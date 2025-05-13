@@ -64,7 +64,6 @@ class ParquetLoaderVariants:
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        limit: int | None = None,  # noqa: ARG002
         **kwargs: Any,
     ) -> RawVariantsQueryRunner:
         """Return a query runner for the summary variants."""
@@ -118,7 +117,6 @@ class ParquetLoaderVariants:
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        limit: int | None = None,
         **_kwargs: Any,
     ) -> RawVariantsQueryRunner:
         """Return a query runner for the family variants."""
@@ -138,8 +136,7 @@ class ParquetLoaderVariants:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
-            seen=set())
+        )
 
         if genes is not None:
             assert self.gene_models is not None

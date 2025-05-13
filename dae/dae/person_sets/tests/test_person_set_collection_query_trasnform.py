@@ -9,17 +9,17 @@ from dae.person_sets import (
 
 @pytest.mark.parametrize("query, expected", [
     (PSCQuery("phenotype", {"autism"}),
-     {"affected_statuses": "any(affected)"}),
+     {"affected_statuses": "any([affected])"}),
     (PSCQuery("phenotype", {"developmental_disorder"}),
      {}),
     (PSCQuery("phenotype", {"unaffected"}),
-     {"affected_statuses": "any(unaffected)"}),
+     {"affected_statuses": "any([unaffected])"}),
     (PSCQuery("phenotype", {"unspecified"}),
-     {"affected_statuses": "any(unspecified)"}),
+     {"affected_statuses": "any([unspecified])"}),
     (PSCQuery("phenotype", {"autism", "unaffected"}),
-     {"affected_statuses": "any(affected,unaffected)"}),
+     {"affected_statuses": "any([affected,unaffected])"}),
     (PSCQuery("phenotype", {"autism", "unaffected", "unspecified"}),
-     {"affected_statuses": "any(affected,unaffected,unspecified)"}),
+     {"affected_statuses": "any([affected,unaffected,unspecified])"}),
     (PSCQuery("phenotype", {"unknown"}),
      {"affected_statuses":
       "((not affected) and (not unaffected) and (not unspecified))"}),
@@ -37,15 +37,15 @@ def test_phenotype_psc_query_transform_phenotype(
 
 @pytest.mark.parametrize("query, expected", [
     (PSCQuery("status", {"affected"}),
-     {"affected_statuses": "any(affected)"}),
+     {"affected_statuses": "any([affected])"}),
     (PSCQuery("status", {"unaffected"}),
-     {"affected_statuses": "any(unaffected)"}),
+     {"affected_statuses": "any([unaffected])"}),
     (PSCQuery("status", {"unspecified"}),
-     {"affected_statuses": "any(unspecified)"}),
+     {"affected_statuses": "any([unspecified])"}),
     (PSCQuery("status", {"affected", "unaffected"}),
-     {"affected_statuses": "any(affected,unaffected)"}),
+     {"affected_statuses": "any([affected,unaffected])"}),
     (PSCQuery("status", {"affected", "unaffected", "unspecified"}),
-     {"affected_statuses": "any(affected,unaffected,unspecified)"}),
+     {"affected_statuses": "any([affected,unaffected,unspecified])"}),
     (PSCQuery("status", {"unknown"}),
      {"affected_statuses":
       "((not affected) and (not unaffected) and (not unspecified))"}),
@@ -63,11 +63,11 @@ def test_status_psc_query_transform_phenotype(
 
 @pytest.mark.parametrize("query, expected", [
     (PSCQuery("status_sex", {"affected_male"}),
-     {"affected_statuses": "any(affected)", "sexes": "any(M)"}),
+     {"affected_statuses": "any([affected])", "sexes": "any([M])"}),
     (PSCQuery("status_sex", {"affected_male", "affected_female"}),
-     {"affected_statuses": "any(affected)", "sexes": "any(F,M)"}),
+     {"affected_statuses": "any([affected])", "sexes": "any([F,M])"}),
     (PSCQuery("status_sex", {"affected_male", "unaffected_male"}),
-     {"affected_statuses": "any(affected,unaffected)", "sexes": "any(M)"}),
+     {"affected_statuses": "any([affected,unaffected])", "sexes": "any([M])"}),
     (PSCQuery("status_sex", {"affected_male", "unaffected_female"}),
      None),
     (PSCQuery("status_sex", {"unknown"}),

@@ -1,7 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any
+
+from sqlglot import column
 
 from dae.genomic_resources.gene_models import (
     GeneModels,
@@ -10,23 +12,14 @@ from dae.genomic_resources.gene_models import (
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.attributes_query import (
-    LeafNode,
-    QueryTransformerMatcher,
-    QueryTreeToSQLBitwiseTransformer,
-    TreeNode,
-    affected_status_query,
-    inheritance_query,
-    role_query,
-    sex_query,
-    variant_type_query,
-)
-from dae.query_variants.attributes_query_inheritance import (
-    InheritanceTransformer,
-    inheritance_parser,
+from dae.query_variants.attribute_queries import (
+    transform_attribute_query_to_function,
+    transform_attribute_query_to_sql_expression,
+    transform_attribute_query_to_sql_expression_schema1,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
@@ -76,8 +69,8 @@ class Dialect:
         return f"`{self.namespace}`.{db}.{table}" if self.namespace else \
                f"{db}.{table}"
 
-    def build_array_join(self, column: str, allias: str) -> str:
-        return f"\n    JOIN\n    {column} AS {allias}"
+    def build_array_join(self, col: str, alias: str) -> str:
+        return f"\n    JOIN\n    {col} AS {alias}"
 
 
 # A type describing a schema as expected by the query builders
@@ -147,6 +140,13 @@ class BaseQueryBuilder(ABC):
         self.reference_genome = reference_genome
         self.query_columns = self._query_columns()
         self.where_accessors = self._where_accessors()
+
+        if self.dialect.use_bit_and_function():
+            self._transform_attribute_query = \
+                transform_attribute_query_to_sql_expression_schema1
+        else:
+            self._transform_attribute_query = \
+                transform_attribute_query_to_sql_expression
 
     def _where_accessors(self) -> dict[str, str]:
         cols = list(self.family_columns) + list(self.summary_columns)
@@ -336,38 +336,36 @@ class BaseQueryBuilder(ABC):
         if inheritance is not None:
             where.extend(
                 self._build_inheritance_where(
-                    self.where_accessors["inheritance_in_members"],
+                    "inheritance_in_members",
                     inheritance,
-                    use_bit_and_function=self.dialect.use_bit_and_function(),
                 ),
             )
         if roles is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["allele_in_roles"], roles, role_query,
-                ),
-            )
+            roles_query = self._transform_attribute_query(
+                Role, roles, column("allele_in_roles"),
+            ).sql()
+            where.append(roles_query)
         if sexes is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["allele_in_sexes"], sexes, sex_query,
-                ),
-            )
+            sexes_query = self._transform_attribute_query(
+                Sex, sexes, column("allele_in_sexes"),
+                aliases=Sex.aliases(),
+            ).sql()
+            where.append(sexes_query)
         if affected_statuses is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["allele_in_statuses"],
-                    affected_statuses, affected_status_query,
-                ),
-            )
+            statuses_query = \
+                self._transform_attribute_query(
+                    Status, affected_statuses,
+                    column("allele_in_statuses"),
+                ).sql()
+            where.append(statuses_query)
         if variant_type is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["variant_type"],
-                    variant_type,
-                    variant_type_query,
-                ),
-            )
+            variant_type_query = \
+                self._transform_attribute_query(
+                    Allele.Type, variant_type,
+                    column("variant_type"),
+                    aliases=Allele.TYPE_DISPLAY_NAME,
+                ).sql()
+            where.append(variant_type_query)
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
 
@@ -612,49 +610,19 @@ class BaseQueryBuilder(ABC):
 
         return " OR ".join([f"( {w} )" for w in where])
 
-    def _build_bitwise_attr_where(
-        self, column_name: str,
-        query_value: str, query_transformer: QueryTransformerMatcher,
-    ) -> str:
-        assert query_value is not None
-        parsed: str | LeafNode | TreeNode = query_value
-        if isinstance(query_value, str):
-            parsed = query_transformer.transform_query_string_to_tree(
-                query_value,
-            )
-
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            column_name,
-            use_bit_and_function=self.dialect.use_bit_and_function(),
-        )
-        return cast(str, transformer.transform(parsed))
-
-    @staticmethod
     def _build_inheritance_where(
-        column_name: str, query_value: str | list[str], *,
-        use_bit_and_function: bool,
+        self, column_name: str, query_value: str | list[str],
     ) -> list[str]:
-        trees = []
         if isinstance(query_value, str):
-            tree = inheritance_parser.parse(query_value)
-            trees.append(tree)
+            query_value = [query_value]
 
-        elif isinstance(query_value, list):
-            for qval in query_value:
-                tree = inheritance_parser.parse(qval)
-                trees.append(tree)
-
-        else:
-            tree = query_value
-            trees.append(tree)
-
+        assert len(query_value) > 0
         result = []
-        for tree in trees:
-            transformer = InheritanceTransformer(
-                column_name,
-                use_bit_and_function=use_bit_and_function)
-            res = transformer.transform(tree)
-            result.append(res)
+        for query in query_value:
+            subquery = self._transform_attribute_query(
+                Inheritance, query, column(column_name),
+            )
+            result.append(subquery.sql())
         return result
 
     def _build_gene_regions_heuristic(
@@ -708,13 +676,11 @@ class BaseQueryBuilder(ABC):
                 inheritance = [inheritance]
 
             matchers = [
-                inheritance_query.transform_tree_to_matcher(
-                    inheritance_query.transform_query_string_to_tree(inh),
-                )
+                transform_attribute_query_to_function(Inheritance, inh)
                 for inh in inheritance
             ]
 
-            if any(m.match([Inheritance.denovo]) for m in matchers):
+            if any(m(Inheritance.denovo.value) for m in matchers):
                 frequency_bins.add("0")
 
         has_frequency_filter = False
@@ -725,12 +691,10 @@ class BaseQueryBuilder(ABC):
                     break
 
         if inheritance is None or any(
-            m.match(
-                [
-                    Inheritance.mendelian,
-                    Inheritance.possible_denovo,
-                    Inheritance.possible_omission,
-                ],
+            m(
+                Inheritance.mendelian.value &
+                Inheritance.possible_denovo.value &
+                Inheritance.possible_omission.value,
             )
             for m in matchers
         ):

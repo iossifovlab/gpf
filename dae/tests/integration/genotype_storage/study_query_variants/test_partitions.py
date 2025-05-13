@@ -208,7 +208,7 @@ def test_wdae_get_all_from_genotype_browser(
                       "noStart", "non-coding", "non-coding-intron", "nonsense",
                       "splice-site", "synonymous", "CDS", "CNV+", "CNV-"],
         inheritance=["not possible_denovo and not possible_omission",
-                     "any(denovo,mendelian,missing,omission)"],
+                     "any([denovo,mendelian,missing,omission])"],
         real_attr_filter=[],
         study_filters=["test_partitions"],
         inheritanceTypeFilter=[],

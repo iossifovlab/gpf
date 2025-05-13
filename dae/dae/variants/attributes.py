@@ -166,6 +166,14 @@ class Sex(enum.Enum):
     unspecified = U
 
     @staticmethod
+    def aliases() -> dict[str, str]:
+        return {
+            "M": "male",
+            "F": "female",
+            "U": "unspecified",
+        }
+
+    @staticmethod
     def from_name(name: int | str | None) -> Sex:
         """Construct and return person Sex from string."""
         if name is None:

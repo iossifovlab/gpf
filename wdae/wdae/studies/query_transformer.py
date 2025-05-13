@@ -7,7 +7,6 @@ from dae.effect_annotation.effect import EffectTypesMixin
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
-from dae.query_variants.attributes_query import role_query
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
     TagsQuery,
@@ -16,6 +15,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
 from dae.utils.regions import Region
 from dae.utils.variant_utils import BitmaskEnumTranslator
 from dae.variants.attributes import Inheritance, Role, Sex, Zygosity
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +147,7 @@ class QueryTransformer:
             ]
 
         result = ",".join([str(inh) for inh in inheritance])
-        return f"any({result})"
+        return f"any([{result}])"
 
     @staticmethod
     def _transform_present_in_child_and_parent_frequency(
@@ -258,23 +258,6 @@ class QueryTransformer:
             raise TypeError(f"unexpected inheritance query {inheritance}")
         kwargs["inheritance"] = inheritance
 
-    @staticmethod
-    def _add_roles_to_query(
-        query: str | None, kwargs: dict[str, Any],
-    ) -> str | None:
-        if not query:
-            return None
-
-        original_roles = kwargs.get("roles")
-        if original_roles is not None:
-            if isinstance(original_roles, str):
-                original_roles = role_query.transform_query_string_to_tree(
-                    original_roles,
-                )
-            return f"{original_roles} and {query}"
-
-        return query
-
     def _handle_person_set_collection(
         self, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
@@ -357,8 +340,7 @@ class QueryTransformer:
                 kwargs.pop("presentInChild")
                 children_roles_query = \
                     self._present_in_child_to_roles(present_in_child)
-                children_roles_query = \
-                    self._add_roles_to_query(children_roles_query, kwargs)
+
                 kwargs["roles_in_child"] = children_roles_query
 
             if "presentInParent" in kwargs:
@@ -368,9 +350,6 @@ class QueryTransformer:
                 kwargs.pop("presentInParent")
                 parent_roles_query = \
                     self._present_in_parent_to_roles(present_in_parent)
-
-                parent_roles_query = \
-                    self._add_roles_to_query(parent_roles_query, kwargs)
 
                 kwargs["roles_in_parent"] = parent_roles_query
 
@@ -429,20 +408,29 @@ class QueryTransformer:
         if "genders" in kwargs:
             sexes = set(kwargs["genders"])
             if sexes != {"female", "male", "unspecified"}:
-                sexes_query = f"any({','.join(sexes)})"
+                sexes_query = f"any([{','.join(sexes)}])"
                 kwargs["genders"] = sexes_query
             else:
                 kwargs["genders"] = None
 
         if "variantTypes" in kwargs:
-            variant_types = set(kwargs["variantTypes"])
+            variant_types = {
+                Allele.DISPLAY_NAME_TYPE[vt.lower()]
+                for vt in kwargs["variantTypes"]
+            }
 
-            if variant_types != {"ins", "del", "sub", "CNV", "complex"}:
-                if "CNV" in variant_types:
-                    variant_types.remove("CNV")
-                    variant_types.add("CNV+")
-                    variant_types.add("CNV-")
-                variant_types_query = f"any({','.join(variant_types)})"
+            if variant_types != {
+                "small_insertion",
+                "small_deletion",
+                "substitution",
+                "cnv",
+                "complex",
+            }:
+                if "cnv" in variant_types:
+                    variant_types.remove("cnv")
+                    variant_types.add("cnv+")
+                    variant_types.add("cnv-")
+                variant_types_query = f"{' or '.join(variant_types)}"
                 kwargs["variantTypes"] = variant_types_query
             else:
                 del kwargs["variantTypes"]
