@@ -98,12 +98,12 @@ Data Import of ``ssc_cnv``
 ++++++++++++++++++++++++++
 
 Now we have a pedigree file, ``ssc_denovo.ped``, and a list of CNV
-variants, ``ssc_cnv.tsv``. Let us prepare an import project configuration
-file, ``ssc_cnv.yaml``:
+variants, ``ssc_cnv.tsv``. To import the data we need an import project. The
+import project for import ``ssc_cnv`` data is already available in the
+examples directory ``example_imports/denovo_and_cnv_import/ssc_cnv.yaml``:
 
 .. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/ssc_cnv.yaml
     :linenos:
-    :emphasize-lines: 12-14
 
 Lines 12-14 configure how the CNV variants are defined in the input file.
 The ``variant``

@@ -26,9 +26,7 @@ This will return a list with the IDs of all configured studies:
 
 .. code-block:: python3
 
-    ['denovo_example',
-     'vcf_example',
-     'example_dataset']
+    ['ssc_denovo', 'denovo_example', 'vcf_example', 'ssc_cnv', 'example_dataset']
 
 To get a specific study and query it, you can use:
 
@@ -40,8 +38,8 @@ To get a specific study and query it, you can use:
 .. note::
     The ``query_variants`` method returns a Python iterator.
 
-To get the basic information about variants found by the ``query_variants`` method,
-you can use:
+To get the basic information about variants found by the ``query_variants``
+method, you can use:
 
 .. code-block:: python3
 
@@ -117,10 +115,9 @@ This will return a list with the IDs of all configured phenotype data:
 
 .. code-block:: python3
 
-    ['comp_pheno',
-     'mini_pheno']
+    ['mini_pheno']
 
-To get a specific phenotype data and query it, use: 
+To get a specific phenotype data and query it, use:
 
 .. code-block:: python3
 

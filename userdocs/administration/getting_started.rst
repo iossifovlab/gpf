@@ -277,7 +277,7 @@ When the import finishes, you can run the GPF development server using:
 and browse the content of the GPF development server at
 ``http://localhost:8000``
 
-The GRF instance `Home Page` now includes the imported study ``vcf_example``.
+The GPF instance `Home Page` now includes the imported study ``vcf_example``.
 
 .. image:: getting_started_files/vcf-example-home-page.png
 

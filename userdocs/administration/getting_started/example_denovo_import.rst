@@ -253,12 +253,12 @@ Data Import of ``ssc_denovo``
 +++++++++++++++++++++++++++++
 
 Now we have a pedigree file, ``ssc_denovo.ped``, and a list of de novo
-variants, ``ssc_denovo.tsv``. Let us prepare an import project configuration
-file, ``ssc_denovo.yaml``:
+variants, ``ssc_denovo.tsv``. To import this data we need to prepare an import
+project.  The import project is already available in the example imports
+directory ``example_imports/denovo_and_cnv_import/ssc_denovo.yaml``:
 
 .. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/ssc_denovo.yaml
     :linenos:
-    :emphasize-lines: 11-12
 
 When importing genotype data, we often need to instruct the import tool how to
 split the import process into multiple jobs. For this purpose, we can use

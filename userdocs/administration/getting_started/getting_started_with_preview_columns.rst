@@ -48,7 +48,6 @@ at the end of the configuration file:
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 3-7,9-13,15-16
 
     genotype_browser:
       column_groups:
