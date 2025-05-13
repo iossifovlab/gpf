@@ -454,7 +454,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clinsig}")`).click({ force: true });
     await page.getByRole('button', {name: 'Mode'}).nth(1).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click({force: true});
     await page.locator('#search-box').focus();
     await page.keyboard.type('Pathogenic');
     await page.locator('mat-option:has-text("Pathogenic (158261)")').click();
