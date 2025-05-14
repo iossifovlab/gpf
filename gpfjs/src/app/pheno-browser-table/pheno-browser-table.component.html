@@ -35,8 +35,6 @@
     </div>
   </div>
 
-  <div class="grid-header-cell" *ngIf="measures.hasDescriptions">Measure Description</div>
-
   <div class="grid-header-cell">Pheno Measure Values</div>
 
   <div class="grid-header-cell">
@@ -106,15 +104,37 @@
   >
 
   <ng-container *ngFor="let measure of measures.measures">
-    <div class="grid-cell instrument-cell" [attr.title]="measure.instrumentDescription">{{
-      measure.instrumentName
-    }}</div>
+    <div class="grid-cell instrument-cell"
+      >{{ measure.instrumentName }}
+      <button
+        *ngIf="measure.instrumentDescription"
+        [id]="measure.instrumentName + '-description-button'"
+        class="description-tooltip"
+        [ngbTooltip]="measure.instrumentDescription"
+        [autoClose]="true"
+        triggers="manual"
+        #instrumentDescription="ngbTooltip"
+        (click)="instrumentDescription.open()">
+        <span class="material-symbols-outlined info-icon" [id]="measure.instrumentName + '-description-icon'"
+          >info</span
+        >
+      </button>
+    </div>
 
-    <div class="grid-cell measure-name-cell" [attr.title]="measure.measureName">{{ measure.measureName }}</div>
-
-    <div class="grid-cell description-cell" *ngIf="measures.hasDescriptions" [attr.title]="measure.description">{{
-      measure.description
-    }}</div>
+    <div class="grid-cell measure-name-cell" [attr.title]="measure.measureName"
+      >{{ measure.measureName }}
+      <button
+        *ngIf="measure.description"
+        [id]="measure.measureName + '-description-button'"
+        class="description-tooltip"
+        [ngbTooltip]="measure.description"
+        [autoClose]="true"
+        triggers="manual"
+        #measureDescription="ngbTooltip"
+        (click)="measureDescription.open()">
+        <span class="material-symbols-outlined info-icon" [id]="measure.measureName + '-description-icon'">info</span>
+      </button>
+    </div>
 
     <div class="grid-cell figure-distribution-cell">
       <a [class.clickable]="!!measure.figureDistribution" (click)="openModal(measure.figureDistribution)">
