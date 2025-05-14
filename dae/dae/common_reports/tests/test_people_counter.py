@@ -1,24 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.common_reports.people_counter import PeopleCounter, PeopleReport
 from dae.person_sets import PersonSetCollection
-from dae.studies.study import GenotypeDataStudy
 
 
 def test_people_counter(
-    study1: GenotypeDataStudy,
     phenotype_role_collection: PersonSetCollection,
 ) -> None:
     people_counter = PeopleCounter.from_person_set(
-        phenotype_role_collection.person_sets["phenotype1"],
+        phenotype_role_collection.person_sets["autism"],
     )
 
-    assert people_counter.people_male == 7
-    assert people_counter.people_female == 9
+    assert people_counter.people_male == 0
+    assert people_counter.people_female == 2
     assert people_counter.people_unspecified == 0
-    assert people_counter.people_total == 16
+    assert people_counter.people_total == 2
 
     assert people_counter.is_empty() is False
-    assert people_counter.is_empty_field("people_male") is False
+    assert people_counter.is_empty_field("people_male") is True
     assert people_counter.is_empty_field("people_female") is False
 
     assert (
@@ -28,27 +26,25 @@ def test_people_counter(
     )
 
 
-def test_people_counter_empty(
-    study1: GenotypeDataStudy,
+def test_people_counter_unspecified(
     phenotype_role_collection: PersonSetCollection,
 ) -> None:
     people_counter = PeopleCounter.from_person_set(
-        phenotype_role_collection.person_sets["unknown"],
+        phenotype_role_collection.person_sets["unspecified"],
     )
 
-    assert people_counter.people_male == 4
-    assert people_counter.people_female == 0
+    assert people_counter.people_male == 0
+    assert people_counter.people_female == 1
     assert people_counter.people_unspecified == 0
-    assert people_counter.people_total == 4
+    assert people_counter.people_total == 1
 
     assert people_counter.is_empty() is False
-    assert people_counter.is_empty_field("people_female") is True
+    assert people_counter.is_empty_field("people_male") is True
 
     assert len(people_counter.to_dict([]).keys()) == 1
 
 
 def test_people_report(
-    study1: GenotypeDataStudy,
     phenotype_role_collection: PersonSetCollection,
 ) -> None:
     people_report = PeopleReport.from_person_set_collections(
@@ -58,7 +54,7 @@ def test_people_report(
     assert len(people_report.people_counters) == 1
     people_counters = people_report.people_counters[0]
     assert len(people_counters.counters) == 4
-    assert people_counters.group_name == "Diagnosis"
+    assert people_counters.group_name == "Phenotype"
     assert people_counters.rows == [
         "people_male",
         "people_female",
@@ -66,10 +62,10 @@ def test_people_report(
     ]
     assert sorted(people_counters.columns) == sorted(
         [
-            "phenotype 1",
-            "phenotype 2",
+            "autism",
+            "epilepsy",
             "unaffected",
-            "unknown",
+            "unspecified",
         ],
     )
 

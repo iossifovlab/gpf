@@ -43,7 +43,7 @@ class FamiliesReport:
             FamiliesGroupCounters.from_families(
                 families,
                 person_set_collection,
-                draw_all_families,
+                draw_all_families=draw_all_families,
             )
             for person_set_collection in person_set_collections
         ]

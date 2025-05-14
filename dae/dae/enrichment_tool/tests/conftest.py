@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import json
 import pathlib
 import shutil
 import textwrap
-from collections.abc import Generator
-from typing import cast
 
+import numpy as np
 import pytest
-from box import Box
+import pytest_mock
 
 from dae.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
@@ -23,6 +23,9 @@ from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     build_inmemory_test_repository,
@@ -32,38 +35,18 @@ from dae.genomic_resources.testing import (
     setup_vcf,
 )
 from dae.gpf_instance import GPFInstance
+from dae.pedigrees.families_data import FamiliesData
 from dae.studies.study import GenotypeData
-from dae.testing import setup_gpf_instance
+from dae.testing import (
+    setup_empty_gene_models,
+    setup_genome,
+    setup_gpf_instance,
+)
 from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
-
-
-@pytest.fixture(scope="session")
-def gpf_fixture(
-    fixtures_gpf_instance: GPFInstance,
-    grr: GenomicResourceRepo,
-) -> Generator[GPFInstance, None, None]:
-    original_grr = fixtures_gpf_instance.grr
-    fixtures_gpf_instance.grr = GenomicResourceGroupRepo(
-        [grr, original_grr], "enrichment_testing_repo",
-    )
-
-    yield fixtures_gpf_instance
-
-    fixtures_gpf_instance.grr = original_grr
-
-
-@pytest.fixture(scope="session")
-def f1_trio_enrichment_config(gpf_fixture: GPFInstance) -> Box:
-    config = gpf_fixture.get_genotype_data_config("f1_trio")
-    assert config is not None
-
-    return cast(Box, config["enrichment"])
-
-
-@pytest.fixture(scope="session")
-def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
-    return gpf_fixture.get_genotype_data("f1_trio")
+from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariantFactory
 
 
 @pytest.fixture(scope="session")
@@ -155,7 +138,10 @@ def grr() -> GenomicResourceRepo:
 
 
 @pytest.fixture
-def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
+def t4c8_fixture(
+    tmp_path: pathlib.Path,
+    grr: GenomicResourceRepo,
+) -> GPFInstance:
     root_path = tmp_path
 
     t4c8_genes(root_path / "grr")
@@ -194,7 +180,10 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
         """),
     })
 
-    grr = build_filesystem_test_repository(root_path / "grr")
+    local_grr = build_filesystem_test_repository(root_path / "grr")
+    grr = GenomicResourceGroupRepo(
+        [grr, local_grr], "enrichment_testing_repo",
+    )
     return setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="t4c8_genome",
@@ -210,14 +199,14 @@ def study_data(
     ped_path = setup_pedigree(
         root_path / "test_study" / "in.ped",
         """
-        familyId	personId	dadId	momId	sex	status	role	phenotype
-        f1	mom1	0	0	2	1	mom	unaffected
-        f1	dad1	0	0	1	1	dad	unaffected
-        f1	ch1	dad1	mom1	2	2	prb	phenotype1
-        f2	mom2	0	0	2	1	mom	unaffected
-        f2	dad2	0	0	1	1	dad	unaffected
-        f2	ch2	dad2	mom2	1	2	prb	phenotype1
-        f2	ch2.1	dad2	mom2	2	1	sib	unaffected
+        familyId  personId  dadId  momId  sex  status  role  phenotype
+        f1        mom1      0      0      2    1       mom   unaffected
+        f1        dad1      0      0      1    1       dad   unaffected
+        f1        ch1       dad1   mom1   2    2       prb   phenotype1
+        f2        mom2      0      0      2    1       mom   unaffected
+        f2        dad2      0      0      1    1       dad   unaffected
+        f2        ch2       dad2   mom2   1    2       prb   phenotype1
+        f2        ch2.1     dad2   mom2   2    1       sib   unaffected
         """,
     )
     vcf_path = setup_vcf(
@@ -227,12 +216,12 @@ def study_data(
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
         ##contig=<ID=1>
-        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1	mom2	dad2	ch2	ch2.1
-        1	865583	.	G	A	.	.	EFF=SYN:SAMD11	GT	0/0	0/1	0/0	0/0	0/1	0/0	0/0
-        1	865624	.	G	A	.	.	EFF=MIS:SAMD11	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0
-        1	865664	.	G	A	.	.	EFF=SYN:SAMD11	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0
-        1	901923	.	C	A	.	.	EFF=MIS:PLEKHN1	GT	0/1	0/0	0/0	0/1	0/0	0/0	0/0
-        1	905957	.	C	T	.	.	EFF=SYN:PLEKHN1	GT	0/0	0/0	0/0	0/0	0/0	0/0	0/1
+        #CHROM POS    ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom2 dad2 ch2  ch2.1
+        1      865583 .  G   A   .    .      .    GT     0/0  0/1  0/0 0/0  0/1  0/0  0/0
+        1      865624 .  G   A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/1  0/0
+        1      865664 .  G   A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/1  0/0
+        1      901923 .  C   A   .    .      .    GT     0/1  0/0  0/0 0/1  0/0  0/0  0/0
+        1      905957 .  C   T   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/0  0/1
         """,  # noqa: E501
     )
     return ped_path, vcf_path
@@ -244,26 +233,26 @@ def create_test_study(
     study_data: tuple[pathlib.Path, pathlib.Path],
     t4c8_fixture: GPFInstance,
 ):
-    study_path = tmp_path_factory.mktemp("test_study")
+    study_path = tmp_path_factory.mktemp("f1_trio")
     ped_path, vcf_path = study_data
 
     def _create_study(study_config: dict) -> GenotypeData:
         return vcf_study(
-            study_path, "test_study", ped_path, [vcf_path], t4c8_fixture,
+            study_path, "f1_trio", ped_path, [vcf_path], t4c8_fixture,
             study_config_update=study_config)
 
     yield _create_study
     shutil.rmtree(
-        str(pathlib.Path(t4c8_fixture.dae_dir, "studies", "test_study")),
+        str(pathlib.Path(t4c8_fixture.dae_dir, "studies", "f1_trio")),
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def enrichment_helper(grr: GenomicResourceRepo) -> EnrichmentHelper:
     return EnrichmentHelper(grr)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def enrichment_builder(
     f1_trio: GenotypeData,
     enrichment_helper: EnrichmentHelper,
@@ -271,7 +260,7 @@ def enrichment_builder(
     return EnrichmentBuilder(enrichment_helper, f1_trio)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def enrichment_serializer(
     f1_trio: GenotypeData,
     enrichment_helper: EnrichmentHelper,
@@ -286,3 +275,149 @@ def enrichment_serializer(
         counting_id="enrichment_events_counting",
     )
     return EnrichmentSerializer(enrichment_config, build)
+
+
+@pytest.fixture
+def psc_config(
+) -> dict:
+    return {
+        "person_set_collections": {
+
+            "phenotype": {
+                "id": "phenotype",
+                "name": "Phenotype",
+                "sources": [
+                    {
+                        "from": "pedigree",
+                        "source": "phenotype",
+                    },
+                ],
+                "default": {
+                    "color": "#aaaaaa",
+                    "id": "unknown",
+                    "name": "unknown",
+                },
+                "domain": [
+                    {
+                        "color": "#111111",
+                        "id": "phenotype1",
+                        "name": "phenotype 1",
+                        "values": [
+                            "phenotype1",
+                        ],
+                    },
+                    {
+                        "color": "#222222",
+                        "id": "phenotype2",
+                        "name": "phenotype 2",
+                        "values": [
+                            "phenotype2",
+                        ],
+                    },
+                    {
+                        "color": "#333333",
+                        "id": "phenotype3",
+                        "name": "phenotype 3",
+                        "values": [
+                            "phenotype3",
+                        ],
+                    },
+                    {
+                        "color": "#aaaaaa",
+                        "id": "unaffected",
+                        "name": "unaffected",
+                        "values": [
+                            "unaffected",
+                        ],
+                    },
+                ],
+            },
+            "selected_person_set_collections": [
+                "phenotype",
+            ],
+        },
+    }
+
+
+def f1_trio_variants(
+    f1_trio_families: FamiliesData,
+) -> list:
+    content = (
+        pathlib.Path(__file__).parent /
+        "fixtures" /
+        "f1_trio_variants.json") .read_text()
+    records = json.loads(content)
+    result = []
+    for sv_record, fv_record in records:
+        sv = SummaryVariantFactory.summary_variant_from_records(sv_record)
+        inheritance_in_members = {
+            int(k): [Inheritance.from_value(inh) for inh in v]
+            for k, v in fv_record["inheritance_in_members"].items()
+        }
+        fattributes = fv_record.get("family_variant_attributes")
+        fv = FamilyVariant(
+            sv,
+            f1_trio_families[fv_record["family_id"]],
+            np.array(fv_record["genotype"]),
+            np.array(fv_record["best_state"]),
+            inheritance_in_members=inheritance_in_members,
+        )
+        if fattributes:
+            for fa, fattr in zip(
+                    fv.family_alt_alleles, fattributes, strict=True):
+                fa.update_attributes(fattr)
+        result.append(fv)
+    return result
+
+
+@pytest.fixture
+def f1_trio(
+    tmp_path: pathlib.Path,
+    study_data: tuple[pathlib.Path, pathlib.Path],
+    psc_config: dict,
+    grr: GenomicResourceRepo,
+    mocker: pytest_mock.MockerFixture,
+) -> GenotypeData:
+
+    setup_genome(
+        tmp_path / "alla_gpf" / "genome" / "allChr.fa",
+        f"""
+        >1
+        {1_000_000 * "A"}
+        """,
+    )
+    setup_empty_gene_models(
+        tmp_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
+
+    local_repo = build_genomic_resource_repository({
+        "id": "alla_local",
+        "type": "directory",
+        "directory": str(tmp_path / "alla_gpf"),
+    })
+
+    grr = GenomicResourceGroupRepo(
+        [grr, local_repo], "enrichment_testing_repo",
+    )
+
+    gpf_instance = setup_gpf_instance(
+        tmp_path / "gpf_instance",
+        reference_genome_id="genome",
+        gene_models_id="empty_gene_models",
+        grr=local_repo)
+
+    ped_path, vcf_path = study_data
+    study = vcf_study(
+        tmp_path / "f1_trio",
+        "f1_trio",
+        ped_path,
+        vcf_paths=[vcf_path],
+        gpf_instance=gpf_instance,
+        study_config_update=psc_config,
+    )
+
+    mocker.patch.object(
+        study,
+        "query_variants",
+        return_value=f1_trio_variants(study.families),
+    )
+    return study

@@ -300,6 +300,7 @@ def setup_t4c8_instance(
 
     _t4c8_study_1(root_path, gpf_instance)
     _t4c8_study_2(root_path, gpf_instance)
+    _t4c8_study_3(root_path, gpf_instance)
     _t4c8_study_4(root_path, gpf_instance)
     _t4c8_dataset(gpf_instance)
 
@@ -492,6 +493,11 @@ def t4c8_study_1(t4c8_instance: GPFInstance) -> GenotypeData:
 @pytest.fixture(scope="session")
 def t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_study_2")
+
+
+@pytest.fixture(scope="session")
+def t4c8_study_3(t4c8_instance: GPFInstance) -> GenotypeData:
+    return t4c8_instance.get_genotype_data("t4c8_study_3")
 
 
 @pytest.fixture(scope="session")
@@ -972,6 +978,55 @@ chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
                 },
+            },
+        },
+    )
+
+
+def _t4c8_study_3(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> GenotypeData:
+    ped_path = setup_pedigree(
+        root_path / "t4c8_study_3" / "pedigree" / "in.ped",
+        """
+familyId personId dadId  momId  sex status role phenotype
+f3.1     mom3.1   0      0      2   1      mom  unaffected
+f3.1     dad3.1   0      0      1   1      dad  unaffected
+f3.1     p3.1     dad3.1 mom3.1 2   2      prb  autism
+f3.1     s3.1     dad3.1 mom3.1 1   1      sib  unaffected
+        """)
+    vcf_path1 = setup_vcf(
+        root_path / "t4c8_study_3" / "vcf" / "in.vcf.gz",
+        """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom4.1 dad4.1 p4.1 s4.1
+chr1   52  MIS  C   A   .    .      .    GT     0/1    0/0    0/1  0/0
+chr1   54  SYN  T   C   .    .      .    GT     0/1    0/0    0/0  0/0
+chr1   57  SYN  A   C   .    .      .    GT     0/1    0/0    0/1  0/0
+chr1   117 MIS  T   G   .    .      .    GT     0/1    0/0    0/1  0/0
+chr1   119 SYN  A   G   .    .      .    GT     0/1    0/0    0/0  0/1
+        """)
+
+    return vcf_study(
+        root_path,
+        "t4c8_study_3", ped_path, [vcf_path1],
+        t4c8_instance,
+        project_config_update={
+            "input": {
+                "vcf": {
+                    "denovo_mode": "ignore",
+                    "omission_mode": "ignore",
+                },
+            },
+        },
+        study_config_update={
+            "denovo_gene_sets": {
+                "enabled": False,
             },
         },
     )

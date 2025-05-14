@@ -10,19 +10,18 @@ from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 
 
-def test_gpf_fixture(gpf_fixture: GPFInstance) -> None:
-    grr = gpf_fixture.grr
+def test_gpf_fixture(t4c8_fixture: GPFInstance) -> None:
+    grr = t4c8_fixture.grr
     res = grr.get_resource("enrichment/samocha_testing")
     assert res.get_type() == "samocha_enrichment_background"
 
 
 def test_get_study_background(
-    f1_trio: GenotypeData,  # noqa: ARG001
-    gpf_fixture: GPFInstance,
+    t4c8_fixture: GPFInstance,
 ) -> None:
-    assert gpf_fixture.grr.repo_id == "enrichment_testing_repo"
+    assert t4c8_fixture.grr.repo_id == "enrichment_testing_repo"
 
-    helper = EnrichmentHelper(gpf_fixture.grr)
+    helper = EnrichmentHelper(t4c8_fixture.grr)
 
     assert isinstance(
         helper.create_background(
@@ -41,18 +40,18 @@ def test_get_study_background(
 
 def test_get_study_enrichment_config(
     f1_trio: GenotypeData,
-    gpf_fixture: GPFInstance,
+    t4c8_fixture: GPFInstance,
 ) -> None:
-    helper = EnrichmentHelper(gpf_fixture.grr)
+    helper = EnrichmentHelper(t4c8_fixture.grr)
     assert helper.get_enrichment_config(f1_trio) is not None
 
 
 def test_has_enrichment_config(
     f1_trio: GenotypeData,
-    gpf_fixture: GPFInstance,
+    t4c8_fixture: GPFInstance,
 ) -> None:
 
-    helper = EnrichmentHelper(gpf_fixture.grr)
+    helper = EnrichmentHelper(t4c8_fixture.grr)
     assert helper.has_enrichment_config(f1_trio) is True
 
 

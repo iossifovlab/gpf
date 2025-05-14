@@ -28,4 +28,4 @@ def test_dae_config(tmp_path_factory: pytest.TempPathFactory) -> None:
 
 def test_variants_db(t4c8_instance: GPFInstance) -> None:
     variants_db = t4c8_instance._variants_db
-    assert len(variants_db.get_all_genotype_data()) == 4
+    assert len(variants_db.get_all_genotype_data()) == 5

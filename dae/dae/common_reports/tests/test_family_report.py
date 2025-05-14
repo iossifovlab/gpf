@@ -5,11 +5,11 @@ from dae.studies.study import GenotypeDataStudy
 
 
 def test_families_report(
-    study1: GenotypeDataStudy,
+    t4c8_dataset: GenotypeDataStudy,
     phenotype_role_collection: PersonSetCollection,
 ) -> None:
     families_report = FamiliesReport.from_study(
-        study1, [phenotype_role_collection],
+        t4c8_dataset, [phenotype_role_collection],
     )
     assert len(families_report.families_counters) == 1
     assert len(families_report.to_dict()) == 1

@@ -14,8 +14,8 @@ def get_family_pedigree(
         (
             p.family_id,
             p.person_id,
-            p.mom_id if p.mom_id else "0",
-            p.dad_id if p.dad_id else "0",
+            p.mom_id or "0",
+            p.dad_id or "0",
             p.sex.short(),
             str(p.role),
             PersonSetCollection.get_person_color(p, person_set_collection),
@@ -84,7 +84,7 @@ class FamilyCounter:
             "counter_id": 0,
         })
 
-    def to_dict(self, full: bool = False) -> dict[str, Any]:
+    def to_dict(self, *, full: bool = False) -> dict[str, Any]:
         """Transform counter to dict."""
         output = {
             "pedigree": self.pedigree,
@@ -109,11 +109,10 @@ class FamiliesGroupCounters:
         counters = [FamilyCounter(d) for d in json["counters"]]
         self.counters = {c.counter_id: c for c in counters}
 
-    # FIXME: Too many locals
     @staticmethod
     def from_families(  # pylint: disable=too-many-locals
         families: FamiliesData,
-        person_set_collection: PersonSetCollection,
+        person_set_collection: PersonSetCollection, *,
         draw_all_families: bool,
     ) -> "FamiliesGroupCounters":
         """Create families group counters from a dict of families."""
@@ -130,7 +129,7 @@ class FamiliesGroupCounters:
                     "tags": family.tag_labels,
                     "counter_id": idx,
                 })
-                counters[(family.family_id,)] = family_counter
+                counters[family.family_id,] = family_counter
         else:
             families_to_types: dict[tuple, list[Family]] = defaultdict(list)
 
@@ -181,7 +180,7 @@ class FamiliesGroupCounters:
 
         return FamiliesGroupCounters(json)
 
-    def to_dict(self, full: bool = False) -> dict[str, Any]:
+    def to_dict(self, *, full: bool = False) -> dict[str, Any]:
         return {
             "group_name": self.group_name,
             "phenotypes": self.phenotypes,
