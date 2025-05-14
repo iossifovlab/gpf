@@ -549,7 +549,7 @@ class PersonSetCollection:
             result_def = {
                 "id": person_set.id,
                 "name": person_set.name,
-                "values": list(person_set.values),
+                "values": [person_set.id],
                 "color": person_set.color,
             }
             domain[person_set.id] = result_def
