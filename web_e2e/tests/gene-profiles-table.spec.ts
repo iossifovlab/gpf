@@ -466,6 +466,27 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(page.locator('gpf-effect-types').getByLabel('noStart')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('noEnd')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('synonymous')).not.toBeChecked();
+
+    await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
+  });
+
+  test('should navigate to genotype browser and check if correct variants are loaded', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype Browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+    await page.locator('#gene-symbols-panel textarea').pressSequentially('GRIN2B');
+    await page.locator('gpf-pedigree-selector').getByLabel('unaffected').click();
+
+    await page.getByRole('button', { name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('3 variants selected');
+
+    await page.locator('#header a:text("Gene Profiles")').click();
+    await page.waitForSelector('gpf-gene-profiles-table');
+
+    await page.getByTitle('3.0 (1.2)\nGRIN2B').click();
+    await page.waitForSelector('gpf-genotype-browser');
+    expect(page.url()).toContain('/datasets/iossifov_2014_liftover/genotype-browser');
+
+    await expect(page.locator('#variants-count-span')).toHaveText('3 variants selected');
   });
 });
 
