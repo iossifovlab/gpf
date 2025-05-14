@@ -155,7 +155,7 @@ def test_categorical_histogram_merge_values_order(
 @pytest.mark.parametrize("displayed_values_count, expected_bars", [
     (None, {"1": 1, "2": 1, "3": 1}),
     (3, {"1": 1, "2": 1, "3": 1}),
-    (2, {"1": 1, "2": 1, "Other Values": 1}),
+    (2, {"1": 1, "2": 1, "Other": 1}),
 ])
 def test_categorical_histogram_number_of_displayed_values(
         displayed_values_count: int | None,
@@ -178,10 +178,10 @@ def populate_categorical_histogram(hist: CategoricalHistogram) -> None:
 
 
 @pytest.mark.parametrize("displayed_values_count, expected_bars", [
-    (3, {"10": 100, "9": 90, "8": 80, "Other Values": 280}),
-    (4, {"10": 100, "9": 90, "8": 80, "7": 70, "Other Values": 210}),
-    (5, {"10": 100, "9": 90, "8": 80, "7": 70, "6": 60, "Other Values": 150}),
-    (2, {"10": 100, "9": 90, "Other Values": 360}),
+    (3, {"10": 100, "9": 90, "8": 80, "Other": 280}),
+    (4, {"10": 100, "9": 90, "8": 80, "7": 70, "Other": 210}),
+    (5, {"10": 100, "9": 90, "8": 80, "7": 70, "6": 60, "Other": 150}),
+    (2, {"10": 100, "9": 90, "Other": 360}),
 ])
 def test_categorical_histogram_number_of_displayed_values_populated(
         displayed_values_count: int | None,
@@ -203,7 +203,7 @@ def populate_categorical_histogram_with_int(
 
 
 @pytest.mark.parametrize("displayed_values_count, expected_bars", [
-    (3, {10: 100, 9: 90, 8: 80, "Other Values": 280}),
+    (3, {10: 100, 9: 90, 8: 80, "Other": 280}),
 ])
 def test_categorical_histogram_number_of_displayed_values_int_populated(
         displayed_values_count: int | None,
