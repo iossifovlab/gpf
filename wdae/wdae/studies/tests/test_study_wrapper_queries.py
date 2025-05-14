@@ -507,3 +507,16 @@ def test_query_present_in_parent_and_present_in_child_and_phenotypes(
     )
 
     assert len(variants) == count
+
+
+def test_query_inheritance_types(t4c8_study_1_wrapper: StudyWrapper):
+    query = {
+        "inheritanceTypeFilter": [
+            "denovo", "mendelian", "omission", "missing",
+        ],
+    }
+
+    variants = list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+    ))
+    assert len(variants) == 12
