@@ -357,7 +357,7 @@ GENE_SETS_TEMPLATE = """
 <p>Number of unique genes: {{ data["number_of_unique_genes"] }}</p>
 <div style="display: flex; padding-top: 8px;">
     <div style="display: flex; flex-direction: column; align-items: center;">
-        <span>Gene set size distribution</span>
+        <span>Count of genes per gene set</span>
         <div class="histogram">
             <img src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
                 style="width: 300px; cursor: pointer;"
@@ -367,7 +367,7 @@ GENE_SETS_TEMPLATE = """
         </div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: center; padding-left: 38px;">
-        <span>Gene reuse frequency</span>
+        <span>Count of gene sets per gene</span>
         <div class="histogram">
             <img src="{{ gene_set_collection.get_gene_sets_per_gene_hist_filename() }}"
                 style="width: 300px; cursor: pointer;"
