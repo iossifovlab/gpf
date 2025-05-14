@@ -199,7 +199,7 @@ test.describe('Home page tests', () => {
     await page.locator('a:text("Hello World Genotypes")').click();
     await expect(page.locator('a:text("Datasets")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
-    await expect(page.locator('gpf-dataset-description')).toBeVisible();
+    await expect(page.locator('gpf-gene-browser')).toBeVisible();
     await expect(page.locator('#register-alert')).toBeVisible();
     await expect(page.locator('#selected-dataset-name')).toHaveText('Hello World Genotypes');
     await expect(
