@@ -239,7 +239,7 @@ def inference_reference_impl(
         transformed_values = values
     else:
         none_count = non_numeric_count
-        values_domain = f"[{min_value}, {max_value}]"
+        values_domain = f"{min_value}, {max_value}"
         count_unique_values = len(unique_numeric_values)
         transformed_values = numeric_values
 
@@ -296,7 +296,7 @@ def force_type_inference(
         ))
         min_value = min(non_null_values)
         max_value = max(non_null_values)
-        values_domain = f"[{min_value}, {max_value}]"
+        values_domain = f"{min_value}, {max_value}"
 
     count_without_values = len(list(
         filter(lambda v: v is None, transformed_values),
