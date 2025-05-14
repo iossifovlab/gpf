@@ -32,6 +32,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
     init_test_gpf_instance_genomic_context_plugin,
 )
+from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
 from dae.testing import (
@@ -508,6 +509,11 @@ def t4c8_study_4(t4c8_instance: GPFInstance) -> GenotypeData:
 @pytest.fixture(scope="session")
 def t4c8_dataset(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_dataset")
+
+
+@pytest.fixture(scope="session")
+def t4c8_study_1_pheno(t4c8_instance: GPFInstance) -> PhenotypeData:
+    return t4c8_instance.get_phenotype_data("study_1_pheno")
 
 
 def _t4c8_default_study_config(instance_path: pathlib.Path) -> None:
