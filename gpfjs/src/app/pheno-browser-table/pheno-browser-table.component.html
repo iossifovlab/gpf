@@ -152,25 +152,19 @@
         <ng-container *ngIf="measure.measureType === 'continuous'">
           <div>
             <span
-              >[{{
-                +measure.valuesDomain.slice(measure.valuesDomain.indexOf('[') + 1, measure.valuesDomain.indexOf(','))
-                  | numberWithExp : '1.3-3'
-              }},</span
-            >
-            <span
-              >{{
-                +measure.valuesDomain.slice(measure.valuesDomain.indexOf(',') + 1, measure.valuesDomain.indexOf(']'))
-                  | numberWithExp : '1.3-3'
-              }}]</span
-            >
+              >{{ measure.valuesDomain.slice(0, measure.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},
+            </span>
+            <span>{{
+              measure.valuesDomain.slice(measure.valuesDomain.indexOf(',') + 1, measure.valuesDomain.length)
+                | numberWithExp : '1.3-3'
+            }}</span>
           </div>
         </ng-container>
-
-        <ng-container
-          *ngIf="
-            measure.measureType === 'categorical' || measure.measureType === 'raw' || measure.measureType === 'ordinal'
-          ">
-          <span *ngFor="let value of measure.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
+        <ng-container *ngIf="measure.measureType === 'ordinal'">
+          <span title="{{ measure.valuesDomain }}">{{ measure.valuesDomain.replace(', ', ' - ') }}</span>
+        </ng-container>
+        <ng-container *ngIf="measure.measureType === 'categorical' || measure.measureType === 'raw'">
+          <span title="{{ measure.valuesDomain }}">{{ measure.valuesDomain }}</span>
         </ng-container>
       </div>
     </div>
