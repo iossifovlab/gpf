@@ -44,6 +44,62 @@ test.describe('Family filters block tests', () => {
     await expect(page.locator('gpf-family-ids textarea')).toHaveText('f1');
   });
 
+  test('should test resetting family ids state', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Ids')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
+
+    await page.locator('gpf-family-ids textarea').focus();
+    await page.keyboard.type('f1, f2');
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+
+    await page.locator('gpf-family-filters-block').getByText('All').click();
+
+    await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
+    await expect(page.locator('gpf-family-ids textarea')).toBeEmpty();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('should test family ids error state is reset when switching tab', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Ids')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
+
+    await expect(page.getByText('Please insert at least one family id.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-family-filters-block').getByText('All').click();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should check number of selected variants when changing list of ids and if table is reset', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Ids')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
+
+    await page.locator('gpf-family-ids textarea').focus();
+    await page.keyboard.type('f5');
+
+    await page.getByRole('button', { name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
+
+    await page.locator('gpf-family-ids textarea').focus();
+    await page.keyboard.type(', f7');
+    await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+
+    await page.getByRole('button', { name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('3 variants selected');
+  });
+
   test('should preview table and download filtered by Family Tags', async({ page }) => {
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
     await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
