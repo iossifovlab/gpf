@@ -90,6 +90,11 @@ NO_PARTITIONING_PROPERTIES = {
 
 
 @pytest.fixture(scope="module")
+def resources_dir() -> pathlib.Path:
+    return pathlib.Path(__file__).parent / "resources"
+
+
+@pytest.fixture(scope="module")
 def families(resources_dir: pathlib.Path) -> FamiliesData:
     ped_df = pd.read_csv(resources_dir / "pedigree_table.csv")
     ped_df.role = ped_df.role.apply(Role.from_name)  # type: ignore
