@@ -49,8 +49,6 @@ from dae.tools.generate_denovo_gene_sets import (
 
 logger = logging.getLogger(__name__)
 
-pytest_plugins = ["dae_conftests.dae_conftests"]
-
 
 @pytest.fixture
 def gpf_instance_genomic_context_fixture(
