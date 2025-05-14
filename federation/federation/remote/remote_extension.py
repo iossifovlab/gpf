@@ -6,7 +6,10 @@ from dae.genomic_scores.scores import ScoreDesc
 from federation.remote.gene_sets_db import RemoteGeneSetCollection
 from federation.remote.remote_enrichment_builder import RemoteEnrichmentBuilder
 from federation.remote.remote_pheno_tool_adapter import RemotePhenoToolAdapter
-from federation.remote.remote_study import RemoteGenotypeData
+from federation.remote.remote_study import (
+    RemoteGenotypeData,
+    RemoteGenotypeDataGroup,
+)
 from federation.remote.remote_study_wrapper import RemoteStudyWrapper
 from federation.remote.rest_api_client import (
     RESTClient,
@@ -101,17 +104,45 @@ def fetch_studies_from_client(
     rest_client: RESTClient,
 ) -> list[RemoteGenotypeData]:
     """Get all remote studies from a REST client."""
-    studies = []
-    fetched_studies = rest_client.get_studies()
+    result = {}
     visible_studies = rest_client.get_visible_datasets()
 
-    if fetched_studies is None:
+    all_data = [
+        study
+        for study in rest_client.get_studies()
+        if (
+            study["access_rights"] is True
+            and study.get("study_type") != "Phenotype study"
+        )
+    ]
+    if all_data is None:
         raise RESTClientRequestError(
             f"Failed to get studies from {rest_client.remote_id}",
         )
-    for study in fetched_studies["data"]:
-        if study["access_rights"] is True and study["id"] in visible_studies:
-            logger.info("creating remote genotype data: %s", study["id"])
-            studies.append(RemoteGenotypeData(study["id"], rest_client))
 
-    return studies
+    all_configs = {
+        study["id"]: rest_client.get_dataset_config(study["id"])
+        for study in all_data
+    }
+
+    for study_id, config in all_configs.items():
+        if config is None:
+            raise ValueError(f"unable to find remote study {study_id}")
+        logger.info("creating remote genotype study: %s", study_id)
+        if "studies" in config:
+            data = RemoteGenotypeDataGroup(study_id, config, rest_client)
+        else:
+            data = RemoteGenotypeData(study_id, config, rest_client)
+        result[study_id] = data
+
+    for study_id, data in result.items():
+        if not isinstance(data, RemoteGenotypeDataGroup):
+            continue
+        config = all_configs[study_id]
+        data.studies = [
+            result[child_id]
+            for child_id in config["studies"]
+        ]
+
+    return [study for study_id, study in result.items()
+            if study_id in visible_studies]

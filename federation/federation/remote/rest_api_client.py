@@ -179,11 +179,8 @@ class RESTClient:
             return cast(dict, response.json())
         return None
 
-    def get_studies(self) -> dict | None:
-        response = self._get("datasets/studies")
-        if response.status_code == 200:
-            return cast(dict, response.json())
-        return None
+    def get_studies(self) -> list[dict]:
+        return self.gpf_rest_client.get_all_datasets()
 
     def get_dataset_config(self, study_id: str) -> dict | None:
         response = self._get(f"datasets/config/{study_id}")

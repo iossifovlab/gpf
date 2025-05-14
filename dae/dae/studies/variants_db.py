@@ -580,11 +580,9 @@ class VariantsDb:
                 "replacing genotype group instance %s", genotype_data.study_id)
 
         if genotype_data.is_group:
-            assert isinstance(genotype_data, GenotypeDataGroup)
-            self._genotype_group_cache[genotype_data.study_id] = genotype_data
+            self._genotype_group_cache[genotype_data.study_id] = genotype_data  # type: ignore
         else:
-            assert isinstance(genotype_data, GenotypeDataStudy)
-            self._genotype_study_cache[genotype_data.study_id] = genotype_data
+            self._genotype_study_cache[genotype_data.study_id] = genotype_data  # type: ignore
 
     def unregister_genotype_data(self, genotype_data: GenotypeData) -> None:
         """Remove GenotypeData from DB."""

@@ -20,13 +20,9 @@ from federation.remote.rest_api_client import RESTClient
 class RemoteGenotypeData(GenotypeDataStudy):
     """Represent remote genotype data."""
 
-    def __init__(self, study_id: str, rest_client: RESTClient):
+    def __init__(self, study_id: str, config: dict, rest_client: RESTClient):
         self.remote_study_id = study_id
         self.rest_client = rest_client
-
-        config = self.rest_client.get_dataset_config(self.remote_study_id)
-        if config is None:
-            raise ValueError(f"unable to find remote study {study_id}")
 
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
         config["name"] = self.rest_client.prefix_remote_name(
@@ -48,10 +44,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
                     config["parents"],
                 ),
             )
-            self._parents = set(config["parents"])
-
-        if config.get("studies") is not None:
-            raise ValueError("Tried to create remote dataset")
 
         self.config = FrozenBox(config)
 
@@ -61,6 +53,8 @@ class RemoteGenotypeData(GenotypeDataStudy):
         self._remote_common_report = None
 
         super().__init__(self.config, None)
+
+        self._parents = set(config["parents"])
 
         self.is_remote = True
         self._description = ""
@@ -103,7 +97,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
         self, pscs_config: dict[str, Any] | None,
         _families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
-
         if pscs_config is None:
             return {}
         result = {}
@@ -112,7 +105,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
         )
         for conf in configs.values():
             psc_config = parse_person_set_collection_config(conf)
-            psc = PersonSetCollection.from_families(psc_config, self._families)
+            psc = PersonSetCollection.from_families(psc_config, self.families)
             result[psc.id] = psc
         return result
 
@@ -125,11 +118,11 @@ class RemoteGenotypeData(GenotypeDataStudy):
     def get_studies_ids(
         self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
-        return [self.study_id]
+        return [self.remote_study_id]
 
     @property
     def is_group(self) -> bool:
-        return "studies" in self.config
+        return False
 
     def query_variants(
         self,
@@ -193,3 +186,26 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
     def get_common_report(self) -> CommonReport | None:
         return self.common_report
+
+
+class RemoteGenotypeDataGroup(RemoteGenotypeData):
+    """Represents remote genotype data group."""
+
+    @property
+    def is_group(self) -> bool:
+        return True
+
+    def get_studies_ids(
+        self, *,
+        leaves: bool = True,
+    ) -> list[str]:
+        result = [self.study_id]
+        for study in self.studies:
+            result.append(study.study_id)
+            if leaves:
+                result.extend([
+                    child_id
+                    for child_id in study.get_studies_ids(leaves=True)
+                    if child_id not in result
+                ])
+        return result
