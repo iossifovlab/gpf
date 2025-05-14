@@ -185,7 +185,7 @@ def liftover_grr_fixture(
 def setup_t4c8_grr(
     root_path: pathlib.Path,
 ) -> GenomicResourceRepo:
-    repo_path = root_path / "t4c8_grr"
+    repo_path = root_path
     t4c8_genome(repo_path)
     t4c8_genes(repo_path)
 
@@ -250,7 +250,7 @@ def setup_t4c8_grr(
 def setup_t4c8_instance(
     root_path: pathlib.Path,
 ) -> GPFInstance:
-    t4c8_grr = setup_t4c8_grr(root_path)
+    t4c8_grr = setup_t4c8_grr(root_path / "t4c8_grr")
 
     instance_path = root_path / "gpf_instance"
 
@@ -1073,8 +1073,7 @@ def acgt_genome_19(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
 @pytest.fixture(scope="session")
 def t4c8_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("t4c8_grr")
-    t4c8_genome(root_path)
-    t4c8_genes(root_path)
+    setup_t4c8_grr(root_path)
     root_path2 = root_path / "2"
     t4c8_genome(root_path2)
     t4c8_genes(root_path2)
