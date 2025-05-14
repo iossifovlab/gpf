@@ -1,9 +1,9 @@
-instrument_1ageThe age of the individual (in months)continuous[68.001,606.229]NaNNaNNaNNaN,
-instrument_1iqThe IQ of the individualcontinuous[-1.111e+1,174.290]NaNNaNNaNNaN,
-instrument_1measure_1Measure 1, a normally distributed continuous measure with a mean of 80continuous[28.877,143.029]0.8160.93530.12830.0252,
-instrument_1measure_2Measure 2, a normally distributed continuous measure with a mean of 40continuous[17.650,69.721]0.69070.74880.99220.2873,
-instrument_1measure_3Measure 3, a continuous measure with a normal distribution with mean of 80 for non-affected individuals, and 40 for affected individualscontinuous[20.349,122.832]1.80e-90.00270.00030.0096,
-instrument_1measure_4Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individualscontinuous[0.000,10.000]6.10e-70.08920.01310.0157,
-instrument_1measure_5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical[val1][val2][val3][val4][val5]NaNNaNNaNNaN,
-instrument_2measure_6The first measure of the second instrumentcontinuous[10.100,15.400]0.84060.8750.96410.8703,
-instrument_2measure_7The second measure of the second instrumentraw[AA][AB][AC][AD][BA][BB][BC][BD][CA][CB][CC][CD][DA][DB][DC][DD][EA][EB][EC][ED]NaNNaNNaNNaN
+instrument_1 age infocontinuous[68.001,606.229]NaNNaNNaNNaN,
+instrument_1 iq infocontinuous[-1.111e+1,174.290]NaNNaNNaNNaN,
+instrument_1 measure_1 infocontinuous[28.877,143.029]0.8160.93530.12830.0252,
+instrument_1 measure_2 infocontinuous[17.650,69.721]0.69070.74880.99220.2873,
+instrument_1 measure_3 infocontinuous[20.349,122.832]1.80e-90.00270.00030.0096,
+instrument_1 measure_4 infocontinuous[0.000,10.000]6.10e-70.08920.01310.0157,
+instrument_1 measure_5 infocategorical[val1][val2][val3][val4][val5]NaNNaNNaNNaN,
+instrument_2 measure_6 infocontinuous[10.100,15.400]0.84060.8750.96410.8703,
+instrument_2 measure_7 inforaw[AA][AB][AC][AD][BA][BB][BC][BD][CA][CB][CC][CD][DA][DB][DC][DD][EA][EB][EC][ED]NaNNaNNaNNaN
