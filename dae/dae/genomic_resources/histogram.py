@@ -327,7 +327,7 @@ class NumberHistogram(Statistic):
             self.max_value = max(self.max_value, other.max_value)
 
     def values_domain(self) -> str:
-        return f"[{self.min_value:0.3f}, {self.max_value:0.3f}]"
+        return f"{self.min_value:0.3g}, {self.max_value:0.3g}"
 
     def add_value(self, value: float | None, count: int = 1) -> None:
         """Add value to the histogram."""
