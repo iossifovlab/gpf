@@ -352,10 +352,6 @@ GENE_SETS_TEMPLATE = """
 {% set gene_set_collection = data.gene_set_collection %}
 <hr>
 <h2>Gene set ID: {{ data["id"] }}</h2>
-{% if data["format"] == "directory" %}
-<h3>Gene sets directory:</h3>
-<a href="{{ data["directory"] }}">{{ data["directory"] }}</a>
-{% else %}
 <h3>Statistics:</h3>
 <p>Number of gene sets: {{ data["number_of_gene_sets"] }}</p>
 <p>Number of unique genes: {{ data["number_of_unique_genes"] }}</p>
@@ -417,6 +413,10 @@ GENE_SETS_TEMPLATE = """
         {%- endfor -%}
     </table>
 </div>
+{% if data["format"] == "directory" %}
+<h3>Gene sets directory:</h3>
+<a href="{{ data["directory"] }}">{{ data["directory"] }}</a>
+{% else %}
 <h3 style="margin-top: 32px">Gene sets file:</h3>
 <a href="{{ data["filename"] }}">{{ data["filename"] }}</a>
 {% endif %}
