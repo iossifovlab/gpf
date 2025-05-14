@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 
+from dae.gpf_instance import GPFInstance
 from dae.person_filters import (
     FamilyFilter,
     PhenoFilterRange,
@@ -8,31 +9,30 @@ from dae.person_filters import (
     make_pheno_filter,
 )
 from dae.person_filters.person_filters import make_pheno_filter_beta
-from dae.pheno.pheno_data import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeData
 
 
 @pytest.fixture
-def fake_phenotype_data(fixture_dirname):
-    return PhenotypeStudy(
-        "fake_db", fixture_dirname("fake_pheno_db/fake_i1.db"))
+def fake_phenotype_data(t4c8_instance: GPFInstance) -> PhenotypeData:
+    return t4c8_instance.get_phenotype_data("study_1_pheno")
 
 
 def test_pheno_filter_set_apply(fake_phenotype_data):
     df = fake_phenotype_data.get_people_measure_values_df(["i1.m5"])
-    assert len(df) == 195
+    assert len(df) == 16
 
     measure = fake_phenotype_data.get_measure("i1.m5")
 
     pheno_filter = PhenoFilterSet(
-        measure, {"catB", "catF"}, fake_phenotype_data)
+        measure, {"val1", "val3"}, fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 77
-    assert set(filtered_df["i1.m5"]) == {"catB", "catF"}
+    assert len(filtered_df) == 10
+    assert set(filtered_df["i1.m5"]) == {"val1", "val3"}
 
-    pheno_filter = PhenoFilterSet(measure, ["catF"], fake_phenotype_data)
+    pheno_filter = PhenoFilterSet(measure, ["val1"], fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 33
-    assert set(filtered_df["i1.m5"]) == {"catF"}
+    assert len(filtered_df) == 3
+    assert set(filtered_df["i1.m5"]) == {"val1"}
 
 
 def test_pheno_filter_set_noncategorical_measure(fake_phenotype_data):
@@ -64,39 +64,39 @@ def test_pheno_filter_min_max_assignment(fake_phenotype_data, values_range):
 
 def test_pheno_filter_range_apply(fake_phenotype_data):
     df = fake_phenotype_data.get_people_measure_values_df(["i1.m1"])
-    assert len(df) == 195
+    assert len(df) == 16
 
     measure = fake_phenotype_data.get_measure("i1.m1")
 
     pheno_filter = PhenoFilterRange(measure, (50, 70), fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 44
+    assert len(filtered_df) == 4
     for value in list(filtered_df["i1.m1"]):
         assert value > 50.0
         assert value < 70.0
 
     pheno_filter = PhenoFilterRange(measure, [70, 80], fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 30
+    assert len(filtered_df) == 3
     for value in list(filtered_df["i1.m1"]):
         assert value > 70.0
         assert value < 80.0
 
     pheno_filter = PhenoFilterRange(measure, (None, 70), fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 53
+    assert len(filtered_df) == 5
     for value in list(filtered_df["i1.m1"]):
         assert value < 70.0
 
     pheno_filter = PhenoFilterRange(measure, (50, None), fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 186
+    assert len(filtered_df) == 15
     for value in list(filtered_df["i1.m1"]):
         assert value > 50.0
 
     pheno_filter = PhenoFilterRange(measure, (None, None), fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
-    assert len(filtered_df) == 195
+    assert len(filtered_df) == 16
 
     pheno_filter = PhenoFilterRange(measure, {50}, fake_phenotype_data)
     print(df.head())
@@ -106,10 +106,6 @@ def test_pheno_filter_range_apply(fake_phenotype_data):
 
 def test_pheno_filter_range_measure_type(fake_phenotype_data):
     measure = fake_phenotype_data.get_measure("i1.m5")
-    with pytest.raises(AssertionError):
-        PhenoFilterRange(measure, (0, 0), fake_phenotype_data)
-
-    measure = fake_phenotype_data.get_measure("i1.m6")
     with pytest.raises(AssertionError):
         PhenoFilterRange(measure, (0, 0), fake_phenotype_data)
 
