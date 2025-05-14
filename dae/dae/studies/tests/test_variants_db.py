@@ -87,7 +87,7 @@ def test_get_invalid(variants_db_fixture: VariantsDb) -> None:
 
 def test_get_all(variants_db_fixture: VariantsDb) -> None:
     studies = variants_db_fixture.get_all_genotype_data()
-    assert len(studies) == 4
+    assert len(studies) == 5
 
 
 def test_make_genotype_study(

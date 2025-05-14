@@ -1,0 +1,10 @@
+familyId	personId	dadId	momId	sex	status	role
+f1	f1.dad	0	0	1	unaffected	dad
+f1	f1.mom	0	0	2	unaffected	mom
+f1	f1.s1	f1.dad	f1.mom	2	unaffected	sib
+f1	f1.p1	f1.dad	f1.mom	1	affected	prb
+f1	f1.s2	f1.dad	f1.mom	2	affected	sib
+f2	f2.mom	0	0	2	unaffected	mom
+f2	f2.dad	0	0	1	unaffected	dad
+f2	f2.p1	f2.dad	f2.mom	1	affected	prb
+f2	f2.s1	f2.dad	f2.mom	2	unaffected	sib

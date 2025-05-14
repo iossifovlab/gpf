@@ -11,9 +11,9 @@ from dae.pheno_tool.tool import PhenoResult, PhenoTool
 from dae.variants.attributes import Sex
 
 
-def test_init_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
+def test_init_pheno_df(t4c8_study_1_pheno: PhenotypeStudy) -> None:
     pheno_tool = PhenoTool(
-        fake_phenotype_data,
+        t4c8_study_1_pheno,
     )
     pheno_df = pheno_tool.create_df(
         "i1.m1",
@@ -34,9 +34,9 @@ def test_init_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
 
 
 def test_init_empty_person_ids_normalize(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     pheno_df = pheno_tool.create_df(
         "i1.m1",
         person_ids=[],
@@ -45,56 +45,54 @@ def test_init_empty_person_ids_normalize(
     assert pheno_df is not None
 
 
-def test_init_nonexistent_measure(fake_phenotype_data: PhenotypeStudy) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+def test_init_nonexistent_measure(t4c8_study_1_pheno: PhenotypeStudy) -> None:
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     with pytest.raises(KeyError):
         pheno_tool.create_df("i1.??")
 
 
 def test_init_non_continuous_or_ordinal_measure(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     with pytest.raises(AssertionError):
-        pheno_tool.create_df("i1.m5")  # ordinal
-    with pytest.raises(AssertionError):
-        pheno_tool.create_df("i1.m9")  # raw
+        pheno_tool.create_df("i1.m5")  # categorical
 
 
-def test_init_with_person_ids(fake_phenotype_data: PhenotypeStudy) -> None:
+def test_init_with_person_ids(t4c8_study_1_pheno: PhenotypeStudy) -> None:
     pheno_tool = PhenoTool(
-        fake_phenotype_data,
+        t4c8_study_1_pheno,
     )
     pheno_df = pheno_tool.create_df(
         "i1.m1",
-        person_ids=["f1.p1", "f3.p1", "f5.p1", "f7.p1"],
+        person_ids=["p1", "p3", "p4", "p5", "p7"],
     )
 
     assert set(pheno_df["person_id"]) == {
-        "f1.p1", "f3.p1", "f5.p1", "f7.p1"}
+        "p1", "p3", "p4"}
 
 
-def test_init_normalize_measures(fake_phenotype_data: PhenotypeStudy) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+def test_init_normalize_measures(t4c8_study_1_pheno: PhenotypeStudy) -> None:
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     norm_measures_in = [
         {"measure_name": "??", "instrument_name": ""},
         {"measure_name": "m3", "instrument_name": ""},
-        {"measure_name": "m7", "instrument_name": "i1"},
+        {"measure_name": "iq", "instrument_name": "i1"},
     ]
 
     norm_measures = pheno_tool.init_normalize_measures(
-        "i1.m1", norm_measures_in,
+        "i1.m3", norm_measures_in,
     )
-    assert len(norm_measures) == 2
-    assert set(norm_measures) == {"i1.m3", "i1.m7"}
+    assert len(norm_measures) == 1
+    assert set(norm_measures) == {"i1.iq"}
     for measure_id in norm_measures:
-        assert fake_phenotype_data.has_measure(measure_id)
+        assert t4c8_study_1_pheno.has_measure(measure_id)
 
 
 def test_init_normalize_measures_non_continuous(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     norm_measures = [
         {"measure_name": "??", "instrument_name": ""},
         {"measure_name": "m5", "instrument_name": ""},
@@ -105,9 +103,9 @@ def test_init_normalize_measures_non_continuous(
 
 
 def test_get_normalize_measure_id_non_dict_measure(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     with pytest.raises(AssertionError):
         pheno_tool.get_normalize_measure_id(
             "i1.m1", ["measure"],  # type: ignore
@@ -123,9 +121,9 @@ def test_get_normalize_measure_id_non_dict_measure(
 
 
 def test_get_normalize_measure_id_measure_dict_no_keys(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     with pytest.raises(AssertionError):
         pheno_tool.get_normalize_measure_id(
             "i1.m1", {"measure_name": "something"},
@@ -137,9 +135,9 @@ def test_get_normalize_measure_id_measure_dict_no_keys(
 
 
 def test_get_normalize_measure_id_no_instrument_name(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     measure_id = pheno_tool.get_normalize_measure_id(
         "i1.m1",
         {"measure_name": "m3", "instrument_name": None},  # type: ignore
@@ -148,20 +146,20 @@ def test_get_normalize_measure_id_no_instrument_name(
 
 
 def test_get_normalize_measure_id_with_instrument_name(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     measure_id = pheno_tool.get_normalize_measure_id(
         "i1.m1",
-        {"measure_name": "m7", "instrument_name": "i1"},
+        {"measure_name": "age", "instrument_name": "i1"},
     )
-    assert measure_id == "i1.m7"
+    assert measure_id == "i1.age"
 
 
 def test_get_normalize_measure_id_same_measure(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     measure_id = pheno_tool.get_normalize_measure_id(
         "i1.m1",
         {"measure_name": "m1", "instrument_name": "i1"},
@@ -174,11 +172,11 @@ def test_get_normalize_measure_id_same_measure(
     [("??", "i1"), ("i1", "??"), ("??", "??"), ("??", None)],
 )
 def test_get_normalize_measure_id_non_existent(
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
     measure_name: str,
     instrument_name: str | None,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     measure_id = pheno_tool.get_normalize_measure_id(
         "i1.m1",
         {"measure_name": measure_name,
@@ -414,9 +412,9 @@ def test_calc_stats_empty_data() -> None:
 
 def test_calc(
     mocker: pytest_mock.MockerFixture,
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     variants = Counter(
         {
             "f4.p1": 1,
@@ -452,9 +450,9 @@ def test_calc(
 
 def test_calc_split_by_sex(
     mocker: pytest_mock.MockerFixture,
-    fake_phenotype_data: PhenotypeStudy,
+    t4c8_study_1_pheno: PhenotypeStudy,
 ) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     variants = Counter(
         {
             "f4.p1": 1,
@@ -494,8 +492,8 @@ def test_calc_split_by_sex(
     assert call_arg_sex_split is Sex.F
 
 
-def test_calc_empty_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+def test_calc_empty_pheno_df(t4c8_study_1_pheno: PhenotypeStudy) -> None:
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     variants = Counter(
         {
             "f4.p1": 1,
@@ -546,8 +544,8 @@ def test_calc_empty_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
     assert res_f.pvalue == "NA"  # type: ignore
 
 
-def test_calc_empty_variants(fake_phenotype_data: PhenotypeStudy) -> None:
-    pheno_tool = PhenoTool(fake_phenotype_data)
+def test_calc_empty_variants(t4c8_study_1_pheno: PhenotypeStudy) -> None:
+    pheno_tool = PhenoTool(t4c8_study_1_pheno)
     variants: Counter = Counter()
 
     pheno_df = pheno_tool.create_df("i1.m1")
@@ -571,8 +569,8 @@ def test_calc_empty_variants(fake_phenotype_data: PhenotypeStudy) -> None:
     assert res_m.positive_mean == 0
     assert res_m.positive_deviation == 0
     assert res_m.negative_count == res.negative_count - res_f.negative_count
-    assert res_m.negative_mean
-    assert res_m.negative_deviation
+    assert res_m.negative_mean == 0.0
+    assert res_m.negative_deviation == 0.0
     assert res_m.pvalue == "NA"  # type: ignore
 
     assert res_f.positive_count == 0
@@ -584,8 +582,8 @@ def test_calc_empty_variants(fake_phenotype_data: PhenotypeStudy) -> None:
     assert res_f.pvalue == "NA"  # type: ignore
 
 
-def test_normalize_df_by_empty_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    pheno_df = fake_phenotype_data.get_people_measure_values_df(
+def test_normalize_df_by_empty_df(t4c8_study_1_pheno: PhenotypeStudy) -> None:
+    pheno_df = t4c8_study_1_pheno.get_people_measure_values_df(
         ["i1.m1", "i1.m2"], person_ids=[],
     )
 

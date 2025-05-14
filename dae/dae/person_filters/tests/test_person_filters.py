@@ -4,7 +4,7 @@ from dae.gpf_instance import GPFInstance
 
 
 def test_family_filter(
-    fixtures_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
     filter_conf = {
         "source": "phenotype",
@@ -12,9 +12,9 @@ def test_family_filter(
         "role": "dad",
     }
     pedigree_filter = pf.make_pedigree_filter(filter_conf)
-    genotype_data = fixtures_gpf_instance.get_genotype_data("Study1")
+    genotype_data = t4c8_instance.get_genotype_data("t4c8_study_1")
     ids = pedigree_filter.apply(genotype_data.families, ["dad"])
-    assert ids == {"f1", "f3", "f6", "f11"}
+    assert ids == {"f1.1", "f1.3"}
 
 
 def test_make_pedigree_filter() -> None:
@@ -27,4 +27,4 @@ def test_make_pedigree_filter() -> None:
     assert isinstance(pedigree_filter, pf.FamilyFilter)
     assert isinstance(pedigree_filter.person_filter, pf.PersonFilterSet)
     assert pedigree_filter.person_filter.criteria == "pedigree_column"
-    assert pedigree_filter.person_filter.values == {"some_value"}  # noqa: PD011
+    assert pedigree_filter.person_filter.values == {"some_value"}

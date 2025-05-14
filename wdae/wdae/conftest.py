@@ -43,8 +43,6 @@ from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 
-pytest_plugins = ["dae_conftests.dae_conftests"]
-
 
 @pytest.fixture
 def hundred_users(

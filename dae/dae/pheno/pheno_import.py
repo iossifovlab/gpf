@@ -306,7 +306,7 @@ def get_gpf_instance(config: PhenoImportConfig) -> GPFInstance | None:
     try:
         return GPFInstance.build()
     except ValueError:
-        logger.exception("Cannot build GPF instance")
+        logger.warning("Cannot build GPF instance")
     return None
 
 

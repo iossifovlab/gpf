@@ -32,6 +32,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
     init_test_gpf_instance_genomic_context_plugin,
 )
+from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
 from dae.testing import (
@@ -47,8 +48,6 @@ from dae.tools.generate_denovo_gene_sets import (
 )
 
 logger = logging.getLogger(__name__)
-
-pytest_plugins = ["dae_conftests.dae_conftests"]
 
 
 @pytest.fixture
@@ -184,7 +183,7 @@ def liftover_grr_fixture(
 def setup_t4c8_grr(
     root_path: pathlib.Path,
 ) -> GenomicResourceRepo:
-    repo_path = root_path / "t4c8_grr"
+    repo_path = root_path
     t4c8_genome(repo_path)
     t4c8_genes(repo_path)
 
@@ -249,7 +248,7 @@ def setup_t4c8_grr(
 def setup_t4c8_instance(
     root_path: pathlib.Path,
 ) -> GPFInstance:
-    t4c8_grr = setup_t4c8_grr(root_path)
+    t4c8_grr = setup_t4c8_grr(root_path / "t4c8_grr")
 
     instance_path = root_path / "gpf_instance"
 
@@ -300,6 +299,7 @@ def setup_t4c8_instance(
 
     _t4c8_study_1(root_path, gpf_instance)
     _t4c8_study_2(root_path, gpf_instance)
+    _t4c8_study_3(root_path, gpf_instance)
     _t4c8_study_4(root_path, gpf_instance)
     _t4c8_dataset(gpf_instance)
 
@@ -317,11 +317,10 @@ def t4c8_instance(
     return setup_t4c8_instance(root_path)
 
 
-def _t4c8_study_1(
-    root_path: pathlib.Path,
-    t4c8_instance: GPFInstance,
-) -> None:
-    ped_path = setup_pedigree(
+def _t4c8_study_1_ped(
+        root_path: pathlib.Path,
+) -> pathlib.Path:
+    return setup_pedigree(
         root_path / "t4c8_study_1" / "pedigree" / "in.ped",
         """
 familyId personId dadId momId sex status role phenotype
@@ -334,6 +333,20 @@ f1.3     dad3     0     0     1   1      dad  unaffected
 f1.3     p3       dad3  mom3  2   2      prb  autism
 f1.3     s3       dad3  mom3  2   1      sib  unaffected
         """)
+
+
+@pytest.fixture
+def t4c8_study_1_ped(
+    tmp_path: pathlib.Path,
+) -> pathlib.Path:
+    return _t4c8_study_1_ped(tmp_path)
+
+
+def _t4c8_study_1(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> None:
+    ped_path = _t4c8_study_1_ped(root_path)
     vcf_path1 = setup_vcf(
         root_path / "t4c8_study_1" / "vcf" / "in.vcf.gz",
         """
@@ -482,6 +495,11 @@ def t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
 
 
 @pytest.fixture(scope="session")
+def t4c8_study_3(t4c8_instance: GPFInstance) -> GenotypeData:
+    return t4c8_instance.get_genotype_data("t4c8_study_3")
+
+
+@pytest.fixture(scope="session")
 def t4c8_study_4(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_study_4")
 
@@ -489,6 +507,11 @@ def t4c8_study_4(t4c8_instance: GPFInstance) -> GenotypeData:
 @pytest.fixture(scope="session")
 def t4c8_dataset(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_dataset")
+
+
+@pytest.fixture(scope="session")
+def t4c8_study_1_pheno(t4c8_instance: GPFInstance) -> PhenotypeData:
+    return t4c8_instance.get_phenotype_data("study_1_pheno")
 
 
 def _t4c8_default_study_config(instance_path: pathlib.Path) -> None:
@@ -964,6 +987,55 @@ chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0
     )
 
 
+def _t4c8_study_3(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> GenotypeData:
+    ped_path = setup_pedigree(
+        root_path / "t4c8_study_3" / "pedigree" / "in.ped",
+        """
+familyId personId dadId  momId  sex status role phenotype
+f3.1     mom3.1   0      0      2   1      mom  unaffected
+f3.1     dad3.1   0      0      1   1      dad  unaffected
+f3.1     p3.1     dad3.1 mom3.1 2   2      prb  autism
+f3.1     s3.1     dad3.1 mom3.1 1   1      sib  unaffected
+        """)
+    vcf_path1 = setup_vcf(
+        root_path / "t4c8_study_3" / "vcf" / "in.vcf.gz",
+        """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom4.1 dad4.1 p4.1 s4.1
+chr1   52  MIS  C   A   .    .      .    GT     0/1    0/0    0/1  0/0
+chr1   54  SYN  T   C   .    .      .    GT     0/1    0/0    0/0  0/0
+chr1   57  SYN  A   C   .    .      .    GT     0/1    0/0    0/1  0/0
+chr1   117 MIS  T   G   .    .      .    GT     0/1    0/0    0/1  0/0
+chr1   119 SYN  A   G   .    .      .    GT     0/1    0/0    0/0  0/1
+        """)
+
+    return vcf_study(
+        root_path,
+        "t4c8_study_3", ped_path, [vcf_path1],
+        t4c8_instance,
+        project_config_update={
+            "input": {
+                "vcf": {
+                    "denovo_mode": "ignore",
+                    "omission_mode": "ignore",
+                },
+            },
+        },
+        study_config_update={
+            "denovo_gene_sets": {
+                "enabled": False,
+            },
+        },
+    )
+
+
 @pytest.fixture(scope="session")
 def acgt_genome_38(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
     root_path = tmp_path_factory.mktemp("acgt_genome")
@@ -999,8 +1071,7 @@ def acgt_genome_19(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
 @pytest.fixture(scope="session")
 def t4c8_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("t4c8_grr")
-    t4c8_genome(root_path)
-    t4c8_genes(root_path)
+    setup_t4c8_grr(root_path)
     root_path2 = root_path / "2"
     t4c8_genome(root_path2)
     t4c8_genes(root_path2)

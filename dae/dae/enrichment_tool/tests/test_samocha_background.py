@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
 import pytest
 
 from dae.enrichment_tool.event_counters import (
@@ -42,12 +41,14 @@ def test_load(samocha_background: SamochaEnrichmentBackground) -> None:
 
 
 def test_calc_stats(
-    f1_trio: GenotypeData, samocha_background: SamochaEnrichmentBackground,
+    f1_trio: GenotypeData,
+    samocha_background: SamochaEnrichmentBackground,
 ) -> None:
     # pylint: disable=too-many-statements
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
+
     event_counter = EventsCounter()
 
     psc = f1_trio.get_person_set_collection("phenotype")

@@ -13,9 +13,9 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import IO, Any
 
-import matplotlib.ticker as ticker
 import numpy as np
 import yaml
+from matplotlib import ticker
 
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.statistics.base_statistic import Statistic

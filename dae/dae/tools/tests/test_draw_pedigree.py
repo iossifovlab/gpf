@@ -1,15 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-from collections.abc import Callable
 
 from dae.tools.draw_pedigree import main
 
 
 def test_draw_pedigree_simple(
-    tmp_path: pathlib.Path, fixture_dirname: Callable,
+    t4c8_study_1_ped: pathlib.Path,
+    tmp_path: pathlib.Path,
 ) -> None:
-    input_file = os.path.join(fixture_dirname("backends"), "trios2.ped")
+
+    input_file = str(t4c8_study_1_ped)
     output_file = str(tmp_path / "output.pdf")
     assert os.path.exists(input_file)
 

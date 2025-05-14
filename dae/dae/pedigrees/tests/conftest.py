@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable, cast
+import os
+from collections.abc import Callable
+from typing import cast
 
 import pytest
 
@@ -18,7 +20,18 @@ from dae.pedigrees.pedigrees import (
 )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
+def fixture_dirname() -> Callable:
+    def _fixture_dirname(filename: str) -> str:
+        return os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "fixtures",
+            filename)
+
+    return _fixture_dirname
+
+
+@pytest.fixture
 def member1() -> Person:
     return Person(
         person_id="id1",
@@ -33,7 +46,7 @@ def member1() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def member2() -> Person:
     return Person(
         person_id="mom1",
@@ -48,7 +61,7 @@ def member2() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def member3() -> Person:
     return Person(
         person_id="dad1",
@@ -63,7 +76,7 @@ def member3() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def member4() -> Person:
     return Person(
         person_id="id2",
@@ -78,7 +91,7 @@ def member4() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def member5() -> Person:
     return Person(
         person_id="mom2",
@@ -93,7 +106,7 @@ def member5() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def member6() -> Person:
     return Person(
         person_id="dad2",
@@ -108,7 +121,7 @@ def member6() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def member7() -> Person:
     return Person(
         person_id="id3",
@@ -121,42 +134,42 @@ def member7() -> Person:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def individual4(member4: Person) -> Individual:
     return Individual(member=member4)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def individual5(member5: Person) -> Individual:
     return Individual(member=member5)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def individual6(member6: Person) -> Individual:
     return Individual(member=member6)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def family1(member1: Person, member2: Person, member3: Person) -> Family:
     return Family.from_persons([member1, member2, member3])
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def family2(member4: Person, member5: Person, member6: Person) -> Family:
     return Family.from_persons([member4, member5, member6])
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def family3(member7: Person) -> Family:
     return Family.from_persons([member7])
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def sibship_unit2(individual4: Individual) -> SibshipUnit:
     return SibshipUnit({individual4})
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mating_unit2(
     individual5: Individual,
     individual6: Individual,
@@ -165,47 +178,38 @@ def mating_unit2(
     return MatingUnit(individual5, individual6, sibship_unit2)
 
 
-# @pytest.fixture(scope="function")
-# def people1(member1, member2, member3):
-#     return {"fam1;id1": member1, "fam1;mom1": member2, "fam1;dad1": member3}
-
-
-# @pytest.fixture(scope="function")
-# def people2(member4, member5, member6):
-#     return {"fam2;id2": member4, "fam2;mom2": member5, "fam2;dad2": member6}
-
-
-@pytest.fixture(scope="function")
+@pytest.fixture
 def layout2(
     individual4: Individual,
     individual5: Individual,
     individual6: Individual,
 ) -> Layout:
     layout = Layout()
-    layout._id_to_position = {
+    layout._id_to_position = {  # noqa: SLF001
         individual4: IndividualWithCoordinates(individual4, 100.0, 75.0),
         individual5: IndividualWithCoordinates(individual5, 50.0, 50.0),
         individual6: IndividualWithCoordinates(individual6, 50.0, 100.0),
     }
-    layout._individuals_by_rank = [[individual5, individual6], [individual4]]
+    layout._individuals_by_rank = [  # noqa: SLF001
+        [individual5, individual6], [individual4]]
     return layout
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def family_connections_from_family2(family2: Family) -> FamilyConnections:
     result = FamilyConnections.from_family(family2)
     assert result is not None
     return result
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def sandwich_instance_from_family2(
     family_connections_from_family2: FamilyConnections,
 ) -> SandwichInstance:
     return family_connections_from_family2.create_sandwich_instance()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def intervals_from_family2(
     sandwich_instance_from_family2: SandwichInstance,
 ) -> list[IntervalForVertex]:
@@ -214,7 +218,7 @@ def intervals_from_family2(
         SandwichSolver.solve(sandwich_instance_from_family2))
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def individuals_intervals_from_family2(
     intervals_from_family2: list[IntervalForVertex],
 ) -> list[IntervalForVertex]:
@@ -225,7 +229,7 @@ def individuals_intervals_from_family2(
     ]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def layout_from_family2(
     individuals_intervals_from_family2: list[IntervalForVertex],
 ) -> list[Layout]:
@@ -235,12 +239,11 @@ def layout_from_family2(
 @pytest.fixture(scope="session")
 def pedigree_test(fixture_dirname: Callable) -> FamiliesData:
     loader = FamiliesLoader(fixture_dirname("pedigrees/test.ped"))
-    families = loader.load()
-    return families
+    return loader.load()
 
 
 @pytest.fixture(scope="session")
-def fam1(pedigree_test: FamiliesData) -> Family:
+def fam1(pedigree_test: FamiliesData) -> Family:  # noqa: FURB118
     return pedigree_test["fam1"]
 
 

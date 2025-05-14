@@ -61,7 +61,7 @@ def test_storage_type(filesystem_genotype_storage):
     ],
 )
 def test_get_data_dir(
-    fixture_dirname, filesystem_genotype_storage, expected_path, build_path,
+    filesystem_genotype_storage, expected_path, build_path,
 ) -> None:
     assert filesystem_genotype_storage.get_data_dir(
         *build_path).endswith(expected_path)
@@ -80,7 +80,6 @@ def test_create_filesystem_storage(tmp_path) -> None:
 def test_create_filesystem_storage_missing_id(tmp_path) -> None:
     config = {
         "storage_type": "inmemory",
-        # "id": "aaaa",
         "dir": str(tmp_path),
     }
     with pytest.raises(
@@ -92,7 +91,7 @@ def test_create_filesystem_storage_missing_id(tmp_path) -> None:
 def test_create_missing_storage_type() -> None:
     config = {
         "id": "aaaa",
-        "dir": "/tmp/aaaa_filesystem",
+        "dir": "/ttt/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
@@ -104,7 +103,7 @@ def test_create_wrong_storage_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "filesystem2",
-        "dir": "/tmp/aaaa_filesystem",
+        "dir": "/ttt/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
