@@ -47,6 +47,12 @@
   align-items: center;
 }
 
+.instrument-cell,
+.measure-name-cell {
+  justify-content: center;
+  grid-auto-flow: column;
+}
+
 .header-button {
   padding: 0;
 }
@@ -85,4 +91,31 @@
   margin-top: 10px;
   font-size: 0.75em;
   font-weight: 500;
+}
+
+.description-tooltip {
+  background-color: transparent;
+  border: none;
+}
+
+.info-icon {
+  vertical-align: bottom;
+  color: #b4b4b4;
+}
+
+.info-icon:hover {
+  color: #9b9b9b;
+  cursor: pointer;
+}
+
+:host::ng-deep.tooltip-inner {
+  background-color: #6c6c6c !important;
+}
+
+:host::ng-deep.tooltip-arrow::before {
+  opacity: 50% !important;
+}
+
+:host::ng-deep.tooltip.show {
+  opacity: 100% !important;
 }

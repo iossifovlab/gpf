@@ -38,9 +38,6 @@ export class PhenoBrowserTableComponent implements OnInit {
 
   public ngOnInit(): void {
     this.columnsCount += 2*Object.keys(this.measures.regressionNames).length;
-    if (this.measures.hasDescriptions) {
-      this.columnsCount += 1;
-    }
     this.onResize();
   }
 
