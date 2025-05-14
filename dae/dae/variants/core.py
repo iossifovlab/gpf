@@ -27,6 +27,7 @@ class Allele:
         "ins": "small_insertion",
         "del": "small_deletion",
         "comp": "complex",
+        "complex": "complex",
         "cnv+": "large_duplication",
         "cnv-": "large_deletion",
         "cnv": "cnv",

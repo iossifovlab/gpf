@@ -368,7 +368,7 @@ class QueryTransformer:
             if inheritance_types & {"mendelian", "missing"}:
                 inheritance_types.add("unknown")
 
-            query = f"any({','.join(inheritance_types)})"
+            query = f"any([{','.join(inheritance_types)}])"
 
             self._add_inheritance_to_query(query, kwargs)
             kwargs.pop("inheritanceTypeFilter")

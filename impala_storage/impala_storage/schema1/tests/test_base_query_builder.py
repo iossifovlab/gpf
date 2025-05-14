@@ -145,7 +145,7 @@ def test_build_frequency_bin_heuristic(
     result = impala_query_builder._build_frequency_bin_heuristic(
         inheritance=[
             "not possible_denovo and not possible_omission",
-            "any(missing,omission,mendelian,denovo)",
+            "any([missing,omission,mendelian,denovo])",
         ],
         ultra_rare=None,
         real_attr_filter=[
