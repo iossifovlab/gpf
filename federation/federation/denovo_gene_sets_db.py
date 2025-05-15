@@ -34,7 +34,6 @@ class RemoteDenovoGeneSetsCollection:
     def get_all_gene_sets(
         self, denovo_gene_set_spec, _permitted_datasets=None,
     ):
-        # TODO FIXME Utilise permitted datasets
         return self.rest_client.get_denovo_gene_sets(
             denovo_gene_set_spec,
         )
@@ -44,9 +43,8 @@ class RemoteDenovoGeneSetsCollection:
         ):
         """Find and return a de Novo gene set."""
         logger.debug(
-            "going to ged remote gene set: %s; %s",
+            "going to get remote gene set: %s; %s",
             gene_set_id, denovo_gene_set_spec)
-        # TODO FIXME Utilise permitted datasets
         raw_gene_set = self.rest_client.get_denovo_gene_set(
             gene_set_id, denovo_gene_set_spec).split("\n")
 
@@ -98,7 +96,6 @@ class RemoteDenovoGeneSetsDb:
             self._local_dgsdb.get_gene_set_descriptions(permitted_datasets),
         ]
         for collection in self.remote_denovo_gene_set_collections.values():
-            # TODO Implement permitted datasets
             result.append({  # noqa: PERF401
                 "desc": collection.collection_description,
                 "name": collection.collection_id,
