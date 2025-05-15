@@ -1,0 +1,9 @@
+histogram_config:
+  bins: 10
+  max: 1
+  min: 0
+  score: phastCons100way
+  x_scale: linear
+  y_scale: linear
+md5: c9d0597d6894782903a194617fc93a4d
+resource: hg38/TESTphastCons100way

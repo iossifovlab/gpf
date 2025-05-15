@@ -1,0 +1,45 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "view_range": [
+          0.0,
+          1.0
+        ],
+        "number_of_bins": 10,
+        "x_log_scale": false,
+        "y_log_scale": false,
+        "x_min_log": null
+      }
+    ],
+    "table": {
+      "config": {
+        "filename": "TESTphastCons100way.bedGraph.gz",
+        "format": "tabix",
+        "header_mode": "none",
+        "chrom": {
+          "index": 0
+        },
+        "pos_begin": {
+          "index": 1
+        },
+        "pos_end": {
+          "index": 2
+        }
+      },
+      "files_md5": {
+        "TESTphastCons100way.bedGraph.gz": "e793fd5e2153ae2b35ecaa8efb595ab0",
+        "TESTphastCons100way.bedGraph.gz.tbi": "0cae8c2951f4c60954b94c0a0cb2e431"
+      }
+    }
+  },
+  "score_config": [
+    {
+      "id": "phastCons100way",
+      "type": "float",
+      "name": null,
+      "index": 3,
+      "na_values": "['', '.', 'NA', 'nan']"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+    "affected": {
+        "LGDs": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {
+                "PLEKHN1": [
+                    "f2",
+                    "f4"
+                ],
+                "SAMD11": [
+                    "f2",
+                    "f4"
+                ]
+            }
+        },
+        "Missense": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        },
+        "Synonymous": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {
+                "SAMD11": [
+                    "f4"
+                ]
+            }
+        }
+    },
+    "unaffected": {
+        "LGDs": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        },
+        "Missense": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        },
+        "Synonymous": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        }
+    }
+}

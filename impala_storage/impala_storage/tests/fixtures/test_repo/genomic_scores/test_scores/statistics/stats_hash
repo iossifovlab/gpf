@@ -1,0 +1,67 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "view_range": [
+          0,
+          1
+        ],
+        "number_of_bins": 101,
+        "x_log_scale": false,
+        "y_log_scale": true,
+        "x_min_log": null
+      },
+      {
+        "view_range": [
+          0,
+          1
+        ],
+        "number_of_bins": 101,
+        "x_log_scale": false,
+        "y_log_scale": true,
+        "x_min_log": null
+      },
+      {
+        "view_range": [
+          0,
+          1
+        ],
+        "number_of_bins": 101,
+        "x_log_scale": false,
+        "y_log_scale": true,
+        "x_min_log": null
+      }
+    ],
+    "table": {
+      "config": {
+        "filename": "table.txt"
+      },
+      "files_md5": {
+        "table.txt": "0de608bb0038128685f7bd88a91b70f1"
+      }
+    }
+  },
+  "score_config": [
+    {
+      "id": "score_raw_rankscore",
+      "type": "float",
+      "name": null,
+      "index": 3,
+      "na_values": "['', '.', 'NA', 'nan']"
+    },
+    {
+      "id": "score_raw",
+      "type": "float",
+      "name": null,
+      "index": 4,
+      "na_values": "['', '.', 'NA', 'nan']"
+    },
+    {
+      "id": "score_phred",
+      "type": "float",
+      "name": null,
+      "index": 5,
+      "na_values": "['', '.', 'NA', 'nan']"
+    }
+  ]
+}

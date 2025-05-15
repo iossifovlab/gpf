@@ -1,0 +1,692 @@
+- config:
+    default_annotation:
+    - name: cadd_raw
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_raw
+    - name: cadd_phred
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_phred
+    scores:
+    - desc: ''
+      id: cadd_raw
+      index: 4
+      type: float
+    - desc: ''
+      id: cadd_phred
+      index: 5
+      type: float
+    table:
+      alternative:
+        index: 3
+      chrom:
+        index: 0
+      filename: CADD.bedgraph.gz
+      format: tabix
+      header_mode: none
+      pos_begin:
+        index: 1
+      reference:
+        index: 2
+    type: np_score
+  id: hg19/CADD
+  manifest:
+  - md5: 9499e8511a30d7445ec973cae9726920
+    name: CADD.bedgraph.gz
+    size: 18459035
+  - md5: 5d95f08840be7f0f6fef13a5157d7f47
+    name: CADD.bedgraph.gz.tbi
+    size: 670
+  - md5: 981f7738a0642ac053aba0d35e8b7b02
+    name: genomic_resource.yaml
+    size: 592
+  - md5: a23388082a0fa5369309f5bf96d8894e
+    name: index.html
+    size: 2182
+  - md5: 87ccbd501bf64e37ce042a397788c489
+    name: statistics/histogram_cadd_phred.png
+    size: 18985
+  - md5: 1d58f89f7ddafd24257a121991cc41e9
+    name: statistics/histogram_cadd_phred.yaml
+    size: 2438
+  - md5: 231662831f12feee6e6f66845a4d6cea
+    name: statistics/histogram_cadd_raw.png
+    size: 19533
+  - md5: c4dfbbfa8419a8974e4a2cb6c54ae3a5
+    name: statistics/histogram_cadd_raw.yaml
+    size: 2646
+  - md5: db8b1ed3a3902de4aa910f4f7948b93f
+    name: statistics/stats_hash
+    size: 876
+  version: '0'
+- config:
+    filename: refGene201309.txt
+    format: default
+    meta:
+      description: '## refGene gene models from 2013-09
+
+
+        Old gene models used by GPF up to 2019-02.
+
+        '
+      labels: null
+    type: gene_models
+  id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
+  manifest:
+  - md5: ed67a675e3f2d06a4f0736ca535a00f9
+    name: genomic_resource.yaml
+    size: 192
+  - md5: a38df40debc0ab3133dce654e546c7ac
+    name: index.html
+    size: 2193
+  - md5: a42701941f92c7b999a4f8f26e4a3a47
+    name: refGene201309.txt
+    size: 3761
+  - md5: 3db4974ae5244ba34db2aa8ce4d40ca5
+    name: statistics/stats.yaml
+    size: 615
+  - md5: 9e80b34285fd49637b6ccf862fbcbf38
+    name: statistics/stats_hash
+    size: 127
+  version: '0'
+- config:
+    PARS:
+      X:
+      - X:60001-2699520
+      - X:154931044-155260560
+      Y:
+      - Y:10001-2649520
+      - Y:59034050-59363566
+    chrom_prefix: ''
+    filename: chrAll.fa
+    meta:
+      description: '## HG19 Reference Genome Fragment
+
+
+        Default HG19 reference genome used by GPF
+
+        '
+      labels: null
+    type: genome
+  id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+  manifest:
+  - md5: bc006bda05a3f23930a65f9d566a42a2
+    name: chrAll.fa
+    size: 915148
+  - md5: e195bffa62daa1d82e341f0bd4fb72ad
+    name: chrAll.fa.fai
+    size: 62
+  - md5: bd5e747b25ab3eca4dafef208c8c2cbf
+    name: genomic_resource.yaml
+    size: 302
+  - md5: 762c9d2a999e68a7a4ff7f8800ebb8a1
+    name: index.html
+    size: 3104
+  - md5: 70c82fe72004009eee59d3ffabd254e8
+    name: statistics/1_statistic.yaml
+    size: 389
+  - md5: d80e7bcdc1efb96abf51139478f8b7a6
+    name: statistics/2_statistic.yaml
+    size: 390
+  - md5: b7aff904faff32a2fb53ab9712aadd3b
+    name: statistics/X_statistic.yaml
+    size: 382
+  - md5: 6960243370fd466a175e064cc9e123e0
+    name: statistics/reference_genome_statistic.yaml
+    size: 820
+  - md5: ba67778c5b7dd39d68fe120945cf8ab4
+    name: statistics/stats_hash
+    size: 54
+  version: '0'
+- config:
+    default_annotation:
+    - name: mpc
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: MPC
+    scores:
+    - desc: ''
+      histogram:
+        number_of_bins: 100
+        type: number
+        view_range:
+          max: 5.0
+          min: 0.0
+        y_log_scale: true
+      id: MPC
+      name: MPC
+      type: float
+    table:
+      alternative:
+        name: alt
+      chrom:
+        name: chrom
+      filename: fordist_constraint_official_mpc_values_v2.txt.gz
+      format: tabix
+      pos_begin:
+        name: pos
+      reference:
+        name: ref
+    type: np_score
+  id: hg19/MPC
+  manifest:
+  - md5: cd8f6f35577bc24f6b56c6ff1c06173a
+    name: fordist_constraint_official_mpc_values_v2.txt.gz
+    size: 417277
+  - md5: 5bb77f8efe6ed1b01b3422a3b5070307
+    name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
+    size: 257
+  - md5: 236019c42a2792203d240c041485cacf
+    name: genomic_resource.yaml
+    size: 665
+  - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
+    name: histograms/MPC.csv
+    size: 1481
+  - md5: 8c7946a6dd1d964550e497d68675aeb8
+    name: histograms/MPC.metadata.yaml
+    size: 137
+  - md5: 558273e259dee3322accc97e92e9d7d1
+    name: histograms/MPC.png
+    size: 8667
+  - md5: c559c7612e8019f98f04ef793bab6376
+    name: index.html
+    size: 2714
+  - md5: d8c9ca050dd58e0f3e35ab7132500511
+    name: statistics/histogram_MPC.png
+    size: 10251
+  - md5: 9448bfc27262aeebe9ced0cc07a28ec2
+    name: statistics/histogram_MPC.yaml
+    size: 1907
+  - md5: 46b6ba97f29186273fa7eee3451ca6d2
+    name: statistics/stats_hash
+    size: 1011
+  version: '0'
+- config:
+    default_annotation:
+    - name: score0
+      position_aggregator: max
+      source: score0
+    - name: score2
+      position_aggregator: max
+      source: score2
+    - name: score4
+      position_aggregator: max
+      source: score4
+    scores:
+    - id: score0
+      name: score0
+      type: float
+    - id: score2
+      name: score2
+      type: float
+    - id: score4
+      name: score4
+      type: float
+    table:
+      chrom:
+        name: CHROM
+      filename: scores1.tsv.gz
+      format: tabix
+      pos_begin:
+        name: POS
+      pos_end:
+        name: POS
+    type: position_score
+  id: hg19/internal/scores1
+  manifest:
+  - md5: d910e8f15582ae411ffc887e363f0825
+    name: genomic_resource.yaml
+    size: 572
+  - md5: 9e4e0eebedba0a739664dd611bf80ea3
+    name: index.html
+    size: 2676
+  - md5: 093c47435b7440def543b99758a92afe
+    name: scores1.tsv.gz
+    size: 367
+  - md5: 7078e1403c7c4d627a1b7c5370f8ec21
+    name: scores1.tsv.gz.conf
+    size: 352
+  - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
+    name: scores1.tsv.gz.tbi
+    size: 1350
+  - md5: 84ad8e6ef23239a2c4f938ad84c18e59
+    name: statistics/histogram_score0.png
+    size: 10808
+  - md5: 57d35c090ec0844fb824fb78cfa90b12
+    name: statistics/histogram_score0.yaml
+    size: 2048
+  - md5: 837ad0f874c6148f63c94baba837d552
+    name: statistics/histogram_score2.png
+    size: 10741
+  - md5: 6606c9e0ed42caf89b36bc13cbee1e12
+    name: statistics/histogram_score2.yaml
+    size: 2305
+  - md5: b0497e19fe5d48ce92ee42d882a4f93c
+    name: statistics/histogram_score4.png
+    size: 10880
+  - md5: 34cf6144b0ca9ac192234765eccb09d6
+    name: statistics/histogram_score4.yaml
+    size: 2360
+  - md5: c6467e80ff5bdad646bb001fbf984415
+    name: statistics/stats_hash
+    size: 946
+  version: '0'
+- config:
+    default_annotation:
+    - name: score0_incomplete_cov
+      position_aggregator: max
+      source: score0_incomplete_cov
+    scores:
+    - id: score0_incomplete_cov
+      name: score0
+      type: float
+    table:
+      chrom:
+        name: CHROM
+      filename: scores_incomplete_coverage.tsv.gz
+      format: tabix
+      pos_begin:
+        name: POS
+      pos_end:
+        name: POS
+    type: position_score
+  id: hg19/internal/scores_incomplete_coverage
+  manifest:
+  - md5: 172f04900d00d664ea30eb92777b44b0
+    name: genomic_resource.yaml
+    size: 405
+  - md5: d45c5de77e57e2309a430a2e59552920
+    name: index.html
+    size: 2356
+  - md5: 28ee47e15cc15c1b8881cd453cdefc7d
+    name: scores_incomplete_coverage.tsv.gz
+    size: 176
+  - md5: 0430149f831b429fbf64235468576191
+    name: scores_incomplete_coverage.tsv.gz.conf
+    size: 292
+  - md5: f77946424457cdc1e16ae23ba2062b1d
+    name: scores_incomplete_coverage.tsv.gz.tbi
+    size: 987
+  - md5: d2c4205214430cf691304aba6dbe2f51
+    name: statistics/histogram_score0_incomplete_cov.png
+    size: 17129
+  - md5: 021f3bdf01911638b8a29764a470a307
+    name: statistics/histogram_score0_incomplete_cov.yaml
+    size: 2155
+  - md5: 64581a11e801b0f4dafcc8be04092c97
+    name: statistics/stats_hash
+    size: 724
+  version: '0'
+- config:
+    default_annotation:
+    - dest: phastCons100
+      position_aggregator: max
+      source: phastCons100
+    scores:
+    - desc: phastCons100
+      histogram:
+        number_of_bins: 10
+        type: number
+        view_range:
+          max: 1.0
+          min: 0.0
+      id: phastCons100
+      index: 3
+      type: float
+    table:
+      chrom:
+        index: 0
+      filename: phastCons100.bedGraph.gz
+      format: tabix
+      header_mode: none
+      pos_begin:
+        index: 1
+      pos_end:
+        index: 2
+    type: position_score
+  id: hg19/phastCons100
+  manifest:
+  - md5: dae62103e1256179406f5b4e086c8d53
+    name: genomic_resource.yaml
+    size: 516
+  - md5: fa97914cdea92bbbe74440f757f3c285
+    name: index.html
+    size: 1979
+  - md5: 00c69ea8fae8ab8445ff64616b8cc07a
+    name: phastCons100.bedGraph.gz
+    size: 2556019
+  - md5: c2c4b109900b9f5ea940563bab3a8ad7
+    name: phastCons100.bedGraph.gz.tbi
+    size: 622
+  - md5: 3c9ab9be979eb4b43ebf07b1aad713e0
+    name: statistics/histogram_phastCons100.png
+    size: 14406
+  - md5: 286cd0a9c0d64cc61f8cac80f57efc9f
+    name: statistics/histogram_phastCons100.yaml
+    size: 401
+  - md5: 53f2bc315744f46ab2ae111f28b24ec6
+    name: statistics/stats_hash
+    size: 902
+  version: '0'
+- config:
+    filename: refSeq_20200330.txt
+    format: refseq
+    meta:
+      description: '## refSeq gene models for HG38 from 2020-03
+
+
+        Default gene models used by GPF for HG38.
+
+        '
+      labels: null
+    type: gene_models
+  id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+  manifest:
+  - md5: 81951889cca5c55bb9a63b8d8aff00a3
+    name: genomic_resource.yaml
+    size: 200
+  - md5: 6a9aa91c85357dd20e4b4ef3d6887918
+    name: index.html
+    size: 2130
+  - md5: 05d8bbd9616407e862d82593d5fd1756
+    name: refSeq_20200330.txt
+    size: 30558
+  - md5: 501c1fc12f4c8d03425c52e6e7db5ed9
+    name: statistics/stats.yaml
+    size: 474
+  - md5: fca08b9d5b481f89f0f04ea303d5bea7
+    name: statistics/stats_hash
+    size: 128
+  version: '0'
+- config:
+    PARS:
+      X:
+      - chrX:10000-2781479
+      - chrX:155701382-156030895
+      Y:
+      - chrY:10000-2781479
+      - chrY:56887902-57217415
+    chrom_prefix: ''
+    filename: GRCh38_full_analysis_set_plus_decoy_hla.fa
+    meta:
+      description: "## HG38 Reference Genome \n\nDefault HG38 reference genome used\
+        \ by GPF\n"
+      labels: null
+    type: genome
+  id: hg38/GRCh38-hg38/genome
+  manifest:
+  - md5: e00929f659f77c5d04d0a881cf6f3033
+    name: GRCh38_full_analysis_set_plus_decoy_hla.fa
+    size: 2840225
+  - md5: 2e3b716901f9da348a3ea6a424d54006
+    name: GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
+    size: 50
+  - md5: b151ecdcef68d9014ab78823b5147711
+    name: genomic_resource.yaml
+    size: 339
+  - md5: d2b8b5b7c69cecbf91e9bbf25ea778b7
+    name: index.html
+    size: 3169
+  - md5: 7ee8ab1286a0dd818843b2a28bcf39cd
+    name: statistics/chr1_statistic.yaml
+    size: 401
+  - md5: fdfeaa0a99e580414c5b0c20306a744c
+    name: statistics/chr2_statistic.yaml
+    size: 401
+  - md5: eb2b395af839a16a36f003d69e252aad
+    name: statistics/reference_genome_statistic.yaml
+    size: 771
+  - md5: 160e5784ac6c6e266ab261b64c4ae02a
+    name: statistics/stats_hash
+    size: 54
+  version: '0'
+- config:
+    default_annotation:
+    - name: cadd_raw
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_raw
+    - name: cadd_phred
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_phred
+    scores:
+    - desc: ''
+      id: cadd_raw
+      name: RawScore
+      type: float
+    - desc: ''
+      id: cadd_phred
+      name: PHRED
+      type: float
+    table:
+      alternative:
+        name: Alt
+      chrom:
+        name: Chrom
+      filename: TESTCADD.tsv.gz
+      format: tabix
+      pos_begin:
+        name: Pos
+      reference:
+        name: Ref
+    type: np_score
+  id: hg38/TESTCADD
+  manifest:
+  - md5: 18001f318b5e9226d4ce5fd16613ac43
+    name: TESTCADD.tsv.gz
+    size: 639
+  - md5: 64ea2e483af33f1ad35d771653889e1d
+    name: TESTCADD.tsv.gz.tbi
+    size: 99
+  - md5: 2e49cb076c89144d2512f2a000144618
+    name: genomic_resource.yaml
+    size: 587
+  - md5: a2e6a3fbf4fea75f8623e81acac78067
+    name: index.html
+    size: 2178
+  - md5: 163b2029a6ca94d95c562bf983bf4efb
+    name: statistics/histogram_cadd_phred.png
+    size: 14459
+  - md5: c2109db906033275c0072492f5ba168d
+    name: statistics/histogram_cadd_phred.yaml
+    size: 2035
+  - md5: 251b835239a6d5e8e2475cc6a315dbd2
+    name: statistics/histogram_cadd_raw.png
+    size: 14290
+  - md5: 18f45d8afd87d6e61886a3b95630887d
+    name: statistics/histogram_cadd_raw.yaml
+    size: 2136
+  - md5: 51d838d5ad53d1d8d4d7c657a097d5c2
+    name: statistics/stats_hash
+    size: 871
+  version: '0'
+- config:
+    default_annotation:
+    - name: alt_freq
+      source: altFreq
+    - name: alt_freq2
+      source: altFreq2
+    scores:
+    - desc: ''
+      id: altFreq
+      name: all.altFreq
+      type: float
+    - desc: ''
+      id: altFreq2
+      name: all.altFreq2
+      type: float
+    table:
+      alternative:
+        name: alt
+      chrom:
+        name: chr
+      filename: TESTFreq.tsv.gz
+      format: tabix
+      pos_begin:
+        name: position
+      reference:
+        name: ref
+    type: allele_score
+  id: hg38/TESTFreq
+  manifest:
+  - md5: 5220b08aa6081a753955e8b5cdf3566c
+    name: TESTFreq.tsv.gz
+    size: 206
+  - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
+    name: TESTFreq.tsv.gz.tbi
+    size: 100
+  - md5: 4804693a90df0092106684d6de246e13
+    name: genomic_resource.yaml
+    size: 530
+  - md5: d632c45a63e5868979f86cbe58d914dc
+    name: index.html
+    size: 2171
+  - md5: 69ce8e06e522f489dc46d1e7be31f730
+    name: statistics/histogram_altFreq.png
+    size: 10546
+  - md5: e642f11ea6bafabb05bdbaee45f2c8f7
+    name: statistics/histogram_altFreq.yaml
+    size: 2129
+  - md5: 14201488aa8dced7cd30f6473d12dc1a
+    name: statistics/histogram_altFreq2.png
+    size: 10898
+  - md5: 6a5f32217b4b4877ed5f1249a9fef731
+    name: statistics/histogram_altFreq2.yaml
+    size: 2078
+  - md5: d8dc74534b10a1e751a2f7a335c3e128
+    name: statistics/stats_hash
+    size: 881
+  version: '0'
+- config:
+    default_annotation:
+    - name: test_score
+      position_aggregator: mean
+      source: test_score
+    scores:
+    - desc: ''
+      id: test_score
+      index: 3
+      position_aggregator: mean
+      type: float
+    table:
+      chrom:
+        index: 0
+      filename: scores.tsv.gz
+      format: tabix
+      header_mode: none
+      pos_begin:
+        index: 1
+      pos_end:
+        index: 2
+    type: position_score
+  id: hg38/TESTPosAgg
+  manifest:
+  - md5: 5f713bab1350bd5f41059b61deb56b40
+    name: genomic_resource.yaml
+    size: 408
+  - md5: 7fdcc63567b9131fb52bfb8ce2b663be
+    name: index.html
+    size: 1910
+  - md5: 590e48aff9382edfa3330a072c98c6c5
+    name: scores.tsv.gz
+    size: 107
+  - md5: 313f112e74853fa39dc6af0fa526b692
+    name: scores.tsv.gz.tbi
+    size: 99
+  - md5: f029658f1be0cb0b4cdbc49092d6fb90
+    name: statistics/histogram_test_score.png
+    size: 12257
+  - md5: c74dd0ec861a188bc0a392fe373c48d7
+    name: statistics/histogram_test_score.yaml
+    size: 1996
+  - md5: 119af567e2047dbf690811abce5551b7
+    name: statistics/stats_hash
+    size: 666
+  version: '0'
+- config:
+    default_annotation:
+    - name: phastCons100way
+      position_aggregator: max
+      source: phastCons100way
+    scores:
+    - desc: phastCons100way
+      histogram:
+        number_of_bins: 10
+        type: number
+        view_range:
+          max: 1.0
+          min: 0.0
+      id: phastCons100way
+      index: 3
+      position_aggregator: max
+      type: float
+    table:
+      chrom:
+        index: 0
+      filename: TESTphastCons100way.bedGraph.gz
+      format: tabix
+      header_mode: none
+      pos_begin:
+        index: 1
+      pos_end:
+        index: 2
+    type: position_score
+  id: hg38/TESTphastCons100way
+  manifest:
+  - md5: e793fd5e2153ae2b35ecaa8efb595ab0
+    name: TESTphastCons100way.bedGraph.gz
+    size: 261
+  - md5: 0cae8c2951f4c60954b94c0a0cb2e431
+    name: TESTphastCons100way.bedGraph.gz.tbi
+    size: 169
+  - md5: 7e3752d55d184032d556bceb3242ddca
+    name: genomic_resource.yaml
+    size: 666
+  - md5: d616082ad56b26177b0aa40c08d27f3f
+    name: histograms/phastCons100way.csv
+    size: 143
+  - md5: 80bcd5f88e69a7014e2263d034fe4cef
+    name: histograms/phastCons100way.metadata.yaml
+    size: 181
+  - md5: 6173d0d671742284f909423144c4f07a
+    name: histograms/phastCons100way.png
+    size: 8178
+  - md5: 7615d41021477d65e701736e18bcb6cb
+    name: index.html
+    size: 3062
+  - md5: 56feb878ed78769d5200702392b8e4b7
+    name: scores/phastCons100way.yaml
+    size: 583
+  - md5: 31c1b2ec189cbc57ce3dd0e46855911f
+    name: statistics/histogram_phastCons100way.png
+    size: 11865
+  - md5: c73ad2e03b5fa160efbaf5088fbc7ce9
+    name: statistics/histogram_phastCons100way.yaml
+    size: 369
+  - md5: ea8f397df81de4e4107f4215fb09a8a4
+    name: statistics/stats_hash
+    size: 926
+  version: '0'
+- config:
+    chrom_prefix:
+      target_coordinates:
+        del_prefix: chr
+    filename: hg38ToHg19.over.chain.gz
+    type: liftover_chain
+  id: hg38/hg38tohg19
+  manifest:
+  - md5: 015277958aceaece752333016fa82695
+    name: genomic_resource.yaml
+    size: 114
+  - md5: ff3031d93792f4cbb86af44055efd903
+    name: hg38ToHg19.over.chain.gz
+    size: 1246411
+  - md5: c424e8a9e345b29d73f9ab9cb8ce8057
+    name: index.html
+    size: 1449
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
+  version: '0'

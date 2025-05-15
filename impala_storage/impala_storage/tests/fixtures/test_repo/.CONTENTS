@@ -1,0 +1,287 @@
+- config:
+    filename: LGD.csv
+    scores:
+    - desc: LGD rank
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: false
+      id: LGD_rank
+    - desc: LGD score
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: true
+      id: LGD_score
+    type: gene_score
+  id: gene_scores/LGD
+  manifest:
+  - md5: 4e9f0967f510d53285a51dfc33b4d06c
+    name: LGD.csv
+    size: 509716
+  - md5: 558068485b8e3fe4911db03dad2dd6f3
+    name: genomic_resource.yaml
+    size: 336
+  - md5: 321486c0074821e59fa0031adf2d9f3a
+    name: index.html
+    size: 6337
+  - md5: 893503f1e1bdafaa82191346896c97b8
+    name: statistics/histogram_LGD_rank.png
+    size: 14066
+  - md5: 3b3a206d962605f50291c24efa8a3e44
+    name: statistics/histogram_LGD_rank.yaml
+    size: 3729
+  - md5: 0ee4123b56218c55c4ac0e7062b8f9db
+    name: statistics/histogram_LGD_score.png
+    size: 11872
+  - md5: 7a892ebccd47128588b1b0a4d3de685f
+    name: statistics/histogram_LGD_score.yaml
+    size: 3939
+  - md5: 6afbc2ae7adff413efd3feab2bb0d2d5
+    name: statistics/stats_hash
+    size: 580
+  version: '0'
+- config:
+    filename: RVIS.csv
+    scores:
+    - desc: RVIS rank
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: false
+      id: RVIS_rank
+    - desc: RVIS
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: true
+      id: RVIS
+    type: gene_score
+  id: gene_scores/RVIS
+  manifest:
+  - md5: 75e39071ae36cc03ca06b0960e110d61
+    name: RVIS.csv
+    size: 241
+  - md5: 23c9655d86de1c4285bb449f2127eeb0
+    name: genomic_resource.yaml
+    size: 329
+  - md5: d6779367728301bff8dd830db8de8848
+    name: index.html
+    size: 6293
+  - md5: af1ae8ba391858e72691f783ace92907
+    name: statistics/histogram_RVIS.png
+    size: 12476
+  - md5: 32cb1745f552cc20f37fd71a0b8144cd
+    name: statistics/histogram_RVIS.yaml
+    size: 2663
+  - md5: 0227f669e73b667f8a98564ee9041e76
+    name: statistics/histogram_RVIS_rank.png
+    size: 11564
+  - md5: 65af8f9cfd5c04067159a00e81a7256e
+    name: statistics/histogram_RVIS_rank.yaml
+    size: 3277
+  - md5: defd5b11b96eb4fefa327498d68ae353
+    name: statistics/stats_hash
+    size: 572
+  version: '0'
+- config:
+    filename: SFARI.csv
+    scores:
+    - desc: SFARI gene score
+      histogram:
+        number_of_bins: 8
+        type: number
+        x_log_scale: false
+        y_log_scale: false
+      id: SFARI_gene_score
+    type: gene_score
+  id: gene_scores/SFARI_gene_score
+  manifest:
+  - md5: ad0c332093f78227a14b9d2ce7e4991d
+    name: SFARI.csv
+    size: 9275
+  - md5: 3892185823463e11633de27c9fd51bab
+    name: genomic_resource.yaml
+    size: 205
+  - md5: 9354feba28aa505034db5e5190b4ccfa
+    name: index.html
+    size: 5104
+  - md5: a94d3f944981943e51d259e5e347fdc1
+    name: statistics/histogram_SFARI_gene_score.png
+    size: 13245
+  - md5: cb2bcc758067527c68f739eef8f03498
+    name: statistics/histogram_SFARI_gene_score.yaml
+    size: 320
+  - md5: 741f09828ae2f5711e94a504c7b87241
+    name: statistics/stats_hash
+    size: 331
+  version: '0'
+- config:
+    directory: GeneSets
+    format: directory
+    id: main
+    type: gene_set
+    web_format_str: 'key| (|count|): |desc'
+    web_label: Main
+  id: gene_sets/main
+  manifest:
+  - md5: e2f399a1067bc25e39097330dd83224a
+    name: GeneSets/CHD8_target_genes.txt
+    size: 233
+  - md5: 0c283624811639f94feb70eaecd6e1f3
+    name: GeneSets/FMRP_Darnell.txt
+    size: 175
+  - md5: e0febb3a88fbdbe767ec91a92d35b754
+    name: GeneSets/main_candidates.txt
+    size: 89
+  - md5: af9a0254eb08c354abbd419a050fa2e3
+    name: genomic_resource.yaml
+    size: 118
+  - md5: 8d10d14fd660e4b308ee13c4124dcdec
+    name: index.html
+    size: 3235
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
+  version: '0'
+- config:
+    filename: test-gmt.gmt
+    format: gmt
+    id: test_gmt
+    type: gene_set
+    web_format_str: key| (|count|)
+    web_label: Test GMT
+  id: gene_sets/test_gmt
+  manifest:
+  - md5: 108e781ddcbbefa72cd70d58fae46ccd
+    name: genomic_resource.yaml
+    size: 116
+  - md5: b955761369a3f2ade97984b95857c73d
+    name: index.html
+    size: 2652
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
+  - md5: 6ed968f512c03b7c6187381bfcb865dd
+    name: test-gmt.gmt
+    size: 118
+  version: '0'
+- config:
+    filename: test-map.txt
+    format: map
+    id: test_mapping
+    type: gene_set
+    web_format_str: key| (|count|)
+    web_label: Test mapping
+  id: gene_sets/test_mapping
+  manifest:
+  - md5: a2c6e1efdf34070d9b890eca85260b57
+    name: genomic_resource.yaml
+    size: 124
+  - md5: abf5307048d501f55f83f8f1e08c15b5
+    name: index.html
+    size: 2918
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
+  - md5: ecac75f4e2a086c19a979cfa2948f8d7
+    name: test-map.txt
+    size: 54
+  - md5: ca4985bb338250b762ec2d59df039018
+    name: test-mapnames.txt
+    size: 58
+  version: '0'
+- config:
+    default_annotation:
+    - name: score_raw_rankscore
+      source: score_raw_rankscore
+    - name: score_raw
+      source: score_raw
+    - name: score_phred
+      source: score_phred
+    scores:
+    - desc: SCORE raw rankscore
+      histogram:
+        number_of_bins: 101
+        type: number
+        view_range:
+          max: 1
+          min: 0
+        x_log_scale: false
+        y_log_scale: true
+      id: score_raw_rankscore
+      index: 3
+      type: float
+    - desc: SCORE raw
+      histogram:
+        number_of_bins: 101
+        type: number
+        view_range:
+          max: 1
+          min: 0
+        x_log_scale: false
+        y_log_scale: true
+      id: score_raw
+      index: 4
+      type: float
+    - desc: SCORE phred
+      histogram:
+        number_of_bins: 101
+        type: number
+        view_range:
+          max: 1
+          min: 0
+        x_log_scale: false
+        y_log_scale: true
+      id: score_phred
+      index: 5
+      type: float
+    table:
+      filename: table.txt
+    type: position_score
+  id: genomic_scores/test_scores
+  manifest:
+  - md5: 1fb791cb6f17a5db2d43cbb1dec8d8fa
+    name: genomic_resource.yaml
+    size: 963
+  - md5: 94608545a04c4b723ef0f33e24b50328
+    name: histograms/score_phred.csv
+    size: 1299
+  - md5: 2add942caf1ad65c2392f3c83b294016
+    name: histograms/score_raw.csv
+    size: 2074
+  - md5: e8905f626e885999e612e1f120461db4
+    name: histograms/score_raw_rankscore.csv
+    size: 1249
+  - md5: d41d8cd98f00b204e9800998ecf8427e
+    name: index.html
+    size: 0
+  - md5: 7e174dd431c46bf4cb2d06a0f4794a4d
+    name: statistics/histogram_score_phred.png
+    size: 9858
+  - md5: 7687d9e3ac906c077d08baa4ceaf744c
+    name: statistics/histogram_score_phred.yaml
+    size: 2759
+  - md5: 42bf6d34f14552ec5c84ce35ff1610e3
+    name: statistics/histogram_score_raw.png
+    size: 9606
+  - md5: 7687d9e3ac906c077d08baa4ceaf744c
+    name: statistics/histogram_score_raw.yaml
+    size: 2759
+  - md5: 350b20387ecedde39aa29a2897039e82
+    name: statistics/histogram_score_raw_rankscore.png
+    size: 11012
+  - md5: 7687d9e3ac906c077d08baa4ceaf744c
+    name: statistics/histogram_score_raw_rankscore.yaml
+    size: 2759
+  - md5: 09eeac597a0f1f32582dc7e63486084d
+    name: statistics/stats_hash
+    size: 1256
+  - md5: 0de608bb0038128685f7bd88a91b70f1
+    name: table.txt
+    size: 45
+  version: '0'

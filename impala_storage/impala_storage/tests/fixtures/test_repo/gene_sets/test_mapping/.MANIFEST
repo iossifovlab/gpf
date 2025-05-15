@@ -1,0 +1,15 @@
+- md5: a2c6e1efdf34070d9b890eca85260b57
+  name: genomic_resource.yaml
+  size: 124
+- md5: abf5307048d501f55f83f8f1e08c15b5
+  name: index.html
+  size: 2918
+- md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+  name: statistics/stats_hash
+  size: 11
+- md5: ecac75f4e2a086c19a979cfa2948f8d7
+  name: test-map.txt
+  size: 54
+- md5: ca4985bb338250b762ec2d59df039018
+  name: test-mapnames.txt
+  size: 58

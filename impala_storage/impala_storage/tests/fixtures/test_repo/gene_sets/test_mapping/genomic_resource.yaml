@@ -1,0 +1,6 @@
+type: gene_set
+id: test_mapping
+format: map
+filename: test-map.txt
+web_label: Test mapping
+web_format_str: "key| (|count|)"

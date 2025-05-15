@@ -1,0 +1,7 @@
+type: liftover_chain
+
+filename: hg38ToHg19.over.chain.gz
+
+chrom_prefix:
+  target_coordinates:
+    del_prefix: chr

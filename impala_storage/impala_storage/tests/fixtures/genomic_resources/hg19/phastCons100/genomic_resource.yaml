@@ -1,0 +1,34 @@
+---
+
+type: position_score
+
+table:
+  filename: phastCons100.bedGraph.gz
+  format: tabix
+  header_mode: none
+
+  # defined by score_type
+  chrom: 
+    index: 0
+  pos_begin:
+    index: 1
+  pos_end: 
+    index: 2
+
+# score values
+scores:
+  - id: phastCons100
+    type: float
+    desc: "phastCons100"
+    index: 3
+    histogram:
+      type: number
+      number_of_bins: 10
+      view_range:
+        max: 1.0
+        min: 0.0
+
+default_annotation:
+  - source: phastCons100
+    dest: phastCons100
+    position_aggregator: max

@@ -1,0 +1,47 @@
+{
+  "config": {
+    "histograms": [],
+    "table": {
+      "config": {
+        "filename": "scores1.tsv.gz",
+        "format": "tabix",
+        "chrom": {
+          "name": "CHROM"
+        },
+        "pos_begin": {
+          "name": "POS"
+        },
+        "pos_end": {
+          "name": "POS"
+        }
+      },
+      "files_md5": {
+        "scores1.tsv.gz": "093c47435b7440def543b99758a92afe",
+        "scores1.tsv.gz.tbi": "26aa9750f0a1ad0458bcc99fe7d71ac2"
+      }
+    }
+  },
+  "score_config": [
+    {
+      "id": "score0",
+      "type": "float",
+      "name": "score0",
+      "index": null,
+      "na_values": "['', '.', 'NA', 'nan']"
+    },
+    {
+      "id": "score2",
+      "type": "float",
+      "name": "score2",
+      "index": null,
+      "na_values": "['', '.', 'NA', 'nan']"
+    },
+    {
+      "id": "score4",
+      "type": "float",
+      "name": "score4",
+      "index": null,
+      "na_values": "['', '.', 'NA', 'nan']"
+    }
+  ]
+}

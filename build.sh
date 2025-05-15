@@ -174,7 +174,7 @@ EOT
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    for d in dae wdae dae_conftests impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator; do
+    for d in dae wdae impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator; do
       build_run_container bash -c \
         'cd /wd;
         /opt/conda/bin/conda run --no-capture-output -n gpf \
@@ -236,7 +236,7 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_dae
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+        for d in /wd/dae /wd/wdae; do
           build_run_container ctx:ctx_dae bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
@@ -268,7 +268,7 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_dae_integ
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+        for d in /wd/dae /wd/wdae; do
           build_run_container ctx:ctx_dae_integ bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
@@ -302,7 +302,7 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_wdae
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+        for d in /wd/dae /wd/wdae; do
           build_run_container ctx:ctx_wdae bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
@@ -334,7 +334,7 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_demo
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_demo_annotator; do
+        for d in /wd/dae /wd/wdae /wd/external_demo_annotator; do
           build_run_container ctx:ctx_demo bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
@@ -365,7 +365,7 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_vep
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_vep_annotator; do
+        for d in /wd/dae /wd/wdae /wd/external_vep_annotator; do
           build_run_container ctx:ctx_vep bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
