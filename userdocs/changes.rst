@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+* 2025.5.4
+    * GPF federation regorganization.
+    * Support for phenotype instruments and measures update.
+    * Fix VEP annotator plugin for newer version of VEP.
+    * Bump version of Lark parser library to 1.2.2.
+    * Update GRR gene set collection info pages.
+    * Clean up dae and wdae testing infrastructure.
+    * Clean up phenotype browser measure domains.
+    * Support for instruments and measures tooltips in phenotype browser.
+
 * 2025.5.3
     * Fix handling of phenotype measures error state in GPFjs.
     * Update GPF federation plugin.
