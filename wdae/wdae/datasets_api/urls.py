@@ -14,9 +14,9 @@ urlpatterns = [
         name="pedigree",
     ),
     re_path(
-        r"^/config/(?P<dataset_id>[^/]+)/?$",
-        views.DatasetConfigView.as_view(),
-        name="dataset_config",
+        r"^/federation/?$",
+        views.FederationDatasetsView.as_view(),
+        name="datasets_federation",
     ),
     re_path(
         r"^/description/(?P<dataset_id>[^/]+)/?$",

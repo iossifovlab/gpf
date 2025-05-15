@@ -457,6 +457,12 @@ class RESTClient:
         data = response.json()
         return cast(list, data)
 
+    def get_federation_datasets(self) -> list[dict]:
+        datasets_url = f"{self.base_url}/api/v3/datasets/federation"
+        response = self.session.get(datasets_url)
+        data = response.json()
+        return cast(list, data)
+
     def get_all_groups(self) -> list[dict]:
         """Get all groups from the GPF groups REST API."""
         groups_url = f"{self.base_url}/api/v3/groups"

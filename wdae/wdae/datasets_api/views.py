@@ -226,26 +226,26 @@ class DatasetPedigreeView(QueryBaseView):
         )
 
 
-class DatasetConfigView(DatasetView):
-    """Provide a dataset's configuration. Used for remote instances."""
+class FederationDatasetsView(QueryBaseView):
+    """Class used for federation-related dataset requests."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(
-        self, request: Request,  # noqa: ARG002
-        dataset_id: str | None = None,
-    ) -> Response:
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+    def get(self, request: Request) -> Response:
+        """Provide available datasets and their configurations."""
+        user = request.user
+        permitted_datasets = IsDatasetAllowed.permitted_datasets(
+            user, self.instance_id,
+        )
+        result = []
 
-        if genotype_data is None:
-            return Response(
-                {"error": f"Dataset {dataset_id} not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        return Response(augment_with_parents(
-            self.instance_id, genotype_data.config.to_dict(),
-        ))
+        for dataset_id in permitted_datasets:
+            dataset_config = \
+                self.gpf_instance.get_genotype_data_config(dataset_id)
+            if dataset_config is not None:
+                result.append(augment_with_parents(self.instance_id,
+                                                   dataset_config.to_dict()))
+
+        return Response(result)
 
 
 class DatasetDescriptionView(QueryBaseView):
