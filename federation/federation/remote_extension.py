@@ -3,15 +3,15 @@ import logging
 from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.genomic_scores.scores import ScoreDesc
-from federation.remote.gene_sets_db import RemoteGeneSetCollection
-from federation.remote.remote_enrichment_builder import RemoteEnrichmentBuilder
-from federation.remote.remote_pheno_tool_adapter import RemotePhenoToolAdapter
-from federation.remote.remote_study import (
+from federation.gene_sets_db import RemoteGeneSetCollection
+from federation.remote_enrichment_builder import RemoteEnrichmentBuilder
+from federation.remote_pheno_tool_adapter import RemotePhenoToolAdapter
+from federation.remote_study import (
     RemoteGenotypeData,
     RemoteGenotypeDataGroup,
 )
-from federation.remote.remote_study_wrapper import RemoteStudyWrapper
-from federation.remote.rest_api_client import (
+from federation.remote_study_wrapper import RemoteStudyWrapper
+from federation.rest_api_client import (
     RESTClient,
     RESTClientRequestError,
 )

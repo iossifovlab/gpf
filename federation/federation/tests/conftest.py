@@ -26,8 +26,8 @@ from dae.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
 from dae.testing import (
     setup_directories,
 )
-from federation.remote.remote_extension import load_extension
-from federation.remote.rest_api_client import RESTClient
+from federation.remote_extension import load_extension
+from federation.rest_api_client import RESTClient
 
 
 def setup_remote_t4c8_instance(
