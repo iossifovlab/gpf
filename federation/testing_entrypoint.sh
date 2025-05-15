@@ -7,7 +7,7 @@ mkdir /wd/federation/tmp/grrCache
 cat >> /wd/federation/tmp/grr_definition.yaml << EOT
 id: "remote"
 type: "directory"
-directory: "/wd/federation/tmp/grrCache"
+directory: "/wd/federation/tmp/t4c8_grr"
 EOT
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
