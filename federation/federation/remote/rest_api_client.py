@@ -173,13 +173,7 @@ class RESTClient:
     def prefix_remote_name(self, value: Any) -> str:
         return f"({self.remote_id}) {value}"
 
-    def get_datasets(self) -> dict | None:
-        response = self._get("datasets")
-        if response.status_code == 200:
-            return cast(dict, response.json())
-        return None
-
-    def get_studies(self) -> list[dict]:
+    def get_datasets(self) -> list[dict]:
         return self.gpf_rest_client.get_all_datasets()
 
     def get_dataset_config(self, study_id: str) -> dict | None:
