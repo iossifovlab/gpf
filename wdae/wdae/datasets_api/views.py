@@ -187,15 +187,6 @@ class DatasetView(QueryBaseView):
         return Response({"data": self._collect_single_dataset(user, dataset)})
 
 
-class DatasetStudiesView(DatasetView):
-    @method_decorator(etag(get_permissions_etag))
-    def get(
-        self, request: Request, dataset_id: str | None = None,  # noqa: ARG002
-    ) -> Response:
-        """Return all studies (non-group genotype data)."""
-        return Response({"data": self._collect_datasets_summary(request.user, studies_only=True)})  # noqa: E501
-
-
 class DatasetPedigreeView(QueryBaseView):
     """Provide pedigree data for a given dataset."""
 

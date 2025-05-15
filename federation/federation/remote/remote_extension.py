@@ -109,7 +109,7 @@ def fetch_studies_from_client(
 
     all_data = [
         study
-        for study in rest_client.get_studies()
+        for study in rest_client.get_datasets()
         if (
             study["access_rights"] is True
             and study.get("study_type") != "Phenotype study"
