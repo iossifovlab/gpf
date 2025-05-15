@@ -1,8 +1,0 @@
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-##contig=<ID=1>
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1
-1	878109	.	C	G,T	.	.	EFF=MIS!MIS	GT	0/1	0/2	1/2
-1	901921	.	G	A,C	.	.	EFF=SYN!MIS	GT	0/1	0/2	1/2
-1	905956	.	CGGCTCGGAAGG	C,TGGCTCGGAAGG	.	.	EFF=FS!MIS	GT	0/1	0/2	1/2
