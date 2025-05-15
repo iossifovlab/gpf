@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 
-for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+for d in /wd/dae /wd/wdae; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done

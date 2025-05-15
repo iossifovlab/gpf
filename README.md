@@ -39,7 +39,7 @@ development usage. (You need to install GPF packages in the development `gpf`
 conda environment.)
 
 ```bash
-for d in dae wdae dae_conftests; do (cd $d; pip install -e .); done
+for d in dae wdae; do (cd $d; pip install -e .); done
 ```
 
 ### Additional GPF genotype storages
