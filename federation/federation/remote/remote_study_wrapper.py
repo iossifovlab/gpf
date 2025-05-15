@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Generator
+from functools import cached_property
 from typing import Any, cast
 
 from studies.response_transformer import ResponseTransformer
@@ -37,7 +38,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self._person_set_collections = None
         self._person_set_collection_configs = None
 
-        self.response_transformer = ResponseTransformer(self)
+    @cached_property
+    def response_transformer(self) -> ResponseTransformer:
+        return ResponseTransformer(self)
 
     @property
     def is_group(self) -> bool:

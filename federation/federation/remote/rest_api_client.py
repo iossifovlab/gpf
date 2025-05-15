@@ -6,7 +6,7 @@ import ijson
 import requests
 
 from dae.pheno.common import MeasureType
-from rest_client.rest_client import GPFConfidentialClient
+from rest_client.rest_client import GPFAnonymousClient, GPFConfidentialClient
 from rest_client.rest_client import RESTClient as GPFRESTClient
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ class RESTClient:
         self,
         remote_id: str,
         host: str,
-        client_id: str,
-        client_secret: str,
+        client_id: str | None,
+        client_secret: str | None,
         base_url: str | None = None,
         port: int | None = None,
         protocol: str | None = None,
@@ -40,7 +40,6 @@ class RESTClient:
         self.remote_id = remote_id
         self.client_id = client_id
         self.client_secret = client_secret
-        self.token = None
         if base_url:
             if not base_url.endswith("/"):
                 base_url = f"{base_url}/"
@@ -55,18 +54,22 @@ class RESTClient:
         self.gpf_prefix = gpf_prefix or None
 
         prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
-        self.session = GPFConfidentialClient(
-            f"{self.build_host_url()}{prefix}",
-            client_id,
-            client_secret,
-            "",
-        )
-        self.gpf_rest_client = GPFRESTClient(self.session)
-        self._refresh_token()
 
-    def _refresh_token(self) -> None:
-        self.session.refresh_token()
-        self.token = self.session.token
+        if client_id is None and client_secret is None:
+            self.session = GPFAnonymousClient(
+                f"{self.build_host_url()}{prefix}",
+            )
+        else:
+            assert client_id is not None
+            assert client_secret is not None
+            self.session = GPFConfidentialClient(
+                f"{self.build_host_url()}{prefix}",
+                client_id,
+                client_secret,
+                "",
+            )
+        self.gpf_rest_client = GPFRESTClient(self.session)
+        self.session.authenticate()
 
     def build_host_url(self) -> str:
         if self.port:
@@ -110,14 +113,14 @@ class RESTClient:
         url = self._build_url(url, query_values)
 
         def make_request() -> requests.Response:
-            return requests.get(url, stream=stream, headers={
-                "Authorization": f"Bearer {self.token}",
-            }, timeout=self.DEFAULT_TIMEOUT)
+            return self.session.get(
+                url, stream=stream, timeout=self.DEFAULT_TIMEOUT)
 
         response = make_request()
-        if response.status_code == 401:
+        if response.status_code == 401 \
+           and isinstance(self.session, GPFConfidentialClient):
             # Try refreshing token
-            self._refresh_token()
+            self.session.refresh_token()
             response = make_request()
         return response
 
@@ -130,13 +133,13 @@ class RESTClient:
         url = self._build_url(url)
 
         def make_request() -> requests.Response:
-            return requests.post(url, json=data, stream=stream, headers={
-                "Authorization": f"Bearer {self.token}",
-            }, timeout=self.DEFAULT_TIMEOUT)
+            return self.session.post(
+                url, json=data, stream=stream, timeout=self.DEFAULT_TIMEOUT)
 
         response = make_request()
-        if response.status_code == 401:
-            self._refresh_token()
+        if response.status_code == 401 \
+           and isinstance(self.session, GPFConfidentialClient):
+            self.session.refresh_token()
             response = make_request()
         return response
 
@@ -170,17 +173,8 @@ class RESTClient:
     def prefix_remote_name(self, value: Any) -> str:
         return f"({self.remote_id}) {value}"
 
-    def get_datasets(self) -> dict | None:
-        response = self._get("datasets")
-        if response.status_code == 200:
-            return cast(dict, response.json())
-        return None
-
-    def get_studies(self) -> dict | None:
-        response = self._get("datasets/studies")
-        if response.status_code == 200:
-            return cast(dict, response.json())
-        return None
+    def get_datasets(self) -> list[dict]:
+        return self.gpf_rest_client.get_all_datasets()
 
     def get_dataset_config(self, study_id: str) -> dict | None:
         response = self._get(f"datasets/config/{study_id}")
@@ -644,3 +638,6 @@ class RESTClient:
             return None, None
 
         return response.content, response.headers["content-type"]
+
+    def get_visible_datasets(self) -> list:
+        return self.gpf_rest_client.get_visible_datasets()

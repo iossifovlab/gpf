@@ -84,7 +84,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
 
         self._description: str | None = None
 
-        self._person_set_collections: dict[str, PersonSetCollection] = {}
+        self._person_set_collections: dict[str, PersonSetCollection] | None = None  # noqa: E501
         self._parents: set[str] = set()
         self._executor = None
         self.is_remote = False
@@ -146,6 +146,10 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
 
     @property
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
+        if self._person_set_collections is None:
+            self._person_set_collections = self._build_person_set_collections(
+                self.config, self.families,
+            )
         return self._person_set_collections
 
     def add_parent(self, genotype_data_id: str) -> None:
@@ -931,11 +935,6 @@ class GenotypeDataStudy(GenotypeData):
     def __init__(self, config: Box, backend: QueryVariantsBase):
         super().__init__(config, [self])
         self._backend = backend
-        self. _person_set_collections = self._build_person_set_collections(
-            self.config,
-            self.families,
-        )
-
         self.is_remote = False
 
     @property

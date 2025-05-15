@@ -69,6 +69,74 @@ class GPFClientSession(Protocol):
         ...
 
 
+class GPFAnonymousClient:
+    """GPF anonymous REST client."""
+
+    DEFAULT_TIMEOUT = 10
+
+    def __init__(
+        self, base_url: str,
+    ):
+        self._base_url = base_url
+
+    def base_url(self) -> str:
+        return self._base_url
+
+    def authenticate(self) -> None:
+        pass
+
+    def deauthenticate(self) -> None:
+        pass
+
+    def get(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Get request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def post(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Post request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.post(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def put(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Put request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.put(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+
 class GPFConfidentialClient:
     """GPF Rest Client."""
 
@@ -383,6 +451,18 @@ class RESTClient:
         data = response.json()
         return cast(dict, data["data"])
 
+    def get_visible_datasets(self) -> list:
+        datasets_url = f"{self.base_url}/api/v3/datasets/visible"
+        response = self.session.get(datasets_url)
+        data = response.json()
+        return cast(list, data)
+
+    def get_federation_datasets(self) -> list[dict]:
+        datasets_url = f"{self.base_url}/api/v3/datasets/federation"
+        response = self.session.get(datasets_url)
+        data = response.json()
+        return cast(list, data)
+
     def get_all_groups(self) -> list[dict]:
         """Get all groups from the GPF groups REST API."""
         groups_url = f"{self.base_url}/api/v3/groups"
@@ -514,10 +594,11 @@ class RESTClient:
 
     def get_families(
         self, dataset_id: str,
+        timeout: float = 200.0,
     ) -> list[dict]:
         """Get families for a dataset."""
         url = f"{self.base_url}/api/v3/families/{dataset_id}/all"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=timeout)
         if response.status_code != 200:
             raise RESTError(f"Get families failed: {response.text}")
         return cast(list[dict], response.json())

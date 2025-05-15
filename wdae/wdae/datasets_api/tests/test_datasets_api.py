@@ -143,29 +143,14 @@ def test_datasets_pedigree_proper_request(
     }
 
 
-def test_datasets_config_no_such_dataset(
+def test_datasets_federation(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    response = admin_client.get("/api/v3/datasets/config/alabala")
-    assert response
-    assert response.status_code == 404
-
-    data = response.json()
-    assert "error" in data
-    assert data["error"] == "Dataset alabala not found"
-
-
-def test_datasets_config_proper_request(
-    admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    response = admin_client.get("/api/v3/datasets/config/t4c8_study_1")
+    response = admin_client.get("/api/v3/datasets/federation")
     assert response
     assert response.status_code == 200
-
-    data = response.json()
-    assert data
+    assert len(response.json()) == 4
 
 
 def test_datasets_description_not_admin(
