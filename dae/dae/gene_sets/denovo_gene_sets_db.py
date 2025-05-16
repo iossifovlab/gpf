@@ -46,6 +46,28 @@ class DenovoGeneSetsDb:
             self._load_cache()
         return self._gene_set_configs_cache
 
+    @staticmethod
+    def from_dict(
+        gpf_instance,
+        db_cache: dict[str, Any],
+    ) -> "DenovoGeneSetsDb":
+        """Instantiate a DenovoGeneSetsDb from a dictionary of caches."""
+        db = DenovoGeneSetsDb(gpf_instance)
+        for study_id, cache in db_cache.items():
+            study = gpf_instance.get_genotype_data(study_id)
+            assert study is not None, study_id
+
+            dgsc = DenovoGeneSetHelpers.load_collection_from_dict(
+                study, cache)
+            if dgsc is None:
+                logger.info(
+                    "No denovo gene set collection for %s", study_id)
+                continue
+
+            db._gene_set_configs_cache[study_id] = dgsc.config  # noqa: SLF001
+            db._gene_set_collections_cache[study_id] = dgsc  # noqa: SLF001
+        return db
+
     def _load_cache(self) -> None:
         for study_id in self.get_genotype_data_ids():
             study = self.gpf_instance.get_genotype_data(study_id)

@@ -25,6 +25,21 @@ class DenovoGeneSetHelpers:
         return dgsc
 
     @classmethod
+    def load_collection_from_dict(
+        cls,
+        study: GenotypeData,
+        cache: dict,
+    ) -> DenovoGeneSetCollection | None:
+        """Load a denovo gene set collection for a given study."""
+        dgsc = DenovoGeneSetCollection.create_empty_collection(study)
+        if dgsc is None:
+            logger.info(
+                "No denovo gene set collection for %s", study.study_id)
+            return None
+        dgsc.cache = cache
+        return dgsc
+
+    @classmethod
     def build_collection(
         cls, study: GenotypeData, *,
         force: bool = False,

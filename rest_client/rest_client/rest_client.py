@@ -602,3 +602,13 @@ class RESTClient:
         if response.status_code != 200:
             raise RESTError(f"Get families failed: {response.text}")
         return cast(list[dict], response.json())
+
+    def get_denovo_gene_sets_db(
+        self, timeout: float = 200.0,
+    ) -> dict:
+        """Get denovo gene sets db."""
+        url = f"{self.base_url}/api/v3/gene_sets/denovo_gene_sets_db"
+        response = self.session.get(url, timeout=timeout)
+        if response.status_code != 200:
+            raise RESTError(f"Get families failed: {response.text}")
+        return cast(dict, response.json())
