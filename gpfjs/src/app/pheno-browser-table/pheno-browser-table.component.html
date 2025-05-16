@@ -110,8 +110,8 @@
         *ngIf="measure.instrumentDescription"
         [id]="measure.instrumentName + '-description-button'"
         class="description-tooltip"
-        [ngbTooltip]="measure.instrumentDescription"
-        [autoClose]="true"
+        [ngbTooltip]="instrumentDescriptionContent"
+        [autoClose]="'outside'"
         triggers="manual"
         #instrumentDescription="ngbTooltip"
         (click)="instrumentDescription.open()">
@@ -121,20 +121,28 @@
       </button>
     </div>
 
+    <ng-template #instrumentDescriptionContent>
+      <markdown>{{ measure.instrumentDescription }}</markdown>
+    </ng-template>
+
     <div class="grid-cell measure-name-cell" [attr.title]="measure.measureName"
       >{{ measure.measureName }}
       <button
         *ngIf="measure.description"
         [id]="measure.measureName + '-description-button'"
         class="description-tooltip"
-        [ngbTooltip]="measure.description"
-        [autoClose]="true"
+        [ngbTooltip]="measureDescriptionContent"
+        [autoClose]="'outside'"
         triggers="manual"
         #measureDescription="ngbTooltip"
         (click)="measureDescription.open()">
         <span class="material-symbols-outlined info-icon" [id]="measure.measureName + '-description-icon'">info</span>
       </button>
     </div>
+
+    <ng-template #measureDescriptionContent>
+      <markdown>{{ measure.description }}</markdown>
+    </ng-template>
 
     <div class="grid-cell figure-distribution-cell">
       <a [class.clickable]="!!measure.figureDistribution" (click)="openModal(measure.figureDistribution)">
