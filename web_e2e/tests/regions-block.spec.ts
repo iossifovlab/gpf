@@ -20,11 +20,11 @@ test.describe('Regions block tests', () => {
     await page.locator('#regions-filter').click();
     await expect(page.getByText('Add at least one region filter.')).toBeVisible();
 
-    await page.locator('gpf-regions-filter textarea').fill('14:21393485');
+    await page.locator('gpf-regions-filter textarea').pressSequentially('14:21393485');
     await expect(page.getByText('Invalid region: 14:21393485')).toBeVisible();
 
     await page.locator('gpf-regions-filter textarea').clear();
-    await page.locator('gpf-regions-filter textarea').fill('chr14:21393485');
+    await page.locator('gpf-regions-filter textarea').pressSequentially('chr14:21393485');
     await expect(page.locator('gpf-regions-filter').locator('gpf-errors-alert')).not.toBeVisible();
   });
 });
