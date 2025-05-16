@@ -359,6 +359,8 @@ will be able to see the variants from both studies.
 
 .. include:: getting_started/example_cnv_import.rst
 
+.. include:: getting_started/example_pheno_import.rst
+
 .. include:: getting_started/getting_started_with_gene_sets.rst
 
 .. include:: getting_started/getting_started_with_enrichment.rst
