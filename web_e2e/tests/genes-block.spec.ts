@@ -290,7 +290,7 @@ test.beforeEach(async({ page }) => {
     },
     {
       collection: 'Protein domains',
-      expectedSearchCondition: 'ABH (18):'
+      expectedSearchCondition: 'ABC1 (5): ABC1 atypical kinase-like domain'
     },
     {
       collection: 'miRNA from Darnell',
@@ -325,7 +325,7 @@ test.beforeEach(async({ page }) => {
   );
 
     await page.waitForLoadState('load');
-    await page.locator('.sets-dropdown mat-option').first().click();
+    await page.locator('.sets-dropdown mat-option').filter({ hasText: data.expectedSearchCondition }).click();
 
     const downloadPromise = page.waitForEvent('download');
     await page.locator('a.download-link').click();
