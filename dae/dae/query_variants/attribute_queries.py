@@ -8,7 +8,7 @@ from sqlglot.expressions import BitwiseAnd, Column, Expression, Paren, and_, or_
 QUERY_GRAMMAR = """
 ?start: expr+
 
-literal: /\\w+/
+literal: /[\\w+-]+/
 neg: "not" expr
 
 and_: expr "and" expr

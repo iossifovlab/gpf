@@ -19,6 +19,9 @@ from dae.variants.core import Allele
         ("del or tandem_repeat", Allele.Type.tandem_repeat_ins, True),
         ("del and tandem_repeat", Allele.Type.tandem_repeat_ins, False),
         ("ins and tandem_repeat", Allele.Type.tandem_repeat_ins, True),
+        ("cnv+ or cnv-", Allele.Type.large_duplication, True),
+        ("cnv+ or cnv-", Allele.Type.large_deletion, True),
+        ("cnv+ or cnv-", Allele.Type.substitution, False),
     ],
 )
 def test_simple_variant_types_parser(query, variant, expected):
