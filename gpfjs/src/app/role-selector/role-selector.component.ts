@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { MeasuresService } from 'app/measures/measures.service';
-import { debounceTime, distinctUntilChanged, Subject, switchMap, take } from 'rxjs';
+import { distinctUntilChanged, Subject, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-role-selector',
@@ -32,7 +32,7 @@ export class RoleSelectorComponent implements OnInit {
       }
     });
 
-    this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
+    this.searchBoxInput$.pipe(distinctUntilChanged()).subscribe(() => {
       if (!this.searchValue) {
         this.roleSuggestions = this.roles;
         return;
