@@ -90,6 +90,13 @@ def load_extension(instance: WGPFInstance) -> None:
             gsc_id = gsc.collection_id
             gs_db.gene_set_collections[gsc_id] = gsc
 
+        d_gs_db = instance.denovo_gene_sets_db
+        remote_dgsdb_cache = {
+            client.prefix_remote_identifier(study_id): cache
+            for study_id, cache in client.gpf_rest_client.get_denovo_gene_sets_db().items()  # noqa: E501
+        }
+        d_gs_db.update_cache(remote_dgsdb_cache)
+
         scores = client.get_genomic_scores()
         if scores is not None:
             for score in scores:
