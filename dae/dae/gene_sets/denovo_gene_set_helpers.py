@@ -1,7 +1,4 @@
 import logging
-import os
-
-import box
 
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.studies.study import GenotypeData
@@ -11,17 +8,6 @@ logger = logging.getLogger(__name__)
 
 class DenovoGeneSetHelpers:
     """Helper functions for creation of denovo gene sets."""
-
-    @staticmethod
-    def denovo_gene_set_cache_file(
-        config: box.Box,
-        person_set_collection_id: str = "",
-    ) -> str:
-        """Return the path to the cache file for a person set collection."""
-        return os.path.join(
-            config.conf_dir,
-            "denovo-cache-" + person_set_collection_id + ".json",
-        )
 
     @classmethod
     def load_collection(
