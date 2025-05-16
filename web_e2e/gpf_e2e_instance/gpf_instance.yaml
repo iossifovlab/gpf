@@ -45,7 +45,7 @@ gene_sets_db:
     - gene_properties/gene_sets/MSigDB_curated
     - gene_properties/gene_sets/miRNA
     - gene_properties/gene_sets/GO
-    - gene_properties/gene_sets/domain
+    - gene_properties/gene_sets/PFAM_37.0_domains
     - gene_properties/gene_sets/disease
     - gene_properties/gene_sets/miRNA_Darnell
 
