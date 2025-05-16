@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+* 2025.5.5
+    * Reorganization of GPF federation plugin.
+    * Fix support for CNV in variants query grammar.
+    * Fix regions filter text area.
+
 * 2025.5.4
     * GPF federation regorganization.
     * Support for phenotype instruments and measures update.
