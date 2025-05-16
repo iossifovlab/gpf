@@ -44,6 +44,14 @@ def load_extension(instance: WGPFInstance) -> None:
 
     for client in clients.values():
         studies = fetch_studies_from_client(client)
+        visible_studies = [
+            client.prefix_remote_identifier(data_id)
+            for data_id in client.get_visible_datasets()
+        ]
+        if instance.visible_datasets is None:
+            instance.visible_datasets = \
+                sorted(instance.get_available_data_ids())
+        instance.visible_datasets.extend(visible_studies)
         for study in studies:
             wrapper = RemoteStudyWrapper(study)
 
@@ -54,8 +62,6 @@ def load_extension(instance: WGPFInstance) -> None:
             if wrapper.has_pheno_data:
                 pheno_registry._cache[wrapper.phenotype_data.pheno_id] = \
                     wrapper.phenotype_data  # noqa: SLF001
-            if instance.visible_datasets is not None:
-                instance.visible_datasets.append(wrapper.study_id)
 
             builder = RemoteEnrichmentBuilder(
                 instance.enrichment_helper, wrapper, client,
@@ -105,27 +111,15 @@ def fetch_studies_from_client(
 ) -> list[RemoteGenotypeData]:
     """Get all remote studies from a REST client."""
     result = {}
-    visible_studies = rest_client.get_visible_datasets()
 
-    all_data = [
-        study
-        for study in rest_client.get_datasets()
-        if (
-            study["access_rights"] is True
-            and study.get("study_type") != "Phenotype study"
-        )
-    ]
+    all_data = rest_client.get_datasets()
     if all_data is None:
         raise RESTClientRequestError(
             f"Failed to get studies from {rest_client.remote_id}",
         )
 
-    all_configs = {
-        study["id"]: rest_client.get_dataset_config(study["id"])
-        for study in all_data
-    }
-
-    for study_id, config in all_configs.items():
+    for config in all_data:
+        study_id = config["id"]
         if config is None:
             raise ValueError(f"unable to find remote study {study_id}")
         logger.info("creating remote genotype study: %s", study_id)
@@ -135,14 +129,12 @@ def fetch_studies_from_client(
             data = RemoteGenotypeData(study_id, config, rest_client)
         result[study_id] = data
 
-    for study_id, data in result.items():
+    for data in result.values():
         if not isinstance(data, RemoteGenotypeDataGroup):
             continue
-        config = all_configs[study_id]
         data.studies = [
             result[child_id]
-            for child_id in config["studies"]
+            for child_id in data.config["studies"]
         ]
 
-    return [study for study_id, study in result.items()
-            if study_id in visible_studies]
+    return list(result.values())
