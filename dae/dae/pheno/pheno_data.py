@@ -864,7 +864,7 @@ class PhenotypeStudy(PhenotypeData):
             }
         return {
             "base_image_url": self._get_pheno_images_base_url(),
-            "has_descriptions": self.browser.has_descriptions,
+            "has_descriptions": self.browser.has_measure_descriptions,
             "regression_names": self.browser.regression_display_names,
         }
 

@@ -20,12 +20,9 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import sqlglot
+import sqlglot.expressions as exp
 import yaml
 from pydantic import BaseModel
-from sqlglot.expressions import (
-    insert,
-    values,
-)
 
 from dae.genomic_resources.histogram import (
     CategoricalHistogram,
@@ -490,18 +487,20 @@ def import_pheno_data(  # pylint: disable=R0912
 
     start = time.time()
     print("WRITING DESCRIPTIONS")
-    write_descriptions(
-        connection,
-        "measure_id",
-        "measure_descriptions",
-        measure_descriptions,
-    )
-    write_descriptions(
-        connection,
-        "instrument_name",
-        "instrument_descriptions",
-        instrument_descriptions,
-    )
+    if measure_descriptions:
+        write_descriptions(
+            connection,
+            "measure_id",
+            "measure_descriptions",
+            measure_descriptions,
+        )
+    if instrument_descriptions:
+        write_descriptions(
+            connection,
+            "instrument_name",
+            "instrument_descriptions",
+            instrument_descriptions,
+        )
     print(f"DONE {time.time() - start}")
 
     ImportManifest.create_table(connection, IMPORT_METADATA_TABLE)
@@ -1163,8 +1162,8 @@ def write_descriptions(
     """Write descriptions into duckdb as description table."""
     with connection.cursor() as cursor:
         table_name = safe_db_name(table_name)
-        query = insert(
-            values(descriptions.items()),
+        query = exp.insert(
+            exp.values(descriptions.items()),
             table_name,
             columns=[primary_column, "description"],
         )

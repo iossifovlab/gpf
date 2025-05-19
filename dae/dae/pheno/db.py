@@ -38,6 +38,16 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.measure_descriptions = table_("measure_descriptions")
         self.instrument_descriptions = table_("instrument_descriptions")
         self.instrument_values_tables = self.find_instrument_values_tables()
+        self.is_legacy = self._is_browser_legacy()
+
+    def _is_browser_legacy(self) -> bool:
+        """Handle legacy databases."""
+        with self.connection.cursor() as cursor:
+            result = cursor.execute("SHOW TABLES").fetchall()
+        tables = [row[0] for row in result]
+        return bool(
+            "instrument_descriptions" not in tables
+            or "measure_descriptions" not in tables)
 
     def find_instrument_values_tables(self) -> dict[str, expressions.Table]:
         """
@@ -136,40 +146,45 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         measure_table_instrument_name_col = column(
             "instrument_name", measure_table.alias_or_name)
-        instrument_descriptions_instrument_name_col = column(
-            "instrument_name", self.instrument_descriptions.alias_or_name)
-        instrument_descriptions_description_col = column(
-            "description", self.instrument_descriptions.alias_or_name)
-
-        query = query.join(
-                self.instrument_descriptions,
-                on=sqlglot.condition(
-                    measure_table_instrument_name_col.eq(
-                        instrument_descriptions_instrument_name_col,
-                    ),
-                ),
-                join_type="LEFT OUTER",
-            )
-        query = query.select(instrument_descriptions_description_col.as_(
-            "instrument_description"))
-
         measure_table_measure_id_col = column(
             "measure_id", measure_table.alias_or_name)
-        measure_descriptions_measure_id_col = column(
-            "measure_id", self.measure_descriptions.alias_or_name)
-        measure_descriptions_description_col = column(
-            "description", self.measure_descriptions.alias_or_name)
 
-        query = query.join(
-                self.measure_descriptions,
-                on=sqlglot.condition(
-                    measure_table_measure_id_col.eq(
-                        measure_descriptions_measure_id_col,
+        if not self.is_legacy:
+            instrument_descriptions_instrument_name_col = column(
+                "instrument_name", self.instrument_descriptions.alias_or_name)
+            instrument_descriptions_description_col = column(
+                "description", self.instrument_descriptions.alias_or_name)
+
+            query = query.join(
+                    self.instrument_descriptions,
+                    on=sqlglot.condition(
+                        measure_table_instrument_name_col.eq(
+                            instrument_descriptions_instrument_name_col,
+                        ),
                     ),
-                ),
-                join_type="LEFT OUTER",
-            )
-        query = query.select(measure_descriptions_description_col)
+                    join_type="LEFT OUTER",
+                )
+            query = query.select(instrument_descriptions_description_col.as_(
+                "instrument_description"))
+
+            measure_descriptions_measure_id_col = column(
+                "measure_id", self.measure_descriptions.alias_or_name)
+            measure_descriptions_description_col = column(
+                "description", self.measure_descriptions.alias_or_name)
+
+            query = query.join(
+                    self.measure_descriptions,
+                    on=sqlglot.condition(
+                        measure_table_measure_id_col.eq(
+                            measure_descriptions_measure_id_col,
+                        ),
+                    ),
+                    join_type="LEFT OUTER",
+                )
+            query = query.select(measure_descriptions_description_col)
+        else:
+            query = query.select(alias_(Null(), "instrument_description"))
+            query = query.select(alias_(Null(), "description"))
 
         query = query.where(f"{columns[3].sql()} IS NOT NULL")
 

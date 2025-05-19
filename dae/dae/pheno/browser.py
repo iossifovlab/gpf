@@ -11,7 +11,9 @@ from duckdb import ConstraintException
 from sqlglot import column, expressions, select
 from sqlglot.expressions import (
     Count,
+    Null,
     Table,
+    alias_,
     delete,
     insert,
     table_,
@@ -41,8 +43,16 @@ class PhenoBrowser:
         self.regression_values = table_("regression_values")
         self.instrument_descriptions = table_("instrument_descriptions")
         self.measure_descriptions = table_("measure_descriptions")
+        self.is_legacy = self._is_browser_legacy()
 
-
+    def _is_browser_legacy(self) -> bool:
+        """Handle legacy databases."""
+        with self.connection.cursor() as cursor:
+            result = cursor.execute("SHOW TABLES").fetchall()
+        tables = [row[0] for row in result]
+        return bool(
+            "instrument_descriptions" not in tables
+            or "measure_descriptions" not in tables)
 
     @staticmethod
     def create_browser_tables(conn: duckdb.DuckDBPyConnection) -> None:
@@ -134,27 +144,52 @@ class PhenoBrowser:
 
     def save(self, v: dict[str, Any]) -> None:
         """Save measure values into the database."""
-        instrument_desc_query = to_duckdb_transpile(insert(
-            values([(v["instrument_name"], v["instrument_description"])]),
-            self.instrument_descriptions,
-            columns=["instrument_name", "description"],
-        ))
-        v.pop("instrument_description", None)
-
-        measure_desc_query = to_duckdb_transpile(insert(
-            values([(v["measure_id"], v["description"])]),
-            self.measure_descriptions,
-            columns=["measure_id", "description"],
-        ))
-        v.pop("description", None)
-
-        measure_query = to_duckdb_transpile(insert(
-            values([(*v.values(),)]),
-            self.variable_browser,
-            columns=[*v.keys()],
-        ))
-
         with self.connection.cursor() as cursor:
+            if not self.is_legacy:
+                instrument_desc_query = to_duckdb_transpile(insert(
+                    values([(
+                        v["instrument_name"],
+                        v.get("instrument_description", ""),
+                    )]),
+                    self.instrument_descriptions,
+                    columns=["instrument_name", "description"],
+                ))
+                v.pop("instrument_description", None)
+
+                try:
+                    cursor.execute(instrument_desc_query)
+                except ConstraintException:
+                    delete_instrument_desc_query = to_duckdb_transpile(delete(
+                        self.instrument_descriptions,
+                    ).where("instrument_name").eq(v["instrument_name"]))
+                    cursor.execute(delete_instrument_desc_query)
+                    cursor.execute(instrument_desc_query)
+
+                measure_desc_query = to_duckdb_transpile(insert(
+                    values([(
+                        v["measure_id"],
+                        v.get("description", ""),
+                    )]),
+                    self.measure_descriptions,
+                    columns=["measure_id", "description"],
+                ))
+                v.pop("description", None)
+
+                try:
+                    cursor.execute(measure_desc_query)
+                except ConstraintException:
+                    delete_measure_desc_query = to_duckdb_transpile(delete(
+                        self.measure_descriptions,
+                    ).where("measure_id").eq(v["measure_id"]))
+                    cursor.execute(delete_measure_desc_query)
+                    cursor.execute(measure_desc_query)
+
+            measure_query = to_duckdb_transpile(insert(
+                values([(*v.values(),)]),
+                self.variable_browser,
+                columns=[*v.keys()],
+            ))
+
             try:
                 cursor.execute(measure_query)
             except ConstraintException:
@@ -163,22 +198,6 @@ class PhenoBrowser:
                 ).where("measure_id").eq(v["measure_id"]))
                 cursor.execute(delete_measure_query)
                 cursor.execute(measure_query)
-            try:
-                cursor.execute(instrument_desc_query)
-            except ConstraintException:
-                delete_instrument_desc_query = to_duckdb_transpile(delete(
-                    self.instrument_descriptions,
-                ).where("instrument_name").eq(v["instrument_name"]))
-                cursor.execute(delete_instrument_desc_query)
-                cursor.execute(instrument_desc_query)
-            try:
-                cursor.execute(measure_desc_query)
-            except ConstraintException:
-                delete_measure_desc_query = to_duckdb_transpile(delete(
-                    self.instrument_descriptions,
-                ).where("measure_id").eq(v["measure_id"]))
-                cursor.execute(delete_measure_desc_query)
-                cursor.execute(measure_desc_query)
 
     def save_regression(self, reg: dict[str, str]) -> None:
         """Save regressions into the database."""
@@ -258,42 +277,47 @@ class PhenoBrowser:
 
         variable_browser_instrument_name_col = column(
             "instrument_name", self.variable_browser.alias_or_name)
-        instrument_descriptions_instrument_name_col = column(
-            "instrument_name", self.instrument_descriptions.alias_or_name)
-        instrument_descriptions_description_col = column(
-            "description", self.instrument_descriptions.alias_or_name)
-
-        query = query.join(
-                self.instrument_descriptions,
-                on=sqlglot.condition(
-                    variable_browser_instrument_name_col.eq(
-                        instrument_descriptions_instrument_name_col,
-                    ),
-                ),
-                join_type="LEFT OUTER",
-            )
-        query = query.select(
-            instrument_descriptions_description_col.as_(
-                "instrument_description",
-            ))
-
         variable_browser_measure_id_col = column(
-            "measure_id", self.variable_browser.alias_or_name)
-        measure_descriptions_measure_id_col = column(
-            "measure_id", self.measure_descriptions.alias_or_name)
-        measure_descriptions_description_col = column(
-            "description", self.measure_descriptions.alias_or_name)
+                "measure_id", self.variable_browser.alias_or_name)
 
-        query = query.join(
-                self.measure_descriptions,
-                on=sqlglot.condition(
-                    variable_browser_measure_id_col.eq(
-                        measure_descriptions_measure_id_col,
+        if not self.is_legacy:
+            instrument_descriptions_instrument_name_col = column(
+                "instrument_name", self.instrument_descriptions.alias_or_name)
+            instrument_descriptions_description_col = column(
+                "description", self.instrument_descriptions.alias_or_name)
+
+            query = query.join(
+                    self.instrument_descriptions,
+                    on=sqlglot.condition(
+                        variable_browser_instrument_name_col.eq(
+                            instrument_descriptions_instrument_name_col,
+                        ),
                     ),
-                ),
-                join_type="LEFT OUTER",
-            )
-        query = query.select(measure_descriptions_description_col)
+                    join_type="LEFT OUTER",
+                )
+            query = query.select(
+                instrument_descriptions_description_col.as_(
+                    "instrument_description",
+                ))
+
+            measure_descriptions_measure_id_col = column(
+                "measure_id", self.measure_descriptions.alias_or_name)
+            measure_descriptions_description_col = column(
+                "description", self.measure_descriptions.alias_or_name)
+
+            query = query.join(
+                    self.measure_descriptions,
+                    on=sqlglot.condition(
+                        variable_browser_measure_id_col.eq(
+                            measure_descriptions_measure_id_col,
+                        ),
+                    ),
+                    join_type="LEFT OUTER",
+                )
+            query = query.select(measure_descriptions_description_col)
+        else:
+            query = query.select(alias_(Null(), "instrument_description"))
+            query = query.select(alias_(Null(), "description"))
 
         for regression_id in regression_ids:
             reg_table = self.regression_values.as_(regression_id)
@@ -559,10 +583,26 @@ class PhenoBrowser:
         return res
 
     @property
-    def has_descriptions(self) -> bool:
-        """Check if the database has a description data."""
+    def has_instrument_descriptions(self) -> bool:
+        """Check if the database has instrument description data."""
+        if self.is_legacy:
+            return False
         query = to_duckdb_transpile(select("COUNT(*)").from_(
-            self.variable_browser,
+            self.instrument_descriptions,
+        ).where("description IS NOT NULL"))
+        with self.connection.cursor() as cursor:
+            row = cursor.execute(query).fetchone()
+            if row is None:
+                return False
+            return bool(row[0])
+
+    @property
+    def has_measure_descriptions(self) -> bool:
+        """Check if the database has measure description data."""
+        if self.is_legacy:
+            return False
+        query = to_duckdb_transpile(select("COUNT(*)").from_(
+            self.measure_descriptions,
         ).where("description IS NOT NULL"))
         with self.connection.cursor() as cursor:
             row = cursor.execute(query).fetchone()

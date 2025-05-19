@@ -18,7 +18,7 @@ def test_create_browser_tables(
     assert spy.call_count == 1
 
     tables = browser.connection.execute("SELECT * FROM duckdb_tables;").df()
-    assert len(tables) == 3
+    assert len(tables) == 5
 
 
 def test_save(tmp_path: pathlib.Path) -> None:
@@ -304,5 +304,5 @@ def test_regression_display_names_with_ids(
     }
 
 
-def test_has_descriptions(fake_pheno_browser: PhenoBrowser) -> None:
-    assert fake_pheno_browser.has_descriptions is True
+def test_has_measure_descriptions(fake_pheno_browser: PhenoBrowser) -> None:
+    assert fake_pheno_browser.has_measure_descriptions is True
