@@ -203,7 +203,7 @@ class AttributeQueryTransformerSQL(AttributeQueryTransformer):
 
         return BitwiseAnd(
             this=self._column,
-            expression=str(self._values[value_name]),
+            expression=str(self._values[value_name].value),
         ).neq(0)
 
     def compound(self, values) -> Expression:
@@ -228,13 +228,13 @@ class AttributeQueryTransformerSQL(AttributeQueryTransformer):
 
         bitmask_value = self._bitmask_transformer.apply_mask(
             0,
-            self._values[main_value].value,
             self._complementary_values[complementary_value],
+            self._values[main_value],
         )
 
         return BitwiseAnd(
             this=self._column,
-            expression=str(self._values[main_value]),
+            expression=str(self._values[main_value].value),
         ).neq(0).and_(
             BitwiseAnd(
                 this=self._complementary_column,
@@ -277,7 +277,7 @@ class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
 
         return parse_one(
             "BITAND("
-            f"{self._column.alias_or_name}, {self._values[value_name]!s}"
+            f"{self._column.alias_or_name}, {self._values[value_name].value!s}"
             ") != 0",
         )
 
@@ -321,6 +321,8 @@ def transform_attribute_query_to_sql_expression(
     query: str,
     column: Column,
     aliases: dict[str, str] | None = None,
+    complementary_type: type[Enum] | None = None,
+    complementary_column: Column | None = None,
 ) -> Expression:
     """
     Transform attribute query to an SQLglot expression.
@@ -335,7 +337,11 @@ def transform_attribute_query_to_sql_expression(
 
     tree = QUERY_PARSER.parse(query)
     syntax_sugar_transformer = SyntaxSugarTransformer()
-    transformer = AttributeQueryTransformerSQL(column, enum_type, aliases)
+    transformer = AttributeQueryTransformerSQL(
+        column, enum_type, aliases,
+        complementary_column=complementary_column,
+        complementary_type=complementary_type,
+    )
 
     tree = syntax_sugar_transformer.transform(tree)
     return transformer.transform(tree)
@@ -346,6 +352,8 @@ def transform_attribute_query_to_sql_expression_schema1(
     query: str,
     column: Column,
     aliases: dict[str, str] | None = None,
+    complementary_type: type[Enum] | None = None,
+    complementary_column: Column | None = None,
 ) -> Expression:
     """
     Transform attribute query to an SQLglot expression.
@@ -361,7 +369,10 @@ def transform_attribute_query_to_sql_expression_schema1(
     tree = QUERY_PARSER.parse(query)
     syntax_sugar_transformer = SyntaxSugarTransformer()
     transformer = AttributeQueryTransformerSQLLegacy(
-        column, enum_type, aliases)
+        column, enum_type, aliases,
+        complementary_column=complementary_column,
+        complementary_type=complementary_type,
+    )
 
     tree = syntax_sugar_transformer.transform(tree)
     return transformer.transform(tree)
