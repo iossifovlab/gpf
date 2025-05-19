@@ -83,7 +83,7 @@ def load_extension(instance: WGPFInstance) -> None:
             if gsc_id == "denovo":
                 continue
             gsc_desc = collection["desc"]
-            gsc_fmt = collection["format"]
+            gsc_fmt = "|".join(collection["format"])
             gsc = RemoteGeneSetCollection(
                 gsc_id, client, gsc_desc, gsc_fmt,
             )
