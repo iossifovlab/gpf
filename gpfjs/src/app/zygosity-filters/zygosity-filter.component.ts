@@ -20,18 +20,25 @@ export class ZygosityFilterComponent implements OnInit {
     this.zygosityTypes = ['homozygous', 'heterozygous'];
 
     this.store.select(selectZygosityFilter).pipe(take(1)).subscribe(zygosityFilter => {
+      let checkAll = true;
       if (zygosityFilter?.length) {
-        const filterFromState = zygosityFilter.find(z => z.componentId === this.parentComponent).filter;
-        this.selectedZygosityTypes.add(filterFromState);
-      } else {
+        const componentZygosity = zygosityFilter.find(z => z.componentId === this.parentComponent);
+        if (componentZygosity) {
+          checkAll = false;
+          const filterFromState = componentZygosity.filter;
+          this.selectedZygosityTypes.add(filterFromState);
+        }
+      }
+
+      if (checkAll) {
         this.selectedZygosityTypes.add(this.zygosityTypes[0]);
         this.selectedZygosityTypes.add(this.zygosityTypes[1]);
       }
     });
   }
 
-  public checkZygosityType(zygosityType: string, value: boolean): void {
-    if (value) {
+  public checkZygosityType(zygosityType: string, isChecked: boolean): void {
+    if (isChecked) {
       this.selectedZygosityTypes.add(zygosityType);
     } else {
       this.selectedZygosityTypes.delete(zygosityType);
