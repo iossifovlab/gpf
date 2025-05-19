@@ -1,5 +1,5 @@
-Getting Started with Gene Sets
-##############################
+Getting Started with Gene Sets and Gene Scores
+##############################################
 
 The GPF system provides support for the collection of gene symbols of interest
 for the analysis of genotype data. There are two types of gene sets that can be

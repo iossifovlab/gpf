@@ -39,7 +39,7 @@ There are several sections in this configuration file:
   gene scores:
 
   - ``autism_scores`` - lines 36-42;
-  - ``protectsion_scores`` - lines 44-52.
+  - ``protection_scores`` - lines 44-52.
 
   Please note that all gene scores used in this configuration section should
   be defined in the GPF instance configuration file.
