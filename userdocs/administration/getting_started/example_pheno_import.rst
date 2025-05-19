@@ -38,7 +38,7 @@ descriptions of families, phenotype measures, and some other information,
 that we do not need for the import.
 
 We will construct the pedigree file from the first four columns of the
-``Supplementary_Table_1.tsv.gz`` file. 
+``Supplementary_Table_1.tsv.gz`` file.
 
 .. code-block:: bash
 
@@ -62,7 +62,7 @@ We will construct the pedigree file from the first four columns of the
 
 The procedure will be similar to one
 already described in :ref:`example_denovo_pedigree` and will rely on the
-specific structure of the families in the SSC collection described there.
+the specific structure of the families in the SSC collection described there.
 
 An example Awk script to transform the Supplementary Table 1 into a pedigree
 file is given below.
@@ -87,8 +87,8 @@ file is given below.
             }
         }' > example_imports/pheno_import/ssc_pheno.ped
 
-If we run this script, it will read ``Supplementary_Table_1.tsv.gz`` and produce
-the appropriate pedigree file ``ssc_pheno.ped``.
+If we run this script, it will read ``Supplementary_Table_1.tsv.gz`` and
+produce the appropriate pedigree file ``ssc_pheno.ped``.
 
 .. note::
     The resulting pedigree file is also available in the
@@ -106,7 +106,7 @@ Preprocess the available phenotype measures
 +++++++++++++++++++++++++++++++++++++++++++
 
 The `Supplementary_Table_1.tsv.gz` file contains some phenotype measures
-that we will use for the import. We will focus on the columns 1 and 8-13
+that we will use for the import. We will focus on columns 1 and 8-13
 of the file.
 
 .. code-block:: bash
@@ -138,7 +138,7 @@ The available measures are as follows:
 - ``fatherAgeInMonthsAtBirthOfProband``: father's age in months at the birth of
   the proband.
 
-Using the following Awk script we will extract the relevant measures into
+Using the following Awk script, we will extract the relevant measures into
 an instrument file.
 
 .. code-block:: bash
@@ -153,8 +153,8 @@ an instrument file.
         }' > example_imports/pheno_import/proband_measures.csv
 
 
-This script will produce a file named ``proband_measures.csv`` with the following
-content:
+This script will produce a file named ``proband_measures.csv`` with the
+following content:
 
 .. csv-table:: ``example_imports/pheno_import/proband_measures.csv``
     :header-rows: 1
@@ -182,14 +182,14 @@ Data Import of ``ssc_pheno``
 +++++++++++++++++++++++++++++
 
 Now we have a pedigree file, ``ssc_pheno.ped``, and an instrument file
-``proband_measures.csv``. To import this data we need an import
+``proband_measures.csv``. To import this data, we need an import
 project.  A suitable import project is already available in the example imports
 directory ``example_imports/pheno_import/ssc_pheno.yaml``:
 
 .. literalinclude:: gpf-getting-started/example_imports/pheno_import/ssc_pheno.yaml
     :linenos:
 
-To import the phenotype data we will use the ``import_phenotypes`` tool.
+To import the phenotype data, we will use the ``import_phenotypes`` tool.
 
 .. code-block:: bash
 
@@ -201,9 +201,9 @@ When the import finishes, we can run the GPF development server using:
 
     wgpf run
 
-Now, on the GPF instance `Home Page`, you should see the ``ssc_pheno`` phenotype
-study. If you follow the link, you will see the `Phenotype Browser` tab with the
-imported data.
+Now, on the GPF instance `Home Page`, you should see the ``ssc_pheno``
+phenotype study. If you follow the link, you will see the `Phenotype Browser`
+tab with the imported data.
 
 .. figure:: getting_started_files/ssc_pheno_phenotype_browser.png
 
@@ -213,10 +213,10 @@ imported data.
 Configure a genotype study ``ssc_denovo`` to use phenotype data
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Now we can configute the ``ssc_denovo`` genotype study to use the newly
+Now we can configure the ``ssc_denovo`` genotype study to use the newly
 import phenotype data. We need to edit the ``ssc_denovo.yaml`` configuration
 file located in the ``minimal_instance/studies/ssc_denovo/`` directory and
-add the line 18 as shown below:
+add line 18 as shown below:
 
 
 .. code-block:: yaml
@@ -242,15 +242,16 @@ add the line 18 as shown below:
 
     phenotype_data: ssc_pheno
 
-When you restart the GPF instance, showld be able to see `Phenotype Browser`
-and the `Phenotype Tool` tabs enable for the study ``ssc_denovo``.
+When you restart the GPF instance, you should be able to see
+`Phenotype Browser` and the `Phenotype Tool` tabs enabled for the
+``ssc_denovo`` study.
 
 .. figure:: getting_started_files/ssc_denovo_with_ssc_pheno_configured.png
 
     Genotype study ``ssc_denovo`` with phenotype data configured.
 
-Now we can use the `Phenotype Tool` to see how de Novo variants are corelated
-with the proband's phenotype measures. 
+Now we can use the `Phenotype Tool` to see how de Novo variants are correlated
+with the proband's phenotype measures.
 
 .. figure:: getting_started_files/ssc_denovo_phenotype_tool.png
 
