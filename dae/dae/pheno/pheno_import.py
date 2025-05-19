@@ -22,6 +22,10 @@ import pyarrow.parquet as pq
 import sqlglot
 import yaml
 from pydantic import BaseModel
+from sqlglot.expressions import (
+    insert,
+    values,
+)
 
 from dae.genomic_resources.histogram import (
     CategoricalHistogram,
@@ -471,8 +475,6 @@ def import_pheno_data(  # pylint: disable=R0912
         inference_configs,
         histogram_configs,
         config,
-        measure_descriptions,
-        instrument_descriptions,
     )
 
     instrument_pq_files = handle_measure_inference_tasks(
@@ -484,6 +486,22 @@ def import_pheno_data(  # pylint: disable=R0912
     start = time.time()
     print("WRITING RESULTS")
     write_results(connection, instrument_pq_files, ped_df)
+    print(f"DONE {time.time() - start}")
+
+    start = time.time()
+    print("WRITING DESCRIPTIONS")
+    write_descriptions(
+        connection,
+        "measure_id",
+        "measure_descriptions",
+        measure_descriptions,
+    )
+    write_descriptions(
+        connection,
+        "instrument_name",
+        "instrument_descriptions",
+        instrument_descriptions,
+    )
     print(f"DONE {time.time() - start}")
 
     ImportManifest.create_table(connection, IMPORT_METADATA_TABLE)
@@ -647,7 +665,6 @@ def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
 class MeasureReport(BaseModel):
     measure_name: str
     instrument_name: str
-    instrument_description: str
     db_name: str
     measure_type: MeasureType
     inference_report: InferenceReport
@@ -655,9 +672,7 @@ class MeasureReport(BaseModel):
 
 def read_and_classify_measure(
     instrument: ImportInstrument,
-    instrument_description: str,
     measure_names: list[str],
-    descriptions: dict[str, str],
     import_config: PhenoImportConfig,
     db_names: list[str],
     inf_configs: list[InferenceConfig],
@@ -695,7 +710,6 @@ def read_and_classify_measure(
 
     output_table, reports = infer_measures(
         instrument,
-        instrument_description,
         person_ids,
         measure_names,
         db_names,
@@ -720,7 +734,6 @@ def read_and_classify_measure(
     reports_out_file = write_reports_to_parquet(
         reports_out_file,
         reports,
-        descriptions,
         hist_configs,
     )
 
@@ -729,7 +742,6 @@ def read_and_classify_measure(
 
 def infer_measures(
     instrument: ImportInstrument,
-    instrument_description: str,
     person_ids: list[str],
     measure_names: list[str],
     db_names: list[str],
@@ -765,7 +777,6 @@ def infer_measures(
         report = MeasureReport.model_validate({
             "measure_name": instrument.name.strip(),
             "instrument_name": m_name.strip(),
-            "instrument_description": instrument_description,
             "db_name": m_dbname,
             "measure_type": m_type,
             "inference_report": inference_report,
@@ -901,8 +912,6 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             db_column_name VARCHAR NOT NULL,
             measure_name VARCHAR NOT NULL,
             instrument_name VARCHAR NOT NULL,
-            instrument_description VARCHAR,
-            description VARCHAR,
             measure_type INT,
             value_type VARCHAR,
             histogram_type VARCHAR,
@@ -973,11 +982,37 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         """,
     ))
 
+    create_instrument_descriptions = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE IF NOT EXISTS instrument_descriptions(
+            instrument_name VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+            description VARCHAR,
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS
+            instrument_descriptions_instrument_name_idx
+            ON instrument_descriptions (instrument_name);
+        """,
+    ))
+
+    create_measure_descriptions = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE IF NOT EXISTS measure_descriptions(
+            measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+            description VARCHAR,
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS
+            measure_descriptions_measure_id_idx
+            ON measure_descriptions (measure_id);
+        """,
+    ))
+
     queries = [
         *create_instrument,
         *create_measure,
         *create_family,
         *create_person,
+        *create_instrument_descriptions,
+        *create_measure_descriptions,
     ]
 
     with connection.cursor() as cursor:
@@ -1117,6 +1152,23 @@ def write_results(
             )
 
             connection.execute(query)
+
+
+def write_descriptions(
+    connection: duckdb.DuckDBPyConnection,
+    primary_column: str,
+    table_name: str,
+    descriptions: dict[str, str],
+) -> None:
+    """Write descriptions into duckdb as description table."""
+    with connection.cursor() as cursor:
+        table_name = safe_db_name(table_name)
+        query = insert(
+            values(descriptions.items()),
+            table_name,
+            columns=[primary_column, "description"],
+        )
+        cursor.execute(to_duckdb_transpile(query))
 
 
 def load_measure_description_file(
@@ -1302,15 +1354,9 @@ def create_import_tasks(
     inference_configs: dict[str, Any],
     histogram_configs: MeasureHistogramConfigs | None,
     import_config: PhenoImportConfig,
-    measure_descriptions: dict[str, str],
-    instrument_descriptions: dict[str, str],
 ) -> None:
     """Add measure tasks for importing pheno data."""
     for instrument in instruments:
-        instrument_description = instrument_descriptions.get(
-            instrument.name, "",
-        )
-
         seen_col_names: dict[str, int] = defaultdict(int)
         table_column_names = [
             "person_id", "family_id", "role", "status", "sex",
@@ -1345,9 +1391,7 @@ def create_import_tasks(
             read_and_classify_measure,
             [
                 instrument,
-                instrument_description,
                 group_measure_names,
-                measure_descriptions,
                 import_config,
                 group_db_names,
                 group_inf_configs,
@@ -1360,7 +1404,6 @@ def create_import_tasks(
 def write_reports_to_parquet(
     output_file: Path,
     reports: dict[str, MeasureReport],
-    descriptions: dict[str, str],
     hist_configs: MeasureHistogramConfigs | None,
 ) -> Path:
     """Write inferred instrument measure values to parquet file."""
@@ -1369,8 +1412,6 @@ def write_reports_to_parquet(
         pa.field("db_column_name", pa.string()),
         pa.field("measure_name", pa.string()),
         pa.field("instrument_name", pa.string()),
-        pa.field("instrument_description", pa.string()),
-        pa.field("description", pa.string()),
         pa.field("measure_type", pa.int32()),
         pa.field("value_type", pa.string()),
         pa.field("histogram_type", pa.string()),
@@ -1387,8 +1428,6 @@ def write_reports_to_parquet(
         "db_column_name": [],
         "measure_name": [],
         "instrument_name": [],
-        "instrument_description": [],
-        "description": [],
         "measure_type": [],
         "value_type": [],
         "histogram_type": [],
@@ -1418,14 +1457,10 @@ def write_reports_to_parquet(
         values_domain = report.inference_report.values_domain.replace(
             "'", "''",
         )
-        desc = descriptions.get(m_id, "")
         batch_values["measure_id"].append(m_id)
         batch_values["db_column_name"].append(report.db_name)
         batch_values["measure_name"].append(report.measure_name)
         batch_values["instrument_name"].append(report.instrument_name)
-        batch_values["instrument_description"].append(
-            report.instrument_description)
-        batch_values["description"].append(desc)
         batch_values["measure_type"].append(report.measure_type.value)
         batch_values["value_type"].append(value_type)
         batch_values["histogram_type"].append(histogram_type)

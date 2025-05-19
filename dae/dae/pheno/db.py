@@ -6,8 +6,16 @@ from typing import Any, cast
 
 import duckdb
 import pandas as pd
+import sqlglot
 from sqlglot import column, expressions, select
-from sqlglot.expressions import Null, alias_, table_
+from sqlglot.expressions import (
+    Null,
+    Table,
+    alias_,
+    insert,
+    table_,
+    values,
+)
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import glot_and, to_duckdb_transpile
@@ -27,6 +35,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.person = table_("person")
         self.measure = table_("measure")
         self.instrument = table_("instrument")
+        self.measure_descriptions = table_("measure_descriptions")
+        self.instrument_descriptions = table_("instrument_descriptions")
         self.instrument_values_tables = self.find_instrument_values_tables()
 
     def find_instrument_values_tables(self) -> dict[str, expressions.Table]:
@@ -86,7 +96,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         Each row in the returned data frame represents given measure.
 
         Columns in the returned data frame are: `measure_id`, `measure_name`,
-        `instrument_name`, `description`, `stats`, `min_value`, `max_value`,
+        `instrument_name`, `stats`, `min_value`, `max_value`,
         `value_domain`, `has_probands`, `has_siblings`, `has_parents`,
         `default_filter`.
         """
@@ -106,23 +116,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             else:
                 hist_config_column = alias_(Null(), "histogram_config")
 
-            if "instrument_description" in column_names:
-                instrument_description_column = column(
-                    "instrument_description",
-                    measure_table.alias_or_name,
-                )
-            else:
-                instrument_description_column = alias_(
-                    Null(),
-                    "instrument_description",
-                )
-
         columns = [
             column("measure_id", measure_table.alias_or_name),
             column("instrument_name", measure_table.alias_or_name),
-            instrument_description_column,
             column("measure_name", measure_table.alias_or_name),
-            column("description", measure_table.alias_or_name),
             column("measure_type", measure_table.alias_or_name),
             column("value_type", measure_table.alias_or_name),
             column("histogram_type", measure_table.alias_or_name),
@@ -135,19 +132,56 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         ]
         query: Any = select(*columns).from_(
             measure_table,
-        ).where(f"{columns[4].sql()} IS NOT NULL")
+        )
+
+        measure_table_instrument_name_col = column(
+            "instrument_name", measure_table.alias_or_name)
+        instrument_descriptions_instrument_name_col = column(
+            "instrument_name", self.instrument_descriptions.alias_or_name)
+        instrument_descriptions_description_col = column(
+            "description", self.instrument_descriptions.alias_or_name)
+
+        query = query.join(
+                self.instrument_descriptions,
+                on=sqlglot.condition(
+                    measure_table_instrument_name_col.eq(
+                        instrument_descriptions_instrument_name_col,
+                    ),
+                ),
+                join_type="LEFT OUTER",
+            )
+        query = query.select(instrument_descriptions_description_col.as_(
+            "instrument_description"))
+
+        measure_table_measure_id_col = column(
+            "measure_id", measure_table.alias_or_name)
+        measure_descriptions_measure_id_col = column(
+            "measure_id", self.measure_descriptions.alias_or_name)
+        measure_descriptions_description_col = column(
+            "description", self.measure_descriptions.alias_or_name)
+
+        query = query.join(
+                self.measure_descriptions,
+                on=sqlglot.condition(
+                    measure_table_measure_id_col.eq(
+                        measure_descriptions_measure_id_col,
+                    ),
+                ),
+                join_type="LEFT OUTER",
+            )
+        query = query.select(measure_descriptions_description_col)
+
+        query = query.where(f"{columns[3].sql()} IS NOT NULL")
+
         if instrument is not None:
             query = query.where(columns[1]).eq(instrument)
         if measure_type is not None:
-            query = query.where(columns[4]).eq(measure_type.value)
+            query = query.where(columns[3]).eq(measure_type.value)
 
         with self.connection.cursor() as cursor:
             df = cursor.execute(to_duckdb_transpile(query)).df()
 
         df["histogram_config"] = df["histogram_config"].apply(
-            lambda x: None if pd.isna(x) else str(x),
-        )
-        df["instrument_description"] = df["instrument_description"].apply(
             lambda x: None if pd.isna(x) else str(x),
         )
 
@@ -338,57 +372,19 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             df["role"] = df["role"].transform(Role.from_value)
             return df
 
-    def save_instrument_descriptions(
+    def save_descriptions(
         self,
+        table: Table,
         descriptions: dict[str, str],
     ) -> None:
-        """Save instrument descriptions."""
-        measure_table = self.measure
+        """Save instrument or measure descriptions."""
+        descriptions_table = table.alias_or_name
         with self.connection.cursor() as cursor:
-            # UPDATE measure_table
-            # SET instrument_description = CASE instrument_name
-            # WHEN [instrument_name] THEN [description]
-            # ...
-            # ELSE NULL END WHERE instrument_name IN([instrument_name], ...)
-            def replace_quotes(x):
-                return x.replace("'", "''")
-            descriptions_case = "".join(
-                f"WHEN '{instrument_name}' "
-                f"THEN '{replace_quotes(description)}' "
-                for instrument_name, description in descriptions.items()
-            )
-            instrument_names = ",".join(
-                f"'{key}'" for key in descriptions
-            )
-            query = (
-                f"UPDATE {measure_table.alias_or_name} "  # noqa: S608
-                "SET instrument_description = "
-                f"CASE instrument_name {descriptions_case}"
-                f"ELSE NULL END WHERE instrument_name IN ({instrument_names})"
-            )
-            cursor.execute(query)
-
-    def save_measure_descriptions(
-        self,
-        descriptions: dict[str, str],
-    ) -> None:
-        """Save instrument descriptions."""
-        measure_table = self.measure
-        with self.connection.cursor() as cursor:
-            def replace_quotes(x):
-                return x.replace("'", "''")
-            descriptions_case = "".join(
-                f"WHEN '{measure_id}' THEN '{replace_quotes(description)}' "
-                for measure_id, description in descriptions.items()
-            )
-            measure_ids = ",".join(
-                f"'{key}'" for key in descriptions
-            )
-            query = (
-                f"UPDATE {measure_table.alias_or_name} "  # noqa: S608
-                "SET description = "
-                f"CASE measure_id {descriptions_case}"
-                f"ELSE NULL END WHERE measure_id IN ({measure_ids})"
+            query = insert(
+                values([(*descriptions.values(),)]),
+                descriptions_table,
+                columns=[*descriptions.keys()],
+                overwrite=True,
             )
             cursor.execute(query)
 
