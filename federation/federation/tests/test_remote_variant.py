@@ -5,13 +5,13 @@ import numpy as np
 import pytest
 
 from dae.pedigrees.family import Family, Person
-from federation.remote.remote_variant import (
+from federation.remote_variant import (
     RemoteFamilyAllele,
     RemoteFamilyVariant,
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_family() -> Family:
     members = [
         Person(
@@ -62,7 +62,7 @@ def sample_family() -> Family:
     return Family.from_persons(members)
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_attributes_columns() -> tuple[list[Any], list[str]]:
     attributes = [
         ["5:140391002"],

@@ -3,9 +3,9 @@ from typing import Any, cast
 
 from dae.enrichment_tool.enrichment_builder import BaseEnrichmentBuilder
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-from federation.remote.remote_study import RemoteGenotypeData
-from federation.remote.remote_study_wrapper import RemoteStudyWrapper
-from federation.remote.rest_api_client import RESTClient
+from federation.remote_study import RemoteGenotypeData
+from federation.remote_study_wrapper import RemoteStudyWrapper
+from federation.rest_api_client import RESTClient
 
 
 class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):

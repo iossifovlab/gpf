@@ -174,13 +174,7 @@ class RESTClient:
         return f"({self.remote_id}) {value}"
 
     def get_datasets(self) -> list[dict]:
-        return self.gpf_rest_client.get_all_datasets()
-
-    def get_dataset_config(self, study_id: str) -> dict | None:
-        response = self._get(f"datasets/config/{study_id}")
-        if response.status_code == 200:
-            return cast(dict, response.json())
-        return None
+        return self.gpf_rest_client.get_federation_datasets()
 
     def get_variants_preview(self, data: dict) -> requests.Response:
         return self._post(

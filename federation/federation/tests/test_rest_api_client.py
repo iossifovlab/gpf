@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from requests import Response
 
-from federation.remote.rest_api_client import RESTClient
+from federation.rest_api_client import RESTClient
 
 
 def test_get_datasets(rest_client: RESTClient) -> None:

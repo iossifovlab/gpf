@@ -53,6 +53,24 @@ class DenovoGeneSetsTypesView(QueryBaseView):
         return Response(dataset_phenotypes, status=status.HTTP_200_OK)
 
 
+class DenovoGeneSetsDb(QueryBaseView):
+    """
+    Class to return the entire denovo gene sets db.
+
+    Used for federation remote purposes.
+    """
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, _request: Request) -> Response:
+        """Build response to a get request."""
+        result = {}
+
+        for study_id, collection in self.gpf_instance.denovo_gene_sets_db._denovo_gene_set_collections.items():  # noqa: E501, SLF001
+            result[study_id] = dict(collection.cache)
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class GeneSetsView(QueryBaseView):
     """Class to handle gene set view.
 

@@ -8,9 +8,9 @@ from studies.study_wrapper import StudyWrapperBase
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
-from federation.remote.remote_phenotype_data import RemotePhenotypeData
-from federation.remote.remote_study import RemoteGenotypeData
-from federation.remote.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
+from federation.remote_phenotype_data import RemotePhenotypeData
+from federation.remote_study import RemoteGenotypeData
+from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
 
 logger = logging.getLogger(__name__)
 
