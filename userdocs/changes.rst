@@ -182,7 +182,7 @@ Release Notes
     * Fix handling of categorical histograms labels.
     * Fix transmitted rare variants filter.
     * Improvements in categorical histograms user interface.
-    * Update phenotype family and person filters to include roles. 
+    * Update phenotype family and person filters to include roles.
 
 * 2025.3.1
     * Fix permissions for any_user group with annonymous user.
@@ -203,7 +203,6 @@ Release Notes
     * Support for label rotation in categorical histograms.
     * Expand gene set collection GRR info page.
     * Fix support for phenotype person and family filters in genotype browser.
-    * 
 
 * 2025.2.2
     * Fix phenotype group hierarchy construction.
@@ -222,7 +221,8 @@ Release Notes
     * Support phenotype data into datasets hierarchy
     * Update and fix CNV collection statistics
     * Improvements in phenotype data import and phenotype browser cache
-    * Initial support for VCF serialization of full variants iterator from variant loaders
+    * Initial support for VCF serialization of full variants iterator from
+      variant loaders
     * Support for phenotype data common reports
     * Support for full pedigree information in phenotype data import
     * Adjust wgpf tool to support phenotype data stides and groups
@@ -240,7 +240,8 @@ Release Notes
     * Clean up phenotype browser cache build tool.
     * Fix support for categorical genomic scores queries.
     * Deprecation of `import_tools` and introduction of `genotypes_import`.
-    * Deprecation of `import_tools_pheno` and introduction of `phenotypes_import`.
+    * Deprecation of `import_tools_pheno` and introduction
+      of `phenotypes_import`.
     * Fix support for categorical histograms for genomic scores.
 
 * 2025.1.2
@@ -263,7 +264,8 @@ Release Notes
     * Extention of GPF REST client to support more REST API endpoints.
     * Switch to using DuckDb for gene profiles.
     * Fix handling of internal annotation attributes in annotate_vcf.
-    * NormalizeAlleleAnnotator to support discovery of the reference genome if not specified in the annotation pipeline.
+    * NormalizeAlleleAnnotator to support discovery of the reference genome
+      if not specified in the annotation pipeline.
     * Change the VEP annotator plugin to use VEP in offline mode.
     * Reorganization of genomic scores resources hierarchy.
     * Reorganization of genomic scores annotators hierarchy.
@@ -412,7 +414,8 @@ Release Notes
 * 2024.9.2
     * Support search for datasets in management user interface
     * Fix denovo report generation
-    * Remove duplicated large and small value labes in genomic scores histograms help modals
+    * Remove duplicated large and small value labes in genomic scores
+      histograms help modals
     * Fix bigWig genomic position table fetch method
     * Fix inmemory genomic position table handling of zero based scores
     * Fix handling of displayed_values_percent in categorical histograms
@@ -420,13 +423,15 @@ Release Notes
 * 2024.9.1
     * Fix default number of bins in genomic scores histograms
     * Support case insensitive search in phenotype browser
-    * Update links to annotators documentation in annotation pipeline documentation
+    * Update links to annotators documentation in annotation pipeline
+      documentation
     * Add missing files method in gene sets genomic resource implementation
     * Fix handling of ultra rare heuristics in DuckDb genotype storage queries
     * Clean up and imporements in wdae unit testing
     * Fix hanlding of zero based scores in inmemory genomic position table
     * Fix phenotype browser table sorting buttons state
-    * Refactor and clean up of GPFjs internal state handling and transition to ngrx
+    * Refactor and clean up of GPFjs internal state handling and transition
+      to ngrx
 
 * 2024.9.0
     * Performance improvements in annotation with bigWig scores resources
@@ -441,7 +446,8 @@ Release Notes
     * DuckDb genotype storage reorganization
     * Support for DuckDb genotype storage over S3
     * Separate GPF federation into a package ``gpf_federation``
-    * Revisit histogram configuration and support for user defined plot functions
+    * Revisit histogram configuration and support for user defined plot
+      functions
     * Improvements in ``gpf_wdae`` unit testing
 
 * 2024.8.2
@@ -457,7 +463,8 @@ Release Notes
 * 2024.8.0
     * Fix for pheno data import on clusters
     * Fix genomic scores histograms large and small value labels
-    * Change genomic scores configuration to support `column_name` and `column_index`
+    * Change genomic scores configuration to support `column_name` and
+      `column_index`
     * Fix support for genomic scores with `zero_based` genomic position table
 * 2024.7.8
     * Fix handling of bigWig resources with chromosome mapping in `grr_manage`
@@ -533,7 +540,7 @@ Release Notes
     * Update for GRR info pages for genomic scores, gene scores, gene models
       and reference genome
     * Demo annotators for external tools using batch mode annotation
-    * Demo annotators for external tools using using GRR resources and 
+    * Demo annotators for external tools using using GRR resources and
       batch mode annotation
     * Fixes and optimization for genotype variants query over schema2
       parquet loader
@@ -590,14 +597,13 @@ Release Notes
     * Improved styling of annotation documentation generated by annote_doc
     * Fix handling of `hidden` datasets in GPF home page hierarchy
     * Bug fix for loading datasets in GPFjs
-		
+
 * 2024.5.1
     * Annotation pipeline as genomic resource
     * Improvements in liftover annotator
     * Store column ordering in gene profiles state
     * Fix resizing of phenotype browser table
     * Source maps instrumentation of GPFjs build
-		
 
 * 2024.5.0
     * Support for preamble in annotation pipeline
