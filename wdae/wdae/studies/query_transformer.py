@@ -8,13 +8,10 @@ from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
 from dae.query_variants.sql.schema2.sql_query_builder import (
-    SqlQueryBuilder,
     TagsQuery,
-    ZygosityQuery,
 )
 from dae.utils.regions import Region
-from dae.utils.variant_utils import BitmaskEnumTranslator
-from dae.variants.attributes import Inheritance, Role, Sex, Zygosity
+from dae.variants.attributes import Inheritance, Zygosity
 from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
@@ -106,13 +103,10 @@ class QueryTransformer:
 
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
-        present_in_child: set[str],
-        present_in_parent: set[str],
+        present_in_child: str | None,
+        present_in_parent: str | None,
     ) -> str | None:
-        roles_query = [
-            QueryTransformer._present_in_child_to_roles(present_in_child),
-            QueryTransformer._present_in_parent_to_roles(present_in_parent),
-        ]
+        roles_query = [present_in_child, present_in_parent]
         result = [role for role in roles_query if role is not None]
 
         if len(result) == 2:
@@ -175,21 +169,23 @@ class QueryTransformer:
     @staticmethod
     def _present_in_child_to_roles(
         present_in_child: set[str],
+        suffix: str | None = None,
     ) -> str | None:
+        suffix = "" if suffix is None else f"~{suffix}"
         roles_query = []
 
         if "proband only" in present_in_child:
-            roles_query.append("prb and not sib")
+            roles_query.append(f"prb{suffix} and not sib{suffix}")
 
         if "sibling only" in present_in_child:
-            roles_query.append("sib and not prb")
+            roles_query.append(f"sib{suffix} and not prb{suffix}")
 
         if "proband and sibling" in present_in_child:
-            roles_query.append("prb and sib")
+            roles_query.append(f"prb{suffix} and sib{suffix}")
 
         if "neither" in present_in_child:
-            roles_query.append("not prb and not sib")
-        if len(roles_query) == 4 or len(roles_query) == 0:
+            roles_query.append(f"not prb{suffix} and not sib{suffix}")
+        if (len(roles_query) == 4 and suffix == "") or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
@@ -198,21 +194,23 @@ class QueryTransformer:
     @staticmethod
     def _present_in_parent_to_roles(
         present_in_parent: set[str],
+        suffix: str | None = None,
     ) -> str | None:
+        suffix = "" if suffix is None else f"~{suffix}"
         roles_query = []
 
         if "mother only" in present_in_parent:
-            roles_query.append("mom and not dad")
+            roles_query.append(f"mom{suffix} and not dad{suffix}")
 
         if "father only" in present_in_parent:
-            roles_query.append("dad and not mom")
+            roles_query.append(f"dad{suffix} and not mom{suffix}")
 
         if "mother and father" in present_in_parent:
-            roles_query.append("mom and dad")
+            roles_query.append(f"mom{suffix} and dad{suffix}")
 
         if "neither" in present_in_parent:
-            roles_query.append("not mom and not dad")
-        if len(roles_query) == 4 or len(roles_query) == 0:
+            roles_query.append(f"not mom{suffix} and not dad{suffix}")
+        if (len(roles_query) == 4 and suffix == "") or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
@@ -261,15 +259,13 @@ class QueryTransformer:
     def _handle_person_set_collection(
         self, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
-        psc_query = kwargs.pop("personSetCollection", {})
-        logger.debug("person set collection requested: %s", psc_query)
+        psc_query_raw = kwargs.pop("personSetCollection", {})
+        logger.debug("person set collection requested: %s", psc_query_raw)
 
-        collection_id, selected_sets = None, None
-        if psc_query:
-            collection_id = psc_query["id"]
-            selected_sets = psc_query["checkedValues"]
-            kwargs["person_set_collection"] = PSCQuery(
-                collection_id, set(selected_sets))
+        if psc_query_raw:
+            collection_id = psc_query_raw["id"]
+            selected_sets = psc_query_raw["checkedValues"]
+            psc_query = PSCQuery(collection_id, set(selected_sets))
         else:
             # use default (first defined) person set collection
             # we need it for meaningful pedigree display
@@ -277,9 +273,38 @@ class QueryTransformer:
                 .genotype_data.person_set_collections
             psc_id = next(iter(person_set_collections))
             default_psc = person_set_collections[psc_id]
-            kwargs["person_set_collection"] = PSCQuery(
+            psc_query = PSCQuery(
                 psc_id, set(default_psc.person_sets.keys()),
             )
+
+        if not self.study_wrapper.is_genotype:
+            raise ValueError(
+                "Cannot handle person set collection "
+                "query argument on non genotype studies.",
+            )
+        psc = self.study_wrapper.get_person_set_collection(psc_query.psc_id)
+
+        zygosity = None
+        if "zygosityInStatus" in kwargs:
+            zygosity = kwargs.pop("zygosityInStatus")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in status argument - not a string.",
+                )
+
+            zygosity = zygosity.lower()
+
+            if zygosity not in ["homozygous", "heterozygous"]:
+                raise ValueError(
+                    f"Invalid zygosity in status value {zygosity},"
+                    "expected either homozygous or heterozygous.",
+                )
+
+        psc_queries = psc.transform_pedigree_queries(
+            psc_query, status_zygosity=zygosity,
+        )
+
+        kwargs.update(psc_queries)
 
         return kwargs
 
@@ -333,35 +358,67 @@ class QueryTransformer:
 
         present_in_child = set()
         present_in_parent = set()
+        children_roles_query = None
+        parent_roles_query = None
         rarity = None
-        if "presentInChild" in kwargs or "presentInParent" in kwargs:
-            if "presentInChild" in kwargs:
-                present_in_child = set(kwargs["presentInChild"])
-                kwargs.pop("presentInChild")
-                children_roles_query = \
-                    self._present_in_child_to_roles(present_in_child)
+        valid_zygosities = [v.name for v in Zygosity]
+        if "presentInChild" in kwargs:
+            present_in_child = set(kwargs["presentInChild"])
+            kwargs.pop("presentInChild")
 
-                kwargs["roles_in_child"] = children_roles_query
-
-            if "presentInParent" in kwargs:
-                present_in_parent = \
-                    set(kwargs["presentInParent"]["presentInParent"])
-                rarity = kwargs["presentInParent"].get("rarity", None)
-                kwargs.pop("presentInParent")
-                parent_roles_query = \
-                    self._present_in_parent_to_roles(present_in_parent)
-
-                kwargs["roles_in_parent"] = parent_roles_query
-
-            if present_in_parent != {"neither"} and rarity is not None:
-                frequency_filter = kwargs.get("frequency_filter", [])
-                arg, val = \
-                    self._transform_present_in_child_and_parent_frequency(
-                        present_in_child, present_in_parent,
-                        rarity, frequency_filter,
+            zygosity = None
+            if "zygosityInChild" in kwargs:
+                zygosity = kwargs.pop("zygosityInChild")
+                if not isinstance(zygosity, str):
+                    raise ValueError(
+                        "Invalid zygosity in child argument - not a string.",
                     )
-                if arg is not None:
-                    kwargs[arg] = val
+                if zygosity not in valid_zygosities:
+                    raise ValueError(
+                        f"Invalid zygosity in child {zygosity}, "
+                        f"expected one of {valid_zygosities}",
+                    )
+
+            children_roles_query = self._present_in_child_to_roles(
+                present_in_child, suffix=zygosity,
+            )
+
+        if "presentInParent" in kwargs:
+            present_in_parent = \
+                set(kwargs["presentInParent"]["presentInParent"])
+            rarity = kwargs["presentInParent"].get("rarity", None)
+            kwargs.pop("presentInParent")
+
+            zygosity = None
+            if "zygosityInParent" in kwargs:
+                zygosity = kwargs.pop("zygosityInParent")
+                if not isinstance(zygosity, str):
+                    raise ValueError(
+                        "Invalid zygosity in parent argument - not a string.",
+                    )
+                if zygosity not in valid_zygosities:
+                    raise ValueError(
+                        f"Invalid zygosity in parent {zygosity}, "
+                        f"expected one of {valid_zygosities}",
+                    )
+
+            parent_roles_query = self._present_in_parent_to_roles(
+                present_in_parent, suffix=zygosity,
+            )
+
+        kwargs["roles"] = self._transform_present_in_child_and_parent_roles(
+            children_roles_query, parent_roles_query,
+        )
+
+        if present_in_parent != {"neither"} and rarity is not None:
+            frequency_filter = kwargs.get("frequency_filter", [])
+            arg, val = \
+                self._transform_present_in_child_and_parent_frequency(
+                    present_in_child, present_in_parent,
+                    rarity, frequency_filter,
+                )
+            if arg is not None:
+                kwargs[arg] = val
 
         if kwargs.get("inheritanceTypeFilter"):
             inheritance_types = set(kwargs["inheritanceTypeFilter"])
@@ -407,7 +464,20 @@ class QueryTransformer:
 
         if "genders" in kwargs:
             sexes = set(kwargs["genders"])
+            zygosity = ""
+            if "zygosityInParent" in kwargs:
+                zygosity = kwargs.pop("zygosityInParent")
+                if not isinstance(zygosity, str):
+                    raise ValueError(
+                        "Invalid zygosity in parent argument - not a string.",
+                    )
+                if zygosity not in valid_zygosities:
+                    raise ValueError(
+                        f"Invalid zygosity in parent {zygosity}, "
+                        f"expected one of {valid_zygosities}",
+                    )
             if sexes != {"female", "male", "unspecified"}:
+                sexes = {f"{sex}~{zygosity}" for sex in sexes}
                 sexes_query = f"any([{','.join(sexes)}])"
                 kwargs["genders"] = sexes_query
             else:
@@ -501,184 +571,6 @@ class QueryTransformer:
                     )
                 else:
                     kwargs["familyIds"] = matching_family_ids
-
-        kwargs["zygosity_query"] = ZygosityQuery()
-        if "zygosityInStatus" in kwargs:
-            zygosity = kwargs.pop("zygosityInStatus")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in status argument - not a string.",
-                )
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in status value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-
-            kwargs["zygosity_query"].status_zygosity = zygosity
-
-        role_translator = BitmaskEnumTranslator(
-            main_enum_type=Zygosity, partition_by_enum_type=Role,
-        )
-        if "zygosityInParent" in kwargs:
-            zygosity = kwargs.pop("zygosityInParent")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in parents argument - not a string.",
-                )
-            if "roles_in_parent" not in kwargs:
-                raise ValueError(
-                    "Missing present in parent for parent zygosity",
-                )
-
-            roles_in_parent = kwargs["roles_in_parent"]
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in parents value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-            mask = 0
-            if roles_in_parent is None:
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.mom,
-                )
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.dad,
-                )
-            else:
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_parent), Role.mom.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.mom,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_parent), Role.dad.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.dad,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_parent), Role.mom.value | Role.dad.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.dad,
-                    )
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.mom,
-                    )
-            kwargs["zygosity_query"].parents_zygosity = mask
-
-        if "zygosityInChild" in kwargs:
-            zygosity = kwargs.pop("zygosityInChild")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in children argument - not a string.",
-                )
-
-            if "roles_in_child" not in kwargs:
-                raise ValueError(
-                    "Missing present in child for child zygosity",
-                )
-
-            roles_in_child = kwargs["roles_in_child"]
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in children value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-
-            mask = 0
-
-            if roles_in_child is None:
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.prb,
-                )
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.sib,
-                )
-
-            else:
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_child), Role.prb.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.prb,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_child), Role.sib.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.sib,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_child), Role.prb.value | Role.sib.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.prb,
-                    )
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.sib,
-                    )
-            kwargs["zygosity_query"].children_zygosity = mask
-
-        gender_translator = BitmaskEnumTranslator(
-            main_enum_type=Zygosity, partition_by_enum_type=Sex,
-        )
-
-        if "zygosityInGenders" in kwargs:
-            zygosity = kwargs.pop("zygosityInGenders")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in genders argument - not a string.",
-                )
-
-            if "genders" not in kwargs:
-                raise ValueError(
-                    "Missing genders for gender zygosity",
-                )
-
-            genders = kwargs["genders"]
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in children value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-
-            mask = 0
-
-            if SqlQueryBuilder.check_sexes_query_value(
-                cast(str, genders), Sex.M.value,
-            ):
-                mask = gender_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Sex.M,
-                )
-            if SqlQueryBuilder.check_sexes_query_value(
-                cast(str, genders), Sex.F.value,
-            ):
-                mask = gender_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Sex.F,
-                )
-            if SqlQueryBuilder.check_sexes_query_value(
-                cast(str, genders), Sex.U.value,
-            ):
-                mask = gender_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Sex.U,
-                )
-
-            kwargs["zygosity_query"].sex_zygosity = mask
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])
