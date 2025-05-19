@@ -21,7 +21,7 @@ setuptools.setup(
     scripts=[],
     entry_points="""
     [wdae.gpf_instance.extensions]
-    remote_extension=federation.remote.remote_extension:load_extension
+    remote_extension=federation.remote_extension:load_extension
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
