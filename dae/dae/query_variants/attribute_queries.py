@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from enum import Enum
+from typing import Protocol
 
 from lark import Lark, Transformer, Tree
 from sqlglot import not_, parse_one
@@ -287,7 +288,9 @@ class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
         )
 
 
-Matcher = Callable[[int, int | None], bool]
+class Matcher(Protocol):
+    def __call__(self, a: int, b: int | None = None) -> bool:  # noqa: ARG002
+        return False
 
 
 def transform_attribute_query_to_function(
