@@ -232,6 +232,14 @@ class IsDatasetAllowed(permissions.BasePermission):
                         allowed_datasets.add(dataset_id)
                         allowed_datasets.update(
                             [
+                                parent.dataset_id for parent in
+                                DatasetHierarchy.get_parents(
+                                    instance_id, dataset,
+                                )
+                            ],
+                        )
+                        allowed_datasets.update(
+                            [
                                 child.dataset_id for child in
                                 DatasetHierarchy.get_children(
                                     instance_id,

@@ -108,6 +108,24 @@ def test_dataset_group_rights_gives_access_to_parent_dataset(
     assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
 
+def test_any_user_propagates_to_parents(
+    omni_dataset: GenotypeData,
+) -> None:
+    add_group_perm_to_dataset("any_user", "dataset_1")
+    assert user_has_permission("t4c8_instance",
+                               cast(User, AnonymousUser()),
+                               omni_dataset.study_id)
+
+
+def test_any_user_propagates_to_children(
+    omni_dataset: GenotypeData,
+) -> None:
+    add_group_perm_to_dataset("any_user", omni_dataset.study_id)
+    assert user_has_permission("t4c8_instance",
+                               cast(User, AnonymousUser()),
+                               "dataset_1")
+
+
 def test_dataset_group_rights_mixed(
     user: User,
     custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
