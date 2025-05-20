@@ -74,9 +74,10 @@ def test_transform_present_in_child_and_present_in_parent(
     accepted: bool,  # noqa: FBT001
 ) -> None:
 
-    roles_q = QueryTransformer\
-        ._transform_present_in_child_and_parent_roles(
-            present_in_child, present_in_parent)
+    roles_q = QueryTransformer._transform_present_in_child_and_parent_roles(
+        QueryTransformer._present_in_child_to_roles(present_in_child),
+        QueryTransformer._present_in_parent_to_roles(present_in_parent),
+    )
     assert roles_q is not None
     role_matcher = transform_attribute_query_to_function(Role, roles_q)
 
@@ -140,7 +141,9 @@ def test_transform_present_in_child_and_present_in_parent_roles(
 ) -> None:
     roles_query = QueryTransformer\
         ._transform_present_in_child_and_parent_roles(
-            present_in_child, present_in_parent)
+            QueryTransformer._present_in_child_to_roles(present_in_child),
+            QueryTransformer._present_in_parent_to_roles(present_in_parent),
+        )
     assert roles_query is not None
     assert roles_query == expected_query
     for value in accepted:
