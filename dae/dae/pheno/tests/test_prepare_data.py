@@ -446,7 +446,7 @@ def test_handle_regressions(
 
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
-    )["regression"]
+    )["regressions"]
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
     browser = PhenotypeData.create_browser(
@@ -511,7 +511,7 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
     )
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
-    )["regression"]
+    )["regressions"]
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
     browser = PhenotypeData.create_browser(
@@ -616,7 +616,7 @@ def test_handle_regressions_default_jitter(
 
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
-    )["regression"]
+    )["regressions"]
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
     browser = PhenotypeData.create_browser(

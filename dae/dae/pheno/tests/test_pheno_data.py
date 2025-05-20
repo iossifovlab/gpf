@@ -85,7 +85,7 @@ def test_measure_to_json(
         "description": "Measure number one",
         "defaultFilter": "",
         "histogramConfig": None,
-        "valuesDomain": "[21.04639185188603, 131.3034132504469]",
+        "valuesDomain": "21.04639185188603, 131.3034132504469",
         "minValue": pytest.approx(21.046, rel=1e-1),
         "maxValue": pytest.approx(131.303, rel=1e-1),
     }
@@ -99,7 +99,7 @@ def test_measure_to_json(
         "measureType": "categorical",
         "histogramType": "CategoricalHistogram",
         "valueType": "str",
-        "description": "",
+        "description": None,
         "defaultFilter": "",
         "histogramConfig": None,
         "valuesDomain": "catA, catB, catC, catD, catF",
@@ -167,8 +167,8 @@ def test_data_get_instruments(fake_phenotype_data: PhenotypeStudy) -> None:
 
 def test_data_get_instrument_measures(fake_phenotype_data: PhenotypeStudy):
     assert fake_phenotype_data.get_instrument_measures("i1") == [
-        "i1.age", "i1.iq", "i1.m1", "i1.m2", "i1.m3", "i1.m4",
-        "i1.m5", "i1.m6", "i1.m7", "i1.m8", "i1.m9", "i1.m10",
+        "i1.m1", "i1.m2", "i1.m9", "i1.age", "i1.iq", "i1.m3", "i1.m4",
+        "i1.m5", "i1.m6", "i1.m7", "i1.m8", "i1.m10",
     ]
 
 
@@ -210,7 +210,7 @@ def test_data_is_browser_outdated_older(
     # this is the browser manifest's timestamp + 1, hardcoded
     # cause writing it dynamically will bloat the test further.
     # update this value if the browser db file is re-built.
-    import_manifest.unix_timestamp = 1739974139 + 1
+    import_manifest.unix_timestamp = 1747730757 + 1
 
     mocker.patch(
         "dae.pheno.pheno_data.PhenotypeStudy.generate_import_manifests",
