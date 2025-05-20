@@ -81,14 +81,24 @@ class RemoteGenotypeData(GenotypeDataStudy):
         families_details = self.rest_client.get_all_family_details(
             self.remote_study_id,
         )
+
+        result = FamiliesData()
+
         for family in families_details:
             family_id = family["family_id"]
             person_jsons = family["members"]
-            family_members = [
-                Person(**person_json) for person_json in person_jsons
-            ]
+            family_members = []
+            for person_json in person_jsons:
+                person = Person(**person_json)
+                family_members.append(person)
+                result.persons_by_person_id[person.person_id].append(person)
+                result.persons[person.fpid] = person
             families[family_id] = Family.from_persons(family_members)
-        result = FamiliesData.from_families(families)
+
+        # Setting the families directly since we can assume that
+        # the remote has carried out all necessary transformations
+        result._families = families  # noqa: SLF001
+
         tag_families_data(result)
         return result
 
