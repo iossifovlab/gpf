@@ -774,6 +774,8 @@ test.describe('Pheno Measures tests', () => {
     const downloadFrame1 = (await downloadData1.select(downloadData1.columns.sort()).collect()).sort('person_id');
     expect(fixtureFrame1.toString()).toEqual(downloadFrame1.toString());
 
+    await download1.delete();
+
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
     await page.locator('gpf-family-filters-block').getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_4').click();
