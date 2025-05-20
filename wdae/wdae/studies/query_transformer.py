@@ -304,7 +304,8 @@ class QueryTransformer:
             psc_query, status_zygosity=zygosity,
         )
 
-        kwargs.update(psc_queries)
+        if psc_queries is not None:
+            kwargs.update(psc_queries)
 
         return kwargs
 
