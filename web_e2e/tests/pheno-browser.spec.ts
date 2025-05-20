@@ -15,7 +15,7 @@ test.describe('Pheno browser tests', () => {
 
 
   [
-    {seachQuery: 'the age'},
+    {seachQuery: 'age'},
     {seachQuery: 'measure_5'}
   ].forEach(data => {
     test(`should filter the correct rows when typing "${data.seachQuery}" in the searchbox`, async({ page }) => {
