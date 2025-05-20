@@ -16,4 +16,5 @@ GPF Administration
    gpf_tools
    gpf_instance_configuration
    study_configuration
+   production_gpf
    data_appendix
