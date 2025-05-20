@@ -23,12 +23,12 @@ files:
 
 * The list
   of sequenced children available from
-  `Supplementary Data
-  1. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM3_ESM.xlsx>`_
+  `Supplementary Data 1
+  <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM3_ESM.xlsx>`_
 
 * The list of SNP and INDEL de novo variants is available from
-  `Supplementary Data
-  2. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM4_ESM.xlsx>`_
+  `Supplementary Data 2
+  <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM4_ESM.xlsx>`_
 
 
 .. note::
