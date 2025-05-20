@@ -477,8 +477,9 @@ class QueryTransformer:
                         f"Invalid zygosity in parent {zygosity}, "
                         f"expected one of {valid_zygosities}",
                     )
+                zygosity = f"~{zygosity}"
             if sexes != {"female", "male", "unspecified"}:
-                sexes = {f"{sex}~{zygosity}" for sex in sexes}
+                sexes = {f"{sex}{zygosity}" for sex in sexes}
                 sexes_query = f"any([{','.join(sexes)}])"
                 kwargs["genders"] = sexes_query
             else:
