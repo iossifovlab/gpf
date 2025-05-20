@@ -12,6 +12,7 @@ from sqlglot.expressions import (
     Null,
     Table,
     alias_,
+    delete,
     insert,
     table_,
     values,
@@ -395,13 +396,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Save instrument or measure descriptions."""
         descriptions_table = table.alias_or_name
         with self.connection.cursor() as cursor:
+            delete_rows = delete(table.alias_or_name)
             query = insert(
-                values([(*descriptions.values(),)]),
+                values([tuple(i) for i in descriptions.items()]),
                 descriptions_table,
-                columns=[*descriptions.keys()],
-                overwrite=True,
             )
-            cursor.execute(query)
+            cursor.execute(to_duckdb_transpile(delete_rows))
+            cursor.execute(to_duckdb_transpile(query))
 
 
 def safe_db_name(name: str) -> str:

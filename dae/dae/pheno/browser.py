@@ -532,13 +532,13 @@ class PhenoBrowser:
         """Save instrument or measure descriptions."""
         descriptions_table = table.alias_or_name
         with self.connection.cursor() as cursor:
+            delete_rows = delete(table.alias_or_name)
             query = insert(
-                values([(*descriptions.values(),)]),
+                values([tuple(i) for i in descriptions.items()]),
                 descriptions_table,
-                columns=[*descriptions.keys()],
-                overwrite=True,
             )
-            cursor.execute(query)
+            cursor.execute(to_duckdb_transpile(delete_rows))
+            cursor.execute(to_duckdb_transpile(query))
 
     @property
     def regression_ids(self) -> list[str]:
