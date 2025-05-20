@@ -59,7 +59,7 @@ def test_browser_update(tmp_path: str) -> None:
     assert res["figure_distribution"] == "test_figure.png"
 
 
-def test_browser_has_descriptions(tmp_path: str) -> None:
+def test_browser_has_measure_descriptions(tmp_path: str) -> None:
     dbfile = Path(tmp_path) / "browser.db"
     browser = PhenoBrowser(str(dbfile), read_only=False)
     assert browser is not None
@@ -73,7 +73,7 @@ def test_browser_has_descriptions(tmp_path: str) -> None:
             "description": None,
         }
         browser.save(v)
-    assert not browser.has_descriptions
+    assert not browser.has_measure_descriptions
 
     v = {
         "measure_id": "test.measure4",
@@ -83,7 +83,7 @@ def test_browser_has_descriptions(tmp_path: str) -> None:
         "description": "a description",
     }
     browser.save(v)
-    assert browser.has_descriptions
+    assert browser.has_measure_descriptions
 
 
 def test_search_measures_get_all(
@@ -133,20 +133,6 @@ def test_search_measures_get_by_instrument(
     assert len(measures) == 1
     for row in measures:
         assert row["instrument_name"] == "i2"
-
-
-def test_search_measures_by_keyword_in_description(
-    fake_phenotype_data_browser_dbfile: str,
-) -> None:
-    browser = PhenoBrowser(
-        fake_phenotype_data_browser_dbfile,
-        read_only=True,
-    )
-    assert browser is not None
-    measures = list(browser.search_measures(None, "number"))
-    assert len(measures) == 3
-    for row in measures:
-        assert "number" in row["description"]
 
 
 def test_search_measures_by_keyword_in_measure_id(

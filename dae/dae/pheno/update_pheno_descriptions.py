@@ -56,10 +56,22 @@ def save_descriptions(
     pheno_browser_db: PhenoBrowser,
 ) -> None:
     """Save new descriptions to pheno db and pheno browser db."""
-    pheno_db.save_instrument_descriptions(instrument_descriptions)
-    pheno_browser_db.save_instrument_descriptions(instrument_descriptions)
-    pheno_db.save_measure_descriptions(measure_descriptions)
-    pheno_browser_db.save_measure_descriptions(measure_descriptions)
+    pheno_db.save_descriptions(
+        pheno_db.instrument_descriptions,
+        instrument_descriptions,
+    )
+    pheno_browser_db.save_descriptions(
+        pheno_browser_db.instrument_descriptions,
+        instrument_descriptions,
+    )
+    pheno_db.save_descriptions(
+        pheno_db.measure_descriptions,
+        measure_descriptions,
+    )
+    pheno_browser_db.save_descriptions(
+        pheno_browser_db.measure_descriptions,
+        measure_descriptions,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

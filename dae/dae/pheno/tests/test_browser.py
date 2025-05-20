@@ -18,7 +18,7 @@ def test_create_browser_tables(
     assert spy.call_count == 1
 
     tables = browser.connection.execute("SELECT * FROM duckdb_tables;").df()
-    assert len(tables) == 3
+    assert len(tables) == 5
 
 
 def test_save(tmp_path: pathlib.Path) -> None:
@@ -52,11 +52,17 @@ def test_save_already_existing(tmp_path: pathlib.Path) -> None:
     browser.save(measure)
     result = browser.connection.execute("SELECT * FROM variable_browser;").df()
     assert len(result) == 1
+    result = browser.connection.execute(
+        "SELECT * FROM measure_descriptions;").df()
+    assert len(result) == 1
     assert result["description"][0] == "a test measure"
 
     measure["description"] = "overriding measure"
     browser.save(measure)
     result = browser.connection.execute("SELECT * FROM variable_browser;").df()
+    assert len(result) == 1
+    result = browser.connection.execute(
+        "SELECT * FROM measure_descriptions;").df()
     assert len(result) == 1
     assert result["description"][0] == "overriding measure"
 
@@ -154,9 +160,6 @@ def test_save_regression_values_already_existing(
                             "i2.m1",
                             "i3.m1",
                             "i4.m1"}),
-        # the keyword here is found in the descriptions of these measures
-        (None, "Measure number", None, {"i1.m1", "i1.m2", "i1.m9"}),
-        # page size is 1001 and there's only 17 measures; result should be empty
         (None, None, 2, set()),
     ],
 )
@@ -212,11 +215,6 @@ def test_search_measures(
                                 *[MeasureType.ordinal] * 4,
                                 *[MeasureType.categorical] * 1,
                                 *[MeasureType.raw] * 3]),
-        # three measures with descriptions, fourteen without
-        ("description", None, [*[''] * 12,  # noqa Q000
-                               "Measure number nine",
-                               "Measure number one",
-                               "Measure number two"]),
     ],
 )
 def test_search_measures_order_and_sort(
@@ -247,9 +245,6 @@ def test_search_measures_order_and_sort(
         ("i2", None, None, 1),
         (None, "i2", None, 1),
         (None, "m1", None, 5),
-        # the keyword here is found in the descriptions of these measures
-        (None, "Measure number", None, 3),
-        # page size is 1001 and there's only 17 measures; result should be empty
         (None, None, 2, 0),
     ],
 )
@@ -304,5 +299,5 @@ def test_regression_display_names_with_ids(
     }
 
 
-def test_has_descriptions(fake_pheno_browser: PhenoBrowser) -> None:
-    assert fake_pheno_browser.has_descriptions is True
+def test_has_measure_descriptions(fake_pheno_browser: PhenoBrowser) -> None:
+    assert fake_pheno_browser.has_measure_descriptions is True

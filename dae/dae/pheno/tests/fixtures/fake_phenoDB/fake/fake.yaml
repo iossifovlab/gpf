@@ -1,9 +1,7 @@
 browser_images_url: static/images/
 id: fake
 name: fake
-type: study
-
-regression:
+regressions:
   age:
     display_name: age
     instrument_name: i1
@@ -16,6 +14,7 @@ regression:
     jitter: 0.1
     measure_names:
     - iq
+type: study
 
 common_report:
   enabled: True
