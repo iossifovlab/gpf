@@ -99,11 +99,12 @@ def test_liftover_chain_fixture(
 
 @pytest.mark.parametrize("annotatable, expected", [
     (Position("1", 10), Position("chr1", 6)),
-    (Region("1", 5, 19), Region("chr1", 1, 15)),
+    (Position("1", 120), None),
     (Region("1", 5, 52), Region("chr1", 1, 48)),
     (Region("1", 5, 53), None),
     (CNVAllele("1", 5, 52, CNVAllele.Type.LARGE_DELETION),
      CNVAllele("chr1", 1, 48, CNVAllele.Type.LARGE_DELETION)),
+    (CNVAllele("1", 999, 999, CNVAllele.Type.LARGE_DELETION), None),
 ])
 def test_liftover_annotator(
         annotatable: Annotatable,

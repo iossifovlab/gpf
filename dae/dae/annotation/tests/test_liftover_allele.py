@@ -1,9 +1,16 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 import textwrap
+from unittest.mock import MagicMock, patch
 
 import pytest
+import pytest_mock
 
+from dae.annotation.annotatable import VCFAllele
 from dae.annotation.liftover_annotator import (
+    AbstractLiftoverAnnotator,
+    _liftover_sequence,
+    _liftover_snp_simple,
+    _liftover_variant,
     basic_liftover_allele,
     bcf_liftover_allele,
     bcf_liftover_variant,
@@ -68,7 +75,7 @@ def test_liftover_allele_util(
     assert lalt == ealt
 
 
-@pytest.fixture()
+@pytest.fixture
 def liftover_ex4_grr(
         tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("liftover_ex4_grr")
@@ -271,7 +278,7 @@ def test_ex4d_fixture(
     assert t_ref == "TTTT"
 
 
-@pytest.fixture()
+@pytest.fixture
 def liftover_ex3_grr(
         tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("liftover_ex4_grr")
@@ -675,6 +682,7 @@ def test_basic_liftover_allele(
     res = liftover_grr_fixture.get_resource("source_genome")
     source_genome = build_reference_genome_from_resource(res).open()
     assert source_genome is not None
+
     res = liftover_grr_fixture.get_resource("target_genome")
     target_genome = build_reference_genome_from_resource(res).open()
     assert target_genome is not None
@@ -691,3 +699,429 @@ def test_basic_liftover_allele(
     assert lpos == epos
     assert lref == eref
     assert lalt == ealt
+
+
+def test_basic_liftover_allele_missing_chromosome(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    lresult = basic_liftover_allele(
+        "foo", 6, "C", "C",
+        liftover_chain, source_genome, target_genome,
+    )
+    assert lresult is None
+
+
+def test_basic_liftover_allele_no_target_sequence(
+    liftover_grr_fixture_reverse_strand: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture_reverse_strand.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture_reverse_strand.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture_reverse_strand.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    with patch.object(target_genome, "get_sequence", return_value=""):
+        lresult = basic_liftover_allele(
+            "foo", 6, "A", "A",
+            liftover_chain, source_genome, target_genome,
+        )
+        assert lresult is None
+
+
+def test_basic_liftover_allele_no_variant(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    lresult = basic_liftover_allele(
+        "foo", 6, "A", "C",
+        liftover_chain, source_genome, target_genome,
+    )
+    assert lresult is None
+
+
+def test_liftover_allele(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    class TestLiftoverAnnotator(AbstractLiftoverAnnotator):
+        def _internal_liftover_allele(
+            self, allele: VCFAllele) -> tuple[str, int, str, str] | None:  # noqa: ARG002
+            return ("chrFoo", 5678, "T", "C")
+    mock_pipeline = MagicMock()
+    annotator = TestLiftoverAnnotator(
+        pipeline=mock_pipeline,
+        info=MagicMock(),
+        chain=liftover_chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+    )
+
+    mock_allele = MagicMock(spec=VCFAllele)
+    mock_allele.chrom = "chrFoo"
+    mock_allele.position = 1234
+    mock_allele.ref = "A"
+    mock_allele.alt = "T"
+
+    result = annotator.liftover_allele(mock_allele)
+
+    assert result is not None
+    assert isinstance(result, VCFAllele)
+    assert result.chrom == "chrFoo"
+    assert result.position == 5678
+    assert result.ref == "T"
+    assert result.alt == "C"
+
+
+def test_liftover_allele_none_allele(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    class TestLiftoverAnnotatorNone(AbstractLiftoverAnnotator):
+        def _internal_liftover_allele(
+            self, allele: VCFAllele) -> tuple[str, int, str, str] | None:  # noqa: ARG002
+            return None
+    mock_pipeline = MagicMock()
+    annotator = TestLiftoverAnnotatorNone(
+        pipeline=mock_pipeline,
+        info=MagicMock(),
+        chain=liftover_chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+    )
+
+    mock_allele = MagicMock(spec=VCFAllele)
+    mock_allele.chrom = "chrFoo"
+    mock_allele.position = 1234
+    mock_allele.ref = "A"
+    mock_allele.alt = "T"
+
+    result = annotator.liftover_allele(mock_allele)
+    assert result is None
+
+
+def test_basic_liftover_allele_coordinates_none(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    liftover_chain.convert_coordinate = MagicMock(return_value=None)
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A"
+    alt = "T"
+
+    result = basic_liftover_allele(
+        chrom, pos, ref, alt, liftover_chain, source_genome, target_genome,
+    )
+
+    assert result is None
+    liftover_chain.convert_coordinate.assert_called_once_with(chrom, pos)
+
+
+def test_liftover_variant_allele_none(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    liftover_allele_func = MagicMock()
+    liftover_allele_func.side_effect = [("chrFoo", 1000, "A", "T"), None]
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A"
+    alts = ["T", "G"]
+
+    result = _liftover_variant(
+        chrom, pos, ref, alts, liftover_chain, source_genome,
+        target_genome, liftover_allele_func,
+    )
+
+    assert result is None
+    liftover_allele_func.assert_any_call(
+        chrom, pos, ref, "T", liftover_chain, source_genome, target_genome,
+    )
+    liftover_allele_func.assert_any_call(
+        chrom, pos, ref, "G", liftover_chain, source_genome, target_genome,
+    )
+
+
+def test_liftover_variant_different_chromosomes(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    liftover_allele_func = MagicMock()
+    liftover_allele_func.side_effect = [
+        ("chrFoo", 1000, "A", "T"),
+        ("chrBar", 1000, "A", "T"),
+    ]
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A"
+    alts = ["T", "G"]
+
+    result = _liftover_variant(
+        chrom, pos, ref, alts, liftover_chain, source_genome,
+        target_genome, liftover_allele_func,
+    )
+    assert result is None
+
+
+def test_liftover_variant_different_positions(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    liftover_allele_func = MagicMock()
+    liftover_allele_func.side_effect = [
+        ("chrFoo", 1000, "A", "T"),
+        ("chrFoo", 1001, "A", "T"),
+    ]
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A"
+    alts = ["T", "G"]
+
+    result = _liftover_variant(
+        chrom, pos, ref, alts, liftover_chain, source_genome,
+        target_genome, liftover_allele_func,
+    )
+
+    assert result is None
+
+
+def test_liftover_sequence_anchors_none():
+    liftover_chain = MagicMock()
+    target_genome = MagicMock()
+
+    liftover_chain.convert_coordinate.return_value = None
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A"
+    alt = "T"
+
+    result = _liftover_sequence(
+        chrom, pos, ref, alt, liftover_chain, target_genome,
+    )
+    assert result is None
+    liftover_chain.convert_coordinate.assert_called()
+
+
+def test_liftover_sequence_anchors_different_chromosomes():
+    liftover_chain = MagicMock()
+    target_genome = MagicMock()
+
+    liftover_chain.convert_coordinate.side_effect = [
+        ("chrFoo", 1000, "+"),
+        ("chrBar", 1000, "+"),
+    ]
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A"
+    alt = "T"
+
+    result = _liftover_sequence(
+        chrom, pos, ref, alt, liftover_chain, target_genome,
+    )
+    assert result is None
+
+
+def test_liftover_sequence_length_change_too_large():
+    liftover_chain = MagicMock()
+    target_genome = MagicMock()
+
+    liftover_chain.convert_coordinate.side_effect = [
+        ("chrFoo", 1000, "+"),
+        ("chrFoo", 1005, "+"),
+    ]
+
+    target_genome.get_sequence.return_value = "G"
+
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A" * 10
+    alt = "T" * 10
+
+    result = _liftover_sequence(
+        chrom, pos, ref, alt, liftover_chain, target_genome,
+    )
+    assert result is None
+
+
+def test_liftover_sequence_tseq_equals_alt():
+    liftover_chain = MagicMock()
+    target_genome = MagicMock()
+
+    liftover_chain.convert_coordinate.side_effect = [
+        ("chrFoo", 1000, "+"),
+        ("chrFoo", 1005, "+"),
+    ]
+
+    target_genome.get_sequence.return_value = "T" * 10
+    chrom = "chrFoo"
+    pos = 1000
+    ref = "A" * 10
+    alt = "T" * 10
+
+    result = _liftover_sequence(
+        chrom, pos, ref, alt, liftover_chain, target_genome,
+    )
+    assert result is not None
+    assert result[2] == "T" * 10
+    assert result[3] == "A" * 10
+
+
+def test_liftover_snp_simple(
+    mocker: pytest_mock.MockerFixture,
+    liftover_grr_fixture_reverse_strand,
+) -> None:
+    target_genome_mock = mocker.Mock()
+    mocker.patch.object(
+        target_genome_mock,
+        "get_sequence",
+        return_value="C",
+    )
+    assert _liftover_snp_simple(
+        ("chr1", 145873884, "-", 51897113),
+        "G",
+        "A",
+        target_genome_mock,
+    ) == ("chr1", 145873884, "C", "T")
+
+    mocker.patch.object(
+        target_genome_mock,
+        "get_sequence",
+        return_value="G",
+    )
+    assert _liftover_snp_simple(
+        ("chr1", 145873884, "-", 51897113),
+        "C",
+        "T",
+        target_genome_mock,
+    ) == ("chr1", 145873884, "G", "A")
+
+    mocker.patch.object(
+        target_genome_mock,
+        "get_sequence",
+        return_value="A",
+    )
+    assert _liftover_snp_simple(
+        ("chr1", 145873884, "-", 51897113),
+        "T",
+        "C",
+        target_genome_mock,
+    ) == ("chr1", 145873884, "A", "G")
+
+    res = liftover_grr_fixture_reverse_strand.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    assert _liftover_snp_simple(
+        ("chrFoo", 1, "-", 5),
+        "A",
+        "C",
+        target_genome,
+    ) is None
+
+    assert _liftover_snp_simple(
+        ("chrFoo", 1, "-", 5),
+        "A",
+        "T",
+        target_genome,
+    ) == ("chrFoo", 1, "A", "T")

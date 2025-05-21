@@ -73,7 +73,7 @@ def gpf_instance_genomic_context_fixture(
     return builder
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def liftover_grr_fixture(
         tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("liftover_grr_fixture")
@@ -175,6 +175,55 @@ def liftover_grr_fixture(
             """),
     )
 
+    return build_filesystem_test_repository(root_path)
+
+
+@pytest.fixture(scope="module")
+def liftover_grr_fixture_reverse_strand(
+        tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
+    root_path = tmp_path_factory.mktemp("liftover_grr_fixture_2")
+    setup_directories(root_path, {
+        "target_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: genome
+                filename: genome.fa
+            """),
+        },
+        "source_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: genome
+                filename: genome.fa
+            """),
+        },
+        "liftover_chain": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: liftover_chain
+
+                filename: liftover.chain.gz
+            """),
+        },
+    })
+    setup_gzip(
+        root_path / "liftover_chain" / "liftover.chain.gz",
+        convert_to_tab_separated("""
+        chain 1000 foo 125 + 0 125 chrFoo 125 - 0 125 1
+        125
+        """),
+    )
+    setup_genome(
+        root_path / "target_genome" / "genome.fa",
+        textwrap.dedent(f"""
+          >chrFoo
+          {25 * 'AAAAA'}
+        """),
+    )
+    setup_genome(
+        root_path / "source_genome" / "genome.fa",
+        textwrap.dedent(f"""
+          >foo
+          {25 * 'TTTT'}
+        """),
+    )
     return build_filesystem_test_repository(root_path)
 
 
