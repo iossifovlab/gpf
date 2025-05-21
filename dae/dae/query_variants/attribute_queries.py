@@ -2,7 +2,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Protocol
 
-from lark import Lark, Transformer, Tree
+from lark import Lark, Token, Transformer, Tree
 from sqlglot import not_, parse_one
 from sqlglot.expressions import BitwiseAnd, Column, Expression, Paren, and_, or_
 
@@ -69,6 +69,12 @@ class SyntaxSugarTransformer(Transformer):
             current = create_or_node(current, child)
 
         return current
+
+
+class CompoundStripTransformer(Transformer):
+    def compound(self, values):
+        assert len(values) == 2
+        return Tree("literal", children=[Token("__ANON_0", values[0].value)])
 
 
 class AttributeQueryTransformer(Transformer):
@@ -298,6 +304,8 @@ def transform_attribute_query_to_function(
     query: str,
     aliases: dict[str, str] | None = None,
     complementary_type: type[Enum] | None = None,
+    *,
+    strip_compounds: bool = False,
 ) -> Matcher:
     """
     Transform attribute query to a callable function.
@@ -315,6 +323,11 @@ def transform_attribute_query_to_function(
     transformer = AttributeQueryTransformerFunction(
         enum_type, aliases, complementary_type=complementary_type,
     )
+
+    if strip_compounds:
+        strip_transformer = CompoundStripTransformer()
+        tree = strip_transformer.transform(tree)
+
     tree = syntax_sugar_transformer.transform(tree)
     return transformer.transform(tree)
 
@@ -326,6 +339,8 @@ def transform_attribute_query_to_sql_expression(
     aliases: dict[str, str] | None = None,
     complementary_type: type[Enum] | None = None,
     complementary_column: Column | None = None,
+    *,
+    strip_compounds: bool = False,
 ) -> Expression:
     """
     Transform attribute query to an SQLglot expression.
@@ -345,6 +360,10 @@ def transform_attribute_query_to_sql_expression(
         complementary_column=complementary_column,
         complementary_type=complementary_type,
     )
+
+    if strip_compounds:
+        strip_transformer = CompoundStripTransformer()
+        tree = strip_transformer.transform(tree)
 
     tree = syntax_sugar_transformer.transform(tree)
     return transformer.transform(tree)
