@@ -277,6 +277,8 @@ class QueryTransformer:
                 psc_id, set(default_psc.person_sets.keys()),
             )
 
+        kwargs["person_set_collection"] = psc_query
+
         if not self.study_wrapper.is_genotype:
             raise ValueError(
                 "Cannot handle person set collection "

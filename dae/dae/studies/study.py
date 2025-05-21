@@ -289,7 +289,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         family_ids: list[str] | None = None,
-        person_ids: list[str] | None = None,
+        person_ids: list[str] | set[str] | None = None,
         person_set_collection: PSCQuery | None = None,
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
@@ -339,16 +339,43 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         logger.debug("query leaf studies...")
 
         for genotype_study in self._get_query_leaf_studies(study_filters):
+
             psc_query = person_set_collection
-            psc_adjustments = self._psc_query_adjustments(
-                genotype_study, psc_query,
-                affected_statuses=affected_statuses,
-                roles=roles,
-                sexes=sexes,
-                person_ids=person_ids,
-            )
-            if psc_adjustments is None:
-                continue
+            if psc_query is not None:
+                psc = genotype_study.get_person_set_collection(
+                    psc_query.psc_id,
+                )
+                if psc is None:
+                    logger.info(
+                        "study %s does not have person set collection %s; "
+                        "skipping", genotype_study.study_id, psc_query.psc_id)
+                    continue
+                if genotype_study.backend.has_affected_status_queries():
+                    psc_queries = psc.transform_pedigree_queries(psc_query)
+                    if not psc_queries:
+                        logger.info(
+                            "study %s: no persons matching %s; "
+                            "skipping", genotype_study.study_id, psc_query)
+                        continue
+                    psc_person_ids = psc.query_person_ids(psc_query)
+                    if psc_person_ids is not None:
+                        if len(psc_person_ids) == 0:
+                            logger.info(
+                                "study %s: no persons matching %s; "
+                                "skipping",
+                                genotype_study.study_id, psc_query)
+                            continue
+                        if person_ids is not None:
+                            person_ids = psc_person_ids.update(person_ids)
+                        else:
+                            person_ids = psc_person_ids
+                    if person_ids is not None and len(person_ids) == 0:
+                        logger.debug(
+                            "Study %s can't match "
+                            "any person to filter %s... skipping",
+                            genotype_study.study_id,
+                            psc_query)
+                        continue
 
             runner = genotype_study.backend\
                 .build_family_variants_query_runner(
@@ -356,11 +383,11 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
                     genes=genes,
                     effect_types=effect_types,
                     family_ids=family_ids,
-                    person_ids=psc_adjustments.person_ids,
+                    person_ids=cast(list, person_ids),
                     inheritance=inheritance,
-                    roles=psc_adjustments.roles,
-                    sexes=psc_adjustments.sexes,
-                    affected_statuses=psc_adjustments.affected_statues,
+                    roles=roles,
+                    sexes=sexes,
+                    affected_statuses=affected_statuses,
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     categorical_attr_filter=categorical_attr_filter,
