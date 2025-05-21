@@ -149,6 +149,12 @@ def main(
             "familyId", "bestSt",
         ]
 
+        additional_columns = set(variants_loader.denovo_df.columns) - {
+            "chrom", "position", "reference", "alternative", "family_id",
+            "genotype", "best_state",
+        }
+        header.extend(sorted(additional_columns))
+
         output.write("\t".join(header))
         output.write("\n")
 
@@ -185,6 +191,9 @@ def main(
                     fa.family_id,
                     mat2str(fa.best_state, col_sep=" "),
                 ]
+                line.extend([
+                    str(fa.get_attribute(col) or "")
+                    for col in sorted(additional_columns)])
                 output.write("\t".join(line))
                 output.write("\n")
 
