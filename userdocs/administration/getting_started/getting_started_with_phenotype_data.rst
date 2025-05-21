@@ -73,8 +73,8 @@ When the import finishes, you can run the GPF development server using:
 
     wgpf run
 
-Now, on the GPF instance `Home Page`, you should see the ``mini_pheno`` phenotype
-study.
+Now, on the GPF instance `Home Page`, you should see the ``mini_pheno``
+phenotype study.
 
 .. figure:: getting_started_files/mini-pheno-home-page.png
 

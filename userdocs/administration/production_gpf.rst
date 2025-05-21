@@ -121,6 +121,29 @@ GRR Definition File
     cache_dir: /grr/cache
 
 
+GPF Instance Directory
+----------------------
+
+For our example, we will use GPF instance configuration and data created in the
+:ref:`GPF Getting Started Guide` section. We need to copy the whole
+``minimal_instance`` directory to the GPF instance public host
+``/demo/minimal_instance`` directory. To this end you can use ``rsync`` or
+``scp`` command. We will use ``rsync`` command in the following example. Our
+example host is ``demo.seqpipe.org`` and the user is ``root``. So our command
+will look like this:
+
+.. code-block:: shell
+
+    rsync -av minimal_instance root@demo.seqpipe.org:/demo/
+
+
+.. note::
+
+    You should change the ``demo.seqpipe.org`` and ``root`` to your own
+    values.
+
+
+
 GPF Docker Compose File
 -----------------------
 
@@ -171,7 +194,7 @@ to run GPF:
             - /demo/logs:/logs
             environment:
             - DAE_DB_DIR=/data
-            - DUCKDB_STORAGE=/duckdb_store
+            - DAE_PHENODB_DIR=/data/pheno
             - GRR_DEFINITION_FILE=/grr/grr_definition.yaml
             - WDAE_DB_NAME=gpf_demo
             - WDAE_DB_USER=seqpipe
@@ -179,8 +202,8 @@ to run GPF:
             - WDAE_DB_HOST=mysql
             - WDAE_DB_PORT=3306
             - WDAE_SECRET_KEY="Di3ahti8oophushiePh0vang2ri2AeK0maetha7loz2Waleez2"
-            - WDAE_ALLOWED_HOST=*
             - WDAE_PUBLIC_HOSTNAME=demo.seqpipe.org
+            - WDAE_ALLOWED_HOST=demo.seqpipe.org
             - WDAE_LOG_DIR=/logs
             - GPF_PREFIX=gpf
             - WDAE_PREFIX=gpf
@@ -196,19 +219,6 @@ to run GPF:
     passwords should be strong and not easily guessable.
 
 
-
-GPF Instance Directory
-----------------------
-
-For our example, we will use GPF instance configuration created in the
-:ref:`GPF Getting Started Guide` section. We just copied the final
-``minimal_instance`` directory to the ``/demo/minimal_instance`` directory:
-
-.. code-block:: shell
-
-    rsync -a minimal_instance root@demo.seqpipe.org/demo/
-
-
 Start GPF
 ---------
 
@@ -219,25 +229,25 @@ use the following command:
 .. code-block:: shell
 
     cd /demo
-    docker-compose up -d
+    docker compose up -d
 
 To inspect the logs, you can use the following command:
 
 .. code-block:: shell
 
-    docker-compose logs -f
+    docker compose logs -f
 
 You can check the status of the containers using the following command:
 
 .. code-block:: shell
 
-    docker-compose ps
+    docker compose ps
 
 If you want to enter into the GPF container, you can use the following command:
 
 .. code-block:: shell
 
-    docker exec -it demo_gpf_1 /bin/bash
+    docker compose exec -it gpf /bin/bash
 
 
 Create GPF Admin User and OAuth2 Application
@@ -293,6 +303,9 @@ following command:
 Apache2 Proxy Configuration
 ---------------------------
 
+Finally you need to configure the Apache2 web server to proxy the requests
+to the GPF instance. You can use the following configuration as an example:
+
 
 .. code-block:: shell
     :linenos:
@@ -323,3 +336,4 @@ Apache2 Proxy Configuration
         SessionCryptoPassphrase 5fRdQ8P1SEjejYvXECPiVu7UHA9Z1Sz8SS3xz
 
     </VirtualHost>
+
