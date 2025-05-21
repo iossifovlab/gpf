@@ -278,11 +278,12 @@ class GPFInstance:
         config_files = GPFConfigParser.collect_directory_configs(
             pheno_data_dir,
         )
-
+        logger.info("phenotype data config files: %s", config_files)
         configurations = [
             GPFConfigParser.load_config_dict(file, pheno_conf_schema)
             for file in config_files
         ]
+        logger.debug("phenotype data configurations: %s", configurations)
         return PhenoRegistry(
             self.phenotype_storages,
             configurations=configurations,

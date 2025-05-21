@@ -50,7 +50,7 @@ class PhenoRegistry:
                 except ValueError:
                     logger.exception(
                         "Failure while registering "
-                        "phenotype study configuration",
+                        "phenotype study configuration %s", configuration,
                     )
 
     @staticmethod
@@ -58,7 +58,7 @@ class PhenoRegistry:
         config_files = GPFConfigParser.collect_directory_configs(
             pheno_data_dir,
         )
-
+        logger.info("phenotype data config files: %s", config_files)
         return [
             GPFConfigParser.load_config_dict(file, pheno_conf_schema)
             for file in config_files
