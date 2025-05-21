@@ -49,8 +49,13 @@ def main(
         gpf_instance = GPFInstance.build()
     denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
 
+    study_ids = [
+        study_id for study_id in denovo_gene_sets_db.get_genotype_data_ids()
+        if not gpf_instance.get_genotype_data(study_id).is_remote
+    ]
+
     if args.show_studies:
-        for study_id in denovo_gene_sets_db.get_genotype_data_ids():
+        for study_id in study_ids:
             logger.warning("study with denovo gene sets: %s", study_id)
     else:
         if args.studies:
@@ -61,7 +66,7 @@ def main(
 
         filtered_study_ids = [
             study_id
-            for study_id in denovo_gene_sets_db.get_genotype_data_ids()
+            for study_id in study_ids
             if study_id in studies
         ]
         logger.info(

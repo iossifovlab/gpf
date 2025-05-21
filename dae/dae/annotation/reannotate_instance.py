@@ -163,6 +163,7 @@ class ReannotateInstanceTool:
             study
             for study in self.gpf_instance.get_all_genotype_data()
             if (not study.is_group
+                and not study.is_remote
                 and self._is_reannotatable(study, self.gpf_instance))
         ]
 

@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from unittest.mock import patch
 
 import pytest
 import toml
@@ -29,7 +30,7 @@ def get_person_set_collections_config(
     return parse_person_set_collections_study_config(config)
 
 
-@pytest.fixture()
+@pytest.fixture
 def status_person_sets_collection() -> dict[str, PersonSetCollectionConfig]:
     content = textwrap.dedent(
         """
@@ -177,7 +178,7 @@ def test_get_person_color(
 
     assert (
         PersonSetCollection.get_person_color(
-            families_fixture.persons[("f1", "prb1")], status_collection,
+            families_fixture.persons["f1", "prb1"], status_collection,
         )
         == "#aabbcc"
     )
@@ -445,7 +446,7 @@ def test_genotype_group_person_sets_subset(
     assert {("f2.3", "ch3"), ("f2.1", "ch1")} == epilepsy_persons
 
 
-@pytest.fixture()
+@pytest.fixture
 def families_fixture2(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "test_pedigree2" / "ped2.ped",
@@ -513,3 +514,39 @@ def test_merge_person_sets(
     print(combined_collection)
 
     assert len(combined_collection) == 4
+
+
+def test_combine_calls_merge_configs_with_single_collection(
+    families_fixture: FamiliesData,
+) -> None:
+    content = textwrap.dedent("""
+    [person_set_collections]
+    selected_person_set_collections = ["phenotype"]
+    phenotype.id = "phenotype"
+    phenotype.name = "Phenotype"
+    phenotype.sources = [{ from = "pedigree", source = "status" }]
+    phenotype.domain = [
+    {id = "aa",name = "aa",values = ["affected"],color = "1"},
+    {id = "unaffected",name = "unaffected",values = ["unaffected"],color = "9"}
+    ]
+    phenotype.default = {id = "unknown",name = "unknown",color = "#aaaaaa"}
+    """)
+    config = get_person_set_collections_config(content)
+    collection = PersonSetCollection.from_families(
+        config["phenotype"], families_fixture,
+    )
+
+    with patch.object(
+        PersonSetCollection,
+        "merge_configs",
+        wraps=PersonSetCollection.merge_configs,
+    ) as mock_merge_configs:
+        combined_collection = PersonSetCollection.combine(
+            [collection], families_fixture,
+        )
+
+        # Assert that merge_configs was called
+        mock_merge_configs.assert_called_once()
+
+        # Assert that the combined collection has correctly updated values
+        assert combined_collection.person_sets["aa"].values == ("aa",)

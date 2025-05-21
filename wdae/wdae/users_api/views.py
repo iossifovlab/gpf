@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import json
 import logging
 from collections.abc import Generator, Iterator
@@ -668,13 +667,9 @@ class FederationCredentials(views.APIView):
         cleartext_secret = new_application.client_secret
         new_application.save()
 
-        credentials = base64.b64encode(
-            f"{new_application.client_id}:{cleartext_secret}".encode(),
-        )
         return Response(
-            {"credentials": credentials,
-             "client_secret": cleartext_secret,
-             "client_id": new_application.client_id},
+            {"client_id": new_application.client_id,
+             "client_secret": cleartext_secret},
             status=status.HTTP_200_OK,
         )
 

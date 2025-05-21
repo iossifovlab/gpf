@@ -44,13 +44,16 @@ def load_extension(instance: WGPFInstance) -> None:
 
     for client in clients.values():
         studies = fetch_studies_from_client(client)
+        available_studies_ids = [study.study_id for study in studies]
+
         visible_studies = [
             client.prefix_remote_identifier(data_id)
             for data_id in client.get_visible_datasets()
         ]
         if instance.visible_datasets is None:
             instance.visible_datasets = \
-                sorted(instance.get_available_data_ids())
+                sorted(instance.get_available_data_ids()
+                       + available_studies_ids)
         instance.visible_datasets.extend(visible_studies)
         for study in studies:
             wrapper = RemoteStudyWrapper(study)
@@ -83,7 +86,7 @@ def load_extension(instance: WGPFInstance) -> None:
             if gsc_id == "denovo":
                 continue
             gsc_desc = collection["desc"]
-            gsc_fmt = collection["format"]
+            gsc_fmt = "|".join(collection["format"])
             gsc = RemoteGeneSetCollection(
                 gsc_id, client, gsc_desc, gsc_fmt,
             )
@@ -91,10 +94,18 @@ def load_extension(instance: WGPFInstance) -> None:
             gs_db.gene_set_collections[gsc_id] = gsc
 
         d_gs_db = instance.denovo_gene_sets_db
-        remote_dgsdb_cache = {
-            client.prefix_remote_identifier(study_id): cache
-            for study_id, cache in client.gpf_rest_client.get_denovo_gene_sets_db().items()  # noqa: E501
-        }
+        # Important - must initialize the db first by accessing these
+        # member variables, otherwise it will not load the local cache
+        # since it will be non-empty because of the remote denovo gene sets
+        # being loaded into the internal _collections and _configs variables
+        _ = d_gs_db._denovo_gene_set_collections  # noqa: SLF001
+        _ = d_gs_db._denovo_gene_set_configs  # noqa: SLF001
+
+        remote_dgsdb_cache = {}
+        for study_id, cache in client.gpf_rest_client.get_denovo_gene_sets_db().items():  # noqa: E501
+            remote_id = client.prefix_remote_identifier(study_id)
+            if remote_id in available_studies_ids:
+                remote_dgsdb_cache[remote_id] = cache
         d_gs_db.update_cache(remote_dgsdb_cache)
 
         scores = client.get_genomic_scores()
@@ -125,11 +136,17 @@ def fetch_studies_from_client(
             f"Failed to get studies from {rest_client.remote_id}",
         )
 
+    available_data_ids = [data["id"] for data in all_data]
+
     for config in all_data:
         study_id = config["id"]
-        if config is None:
-            raise ValueError(f"unable to find remote study {study_id}")
         logger.info("creating remote genotype study: %s", study_id)
+        # Fix for remote studies for whose parents we don't have permissions
+        config["parents"] = [
+            parent_id
+            for parent_id in config["parents"]
+            if parent_id in available_data_ids
+        ]
         if "studies" in config:
             data = RemoteGenotypeDataGroup(study_id, config, rest_client)
         else:
@@ -142,6 +159,7 @@ def fetch_studies_from_client(
         data.studies = [
             result[child_id]
             for child_id in data.config["studies"]
+            if child_id in available_data_ids
         ]
 
     return list(result.values())

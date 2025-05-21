@@ -50,7 +50,10 @@ def main(
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    available_studies = gpf_instance.get_genotype_data_ids()
+    available_studies = [
+        study.study_id for study in gpf_instance.get_all_genotype_data()
+        if not study.is_remote
+    ]
     available_pheno_studies = gpf_instance.get_phenotype_data_ids()
 
     if args.show_studies:

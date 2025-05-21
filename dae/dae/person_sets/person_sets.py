@@ -618,8 +618,6 @@ class PersonSetCollection:
         """Combine a list of PersonSetCollection objects into a single one."""
         if len(collections) == 0:
             raise ValueError("can't combine empty list of collections")
-        if len(collections) == 1:
-            return collections[0]
 
         config = PersonSetCollection.merge_configs(collections)
         result = PersonSetCollection(

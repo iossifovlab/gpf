@@ -30,9 +30,9 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             collection_id,
         )
         self.collection_id = collection_id
-        self.collection_description: str = \
+        self.web_label: str = \
             self.rest_client.prefix_remote_name(desc)
-        self.collection_format: str = fmt
+        self.web_format_str: str = fmt
         self.gene_sets: dict[str, GeneSet] = {}
 
     def _load_remote_gene_sets(self):
@@ -105,7 +105,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
                 if gsc_id == "denovo":
                     continue
                 gsc_desc = collection["desc"]
-                gsc_fmt = collection["format"]
+                gsc_fmt = "|".join(collection["format"])
                 gsc = RemoteGeneSetCollection(
                     gsc_id, remote_client, gsc_desc, gsc_fmt,
                 )
@@ -120,9 +120,9 @@ class RemoteGeneSetsDb(GeneSetsDb):
         for gsc in self.gene_set_collections.values():
             gene_sets_collections_desc.append(  # noqa: PERF401
                 {
-                    "desc": gsc.collection_description,
+                    "desc": gsc.web_label,
                     "name": gsc.collection_id,
-                    "format": gsc.collection_format,
+                    "format": gsc.web_format_str.split("|"),
                     "types": [],
                 },
             )
