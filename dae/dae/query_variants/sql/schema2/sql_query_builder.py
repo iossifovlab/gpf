@@ -179,6 +179,7 @@ class QueryBuilderBase:
         """Check if value satisfies a given roles query."""
         matcher = transform_attribute_query_to_function(
             Role, roles_query, complementary_type=Zygosity,
+            strip_compounds=True,
         )
         return matcher(value, None)
 
