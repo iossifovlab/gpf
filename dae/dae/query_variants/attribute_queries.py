@@ -1,3 +1,50 @@
+"""
+Module for attribute queries
+
+Attribute queries are human readable strings which are used to filter variants
+based on enum attribute values.
+
+They are applicable only to enum types and this module provides three utilities
+to transform an attribute query string into a callable function, an sqlglot
+expression or an sqlglot expression tailored to old legacy genotype storages.
+
+Attribute queries have a defined earley grammar, used by lark to create a
+parsable tree.
+
+The grammar divides the input string into expressions, which can be different
+types:
+    - literal:
+        The most basic type, a normal string which
+        matches to an enumeration.
+        For example, for roles "mom" would match variants which are present
+        in the mother.
+    - compound:
+        A special case of literal, used for zygosity.
+        A compound consists of 2 literals connected by a tilde ("~")
+        with the second one being the complementary.
+        For example: prb~homozygous would match variants which
+        are present and homozygotic in the proband of the family.
+    - neg:
+        Match any value that does not match the underlying expression.
+        Negation is written by writing "not" before your expression.
+        Example: "not sib~heterozygous"
+    - and_:
+        Match when both expressions are true.
+        Example: prb and dad
+    - or_:
+        Match when one of the expressions is true.
+        Example: sib or prb
+    - grouping:
+        Prioritize an expression to be evaluated first with brackets.
+        Example: (sib or prb) and dad
+    - any:
+        Syntax sugar for doing an or_ between many values.
+        Example: "any([dad, prb, sib])" is equivalent to "dad or prb or sib"
+    - all:
+        Syntax sugar for doing an and_ between many values.
+        Example: "all([dad, prb, sib])" is equivalent to "dad and prb and sib"
+"""
+
 from collections.abc import Callable
 from enum import Enum
 from typing import Protocol
