@@ -494,3 +494,12 @@ def test_check_inheritance_denovo_only(
 ) -> None:
     result = sql_builder.check_inheritance_denovo_only(inheritance)
     assert result == expected
+
+
+def test_check_roles_denovo_only_works_with_zygosity(
+    sql_builder: SqlQueryBuilder,
+) -> None:
+    result = sql_builder.check_roles_denovo_only(
+        "prb~homozygous and (not mom and not dad)",
+    )
+    assert result is True
