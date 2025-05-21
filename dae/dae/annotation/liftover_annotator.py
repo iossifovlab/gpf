@@ -375,14 +375,12 @@ def basic_liftover_allele(
 
     lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
 
-    if lo_strand == "+":
-        pass
-    elif lo_strand == "-":
+    if lo_strand == "-":
         lo_pos -= len(nref)
 
     lo_ref = target_genome.get_sequence(
         lo_chrom, lo_pos, lo_pos + len(ref) - 1)
-    if lo_ref is None:
+    if lo_ref == "":
         logger.warning(
             "can't find genomic sequence for %s:%s", lo_chrom, lo_pos)
         return None
