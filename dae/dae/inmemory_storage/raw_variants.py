@@ -17,7 +17,7 @@ from dae.query_variants.base_query_variants import (
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
+from dae.variants.attributes import Inheritance, Role, Sex, Status
 from dae.variants.core import Allele
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
@@ -287,7 +287,7 @@ class RawFamilyVariants(abc.ABC):
                 if role is None:
                     continue
                 allele_roles |= role.value
-            if not roles(allele_roles, allele.zygosity_in_roles):
+            if not roles(allele_roles):
                 return False
         if sexes is not None:
             allele_sexes = 0
@@ -295,7 +295,7 @@ class RawFamilyVariants(abc.ABC):
                 if sex is None:
                     continue
                 allele_sexes |= sex.value
-            if not sexes(allele_sexes, allele.zygosity_in_sexes):
+            if not sexes(allele_sexes):
                 return False
         if affected_statuses is not None:
             allele_statuses = 0
@@ -303,9 +303,7 @@ class RawFamilyVariants(abc.ABC):
                 if status is None:
                     continue
                 allele_statuses |= status.value
-            if not affected_statuses(
-                allele_statuses, allele.zygosity_in_status,
-            ):
+            if not affected_statuses(allele_statuses):
                 return False
         return True
 
@@ -501,18 +499,17 @@ class RawFamilyVariants(abc.ABC):
 
         roles_matcher = None
         if roles is not None:
-            roles_matcher = transform_attribute_query_to_function(
-                Role, roles, complementary_type=Zygosity,
-            )
+            roles_matcher = transform_attribute_query_to_function(Role, roles)
 
         sexes_matcher = None
         if sexes is not None:
             sexes_matcher = transform_attribute_query_to_function(
-                Sex, sexes, aliases=Sex.aliases(), complementary_type=Zygosity)
+                Sex, sexes, Sex.aliases())
+
         statuses_matcher = None
         if affected_statuses is not None:
             statuses_matcher = transform_attribute_query_to_function(
-                Status, affected_statuses, complementary_type=Zygosity)
+                Status, affected_statuses)
 
         def filter_func(v: FamilyVariant) -> FamilyVariant | None:
             try:

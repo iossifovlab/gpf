@@ -5,6 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.query_variants.sql.schema2.sql_query_builder import ZygosityQuery
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
@@ -55,45 +56,59 @@ def imported_study(
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
 @pytest.mark.gs_duckdb_parquet(reason="supported for schema2 duckdb parquet")
 @pytest.mark.parametrize(
-    "affected_status, expected_positions",
+    "affected_status, zygosity, expected_positions",
     [
         (
             "affected",
-            [1, 3, 5, 7, 8],
-        ),
-        (
-            "affected~homozygous",
+            ZygosityQuery(status_zygosity="homozygous"),
             [1, 5, 8],
         ),
         (
-            "unaffected~homozygous",
+            "unaffected",
+            ZygosityQuery(status_zygosity="homozygous"),
             [2, 6, 7],
         ),
         (
-            "affected~heterozygous",
+            "affected",
+            ZygosityQuery(status_zygosity="heterozygous"),
             [3, 5, 7],
         ),
         (
-            "unaffected~heterozygous",
+            "unaffected",
+            ZygosityQuery(status_zygosity="heterozygous"),
             [4, 6, 8],
         ),
         (
-            "affected~homozygous or unaffected~homozygous",
+            None,
+            ZygosityQuery(status_zygosity="homozygous"),
             [1, 2, 5, 6, 7, 8],
         ),
         (
-            "affected~heterozygous or unaffected~heterozygous",
+            None,
+            ZygosityQuery(status_zygosity="heterozygous"),
+            [3, 4, 5, 6, 7, 8],
+        ),
+        (
+            "affected or unaffected",
+            ZygosityQuery(status_zygosity="homozygous"),
+            [1, 2, 5, 6, 7, 8],
+        ),
+        (
+            "affected or unaffected",
+            ZygosityQuery(status_zygosity="heterozygous"),
             [3, 4, 5, 6, 7, 8],
         ),
     ],
 )
 def test_query_by_zygosity_in_status(
     affected_status: str | None,
+    zygosity: str,
     expected_positions: list[int],
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(
         affected_statuses=affected_status,
+        zygosity_query=zygosity,
     ))
     positions = sorted([v.position for v in vs])
     assert len(positions) == len(expected_positions), positions

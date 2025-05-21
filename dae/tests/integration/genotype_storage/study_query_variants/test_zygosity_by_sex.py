@@ -5,6 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.query_variants.sql.schema2.sql_query_builder import ZygosityQuery
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
@@ -62,33 +63,39 @@ translator = BitmaskEnumTranslator(
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
 @pytest.mark.gs_duckdb_parquet(reason="supported for schema2 duckdb parquet")
 @pytest.mark.parametrize(
-    "sexes, expected_positions",
+    "sexes, zygosity, expected_positions",
     [
         (
-            "m~heterozygous",
+            "m",
+            translator.apply_mask(0, Zygosity.heterozygous.value, Sex.M),
             [6],
         ),
         (
-            "f~heterozygous",
+            "f",
+            translator.apply_mask(0, Zygosity.heterozygous.value, Sex.F),
             [3, 4, 5, 6, 7, 8],
         ),
         (
-            "m~homozygous",
+            "m",
+            translator.apply_mask(0, Zygosity.homozygous.value, Sex.M),
             [5],
         ),
         (
-            "f~homozygous",
+            "f",
+            translator.apply_mask(0, Zygosity.homozygous.value, Sex.F),
             [1, 2, 7, 8],
         ),
     ],
 )
 def test_query_by_zygosity_in_status(
     sexes: str | None,
+    zygosity: int | None,
     expected_positions: list[int],
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(
         sexes=sexes,
+        zygosity_query=ZygosityQuery(sex_zygosity=zygosity),
     ))
     positions = sorted([v.position for v in vs])
     assert len(positions) == len(expected_positions), positions

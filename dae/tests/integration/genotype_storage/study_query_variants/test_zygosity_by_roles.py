@@ -5,6 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.query_variants.sql.schema2.sql_query_builder import ZygosityQuery
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
@@ -64,49 +65,83 @@ translator = BitmaskEnumTranslator(
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
 @pytest.mark.gs_duckdb_parquet(reason="supported for schema2 duckdb parquet")
 @pytest.mark.parametrize(
-    "roles, expected_positions",
+    "roles_in_parent, roles_in_child,"
+    "parents_zygosity, children_zygosity, expected_positions",
     [
         (
-            "mom~heterozygous",
+            "mom",
+            None,
+            translator.apply_mask(0, Zygosity.heterozygous.value, Role.mom),
+            None,
             [1, 1],
         ),
         (
-            "dad~heterozygous",
+            "dad",
+            None,
+            translator.apply_mask(0, Zygosity.heterozygous.value, Role.dad),
+            None,
             [2, 2],
         ),
         (
-            "prb~heterozygous",
+            None,
+            "prb",
+            None,
+            translator.apply_mask(0, Zygosity.heterozygous.value, Role.prb),
             [3, 3],
         ),
         (
-            "sib~heterozygous",
+            None,
+            "sib",
+            None,
+            translator.apply_mask(0, Zygosity.heterozygous.value, Role.sib),
             [4, 4],
         ),
         (
-            "mom~homozygous",
+            "mom",
+            None,
+            translator.apply_mask(0, Zygosity.homozygous.value, Role.mom),
+            None,
             [5, 5],
         ),
         (
-            "dad~homozygous",
+            "dad",
+            None,
+            translator.apply_mask(0, Zygosity.homozygous.value, Role.dad),
+            None,
             [6, 6],
         ),
         (
-            "prb~homozygous",
+            None,
+            "prb",
+            None,
+            translator.apply_mask(0, Zygosity.homozygous.value, Role.prb),
             [7, 7],
         ),
         (
-            "sib~homozygous",
+            None,
+            "sib",
+            None,
+            translator.apply_mask(0, Zygosity.homozygous.value, Role.sib),
             [8, 8],
         ),
     ],
 )
 def test_query_by_zygosity_in_status(
-    roles: str | None,
+    roles_in_child: str | None,
+    roles_in_parent: str | None,
+    parents_zygosity: int | None,
+    children_zygosity: int | None,
     expected_positions: list[int],
     imported_study: GenotypeData,
 ) -> None:
+    zygosity = ZygosityQuery(
+        parents_zygosity=parents_zygosity,
+        children_zygosity=children_zygosity,
+    )
     vs = list(imported_study.query_variants(
-        roles=roles,
+        roles_in_child=roles_in_child,
+        roles_in_parent=roles_in_parent,
+        zygosity_query=zygosity,
     ))
     positions = sorted([v.position for v in vs])
     assert len(positions) == len(expected_positions), positions

@@ -804,26 +804,8 @@ class PersonSetCollection:
             for field, query in result_query.items()
         }
 
-    def _pedigree_to_attribute_queries(
-        self, pedigree_queries: dict[str, set],
-        default_queries: dict[str, str],
-    ) -> dict[str, str]:
-        result_queries = {}
-        for field, values in pedigree_queries.items():
-            temp = f"any([{','.join(sorted(values))}])"
-            if field not in default_queries:
-                result_queries[field] = temp
-            else:
-                result_queries[field] = f"{temp} or ({default_queries[field]})"
-        for field, value in default_queries.items():
-            if field not in result_queries:
-                result_queries[field] = f"({value})"
-
-        return result_queries
-
     def transform_pedigree_queries(
         self, query: PSCQuery,
-        status_zygosity: str | None = None,
     ) -> dict[str, str] | None:
         """Transform person set collection query into query variants."""
         if query.psc_id != self.id:
@@ -846,21 +828,13 @@ class PersonSetCollection:
             if ps_id == self.default.id:
                 # handle default person set
                 for field, values in self._pedigree_query_all_values().items():
-                    suffix = ""
-                    if field == "status" and status_zygosity is not None:
-                        suffix = f"~{status_zygosity}"
-                    default_result[field].update(
-                        [f"{v}{suffix}" for v in values],
-                    )
+                    default_result[field].update(values)
                 continue
             for field, value in zip(
                     [s.source for s in self.config.sources],
                     self.person_sets[ps_id].values,
                     strict=True):
-                suffix = ""
-                if field == "status" and status_zygosity is not None:
-                    suffix = f"~{status_zygosity}"
-                result[field].add(f"{value!s}{suffix}")
+                result[field].add(str(value))
 
         # Since we alwayes do OR between queries on differenc fields we
         # can't support fully queries that use multiple on multiple fields
@@ -872,6 +846,14 @@ class PersonSetCollection:
             field: " and ".join([f"(not {v})" for v in sorted(values)])
             for field, values in default_result.items()
         }
-        return self._pedigree_query_map_queries(
-            self._pedigree_to_attribute_queries(result, default_queries),
-        )
+        result_queries = {}
+        for field, values in result.items():
+            temp = f"any([{','.join(sorted(values))}])"
+            if field not in default_queries:
+                result_queries[field] = temp
+            else:
+                result_queries[field] = f"{temp} or ({default_queries[field]})"
+        for field, value in default_queries.items():
+            if field not in result_queries:
+                result_queries[field] = f"({value})"
+        return self._pedigree_query_map_queries(result_queries)

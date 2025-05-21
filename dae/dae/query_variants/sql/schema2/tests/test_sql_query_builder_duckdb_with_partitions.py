@@ -354,11 +354,15 @@ def test_query_summary_variants_counting(
 @pytest.mark.parametrize("skip,params, count", [
     (False, {}, 12),
     (True, {}, 16),
-    (True, {"roles": "prb"}, 9),
-    (True, {"roles": "not prb"}, 7),
-    (True, {"roles": "mom and not prb"}, 5),
-    (True, {"roles": "mom and dad and not prb"}, 3),
-    (True, {"roles": "not mom and not dad and prb"}, 0),
+    (True, {"roles_in_child": "prb"}, 9),
+    (True, {"roles_in_child": "not prb"}, 7),
+    (True, {"roles_in_parent": "mom", "roles_in_child": "not prb"}, 5),
+    (True, {"roles_in_parent": "mom and dad", "roles_in_child": "not prb"}, 3),
+    (
+        True,
+        {"roles_in_parent": "not mom and not dad", "roles_in_child": "prb"},
+        0,
+    ),
 ])
 def test_query_family_variants_by_role(
     skip: bool,  # noqa: FBT001
