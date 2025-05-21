@@ -159,6 +159,7 @@ def fetch_studies_from_client(
         data.studies = [
             result[child_id]
             for child_id in data.config["studies"]
+            if child_id in available_data_ids
         ]
 
     return list(result.values())
