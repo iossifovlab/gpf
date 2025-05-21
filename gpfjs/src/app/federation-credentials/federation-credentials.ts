@@ -3,9 +3,8 @@ export interface FederationGetJson {
 }
 
 export interface FederationPostJson {
-  credentials: string;
-  client_secret: string;
   client_id: string;
+  client_secret: string;
 }
 
 export class FederationCredential {

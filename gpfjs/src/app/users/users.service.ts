@@ -199,9 +199,8 @@ export class UsersService {
       options
     ).pipe(
       map((res: FederationPostJson) => ({
-        credentials: res.credentials,
-        client_secret: res.client_secret,
         client_id: res.client_id,
+        client_secret: res.client_secret,
       }))
     );
   }

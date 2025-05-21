@@ -327,9 +327,8 @@ describe('UsersService', () => {
   it('should create federation credentials', async() => {
     const httpPostSpy = jest.spyOn(HttpClient.prototype, 'post');
     httpPostSpy.mockReturnValue(of({
-      credentials: 'mockCredentialName',
+      client_id: 'mockClientId',
       client_secret: 'mockClientSecret',
-      client_id: 'mockClientId'
     }));
 
     const postResult = service.createFederationCredentials('mockCredentialName');
@@ -340,7 +339,8 @@ describe('UsersService', () => {
     );
 
     const res = await lastValueFrom(postResult.pipe(take(1)));
-    expect(res.credentials).toBe('mockCredentialName');
+    expect(res.client_id).toBe('mockClientId');
+    expect(res.client_secret).toBe('mockClientSecret');
   });
 
   it('should update federation credentials', async() => {
