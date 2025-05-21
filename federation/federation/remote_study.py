@@ -3,8 +3,8 @@ from typing import Any, cast
 
 from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import FrozenBox
-from dae.pedigrees.families_data import FamiliesData, tag_families_data
-from dae.pedigrees.family import Family, Person
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family, FamilyTag, Person
 from dae.person_sets import (
     PersonSetCollection,
     PSCQuery,
@@ -93,13 +93,16 @@ class RemoteGenotypeData(GenotypeDataStudy):
                 family_members.append(person)
                 result.persons_by_person_id[person.person_id].append(person)
                 result.persons[person.fpid] = person
-            families[family_id] = Family.from_persons(family_members)
+
+            family_obj = Family.from_persons(family_members)
+            for tag in family["tags"]:
+                family_obj.set_tag(FamilyTag.from_label(tag))
+            families[family_id] = family_obj
 
         # Setting the families directly since we can assume that
         # the remote has carried out all necessary transformations
         result._families = families  # noqa: SLF001
 
-        tag_families_data(result)
         return result
 
     # pylint: disable=arguments-renamed
