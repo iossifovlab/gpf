@@ -294,6 +294,18 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('#register-alert')).toBeVisible();
   });
 
+  test('if Gene Browser tool is opened by default', async({ page }) => {
+    await page.locator('a').filter({ hasText: 'Datasets'}).click();
+    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+
+    await utils.logout(page);
+    await page.locator('a').filter({ hasText: 'Datasets'}).click();
+    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+
+    await utils.loginAdmin(page);
+    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+  });
+
   // tests robustness of the authentication process
   test('should login and logout repeatedly', async({ page }) => {
     for (let i = 0; i < 10; i++) {
