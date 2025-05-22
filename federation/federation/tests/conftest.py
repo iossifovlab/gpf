@@ -28,6 +28,7 @@ from dae.testing import (
 )
 from federation.remote_extension import load_extension
 from federation.rest_api_client import RESTClient
+from rest_client.rest_client import GPFConfidentialClient
 
 
 def setup_remote_t4c8_instance(
@@ -153,7 +154,8 @@ def remote_config() -> dict[str, str]:
         "host": host,
         "base_url": "api/v3",
         "port": "21010",
-        "credentials": "ZmVkZXJhdGlvbjpzZWNyZXQ=",
+        "client_id": "federation",
+        "client_secret": "secret",
     }
 
 
@@ -166,12 +168,15 @@ def rest_client(
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],
-        remote_config["credentials"],
+        remote_config["client_id"],
+        remote_config["client_secret"],
         base_url=remote_config["base_url"],
         port=int(remote_config["port"]),
     )
 
-    assert client.token is not None, \
+    assert isinstance(client.gpf_rest_client.session,
+                      GPFConfidentialClient)
+    assert client.gpf_rest_client.session.token is not None, \
         "Failed to get auth token for REST client"
 
     return client
