@@ -217,8 +217,11 @@ test.describe('Genes sybmols tests', () => {
     await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
 
-    await page.waitForTimeout(5000); // fixes page stucking in infinite load, needs further investigating
-    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(async() => {
+      await page.getByRole('button', {name: 'Table Preview'}).click();
+      await expect(page.locator('gpf-genotype-preview-table')).toBeVisible({timeout: 5000});
+    }).toPass({intervals: [1000, 2000, 3000]});
+
     await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected', { timeout: 180000 });
   });
 });
