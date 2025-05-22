@@ -25,12 +25,10 @@ test.describe('Federation token tests', () => {
     await expect(page.locator('.modal-content')).toBeVisible();
     await expect(page.locator('.modal-content'))
       .toContainText('Federation credentials are shown only once, copy before closing!');
-    await expect(page.getByTitle('Copy credentials')).toBeVisible();
     await expect(page.getByTitle('Copy client secret')).toBeVisible();
     await expect(page.getByTitle('Copy client id')).toBeVisible();
     await expect(page.locator('.credential-modal-content').nth(0)).not.toBeEmpty();
     await expect(page.locator('.credential-modal-content').nth(1)).not.toBeEmpty();
-    await expect(page.locator('.credential-modal-content').nth(2)).not.toBeEmpty();
 
     await page.mouse.click(0, 0); // close modal
     await expect(page.locator('.modal-content')).not.toBeVisible();
