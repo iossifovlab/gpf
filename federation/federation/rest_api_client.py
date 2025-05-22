@@ -47,10 +47,10 @@ class RESTClient:
                 base_url = f"/{base_url}"
             self.base_url = base_url
         else:
-            self.base_url = "/"
+            self.base_url = "/api/v3/"
 
         self.port = port or None
-        self.protocol = protocol or "http"
+        self.protocol = protocol or "https"
         self.gpf_prefix = gpf_prefix or None
 
         prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
