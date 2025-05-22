@@ -111,8 +111,11 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
       this.getGenotypeBrowserState().subscribe(state => {
         this.genotypeBrowserState = { ...state };
         if (!this.autoPreview) {
-          this.queryService.cancelStreamPost();
           this.genotypePreviewVariantsArray = null;
+          if (this.queryService.isStreamingActive()) {
+            this.queryService.cancelStreamPost();
+            this.submitQuery();
+          }
         }
       });
       if (this.autoPreview) {
@@ -276,6 +279,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
 
     this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
       this.showTable = true;
+
       this.loadingService.setLoadingStop();
 
       const loadingSpinnerElement = document.querySelector('.loader-container');

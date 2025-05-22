@@ -52,6 +52,10 @@ export class QueryService {
     }
   }
 
+  public isStreamingActive(): boolean {
+    return this.oboeInstance !== null;
+  }
+
   public streamPost(url: string, filter) {
     this.cancelStreamPost();
 
@@ -76,11 +80,13 @@ export class QueryService {
       this.streamingSubject.next(null);
       this.familyVariantsSubscription.unsubscribe();
       this.familyVariantsSubscription = null;
+      this.oboeInstance = null;
     }).fail(error => {
       console.warn('oboejs encountered a fail event while streaming');
       console.error(error);
       this.streamingFinishedSubject.next(true);
       this.streamingSubject.next(null);
+      this.oboeInstance = null;
     });
 
     return this.streamingSubject;
