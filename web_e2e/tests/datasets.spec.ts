@@ -73,7 +73,13 @@ test.describe('Dataset navigation tests', () => {
     await expect(page.locator('.alert-danger')).toContainText('No such dataset found!');
     await expect(page.locator('gpf-gene-browser')).not.toBeVisible();
   });
+});
 
+test.describe('Access rights and icons', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+  });
   test('list of icons of different datasets in datasets dropdown', async({ page }) => {
     await utils.openDatasetDropdown(page);
     await utils.expandDataset(page, utils.datasetIds.helloWorldGenotypes);
