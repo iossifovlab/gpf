@@ -34,6 +34,34 @@ test.describe('Pheno browser tests', () => {
     await expect(page.locator('.instrument-cell')).toHaveCount(9);
   });
 
+  test('should show nothing found when searching with invalid values', async({ page }) => {
+    await expect(page.locator('.instrument-cell')).toHaveCount(9);
+
+    await page.locator('input.form-control').fill('the age');
+    await expect(page.locator('.instrument-cell')).toHaveCount(0);
+    await expect(page.getByText('Nothing found')).toBeVisible();
+    await expect(page.getByText('Measures count: 0')).toBeVisible();
+
+    await page.locator('input.form-control').clear();
+
+    await page.locator('input.form-control').fill('continuous');
+    await expect(page.locator('.instrument-cell')).toHaveCount(0);
+    await expect(page.getByText('Nothing found')).toBeVisible();
+    await expect(page.getByText('Measures count: 0')).toBeVisible();
+  });
+
+  test('should check measure description', async({ page }) => {
+    await expect(page.locator('[id="measure_1-description-icon"]')).toBeVisible();
+    await page.locator('[id="measure_1-description-icon"]').click();
+
+    await expect(page.locator('.tooltip-inner')).toBeVisible();
+    await expect(page.locator('.tooltip-inner'))
+      .toContainText('Measure 1, a normally distributed continuous measure with a mean of 80');
+
+    await page.mouse.click(0, 0);
+    await expect(page.locator('.tooltip-inner')).not.toBeVisible();
+  });
+
   test('should have working table header sorting buttons', async({ page }) => {
     await page.getByText('Instrument', { exact: true }).click();
     await expect(page.locator('.instrument-cell').nth(0)).toHaveText('instrument_2');
