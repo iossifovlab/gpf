@@ -118,7 +118,7 @@ To do this, you need to define them in the study's config, in the genotype
 browser section of the configuration file.
 We are going to modify the
 ``example_dataset.yaml`` dataset configuration in
-``minimal_instance/datasets/example_dataset/example_data.yaml``:
+``minimal_instance/datasets/example_dataset/example_dataset.yaml``:
 
 .. code-block:: yaml
     :linenos:
