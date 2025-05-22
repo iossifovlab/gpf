@@ -20,11 +20,11 @@ from federation.rest_api_client import RESTClient
 class RemoteGenotypeData(GenotypeDataStudy):
     """Represent remote genotype data."""
 
-    def __init__(self, study_id: str, config: dict, rest_client: RESTClient):
-        self.remote_study_id = study_id
+    def __init__(self, config: dict, rest_client: RESTClient):
+        self.remote_study_id = config["id"]
         self.rest_client = rest_client
 
-        config["id"] = self.rest_client.prefix_remote_identifier(study_id)
+        config["id"] = self.rest_client.prefix_remote_identifier(config["id"])
         config["name"] = self.rest_client.prefix_remote_name(
             config.get("name", self.remote_study_id),
         )
@@ -131,7 +131,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
     def get_studies_ids(
         self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
-        return [self.remote_study_id]
+        return [self.study_id]
 
     @property
     def is_group(self) -> bool:

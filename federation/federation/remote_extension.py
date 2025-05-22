@@ -19,28 +19,36 @@ from federation.rest_api_client import (
 logger = logging.getLogger(__name__)
 
 
+def load_clients(dae_config) -> dict[str, RESTClient]:
+    """Initialize REST clients for all remotes in the DAE config."""
+    clients: dict[str, RESTClient] = {}
+
+    if dae_config.remotes is None:
+        return clients
+
+    for remote in dae_config.remotes:
+        logger.info("Creating remote %s", remote)
+        try:
+            client = RESTClient(
+                remote["id"],
+                remote["host"],
+                remote["client_id"],
+                remote["client_secret"],
+                base_url=remote["base_url"],
+                port=remote.get("port", None),
+                protocol=remote.get("protocol", None),
+                gpf_prefix=remote.get("gpf_prefix", None),
+            )
+            clients[client.remote_id] = client
+        except ConnectionError:
+            logger.exception("Failed to create remote %s", remote["id"])
+    return clients
+
+
 def load_extension(instance: WGPFInstance) -> None:
     """Load remote studies and modules into a running GPF instance."""
-    clients: dict[str, RESTClient] = {}
-    remotes = instance.dae_config.remotes
-    if remotes is not None:
-        for remote in remotes:
-            logger.info("Creating remote %s", remote)
-            try:
-                client = RESTClient(
-                    remote["id"],
-                    remote["host"],
-                    remote["client_id"],
-                    remote["client_secret"],
-                    base_url=remote["base_url"],
-                    port=remote.get("port", None),
-                    protocol=remote.get("protocol", None),
-                    gpf_prefix=remote.get("gpf_prefix", None),
-                )
-                clients[client.remote_id] = client
 
-            except ConnectionError:
-                logger.exception("Failed to create remote %s", remote["id"])
+    clients = load_clients(instance.dae_config)
 
     for client in clients.values():
         studies = fetch_studies_from_client(client)
@@ -91,7 +99,7 @@ def load_extension(instance: WGPFInstance) -> None:
                 gsc_id, client, gsc_desc, gsc_fmt,
             )
             gsc_id = gsc.collection_id
-            gs_db.gene_set_collections[gsc_id] = gsc
+            gs_db.gene_set_collections[gsc_id] = gsc  # type: ignore
 
         d_gs_db = instance.denovo_gene_sets_db
         # Important - must initialize the db first by accessing these
@@ -141,17 +149,27 @@ def fetch_studies_from_client(
     for config in all_data:
         study_id = config["id"]
         logger.info("creating remote genotype study: %s", study_id)
-        # Fix for remote studies for whose parents we don't have permissions
-        config["parents"] = [
-            parent_id
-            for parent_id in config["parents"]
-            if parent_id in available_data_ids
-        ]
+
+        # Update parents and children config values to have correctly
+        # adjusted data IDs - with prefix and only those that are available
+        if "parents" in config:
+            config["parents"] = [
+                rest_client.prefix_remote_identifier(parent_id)
+                for parent_id in config["parents"]
+                if parent_id in available_data_ids
+            ]
         if "studies" in config:
-            data = RemoteGenotypeDataGroup(study_id, config, rest_client)
+            config["studies"] = [
+                rest_client.prefix_remote_identifier(child_id)
+                for child_id in config["studies"]
+                if child_id in available_data_ids
+            ]
+
+        if "studies" in config:
+            data = RemoteGenotypeDataGroup(config, rest_client)
         else:
-            data = RemoteGenotypeData(study_id, config, rest_client)
-        result[study_id] = data
+            data = RemoteGenotypeData(config, rest_client)
+        result[data.study_id] = data
 
     for data in result.values():
         if not isinstance(data, RemoteGenotypeDataGroup):
@@ -159,7 +177,6 @@ def fetch_studies_from_client(
         data.studies = [
             result[child_id]
             for child_id in data.config["studies"]
-            if child_id in available_data_ids
         ]
 
     return list(result.values())
