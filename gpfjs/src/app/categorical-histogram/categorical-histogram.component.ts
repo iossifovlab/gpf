@@ -178,7 +178,16 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.redrawXAxis(svg, width, height);
 
     const leftAxis = d3.axisLeft(this.scaleYAxis);
-    const yAxisTicks = this.scaleYAxis.ticks(3).filter(tick => Number.isInteger(tick));
+    let yAxisTicks = this.scaleYAxis.ticks(3).filter((tick) => Number.isInteger(tick));
+    // Force usage of 4 ticks even if d3 creates more
+    if (yAxisTicks.length > 3) {
+      yAxisTicks = [
+        yAxisTicks[0],
+        yAxisTicks[Math.floor(yAxisTicks.length / 3)],
+        yAxisTicks[Math.floor(yAxisTicks.length / 3 * 2)],
+        yAxisTicks[yAxisTicks.length - 1]
+      ];
+    }
     leftAxis.tickValues(yAxisTicks).tickFormat(d3.format('d'));
 
     svg.append('g')
