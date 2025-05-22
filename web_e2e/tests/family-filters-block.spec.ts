@@ -33,15 +33,20 @@ test.describe('Family filters block tests', () => {
     await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
 
     await page.locator('gpf-family-ids textarea').focus();
-    await page.keyboard.type('f1');
+    await page.keyboard.type('14338');
+
+    await page.getByRole('button', { name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('1 variant selected');
 
     await page.locator('#save-query-dropdown-button').click();
     await expect(page.locator('#link-input')).not.toHaveValue('');
     const url = await page.locator('#link-input').inputValue();
     await page.goto(url);
-    await page.waitForSelector('gpf-genotype-browser');
 
-    await expect(page.locator('gpf-family-ids textarea')).toHaveText('f1');
+    await expect(page.locator('gpf-family-ids textarea')).toHaveText('14338');
+
+    await page.getByRole('button', { name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('1 variant selected');
   });
 
   test('should test resetting family ids state', async({ page }) => {
