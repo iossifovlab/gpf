@@ -80,11 +80,11 @@ class PhenoToolView(QueryBaseView):
                     data["familyFilters"],
                 ),
             )
-        if data.get("familyFiltersBeta") is not None:
+        if data.get("familyPhenoFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
                 study_wrapper.query_transformer  # noqa: SLF001
-                ._transform_filters_to_ids_beta(
-                    data["familyFiltersBeta"],
+                ._transform_pheno_filters_to_ids(
+                    data["familyPhenoFilters"],
                 ),
             )
 
@@ -193,11 +193,11 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
                     data["familyFilters"],
                 ),
             )
-        if data.get("familyFiltersBeta") is not None:
+        if data.get("familyPhenoFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
                 study_wrapper.query_transformer  # noqa: SLF001
-                ._transform_filters_to_ids_beta(
-                    data["familyFiltersBeta"],
+                ._transform_pheno_filters_to_ids(
+                    data["familyPhenoFilters"],
                 ),
             )
 

@@ -233,7 +233,7 @@ class QueryTransformer:
             result.append(ids)
         return reduce(set.intersection, result)
 
-    def _transform_filters_to_ids_beta(self, filters: list[dict]) -> set[str]:
+    def _transform_pheno_filters_to_ids(self, filters: list[dict]) -> set[str]:
         result = []
         for filter_conf in filters:
             roles = filter_conf.get("roles") if "roles" in filter_conf else None
@@ -466,7 +466,7 @@ class QueryTransformer:
         if "personFiltersBeta" in kwargs:
             person_filters = kwargs.pop("personFiltersBeta")
             if person_filters:
-                matching_person_ids = self._transform_filters_to_ids_beta(
+                matching_person_ids = self._transform_pheno_filters_to_ids(
                     person_filters,
                 )
                 if matching_person_ids is not None and kwargs.get("personIds"):
@@ -489,10 +489,10 @@ class QueryTransformer:
                 else:
                     kwargs["familyIds"] = matching_family_ids
 
-        if "familyFiltersBeta" in kwargs:
-            family_filters = kwargs.pop("familyFiltersBeta")
+        if "familyPhenoFilters" in kwargs:
+            family_filters = kwargs.pop("familyPhenoFilters")
             if family_filters:
-                matching_family_ids = self._transform_filters_to_ids_beta(
+                matching_family_ids = self._transform_pheno_filters_to_ids(
                     family_filters,
                 )
                 if matching_family_ids is not None and kwargs.get("familyIds"):
