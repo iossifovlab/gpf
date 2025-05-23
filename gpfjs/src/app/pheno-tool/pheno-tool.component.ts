@@ -134,7 +134,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
             && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags},
         ...familyIdsState?.length && {familyIds: familyIdsState},
         ...personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters},
-        ...familyMeasureHistogramsState?.length && { familyFiltersBeta: familyMeasureHistogramsState.map(s => ({
+        ...familyMeasureHistogramsState?.length && { familyPhenoFilters: familyMeasureHistogramsState.map(s => ({
           source: s.measure,
           isFamily: true,
           histogramType: s.histogramType,

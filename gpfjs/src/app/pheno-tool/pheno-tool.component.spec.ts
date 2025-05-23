@@ -206,7 +206,7 @@ describe('PhenoToolComponent', () => {
 
     const phenoToolStateResult = {
       effectTypes: ['missense', 'splice-site'],
-      familyFiltersBeta: [{
+      familyPhenoFilters: [{
         source: 'm1',
         isFamily: true,
         histogramType: 'categorical',
