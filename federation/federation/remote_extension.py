@@ -60,8 +60,7 @@ def load_extension(instance: WGPFInstance) -> None:
         ]
         if instance.visible_datasets is None:
             instance.visible_datasets = \
-                sorted(instance.get_available_data_ids()
-                       + available_studies_ids)
+                sorted(instance.get_available_data_ids())
         instance.visible_datasets.extend(visible_studies)
         for study in studies:
             logger.info("register remote study %s", study.study_id)
