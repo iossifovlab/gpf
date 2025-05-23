@@ -6,6 +6,7 @@ studies:
 study_type:
 - WG
 has_complex: true
+has_zygosity: true
 enabled: true
 phenotype_data: pheno_helloworld
 phenotype_tool: true
