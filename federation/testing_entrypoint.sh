@@ -11,7 +11,7 @@ mkdir /wd/federation/tmp
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     python /wd/federation/setup_testing_remote.py
 
-export GRR_DEFINITION_FILE="/wd/federation/tmp/grr_definiton.yaml"
+export GRR_DEFINITION_FILE="/wd/federation/tmp/grr_definition.yaml"
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     /wd/wdae/wdae/wdaemanage.py migrate

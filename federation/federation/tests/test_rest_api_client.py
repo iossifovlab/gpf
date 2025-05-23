@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 from requests import Response
 
 from dae.pheno.common import MeasureType
@@ -13,7 +12,6 @@ def test_get_datasets(rest_client: RESTClient) -> None:
     assert {dataset["id"] for dataset in datasets} == {
         "t4c8_study_1",
         "t4c8_study_2",
-        "t4c8_study_3",
         "t4c8_study_4",
         "t4c8_dataset",
     }
@@ -73,11 +71,10 @@ def test_get_instruments(rest_client: RESTClient) -> None:
     assert isinstance(instruments, list)
 
 
-@pytest.mark.skip
 def test_post_enrichment_test(rest_client: RESTClient) -> None:
     data = {
-        "datasetId": "t4c8_study_1",
-        "geneSymbols": ["POGZ"],
+        "datasetId": "t4c8_study_4",
+        "geneSymbols": ["T4"],
     }
     response = rest_client.post_enrichment_test(data)
 
@@ -123,7 +120,7 @@ def test_get_measures_download(rest_client: RESTClient) -> None:
 
     assert lines is not None
     print(b"".join(lines).decode())
-    assert len(lines) == 11
+    assert len(lines) == 386
 
 
 def test_post_pheno_tool(rest_client: RESTClient) -> None:

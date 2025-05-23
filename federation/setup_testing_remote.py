@@ -1,6 +1,6 @@
 import pathlib  # noqa: INP001
 
-from dae.conftest import setup_t4c8_instance
+from utils.testing import setup_t4c8_instance
 
 ROOT_PATH = pathlib.Path("/wd/federation/tmp")
 
