@@ -1,6 +1,42 @@
 Release Notes
 =============
 
+* 2025.5.9
+    * Hide phenotype browser NaN values.
+    * Stop hover on phenotype browser measure column.
+    * Reorder logging configuration inf wgpf tools.
+    * Fix handling of visible datasets in federation plugin.
+
+
+* 2025.5.8
+    * Fixes in handling of table preview in genotype browser.
+    * Limit y-axis ticks in histograms.
+    * Refactor federation loading of remote studies.
+    * Pin the version of importlib-metadata to workaround Dask issue.
+    * Fix warning for wrong gene_scoores column configuration.
+    * Fix setting zygosity filters in genotype browser UI.
+    * Clean up creation of federation tokens user interface.
+
+* 2025.5.7
+    * Fixing support for denovo gene sets in federation plugin.
+    * Clean up federation plugin testing infrastructure.
+    * Support for update of phenotype measures and instrument descriptoins.
+    * Fix proagation of any_user permissions to dataset parents.
+    * Fix in liftover annotator.
+    * Fix federation support for person set collections.
+    * Fix federation support for studies hierarchy.
+    * Keep additional attributes in denovo_liftover tool.
+
+* 2025.5.6
+    * Remove debounce time in phenotype measure role searching.
+    * Support markdown in phenotype browser measure and instrument desciption.
+
+* 2025.5.5
+    * Reorganization of GPF federation plugin.
+    * Fix support for CNV in variants query grammar.
+    * Fix regions filter text area.
+
+
 * 2025.5.5
     * Reorganization of GPF federation plugin.
     * Fix support for CNV in variants query grammar.
