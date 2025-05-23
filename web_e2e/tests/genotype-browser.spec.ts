@@ -393,6 +393,48 @@ test.describe('Genotype browser table preview result tests', () => {
     await page.getByRole('button', { name: 'Table Preview' }).click();
     await expect(page.locator('#variants-count-span')).toHaveText('164 variants selected');
   });
+
+  test('should load query, click table preview and check if table is visible repeatedly', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    for (let i = 0; i < 50; i++) {
+      /* eslint-disable no-await-in-loop */
+      await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+      await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+
+      await page.getByRole('button', {name: 'Share/save query'}).click();
+      await expect(page.locator('#save-query-dropdown')).toBeVisible();
+      const shareLinkUrl = await page.locator('#link-input').inputValue();
+      await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+      await expect(async() => {
+        await page.getByRole('button', {name: 'Table Preview'}).click();
+        await expect(page.locator('gpf-genotype-preview-table')).toBeVisible({timeout: 5000});
+      }).toPass({intervals: [1000]});
+      /* eslint-enable */
+    }
+  });
+
+  test('should load query, click table preview and check if loading screen is hidden repeatedly', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    for (let i = 0; i < 50; i++) {
+      /* eslint-disable no-await-in-loop */
+      await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+      await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+
+      await page.getByRole('button', {name: 'Share/save query'}).click();
+      await expect(page.locator('#save-query-dropdown')).toBeVisible();
+      const shareLinkUrl = await page.locator('#link-input').inputValue();
+      await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+      await page.getByRole('button', {name: 'Table Preview'}).click();
+      await expect(page.locator('.overlay')).not.toBeVisible();
+      /* eslint-enable */
+    }
+  });
 });
 
 test.describe('Genotype browser download tests', () => {
