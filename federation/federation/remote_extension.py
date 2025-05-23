@@ -64,6 +64,7 @@ def load_extension(instance: WGPFInstance) -> None:
                        + available_studies_ids)
         instance.visible_datasets.extend(visible_studies)
         for study in studies:
+            logger.info("register remote study %s", study.study_id)
             wrapper = RemoteStudyWrapper(study)
 
             instance._variants_db.register_genotype_data(study)  # noqa: SLF001
@@ -148,7 +149,7 @@ def fetch_studies_from_client(
 
     for config in all_data:
         study_id = config["id"]
-        logger.info("creating remote genotype study: %s", study_id)
+        logger.info("loading remote genotype study: %s", study_id)
 
         # Update parents and children config values to have correctly
         # adjusted data IDs - with prefix and only those that are available

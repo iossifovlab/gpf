@@ -196,6 +196,12 @@ def cli(argv: list[str] | None = None) -> None:
     ])
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.wgpf_settings")
+    if args.verbose == 1:
+        settings.LOGGING["handlers"]["console"]["level"] = logging.INFO
+    elif args.verbose >= 2:
+        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG
+    logging.config.dictConfig(settings.LOGGING)
+
     django.setup()
     settings.DISABLE_PERMISSIONS = True
     settings.STUDIES_EAGER_LOADING = True
@@ -212,10 +218,6 @@ def cli(argv: list[str] | None = None) -> None:
     settings.DEFAULT_WDAE_DIR = os.path.join(
         wgpf_instance.dae_dir, "wdae")
     os.makedirs(settings.DEFAULT_WDAE_DIR, exist_ok=True)
-
-    if args.verbose > 0:
-        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG
-    logging.config.dictConfig(settings.LOGGING)
 
     logger.info("using wdae directory: %s", settings.DEFAULT_WDAE_DIR)
 
