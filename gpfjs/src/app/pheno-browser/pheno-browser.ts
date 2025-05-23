@@ -20,8 +20,10 @@ export class PhenoRegression {
     this.measureId = json['measure_id'] as string;
     this.figureRegression = json['figure_regression'] as string;
     this.figureRegressionSmall = json['figure_regression_small'] as string;
-    this.pvalueRegressionMale = json['pvalue_regression_male'] as number;
-    this.pvalueRegressionFemale = json['pvalue_regression_female'] as number;
+    this.pvalueRegressionMale = isNaN(json['pvalue_regression_male'] as number)
+      ? undefined : json['pvalue_regression_male'] as number;
+    this.pvalueRegressionFemale = isNaN(json['pvalue_regression_female'] as number)
+      ? undefined : json['pvalue_regression_female'] as number;
   }
 
   public addBasePath(basePath: string): void {
