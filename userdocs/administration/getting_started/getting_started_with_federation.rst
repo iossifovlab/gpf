@@ -6,10 +6,10 @@ into a single system. This allows you to share data and resources across
 multiple GPF instances, enabling you to work with larger datasets and
 collaborate with other researchers more effectively.
 
-In this section, we will show you how to set up a federation between  SFARI GPF
-instance and your local GPF instance. This will allow you to access the data
-and resources you have access to on the SFARI GPF instance from your local GPF
-instance.
+In this section, we will show you how to set up a federation between the
+SFARI GPF instance and your local GPF instance. This will allow you to access
+the data and resources you have access to on the SFARI GPF instance from your
+local GPF instance.
 
 Federation tokens
 +++++++++++++++++
@@ -17,7 +17,7 @@ Federation tokens
 Federation tokens are used to authenticate and authorize access to the
 federated GPF instance.
 
-Let us create a federation token for the SFARI GPF instance. You need to Log in
+Let us create a federation token for the SFARI GPF instance. You need to log in
 to the SFARI GPF instance, go to *User Profile*, select *Federation Tokens*,
 and create a new federation token:
 
@@ -36,9 +36,9 @@ and create a new federation token:
 Configure federation on your local GPF instance
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-To use the GPF federation, you need to install additional ``gpf_federation``
-conda package in your local conda environment. You can do this by running the
-following command:
+To use the GPF federation, you need to install the additional
+``gpf_federation`` conda package in your local conda environment. You can do
+this by running the following command:
 
 .. code-block:: bash
 
@@ -103,7 +103,7 @@ local GPF instance. You can do this by editing the
 .. note::
 
     If you don't have a user account on the SFARI GPF instance, you can
-    skip the ``client_id`` and ``client_secret`` lines. In this case your local
+    skip the ``client_id`` and ``client_secret`` lines. In this case, your local
     instance will be able to access only the publicly available resources in
     the SFARI GPF instance.
 
@@ -114,8 +114,8 @@ the ``wgpf`` tool:
 
     wgpf run
 
-In the home page of your local GPF instance, you should see studies loaded from
-the ``sfari`` remote instance in the `Home Page`:
+On the home page of your local GPF instance, you should see studies loaded from
+the SFARI remote instance in the `Home Page`:
 
 .. figure:: getting_started_files/federation_home_page.png
 
@@ -123,7 +123,8 @@ the ``sfari`` remote instance in the `Home Page`:
 
 .. note::
 
-    The federation shows only the studies that you have access to.
+    The federation displays only the studies and resources to which you
+    have access.
 
 .. warning::
 
@@ -138,23 +139,23 @@ Having the federation configured, you can explore local and remote studies.
 Moreover, you can combine local and remote studies using the available
 tools.
 
-For example, let us go to the `ssc_denovo` and select `Enrichment Tool`. From
-`Gene Sets` choose `Denovo`:
+For example, let's go to the `ssc_denovo` and select the `Enrichment Tool`.
+From `Gene Sets` choose `Denovo`:
 
 .. figure:: getting_started_files/federation_enrichment_tool.png
 
    Enrichment Tool for `ssc_denovo` study
 
 Then from the studies hierarchy choose `(sfari) SPARK Consortium iWES v1.1`
-study and select `autism` phenotype.
+study and select the `autism` phenotype.
 
 .. figure:: getting_started_files/federation_enrichment_tool_denovo_gene_set.png
 
    Enrichment Tool for `ssc_denovo` study with selected remote study de Novo
    gene sets
 
-Now you can choose a de Novo gene set computed for the remote study `SPARK
-Consortium iWES v1.1`:
+Now you can choose a de Novo gene set computed for the remote study
+`SPARK Consortium iWES v1.1`:
 
 .. figure:: getting_started_files/federation_enrichment_tool_iwes_denovo_gene_sets.png
 
@@ -165,3 +166,4 @@ Let us select the LGDs de Novo gene set and run the `Enrichment Tool`:
 .. figure:: getting_started_files/federation_enrichment_tool_results.png
 
    Enrichment Tool for `ssc_denovo` result page
+
