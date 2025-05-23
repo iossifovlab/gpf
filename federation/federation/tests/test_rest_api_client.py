@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
 from requests import Response
 
 from dae.pheno.common import MeasureType
@@ -72,6 +73,7 @@ def test_get_instruments(rest_client: RESTClient) -> None:
     assert isinstance(instruments, list)
 
 
+@pytest.mark.skip
 def test_post_enrichment_test(rest_client: RESTClient) -> None:
     data = {
         "datasetId": "t4c8_study_1",

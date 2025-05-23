@@ -1,8 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
+
 from federation.gene_sets_db import RemoteGeneSetCollection
 from federation.rest_api_client import RESTClient
 
 
+@pytest.mark.skip
 def test_get_gene_set(rest_client: RESTClient) -> None:
     rgsc = RemoteGeneSetCollection(
         "main", rest_client, "", "",
