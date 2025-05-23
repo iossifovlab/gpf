@@ -9,7 +9,7 @@ To enable the Gene Profile tool, you need to create a configuration for
 the tool and add it to the GPF instance configuration file.
 
 Let us create a configuration for the Gene Profile tool in the GPF instance
-directory ``minimal_instance/gene_profiles.yaml`` wit the following content:
+directory ``minimal_instance/gene_profiles.yaml`` with the following content:
 
 .. literalinclude:: getting_started_files/gene_profiles.yaml
     :linenos:
