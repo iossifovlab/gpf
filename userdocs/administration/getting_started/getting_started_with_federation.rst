@@ -8,7 +8,8 @@ collaborate with other researchers more effectively.
 
 In this section, we will show you how to set up a federation between  SFARI GPF
 instance and your local GPF instance. This will allow you to access the data
-and resources available on the SFARI GPF instance from your local GPF instance.
+and resources you have access to on the SFARI GPF instance from your local GPF
+instance.
 
 Federation tokens
 +++++++++++++++++
@@ -35,7 +36,7 @@ and create a new federation token:
 Configure federation on your local GPF instance
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-To use the GPF federation, you need to install addigional ``gpf_federation``
+To use the GPF federation, you need to install additional ``gpf_federation``
 conda package in your local conda environment. You can do this by running the
 following command:
 
