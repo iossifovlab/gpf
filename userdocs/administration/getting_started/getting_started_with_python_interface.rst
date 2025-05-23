@@ -129,19 +129,19 @@ We can see what instruments and measures are available in the data:
 
     pd.instruments
 
-    >> {'i1': Instrument(i1, 7)}
+    >> {'basic_medical': Instrument(basic_medical, 4), 'iq': Instrument(iq, 3)}
 
 .. code-block:: python3
 
     pd.measures
 
-    >> {'i1.age': Measure(i1.age, MeasureType.continuous, [68.00148724003327, 606.2292731817272]),
-        'i1.iq': Measure(i1.iq, MeasureType.continuous, [-11.109304318239424, 174.2897342432941]),
-        'i1.m1': Measure(i1.m1, MeasureType.continuous, [28.876821569323646, 143.02866815069675]),
-        'i1.m2': Measure(i1.m2, MeasureType.continuous, [17.650256211303596, 69.72059461639753]),
-        'i1.m3': Measure(i1.m3, MeasureType.continuous, [20.34949100410408, 122.8324621617449]),
-        'i1.m4': Measure(i1.m4, MeasureType.continuous, [0, 10]),
-        'i1.m5': Measure(i1.m5, MeasureType.categorical, val1, val2, val3, val4, val5)}
+    >> {'basic_medical.age': Measure(basic_medical.age, MeasureType.continuous, 1, 50),
+        'basic_medical.weight': Measure(basic_medical.weight, MeasureType.continuous, 15, 250),
+        'basic_medical.height': Measure(basic_medical.height, MeasureType.continuous, 30, 185),
+        'basic_medical.race': Measure(basic_medical.race, MeasureType.categorical, african american, asian, white),
+        'iq.diagnosis-notes': Measure(iq.diagnosis-notes, MeasureType.categorical, excels at school, originally diagnosed as Asperger, sleep abnormality, walked late),
+        'iq.verbal-iq': Measure(iq.verbal-iq, MeasureType.continuous, 60, 115),
+        'iq.non-verbal-iq': Measure(iq.non-verbal-iq, MeasureType.continuous, 45, 115)}
 
 We can then get specific measure values for specific individuals:
 
@@ -149,23 +149,23 @@ We can then get specific measure values for specific individuals:
 
     from dae.variants.attributes import Role
 
-    list(pd.get_people_measure_values(["i1.iq"], roles=[Role.prb], family_ids=["f1", "f2", "f3"]))
+    list(pd.get_people_measure_values(["iq.non-verbal-iq"], roles=[Role.prb], family_ids=["f1", "f2", "f3"]))
 
     >> [{'person_id': 'f1.p1',
          'family_id': 'f1',
          'role': 'prb',
          'status': 'affected',
          'sex': 'M',
-         'i1.iq': 104.9118881225586},
+         'iq.non-verbal-iq': 70},
         {'person_id': 'f2.p1',
          'family_id': 'f2',
          'role': 'prb',
          'status': 'affected',
-         'sex': 'M',
-         'i1.iq': 66.6941146850586},
+         'sex': 'F',
+         'iq.non-verbal-iq': 45},
         {'person_id': 'f3.p1',
          'family_id': 'f3',
          'role': 'prb',
          'status': 'affected',
          'sex': 'M',
-         'i1.iq': 69.3330078125}]
+         'iq.non-verbal-iq': 93}]
