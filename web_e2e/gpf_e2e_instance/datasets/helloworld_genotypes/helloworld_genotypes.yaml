@@ -16,7 +16,7 @@ enrichment:
 genotype_browser:
   has_present_in_child: true
   has_present_in_parent: true
-  has_pedigree_selector: false
+  has_pedigree_selector: true
   variant_types: 
   - sub
   - ins
