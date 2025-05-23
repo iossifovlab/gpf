@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 
 test.describe('Dataset navigation tests', () => {
@@ -158,4 +158,186 @@ test.describe('Access rights and icons', () => {
       page.locator('#datasets-dropdown-menu-button').locator('.phenotype-icon')
     ).toHaveCSS('color', 'rgb(126, 126, 126)');
   });
+
+  test('should give rights for vcf_helloworld to any_user', async({ page }) => {
+    // check if Genotype browser is disabled when no user is logged in
+    await utils.logout(page);
+    const study = utils.datasetIds.vcfHelloWorld;
+    const group = 'any_user';
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
+
+    // add any_user group to study
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await searchInTable(page, study);
+
+    await page.locator(`[id="${study}-groups-cell"]`).getByText('Add').click();
+    await page.waitForSelector('.add-item-button');
+    await searchInMenu(page, group);
+    await page.waitForSelector(`button:text("${group}")`);
+    await page.getByRole('button', { name: group }).click();
+
+    await expect(page.locator(`[id="${study}-groups-cell"]`)).toContainText(group);
+
+    // check if Genotype browser is enabled when no user is logged in
+    await utils.logout(page);
+
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+
+    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+
+    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+
+    // remove any_user from list of groups of the study
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await searchInTable(page, study);
+    await page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"] gpf-confirm-button`).click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.locator(`[id="${group}-datasets-cell"] [id="${study}-list-item"]`)).not.toBeVisible();
+  });
+
+  test('should give rights for vcf_helloworld to researcher', async({ page }) => {
+    // check if Genotype browser is disabled when no user is logged in
+    await utils.logout(page);
+
+    const study = utils.datasetIds.vcfHelloWorld;
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
+
+    // add group to reasearcher
+    const researcher = 'research@iossifovlab.com';
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await searchInTable(page, researcher);
+
+    await page.locator(`[id="${researcher}-groups-cell"]`).getByText('Add').click();
+    await page.waitForSelector('.add-item-button');
+    await searchInMenu(page, study);
+    await page.waitForSelector(`button:text("${study}")`);
+    await page.getByRole('button', { name: study }).click();
+
+    await utils.logout(page);
+    // check if Genotype browser is enabled when researcher is logged in
+    await utils.login(page, researcher, 'secret');
+
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+
+    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+
+    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
+    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+
+    // remove group from groups list of research
+    await utils.logout(page);
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await searchInTable(page, researcher);
+
+    await page.locator(`[id="${researcher}-groups-cell"] [id="${study}-list-item"] gpf-confirm-button`).click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+
+    await expect(page.locator(`[id="${researcher}-groups-cell"]`)).not.toContainText(study);
+  });
+
+  test('should give rights for pheno_helloworld to any_user', async({ page }) => {
+    const study = utils.datasetIds.phenoHelloWorld;
+    const group = 'any_user';
+
+    // check if Phenotype browser download is disabled when no user is logged in
+    await utils.logout(page);
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
+    await expect(page.locator('#download-measures')).toContainClass('disabled-download');
+
+    // add any_user group to pheno study
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await searchInTable(page, study);
+
+    await page.locator(`[id="${study}-groups-cell"]`).getByText('Add').click();
+    await page.waitForSelector('.add-item-button');
+    await searchInMenu(page, group);
+    await page.waitForSelector(`button:text("${group}")`);
+    await page.getByRole('button', { name: group }).click();
+
+    await expect(page.locator(`[id="${study}-groups-cell"]`)).toContainText(group);
+
+    // check if Phenotype browser is enabled when no user is logged in
+    await utils.logout(page);
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
+    await expect(page.locator('#download-measures')).not.toContainClass('disabled-download');
+
+    // remove any_user from list of groups of the pheno study
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await searchInTable(page, study);
+    await page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"] gpf-confirm-button`).click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.locator(`[id="${group}-datasets-cell"] [id="${study}-list-item"]`)).not.toBeVisible();
+  });
+
+  test('should give rights for pheno_helloworld to researcher', async({ page }) => {
+    const study = utils.datasetIds.phenoHelloWorld;
+    const researcher = 'research@iossifovlab.com';
+
+    // check if Phenotype browser download is disabled when no user is logged in
+    await utils.logout(page);
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
+    await expect(page.locator('#download-measures')).toContainClass('disabled-download');
+
+    // add pheno group to reasearcher
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await searchInTable(page, researcher);
+
+    await page.locator(`[id="${researcher}-groups-cell"]`).getByText('Add').click();
+    await page.waitForSelector('.add-item-button');
+    await searchInMenu(page, study);
+    await page.waitForSelector(`button:text("${study}")`);
+    await page.getByRole('button', { name: study }).click();
+
+    await utils.logout(page);
+    // check if Phenotype browser download is enabled when researcher is logged in
+    await utils.login(page, researcher, 'secret');
+
+    await utils.navigateToDataset(page, study);
+    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
+    await expect(page.locator('#download-measures')).not.toContainClass('disabled-download');
+
+    // remove pheno group from groups list of research
+    await utils.logout(page);
+    await utils.loginAdmin(page);
+    await page.locator('a:text("Management")').click();
+    await searchInTable(page, researcher);
+
+    await page.locator(`[id="${researcher}-groups-cell"] [id="${study}-list-item"] gpf-confirm-button`).click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+
+    await expect(page.locator(`[id="${researcher}-groups-cell"]`)).not.toContainText(study);
+  });
 });
+
+async function searchInTable(page: Page, name: string): Promise<void> {
+  await page.locator('#search-field').clear();
+  await page.locator('#search-field').focus();
+  await page.keyboard.type(name);
+}
+
+async function searchInMenu(page: Page, name: string): Promise<void> {
+  await page.getByRole('textbox', { name: 'Search' }).clear();
+  await page.getByRole('textbox', { name: 'Search' }).focus();
+  await page.keyboard.type(name);
+}
