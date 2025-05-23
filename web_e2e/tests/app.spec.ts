@@ -298,11 +298,12 @@ test.describe('App user access rights tests', () => {
     await page.locator('a').filter({ hasText: 'Datasets'}).click();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
 
-    await utils.logout(page);
-    await page.locator('a').filter({ hasText: 'Datasets'}).click();
+    await utils.loginAdmin(page);
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
 
-    await utils.loginAdmin(page);
+    await utils.logout(page);
+    await expect(page.locator('gpf-home')).toBeVisible();
+    await page.locator('a').filter({ hasText: 'Datasets'}).click();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
   });
 
