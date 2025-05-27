@@ -420,7 +420,7 @@ test.describe('Genomic scores tests', () => {
     ' multiple values are separated by a vertical bar';
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clinsig}")`).click();
+    await page.locator(`mat-option:has-text("${clinsig}")`).click({force: true});
     await page.getByRole('button', {name: 'Mode'}).nth(0).click();
     await page.getByRole('menuitem', {name: 'click selector'}).click();
     await page.locator('rect[id="Uncertain_significance"]').click();
