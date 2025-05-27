@@ -1,9 +1,9 @@
 instrument_1 age infocontinuous68.001, 606.229,
-instrument_1 iq infocontinuous-1.111e+1, 174.290,
+instrument_1 iq infocontinuous-1.111e+1, 174.29,
 instrument_1 measure_1 infocontinuous28.877, 143.0290.8160.93530.12830.0252,
-instrument_1 measure_2 infocontinuous17.650, 69.7210.69070.74880.99220.2873,
+instrument_1 measure_2 infocontinuous17.65, 69.7210.69070.74880.99220.2873,
 instrument_1 measure_3 infocontinuous20.349, 122.8321.80e-90.00270.00030.0096,
-instrument_1 measure_4 infocontinuous0.000, 10.0006.10e-70.08920.01310.0157,
+instrument_1 measure_4 infocontinuous0, 106.10e-70.08920.01310.0157,
 instrument_1 measure_5 infocategoricalval1, val2, val3, val4, val5,
-instrument_2 measure_6 infocontinuous10.100, 15.4000.84060.8750.96410.8703,
+instrument_2 measure_6 infocontinuous10.1, 15.40.84060.8750.96410.8703,
 instrument_2 measure_7 inforawAA, AB, AC, AD, BA, BB, BC, BD, CA, CB, CC, CD, DA, DB, DC, DD, EA, EB, EC, ED
