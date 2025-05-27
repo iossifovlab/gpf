@@ -119,6 +119,11 @@ class GeneSet:
 
 class BaseGeneSetCollection(abc.ABC):
     """Base class for gene set collections."""
+    def __init__(self, collection_id: str) -> None:
+        self.collection_id = collection_id
+        self.web_label: str = ""
+        self.web_format_str: str = ""
+        self.gene_sets: dict[str, GeneSet] = {}
 
     @abc.abstractmethod
     def get_gene_set(self, gene_set_id: str) -> GeneSet | None:
@@ -137,8 +142,6 @@ class GeneSetCollection(
     """Class representing a collection of gene sets in a resource."""
 
     def __init__(self, resource: GenomicResource) -> None:
-        super().__init__()
-
         config = resource.get_config()
         if config is None:
             raise ValueError(
@@ -146,8 +149,8 @@ class GeneSetCollection(
         self.resource = resource
 
         self.config = GeneSetResourceSchema.model_validate(config)
+        super().__init__(self.config.resource_id)
 
-        self.collection_id = self.config.resource_id
         assert self.collection_id != "denovo"
         if resource.get_type() not in {"gene_set_collection", "gene_set"}:
             raise ValueError("Invalid resource type for gene set collection")
@@ -156,8 +159,8 @@ class GeneSetCollection(
                 "'gene_set' resource type is deprecated; "
                 "use 'gene_set_collection' instead")
 
-        self.web_label = self.config.web_label
-        self.web_format_str = self.config.web_format_str
+        self.web_label = self.config.web_label or ""
+        self.web_format_str = self.config.web_format_str or ""
         logger.debug("loading %s: %s", self.collection_id, config)
         self.gene_sets: dict[str, GeneSet] = self.load_gene_sets()
 
@@ -272,8 +275,11 @@ class GeneSetCollection(
 class GeneSetsDb:
     """Class that represents a dictionary of gene set collections."""
 
-    def __init__(self, gene_set_collections: list[GeneSetCollection]) -> None:
-        self.gene_set_collections: dict[str, GeneSetCollection] = {
+    def __init__(
+        self,
+        gene_set_collections: list[BaseGeneSetCollection],
+    ) -> None:
+        self.gene_set_collections: dict[str, BaseGeneSetCollection] = {
             gsc.collection_id: gsc
             for gsc in gene_set_collections
         }
@@ -322,7 +328,7 @@ class GeneSetsDb:
         gsc = self.gene_set_collections[collection_id]
         logger.debug(
             "gene sets from %s: %s", collection_id, len(gsc.gene_sets.keys()))
-        return list(gsc.gene_sets.values())
+        return gsc.get_all_gene_sets()
 
     def get_gene_set(
         self, collection_id: str,

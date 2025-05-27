@@ -124,7 +124,7 @@ def test_denovo_gene_set_download(
         x.decode("utf-8") for x in response.streaming_content)  # type: ignore
 
     count = len([ln.strip() for ln in res.split("\n") if ln.strip()])
-    assert count == 1 + 2
+    assert count == 2 + 2
 
 
 def test_gene_set_download_missense(
@@ -157,7 +157,7 @@ def test_gene_set_download_missense(
         x.decode("utf-8") for x in response.streaming_content)  # type: ignore
     count = len([ln.strip() for ln in res.split("\n") if ln.strip()])
 
-    assert count == 1 + 1
+    assert count == 2 + 1
 
 
 def test_denovo_gene_set_not_found(
@@ -249,7 +249,7 @@ def test_get_gene_set_download_synonymous_autism(
         x.decode("utf-8") for x in response.streaming_content)  # type: ignore
     count = len([ln.strip() for ln in res.split("\n") if ln.strip()])
 
-    assert count == 1 + 1
+    assert count == 2 + 1
 
 
 def test_get_gene_set_download_synonymous_recurrent(
@@ -282,7 +282,7 @@ def test_get_gene_set_download_synonymous_recurrent(
         x.decode("utf-8") for x in response.streaming_content)  # type: ignore
     count = len([ln.strip() for ln in res.split("\n") if ln.strip()])
 
-    assert count == 1 + 1
+    assert count == 2 + 1
 
 
 def test_get_gene_set_download_synonymous_triple(
@@ -315,7 +315,7 @@ def test_get_gene_set_download_synonymous_triple(
         x.decode("utf-8") for x in response.streaming_content)  # type: ignore
     count = len([ln.strip() for ln in res.split("\n") if ln.strip()])
 
-    assert count == 1 + 1
+    assert count == 2 + 1
 
 
 def test_get_denovo_gene_set_not_found(

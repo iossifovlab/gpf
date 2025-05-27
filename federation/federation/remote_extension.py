@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from gpf_instance.gpf_instance import WGPFInstance
 
@@ -19,14 +20,14 @@ from federation.rest_api_client import (
 logger = logging.getLogger(__name__)
 
 
-def load_clients(dae_config) -> dict[str, RESTClient]:
+def load_clients(dae_config: dict[str, Any]) -> dict[str, RESTClient]:
     """Initialize REST clients for all remotes in the DAE config."""
     clients: dict[str, RESTClient] = {}
 
-    if dae_config.remotes is None:
+    if dae_config["remotes"] is None:
         return clients
 
-    for remote in dae_config.remotes:
+    for remote in dae_config["remotes"]:
         logger.info("Creating remote %s", remote)
         try:
             client = RESTClient(
@@ -99,7 +100,7 @@ def load_extension(instance: WGPFInstance) -> None:
                 gsc_id, client, gsc_desc, gsc_fmt,
             )
             gsc_id = gsc.collection_id
-            gs_db.gene_set_collections[gsc_id] = gsc  # type: ignore
+            gs_db.gene_set_collections[gsc_id] = gsc
 
         d_gs_db = instance.denovo_gene_sets_db
         # Important - must initialize the db first by accessing these
@@ -165,6 +166,7 @@ def fetch_studies_from_client(
                 if child_id in available_data_ids
             ]
 
+        data: RemoteGenotypeData
         if "studies" in config:
             data = RemoteGenotypeDataGroup(config, rest_client)
         else:

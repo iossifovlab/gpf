@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
@@ -86,7 +86,9 @@ class GeneSetsView(QueryBaseView):
 
     def post(self, request: Request) -> Response:
         """Build response to a post request."""
-        data = request.data
+        if not request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        data = cast(dict, request.data)
         if "geneSetsCollection" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
@@ -164,10 +166,15 @@ class GeneSetDownloadView(QueryBaseView):
     }
     """
 
-    def post(self, request: Request) -> Response:
-        return self._build_response(request.data)
+    def post(self, request: Request) -> Response | StreamingHttpResponse:
+        if not request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def _build_response(self, data: dict[str, Any]) -> Response:
+        return self._build_response(cast(dict, request.data))
+
+    def _build_response(
+        self, data: dict[str, Any],
+    ) -> Response | StreamingHttpResponse:
         if "geneSetsCollection" not in data or "geneSet" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
@@ -203,9 +210,13 @@ class GeneSetDownloadView(QueryBaseView):
         if gene_set is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = [f"{s}\r\n" for s in gene_set["syms"]]
-        title = f'"{gene_set["name"]}: {gene_set["desc"]}"\r\n'
-        result = itertools.chain([title], gene_syms)
+        gene_syms = [f"{s}\n".encode() for s in gene_set["syms"]]
+        result = itertools.chain(
+            [
+                f"{gene_set['name']}\n".encode(),
+                f"{gene_set['desc']}\n".encode(),
+            ],
+            gene_syms)
 
         response = StreamingHttpResponse(result, content_type="text/csv")
 
@@ -218,12 +229,13 @@ class GeneSetDownloadView(QueryBaseView):
     def _parse_query_params(data: dict[str, Any]) -> dict[str, Any]:
         res = {str(k): str(v) for k, v in list(data.items())}
         if "geneSetsTypes" in res:
-            # FIXME replace usage of literal_eval
             res["geneSetsTypes"] = ast.literal_eval(res["geneSetsTypes"])
         return res
 
-    def get(self, request: Request) -> Response:
-        data = self._parse_query_params(request.query_params)
+    def get(self, request: Request) -> Response | StreamingHttpResponse:
+        if not request.query_params:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        data = self._parse_query_params(cast(dict, request.query_params))
         return self._build_response(data)
 
 

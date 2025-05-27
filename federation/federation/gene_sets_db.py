@@ -1,12 +1,12 @@
 """Classes for handling of remote gene sets."""
 
 import logging
+from functools import cached_property
 from typing import Any
 
 from dae.gene_sets.gene_sets_db import (
     BaseGeneSetCollection,
     GeneSet,
-    GeneSetCollection,
     GeneSetsDb,
 )
 from federation.rest_api_client import RESTClient
@@ -30,12 +30,12 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             collection_id,
         )
         self.collection_id = collection_id
-        self.web_label: str = \
+        self.web_label = \
             self.rest_client.prefix_remote_name(desc)
-        self.web_format_str: str = fmt
+        self.web_format_str = fmt
         self.gene_sets: dict[str, GeneSet] = {}
 
-    def _load_remote_gene_sets(self):
+    def _load_remote_gene_sets(self) -> None:
         if self._remote_gene_sets_loaded:
             return
 
@@ -68,11 +68,13 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             ).split("\n")
             raw_gene_set = [gs.strip() for gs in raw_gene_set]
             raw_gene_set = [gs for gs in raw_gene_set if gs]
-            name, description = raw_gene_set.pop(0).strip('"').split(":", 1)
+            name = raw_gene_set.pop(0).strip('"')
+            name = name.strip()
+            description = raw_gene_set.pop(0).strip('"')
             description = description.strip()
             assert name is not None
             assert description is not None
-            assert name == gene_set_id
+            assert name == gene_set_id, (name, gene_set_id)
             gene_set = GeneSet(gene_set_id, description, raw_gene_set)
             self.gene_sets[gene_set_id] = gene_set
 
@@ -94,11 +96,11 @@ class RemoteGeneSetsDb(GeneSetsDb):
     ):
         super().__init__([])
         self._local_gsdb: GeneSetsDb = local_gene_sets_db
-        self.gene_set_collections: dict[str, GeneSetCollection] = {}
+        self.gene_set_collections = {}
         self.remote_clients: list[RESTClient] = list(remote_clients.values())
         self._load_remote_collections()
 
-    def _load_remote_collections(self):
+    def _load_remote_collections(self) -> None:
         for remote_client in self.remote_clients:
             for collection in remote_client.get_gene_set_collections():
                 gsc_id = collection["name"]
@@ -112,8 +114,8 @@ class RemoteGeneSetsDb(GeneSetsDb):
                 gsc_id = gsc.collection_id
                 self.gene_set_collections[gsc_id] = gsc
 
-    @property  # type: ignore
-    def collections_descriptions(self):
+    @cached_property
+    def collections_descriptions(self) -> list[dict[str, Any]]:
         gene_sets_collections_desc = list(
             self._local_gsdb.collections_descriptions,
         )
