@@ -2,21 +2,29 @@
  Genomic resources and resource repositories
 =============================================
 
-The GPF system uses genomic resources such as reference genomes, gene models, genomic scores, etc.
-These resources are provided by resource repositories which can be accessed remotely or locally.
-The system can use multiple repositories at a time.
+The GPF system uses genomic resources such as reference genomes, gene models,
+genomic scores, etc. These resources are provided by resource repositories
+which can be accessed remotely or locally. The system can use multiple
+repositories at a time.
 
-Genomic resources and resource repositories are fundamentally a collection of directories and files with special YAML configurations.
+Genomic resources and resource repositories are fundamentally a collection of
+directories and files with special YAML configurations.
 
-The following documentation will explain what genomic resources are available and how they can be configured,
-how resource repositories are configured and discovered by the system, and a short tutorial on creating a local repository
+The following documentation will explain what genomic resources are available
+and how they can be configured, how resource repositories are configured and
+discovered by the system, and a short tutorial on creating a local repository
 with a custom resource.
+
+We also prepared an extensive demo to help individuals get started with their
+own GRR (https://github.com/iossifovlab/mini_grr).
 
 Genomic resources
 =================
 
-A genomic resource is a directory containing a special ``genomic_resource.yaml`` configuration and an arbitrary number of files.
-Additionally, GPF will create additional files (``.MANIFEST``, the ``.grr`` subdirectory) which are used internally to track changes to the resource.
+A genomic resource is a directory containing a special
+``genomic_resource.yaml`` configuration and an arbitrary number of files.
+Additionally, GPF will create additional files (``.MANIFEST``, the ``.grr``
+subdirectory) which are used internally to track changes to the resource.
 
 genomic_resource.yaml
 ---------------------
