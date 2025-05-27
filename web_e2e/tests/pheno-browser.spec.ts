@@ -80,8 +80,8 @@ test.describe('Pheno browser tests', () => {
     await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('0.875');
 
     await page.getByText('male', { exact: true }).first().click();
-    await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('NaN');
-    await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('NaN');
+    await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('');
+    await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('');
   });
 
   test('should have the correct text values in all rows', async({ page }) => {
