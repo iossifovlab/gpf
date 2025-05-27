@@ -16,7 +16,8 @@ export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
     const maxFractionDigits = Number(digitArgs[1]) || 3;
 
     if (num >= Math.pow(10, -maxFractionDigits) || num === 0.0) {
-      return super.transform(num, digits);
+      const r = super.transform(num, digits);
+      return parseFloat(r);
     } else {
       return num.toExponential(minFractionDigits);
     }
