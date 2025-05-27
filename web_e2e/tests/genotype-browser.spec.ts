@@ -503,3 +503,120 @@ test.describe('Genotype browser table tests', () => {
     await expect(page.locator('.modal-content > .grid-container')).toBeVisible();
   });
 });
+
+test.describe('Genotype browser zygosity tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+  });
+
+  test('should check which filters have zygosity and if all types are selected by default', async({ page }) => {
+    await expect(page.locator('#pedigreeSelector-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('#presentInChild-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('#presentInParent-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('#carrierGender-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('gpf-effect-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-variant-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-inheritancetypes').locator('gpf-zygosity-filter')).not.toBeVisible();
+  });
+
+  test('should show error message when no zygosity type is selected', async({ page }) => {
+    await expect(
+      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
+    ).not.toBeVisible();
+
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await expect(
+      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
+    ).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').check();
+    await expect(
+      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
+    ).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should check if zygosity types are loaded correctly after sharing query', async({ page }) => {
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous').uncheck();
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).not.toBeChecked();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).not.toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).not.toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).not.toBeChecked();
+  });
+
+  test('should check if zygosity types are reset when switching tools', async({ page }) => {
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous').uncheck();
+
+    await page.locator('a').filter({ hasText: 'Enrichment Tool'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+  });
+
+  test('should check if invalid zygosity state is reset when switching tools', async({ page }) => {
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await expect(
+      page.locator('#pedigreeSelector-zygosity-filter').getByText('Select at least one zygosity.')
+    ).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(
+      page.locator('#pedigreeSelector-zygosity-filter').getByText('Select at least one zygosity.')
+    ).not.toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+  });
+
+  test('should check if zygosity is not visible in Phenotype Tool', async({ page }) => {
+    await page.locator('a').filter({ hasText: 'Phenotype Tool'}).click();
+    await expect(page.locator('#presentInParent-zygosity-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-effect-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+  });
+});
