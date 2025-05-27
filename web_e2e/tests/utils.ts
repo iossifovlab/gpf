@@ -81,6 +81,7 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
   await openDatasetDropdown(page);
   await expandDataset(page, dataset);
 
+  await expect(page.locator('gpf-dataset-node a').filter({ hasText: dataset })).toBeVisible();
   await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
   await expect(page.locator('#selected-dataset-name')).toHaveText(dataset);
 }
@@ -95,16 +96,22 @@ export async function openDatasetDropdown(page: Page): Promise<void> {
 }
 
 export async function expandDataset(page: Page, dataset: string): Promise<void> {
+  /* eslint-disable no-await-in-loop */
   if (!await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).isVisible()) {
+    // close all datasets
     for (const ele of (await page.locator('.collapse-dataset-icon.rotate').all()).reverse()) {
-      // eslint-disable-next-line no-await-in-loop
       await ele.click();
     }
+
+    // expand all datasets
     for (const ele of await page.locator('.collapse-dataset-icon').all()) {
-      // eslint-disable-next-line no-await-in-loop
-      await ele.click();
+      await expect(async() => {
+        await ele.click();
+        await expect(ele).toContainClass('rotate', {timeout: 5000});
+      }).toPass({intervals: [1000]});
     }
   }
+  /* eslint-enable */
 }
 
 export function readFile(name): Promise<unknown> {
