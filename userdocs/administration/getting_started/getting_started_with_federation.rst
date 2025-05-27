@@ -11,27 +11,6 @@ SFARI GPF instance and your local GPF instance. This will allow you to access
 the data and resources you have access to on the SFARI GPF instance from your
 local GPF instance.
 
-Federation tokens
-+++++++++++++++++
-
-Federation tokens are used to authenticate and authorize access to the
-federated GPF instance.
-
-Let us create a federation token for the SFARI GPF instance. You need to log in
-to the SFARI GPF instance, go to *User Profile*, select *Federation Tokens*,
-and create a new federation token:
-
-.. figure:: getting_started_files/federation_client_id_and_secret.png
-
-   Federation client ID and secret from the `User Profile`
-
-
-.. warning::
-
-   The federation client ID and secret are shown only once. Make sure to
-   copy them to a safe place. You will need them to configure the federation
-   on your local GPF instance.
-
 
 Configure federation on your local GPF instance
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -54,7 +33,7 @@ local GPF instance. You can do this by editing the
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 31-36
+    :emphasize-lines: 31-34
 
     instance_id: minimal_instance
 
@@ -90,22 +69,18 @@ local GPF instance. You can do this by editing the
       - id: "sfari"
         host: "gpf.sfari.org"
         gpf_prefix: "hg38"
-        client_id: "Tqtgr2e3YPiDQS6CHvMdH7rPgTnxmoA46OWSbagV"
-        client_secret: "22xKTkewcxyTnKdHou21LRikUU2Hea2tLRBBOaPm2UCIUWEqZFogWk0nRysDrXepieOWYUkTZvG1xVULtwEspWG2YQ71lH7Vow7dNTMzG9ELdVQcOY8YQOD3y9XwRw8T"
 
 
 .. note::
 
-   The `client_id` and `client_secret` values are the federation client ID
-   and secret that you created in the previous step. Make sure to replace
-   them with the actual values.
-
-.. note::
-
-    If you don't have a user account on the SFARI GPF instance, you can
-    skip the ``client_id`` and ``client_secret`` lines. In this case, your local
-    instance will be able to access only the publicly available resources in
+    This configuration will allow your local
+    instance to access only the publicly available resources in
     the SFARI GPF instance.
+
+    In case you have a user account on the SFARI GPF instance, you can
+    create federation tokens and use them to access the remote instance
+    as described in the :ref:`Federation tokens`.
+
 
 When you are ready with the configuration, you can start the GPF instance using
 the ``wgpf`` tool:
@@ -120,11 +95,6 @@ the SFARI remote instance in the `Home Page`:
 .. figure:: getting_started_files/federation_home_page.png
 
    Home page with studies from the SFARI GPF instance
-
-.. note::
-
-    The federation displays only the studies and resources to which you
-    have access.
 
 .. warning::
 
@@ -146,7 +116,9 @@ From `Gene Sets` choose `Denovo`:
 
    Enrichment Tool for `ssc_denovo` study
 
-Then from the studies hierarchy choose `(sfari) SPARK Consortium iWES v1.1`
+Then from the studies hierarchy choose `(sfari) Sequencing de Novo /
+(sfari) SD Autism / (sfari) SD SPARK Autism /
+(sfari) SD iWES_v1_1_genotypes_DENOVO`
 study and select the `autism` phenotype.
 
 .. figure:: getting_started_files/federation_enrichment_tool_denovo_gene_set.png
@@ -155,11 +127,11 @@ study and select the `autism` phenotype.
    gene sets
 
 Now you can choose a de Novo gene set computed for the remote study
-`SPARK Consortium iWES v1.1`:
+`SD_iWES_v1_1_genotypes_DENOVO`:
 
 .. figure:: getting_started_files/federation_enrichment_tool_iwes_denovo_gene_sets.png
 
-    De Novo gene set from SPARK Consortium iWES v1.1 study
+    De Novo gene set from SD_iWES_v1_1_genotypes_DENOVO study
 
 Let us select the LGDs de Novo gene set and run the `Enrichment Tool`:
 
@@ -167,3 +139,49 @@ Let us select the LGDs de Novo gene set and run the `Enrichment Tool`:
 
    Enrichment Tool for `ssc_denovo` result page
 
+
+Federation tokens
++++++++++++++++++
+
+Federation tokens are used to authenticate and authorize access to the
+federated GPF instance.
+
+Let us create a federation token for the SFARI GPF instance. You need to log in
+to the SFARI GPF instance, go to *User Profile*, select *Federation Tokens*,
+and create a new federation token:
+
+.. figure:: getting_started_files/federation_client_id_and_secret.png
+
+   Federation client ID and secret from the `User Profile`
+
+
+.. warning::
+
+   The federation client ID and secret are shown only once. Make sure to
+   copy them to a safe place. You will need them to configure the federation
+   on your local GPF instance.
+
+Once you have the federation client ID and secret, you can configure your local
+GPF instance to use them. You need to edit the
+``minimal_instacne/gpf_instance.yaml`` file and add the lines 5-6 to the
+``remotes`` section:
+
+.. code-block:: yaml
+    :linenos:
+    :emphasize-lines: 5-6
+
+    remotes:
+      - id: "sfari"
+        host: "gpf.sfari.org"
+        gpf_prefix: "hg38"
+        client_id: "Tqtgr2e3YPiDQS6CHvMdH7rPgTnxmoA46OWSbagV"
+        client_secret: "22xKTkewcxyTnKdHou21LRikUU2Hea2tLRBBOaPm2UCIUWEqZFogWk0nRysDrXepieOWYUkTZvG1xVULtwEspWG2YQ71lH7Vow7dNTMzG9ELdVQcOY8YQOD3y9XwRw8T"
+
+This will allow your local GPF instance to have access to the resources in
+SFARI GPF instance that you have access to.
+
+.. warning::
+
+    The federation client ID and secret in the example above are
+    placeholders and should not be used. You need to replace them with
+    your own federation client ID and secret.
