@@ -12,6 +12,7 @@ import { ComponentValidator } from 'app/common/component-validator';
 @Component({
   selector: 'gpf-enrichment-models',
   templateUrl: './enrichment-models.component.html',
+  styleUrl: './enrichment-models.css'
 })
 export class EnrichmentModelsComponent extends ComponentValidator implements OnInit {
   @Input() private selectedDatasetId: string;

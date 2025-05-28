@@ -1,0 +1,50 @@
+#background-models-container {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#background-models {
+  width: 300px;
+  flex: 1;
+}
+
+#background-models-menu,
+#counting-models-menu {
+  width: 100%;
+  text-overflow: ellipsis;
+}
+
+.description-tooltip {
+  background-color: transparent;
+  border: none;
+  margin-right: 16px;
+  align-self: flex-end;
+  margin-bottom: 6px;
+}
+
+.info-icon {
+  vertical-align: bottom;
+  color: #b4b4b4;
+}
+
+.info-icon:hover {
+  color: #9b9b9b;
+  cursor: pointer;
+}
+
+:host::ng-deep.tooltip-inner {
+  background-color: #6c6c6c !important;
+}
+
+:host::ng-deep.tooltip-arrow::before {
+  opacity: 50% !important;
+}
+
+:host::ng-deep.tooltip.show {
+  opacity: 100% !important;
+}
+
+#counting-models {
+  width: 300px;
+  flex: 1;
+}
