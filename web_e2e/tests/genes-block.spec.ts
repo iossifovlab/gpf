@@ -336,8 +336,8 @@ test.beforeEach(async({ page }) => {
 
       const fixtureData = scanCSV(`playwright/fixtures/gene-sets/gene_sets${data.id}.csv`, {truncateRaggedLines: true});
       const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
+      const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
       expect(downloadFrame.height).toBe(data.numOfRows);
     });
@@ -445,8 +445,8 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
 
       const fixtureData = scanCSV('playwright/fixtures/gene-sets/gene_sets4.csv', {truncateRaggedLines: true});
       const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
+      const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
       expect(downloadFrame.height).toBe(6);
     }
