@@ -23,7 +23,7 @@ DNS name
 To setup a publicly accessible GPF, you need to have a DNS name that points to
 the public IP address of the host.
 
-In the example below, we will use ``demo.seqpipe.org`` as the DNS name.
+In the example below, we will use ``demo.iossifovlab.com`` as the DNS name.
 
 
 Firewall
@@ -129,17 +129,17 @@ For our example, we will use GPF instance configuration and data created in the
 ``minimal_instance`` directory to the GPF instance public host
 ``/demo/minimal_instance`` directory. To this end you can use ``rsync`` or
 ``scp`` command. We will use ``rsync`` command in the following example. Our
-example host is ``demo.seqpipe.org`` and the user is ``root``. So our command
-will look like this:
+example host is ``demo.iossifovlab.com`` and the user is ``root``. So our
+command will look like this:
 
 .. code-block:: shell
 
-    rsync -av minimal_instance root@demo.seqpipe.org:/demo/
+    rsync -av minimal_instance root@demo.iossifovlab.com:/demo/
 
 
 .. note::
 
-    You should change the ``demo.seqpipe.org`` and ``root`` to your own
+    You should change the ``demo.iossifovlab.com`` and ``root`` to your own
     values.
 
 
@@ -202,8 +202,8 @@ to run GPF:
             - WDAE_DB_HOST=mysql
             - WDAE_DB_PORT=3306
             - WDAE_SECRET_KEY="Di3ahti8oophushiePh0vang2ri2AeK0maetha7loz2Waleez2"
-            - WDAE_PUBLIC_HOSTNAME=demo.seqpipe.org
-            - WDAE_ALLOWED_HOST=demo.seqpipe.org
+            - WDAE_PUBLIC_HOSTNAME=demo.iossifovlab.com
+            - WDAE_ALLOWED_HOST=demo.iossifovlab.com
             - WDAE_LOG_DIR=/logs
             - GPF_PREFIX=gpf
             - WDAE_PREFIX=gpf
@@ -286,7 +286,7 @@ following command:
     :linenos:
 
     wdaemanage.py createapplication --user 1 \
-        --redirect-uris "https://demo.seqpipe.org/gpf/login" \
+        --redirect-uris "https://demo.iossifovlab.com/gpf/login" \
         --name "GPF Genotypes and Phenotypes in Families" \
         --client-id gpfjs public authorization-code \
         --skip-authorization
@@ -296,7 +296,7 @@ following command:
 
     The above command will create an OAuth2 application with the
     redirect URI
-    ``https://demo.seqpipe.org/gpf/login``.
+    ``https://demo.iossifovlab.com/gpf/login``.
     You should change the domain name in the redirect URI to your own value.
 
 
@@ -316,7 +316,7 @@ to the GPF instance. You can use the following configuration as an example:
     LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
 
     <VirtualHost *:443>
-        ServerName demo.seqpipe.org
+        ServerName demo.iossifovlab.com
         ServerAdmin webmaster@localhost
 
         LogLevel info ssl:warn
@@ -330,10 +330,10 @@ to the GPF instance. You can use the following configuration as an example:
         </Location>
 
         ### Added by Let's Encrypt certbot
-        SSLCertificateFile /etc/letsencrypt/live/demo.seqpipe.org/fullchain.pem
-        SSLCertificateKeyFile /etc/letsencrypt/live/demo.seqpipe.org/privkey.pem
+        SSLCertificateFile /etc/letsencrypt/live/demo.iossifovlab.com/fullchain.pem
+        SSLCertificateKeyFile /etc/letsencrypt/live/demo.iossifovlab.com/privkey.pem
         Include /etc/letsencrypt/options-ssl-apache.conf
-        SessionCryptoPassphrase 5fRdQ8P1SEjejYvXECPiVu7UHA9Z1Sz8SS3xz
+        SessionCryptoPassphrase "Di3ahti8oophushiePh0vang2ri2AeK0maetha7loz2Waleez2"
 
     </VirtualHost>
 
