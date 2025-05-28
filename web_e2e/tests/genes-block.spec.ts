@@ -2,6 +2,7 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import * as path from 'path';
+import { scanCSV } from 'nodejs-polars';
 
 test.describe('Genes block tests', () => {
   test.beforeEach(async({ page }) => {
@@ -287,63 +288,58 @@ test.beforeEach(async({ page }) => {
 
 [
     {
+      id: 1,
       collection: 'Main',
-      expectedSearchCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
-        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
+      searchValue: 'synaptic clefts inhibitory',
+      geneSet: 'synaptic clefts inhibitory (41): Ken H. Loh, et al. '+
+      'Proteomic Analysis of Unbounded Cellular Compartments: Synaptic Clefts. Cell (2016)',
+      numOfRows: 42
     },
     {
+      id: 2,
+      searchValue: 'ABC1',
       collection: 'Protein domains',
-      expectedSearchCondition: 'ABC1 (5): ABC1 atypical kinase-like domain'
+      geneSet: 'ABC1 (5): ABC1 atypical kinase-like domain',
+      numOfRows: 6
     },
     {
-      collection: 'miRNA from Darnell',
-      expectedSearchCondition: 'let-7 (881):'
-    },
-    {
-      collection: 'miRNA from Darnell',
-      expectedSearchCondition: 'miR-124 (1018):'
+      id: 3,
+      searchValue: 'GO:0000019',
+      collection: 'GO Terms',
+      geneSet: 'GO:0000019 (4): regulation_of_mitotic_recombination',
+      numOfRows: 5
     }
 ].forEach(data => {
-     test('should download "' + data.expectedSearchCondition + '" in the "' + data.collection +
+     test('should download "' + data.geneSet + '" in the "' + data.collection +
      '" collection and check whether the count in the name should matches ' +
      'the downloaded"s file length and the gene set"s name matches the first value of the file', async({ page }) => {
-    const results = [];
-
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype Browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
 
     await page.locator('#gene-sets').click();
     await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
 
-    results.splice(0, results.length);
-    let expectedName = data.expectedSearchCondition;
-    const geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
-    const expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
 
     await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
     await page.getByPlaceholder('Select or start typing to search').click();
     await page.getByPlaceholder('Select or start typing to search').focus();
-    await page.keyboard.type(geneSetName);
+    await page.keyboard.type(data.searchValue);
     await page.waitForResponse(
       resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
   );
 
-    await page.waitForLoadState('load');
-    await page.locator('.sets-dropdown mat-option').filter({ hasText: data.expectedSearchCondition }).click();
+      await expect(page.getByRole('option', {name: data.geneSet})).toBeVisible();
+      await page.getByRole('option', {name: data.geneSet}).click();
 
-    const downloadPromise = page.waitForEvent('download');
-    await page.locator('a.download-link').click();
-    const downloadedFile = (await downloadPromise).createReadStream();
-    const expectedLines = [];
-    for await (const line of await downloadedFile) {
-        expectedLines.push(String(line));
-    }
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.locator('gpf-gene-sets').getByRole('link', { name: 'Download' }).click();
+      const download = await downloadPromise;
 
-    expectedLines.map((text: string) => {
-        const textLines = text.split(/\r\n|\r|\n/);
-        expect(textLines.length - 2).toBe(expectedCount);
-        expectedName = expectedName.replace(/\s*\(\d+\)\s*/, '');
-        expect(textLines[0].replace(/^"(.*)"$/, '$1').trim()).toBe(expectedName);
-      });
+      const fixtureData = scanCSV(`playwright/fixtures/gene-sets/gene_sets${data.id}.csv`, {truncateRaggedLines: true});
+      const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+      expect(downloadFrame.height).toBe(data.numOfRows);
     });
   });
 });
@@ -426,10 +422,8 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
         page.locator('#modal-filter-list').getByText('denovo_helloworld: status: unaffected')
       ).toBeVisible();
   });
-  test(
-    'should download iossifov affected ' +
-      'denovo gene sets and check whether they are equal to the reference data', async({ page }) => {
-        await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+  test('should download denovo_helloworld with affected status', async({ page }) => {
+        await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
         await page.locator('#gene-sets').click();
         await expect(page.locator('#gene-sets-panel')).toBeVisible();
         await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
@@ -441,81 +435,20 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
         );
 
-        await page.locator('.sets-dropdown mat-option')
-          .getByText('Missense')
-          .first()
-          .click();
+      const geneSet ='Missense (5): Missense (denovo_helloworld:status:affected)';
+      await expect(page.getByRole('option', {name: geneSet})).toBeVisible();
+      await page.getByRole('option', {name: geneSet}).click();
 
-        const download = page.waitForEvent('download');
-        const downloadData = [];
-        await page.locator('a.download-link').click();
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.locator('gpf-gene-sets').getByRole('link', { name: 'Download' }).click();
+      const download = await downloadPromise;
 
-        for await (const chunk of await (await download).createReadStream()) {
-          downloadData.push(chunk);
-        }
-
-        // Assert that the downloaded file contents are the same as the expected file contents
-
-        const expectedDataLines = (
-          await utils.readFile(path.join(__dirname +
-            '/../fixtures/gene-sets/Missense_iossifov_2014_liftover_status_affected.csv'))
-        ).toString();
-
-        const downloadedData = Buffer.concat(downloadData);
-        const downloadedDataLines = downloadedData.toString();
-
-        expect(downloadedDataLines.split('\n').sort()).toEqual(expectedDataLines.split('\n').sort());
+      const fixtureData = scanCSV('playwright/fixtures/gene-sets/gene_sets4.csv', {truncateRaggedLines: true});
+      const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+      expect(downloadFrame.height).toBe(6);
     }
   );
-
-    test(
-      'should download iossifov unaffected denovo gene sets and '
-      + 'check whether they are equal to the reference data', async({ page }) => {
-          await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
-          await page.locator('#gene-sets').click();
-          await expect(page.locator('#gene-sets-panel')).toBeVisible();
-          await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
-
-          await page.getByRole('button', { name: 'Select studies' }).click();
-          await expect(page.locator('.modal-content')).toBeVisible();
-
-          await page.locator('#iossifov_2014_liftover-checkbox-affected').click();
-          await page.locator('#iossifov_2014_liftover-checkbox-unaffected').click();
-          await page.mouse.click(0, 0); // close modal
-
-          await page.getByPlaceholder('Select or start typing to search').click();
-          await page.getByPlaceholder('Select or start typing to search').focus();
-          await page.keyboard.type('LGDs');
-          await page.waitForResponse(
-            (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
-          );
-
-          await page.locator('.sets-dropdown mat-option')
-            .getByText('LGDs')
-            .first()
-            .click();
-
-          const download = page.waitForEvent('download');
-          const downloadData = [];
-          await page.locator('a.download-link').click();
-
-          for await (const chunk of await (await download).createReadStream()) {
-            downloadData.push(chunk);
-          }
-
-          // Assert that the downloaded file contents are the same as the expected file contents
-
-          const expectedDataLines = (
-            await utils.readFile(
-              path.join(__dirname + '/../fixtures/gene-sets/LGDs_iossifov_2014_liftover_unaffected.csv')
-            )
-          ).toString();
-
-          const downloadedData = Buffer.concat(downloadData);
-          const downloadedDataLines = downloadedData.toString();
-
-          expect(downloadedDataLines.split('\n').sort()).toEqual(expectedDataLines.split('\n').sort());
-        }
-    );
 });
-
