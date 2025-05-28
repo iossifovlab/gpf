@@ -72,21 +72,105 @@ SSL Certificate
 For a publicly accessible GPF, you need to have a valid SSL certificate
 for the DNS name. We recommend using a free SSL certificate from Let's Encrypt.
 
+Create an virtual host configuration file for the Apache2 web server to
+serve the demo domain over HTTPS. For example, for our demo domain
+``demo.iossifovlab.com``, you can create a file
+``/etc/apache2/sites-available/demo.iossifovlab.com.conf`` with the following
+conteint:
+
+.. code-block:: shell
+    :linenos:
+
+    LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+
+    <VirtualHost *:443>
+        ServerName demo.iossifovlab.com
+        ServerAdmin admin@iossifovlab.com
+
+        LogLevel info ssl:warn
+
+        DocumentRoot /var/www/html
+
+    </VirtualHost>
+
+
 To install the SSL certificate, you can use the instructions from
 https://certbot.eff.org. For example, on Ubuntu with install Apache2 web
 server, you can check the following link:
 https://certbot.eff.org/instructions?ws=apache&os=snap
 
+In out case, we used:
+
+.. code-block:: shell
+    :linenos:
+
+    certbot run --apache -d demo.iossifovlab.com
+
+This will install the SSL certificate and configure the Apache2 web server
+to serve the demo domain over HTTPS. The Apache2 configuration file
+``/etc/apache2/sites-available/demo.iossifovlab.com.conf`` will be similar to
+the following:
+
+.. code-block:: shell
+    :linenos:
+
+    LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+
+    <VirtualHost *:443>
+        ServerName demo.iossifovlab.com
+        ServerAdmin admin@iossifovlab.com
+
+        LogLevel info ssl:warn
+
+        DocumentRoot /var/www/html
+
+        ### Added by Let's Encrypt certbot
+        SSLCertificateFile /etc/letsencrypt/live/demo.iossifovlab.com/fullchain.pem
+        SSLCertificateKeyFile /etc/letsencrypt/live/demo.iossifovlab.com/privkey.pem
+        Include /etc/letsencrypt/options-ssl-apache.conf
+        SessionCryptoPassphrase Di3ahti8oophushiePh0vang2ri2AeK0maetha7loz2Waleez2
+
+    </VirtualHost>
+
+
+Create an installation user
+---------------------------
+
+We recommend to create a user that will be used to install and configure GPF.
+Let's say our user is called ``gpfdemo``. You can create the user with the
+following command:
+
+.. code-block:: shell
+
+    adduser gpfdemo
+
+We need this user to be able to run Docker commands without
+``sudo``. To do this, you can add the user to the ``docker`` group:
+
+.. code-block:: shell
+
+    usermod -aG docker gpfdemo
+
+Then, you can switch to the ``gpfdemo`` user:
+
+.. code-block:: shell
+
+    su - gpfdemo
+
+Make sure to add your SSH public key to the ``gpfdemo`` user's
+``~/.ssh/authorized_keys`` file so you can log in to the host using SSH.
+
 
 Directory Structure
 -------------------
 
-In the following example, we will assume the we install GPF in a directory
-``/demo``. We will use the following directory structure:
+In the following example, we will assume the we install GPF in a subdirectory
+``demo`` of the home directory of the user ``gpfdemo``. We will use the
+following directory structure:
 
 .. code-block:: text
 
-    /demo
+    demo
     ├── docker-compose.yaml
     ├── grr
     │   ├── cache
@@ -134,12 +218,12 @@ command will look like this:
 
 .. code-block:: shell
 
-    rsync -av minimal_instance root@demo.iossifovlab.com:/demo/
+    rsync -av minimal_instance gpfdemo@demo.iossifovlab.com:demo/
 
 
 .. note::
 
-    You should change the ``demo.iossifovlab.com`` and ``root`` to your own
+    You should change the ``demo.iossifovlab.com`` and ``gpfdemo`` to your own
     values.
 
 
@@ -189,9 +273,9 @@ to run GPF:
                     aliases:
                     - gpf
             volumes:
-            - /demo/minimal_instance:/data
-            - /demo/grr:/grr
-            - /demo/logs:/logs
+            - ./minimal_instance:/data
+            - ./grr:/grr
+            - ./logs:/logs
             environment:
             - DAE_DB_DIR=/data
             - DAE_PHENODB_DIR=/data/pheno
@@ -228,7 +312,7 @@ use the following command:
 
 .. code-block:: shell
 
-    cd /demo
+    cd demo
     docker compose up -d
 
 To inspect the logs, you can use the following command:
@@ -259,7 +343,7 @@ the GPF container:
 
 .. code-block:: shell
 
-    docker exec -it demo_gpf_1 /bin/bash
+    docker compose exec -it gpf /bin/bash
 
 Then, from inside the GPF container, you can use the following command to
 create the admin user:
@@ -333,7 +417,7 @@ to the GPF instance. You can use the following configuration as an example:
         SSLCertificateFile /etc/letsencrypt/live/demo.iossifovlab.com/fullchain.pem
         SSLCertificateKeyFile /etc/letsencrypt/live/demo.iossifovlab.com/privkey.pem
         Include /etc/letsencrypt/options-ssl-apache.conf
-        SessionCryptoPassphrase "Di3ahti8oophushiePh0vang2ri2AeK0maetha7loz2Waleez2"
+        SessionCryptoPassphrase Di3ahti8oophushiePh0vang2ri2AeK0maetha7loz2Waleez2
 
     </VirtualHost>
 
