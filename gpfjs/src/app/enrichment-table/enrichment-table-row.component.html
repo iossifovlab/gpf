@@ -5,7 +5,7 @@
   (middleclick)="goToQuery(effectResult.all.countFilter, true)"
   [style.background-color]="effectResult.all | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.all | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.all.count | numberWithExp : '1.0-2'
+    effectResult.all.count | numberWithExp : '1.0-2' : 'enrichment'
   }}</a>
 </td>
 <td
@@ -14,14 +14,14 @@
   (middleclick)="goToQuery(effectResult.all.overlapFilter)"
   [style.background-color]="effectResult.all | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.all | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.all.overlapped | numberWithExp : '1.0-2'
+    effectResult.all.overlapped | numberWithExp : '1.0-2' : 'enrichment'
   }}</a>
 </td>
 <td [style.background-color]="effectResult.all | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.all.expected | numberWithExp : '1.2-2' }}</span>
+  <span>{{ effectResult.all.expected | numberWithExp : '1.2-2' : 'enrichment' }}</span>
 </td>
 <td [style.background-color]="effectResult.all | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.all.pvalue | numberWithExp : '1.2-4' }}</span>
+  <span>{{ effectResult.all.pvalue | numberWithExp : '1.2-4' : 'enrichment' }}</span>
 </td>
 <td
   class="link-td"
@@ -29,7 +29,7 @@
   (middleclick)="goToQuery(effectResult.male.countFilter, true)"
   [style.background-color]="effectResult.male | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.male | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.male.count | numberWithExp : '1.0-2'
+    effectResult.male.count | numberWithExp : '1.0-2' : 'enrichment'
   }}</a>
 </td>
 <td
@@ -38,14 +38,14 @@
   (middleclick)="goToQuery(effectResult.male.overlapFilter)"
   [style.background-color]="effectResult.male | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.male | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.male.overlapped | numberWithExp : '1.0-2'
+    effectResult.male.overlapped | numberWithExp : '1.0-2' : 'enrichment'
   }}</a>
 </td>
 <td [style.background-color]="effectResult.male | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.male.expected | numberWithExp : '1.2-2' }}</span>
+  <span>{{ effectResult.male.expected | numberWithExp : '1.2-2' : 'enrichment' }}</span>
 </td>
 <td [style.background-color]="effectResult.male | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.male.pvalue | numberWithExp : '1.2-4' }}</span>
+  <span>{{ effectResult.male.pvalue | numberWithExp : '1.2-4' : 'enrichment' }}</span>
 </td>
 <td
   class="link-td"
@@ -53,7 +53,7 @@
   (middleclick)="goToQuery(effectResult.female.countFilter, true)"
   [style.background-color]="effectResult.female | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.female | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.female.count | numberWithExp : '1.0-2'
+    effectResult.female.count | numberWithExp : '1.0-2' : 'enrichment'
   }}</a>
 </td>
 <td
@@ -62,12 +62,12 @@
   (middleclick)="goToQuery(effectResult.female.overlapFilter)"
   [style.background-color]="effectResult.female | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.female | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.female.overlapped | numberWithExp : '1.0-2'
+    effectResult.female.overlapped | numberWithExp : '1.0-2' : 'enrichment'
   }}</a>
 </td>
 <td [style.background-color]="effectResult.female | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.female.expected | numberWithExp : '1.2-2' }}</span>
+  <span>{{ effectResult.female.expected | numberWithExp : '1.2-2' : 'enrichment' }}</span>
 </td>
 <td [style.background-color]="effectResult.female | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.female.pvalue | numberWithExp : '1.2-4' }}</span>
+  <span>{{ effectResult.female.pvalue | numberWithExp : '1.2-4' : 'enrichment' }}</span>
 </td>

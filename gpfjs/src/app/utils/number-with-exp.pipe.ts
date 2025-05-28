@@ -3,8 +3,8 @@ import { DecimalPipe } from '@angular/common';
 
 @Pipe({name: 'numberWithExp'})
 export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
-  public transform(value: string | number, digits?: string): null;
-  public transform(value: string | number, digits?: string): string | number {
+  public transform(value: string | number, digits?: string, component?: string): null;
+  public transform(value: string | number, digits?: string, component?: string): string | number {
     const num = Number(value);
     if (isNaN(num)) {
       return value;
@@ -17,7 +17,7 @@ export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
 
     if (num >= Math.pow(10, -maxFractionDigits) || num === 0.0) {
       const r = super.transform(num, digits);
-      return parseFloat(r);
+      return component === 'enrichment'? r : parseFloat(r);
     } else {
       return num.toExponential(minFractionDigits);
     }
