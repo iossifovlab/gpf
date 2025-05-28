@@ -9,7 +9,7 @@ association tools. In addition, GPF allows researchers to share their data
 securely with the broader scientific community. See the `The Genotype and
 Phenotypes in Families (GPF) platform manages the large and complex data
 at SFARI <https://www.biorxiv.org/content/10.1101/2024.02.08.579330v1>`_
-for detailed description.
+for a detailed description.
 
 GPF is an open-source project available at
 `GitHub <https://github.com/iossifovlab/gpf>`_
