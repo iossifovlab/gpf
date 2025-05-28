@@ -121,7 +121,7 @@ To get a specific phenotype data and query it, use:
 
 .. code-block:: python3
 
-    pd = gpf_instance.get_phenotype_data("comp_pheno")
+    pd = gpf_instance.get_phenotype_data("mini_pheno")
 
 We can see what instruments and measures are available in the data:
 
