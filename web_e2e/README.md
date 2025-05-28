@@ -22,8 +22,18 @@ Apply django migrations, create users and Oauth application:
 
 ```bash
 wdaemanage.py migrate
-./scripts/wdae_create_dev_users.sh
-./scripts/wdae_create_local_dev_gpfjs_app.sh
+
+wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
+wdaemanage.py user_create research@iossifovlab.com -p secret -g any_user
+wdaemanage.py user_create user_comp_vcf@iossifovlab.com -p secret -g any_user
+wdaemanage.py user_create user_comp_genotypes@iossifovlab.com -p secret -g any_user
+wdaemanage.py user_create user_all_genotypes@iossifovlab.com -p secret -g any_user
+wdaemanage.py user_create user_iossifov_2014@iossifovlab.com -p secret -g any_user
+
+wdaemanage.py createapplication --user 1 \
+    --redirect-uris "http://localhost:4200/login" \
+    --name "GPF Genotypes and Phenotypes in Families" \
+    --client-id gpfjs  public authorization-code --skip-authorization
 ```
 
 Run Django development server:
