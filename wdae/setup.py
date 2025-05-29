@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List
 
 import setuptools
 import versioneer
@@ -7,7 +6,7 @@ import versioneer
 
 def _expand_recursive_globs(
         root_dir: str,
-        package_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+        package_data: dict[str, list[str]]) -> dict[str, list[str]]:
     root = (Path(__file__).parent / root_dir).resolve()
     for module, patterns in package_data.items():
         new_patterns = []
@@ -29,9 +28,7 @@ def _expand_recursive_globs(
     return package_data
 
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
+long_description = Path("README.md").read_text(encoding="utf8")
 
 setuptools.setup(
     name="gpf_wdae",
@@ -59,13 +56,14 @@ setuptools.setup(
         ],
     }),
     scripts=[
-        "wdae/wdaemanage.py",
         "wdae/wdae_create_dev_users.sh",
         "wdae/wdae_bootstrap.sh",
     ],
     entry_points={
         "console_scripts": [
             "wgpf=wdae.wgpf:cli",
+            "wdaemanage=wdae.wdaemanage:main",
+            "wdaemanage.py=wdae.wdaemanage:main",
         ],
     },
     classifiers=[
