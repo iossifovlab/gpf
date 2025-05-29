@@ -14,14 +14,22 @@ mkdir /wd/federation/tmp
 export GRR_DEFINITION_FILE="/wd/federation/tmp/grr_definition.yaml"
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    /wd/wdae/wdae/wdaemanage.py migrate
+    wdaemanage migrate
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    /wd/wdae/wdae/wdae_create_dev_users.sh
+    wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:any_user:admin
+/opt/conda/bin/conda run --no-capture-output -n gpf \
+    wdaemanage user_create research@iossifovlab.com -p secret -g any_user
+
 /opt/conda/bin/conda run -n gpf \
-    /wd/wdae/wdae/wdae_create_dev_federation_app.sh
+    wdaemanage createapplication \
+        confidential client-credentials \
+        --user 1 \
+        --name "remote federation testing app" \
+        --client-id federation \
+        --client-secret secret
 
 while true; do
     /opt/conda/bin/conda run --no-capture-output -n gpf \
-        /wd/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
+        wdaemanage runserver 0.0.0.0:21010
     sleep 10
 done

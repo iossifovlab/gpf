@@ -32,16 +32,16 @@ cd /wd/rest_client/integration/fixtures/micro_iossifov2014
     generate_denovo_gene_sets
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    /wd/wdae/wdae/wdaemanage.py migrate
+    wdaemanage migrate
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage.py user_create admin@iossifovlab.com \
+    wdaemanage user_create admin@iossifovlab.com \
     -p secret -g any_dataset:any_user:admin || true
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage.py user_create research@iossifovlab.com \
+    wdaemanage user_create research@iossifovlab.com \
     -p secret -g any_user || true
 
 /opt/conda/bin/conda run -n gpf \
-    wdaemanage.py createapplication \
+    wdaemanage createapplication \
         confidential client-credentials \
         --user 1 \
         --redirect-uris "http://resttest:21011/login" \
@@ -51,7 +51,7 @@ cd /wd/rest_client/integration/fixtures/micro_iossifov2014
         --skip-authorization
 
 /opt/conda/bin/conda run -n gpf \
-    wdaemanage.py createapplication \
+    wdaemanage createapplication \
         confidential client-credentials \
         --user 2 \
         --redirect-uris "http://resttest:21011/login" \
@@ -68,7 +68,7 @@ cd /wd/rest_client/integration/fixtures/micro_iossifov2014
 while true; do
 
     /opt/conda/bin/conda run --no-capture-output -n gpf \
-        /wd/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21011
+        wdaemanage runserver 0.0.0.0:21011
     sleep 10
 
 done
