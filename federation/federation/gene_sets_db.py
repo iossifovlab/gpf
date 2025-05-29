@@ -62,7 +62,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             return None
 
         gene_set = self.gene_sets.get(gene_set_id)
-        if gene_set is None:
+        if gene_set is None or len(gene_set.syms) != gene_set.count:
             raw_gene_set = self.rest_client.get_gene_set_download(
                 self._remote_collection_id, gene_set_id,
             ).split("\n")
@@ -82,8 +82,20 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
 
     def get_all_gene_sets(self) -> list[GeneSet]:
         self._load_remote_gene_sets()
-        for gene_set_name in self.remote_gene_sets_names:
-            self.get_gene_set(gene_set_name)
+        gene_set_descriptions = self.rest_client.get_gene_sets(
+            self._remote_collection_id,
+        )
+        if gene_set_descriptions is None:
+            return []
+        for gene_set_description in gene_set_descriptions:
+            name = gene_set_description.get("name")
+            desc = gene_set_description.get("description", "")
+            count = gene_set_description.get("count")
+            if name is not None and count is not None:
+                gene_set = GeneSet(name, desc, [])
+                # Override count, syms will be loaded later
+                gene_set.count = count
+                self.gene_sets[name] = gene_set
         return list(self.gene_sets.values())
 
 
