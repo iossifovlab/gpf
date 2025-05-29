@@ -55,9 +55,6 @@ setuptools.setup(
             "templates/**/*",
         ],
     }),
-    scripts=[
-        "wdae/wdae_create_dev_users.sh",
-    ],
     entry_points={
         "console_scripts": [
             "wgpf=wdae.wgpf:cli",
