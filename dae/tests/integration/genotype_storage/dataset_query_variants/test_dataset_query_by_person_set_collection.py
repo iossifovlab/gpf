@@ -6,7 +6,6 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
@@ -260,27 +259,21 @@ def test_query_by_person_ids(
 
 
 @pytest.mark.parametrize(
-    "person_set_collection, count",
+    "affected_statuses, count",
     [
         (None, 4),
-        (PSCQuery("phenotype", {"autism"}), 1),
-        (PSCQuery("phenotype", {"developmental_disorder"}), 1),
-        (PSCQuery("phenotype", {"unaffected"}), 2),
-        (PSCQuery("phenotype", {"autism", "unaffected"}), 3),
-        (PSCQuery("phenotype", {"developmental_disorder", "unaffected"}), 3),
-        (PSCQuery("phenotype", {"autism", "developmental_disorder"}), 2),
-        (PSCQuery(
-            "phenotype",
-            {"autism", "developmental_disorder", "unaffected"}), 4),
+        ("affected", 2),
+        ("unaffected", 2),
+        ("affected or unaffected", 4),
     ],
 )
-def test_query_by_person_set_coolection(
+def test_query_by_affected_status(
     dataset: GenotypeDataGroup,
-    person_set_collection: PSCQuery | None,
+    affected_statuses: str | None,
     count: int,
 ) -> None:
     vs = list(dataset.query_variants(
-        person_set_collection=person_set_collection,
+        affected_statuses=affected_statuses,
         return_unknown=False,
         return_reference=False))
 

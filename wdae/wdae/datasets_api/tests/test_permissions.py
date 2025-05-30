@@ -174,7 +174,7 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     assert dataset is not None
     assert dataset.study_id == "big_dataset"
 
-    dataset_wrapper = StudyWrapper(dataset, None, None, custom_wgpf)  # type: ignore
+    dataset_wrapper = StudyWrapper(dataset, None, None)  # type: ignore
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 
