@@ -7,11 +7,14 @@ from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
+from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import StudyWrapper
 
 
 def test_special_attrs_formatting(
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -20,7 +23,11 @@ def test_special_attrs_formatting(
     download_sources = study_wrapper.get_columns_as_sources(
         study_wrapper.config, study_wrapper.download_columns,
     )
-    vs = study_wrapper.query_variants_wdae({}, download_sources)
+    vs = study_wrapper.query_variants_wdae(
+        {}, download_sources,
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    )
     vs = list(vs)
     row = vs[0]
     assert row == [
