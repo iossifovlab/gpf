@@ -179,6 +179,8 @@ their own research against the large amount of genetic data managed by GPF.
 To use the tool, the user has to choose a gene or a set of genes to test.
 Enrichment models can be applies as additional normalization criteria.
 
+Background models
+#################
 
 Selecting an appropriate background model for the Enrichment Tools is
 crucial for the proper use of the tool and the accurate interpretation of its
