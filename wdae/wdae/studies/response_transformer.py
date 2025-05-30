@@ -397,11 +397,21 @@ class ResponseTransformer:
                             attribute))
                     row_variant.append(attribute)
 
-            except (AttributeError, KeyError, Exception):
-                logger.exception("error build variant: %s", v)
-                traceback.print_stack()
-                row_variant.append([""])
-                raise
+            except (
+                AttributeError, KeyError, IndexError, AssertionError, Exception,
+            ):
+                if isinstance(v, FamilyVariant):
+                    warning = (
+                        f"Error building family variant: {v} "
+                        f"From family: {v.family_id} "
+                        f"From study {self.study_wrapper.study_id}"
+                    )
+                else:
+                    warning = (
+                        f"Error building summary variant: {v}\n"
+                        f"From study {self.study_wrapper.study_id}\n"
+                    )
+                logger.warning(warning)
 
         return row_variant
 
