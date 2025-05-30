@@ -24,6 +24,8 @@ from oauth2_provider.models import (
     get_access_token_model,
     get_application_model,
 )
+from studies.query_transformer import QueryTransformer
+from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import (
     StudyWrapper,
 )
@@ -297,12 +299,12 @@ def t4c8_study_1_wrapper(
 ) -> StudyWrapper:
 
     data_study = t4c8_instance.get_genotype_data("t4c8_study_1")
+    pheno_data = t4c8_instance.get_phenotype_data("study_1_pheno")
 
     return StudyWrapper(
         data_study,
-        t4c8_instance._pheno_registry,  # noqa: SLF001
-        t4c8_instance.gene_scores_db,
-        t4c8_instance,
+        pheno_data,
+        None,
     )
 
 
@@ -315,9 +317,8 @@ def t4c8_study_2_wrapper(
 
     return StudyWrapper(
         data_study,
-        t4c8_instance._pheno_registry,  # noqa: SLF001
-        t4c8_instance.gene_scores_db,
-        t4c8_instance,
+        None,
+        None,
     )
 
 
@@ -335,6 +336,17 @@ def t4c8_wgpf_instance(
     db: None,  # noqa: ARG001
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
+
+    query_transformer = QueryTransformer(
+        session_t4c8_wgpf_instance.gene_scores_db,
+        session_t4c8_wgpf_instance.reference_genome.chromosomes,
+        session_t4c8_wgpf_instance.reference_genome.chrom_prefix,
+    )
+
+    response_transformer = ResponseTransformer(
+        session_t4c8_wgpf_instance.gene_scores_db,
+    )
+
     reload_datasets(session_t4c8_wgpf_instance)
     mocker.patch(
         "gpf_instance.gpf_instance.get_wgpf_instance",
@@ -349,11 +361,39 @@ def t4c8_wgpf_instance(
         return_value=session_t4c8_wgpf_instance,
     )
     mocker.patch(
+        "query_base.query_base.get_or_create_query_transformer",
+        return_value=query_transformer,
+    )
+    mocker.patch(
+        "query_base.query_base.get_or_create_response_transformer",
+        return_value=response_transformer,
+    )
+    mocker.patch(
         "utils.expand_gene_set.get_wgpf_instance",
         return_value=session_t4c8_wgpf_instance,
     )
 
     return session_t4c8_wgpf_instance
+
+
+@pytest.fixture
+def t4c8_query_transformer(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> QueryTransformer:
+    return QueryTransformer(
+        t4c8_wgpf_instance.gene_scores_db,
+        t4c8_wgpf_instance.reference_genome.chromosomes,
+        t4c8_wgpf_instance.reference_genome.chrom_prefix,
+    )
+
+
+@pytest.fixture
+def t4c8_response_transformer(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> ResponseTransformer:
+    return ResponseTransformer(
+        t4c8_wgpf_instance.gene_scores_db,
+    )
 
 
 @pytest.fixture
