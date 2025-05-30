@@ -49,7 +49,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Protocol
 
-from lark import Lark, Transformer, Tree
+from lark import Lark, Token, Transformer, Tree
 from sqlglot import not_, parse_one
 from sqlglot.expressions import BitwiseAnd, Column, Expression, Paren, and_, or_
 
@@ -116,6 +116,68 @@ class SyntaxSugarTransformer(Transformer):
             current = create_or_node(current, child)
 
         return current
+
+
+class CompoundStripTransformer(Transformer):
+    def compound(self, values):
+        assert len(values) == 2
+        return Tree("literal", children=[Token("__ANON_0", values[0].value)])
+
+
+class QueryCompoundAdditionTransformer(Transformer):
+    """
+    Transformer that adds a compound value to an attribute query's literals.
+
+    Directly returns a new attribute query
+    string to be used with other transformers.
+    """
+    def __init__(self, compound_value: str):
+        super().__init__()
+        self._compound_value = compound_value
+
+    def literal(self, values) -> str:
+        assert len(values) == 1
+        str_value = values[0].value
+
+        return f"{str_value}~{self._compound_value}"
+
+    def compound(self) -> str:
+        raise ValueError(
+            "Attribute queries already containing compounds are "
+            "not eligible for compound addition transformation!",
+        )
+
+    def and_(self, values) -> str:
+        assert len(values) == 2
+
+        return f"{values[0]} and {values[1]}"
+
+    def or_(self, values) -> str:
+        assert len(values) == 2
+
+        return f"{values[0]} or {values[1]}"
+
+    def grouping(self, values) -> str:
+        assert len(values) == 1
+
+        return f"({values[0]})"
+
+    def neg(self, values) -> str:
+        assert len(values) == 1
+
+        return f"not {values[0]}"
+
+    def all(self, values) -> str:
+        list_node = values[0]
+        values = ", ".join(list_node.children)
+
+        return f"all([{values}])"
+
+    def any(self, values):
+        list_node = values[0]
+        values = ", ".join(list_node.children)
+
+        return f"any([{values}])"
 
 
 class AttributeQueryTransformer(Transformer):
@@ -338,6 +400,23 @@ class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
 class Matcher(Protocol):
     def __call__(self, a: int, b: int | None = None) -> bool:  # noqa: ARG002
         return False
+
+
+def update_attribute_query_with_compounds(
+    query: str,
+    compound_value: str,
+) -> str:
+    """
+    Update an attribute query to match by a secondary compound value.
+
+    Used to add zygosity in an already existing attribute query, for example:
+    "dad and mom" -> "dad~homozygous and mom~homozygous"
+    """
+
+    tree = QUERY_PARSER.parse(query)
+    transformer = QueryCompoundAdditionTransformer(compound_value)
+
+    return transformer.transform(tree)
 
 
 def transform_attribute_query_to_function(
