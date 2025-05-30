@@ -1,7 +1,6 @@
 import itertools
 import logging
 import math
-import traceback
 from collections.abc import Callable, Generator, Iterable, Iterator
 from functools import partial
 from typing import (
