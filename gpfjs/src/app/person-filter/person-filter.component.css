@@ -45,7 +45,7 @@
 }
 
 :host::ng-deep.tooltip-inner {
-  background-color: #6c6c6c !important;
+  background-color: #414141 !important;
 }
 
 :host::ng-deep.tooltip-arrow::before {

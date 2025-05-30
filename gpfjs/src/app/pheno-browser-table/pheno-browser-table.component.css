@@ -109,7 +109,7 @@
 }
 
 :host::ng-deep.tooltip-inner {
-  background-color: #6c6c6c !important;
+  background-color: #414141 !important;
 }
 
 :host::ng-deep.tooltip-arrow::before {
@@ -118,4 +118,12 @@
 
 :host::ng-deep.tooltip.show {
   opacity: 100% !important;
+}
+
+:host::ng-deep markdown a {
+  color: #94d0ff !important;
+}
+
+:host::ng-deep markdown a:hover {
+  color: rgb(84, 146, 194) !important;
 }
