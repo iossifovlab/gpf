@@ -28,10 +28,9 @@ from dae.person_sets import (
     parse_person_set_collections_study_config,
 )
 from dae.query_variants.base_query_variants import QueryVariantsBase
-from dae.query_variants.query_runners import QueryResult
+from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
-    ZygosityQuery,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Role
@@ -188,7 +187,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
                     seen.add(child.study_id)
         return result
 
-    def _get_query_leaf_studies(
+    def get_query_leaf_studies(
         self, study_filters: Iterable[str] | None,
     ) -> list[GenotypeDataStudy]:
         leafs = []
@@ -208,80 +207,31 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         logger.debug("studies to query: %s", [st.study_id for st in leafs])
         return leafs
 
-    def _psc_query_adjustments(
-        self, genotype_study: GenotypeDataStudy,
-        psc_query: PSCQuery | None,
-        affected_statuses: str | None,
-        roles: str | None,
-        sexes: str | None,
-        person_ids: list[str] | None,
-    ) -> PSCQueryAdjustments | None:
-        """Adjust genotype_data query based on person set collection query."""
-        if psc_query is None:
-            # nothing to adjust
-            return PSCQueryAdjustments(
-                affected_statues=affected_statuses,
-                roles=roles,
-                sexes=sexes,
-                person_ids=person_ids,
-            )
-        psc = genotype_study.get_person_set_collection(psc_query.psc_id)
-        if psc is None:
-            logger.info(
-                "study %s does not have person set collection %s; "
-                "skipping", genotype_study.study_id, psc_query.psc_id)
-            return None
-        psc_queries = None
-        if genotype_study.backend.has_affected_status_queries():
-            psc_queries = psc.transform_pedigree_queries(psc_query)
-
-        adj_affected_statuses = affected_statuses
-        adj_sexes = sexes
-        adj_roles = roles
-        adj_person_ids = set(person_ids) if person_ids is not None else None
-
-        if psc_queries is not None:
-            if not psc_queries:
-                # no persons matching the query
-                return None
-
-            def _adj_query(query_name: str, query: str | None) -> str | None:
-                if query_name not in psc_queries:
-                    return query
-                if query is None:
-                    return psc_queries[query_name]
-                return f"({query}) and ({psc_queries[query_name]})"
-
-            adj_affected_statuses = _adj_query(
-                "affected_statuses", affected_statuses)
-            adj_sexes = _adj_query("sexes", sexes)
-            adj_roles = _adj_query("roles", roles)
-
-        else:
-            psc_person_ids = psc.query_person_ids(psc_query)
-            if psc_person_ids is not None:
-                if len(psc_person_ids) == 0:
-                    # no persons matching the query
-                    return None
-                if adj_person_ids is not None:
-                    adj_person_ids = adj_person_ids & psc_person_ids
-                else:
-                    adj_person_ids = psc_person_ids
-            if adj_person_ids is not None and len(adj_person_ids) == 0:
-                logger.debug(
-                    "Study %s can't match any person to filter %s... "
-                    "skipping",
-                    genotype_study.study_id,
-                    psc_query)
-                return None
-
-        return PSCQueryAdjustments(
-            affected_statues=adj_affected_statuses,
-            roles=adj_roles,
-            sexes=adj_sexes,
-            person_ids=None if adj_person_ids is None
-            else list(adj_person_ids),
-        )
+    @abstractmethod
+    def create_query_runners(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | set[str] | None = None,
+        person_set_collection: PSCQuery | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        affected_statuses: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        categorical_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        tags_query: TagsQuery | None = None,
+    ) -> list[QueryRunner]:
+        raise NotImplementedError
 
     def query_result_variants(
         self, *,
@@ -305,117 +255,37 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         limit: int | None = None,
         study_filters: list[str] | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_query: ZygosityQuery | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> QueryResult | None:
         """Build a query result."""
         # pylint: disable=too-many-locals,too-many-arguments
 
-        if person_ids is not None and not person_ids:
-            return None
-        if isinstance(inheritance, str):
-            inheritance = [inheritance]
-
-        if effect_types:
-            effect_types = expand_effect_types(effect_types)
-
-        def adapt_study_variants(
-            study_name: str,
-            study_phenotype: str,
-            v: FamilyVariant,
-        ) -> FamilyVariant:
-            if v is None:
-                return None
-            for allele in v.alleles:
-                if allele.get_attribute("study_name") is None:
-                    allele.update_attributes(
-                        {"study_name": study_name})
-                if allele.get_attribute("study_phenotype") is None:
-                    allele.update_attributes(
-                        {"study_phenotype": study_phenotype})
-            return v
-
         runners = []
         logger.debug("query leaf studies...")
 
-        for genotype_study in self._get_query_leaf_studies(study_filters):
-
-            psc_query = person_set_collection
-            if psc_query is not None:
-                psc = genotype_study.get_person_set_collection(
-                    psc_query.psc_id,
-                )
-                if psc is None:
-                    logger.info(
-                        "study %s does not have person set collection %s; "
-                        "skipping", genotype_study.study_id, psc_query.psc_id)
-                    continue
-                if genotype_study.backend.has_affected_status_queries():
-                    psc_queries = psc.transform_pedigree_queries(psc_query)
-                    if not psc_queries:
-                        logger.info(
-                            "study %s: no persons matching %s; "
-                            "skipping", genotype_study.study_id, psc_query)
-                        continue
-                    psc_person_ids = psc.query_person_ids(psc_query)
-                    if psc_person_ids is not None:
-                        if len(psc_person_ids) == 0:
-                            logger.info(
-                                "study %s: no persons matching %s; "
-                                "skipping",
-                                genotype_study.study_id, psc_query)
-                            continue
-                        if person_ids is not None:
-                            person_ids = psc_person_ids.update(person_ids)
-                        else:
-                            person_ids = psc_person_ids
-                    if person_ids is not None and len(person_ids) == 0:
-                        logger.debug(
-                            "Study %s can't match "
-                            "any person to filter %s... skipping",
-                            genotype_study.study_id,
-                            psc_query)
-                        continue
-
-            runner = genotype_study.backend\
-                .build_family_variants_query_runner(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=cast(list, person_ids),
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    affected_statuses=affected_statuses,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    categorical_attr_filter=categorical_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit,
-                    tags_query=tags_query,
-                    zygosity_query=zygosity_query,
-                    **kwargs,
-                )
-
-            if runner is None:
-                logger.debug(
-                    "study %s has no varants... skipping",
-                    genotype_study.study_id)
-                continue
-
-            runner.set_study_id(genotype_study.study_id)
-            logger.debug("runner created")
-
-            study_name = genotype_study.name
-            study_phenotype = genotype_study.study_phenotype
-
-            runner.adapt(functools.partial(
-                adapt_study_variants, study_name, study_phenotype))
-            runners.append(runner)
+        for study in self.get_query_leaf_studies(study_filters):
+            runners.extend(study.create_query_runners(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                person_set_collection=person_set_collection,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                affected_statuses=affected_statuses,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                categorical_attr_filter=categorical_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                study_filters=study_filters,
+                tags_query=tags_query,
+            ))
 
         logger.debug("runners: %s", len(runners))
         if len(runners) == 0:
@@ -535,7 +405,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
             effect_types = expand_effect_types(effect_types)
 
         runners = []
-        for genotype_study in self._get_query_leaf_studies(study_filters):
+        for genotype_study in self.get_query_leaf_studies(study_filters):
             # pylint: disable=no-member,protected-access
             runner = genotype_study.backend \
                 .build_summary_variants_query_runner(
@@ -955,6 +825,55 @@ class GenotypeDataGroup(GenotypeData):
             person.set_attr(psc_id, person_set_value.id)
         return psc
 
+    def create_query_runners(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | set[str] | None = None,
+        person_set_collection: PSCQuery | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        affected_statuses: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        categorical_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        tags_query: TagsQuery | None = None,
+    ) -> list[QueryRunner]:
+        runners = []
+        for study in self.get_query_leaf_studies(study_filters):
+            runners.extend(study.create_query_runners(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                person_set_collection=person_set_collection,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                affected_statuses=affected_statuses,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                categorical_attr_filter=categorical_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                study_filters=study_filters,
+                tags_query=tags_query,
+            ))
+        return runners
+
 
 class GenotypeDataStudy(GenotypeData):
     """Represents a singular genotype data study."""
@@ -998,3 +917,92 @@ class GenotypeDataStudy(GenotypeData):
             assert person_set_value is not None
             person.set_attr(psc.id, person_set_value.id)
         return psc
+
+    def create_query_runners(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | set[str] | None = None,
+        person_set_collection: PSCQuery | None = None,  # noqa: ARG002
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        affected_statuses: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        categorical_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        tags_query: TagsQuery | None = None,
+    ) -> list[QueryRunner]:
+
+        if study_filters is not None and self.study_id not in study_filters:
+            return []
+        if person_ids is not None and not person_ids:
+            return []
+
+        if isinstance(inheritance, str):
+            inheritance = [inheritance]
+
+        if effect_types:
+            effect_types = expand_effect_types(effect_types)
+
+        def adapt_study_variants(
+            study_name: str,
+            study_phenotype: str,
+            v: FamilyVariant | None,
+        ) -> FamilyVariant | None:
+            if v is None:
+                return None
+            for allele in v.alleles:
+                if allele.get_attribute("study_name") is None:
+                    allele.update_attributes(
+                        {"study_name": study_name})
+                if allele.get_attribute("study_phenotype") is None:
+                    allele.update_attributes(
+                        {"study_phenotype": study_phenotype})
+            return v
+
+        runner = self.backend\
+            .build_family_variants_query_runner(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=cast(list, person_ids),
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                affected_statuses=affected_statuses,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                categorical_attr_filter=categorical_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                tags_query=tags_query,
+            )
+
+        if runner is None:
+            logger.debug(
+                "study %s has no varants... skipping",
+                self.study_id)
+            return []
+
+        runner.set_study_id(self.study_id)
+        logger.debug("runner created")
+
+        study_name = self.name
+        study_phenotype = self.study_phenotype
+
+        runner.adapt(functools.partial(
+            adapt_study_variants, study_name, study_phenotype))
+        return [runner]
