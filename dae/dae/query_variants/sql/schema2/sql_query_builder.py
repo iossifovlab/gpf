@@ -177,8 +177,10 @@ class QueryBuilderBase:
     @staticmethod
     def check_roles_query_value(roles_query: str, value: int) -> bool:
         """Check if value satisfies a given roles query."""
-        matcher = transform_attribute_query_to_function(Role, roles_query)
-        return matcher(value)
+        matcher = transform_attribute_query_to_function(
+            Role, roles_query, complementary_type=Zygosity,
+        )
+        return matcher(value, None)
 
     @staticmethod
     def check_inheritance_query_value(
@@ -220,20 +222,6 @@ class QueryBuilderBase:
             and not QueryBuilderBase.check_inheritance_query_value(
                 inheritance_query,
                 Inheritance.missing.value)
-
-    @staticmethod
-    def check_sexes_query_value(sexes_query: str, value: int) -> bool:
-        """Check if value matches a given sexes query."""
-        matcher = transform_attribute_query_to_function(
-            Sex, sexes_query, aliases=Sex.aliases(),
-        )
-        return matcher(value)
-
-    @staticmethod
-    def check_statuses_query_value(statuses_query: str, value: int) -> bool:
-        """Check if value matches a given affected statuses query."""
-        matcher = transform_attribute_query_to_function(Status, statuses_query)
-        return matcher(value)
 
     @staticmethod
     def build_variant_types_query(
@@ -849,51 +837,45 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         return query
 
     @staticmethod
-    def roles(
-        roles_query: str,
-        zygosity: int | None,
-    ) -> Expression:
+    def roles(roles_query: str) -> Expression:
         """
         Construct a roles query condition.
 
         Can match for zygosity in roles with a precalculated mask.
         """
         col = column("allele_in_roles", table="fa")
-        query = transform_attribute_query_to_sql_expression(
+        zyg_col = column("zygosity_in_roles", table="fa")
+        return transform_attribute_query_to_sql_expression(
             Role, roles_query, col,
+            complementary_type=Zygosity,
+            complementary_column=zyg_col,
         )
-        if zygosity is not None:
-            query = query.and_(
-                parse_one(f"fa.zygosity_in_roles & {zygosity} = {zygosity}"),
-            )
-        return query
 
     @staticmethod
-    def sexes(
-        sexes_query: str,
-        zygosity: int | None,
-    ) -> Expression:
+    def sexes(sexes_query: str) -> Expression:
         """
         Construct a sexes query condition.
 
         Can match for zygosity in sexes with a precalculated mask.
         """
         col = column("allele_in_sexes", table="fa")
-        query = transform_attribute_query_to_sql_expression(
-            Sex, sexes_query, col, Sex.aliases(),
+        zyg_col = column("zygosity_in_sexes", table="fa")
+        return transform_attribute_query_to_sql_expression(
+            Sex, sexes_query, col, aliases=Sex.aliases(),
+            complementary_type=Zygosity,
+            complementary_column=zyg_col,
         )
-        if zygosity is not None:
-            query = query.and_(
-                parse_one(f"fa.zygosity_in_sexes & {zygosity} != 0"),
-            )
-        return query
 
     @staticmethod
     def statuses(statuses_query: str) -> Expression:
         col = column("allele_in_statuses", table="fa")
+        zyg_col = column("zygosity_in_status", table="fa")
 
         return transform_attribute_query_to_sql_expression(
-            Status, statuses_query, col)
+            Status, statuses_query, col,
+            complementary_type=Zygosity,
+            complementary_column=zyg_col,
+        )
 
     @staticmethod
     def inheritance(
@@ -976,51 +958,29 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: str | Sequence[str] | None = None,
-        roles_in_parent: str | None = None,
-        roles_in_child: str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity: ZygosityQuery | None = None,
     ) -> Select:
         """Build a family subclause query."""
         if tags_query is None:
             tags_query = TagsQuery()
-        if zygosity is None:
-            zygosity = ZygosityQuery()
 
         query = self.family_base()
-        if roles_in_parent is not None:
-            clause = self.roles(roles_in_parent, zygosity.parents_zygosity)
-            query = query.where(clause)
-        if roles_in_child is not None:
-            clause = self.roles(roles_in_child, zygosity.children_zygosity)
-            query = query.where(clause)
-        if roles is not None and (
-                roles_in_parent is None and roles):
-            clause = self.roles(roles, None)
+        if roles is not None:
+            clause = self.roles(roles)
             query = query.where(clause)
 
         if inheritance is not None:
             clause = self.inheritance(inheritance)
             query = query.where(clause)
         if sexes is not None:
-            clause = self.sexes(sexes, zygosity.sex_zygosity)
+            clause = self.sexes(sexes)
             query = query.where(clause)
         if affected_statuses is not None:
             clause = self.statuses(affected_statuses)
             query = query.where(clause)
-
-        if zygosity.status_zygosity is not None:
-            status_zygosity = self.calc_zygosity_status_value(
-                affected_statuses, zygosity,
-            )
-            if status_zygosity is not None:
-                expr = parse_one(
-                    "(fa.zygosity_in_status & "
-                    f"{status_zygosity}) != 0")
-                query = query.where(expr)
 
         if family_ids is not None or person_ids is not None:
             if person_ids is not None:
@@ -1257,35 +1217,6 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             },
         )
 
-    @staticmethod
-    def calc_zygosity_status_value(
-        affected_statuses: str | None, zygosity: ZygosityQuery,
-    ) -> int | None:
-        """Extract from a query an int for filtering zygosity by status."""
-        if zygosity.status_zygosity is None:
-            return None
-
-        affected = False
-        unaffected = False
-        if affected_statuses is None:
-            affected = True
-            unaffected = True
-        else:
-            if QueryBuilderBase.check_statuses_query_value(
-                    affected_statuses, Status.affected.value):
-                affected = True
-            if QueryBuilderBase.check_statuses_query_value(
-                    affected_statuses, Status.unaffected.value):
-                unaffected = True
-
-        status_zygosity = Zygosity.from_name(zygosity.status_zygosity)
-        zygosity_value = 0
-        if unaffected:
-            zygosity_value |= status_zygosity.value
-        if affected:
-            zygosity_value |= status_zygosity.value << 2
-        return zygosity_value
-
     def build_family_variants_query(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
@@ -1294,8 +1225,6 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: Sequence[str] | None = None,
-        roles_in_parent: str | None = None,
-        roles_in_child: str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
@@ -1308,7 +1237,6 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_query: ZygosityQuery | None = None,
     ) -> list[str]:
         """Build a query for family variants."""
 
@@ -1325,24 +1253,14 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             return_unknown=return_unknown,
         )
 
-        if roles_in_parent is None and roles_in_child is None:
-            pass
-        if roles_in_parent and roles_in_child:
-            roles = f"({roles_in_parent}) and ({roles_in_child})"
-        elif roles_in_child or roles_in_parent:
-            roles = roles_in_child or roles_in_parent
-
         fquery = self.family_query(
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
-            roles_in_parent=roles_in_parent,
-            roles_in_child=roles_in_child,
             roles=roles,
             sexes=sexes,
             affected_statuses=affected_statuses,
             tags_query=tags_query,
-            zygosity=zygosity_query,
         )
 
         batched_heuristics = self.calc_batched_heuristics(
