@@ -345,6 +345,10 @@ class PSCQuery:
     selected_person_sets: set[str]
 
 
+class AttributeQueriesUnsupportedException(Exception):
+    pass
+
+
 class PersonSetCollection:
     """The collection of all possible person sets in a given source."""
 
@@ -735,7 +739,7 @@ class PersonSetCollection:
             return None
         return {fpid[1] for fpid in fpids}
 
-    def _pedigree_query_selected_person_sets(self, query):
+    def get_query_person_set_ids(self, query) -> set[str]:
         selected_person_sets = set(query.selected_person_sets)
         available_person_sets = set(self.person_sets.keys())
         available_person_sets.add(self.default.id)
@@ -777,14 +781,11 @@ class PersonSetCollection:
         return result
 
     def _pedigree_query_check_multi_field_multi_value(
-            self, result, default_result,
-        ) -> bool:
-        if len(result) + len(default_result) > 1:
+        self, result,
+    ) -> bool:
+        if len(result) > 1:
             multi_values_count = 0
             for values in result.values():
-                if len(values) > 1:
-                    multi_values_count += 1
-            for values in default_result.values():
                 if len(values) > 1:
                     multi_values_count += 1
             return multi_values_count > 1
@@ -806,72 +807,73 @@ class PersonSetCollection:
 
     def _pedigree_to_attribute_queries(
         self, pedigree_queries: dict[str, set],
-        default_queries: dict[str, str],
     ) -> dict[str, str]:
         result_queries = {}
         for field, values in pedigree_queries.items():
-            temp = f"any([{','.join(sorted(values))}])"
-            if field not in default_queries:
-                result_queries[field] = temp
-            else:
-                result_queries[field] = f"{temp} or ({default_queries[field]})"
-        for field, value in default_queries.items():
-            if field not in result_queries:
-                result_queries[field] = f"({value})"
+            result_queries[field] = f"any([{','.join(sorted(values))}])"
 
         return result_queries
 
-    def transform_pedigree_queries(
+    def transform_ps_query_to_attribute_queries(
         self, query: PSCQuery,
-        status_zygosity: str | None = None,
-    ) -> dict[str, str] | None:
+    ) -> dict[str, str]:
         """Transform person set collection query into query variants."""
         if query.psc_id != self.id:
             raise ValueError(
                 f"Query for PersonSetCollection {query.psc_id} "
                 f"on PersonSetCollection {self.id}")
         if not self.is_pedigree_only():
-            return None
-        selected_person_sets = self._pedigree_query_selected_person_sets(query)
-        if not selected_person_sets:
+            raise AttributeQueriesUnsupportedException(
+                "Cannot create attribute queries for fields that are not from "
+                "the pedigree!",
+            )
+
+        selected_ps_ids = self.get_query_person_set_ids(query)
+
+        if (
+            selected_ps_ids == set(self.person_sets.keys()) and
+            len(self.default.persons) == 0
+        ):
+            # The query exhausts all available people, do not filter
             return {}
 
+        if self.default.id in selected_ps_ids:
+            raise AttributeQueriesUnsupportedException(
+                "Attribute queries not supported for the default person set!",
+            )
+
         if self._pedigree_query_has_unsupported_fields():
-            return None
+            raise AttributeQueriesUnsupportedException(
+                "Cannot create attribute query for invalid pedigree fields!",
+            )
+
+        if not selected_ps_ids:
+            raise ValueError(
+                f"Selected person sets ({selected_ps_ids}) "
+                "in the query do not match any person set "
+                "in the collection!",
+            )
 
         result = defaultdict(set)
-        default_result = defaultdict(set)
-
-        for ps_id in selected_person_sets:
-            if ps_id == self.default.id:
-                # handle default person set
-                for field, values in self._pedigree_query_all_values().items():
-                    suffix = ""
-                    if field == "status" and status_zygosity is not None:
-                        suffix = f"~{status_zygosity}"
-                    default_result[field].update(
-                        [f"{v}{suffix}" for v in values],
-                    )
-                continue
+        for ps_id in selected_ps_ids:
             for field, value in zip(
                     [s.source for s in self.config.sources],
                     self.person_sets[ps_id].values,
                     strict=True):
-                suffix = ""
-                if field == "status" and status_zygosity is not None:
-                    suffix = f"~{status_zygosity}"
-                result[field].add(f"{value!s}{suffix}")
+                result[field].add(str(value))
 
-        # Since we alwayes do OR between queries on differenc fields we
-        # can't support fully queries that use multiple on multiple fields
+        # The current QueryVariants implementation supports only separate
+        # attribute queries for role, status and sex. Creating a person
+        # set consisting of male probands and female siblings cannot be
+        # mapped to an attribute query as of now and the following line
+        # is a guard against that case.
         if self._pedigree_query_check_multi_field_multi_value(
-                result, default_result):
-            return None
+                result):
+            raise AttributeQueriesUnsupportedException(
+                "Cannot create attribute queries for person sets containing "
+                "values which differ in more than 1 source!",
+            )
 
-        default_queries = {
-            field: " and ".join([f"(not {v})" for v in sorted(values)])
-            for field, values in default_result.items()
-        }
         return self._pedigree_query_map_queries(
-            self._pedigree_to_attribute_queries(result, default_queries),
+            self._pedigree_to_attribute_queries(result),
         )
