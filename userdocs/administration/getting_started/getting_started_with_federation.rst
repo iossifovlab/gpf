@@ -126,18 +126,11 @@ study and select the `autism` phenotype.
    Enrichment Tool for `ssc_denovo` study with selected remote study de Novo
    gene sets
 
-Now you can choose a de Novo gene set computed for the remote study
-`SD_iWES_v1_1_genotypes_DENOVO`:
+Let us select the LGDs de Novo gene set and run the `Enrichment Tool`:
 
 .. figure:: getting_started_files/federation_enrichment_tool_iwes_denovo_gene_sets.png
 
     De Novo gene set from SD_iWES_v1_1_genotypes_DENOVO study
-
-Let us select the LGDs de Novo gene set and run the `Enrichment Tool`:
-
-.. figure:: getting_started_files/federation_enrichment_tool_results.png
-
-   Enrichment Tool for `ssc_denovo` result page
 
 
 Federation tokens
@@ -163,7 +156,7 @@ and create a new federation token:
 
 Once you have the federation client ID and secret, you can configure your local
 GPF instance to use them. You need to edit the
-``minimal_instacne/gpf_instance.yaml`` file and add the lines 5-6 to the
+``minimal_instance/gpf_instance.yaml`` file and add the lines 5-6 to the
 ``remotes`` section:
 
 .. code-block:: yaml

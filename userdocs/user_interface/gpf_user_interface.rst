@@ -261,14 +261,14 @@ in the configured datasets. The table is interactive - columns can be sorted,
 toggled and reordered.
 
 .. video:: ../_static/gene-profiles.mp4
-
+    :width: 100%
 
 Each gene symbol can be clicked to open the single view for that gene.
 Some of the columns represent a statistic for a dataset - their cells can
 be clicked to open the corresponding genotype browser query.
 Rows can be highlighted using the middle mouse button or
 CTRL / ⌘ + click. Highlighted genes are listed in the bottom right
-and can be opened for comparison(fig. 4.1).
+and can be opened for comparison (fig. 4).
 
 
 .. figure:: imgs/gpf_screenshots/gene-profiles.png

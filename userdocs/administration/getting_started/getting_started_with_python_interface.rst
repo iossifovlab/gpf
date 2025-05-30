@@ -115,7 +115,7 @@ This will return a list with the IDs of all configured phenotype data:
 
 .. code-block:: python3
 
-    ['mini_pheno']
+    ['ssc_pheno', 'mini_pheno']
 
 To get a specific phenotype data and query it, use:
 
@@ -129,11 +129,16 @@ We can see what instruments and measures are available in the data:
 
     pd.instruments
 
+.. code-block:: python3
+
     >> {'basic_medical': Instrument(basic_medical, 4), 'iq': Instrument(iq, 3)}
+
 
 .. code-block:: python3
 
     pd.measures
+
+.. code-block:: python3
 
     >> {'basic_medical.age': Measure(basic_medical.age, MeasureType.continuous, 1, 50),
         'basic_medical.weight': Measure(basic_medical.weight, MeasureType.continuous, 15, 250),
@@ -150,6 +155,8 @@ We can then get specific measure values for specific individuals:
     from dae.variants.attributes import Role
 
     list(pd.get_people_measure_values(["iq.non-verbal-iq"], roles=[Role.prb], family_ids=["f1", "f2", "f3"]))
+
+.. code-block:: python3
 
     >> [{'person_id': 'f1.p1',
          'family_id': 'f1',
