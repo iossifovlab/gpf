@@ -1,4 +1,5 @@
 import pathlib
+import textwrap
 
 from dae.genomic_resources.gene_models import build_gene_models_from_resource
 from dae.genomic_resources.reference_genome import (
@@ -18,7 +19,15 @@ def setup_gpf_instance(
     """Set up a GPF instance using prebuild genome, gene models, etc."""
     if not (out_path / "gpf_instance.yaml").exists():
         setup_directories(
-            out_path, {"gpf_instance.yaml": 'instance_id: "test_instance"'},
+            out_path, {
+            "gpf_instance.yaml": textwrap.dedent(f"""
+                instance_id: "test_instance"
+                reference_genome:
+                  resource_id: {reference_genome_id}
+                gene_models:
+                  resource_id: {gene_models_id}
+            """),
+        },
         )
     # pylint: disable=import-outside-toplevel
     reference_genome = None
