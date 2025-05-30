@@ -123,9 +123,30 @@ class WGPFInstance(GPFInstance):
     def make_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
+
         if genotype_data is not None:
+
+            children_ids = [
+                gd.study_id
+                for gd in genotype_data.get_query_leaf_studies(None)
+                if gd.study_id != genotype_data.study_id
+            ]
+            if len(children_ids) == 0:
+                children = None
+            else:
+                children = [
+                    self.make_wdae_wrapper(child_id)
+                    for child_id in children_ids
+                ]
+            if genotype_data.config.phenotype_data:
+                phenotype_data = self._pheno_registry.get_phenotype_data(
+                    genotype_data.config.phenotype_data,
+                )
+            else:
+                phenotype_data = None
             return StudyWrapper(
-                genotype_data, self._pheno_registry, self.gene_scores_db, self,
+                genotype_data, phenotype_data,
+                children=cast(list[StudyWrapper] | None, children),
             )
         if self.has_phenotype_data(dataset_id):
             return WDAEStudy(

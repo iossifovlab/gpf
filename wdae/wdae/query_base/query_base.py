@@ -9,6 +9,8 @@ from gpf_instance.gpf_instance import (
     recreated_dataset_perm,
 )
 from rest_framework import views
+from studies.query_transformer import get_or_create_query_transformer
+from studies.response_transformer import get_or_create_response_transformer
 from utils.authentication import GPFOAuth2Authentication
 
 
@@ -27,6 +29,12 @@ class QueryBaseView(views.APIView):
         self.gpf_instance = get_wgpf_instance()
         self.instance_id = self.gpf_instance.instance_id
         recreated_dataset_perm(self.gpf_instance)
+        self.query_transformer = get_or_create_query_transformer(
+            self.gpf_instance,
+        )
+        self.response_transformer = get_or_create_response_transformer(
+            self.gpf_instance,
+        )
 
     def get_permitted_datasets(self, user: User) -> Iterable[str]:
         return IsDatasetAllowed.permitted_datasets(user, self.instance_id)

@@ -205,6 +205,8 @@ class ImpalaVariants(QueryVariantsBase):
             return None
         assert self.schema is not None
 
+        affected_statuses = None
+
         roles = self.transform_roles_to_single_role_string(
             roles_in_parent, roles_in_child, roles)
 

@@ -18,7 +18,7 @@ from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_sql_expression_schema1,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
@@ -343,12 +343,16 @@ class BaseQueryBuilder(ABC):
         if roles is not None:
             roles_query = self._transform_attribute_query(
                 Role, roles, column("allele_in_roles"),
+                complementary_type=Zygosity,
+                complementary_column=column("zygosity_in_roles"),
             ).sql()
             where.append(roles_query)
         if sexes is not None:
             sexes_query = self._transform_attribute_query(
                 Sex, sexes, column("allele_in_sexes"),
                 aliases=Sex.aliases(),
+                complementary_type=Zygosity,
+                complementary_column=column("zygosity_in_sexes"),
             ).sql()
             where.append(sexes_query)
         if affected_statuses is not None:
@@ -356,6 +360,8 @@ class BaseQueryBuilder(ABC):
                 self._transform_attribute_query(
                     Status, affected_statuses,
                     column("allele_in_statuses"),
+                    complementary_type=Zygosity,
+                    complementary_column=column("zygosity_in_status"),
                 ).sql()
             where.append(statuses_query)
         if variant_type is not None:

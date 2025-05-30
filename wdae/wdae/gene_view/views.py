@@ -69,9 +69,12 @@ class QueryVariantsView(QueryBaseView):
 
         dataset = cast(StudyWrapper, dataset)
 
-        return Response(
-            list(dataset.get_gene_view_summary_variants(freq_col, **data)),
-        )
+        return Response(list(
+            dataset.get_gene_view_summary_variants(
+                freq_col, self.query_transformer,
+                self.response_transformer, **data,
+            ),
+        ))
 
 
 class DownloadSummaryVariantsView(QueryBaseView):
