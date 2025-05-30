@@ -20,12 +20,13 @@ In the steps below, we use the
 ### Install GPF dependencies
 
 Create a conda `gpf` environment with all of the conda package dependencies
-from `environment.yml` and `dev-environment.yml` files. From `gpf` root
-directory run:
+from `environment.yml` and `dev-environment.yml` files. Update federation
+environment if you plan to use federation. From `gpf` root directory run:
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
+mamba env update --name gpf --file ./federation/environment.yml
 ```
 
 To use this environment, you need to activate it using the following command:
@@ -40,6 +41,14 @@ conda environment.)
 
 ```bash
 for d in dae wdae; do (cd $d; pip install -e .); done
+```
+
+The following command is going to install GPF `rest_client` packages for
+development usage. Mandatory when using federation (You need to install
+GPF packages in the development `gpf` conda environment.)
+
+```bash
+pip install -e rest_client
 ```
 
 ### Additional GPF genotype storages
