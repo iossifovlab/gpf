@@ -174,6 +174,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         if is_download:
             result = dataset.query_variants_wdae(
                 data, sources,
+                self.query_transformer,
+                self.response_transformer,
                 max_variants_count=max_variants,
                 max_variants_message=is_download,
             )
@@ -190,6 +192,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         else:
             stream = dataset.query_variants_wdae_streaming(
                 data, sources,
+                self.query_transformer,
+                self.response_transformer,
                 max_variants_count=max_variants,
                 max_variants_message=is_download,
             )
