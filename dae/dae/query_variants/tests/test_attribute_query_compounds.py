@@ -3,6 +3,7 @@ import pytest
 
 from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
+    update_attribute_query_with_compounds,
 )
 from dae.utils.variant_utils import BitmaskEnumTranslator
 from dae.variants.attributes import Role, Zygosity
@@ -30,3 +31,31 @@ def test_compound_zygosity(query, role, zygosity, expected):
 
     bitmask = translator.apply_mask(0, zygosity.value, role)
     assert matcher(role.value, bitmask) == expected
+
+
+@pytest.mark.parametrize(
+    "query, zygosity_str, expected",
+    [
+        ("prb", "homozygous", "prb~homozygous"),
+        ("prb or sib", "homozygous", "prb~homozygous or sib~homozygous"),
+        ("prb and sib", "homozygous", "prb~homozygous and sib~homozygous"),
+        ("(prb and sib)", "homozygous", "(prb~homozygous and sib~homozygous)"),
+        ("not prb", "homozygous", "not prb~homozygous"),
+        (
+            "any([prb, sib])", "homozygous",
+            "any([prb~homozygous, sib~homozygous])",
+        ),
+        (
+            "all([prb, sib])", "homozygous",
+            "all([prb~homozygous, sib~homozygous])",
+        ),
+        (
+            "all([prb, sib]) or (dad and not prb)", "homozygous",
+            "all([prb~homozygous, sib~homozygous]) or "
+            "(dad~homozygous and not prb~homozygous)",
+        ),
+    ],
+)
+def test_compound_addition_to_query(query, zygosity_str, expected):
+    assert update_attribute_query_with_compounds(
+        query, zygosity_str) == expected
