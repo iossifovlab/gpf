@@ -591,8 +591,8 @@ class CategoricalHistogram(Statistic):
             return
         if not isinstance(value, str | int):
             raise TypeError(
-                "Only string or int values can be added categorical histogram; "
-                f"bad <{value}>",
+                "Only string or int values can be added categorical "
+                f"histogram; bad <{value}>",
             )
         self._counter[value] += count
         if not self.enforce_type and \
@@ -723,7 +723,7 @@ class CategoricalHistogram(Statistic):
             ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
         if small_values_description is not None and \
-            large_values_description is not None:
+                large_values_description is not None:
 
             sec = ax.secondary_xaxis(location=0)
             sec.set_ticks(

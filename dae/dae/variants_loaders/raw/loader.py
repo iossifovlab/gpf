@@ -145,7 +145,8 @@ class CLIArgument:
             return
         assert self.destination is not None
         argument = getattr(argv, self.destination)
-        if argument is None and self.default_value is not None and use_defaults:
+        if argument is None and self.default_value is not None \
+                and use_defaults:
             setattr(argv, self.destination, self.default_value)
 
 
@@ -600,9 +601,10 @@ class VariantsGenotypesLoader(VariantsLoader):
                     assert fv._genetic_model is None  # noqa: SLF001
                     assert fv.gt is not None
 
-                    fv._genetic_model = self._calc_genetic_model(  # noqa: SLF001
-                        fv, self.genome,
-                    )
+                    fv._genetic_model = \
+                        self._calc_genetic_model(  # noqa: SLF001
+                            fv, self.genome,
+                        )
 
                     fv._best_state = self._calc_best_state(  # noqa: SLF001
                         fv, self.genome, force=False,
