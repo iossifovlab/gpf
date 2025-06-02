@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+* 2025.5.10
+    * Clean up federation plugin testing.
+    * Fix and improve support for gene sets in federation plugin.
+    * Clean up wdaemanage tool.
+    * Update link description about registration on the login page.
+    * Clean up family and person filters user interface.
+    * Round decimals in value domain in phenotype browser.
+    * Add info icon for enrihment tool background models.
+
 * 2025.5.9
     * Hide phenotype browser NaN values.
     * Stop hover on phenotype browser measure column.
