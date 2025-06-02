@@ -3,15 +3,14 @@ import pathlib
 import textwrap
 from typing import Any, cast
 
-from gpf_instance.gpf_instance import WGPFInstance
 import pytest
+from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
-from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
 from studies.query_transformer import QueryTransformer, make_query_transformer
@@ -336,7 +335,7 @@ def test_dataset_person_sets_queries(
             "personSetCollection": {
                 "id": psc_query.psc_id,
                 "checkedValues": psc_query.selected_person_sets,
-            }
+            },
         }, [],
         query_transformer, response_transformer,
     ))

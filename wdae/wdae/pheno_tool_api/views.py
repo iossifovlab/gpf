@@ -198,16 +198,10 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
             )
         if data.get("familyPhenoFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-<<<<<<< HEAD
-                study_wrapper.query_transformer  # noqa: SLF001
+                self.query_transformer  # noqa: SLF001
                 ._transform_pheno_filters_to_ids(
                     data["familyPhenoFilters"],
-=======
-                self.query_transformer  # noqa: SLF001
-                ._transform_filters_to_ids_beta(
-                    data["familyFiltersBeta"],
                     study_wrapper,
->>>>>>> 141c40c5f (Update API views that use study wrappers and transformers to new API)
                 ),
             )
 

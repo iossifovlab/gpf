@@ -423,7 +423,9 @@ def transform_attribute_query_to_function(
     enum_type: type[Enum],
     query: str,
     aliases: dict[str, str] | None = None,
+    *,
     complementary_type: type[Enum] | None = None,
+    strip_compounds: bool = False,
 ) -> Matcher:
     """
     Transform attribute query to a callable function.
@@ -436,6 +438,10 @@ def transform_attribute_query_to_function(
     if aliases is None:
         aliases = {}
     tree = QUERY_PARSER.parse(query)
+
+    if strip_compounds:
+        strip_transformer = CompoundStripTransformer()
+        tree = strip_transformer.transform(tree)
 
     syntax_sugar_transformer = SyntaxSugarTransformer()
     transformer = AttributeQueryTransformerFunction(
@@ -450,8 +456,10 @@ def transform_attribute_query_to_sql_expression(
     query: str,
     column: Column,
     aliases: dict[str, str] | None = None,
+    *,
     complementary_type: type[Enum] | None = None,
     complementary_column: Column | None = None,
+    strip_compounds: bool = False,
 ) -> Expression:
     """
     Transform attribute query to an SQLglot expression.
@@ -465,6 +473,11 @@ def transform_attribute_query_to_sql_expression(
         aliases = {}
 
     tree = QUERY_PARSER.parse(query)
+
+    if strip_compounds:
+        strip_transformer = CompoundStripTransformer()
+        tree = strip_transformer.transform(tree)
+
     syntax_sugar_transformer = SyntaxSugarTransformer()
     transformer = AttributeQueryTransformerSQL(
         column, enum_type, aliases,
@@ -481,8 +494,10 @@ def transform_attribute_query_to_sql_expression_schema1(
     query: str,
     column: Column,
     aliases: dict[str, str] | None = None,
+    *,
     complementary_type: type[Enum] | None = None,
     complementary_column: Column | None = None,
+    strip_compounds: bool = False,
 ) -> Expression:
     """
     Transform attribute query to an SQLglot expression.
@@ -496,6 +511,11 @@ def transform_attribute_query_to_sql_expression_schema1(
         aliases = {}
 
     tree = QUERY_PARSER.parse(query)
+
+    if strip_compounds:
+        strip_transformer = CompoundStripTransformer()
+        tree = strip_transformer.transform(tree)
+
     syntax_sugar_transformer = SyntaxSugarTransformer()
     transformer = AttributeQueryTransformerSQLLegacy(
         column, enum_type, aliases,
