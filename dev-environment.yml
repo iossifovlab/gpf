@@ -38,6 +38,8 @@ dependencies:
   - parquet-tools
   - ipython
   - curl
+  - flake8
+  - cohesion
   - pip:
     - sphinx-autorun
     - rangehttpserver
