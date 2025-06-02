@@ -3,16 +3,13 @@ from __future__ import annotations
 
 import contextlib
 import gzip
-import importlib
 import logging
-import multiprocessing as mp
 import os
 import pathlib
 import shutil
 import tempfile
 import textwrap
-from collections.abc import Callable, Generator
-from contextlib import AbstractContextManager
+from collections.abc import Generator
 from typing import Any, cast
 
 import pyBigWig  # type: ignore
@@ -374,10 +371,11 @@ def build_http_test_protocol(
     root_path: pathlib.Path, *,
     repair: bool = True,
 ) -> Generator[FsspecReadOnlyProtocol, None, None]:
-    """Run an HTTP range server and construct genomic resource protocol.
+    """Populate Apache2 directory and construct HTTP genomic resource protocol.
 
-    The HTTP range server is used to serve directory pointed by root_path.
-    This directory should be a valid filesystem genomic resource repository.
+    The Apache2 is used to serve the GRR.
+    This root_path directory should be a valid filesystem genomic resource
+    repository.
     """
     source_proto = build_filesystem_test_protocol(root_path, repair=repair)
     http_path = pathlib.Path(__file__).parent
@@ -396,53 +394,6 @@ def build_http_test_protocol(
         print("Generator exit")
     finally:
         shutil.rmtree(http_path)
-
-
-def _internal_process_runner(
-        module_name: str, server_manager_name: str, args: list[Any],
-        start_queue: mp.Queue, stop_queue: mp.Queue) -> None:
-    module = importlib.import_module(module_name)
-    server_manager = getattr(module, server_manager_name)
-    try:
-        with server_manager(*args) as start_message:
-            logger.info("process server started")
-            start_queue.put(start_message)
-            stop_queue.get()
-        logger.info("process server stopped")
-    except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
-        start_queue.put(ex)
-    else:
-        start_queue.put(None)
-
-
-@contextlib.contextmanager
-def _process_server_manager(
-        server_manager: Callable[..., AbstractContextManager[str]],
-        *args: pathlib.Path) -> Generator[str, None, None]:
-    """Run a process server."""
-    start_queue: mp.Queue = mp.Queue()
-    stop_queue: mp.Queue = mp.Queue()
-    proc = mp.Process(
-        target=_internal_process_runner,
-        args=(
-            server_manager.__module__, server_manager.__name__, args,
-            start_queue, stop_queue))
-    proc.start()
-
-    # wait for start message
-    start_message = start_queue.get()
-    if isinstance(start_message, Exception):
-        logger.error(
-            "unexpected execption in starting process: %s", start_message)
-        raise start_message
-
-    yield start_message
-
-    # stop the server process
-    stop_queue.put("stop")
-    stop_queue.close()
-    start_queue.close()
-    proc.join()
 
 
 def s3_test_server_endpoint() -> str:
@@ -491,9 +442,9 @@ def build_s3_test_bucket(s3filesystem: S3FileSystem | None = None) -> str:
 def build_s3_test_protocol(
     root_path: pathlib.Path,
 ) -> Generator[FsspecReadWriteProtocol, None, None]:
-    """Run an S3 moto server and construct fsspec genomic resource protocol.
+    """Construct fsspec genomic resource protocol.
 
-    The S3 moto server is populated with resource from filesystem GRR pointed
+    The S3 bucket is populated with resource from filesystem GRR pointed
     by the root_path.
     """
     endpoint_url = s3_test_server_endpoint()
