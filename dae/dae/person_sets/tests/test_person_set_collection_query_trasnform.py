@@ -20,7 +20,7 @@ from dae.person_sets.person_sets import (
     (PSCQuery("phenotype", {"autism", "unaffected"}),
      {"affected_statuses": "any([affected,unaffected])"}),
     (PSCQuery("phenotype", {"autism", "unaffected", "unspecified"}),
-     {"affected_statuses": "any([affected,unaffected,unspecified])"}),
+     {}),
 ])
 def test_phenotype_psc_query_transform_phenotype(
     phenotype_psc: PersonSetCollection,
