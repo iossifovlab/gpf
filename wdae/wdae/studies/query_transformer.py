@@ -328,7 +328,7 @@ class QueryTransformer(QueryTransformerProtocol):
 
         if study_wrapper.is_group:
             raise ValueError(
-                "Determining person set collection kwargs for groups"
+                "Determining person set collection kwargs for groups "
                 "is not supported!",
             )
         genotype_data = cast(GenotypeDataStudy, study_wrapper.genotype_data)

@@ -22,9 +22,21 @@ from rest_framework import status
         status.HTTP_200_OK,
     ),
     (
+        "/api/v3/gene_view/query_summary_variants",
+        "post",
+        {"datasetId": "t4c8_dataset"},
+        status.HTTP_200_OK,
+    ),
+    (
         "/api/v3/gene_view/download_summary_variants",
         "post",
         {"queryData": json.dumps({"datasetId": "t4c8_study_2"})},
+        status.HTTP_200_OK,
+    ),
+    (
+        "/api/v3/gene_view/download_summary_variants",
+        "post",
+        {"queryData": json.dumps({"datasetId": "t4c8_dataset"})},
         status.HTTP_200_OK,
     ),
 ])
