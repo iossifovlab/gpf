@@ -528,12 +528,15 @@ class StudyWrapper(StudyWrapperBase):
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
         summary_variant_ids = kwargs.pop("summaryVariantIds", None)
 
-        study_filters = set()
+        study_filters = None
         if kwargs.get("allowed_studies") is not None:
             study_filters = set(kwargs.pop("allowed_studies"))
 
         if kwargs.get("studyFilters"):
-            study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
 
         kwargs["study_filters"] = study_filters
 
