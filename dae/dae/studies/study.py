@@ -231,6 +231,27 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         study_filters: list[str] | None = None,
         tags_query: TagsQuery | None = None,
     ) -> list[QueryRunner]:
+        """Create query runners for a variants query."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_summary_query_runners(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        category_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        **kwargs: Any,
+    ) -> list[QueryRunner]:
+        """Create query runners for a summary variants query."""
         raise NotImplementedError
 
     def query_result_variants(
@@ -405,27 +426,21 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
             effect_types = expand_effect_types(effect_types)
 
         runners = []
-        for genotype_study in self.get_query_leaf_studies(study_filters):
-            # pylint: disable=no-member,protected-access
-            runner = genotype_study.backend \
-                .build_summary_variants_query_runner(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    category_attr_filter=category_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit,
-                    **kwargs,
-                )
-            if runner is None:
-                continue
-            runner.set_study_id(genotype_study.study_id)
-            runners.append(runner)
+        for study in self.get_query_leaf_studies(study_filters):
+            runners.extend(study.create_summary_query_runners(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                category_attr_filter=category_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                **kwargs,
+            ))
 
         if len(runners) == 0:
             return None
@@ -874,6 +889,40 @@ class GenotypeDataGroup(GenotypeData):
             ))
         return runners
 
+    def create_summary_query_runners(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        category_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        **kwargs: Any,
+    ) -> list[QueryRunner]:
+        runners = []
+        for study in self.get_query_leaf_studies(study_filters):
+            runners.extend(study.create_summary_query_runners(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                category_attr_filter=category_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                **kwargs,
+            ))
+        return runners
+
 
 class GenotypeDataStudy(GenotypeData):
     """Represents a singular genotype data study."""
@@ -1005,4 +1054,45 @@ class GenotypeDataStudy(GenotypeData):
 
         runner.adapt(functools.partial(
             adapt_study_variants, study_name, study_phenotype))
+        return [runner]
+
+    def create_summary_query_runners(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        category_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        **kwargs: Any,
+    ) -> list[QueryRunner]:
+        if study_filters is not None and self.study_id not in study_filters:
+            return []
+
+        runner = self.backend \
+            .build_summary_variants_query_runner(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                category_attr_filter=category_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                **kwargs,
+            )
+        if runner is None:
+            return []
+
+        runner.set_study_id(self.study_id)
+
         return [runner]
