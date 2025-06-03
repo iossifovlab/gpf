@@ -275,8 +275,8 @@ def get_locus_ploidy(
         raise ValueError("Chromosome Y identified for a female individual!")
 
     if chrom in ("chrX", "X", "chrY", "Y") \
-        and sex in (Sex.M, Sex.U) \
-        and not genome.is_pseudoautosomal(chrom, pos):
+            and sex in (Sex.M, Sex.U) \
+            and not genome.is_pseudoautosomal(chrom, pos):
         return 1
     return 2
 
@@ -333,7 +333,7 @@ class BitmaskEnumTranslator:
         self.main_enum_type = main_enum_type
         self.partition_by_enum_type = partition_by_enum_type
         self.main_indexes = {}
-        self.partition_indexes = {}
+        self.partition_indexes: dict = {}
 
         main_enumerations = {
             e.name: e.value for e in list(main_enum_type)
@@ -394,4 +394,4 @@ class BitmaskEnumTranslator:
 
         bitshift_amount = \
             self.partition_indexes[partition_by_enum.name] * self.tuple_length
-        return mask | (main_enum_value << bitshift_amount)
+        return int(mask | (main_enum_value << bitshift_amount))

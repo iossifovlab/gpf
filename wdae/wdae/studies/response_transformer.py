@@ -86,7 +86,7 @@ class ResponseTransformer:
         lambda v: [
                 members_in_order_get_family_structure([
                     m for m in aa.variant_in_members_objects if m is not None])
-            for aa in v.alt_alleles
+                for aa in v.alt_alleles
         ],
 
         "inheritance_type":
@@ -95,7 +95,7 @@ class ResponseTransformer:
             if Inheritance.denovo in aa.inheritance_in_members
             else "-"
             if {Inheritance.possible_denovo, Inheritance.possible_omission}
-                & set(aa.inheritance_in_members)
+            & set(aa.inheritance_in_members)
             else "mendelian"
             for aa in v.alt_alleles
         ],
@@ -289,9 +289,9 @@ class ResponseTransformer:
                 )
             except IndexError:
                 missing_members.add(member.person_id)
-                logger.exception(
+                logger.info(
                     "problems generating pedigree: %s, %s, %s",
-                    genotype, index, member)
+                    fgt2str(genotype), index, member.person_id)  # type: ignore
 
         result.extend([
             ResponseTransformer._get_wdae_member(member, psc, 0)
@@ -397,20 +397,17 @@ class ResponseTransformer:
                     row_variant.append(attribute)
 
             except (
-                AttributeError, KeyError, IndexError, AssertionError, Exception,
+                AttributeError, KeyError, IndexError, AssertionError,
+                Exception,
             ):
                 if isinstance(v, FamilyVariant):
-                    warning = (
-                        f"Error building family variant: {v} "
-                        f"From family: {v.family_id} "
-                        f"From study {self.study_wrapper.study_id}"
+                    logger.info(
+                        "problem building family variant %s, %s",
+                        v, v.family_id,
                     )
                 else:
-                    warning = (
-                        f"Error building summary variant: {v}\n"
-                        f"From study {self.study_wrapper.study_id}\n"
-                    )
-                logger.warning(warning)
+                    logger.info(
+                        "problem building summary variant %s", v)
 
         return row_variant
 
@@ -496,7 +493,7 @@ class ResponseTransformer:
                 variants, frequency_column, summary_variant_ids,
             )
 
-        return map(join_line, itertools.chain([columns], rows))
+        return map(join_line, itertools.chain([columns], rows))  # type: ignore
 
     def variant_transformer(self) -> Callable[[FamilyVariant], FamilyVariant]:
         """Build and return a variant transformer function."""
