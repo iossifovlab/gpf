@@ -713,18 +713,19 @@ class StudyWrapper(StudyWrapperBase):
 
             runners.extend(
                 study_wrapper.genotype_data.create_summary_query_runners(
-                    regions=kwargs.get("regions"),
-                    genes=kwargs.get("genes"),
-                    effect_types=kwargs.get("effect_types"),
-                    variant_type=kwargs.get("variant_type"),
-                    real_attr_filter=kwargs.get("real_attr_filter"),
-                    category_attr_filter=kwargs.get("category_attr_filter"),
-                    ultra_rare=kwargs.get("ultra_rare"),
-                    frequency_filter=kwargs.get("frequency_filter"),
-                    return_reference=kwargs.get("return_reference"),
-                    return_unknown=kwargs.get("return_unknown"),
-                    limit=kwargs.get("limit"),
-                    study_filters=kwargs.get("study_filters"),
+                    regions=query_kwargs.get("regions"),
+                    genes=query_kwargs.get("genes"),
+                    effect_types=query_kwargs.get("effect_types"),
+                    variant_type=query_kwargs.get("variant_type"),
+                    real_attr_filter=query_kwargs.get("real_attr_filter"),
+                    category_attr_filter=query_kwargs.get(
+                        "category_attr_filter"),
+                    ultra_rare=query_kwargs.get("ultra_rare"),
+                    frequency_filter=query_kwargs.get("frequency_filter"),
+                    return_reference=query_kwargs.get("return_reference"),
+                    return_unknown=query_kwargs.get("return_unknown"),
+                    limit=query_kwargs.get("limit"),
+                    study_filters=query_kwargs.get("study_filters"),
                 ),
             )
 
