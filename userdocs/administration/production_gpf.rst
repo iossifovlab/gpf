@@ -20,7 +20,7 @@ the required software.
 DNS name
 --------
 
-To setup a publicly accessible GPF, you need to have a DNS name that points to
+To set up a publicly accessible GPF, you need to have a DNS name that points to
 the public IP address of the host.
 
 In the example below, we will use ``demo.iossifovlab.com`` as the DNS name.
@@ -99,7 +99,7 @@ https://certbot.eff.org. For example, on Ubuntu with install Apache2 web
 server, you can check the following link:
 https://certbot.eff.org/instructions?ws=apache&os=snap
 
-In out case, we used:
+In our case, we used:
 
 .. code-block:: shell
     :linenos:
@@ -136,7 +136,7 @@ the following:
 Create an installation user
 ---------------------------
 
-We recommend to create a user that will be used to install and configure GPF.
+We recommend creating a user that will be used to install and configure GPF.
 Let's say our user is called ``gpfdemo``. You can create the user with the
 following command:
 
@@ -164,7 +164,7 @@ Make sure to add your SSH public key to the ``gpfdemo`` user's
 Directory Structure
 -------------------
 
-In the following example, we will assume the we install GPF in a subdirectory
+In the following example, we will assume that we install GPF in a subdirectory
 ``demo`` of the home directory of the user ``gpfdemo``. We will use the
 following directory structure:
 
@@ -208,12 +208,12 @@ GRR Definition File
 GPF Instance Directory
 ----------------------
 
-For our example, we will use GPF instance configuration and data created in the
-:ref:`GPF Getting Started Guide` section. We need to copy the whole
+For our example, we will use the GPF instance configuration and data created
+in the :ref:`GPF Getting Started Guide` section. We need to copy the whole
 ``minimal_instance`` directory to the GPF instance public host
-``/demo/minimal_instance`` directory. To this end you can use ``rsync`` or
-``scp`` command. We will use ``rsync`` command in the following example. Our
-example host is ``demo.iossifovlab.com`` and the user is ``root``. So our
+``/demo/minimal_instance`` directory. To this end, you can use ``rsync`` or
+``scp`` command. We will use the ``rsync`` command in the following example.
+Our example host is ``demo.iossifovlab.com`` and the user is ``root``. So our
 command will look like this:
 
 .. code-block:: shell
@@ -231,7 +231,7 @@ command will look like this:
 GPF Docker Compose File
 -----------------------
 
-To run GPF we are going to use
+To run GPF, we are going to use
 `Docker Compose commands <https://docs.docker.com/compose/>`_.
 The following is an example of a Docker Compose configuration file you cat use
 to run GPF:
@@ -327,7 +327,7 @@ You can check the status of the containers using the following command:
 
     docker compose ps
 
-If you want to enter into the GPF container, you can use the following command:
+If you want to enter the GPF container, you can use the following command:
 
 .. code-block:: shell
 
@@ -338,7 +338,7 @@ Create GPF Admin User and OAuth2 Application
 --------------------------------------------
 
 When you start the GPF instance for the first time, you need to create
-an admin user and an OAuth2 application. To do this, you need to enter into
+an admin user and an OAuth2 application. To do this, you need to enter
 the GPF container:
 
 .. code-block:: shell
@@ -387,7 +387,7 @@ following command:
 Apache2 Proxy Configuration
 ---------------------------
 
-Finally you need to configure the Apache2 web server to proxy the requests
+Finally, you need to configure the Apache2 web server to proxy the requests
 to the GPF instance. You can use the following configuration as an example:
 
 
