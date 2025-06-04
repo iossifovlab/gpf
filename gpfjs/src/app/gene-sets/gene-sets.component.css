@@ -55,6 +55,7 @@
 }
 
 ::ng-deep .modal-content {
+  flex-direction: row;
   width: fit-content;
 }
 
@@ -150,4 +151,10 @@
 
 .disabled-dataset {
   pointer-events: none;
+}
+
+#close-button {
+  align-self: flex-start;
+  border: none;
+  background-color: transparent;
 }

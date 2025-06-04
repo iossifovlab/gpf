@@ -291,6 +291,10 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
     );
   }
 
+  public closeModal(): void {
+    this.modal.close();
+  }
+
   public toggleDatasetCollapse(selectedType: GeneSetTypeNode): void {
     if (!this.expandedDatasets.includes(selectedType)) {
       this.expandedDatasets.push(selectedType);
