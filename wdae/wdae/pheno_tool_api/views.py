@@ -85,7 +85,7 @@ class PhenoToolView(QueryBaseView):
             data["phenoFilterFamilyIds"] = list(
                 self.query_transformer  # noqa: SLF001
                 ._transform_pheno_filters_to_ids(
-                    data["familyFiltersBeta"],
+                    data["familyPhenoFilters"],
                     study_wrapper,
                 ),
             )
