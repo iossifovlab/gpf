@@ -13,7 +13,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
 from dae.pheno.pheno_data import PhenotypeData
-from dae.query_variants.query_runners import QueryResult
+from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
@@ -513,33 +513,10 @@ class StudyWrapper(StudyWrapperBase):
     def config_columns(self) -> Box:
         return cast(Box, self.config.genotype_browser.columns)
 
-    def query_variants_wdae_streaming(
+    def _collect_runners(
         self, kwargs: dict[str, Any],
-        sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
-        *,
-        max_variants_message: bool = False,
-    ) -> Generator[list | None, None, None]:
-        """Wrap query variants method for WDAE streaming of variants."""
-        # pylint: disable=too-many-locals,too-many-branches
-
-        max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
-        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
-
-        study_filters = None
-        if kwargs.get("allowed_studies") is not None:
-            study_filters = set(kwargs.pop("allowed_studies"))
-
-        if kwargs.get("studyFilters"):
-            if study_filters is not None:
-                study_filters = study_filters & set(kwargs.pop("studyFilters"))
-            else:
-                study_filters = set(kwargs.pop("studyFilters"))
-
-        kwargs["study_filters"] = study_filters
-
+    ) -> list[QueryRunner]:
         runners = []
         for study_wrapper in self.children:
             try:
@@ -580,6 +557,36 @@ class StudyWrapper(StudyWrapperBase):
                 study_filters=query_kwargs.get("study_filters"),
                 tags_query=query_kwargs.get("tags_query"),
             ))
+        return runners
+
+    def query_variants_wdae_streaming(
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        max_variants_count: int | None = 10000,
+        *,
+        max_variants_message: bool = False,
+    ) -> Generator[list | None, None, None]:
+        """Wrap query variants method for WDAE streaming of variants."""
+        # pylint: disable=too-many-locals,too-many-branches
+
+        max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
+        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
+
+        study_filters = None
+        if kwargs.get("allowed_studies") is not None:
+            study_filters = set(kwargs.pop("allowed_studies"))
+
+        if kwargs.get("studyFilters"):
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
+
+        kwargs["study_filters"] = study_filters
+
+        runners = self._collect_runners(kwargs, query_transformer)
 
         if summary_variant_ids is None:
             # pylint: disable=unused-argument

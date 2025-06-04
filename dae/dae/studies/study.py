@@ -190,6 +190,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
     def get_query_leaf_studies(
         self, study_filters: Iterable[str] | None,
     ) -> list[GenotypeDataStudy]:
+        """Collect studies contained in local hierarchy."""
         leafs = []
         logger.debug("find leaf studies started...")
         start = time.time()

@@ -92,8 +92,11 @@ class QueryTransformer(QueryTransformerProtocol):
             score = self.gene_scores_db.get_gene_score(
                 score_desc.resource_id,
             )
+            if score is None:
+                return None
 
-            genes = score.get_genes(scores_name, range_start, range_end, values)
+            genes = score.get_genes(
+                scores_name, range_start, range_end, values)
 
             return list(genes)
 
@@ -688,6 +691,7 @@ def make_query_transformer(gpf_instance: GPFInstance) -> QueryTransformer:
 def get_or_create_query_transformer(
     gpf_instance: GPFInstance,
 ) -> QueryTransformer:
+    """Get or create query transformer singleton instance."""
     global _QUERY_TRANSFORMER
 
     with _QUERY_TRANSFORMER_LOCK:

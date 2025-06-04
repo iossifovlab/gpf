@@ -739,7 +739,8 @@ class PersonSetCollection:
             return None
         return {fpid[1] for fpid in fpids}
 
-    def get_query_person_set_ids(self, query) -> set[str]:
+    def get_query_person_set_ids(self, query: PSCQuery) -> set[str]:
+        """Extract person set IDs from a person set collection query."""
         selected_person_sets = set(query.selected_person_sets)
         available_person_sets = set(self.person_sets.keys())
         available_person_sets.add(self.default.id)

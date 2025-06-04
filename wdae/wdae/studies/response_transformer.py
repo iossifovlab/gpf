@@ -505,6 +505,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
             self, study_wrapper: StudyWrapper,
             variants_iterable: Generator[SummaryVariant, None, None],
     ) -> Generator[list, None, None]:
+        """Build variant rows for summary variants."""
         for v in self._add_additional_columns_summary(
             study_wrapper, variants_iterable,
         ):
@@ -524,6 +525,7 @@ def make_response_transformer(
 def get_or_create_response_transformer(
     gpf_instance: GPFInstance,
 ) -> ResponseTransformer:
+    """Get or create response transformer singleton instance."""
     global _RESPONSE_TRANSFORMER
 
     with _RESPONSE_TRANSFORMER_LOCK:
