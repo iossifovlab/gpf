@@ -221,8 +221,9 @@ class ImportProject:
         ]
 
     def get_variant_loader_chrom_lens(
-            self, loader_type: str | None = None) -> dict[str, int]:
-        """Collect all chromosomes and their length available in input files."""
+        self, loader_type: str | None = None,
+    ) -> dict[str, int]:
+        """Collect all chromosomes from input files and their lengths."""
         all_chrom_lens = dict(
             self.get_gpf_instance().reference_genome.get_all_chrom_lengths())
         return {chrom: all_chrom_lens[chrom] for chrom in
@@ -360,7 +361,9 @@ class ImportProject:
         """Where to store generated import files (e.g. parquet files)."""
         work_dir = cast(
             str,
-            self.import_config.get("processing_config", {}).get("work_dir", ""),
+            self.import_config
+            .get("processing_config", {})
+            .get("work_dir", ""),
         )
         if work_dir == "":
             work_dir = os.path.join(
@@ -551,11 +554,11 @@ class ImportProject:
             processing_regions = {
                 chrom: [str(r) for r in regions]
                 for chrom, regions in processing_descriptor
-                    .make_region_bins_regions(
-                        chromosomes=loader_chromosomes,
-                        chromosome_lengths=reference_genome
-                        .get_all_chrom_lengths(),
-                    ).items()
+                .make_region_bins_regions(
+                    chromosomes=loader_chromosomes,
+                    chromosome_lengths=reference_genome
+                    .get_all_chrom_lengths(),
+                ).items()
             }
 
         default_bucket_index = self._get_default_bucket_index(loader_type)

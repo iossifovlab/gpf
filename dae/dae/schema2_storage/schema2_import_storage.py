@@ -51,7 +51,7 @@ def schema2_project_dataset_layout(
 
 
 class Schema2ImportStorage(ImportStorage):
-    """Import logic for data in the Impala Schema 1 format."""
+    """Import logic for data in the Schema 2 format."""
 
     BATCH_SIZE = 1_000
 
@@ -187,7 +187,8 @@ class Schema2ImportStorage(ImportStorage):
         )
         variants_writer.write_dataset(
             variants_loader.full_variants_iterator(),
-            annotation_batch_size=project.get_processing_annotation_batch_size(),
+            annotation_batch_size=project
+            .get_processing_annotation_batch_size(),
         )
 
     @classmethod
@@ -217,7 +218,8 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _merge_parquets(
         cls,
-        project: ImportProject, out_dir: str, partitions: list[tuple[str, str]],
+        project: ImportProject, out_dir: str,
+        partitions: list[tuple[str, str]],
     ) -> None:
         layout = schema2_project_dataset_layout(project)
         full_out_dir = fs_utils.join(layout.study, out_dir)

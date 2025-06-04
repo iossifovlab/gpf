@@ -4,7 +4,6 @@ import argparse
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
-from functools import lru_cache
 from typing import Any
 
 from dae.genomic_resources.gene_models import (
@@ -202,7 +201,6 @@ class PriorityGenomicContext(GenomicContext):
             result = result.union(context.get_context_keys())
         return result
 
-    @lru_cache(maxsize=32)
     def get_source(self) -> tuple[str, ...]:
         result = ["PriorityGenomicContext"]
         result.extend([str(context.get_source()) for context in self.contexts])

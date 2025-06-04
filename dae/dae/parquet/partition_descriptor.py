@@ -290,7 +290,7 @@ class PartitionDescriptor:
 
     def make_all_region_bins(
         self, chromosome_lengths: dict[str, int],
-    )  -> list[str]:
+    ) -> list[str]:
         """Produce all region bins for all chromosomes."""
         bins = []
 
