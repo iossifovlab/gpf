@@ -17,7 +17,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def repo_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, GenomicResourceProtocolRepo]:
@@ -43,7 +43,7 @@ def repo_fixture(
     return path, repo
 
 
-@pytest.fixture()
+@pytest.fixture
 def repo_def(
     tmp_path_factory: pytest.TempPathFactory,
     repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
@@ -71,13 +71,14 @@ def test_cli_browse_with_grr_argument(
     out, err = capsys.readouterr()
 
     assert err == ""
-    assert out == \
-        f"Working with GRR definition: {repo_def!s}\n" \
-        "id: test_grr\n" \
-        "type: directory\n" \
-        f"directory: {repo_fixture[0]!s}\n\n" \
-        "Basic                0        2 7.0 B        test_grr one\n" \
+    assert out == (
+        f"Working with GRR definition: {repo_def!s}\n"
+        "id: test_grr\n"
+        "type: directory\n"
+        f"directory: {repo_fixture[0]!s}\n\n"
+        "Basic                0        2 7.0 B        test_grr one\n"
         "gene_models          1.0      2 50.0 B       test_grr sub/two\n"
+    )
 
 
 def test_cli_browse_with_env_variable(
@@ -94,13 +95,14 @@ def test_cli_browse_with_env_variable(
     out, err = capsys.readouterr()
 
     assert err == ""
-    assert out == \
-        f"Working with GRR definition: {repo_def!s}\n" \
-        "id: test_grr\n" \
-        "type: directory\n" \
-        f"directory: {repo_fixture[0]!s}\n\n" \
-        "Basic                0        2 7.0 B        test_grr one\n" \
+    assert out == (
+        f"Working with GRR definition: {repo_def!s}\n"
+        "id: test_grr\n"
+        "type: directory\n"
+        f"directory: {repo_fixture[0]!s}\n\n"
+        "Basic                0        2 7.0 B        test_grr one\n"
         "gene_models          1.0      2 50.0 B       test_grr sub/two\n"
+    )
 
 
 def test_cli_browse_default_defintion(
@@ -119,10 +121,11 @@ def test_cli_browse_default_defintion(
     print(out, str(repo_fixture)[0])
 
     assert err == ""
-    assert out == \
-        f"Working with GRR definition: {repo_def!s}\n" \
-        "id: test_grr\n" \
-        "type: directory\n" \
-        f"directory: {repo_fixture[0]!s}\n\n" \
-        "Basic                0        2 7.0 B        test_grr one\n" \
+    assert out == (
+        f"Working with GRR definition: {repo_def!s}\n"
+        "id: test_grr\n"
+        "type: directory\n"
+        f"directory: {repo_fixture[0]!s}\n\n"
+        "Basic                0        2 7.0 B        test_grr one\n"
         "gene_models          1.0      2 50.0 B       test_grr sub/two\n"
+    )

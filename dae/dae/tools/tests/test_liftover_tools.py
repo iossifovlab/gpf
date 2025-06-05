@@ -42,7 +42,7 @@ foo    7   .  G   A   .    .      .    GT     0/0  1/0  0/1
     assert out_vcf.with_suffix(".vcf").exists()
 
     with closing(pysam.VariantFile(
-        str(out_vcf.with_suffix(".vcf")))) as vcffile:
+            str(out_vcf.with_suffix(".vcf")))) as vcffile:
 
         variants = list(vcffile.fetch())
         assert len(variants) == 3

@@ -25,7 +25,7 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture()
+@pytest.fixture
 def proto_fixture(tmp_path: pathlib.Path) -> FsspecReadWriteProtocol:
     # the following config is missing min/max for phastCons100way
     setup_directories(tmp_path, {
@@ -68,9 +68,6 @@ def one_tabix_index_update(proto: FsspecReadWriteProtocol) -> None:
         str(root_path / "one" / "data.txt.gz"),
         seq_col=0, start_col=1, end_col=2, line_skip=1, force=True)
     res = proto.get_resource("one")
-    # assert proto.compute_md5_sum(
-    #     res, str(root_path / "one" / "data.txt.gz.tbi")
-    # ) == "57f50275bad095d15956af26d8b91406"
 
     proto.save_manifest(res, proto.build_manifest(res))
     proto.invalidate()

@@ -2,7 +2,6 @@
 
 import gzip
 import logging
-import pathlib
 from collections.abc import Generator
 from typing import Any
 

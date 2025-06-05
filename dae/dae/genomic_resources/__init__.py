@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from importlib.metadata import EntryPoint, entry_points
 
@@ -19,8 +20,8 @@ __all__ = [
 ]
 
 
+logger = logging.getLogger(__name__)
 _IMPLEMENTATIONS_LOADED = False
-_PLUGINS_LOADED = False
 
 
 def get_resource_implementation_builder(
@@ -82,18 +83,4 @@ def _find_implementations() -> None:
     _IMPLEMENTATIONS_LOADED = True
 
 
-def _load_plugins() -> None:
-    # pylint: disable=global-statement
-    global _PLUGINS_LOADED
-
-    if _PLUGINS_LOADED:
-        return
-
-    discovered_plugins = entry_points(group="dae.genomic_resources.plugins")
-    for plugin in discovered_plugins:
-        plugin.load()()
-    _PLUGINS_LOADED = True
-
-
-_load_plugins()
 _find_implementations()

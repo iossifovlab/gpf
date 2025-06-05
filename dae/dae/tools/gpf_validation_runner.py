@@ -462,7 +462,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 variants_df.columns, expected_df.columns)
 
             assert len(variants_df) == len(expected_df), (
-                f"expected {len(expected_df)} variants"
+                f"expected {len(expected_df)} variants; "
                 f"got {len(variants_df)}"
             )
 
@@ -489,7 +489,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                     diff_columns.append(column)
 
             assert not diff_columns, \
-                    f"Columns with differences: {diff_columns}"
+                f"Columns with differences: {diff_columns}"
 
         except AssertionError as ex:
             return self._error_reporter2(ex, variants_df, expected_df)

@@ -83,7 +83,7 @@ def fill_family_bins(
                 family.family_id)
             for person in family.persons.values():
                 person.set_attr("family_bin", family_bin)
-        families._ped_df = None  # noqa: SLF001 pylint: disable=protected-access
+        families._ped_df = None  # noqa: SLF001 pylint: disable=W0212
 
 
 def save_ped_df_to_parquet(

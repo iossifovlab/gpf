@@ -34,7 +34,7 @@ def test_caching_repo_simple(
     assert len(list(caching_proto.get_all_resources())) == 5
 
 
-@pytest.fixture()
+@pytest.fixture
 def remote_proto_fixture(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
@@ -52,12 +52,10 @@ def remote_proto_fixture(
             3      11         20         3.5
         """,
         seq_col=0, start_col=1, end_col=2)
-    proto = build_filesystem_test_protocol(root_path)
-    return proto
+    return build_filesystem_test_protocol(root_path)
 
 
-# @pytest.fixture(params=["file", "s3"])
-@pytest.fixture()
+@pytest.fixture
 def caching_proto(
     tmp_path_factory: pytest.TempPathFactory,
     remote_proto_fixture: FsspecReadWriteProtocol,
@@ -81,7 +79,7 @@ def caching_proto(
         raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_get_resource_three(
         caching_proto: CachingProtocol) -> None:
     proto = caching_proto
@@ -91,7 +89,7 @@ def test_get_resource_three(
     assert res.version == (2, 0)
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_get_resource_two(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("sub/two")
@@ -100,7 +98,7 @@ def test_get_resource_two(
     assert res.version == (1, 0)
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_get_resource_copies_nothing_three(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("three")
@@ -111,7 +109,7 @@ def test_get_resource_copies_nothing_three(
     assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_get_resource_copies_nothing_two(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("sub/two")
@@ -121,7 +119,7 @@ def test_get_resource_copies_nothing_two(
     assert not local_proto.file_exists(res, "genes.gtf")
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_open_raw_file_copies_the_file_three_a(
         caching_proto: CachingProtocol) -> None:
 
@@ -136,7 +134,7 @@ def test_open_raw_file_copies_the_file_three_a(
     assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_open_raw_file_copies_the_file_three_b(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("three")
@@ -150,7 +148,7 @@ def test_open_raw_file_copies_the_file_three_b(
     assert not local_proto.file_exists(res, "sub1/a.txt")
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_open_tabix_file_simple(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("one")

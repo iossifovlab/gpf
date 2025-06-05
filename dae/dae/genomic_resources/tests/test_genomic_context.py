@@ -1,8 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import argparse
 import os
 import pathlib
-from typing import cast
 
 import pytest
 import pytest_mock
@@ -12,14 +10,11 @@ from dae.genomic_resources.gene_models import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import (
-    CLIGenomicContext,
     GenomicContext,
     PriorityGenomicContext,
     SimpleGenomicContext,
-    SimpleGenomicContextProvider,
     get_genomic_context,
     register_context,
-    register_context_provider,
 )
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
@@ -193,73 +188,6 @@ def test_get_grr_bad() -> None:
         context.get_genomic_resources_repository()
 
 
-def test_cli_genomic_context_reference_genome(
-    t4c8_grr: GenomicResourceRepo,
-) -> None:
-    # Given
-    file_url = cast(GenomicResourceProtocolRepo, t4c8_grr).proto.get_url()
-    assert file_url.startswith("file:///")
-    grr_dirname = file_url[7:]
-
-    parser = argparse.ArgumentParser(
-        description="Test CLI genomic context",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    CLIGenomicContext.add_context_arguments(parser)
-
-    argv = [
-        "--grr-directory", grr_dirname,
-        "--ref", "t4c8_genome",
-    ]
-
-    # When
-    args = parser.parse_args(argv)
-    context = CLIGenomicContext.context_builder(args)
-
-    # Then
-    assert context.get_context_keys() == {
-        "reference_genome", "genomic_resources_repository"}
-
-    genome = context.get_reference_genome()
-    assert genome is not None
-    assert isinstance(genome, ReferenceGenome)
-    assert genome.resource.resource_id == "t4c8_genome"
-
-
-def test_cli_genomic_context_gene_models(
-    t4c8_grr: GenomicResourceRepo,
-) -> None:
-    # Given
-    file_url = cast(GenomicResourceProtocolRepo, t4c8_grr).proto.get_url()
-    assert file_url.startswith("file:///")
-    grr_dirname = file_url[7:]
-
-    parser = argparse.ArgumentParser(
-        description="Test CLI genomic context",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    CLIGenomicContext.add_context_arguments(parser)
-
-    argv = [
-        "--grr-directory", grr_dirname,
-        "--genes", "t4c8_genes",
-    ]
-
-    # When
-    args = parser.parse_args(argv)
-    context = CLIGenomicContext.context_builder(args)
-
-    # Then
-    assert context.get_context_keys() == {
-        "gene_models", "genomic_resources_repository"}
-
-    gene_models = context.get_gene_models()
-    assert gene_models is not None
-    assert isinstance(gene_models, GeneModels)
-    assert gene_models.resource.resource_id == \
-        "t4c8_genes"
-
-
 @pytest.fixture
 def contexts(
     t4c8_grr: GenomicResourceProtocolRepo,
@@ -299,31 +227,3 @@ def test_register_context(
     # Then
     assert gene_models is not None
     assert gene_models.resource.resource_id == "2/t4c8_genes"
-
-
-def test_register_context_provider(
-    context_fixture: PriorityGenomicContext,  # noqa: ARG001
-    contexts: tuple[SimpleGenomicContext, SimpleGenomicContext],
-) -> None:
-    # Given:
-    context1, context2 = contexts
-
-    register_context_provider(
-        SimpleGenomicContextProvider(
-            lambda: context2,
-            "gene_models2",
-            2),
-    )
-    register_context_provider(
-        SimpleGenomicContextProvider(
-            lambda: context1,
-            "gene_models1",
-            1),
-    )
-
-    # When
-    gene_models = get_genomic_context().get_gene_models()
-
-    # Then
-    assert gene_models is not None
-    assert gene_models.resource.resource_id == "t4c8_genes"

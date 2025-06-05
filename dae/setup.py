@@ -30,15 +30,11 @@ setuptools.setup(
         "dae.annotation": ["templates/annotate_doc_pipeline_template.jinja"],
     },
     scripts=[
-        "dae/tools/simple_family2pedigree.py",
-        "dae/tools/draw_pedigree.py",
-        "dae/tools/vcfinfo_extractor.py",
-        "dae/tools/to_gpf_gene_models_format.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
-    default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider.register
-    gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
+    default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider
+    gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider
 
     [dae.genomic_resources.implementations]
     gene_set_collection=dae.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource

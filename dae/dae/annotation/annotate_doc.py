@@ -9,8 +9,15 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 from markdown2 import markdown
 
-from dae.annotation.context import CLIAnnotationContext
-from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.annotation.genomic_context import (
+    CLIAnnotationContextProvider,
+    get_context_pipeline,
+)
+from dae.genomic_resources.genomic_context import (
+    get_genomic_context,
+    init_context_providers,
+    register_context_provider,
+)
 from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.genomic_resources.repository import GenomicResource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -27,7 +34,6 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("-o", "--output",
                         help="Filename of the output VCF result",
                         default=None)
-    CLIAnnotationContext.add_context_arguments(parser)
     VerbosityConfiguration.set_arguments(parser)
     return parser
 
@@ -38,12 +44,15 @@ def cli(raw_args: list[str] | None = None) -> None:
         raw_args = sys.argv[1:]
 
     parser = configure_argument_parser()
+    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+
     args = parser.parse_args(raw_args)
     VerbosityConfiguration.set(args)
-    CLIAnnotationContext.register(args)
+    register_context_provider(CLIAnnotationContextProvider())
+    init_context_providers(**vars(args))
 
     context = get_genomic_context()
-    pipeline = CLIAnnotationContext.get_pipeline(context)
+    pipeline = get_context_pipeline(context)
 
     pipeline_path = None
     if os.path.exists(args.pipeline):
@@ -55,7 +64,8 @@ def cli(raw_args: list[str] | None = None) -> None:
     def make_histogram_url(score: GenomicScore, score_id: str) -> str | None:
         return score.get_histogram_image_url(score_id)
 
-    env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa: S701
+    env = Environment(loader=PackageLoader(  # noqa: S701
+        "dae.annotation", "templates"))
     template = env.get_template("annotate_doc_pipeline_template.jinja")
     html_doc = template.render(pipeline=pipeline,
                                pipeline_path=pipeline_path,

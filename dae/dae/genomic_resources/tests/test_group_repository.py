@@ -8,9 +8,9 @@ from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture()
+@pytest.fixture
 def group_repo() -> GenomicResourceGroupRepo:
-    repo = GenomicResourceGroupRepo(children=[
+    return GenomicResourceGroupRepo(children=[
         build_inmemory_test_repository(
             {
                 "one": {"genomic_resource.yaml": ""},
@@ -20,7 +20,6 @@ def group_repo() -> GenomicResourceGroupRepo:
                 "one(1.0)": {"genomic_resource.yaml": ""},
             }),
     ])
-    return repo
 
 
 def test_lookup_priority_in_a_group_repository(

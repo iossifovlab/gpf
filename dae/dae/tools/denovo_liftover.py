@@ -15,7 +15,6 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
-from dae.tools.stats_liftover import save_liftover_stats
 from dae.utils.variant_utils import mat2str
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
@@ -196,5 +195,3 @@ def main(
                     for col in sorted(additional_columns)])
                 output.write("\t".join(line))
                 output.write("\n")
-
-    save_liftover_stats(target_stats, args.stats)

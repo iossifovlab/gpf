@@ -21,8 +21,11 @@ from dae.annotation.annotation_pipeline import (
     FullReannotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.format_handlers import AbstractFormat
+from dae.annotation.genomic_context import (
+    CLIAnnotationContextProvider,
+    get_context_pipeline,
+)
 from dae.annotation.record_to_annotatable import (
     DaeAlleleRecordToAnnotatable,
     RecordToCNVAllele,
@@ -33,12 +36,13 @@ from dae.annotation.record_to_annotatable import (
 )
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import (
-    get_registered_genomic_context,
+    get_genomic_context,
+    init_context_providers,
+    register_context_provider,
 )
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.regions import (
@@ -145,24 +149,25 @@ class AnnotationTool:
     def __init__(
         self,
         raw_args: list[str] | None = None,
-        gpf_instance: GPFInstance | None = None,
     ) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
 
         parser = self.get_argument_parser()
+
         self.args = parser.parse_args(raw_args)
         VerbosityConfiguration.set(self.args)
-        CLIAnnotationContext.register(self.args)
 
-        self.gpf_instance = gpf_instance
-        registered_context = get_registered_genomic_context()
+        register_context_provider(CLIAnnotationContextProvider())
+        init_context_providers(**vars(self.args))
+
+        registered_context = get_genomic_context()
 
         # Maybe add a method to build a pipeline from a genomic context
         # the pipeline arguments are registered as a context above, where
         # the pipeline is also written into the context, only to be accessed
         # 3 lines down
-        self.pipeline = CLIAnnotationContext.get_pipeline(registered_context)
+        self.pipeline = get_context_pipeline(registered_context)
 
         self.context = self.pipeline.build_pipeline_genomic_context()
         grr = self.context.get_genomic_resources_repository()
@@ -215,7 +220,10 @@ class AnnotationTool:
         return f"{chrom}_{pos_beg}_{pos_end}"
 
     @staticmethod
-    def annotate(handler: AbstractFormat, batch_mode: bool) -> None:  # noqa: FBT001
+    def annotate(
+        handler: AbstractFormat,
+        batch_mode: bool,  # noqa: FBT001
+    ) -> None:
         """Run annotation."""
         handler.open()
         if batch_mode:

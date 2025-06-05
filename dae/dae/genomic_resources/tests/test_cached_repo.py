@@ -4,9 +4,9 @@ import fcntl
 import os
 import pathlib
 import threading
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import pytest
 from pytest_mock import MockerFixture
@@ -51,7 +51,7 @@ CacheRepositoryBuilder = Callable[
 
 
 # @pytest.fixture(params=["file", "s3"])
-@pytest.fixture()
+@pytest.fixture
 def cache_repository(
     tmp_path: pathlib.Path,
     grr_scheme: str,
@@ -82,7 +82,7 @@ def cache_repository(
     return builder
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_get_cached_resource(
         cache_repository: CacheRepositoryBuilder) -> None:
 
@@ -93,7 +93,7 @@ def test_get_cached_resource(
         assert res.resource_id == "one"
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_repo_get_all_resources(
         cache_repository: CacheRepositoryBuilder) -> None:
 
@@ -120,7 +120,7 @@ def test_cached_repo_get_all_resources(
         assert resource is not None
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_resource_after_access(
         cache_repository: CacheRepositoryBuilder) -> None:
 
@@ -160,7 +160,7 @@ def test_cached_resource_after_access(
             os.path.join(base_url, "sub/two(1.0)", "genes.txt"))
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cache_all(
         cache_repository: CacheRepositoryBuilder) -> None:
 
@@ -199,7 +199,7 @@ def test_cache_all(
             os.path.join(base_url, "sub/two(1.0)", "genes.gtf"))
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_repository_resource_update_delete(
         cache_repository: CacheRepositoryBuilder) -> None:
 
@@ -235,7 +235,7 @@ def test_cached_repository_resource_update_delete(
         assert not gr2.file_exists("alabala.txt")
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_repository_file_level_cache(
         cache_repository: CacheRepositoryBuilder) -> None:
 
@@ -272,7 +272,7 @@ def test_cached_repository_file_level_cache(
             os.path.join(base_url, "one", "alabala.txt"))
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_filesystem_caching_lock_implementation(
         mocker: MockerFixture,
         cache_repository: CacheRepositoryBuilder) -> None:
@@ -301,7 +301,7 @@ def test_filesystem_caching_lock_implementation(
             assert flock_spy.call_args[0][1] == fcntl.LOCK_EX
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_repository_locks_file_when_caching(
         cache_repository: CacheRepositoryBuilder) -> None:
     with cache_repository({
@@ -350,7 +350,7 @@ def test_cached_repository_locks_file_when_caching(
         y.join()
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_get_resource_cached_files(
         cache_repository: CacheRepositoryBuilder) -> None:
     with cache_repository({
@@ -392,7 +392,7 @@ def test_get_resource_cached_files(
         }
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_repo_list_cli(
         cache_repository: CacheRepositoryBuilder,
         capsys: pytest.CaptureFixture) -> None:
@@ -419,7 +419,7 @@ def test_cached_repo_list_cli(
             "Basic                0        1/ 3 14.0 B       test_grr one\n"
 
 
-@pytest.mark.grr_full()
+@pytest.mark.grr_full
 def test_cached_repo_nested_list_cli(
         cache_repository: CacheRepositoryBuilder,
         capsys: pytest.CaptureFixture) -> None:

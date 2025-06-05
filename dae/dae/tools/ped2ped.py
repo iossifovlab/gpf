@@ -6,7 +6,6 @@ import os
 import sys
 
 from dae.genomic_resources.genomic_context import (
-    CLIGenomicContext,
     get_genomic_context,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
@@ -70,7 +69,6 @@ def main(argv: list[str] | None = None) -> None:
     VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
     VcfLoader.cli_arguments(parser, options_only=True)
-    CLIGenomicContext.add_context_arguments(parser)
 
     parser.add_argument(
         "-o",
@@ -97,7 +95,6 @@ def main(argv: list[str] | None = None) -> None:
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
-    CLIGenomicContext.register(args)
 
     filenames, params = FamiliesLoader.parse_cli_arguments(args)
     filename = filenames[0]

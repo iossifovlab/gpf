@@ -2,7 +2,7 @@
 
 import math
 from copy import deepcopy
-from typing import Any, List, Tuple
+from typing import Any
 
 import matplotlib as mpl
 import matplotlib.lines as mlines
@@ -58,9 +58,9 @@ class OffsetLayoutDrawer:
 
     def __init__(
         self,
-        layouts: List[Layout],
+        layouts: list[Layout],
         x_offset: int = 0,
-        y_offset: int = 0,
+        y_offset: int = 0, *,
         show_family: bool = False,
     ) -> None:
 
@@ -71,8 +71,6 @@ class OffsetLayoutDrawer:
         self._gap = self.GAP
         self._layouts = deepcopy(layouts)
         self._layouts_vertical_inverse()
-        # for layout in self._layouts:
-        #     layout.scale(0.5)
 
         self.show_family = show_family
         self.figsize = (7, 10)
@@ -203,11 +201,11 @@ class OffsetLayoutDrawer:
         self, axes: Axes,
         individual: IndividualWithCoordinates,
         color: str,
-    ) -> Tuple[Point, Point]:
-        coords = [
+    ) -> tuple[Point, Point]:
+        coords = (
             individual.x + self._x_offset,
             individual.y + self._y_offset,
-        ]
+        )
         axes.add_patch(
             mpatches.Rectangle(
                 coords,
@@ -231,10 +229,10 @@ class OffsetLayoutDrawer:
         individual: IndividualWithCoordinates,
         color: str,
     ) -> tuple[Point, Point]:
-        coords = [
+        coords = (
             individual.x_center + self._x_offset,
             individual.y_center + self._y_offset,
-        ]
+        )
         axes.add_patch(
             mpatches.Circle(
                 coords,
@@ -261,10 +259,10 @@ class OffsetLayoutDrawer:
         color: str,
     ) -> tuple[Point, Point]:
         size = math.sqrt((individual.size ** 2) / 2)
-        coords = [
+        coords = (
             individual.x + self._x_offset + (individual.size / 2),
             individual.y + self._y_offset,
-        ]
+        )
         axes.add_patch(
             mpatches.Rectangle(
                 coords,
@@ -352,25 +350,22 @@ class OffsetLayoutDrawer:
             "generated",
             "not_sequenced",
         ]
-        table_vals = []
+        table_vals = [
+            [
+                member.family_id,
+                member.person_id,
+                member.dad_id,
+                member.mom_id,
+                Sex.from_name(member.sex),  # type: ignore
+                member.status,
+                member.role,
+                member.layout,
+                "G" if member.generated else "",
+                "N" if member.not_sequenced else "",
+            ] for member in family
+        ]
 
-        for member in family:
-            table_vals.append(
-                [
-                    member.family_id,
-                    member.person_id,
-                    member.dad_id,
-                    member.mom_id,
-                    Sex.from_name(member.sex),  # type: ignore
-                    member.status,
-                    member.role,
-                    member.layout,
-                    "G" if member.generated else "",
-                    "N" if member.not_sequenced else "",
-                ],
-            )
-
-        axes.table = plt.table(
+        axes.table = plt.table(  # type: ignore
             cellText=table_vals, colLabels=col_labels, loc="center",
         )
 

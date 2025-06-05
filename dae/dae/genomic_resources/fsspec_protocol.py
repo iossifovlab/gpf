@@ -281,7 +281,8 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             file_url, index_filename=index_url)
 
     def open_bigwig_file(
-        self, resource: GenomicResource, filename: str) -> Any:
+        self, resource: GenomicResource, filename: str,
+    ) -> Any:
         if self.scheme not in {"file", "s3", "http", "https"}:
             raise OSError(
                 f"bigwig files are not supported on schema {self.scheme}")
@@ -409,7 +410,7 @@ class FsspecReadWriteProtocol(
             return cast(float, round(modification.timestamp(), 2))
         except NotImplementedError:
             info = self.filesystem.info(filepath)
-            modification = info.get("created")
+            modification = cast(float, info.get("created"))
             return cast(float, round(modification, 2))
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
@@ -431,7 +432,8 @@ class FsspecReadWriteProtocol(
             if self.filesystem.exists(manifest_filename):
                 with self.filesystem.open(manifest_filename, "rt") as infile:
                     logger.debug("loading manifest from %s", manifest_filename)
-                    manifest = Manifest.from_file_content(infile.read())
+                    manifest = Manifest.from_file_content(
+                        cast(str, infile.read()))
             yield self.build_genomic_resource(
                 res_id, res_ver, config, manifest)
 
@@ -695,15 +697,14 @@ def build_fsspec_protocol(
         return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
 
     if url.scheme == "s3":
+        from s3fs.core import S3FileSystem
         filesystem = kwargs.get("filesystem")
         if filesystem is None:
-            from s3fs.core import S3FileSystem
-
             endpoint_url = kwargs.get("endpoint_url")
             filesystem = S3FileSystem(
                 anon=False, client_kwargs={"endpoint_url": endpoint_url})
         return FsspecReadWriteProtocol(
-            proto_id, root_url, filesystem)
+            proto_id, root_url, cast(S3FileSystem, filesystem))
     if url.scheme == "memory":
         from fsspec.implementations.memory import MemoryFileSystem
         filesystem = MemoryFileSystem()

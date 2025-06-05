@@ -13,7 +13,9 @@ from dae.duckdb_storage.duckdb_genotype_storage import (
 from dae.duckdb_storage.duckdb_storage_helpers import (
     PARQUET_SCAN,
 )
-from dae.genomic_resources.genomic_context import CLIGenomicContext
+from dae.genomic_resources.genomic_context_cli import (
+    CLIGenomicContextProvider,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet_storage.storage import ParquetLoaderVariants
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
@@ -71,7 +73,7 @@ class ReannotateInstanceTool:
             help="Rename repeated attributes instead of raising"
             " an error.")
 
-        CLIGenomicContext.add_context_arguments(parser)
+        CLIGenomicContextProvider.add_argparser_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
@@ -91,7 +93,8 @@ class ReannotateInstanceTool:
                 gpf_instance.genotype_storages.get_default_genotype_storage()
         else:
             genotype_storage = \
-                gpf_instance.genotype_storages.get_genotype_storage(genotype_storage_id)
+                gpf_instance.genotype_storages.get_genotype_storage(
+                    genotype_storage_id)
         return genotype_storage
 
     @staticmethod
@@ -143,7 +146,8 @@ class ReannotateInstanceTool:
         if not isinstance(genotype_storage, DuckDbParquetStorage):
             raise NotImplementedError
 
-        summary_path = genotype_storage.build_study_layout(study.config).summary
+        summary_path = genotype_storage\
+            .build_study_layout(study.config).summary
 
         if summary_path is None:
             raise ValueError(f"No summary data in study {study.study_id}!")

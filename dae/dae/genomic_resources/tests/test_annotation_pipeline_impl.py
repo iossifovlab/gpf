@@ -14,7 +14,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     root_path = tmp_path / "grr"
     setup_directories(root_path, {
@@ -44,7 +44,7 @@ def grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     return build_filesystem_test_repository(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def alt_grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     root_path = tmp_path / "alt_grr"
     setup_directories(root_path, {
