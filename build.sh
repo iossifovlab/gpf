@@ -162,7 +162,7 @@ EOT
         build_run_ctx_init ctx:ctx_apache "persistent" "container" "httpd:latest" \
            "cmd-from-image" "no-def-mounts" \
            --hostname apache --network "${ctx_network["network_id"]}" \
-           -v ./dae/dae/genomic_resources/tests/.test_grr:/usr/local/apache2/htdocs/
+           -v ./dae/tests/.test_grr:/usr/local/apache2/htdocs/
 
         defer_ret build_run_ctx_reset ctx:ctx_apache
         build_run_ctx_persist ctx:ctx_apache
@@ -247,47 +247,12 @@ EOT
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
               --s3 --http \
-              -n 5 \
+              -n 10 \
               --durations 20 \
               --cov-config /wd/coveragerc \
               --junitxml=/wd/results/dae-junit.xml \
               --cov dae \
-              dae/ || true'
-      }
-
-      # dae integration
-      {
-        local -A ctx_dae_integ
-        build_run_ctx_init ctx:ctx_dae_integ "container" "${gpf_dev_image_ref}" \
-          --network "${ctx_network["network_id"]}" \
-          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env HTTP_HOST="apache" \
-          --env LOCALSTACK_HOST="localstack" \
-          --env AWS_ACCESS_KEY_ID="foo" \
-          --env AWS_SECRET_ACCESS_KEY="foo"
-
-        defer_ret build_run_ctx_reset ctx:ctx_dae_integ
-
-        for d in /wd/dae /wd/wdae; do
-          build_run_container ctx:ctx_dae_integ bash -c \
-            '/opt/conda/bin/conda run --no-capture-output -n gpf \
-                pip install -e "'"${d}"'"'
-        done
-
-        build_run_attach 
-
-        build_run_detached ctx:ctx_dae_integ bash -c '
-            cd /wd/dae/tests;
-            export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              --s3 --http \
-              -n 5 \
-              --durations 20 \
-              --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/dae-tests-junit.xml \
-              --cov .. \
-              . || true'
-
+              tests/ || true'
       }
 
       # wdae
@@ -392,11 +357,6 @@ EOT
       }
 
       {
-        build_run_container ctx:ctx_dae_integ wait
-        build_run_container ctx:ctx_dae_integ cp ./results/dae-tests-junit.xml ./test-results/
-      }
-
-      {
         build_run_container ctx:ctx_wdae wait
         build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
       }
@@ -415,7 +375,7 @@ EOT
     # create cobertura report for jenkins and coverage html report for dae, wdae, dae_integ, wdae_integ
     {
       # the commands are run in the ctx_wdae_integ context to not rely on host to have the 'coverage' commandline tool
-      build_run_container ctx:ctx_wdae coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage
+      build_run_container ctx:ctx_wdae coverage combine dae/.coverage wdae/.coverage
       build_run_container ctx:ctx_wdae coverage xml
       build_run_container ctx:ctx_wdae cp coverage.xml ./test-results/
       build_run_container ctx:ctx_wdae coverage html --title GPF -d ./test-results/coverage-html
