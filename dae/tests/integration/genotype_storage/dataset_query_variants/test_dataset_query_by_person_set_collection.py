@@ -258,6 +258,7 @@ def test_query_by_person_ids(
     assert len(vs) == count
 
 
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize(
     "affected_statuses, count",
     [

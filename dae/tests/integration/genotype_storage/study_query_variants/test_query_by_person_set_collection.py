@@ -149,6 +149,7 @@ def test_study_build_person_set_collection(
     assert person.get_attr("phenotype") == "unaffected"
 
 
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize(
     "kwargs, count",
     [
