@@ -75,16 +75,18 @@ class PhenoToolView(QueryBaseView):
         data["phenoFilterFamilyIds"] = None
         if data.get("familyFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-                study_wrapper.query_transformer  # noqa: SLF001
+                self.query_transformer  # noqa: SLF001
                 ._transform_filters_to_ids(
                     data["familyFilters"],
+                    study_wrapper,
                 ),
             )
         if data.get("familyPhenoFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-                study_wrapper.query_transformer  # noqa: SLF001
+                self.query_transformer  # noqa: SLF001
                 ._transform_pheno_filters_to_ids(
                     data["familyPhenoFilters"],
+                    study_wrapper,
                 ),
             )
 
@@ -93,7 +95,7 @@ class PhenoToolView(QueryBaseView):
 
         effect_groups = list(data["effectTypes"])
 
-        data = study_wrapper.transform_request(data)
+        data = self.query_transformer.transform_kwargs(study_wrapper, **data)
 
         try:
             result = adapter.calc_variants(data, effect_groups)
@@ -188,20 +190,22 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
         data["phenoFilterFamilyIds"] = None
         if data.get("familyFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-                study_wrapper.query_transformer  # noqa: SLF001
+                self.query_transformer  # noqa: SLF001
                 ._transform_filters_to_ids(
                     data["familyFilters"],
+                    study_wrapper,
                 ),
             )
         if data.get("familyPhenoFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-                study_wrapper.query_transformer  # noqa: SLF001
+                self.query_transformer  # noqa: SLF001
                 ._transform_pheno_filters_to_ids(
                     data["familyPhenoFilters"],
+                    study_wrapper,
                 ),
             )
 
-        data = study_wrapper.transform_request(data)
+        data = self.query_transformer.transform_kwargs(study_wrapper, **data)
 
         adapter = self.gpf_instance.get_pheno_tool_adapter(
             study_wrapper.genotype_data,

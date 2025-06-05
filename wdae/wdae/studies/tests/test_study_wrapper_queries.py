@@ -2,15 +2,24 @@
 
 import pytest
 
+from studies.query_transformer import QueryTransformer
+from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import StudyWrapper
 
 
 def test_query_all_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
-    variants = list(study_wrapper.query_variants_wdae(
-        {}, [{"source": "location"}]))
+    variants = list(
+        study_wrapper.query_variants_wdae(
+            {}, [{"source": "location"}],
+            t4c8_query_transformer,
+            t4c8_response_transformer,
+        ),
+    )
 
     assert len(variants) == 12, variants
 
@@ -26,6 +35,8 @@ def test_query_all_variants(
 )
 def test_study_2_query_inheritance_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     inheritance_type: str, count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -33,8 +44,10 @@ def test_study_2_query_inheritance_variants(
         "inheritance": inheritance_type,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -50,12 +63,16 @@ def test_study_2_query_inheritance_variants(
 )
 def test_query_limit_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     max_variants_count: int | None,
     count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
         max_variants_count=max_variants_count,
     ))
     assert len(variants) == count
@@ -73,6 +90,8 @@ def test_query_limit_variants(
 )
 def test_query_family_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     family_ids: list[str] | None, count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -80,8 +99,10 @@ def test_query_family_variants(
         "family_ids": family_ids,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -96,6 +117,8 @@ def test_query_family_variants(
 )
 def test_query_sexes_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     sexes: list[str], count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -103,8 +126,10 @@ def test_query_sexes_variants(
         "genders": sexes,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -120,6 +145,8 @@ def test_query_sexes_variants(
 )
 def test_query_variant_type_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     variant_type: list[str], count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -127,8 +154,10 @@ def test_query_variant_type_variants(
         "variantTypes": variant_type,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -144,6 +173,8 @@ def test_query_variant_type_variants(
 )
 def test_query_effect_types_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     effect_types: list[str], count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -151,8 +182,10 @@ def test_query_effect_types_variants(
         "effect_types": effect_types,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -167,6 +200,8 @@ def test_query_effect_types_variants(
 )
 def test_query_regions_variants(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     regions: list[str], count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -174,8 +209,10 @@ def test_query_regions_variants(
         "regions": regions,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -195,6 +232,8 @@ def test_query_regions_variants(
 )
 def test_query_present_in_child(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     options: list[str], count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -207,8 +246,10 @@ def test_query_present_in_child(
         },
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -232,6 +273,8 @@ def test_query_present_in_child(
 )
 def test_query_present_in_parent(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     options: dict, count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -242,8 +285,10 @@ def test_query_present_in_parent(
         ],
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -262,6 +307,8 @@ def test_query_present_in_parent(
 )
 def test_query_present_in_parent_and_present_in_child(
     t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     present_in_child: list[str],
     present_in_parent: list[str],
     count: int,
@@ -274,8 +321,10 @@ def test_query_present_in_parent_and_present_in_child(
         "presentInChild": present_in_child,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -307,6 +356,8 @@ def test_query_present_in_parent_and_present_in_child(
 )
 def test_query_gene_scores(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     option: dict, count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
@@ -314,14 +365,18 @@ def test_query_gene_scores(
         "geneScores": option,
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
 
 def test_query_person_filters(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
     query = {
@@ -335,13 +390,17 @@ def test_query_person_filters(
         ],
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
     assert len(variants) == 12
 
 
 def test_query_family_filters(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
     query = {
@@ -358,8 +417,10 @@ def test_query_family_filters(
         ],
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == 6
 
@@ -387,13 +448,17 @@ def test_query_family_filters(
 )
 def test_query_study_filters(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     query: dict, count: int,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
     variants = list(study_wrapper.query_variants_wdae(
         query,
-        [{"source": "location"}]),
-    )
+        [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
@@ -408,6 +473,8 @@ def test_query_study_filters(
 )
 def test_query_gene_scores_formatting(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     float_format: str,
     float_val: str,
 ) -> None:
@@ -422,8 +489,10 @@ def test_query_gene_scores_formatting(
         "genes": ["t4"],
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, columns),
-    )
+        query, columns,
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
     v = variants[0]
 
     assert v[0] == [float_val]
@@ -431,6 +500,8 @@ def test_query_gene_scores_formatting(
 
 def test_query_complex_query(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
 
@@ -466,7 +537,10 @@ def test_query_complex_query(
         "maxVariantsCount": 1001,
     }
     vs = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]))
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
     assert len(vs) == 2
 
 
@@ -486,6 +560,8 @@ def test_query_complex_query(
 )
 def test_query_present_in_parent_and_present_in_child_and_phenotypes(
     t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
     present_in_child: list[str],
     present_in_parent: list[str],
     phenotypes: list[str],
@@ -503,13 +579,19 @@ def test_query_present_in_parent_and_present_in_child_and_phenotypes(
         },
     }
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
 
     assert len(variants) == count
 
 
-def test_query_inheritance_types(t4c8_study_1_wrapper: StudyWrapper):
+def test_query_inheritance_types(
+    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+):
     query = {
         "inheritanceTypeFilter": [
             "denovo", "mendelian", "omission", "missing",
@@ -518,5 +600,7 @@ def test_query_inheritance_types(t4c8_study_1_wrapper: StudyWrapper):
 
     variants = list(t4c8_study_1_wrapper.query_variants_wdae(
         query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
     ))
     assert len(variants) == 12

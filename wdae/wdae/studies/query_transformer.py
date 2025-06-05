@@ -1,26 +1,42 @@
+from __future__ import annotations
+
 import logging
 import time
 from functools import reduce
+from threading import Lock
 from typing import Any, ClassVar, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
+from dae.gene_scores.gene_scores import GeneScoresDb
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
-from dae.query_variants.sql.schema2.sql_query_builder import (
-    SqlQueryBuilder,
-    TagsQuery,
-    ZygosityQuery,
+from dae.person_sets.person_sets import (
+    AttributeQueriesUnsupportedException,
 )
+from dae.query_variants.attribute_queries import (
+    update_attribute_query_with_compounds,
+)
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    TagsQuery,
+)
+from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
-from dae.utils.variant_utils import BitmaskEnumTranslator
-from dae.variants.attributes import Inheritance, Role, Sex, Zygosity
+from dae.variants.attributes import Inheritance, Zygosity
 from dae.variants.core import Allele
+from studies.study_wrapper import (
+    QueryTransformerProtocol,
+    StudyWrapper,
+)
 
 logger = logging.getLogger(__name__)
 
+_QUERY_TRANSFORMER: QueryTransformer | None = None
+_QUERY_TRANSFORMER_LOCK = Lock()
 
-class QueryTransformer:
+
+class QueryTransformer(QueryTransformerProtocol):
     """Transform genotype data query WEB parameters into query variants."""
 
     FILTER_RENAMES_MAP: ClassVar[dict[str, str]] = {
@@ -33,10 +49,14 @@ class QueryTransformer:
         "regionS": "regions",
     }
 
-    def __init__(self, study_wrapper):  # type: ignore
-        self.study_wrapper = study_wrapper
+    def __init__(
+        self, gene_scores_db: GeneScoresDb,
+        chromosomes: list[str], chr_prefix: str,
+    ):  # type: ignore
+        self.gene_scores_db = gene_scores_db
+        self.chromosomes = chromosomes
+        self.chr_prefix = chr_prefix
         self.effect_types_mixin = EffectTypesMixin()
-        self.gpf_instance = study_wrapper.gpf_instance
 
     def _transform_genomic_scores_continuous(
         self, genomic_scores: list[dict],
@@ -57,7 +77,7 @@ class QueryTransformer:
         ]
 
     def _transform_gene_scores(self, gene_scores: dict) -> list[str] | None:
-        if not self.study_wrapper.gene_scores_db:
+        if not self.gene_scores_db:
             return None
 
         scores_name = gene_scores.get("score")
@@ -65,15 +85,18 @@ class QueryTransformer:
         range_end = gene_scores.get("rangeEnd")
         values = gene_scores.get("values")
 
-        if scores_name and scores_name in self.study_wrapper.gene_scores_db:
-            score_desc = self.study_wrapper.gene_scores_db[
+        if scores_name and scores_name in self.gene_scores_db:
+            score_desc = self.gene_scores_db[
                 scores_name
             ]
-            score = self.study_wrapper.gene_scores_db.get_gene_score(
+            score = self.gene_scores_db.get_gene_score(
                 score_desc.resource_id,
             )
+            if score is None:
+                return None
 
-            genes = score.get_genes(scores_name, range_start, range_end, values)
+            genes = score.get_genes(
+                scores_name, range_start, range_end, values)
 
             return list(genes)
 
@@ -106,13 +129,16 @@ class QueryTransformer:
 
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
-        present_in_child: set[str],
-        present_in_parent: set[str],
+        kwargs: dict[str, Any],
     ) -> str | None:
-        roles_query = [
-            QueryTransformer._present_in_child_to_roles(present_in_child),
-            QueryTransformer._present_in_parent_to_roles(present_in_parent),
-        ]
+        present_in_child = None
+        present_in_parent = None
+        if "presentInChild" in kwargs:
+            present_in_child = kwargs.pop("presentInChild")
+        if "presentInParent" in kwargs:
+            present_in_parent = kwargs.pop("presentInParent")
+
+        roles_query = [present_in_child, present_in_parent]
         result = [role for role in roles_query if role is not None]
 
         if len(result) == 2:
@@ -189,7 +215,7 @@ class QueryTransformer:
 
         if "neither" in present_in_child:
             roles_query.append("not prb and not sib")
-        if len(roles_query) == 4 or len(roles_query) == 0:
+        if (len(roles_query) == 4) or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
@@ -212,34 +238,40 @@ class QueryTransformer:
 
         if "neither" in present_in_parent:
             roles_query.append("not mom and not dad")
-        if len(roles_query) == 4 or len(roles_query) == 0:
+        if (len(roles_query) == 4) or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
         return " or ".join(f"( {r} )" for r in roles_query)
 
-    def _transform_filters_to_ids(self, filters: list[dict]) -> set[str]:
+    def _transform_filters_to_ids(
+        self, filters: list[dict],
+        study_wrapper: StudyWrapper,
+    ) -> set[str]:
         result = []
         for filter_conf in filters:
             roles = filter_conf.get("role") if "role" in filter_conf else None
             if filter_conf["from"] == "phenodb":
                 ids = make_pheno_filter(
-                    filter_conf, self.study_wrapper.phenotype_data,
-                ).apply(self.study_wrapper.families, roles)
+                    filter_conf, study_wrapper.phenotype_data,
+                ).apply(study_wrapper.families, roles)
             else:
                 ids = make_pedigree_filter(filter_conf).apply(
-                    self.study_wrapper.families, roles,
+                    study_wrapper.families, roles,
                 )
             result.append(ids)
         return reduce(set.intersection, result)
 
-    def _transform_pheno_filters_to_ids(self, filters: list[dict]) -> set[str]:
+    def _transform_pheno_filters_to_ids(
+        self, filters: list[dict],
+        study_wrapper: StudyWrapper,
+    ) -> set[str]:
         result = []
         for filter_conf in filters:
             roles = filter_conf.get("roles") if "roles" in filter_conf else None
             ids = make_pheno_filter_beta(
-                filter_conf, self.study_wrapper.phenotype_data,
-            ).apply(self.study_wrapper.families, roles)
+                filter_conf, study_wrapper.phenotype_data,
+            ).apply(study_wrapper.families, roles)
 
             result.append(ids)
         return reduce(set.intersection, result)
@@ -258,35 +290,84 @@ class QueryTransformer:
             raise TypeError(f"unexpected inheritance query {inheritance}")
         kwargs["inheritance"] = inheritance
 
-    def _handle_person_set_collection(
-        self, kwargs: dict[str, Any],
-    ) -> dict[str, Any]:
-        psc_query = kwargs.pop("personSetCollection", {})
-        logger.debug("person set collection requested: %s", psc_query)
+    def extract_person_set_collection_query(
+            self, study_wrapper: StudyWrapper, kwargs: dict[str, Any],
+    ) -> PSCQuery:
+        psc_query_raw = kwargs.pop("personSetCollection", {})
+        logger.debug("person set collection requested: %s", psc_query_raw)
 
-        collection_id, selected_sets = None, None
-        if psc_query:
-            collection_id = psc_query["id"]
-            selected_sets = psc_query["checkedValues"]
-            kwargs["person_set_collection"] = PSCQuery(
-                collection_id, set(selected_sets))
+        if psc_query_raw:
+            collection_id = psc_query_raw["id"]
+            selected_sets = psc_query_raw["checkedValues"]
+            psc_query = PSCQuery(collection_id, set(selected_sets))
         else:
             # use default (first defined) person set collection
             # we need it for meaningful pedigree display
-            person_set_collections = self.study_wrapper\
+            person_set_collections = study_wrapper\
                 .genotype_data.person_set_collections
             psc_id = next(iter(person_set_collections))
             default_psc = person_set_collections[psc_id]
-            kwargs["person_set_collection"] = PSCQuery(
+            psc_query = PSCQuery(
                 psc_id, set(default_psc.person_sets.keys()),
             )
+        return psc_query
+
+    def _handle_person_set_collection(
+        self, study_wrapper: StudyWrapper, kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        psc_query = \
+            self.extract_person_set_collection_query(study_wrapper, kwargs)
+        kwargs["person_set_collection"] = psc_query
+
+        if not study_wrapper.is_genotype:
+            raise ValueError(
+                "Cannot handle person set collection "
+                "query argument on non genotype studies.",
+            )
+        psc = study_wrapper.genotype_data.get_person_set_collection(
+            psc_query.psc_id,
+        )
+        assert psc is not None
+
+        if study_wrapper.is_group:
+            raise ValueError(
+                "Determining person set collection kwargs for groups "
+                "is not supported!",
+            )
+        genotype_data = cast(GenotypeDataStudy, study_wrapper.genotype_data)
+
+        # Handling of person set collections for roles and sexes
+        # is not implemented here for backends which do not
+        # support affected status intentionally.
+        # This is left as a problem for later as the design decisions
+        # behind how this should get handled were getting way too
+        # complicated for a feature that has barely seen use.
+        if genotype_data.backend.has_affected_status_queries():
+            try:
+                psc_queries = psc.transform_ps_query_to_attribute_queries(
+                    psc_query,
+                )
+            except AttributeQueriesUnsupportedException:
+                person_ids = kwargs.get("personIds")
+                psc_person_ids = psc.query_person_ids(psc_query)
+                if psc_person_ids is not None:
+                    if person_ids is None:
+                        person_ids = psc_person_ids
+                    else:
+                        person_ids = person_ids.intersection(
+                            psc_person_ids,
+                        )
+                if person_ids is not None:
+                    kwargs["personIds"] = person_ids
+            else:
+                kwargs.update(psc_queries)
 
         return kwargs
 
     def _transform_regions(self, regions: list[str]) -> list[Region]:
         result = list(map(Region.from_str, regions))
-        chrom_prefix = self.gpf_instance.reference_genome.chrom_prefix
-        chromosomes = set(self.gpf_instance.reference_genome.chromosomes)
+        chrom_prefix = self.chr_prefix
+        chromosomes = self.chromosomes
         for region in result:
             if region.chrom not in chromosomes:
                 if chrom_prefix == "chr":
@@ -301,18 +382,98 @@ class QueryTransformer:
                     continue
         return result
 
-    def transform_kwargs(self, **kwargs: Any) -> dict[str, Any]:
-        """Transform WEB query variants params into genotype data params."""
+    def _apply_zygosity(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        valid_zygosities = [v.name for v in Zygosity]
+        if "presentInChild" in kwargs and "zygosityInChild" in kwargs:
+            zygosity = kwargs.pop("zygosityInChild")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in child argument - not a string.",
+                )
+            if zygosity not in valid_zygosities:
+                raise ValueError(
+                    f"Invalid zygosity in child {zygosity}, "
+                    f"expected one of {valid_zygosities}",
+                )
+            kwargs["presentInChild"] = update_attribute_query_with_compounds(
+                kwargs["presentInChild"], zygosity,
+            )
+        if "presentInParent" in kwargs and "zygosityInParent" in kwargs:
+            zygosity = kwargs.pop("zygosityInParent")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in parent argument - not a string.",
+                )
+            if zygosity not in valid_zygosities:
+                raise ValueError(
+                    f"Invalid zygosity in parent {zygosity}, "
+                    f"expected one of {valid_zygosities}",
+                )
+            kwargs["presentInParent"] = update_attribute_query_with_compounds(
+                kwargs["presentInParent"], zygosity,
+            )
+
+        if "genders" in kwargs and "zygosityInSexes" in kwargs:
+            zygosity = kwargs.pop("zygosityInSexes")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in sexes argument - not a string.",
+                )
+            if zygosity not in valid_zygosities:
+                raise ValueError(
+                    f"Invalid zygosity in sexes {zygosity}, "
+                    f"expected one of {valid_zygosities}",
+                )
+            kwargs["genders"] = update_attribute_query_with_compounds(
+                kwargs["genders"], zygosity,
+            )
+
+        if "status" in kwargs and "zygosityInStatus" in kwargs:
+            zygosity = kwargs.pop("zygosityInStatus")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in status argument - not a string.",
+                )
+
+            zygosity = zygosity.lower()
+
+            if zygosity not in valid_zygosities:
+                raise ValueError(
+                    f"Invalid zygosity in status {zygosity}, "
+                    f"expected one of {valid_zygosities}",
+                )
+            kwargs["status"] = update_attribute_query_with_compounds(
+                kwargs["status"], zygosity,
+            )
+
+        return kwargs
+
+    def transform_kwargs(
+        self, study_wrapper: StudyWrapper, **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Transform WEB query variants params into genotype data params.
+
+        Requires a study wrapper to handle study context specific arguments,
+        such as person set collections and phenotype filters.
+
+        Returns None if the query is deemed empty.
+        """
         # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         start = time.time()
         logger.debug("kwargs in study wrapper: %s", kwargs)
+
+        if "personIds" in kwargs:
+            # Temporarily transform to set for easier combining of person IDs.
+            kwargs["personIds"] = set(kwargs["personIds"])
+
         self._add_inheritance_to_query(
             "not possible_denovo and not possible_omission",
             kwargs,
         )
 
-        kwargs = self._handle_person_set_collection(kwargs)
+        kwargs = self._handle_person_set_collection(study_wrapper, kwargs)
 
         kwargs["tags_query"] = TagsQuery(
             selected_family_tags=kwargs.get("selectedFamilyTags"),
@@ -334,34 +495,30 @@ class QueryTransformer:
         present_in_child = set()
         present_in_parent = set()
         rarity = None
-        if "presentInChild" in kwargs or "presentInParent" in kwargs:
-            if "presentInChild" in kwargs:
-                present_in_child = set(kwargs["presentInChild"])
-                kwargs.pop("presentInChild")
-                children_roles_query = \
-                    self._present_in_child_to_roles(present_in_child)
+        if "presentInChild" in kwargs:
+            present_in_child = set(kwargs["presentInChild"])
 
-                kwargs["roles_in_child"] = children_roles_query
+            kwargs["presentInChild"] = self._present_in_child_to_roles(
+                present_in_child,
+            )
 
-            if "presentInParent" in kwargs:
-                present_in_parent = \
-                    set(kwargs["presentInParent"]["presentInParent"])
-                rarity = kwargs["presentInParent"].get("rarity", None)
-                kwargs.pop("presentInParent")
-                parent_roles_query = \
-                    self._present_in_parent_to_roles(present_in_parent)
+        if "presentInParent" in kwargs:
+            present_in_parent = \
+                set(kwargs["presentInParent"]["presentInParent"])
+            rarity = kwargs["presentInParent"].get("rarity", None)
+            kwargs["presentInParent"] = self._present_in_parent_to_roles(
+                present_in_parent,
+            )
 
-                kwargs["roles_in_parent"] = parent_roles_query
-
-            if present_in_parent != {"neither"} and rarity is not None:
-                frequency_filter = kwargs.get("frequency_filter", [])
-                arg, val = \
-                    self._transform_present_in_child_and_parent_frequency(
-                        present_in_child, present_in_parent,
-                        rarity, frequency_filter,
-                    )
-                if arg is not None:
-                    kwargs[arg] = val
+        if present_in_parent != {"neither"} and rarity is not None:
+            frequency_filter = kwargs.get("frequency_filter", [])
+            arg, val = \
+                self._transform_present_in_child_and_parent_frequency(
+                    present_in_child, present_in_parent,
+                    rarity, frequency_filter,
+                )
+            if arg is not None:
+                kwargs[arg] = val
 
         if kwargs.get("inheritanceTypeFilter"):
             inheritance_types = set(kwargs["inheritanceTypeFilter"])
@@ -408,6 +565,7 @@ class QueryTransformer:
         if "genders" in kwargs:
             sexes = set(kwargs["genders"])
             if sexes != {"female", "male", "unspecified"}:
+                sexes = {f"{sex}" for sex in sexes}
                 sexes_query = f"any([{','.join(sexes)}])"
                 kwargs["genders"] = sexes_query
             else:
@@ -440,21 +598,12 @@ class QueryTransformer:
                 kwargs["effectTypes"],
             )
 
-        if kwargs.get("studyFilters"):
-            request = set(kwargs["studyFilters"])
-            if kwargs.get("allowed_studies") is not None:
-                request = request & set(kwargs.pop("allowed_studies"))
-            kwargs["study_filters"] = request
-
-            del kwargs["studyFilters"]
-        elif kwargs.get("allowed_studies") is not None:
-            kwargs["study_filters"] = set(kwargs.pop("allowed_studies"))
-
         if "personFilters" in kwargs:
             person_filters = kwargs.pop("personFilters")
             if person_filters:
                 matching_person_ids = self._transform_filters_to_ids(
                     person_filters,
+                    study_wrapper,
                 )
                 if matching_person_ids is not None and kwargs.get("personIds"):
                     kwargs["personIds"] = set.intersection(
@@ -468,6 +617,7 @@ class QueryTransformer:
             if person_filters:
                 matching_person_ids = self._transform_pheno_filters_to_ids(
                     person_filters,
+                    study_wrapper,
                 )
                 if matching_person_ids is not None and kwargs.get("personIds"):
                     kwargs["personIds"] = set.intersection(
@@ -481,6 +631,7 @@ class QueryTransformer:
             if family_filters:
                 matching_family_ids = self._transform_filters_to_ids(
                     family_filters,
+                    study_wrapper,
                 )
                 if matching_family_ids is not None and kwargs.get("familyIds"):
                     kwargs["familyIds"] = set.intersection(
@@ -494,6 +645,7 @@ class QueryTransformer:
             if family_filters:
                 matching_family_ids = self._transform_pheno_filters_to_ids(
                     family_filters,
+                    study_wrapper,
                 )
                 if matching_family_ids is not None and kwargs.get("familyIds"):
                     kwargs["familyIds"] = set.intersection(
@@ -501,184 +653,6 @@ class QueryTransformer:
                     )
                 else:
                     kwargs["familyIds"] = matching_family_ids
-
-        kwargs["zygosity_query"] = ZygosityQuery()
-        if "zygosityInStatus" in kwargs:
-            zygosity = kwargs.pop("zygosityInStatus")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in status argument - not a string.",
-                )
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in status value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-
-            kwargs["zygosity_query"].status_zygosity = zygosity
-
-        role_translator = BitmaskEnumTranslator(
-            main_enum_type=Zygosity, partition_by_enum_type=Role,
-        )
-        if "zygosityInParent" in kwargs:
-            zygosity = kwargs.pop("zygosityInParent")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in parents argument - not a string.",
-                )
-            if "roles_in_parent" not in kwargs:
-                raise ValueError(
-                    "Missing present in parent for parent zygosity",
-                )
-
-            roles_in_parent = kwargs["roles_in_parent"]
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in parents value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-            mask = 0
-            if roles_in_parent is None:
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.mom,
-                )
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.dad,
-                )
-            else:
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_parent), Role.mom.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.mom,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_parent), Role.dad.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.dad,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_parent), Role.mom.value | Role.dad.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.dad,
-                    )
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.mom,
-                    )
-            kwargs["zygosity_query"].parents_zygosity = mask
-
-        if "zygosityInChild" in kwargs:
-            zygosity = kwargs.pop("zygosityInChild")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in children argument - not a string.",
-                )
-
-            if "roles_in_child" not in kwargs:
-                raise ValueError(
-                    "Missing present in child for child zygosity",
-                )
-
-            roles_in_child = kwargs["roles_in_child"]
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in children value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-
-            mask = 0
-
-            if roles_in_child is None:
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.prb,
-                )
-                mask = role_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Role.sib,
-                )
-
-            else:
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_child), Role.prb.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.prb,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_child), Role.sib.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.sib,
-                    )
-                if SqlQueryBuilder.check_roles_query_value(
-                    cast(str, roles_in_child), Role.prb.value | Role.sib.value,
-                ):
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.prb,
-                    )
-                    mask = role_translator.apply_mask(
-                        mask, Zygosity.from_name(zygosity).value, Role.sib,
-                    )
-            kwargs["zygosity_query"].children_zygosity = mask
-
-        gender_translator = BitmaskEnumTranslator(
-            main_enum_type=Zygosity, partition_by_enum_type=Sex,
-        )
-
-        if "zygosityInGenders" in kwargs:
-            zygosity = kwargs.pop("zygosityInGenders")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in genders argument - not a string.",
-                )
-
-            if "genders" not in kwargs:
-                raise ValueError(
-                    "Missing genders for gender zygosity",
-                )
-
-            genders = kwargs["genders"]
-
-            zygosity = zygosity.lower()
-
-            if zygosity not in ["homozygous", "heterozygous"]:
-                raise ValueError(
-                    f"Invalid zygosity in children value {zygosity},"
-                    "expected either homozygous or heterozygous.",
-                )
-
-            mask = 0
-
-            if SqlQueryBuilder.check_sexes_query_value(
-                cast(str, genders), Sex.M.value,
-            ):
-                mask = gender_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Sex.M,
-                )
-            if SqlQueryBuilder.check_sexes_query_value(
-                cast(str, genders), Sex.F.value,
-            ):
-                mask = gender_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Sex.F,
-                )
-            if SqlQueryBuilder.check_sexes_query_value(
-                cast(str, genders), Sex.U.value,
-            ):
-                mask = gender_translator.apply_mask(
-                    mask, Zygosity.from_name(zygosity).value, Sex.U,
-                )
-
-            kwargs["zygosity_query"].sex_zygosity = mask
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])
@@ -689,6 +663,12 @@ class QueryTransformer:
                 status.lower() for status in statuses
             ]
 
+        self._apply_zygosity(kwargs)
+
+        kwargs["roles"] = self._transform_present_in_child_and_parent_roles(
+            kwargs,
+        )
+
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
                 kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
@@ -698,3 +678,29 @@ class QueryTransformer:
         logger.debug("transform kwargs took %.2f sec", elapsed)
 
         return kwargs
+
+
+def make_query_transformer(gpf_instance: GPFInstance) -> QueryTransformer:
+    return QueryTransformer(
+        gpf_instance.gene_scores_db,
+        gpf_instance.reference_genome.chromosomes,
+        gpf_instance.reference_genome.chrom_prefix,
+    )
+
+
+def get_or_create_query_transformer(
+    gpf_instance: GPFInstance,
+) -> QueryTransformer:
+    """Get or create query transformer singleton instance."""
+    global _QUERY_TRANSFORMER  # pylint: disable=global-statement
+
+    with _QUERY_TRANSFORMER_LOCK:
+        if _QUERY_TRANSFORMER is not None:
+            return _QUERY_TRANSFORMER
+
+        _QUERY_TRANSFORMER = QueryTransformer(
+            gpf_instance.gene_scores_db,
+            gpf_instance.reference_genome.chromosomes,
+            gpf_instance.reference_genome.chrom_prefix,
+        )
+        return _QUERY_TRANSFORMER

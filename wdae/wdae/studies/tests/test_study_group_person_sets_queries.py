@@ -4,15 +4,21 @@ import textwrap
 from typing import Any, cast
 
 import pytest
+from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
-from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
+from studies.query_transformer import QueryTransformer, make_query_transformer
+from studies.response_transformer import (
+    ResponseTransformer,
+    make_response_transformer,
+)
+from studies.study_wrapper import StudyWrapper
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 
@@ -57,8 +63,18 @@ def gpf_fixture(
 
 
 @pytest.fixture(scope="module")
-def study_1(gpf_fixture: GPFInstance) -> GenotypeData:
+def wgpf_fixture(
+    gpf_fixture: GPFInstance,
+) -> WGPFInstance:
+    grr = gpf_fixture.grr
     root_path = pathlib.Path(gpf_fixture.dae_dir)
+    instance_filename = str(root_path / "gpf_instance.yaml")
+    return WGPFInstance.build(instance_filename, grr=grr)
+
+
+@pytest.fixture(scope="module")
+def study_1(wgpf_fixture: WGPFInstance) -> StudyWrapper:
+    root_path = pathlib.Path(wgpf_fixture.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study_1" / "pedigree" / "in.ped",
         """
@@ -92,10 +108,10 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
             },
         },
     }
-    return vcf_study(
+    return StudyWrapper(vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        gpf_fixture,
+        wgpf_fixture,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "study_1"),
@@ -137,12 +153,13 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                     "phenotype",
                 ],
             },
-        })
+        },
+    ), None)
 
 
 @pytest.fixture(scope="module")
-def study_2(gpf_fixture: GPFInstance) -> GenotypeData:
-    root_path = pathlib.Path(gpf_fixture.dae_dir)
+def study_2(wgpf_fixture: WGPFInstance) -> StudyWrapper:
+    root_path = pathlib.Path(wgpf_fixture.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study_2" / "pedigree" / "in.ped",
         """
@@ -177,10 +194,10 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
             },
         },
     }
-    return vcf_study(
+    return StudyWrapper(vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
-        gpf_fixture,
+        wgpf_fixture,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "study_2"),
@@ -222,22 +239,26 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                     "phenotype",
                 ],
             },
-        })
+        },
+    ), None)
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset(
-    gpf_fixture: GPFInstance,
-    study_1: GenotypeData,
-    study_2: GenotypeData,
-) -> GenotypeDataGroup:
-    root_path = pathlib.Path(gpf_fixture.dae_dir)
+    wgpf_fixture: WGPFInstance,
+    study_1: StudyWrapper,
+    study_2: StudyWrapper,
+) -> StudyWrapper:
+    root_path = pathlib.Path(wgpf_fixture.dae_dir)
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return setup_dataset(
-        "dataset", gpf_fixture, study_1, study_2,
+    return StudyWrapper(setup_dataset(
+        "dataset", wgpf_fixture,
+        study_1.genotype_data, study_2.genotype_data,
         dataset_config_update=textwrap.dedent(f"""
             conf_dir: { root_path / "dataset "}
+            genotype_browser:
+              enabled: true
             person_set_collections:
                 phenotype:
                   id: phenotype
@@ -261,10 +282,22 @@ def dataset(
                     id: unspecified
                     name: unspecified
                 selected_person_set_collections:
-                - phenotype"""))
+                - phenotype""",
+        ),
+    ), None, children=[study_1, study_2])
 
 
-def test_dataset_simple(dataset: GenotypeDataGroup) -> None:
+@pytest.fixture
+def query_transformer(wgpf_fixture: WGPFInstance) -> QueryTransformer:
+    return make_query_transformer(wgpf_fixture)
+
+
+@pytest.fixture
+def response_transformer(wgpf_fixture: WGPFInstance) -> ResponseTransformer:
+    return make_response_transformer(wgpf_fixture)
+
+
+def test_dataset_simple(dataset: StudyWrapper) -> None:
     assert dataset is not None
     assert dataset.person_set_collections
     assert "phenotype" in dataset.person_set_collections
@@ -291,9 +324,19 @@ def test_dataset_simple(dataset: GenotypeDataGroup) -> None:
     ],
 )
 def test_dataset_person_sets_queries(
-    dataset: GenotypeDataGroup,
-    psc_query: tuple[str, list[str]],
+    dataset: StudyWrapper,
+    query_transformer: QueryTransformer,
+    response_transformer: ResponseTransformer,
+    psc_query: PSCQuery,
     count: int,
 ) -> None:
-    vs = list(dataset.query_variants(person_set_collection=psc_query))
+    vs = list(dataset.query_variants_wdae_streaming(
+        {
+            "personSetCollection": {
+                "id": psc_query.psc_id,
+                "checkedValues": psc_query.selected_person_sets,
+            },
+        }, [],
+        query_transformer, response_transformer,
+    ))
     assert len(vs) == count

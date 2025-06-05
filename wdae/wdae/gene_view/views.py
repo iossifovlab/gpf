@@ -69,9 +69,12 @@ class QueryVariantsView(QueryBaseView):
 
         dataset = cast(StudyWrapper, dataset)
 
-        return Response(
-            list(dataset.get_gene_view_summary_variants(freq_col, **data)),
-        )
+        return Response(list(
+            dataset.get_gene_view_summary_variants(
+                freq_col, self.query_transformer,
+                self.response_transformer, **data,
+            ),
+        ))
 
 
 class DownloadSummaryVariantsView(QueryBaseView):
@@ -99,7 +102,11 @@ class DownloadSummaryVariantsView(QueryBaseView):
 
         freq_col = dataset.config.gene_browser.frequency_column
         yield from dataset.get_gene_view_summary_variants_download(
-            freq_col, **data)
+            freq_col,
+            self.query_transformer,
+            self.response_transformer,
+            **data,
+        )
 
     @request_logging(LOGGER)
     def post(self, request: Request) -> Response:

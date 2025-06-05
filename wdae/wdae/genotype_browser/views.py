@@ -1,7 +1,7 @@
 """Genotype browser routes for browsing and listing variants in studies."""
 import itertools
 import logging
-from typing import cast
+from typing import Any, cast
 
 from datasets_api.permissions import (
     handle_partial_permissions,
@@ -29,7 +29,9 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
     MAX_SHOWN_VARIANTS = 1000
 
     @request_logging(logger)
-    def post(self, request: Request) -> Response:
+    def post(
+        self, request: Request,
+    ) -> StreamingHttpResponse | FileResponse | Response:
         """
         Query for variants from a dataset.
 
@@ -101,11 +103,14 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         """
         # pylint: disable=too-many-branches
         logger.info("query v3 variants request: %s", str(request.data))
-        data = request.data
+        data = cast(dict[str, Any], request.data)
         user = request.user
 
+        if not isinstance(data, dict):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         if "queryData" in data:
-            data = parse_query_params(data)
+            data = cast(dict[str, Any], parse_query_params(data))
 
         dataset_id = data.get("datasetId", None)
 
@@ -115,17 +120,17 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         if "genomicScores" in data:
-            scores = data["genomicScores"]
+            scores = cast(list[dict[str, Any]], data["genomicScores"])
             for score in scores:
-                if score["rangeStart"] is None \
-                    and score["rangeEnd"] is None \
-                    and score["values"] is None:
+                if score.get("rangeStart") is None \
+                    and score.get("rangeEnd") is None \
+                    and score.get("values") is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        is_download = data.pop("download", False)
+        is_download = cast(bool, data.pop("download", False))
 
         if "maxVariantsCount" in data:
-            max_variants = data["maxVariantsCount"]
+            max_variants = cast(int, data["maxVariantsCount"])
         else:
             if is_download:
                 max_variants = 10000
@@ -158,15 +163,18 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             sources = data.pop("sources")
         else:
             # TODO Handle summary variant preview and download sources
+
+            study_config = dataset.genotype_data.config
             if is_download:
-                cols = \
-                    dataset.genotype_data.config.genotype_browser.download_columns
+                cols = study_config.genotype_browser.download_columns
             else:
-                cols = \
-                    dataset.genotype_data.config.genotype_browser.preview_columns
+                cols = study_config.genotype_browser.preview_columns
             sources = StudyWrapperBase.get_columns_as_sources(
                 dataset.genotype_data.config, cols,
             )
+
+        if not isinstance(sources, list):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
@@ -174,6 +182,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         if is_download:
             result = dataset.query_variants_wdae(
                 data, sources,
+                self.query_transformer,
+                self.response_transformer,
                 max_variants_count=max_variants,
                 max_variants_message=is_download,
             )
@@ -190,6 +200,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         else:
             stream = dataset.query_variants_wdae_streaming(
                 data, sources,
+                self.query_transformer,
+                self.response_transformer,
                 max_variants_count=max_variants,
                 max_variants_message=is_download,
             )
