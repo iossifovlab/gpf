@@ -1,24 +1,76 @@
-import itertools
+from __future__ import annotations
+
 import logging
 import time
 from abc import abstractmethod
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import closing
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 from box import Box
 
-from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
+from dae.person_sets.person_sets import PSCQuery
 from dae.pheno.pheno_data import PhenotypeData
-from dae.pheno.registry import PhenoRegistry
+from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.studies.study import GenotypeData
-from dae.variants.family_variant import FamilyAllele
-from studies.query_transformer import QueryTransformer
-from studies.response_transformer import ResponseTransformer
+from dae.variants.attributes import Role
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
+
+
+class QueryTransformerProtocol(Protocol):
+    """Protocol for query transformer interface."""
+
+    @abstractmethod
+    def transform_kwargs(
+        self, study_wrapper: StudyWrapper, **kwargs: Any,
+    ) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def extract_person_set_collection_query(
+            self, study_wrapper: StudyWrapper, kwargs: dict[str, Any],
+    ) -> PSCQuery:
+        raise NotImplementedError
+
+
+class ResponseTransformerProtocol(Protocol):
+    """Protocol for response transformer interface."""
+
+    @abstractmethod
+    def variant_transformer(
+        self, study_wrapper: StudyWrapper,
+        pheno_values: dict[str, Any] | None,
+    ) -> Callable[[FamilyVariant], FamilyVariant]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def transform_gene_view_summary_variant_download(
+        self,
+        variants: Iterable[SummaryVariant],
+        frequency_column: str,
+        summary_variant_ids: set[str],
+    ) -> Iterator[str]:
+        """Produce an iterator for a download file response."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def transform_gene_view_summary_variant(
+        self, variant: SummaryVariant, frequency_column: str,
+    ) -> Generator[dict[str, Any], None, None]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def build_variant_row(
+        self, study_wrapper: StudyWrapper,
+        v: SummaryVariant | FamilyVariant,
+        column_descs: list[dict], **kwargs: str | None,
+    ) -> list:
+        raise NotImplementedError
 
 
 class WDAEStudy:
@@ -111,8 +163,10 @@ class WDAEStudy:
 class StudyWrapperBase(WDAEStudy):
     """Defines WDAE wrapper class to DAE genotype data object."""
 
-    def __init__(self, genotype_data: GenotypeData):
-        super().__init__(genotype_data, None)
+    def __init__(
+        self, genotype_data: GenotypeData, phenotype_data: PhenotypeData | None,
+    ):
+        super().__init__(genotype_data, phenotype_data)
         self.config = self.genotype_data.config
         assert self.config is not None, self.genotype_data.study_id
 
@@ -318,20 +372,24 @@ class StudyWrapperBase(WDAEStudy):
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
         max_variants_count: int | None = 10000,
         *,
         max_variants_message: bool = False,
     ) -> Iterable[list]:
         """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
-            kwargs, sources, max_variants_count,
-            max_variants_message=max_variants_message)
+            kwargs, sources, query_transformer, response_transformer,
+            max_variants_count, max_variants_message=max_variants_message)
         return filter(None, variants_result)
 
     @abstractmethod
     def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
         max_variants_count: int | None = 10000,
         *,
         max_variants_message: bool = False,
@@ -345,41 +403,57 @@ class StudyWrapper(StudyWrapperBase):
     # pylint: disable=too-many-instance-attributes
     def __init__(  # type: ignore
         self, genotype_data_study: GenotypeData,
-        pheno_db: PhenoRegistry,
-        gene_scores_db: GeneScoresDb,
-        gpf_instance,
+        pheno_data: PhenotypeData | None,
+        children: list[StudyWrapper] | None = None,
     ) -> None:
 
         assert genotype_data_study is not None
 
-        super().__init__(genotype_data_study)
+        super().__init__(genotype_data_study, pheno_data)
 
-        self.genotype_data_study = genotype_data_study
+        if children is None:
+            self.children = [self]
+        else:
+            self.children = [*children]
 
         self.is_remote = False
 
-        self._init_wdae_config()
-        self.pheno_db = pheno_db
-        self._init_pheno(self.pheno_db)
+        self._pheno_values_cache = self._get_all_pheno_values()
 
-        self.gene_scores_db = gene_scores_db
-        self.gpf_instance = gpf_instance
-        self.query_transformer = QueryTransformer(self)
-        self.response_transformer = ResponseTransformer(self)
+        self._init_wdae_config()
 
     def __getattr__(self, name: str) -> Any:
-        return getattr(self.genotype_data_study, name)
+        return getattr(self.genotype_data, name)
+
+    def _get_all_pheno_values(self) -> dict | None:
+        if not self.has_pheno_data \
+           or not self.config_columns.phenotype:
+            return None
+
+        pheno_values = {}
+
+        for column in self.config_columns.phenotype.values():
+            assert column.role
+            result = {}
+            column_values_iter = self.phenotype_data.get_people_measure_values(
+                [column.source], roles=[Role.from_name(column.role)])
+            for column_value in column_values_iter:
+                result[column_value["family_id"]] = column_value[column.source]
+
+            pheno_column_name = f"{column.source}.{column.role}"
+            pheno_values[pheno_column_name] = result
+        return pheno_values
 
     @property
     def is_group(self) -> bool:
-        return self.genotype_data_study.is_group
+        return self.genotype_data.is_group
 
     @property
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
-        return self.genotype_data_study.person_set_collections
+        return self.genotype_data.person_set_collections
 
     def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
-        return self.genotype_data_study.get_studies_ids(leaves=leaves)
+        return self.genotype_data.get_studies_ids(leaves=leaves)
 
     def _init_wdae_config(self) -> None:
         genotype_browser_config = self.config.genotype_browser
@@ -421,14 +495,6 @@ class StudyWrapper(StudyWrapperBase):
         self.summary_download_columns = \
             genotype_browser_config.summary_download_columns
 
-    def _init_pheno(self, pheno_db: PhenoRegistry | None) -> None:
-        if pheno_db is None:
-            return
-        if self.config.phenotype_data:
-            self._phenotype_data = pheno_db.get_phenotype_data(
-                self.config.phenotype_data,
-            )
-
     def _validate_column_groups(self) -> bool:
         genotype_cols = self.columns.get("genotype") or []
         phenotype_cols = self.columns.get("phenotype") or []
@@ -450,21 +516,80 @@ class StudyWrapper(StudyWrapperBase):
     def config_columns(self) -> Box:
         return cast(Box, self.config.genotype_browser.columns)
 
-    def transform_request(self, kwargs: dict[str, Any]) -> dict[str, Any]:
-        return self.query_transformer.transform_kwargs(**kwargs)
+    def _collect_runners(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,
+    ) -> list[QueryRunner]:
+        runners = []
+        for study_wrapper in self.children:
+            try:
+                query_kwargs = query_transformer.transform_kwargs(
+                    study_wrapper, **kwargs,
+                )
+            except ValueError:
+                logger.exception("Skipping study %s", study_wrapper.study_id)
+                continue
+            else:
+                if query_kwargs is None:
+                    logger.info(
+                        "study %s skipped", study_wrapper.study_id)
+                    continue
+            assert study_wrapper.genotype_data is not None
+
+            runners.extend(study_wrapper.genotype_data.create_query_runners(
+                regions=query_kwargs.get("regions"),
+                genes=query_kwargs.get("genes"),
+                effect_types=query_kwargs.get("effect_types"),
+                family_ids=query_kwargs.get("family_ids"),
+                person_ids=query_kwargs.get("person_ids"),
+                person_set_collection=query_kwargs.get(
+                    "person_set_collection"),
+                inheritance=query_kwargs.get("inheritance"),
+                roles=query_kwargs.get("roles"),
+                sexes=query_kwargs.get("sexes"),
+                affected_statuses=query_kwargs.get("affected_statuses"),
+                variant_type=query_kwargs.get("variant_type"),
+                real_attr_filter=query_kwargs.get("real_attr_filter"),
+                categorical_attr_filter=query_kwargs.get(
+                    "categorical_attr_filter"),
+                ultra_rare=query_kwargs.get("ultra_rare"),
+                frequency_filter=query_kwargs.get("frequency_filter"),
+                return_reference=query_kwargs.get("return_reference"),
+                return_unknown=query_kwargs.get("return_unknown"),
+                limit=query_kwargs.get("limit"),
+                study_filters=query_kwargs.get("study_filters"),
+                tags_query=query_kwargs.get("tags_query"),
+            ))
+        return runners
 
     def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
         max_variants_count: int | None = 10000,
         *,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
         # pylint: disable=too-many-locals,too-many-branches
+
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
         summary_variant_ids = kwargs.pop("summaryVariantIds", None)
-        kwargs = self.query_transformer.transform_kwargs(**kwargs)
+
+        study_filters = None
+        if kwargs.get("allowed_studies") is not None:
+            study_filters = set(kwargs.pop("allowed_studies"))
+
+        if kwargs.get("studyFilters"):
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
+
+        kwargs["study_filters"] = study_filters
+
+        runners = self._collect_runners(kwargs, query_transformer)
 
         if summary_variant_ids is None:
             # pylint: disable=unused-argument
@@ -488,7 +613,9 @@ class StudyWrapper(StudyWrapperBase):
         logger.debug(
             "study wrapper (%s) creating variant transformer...",
             self.name)
-        transform = self.response_transformer.variant_transformer()
+        transform = response_transformer.variant_transformer(
+            self, self._pheno_values_cache,
+        )
         logger.debug(
             "study wrapper (%s) variant transformer created in %.2f sec",
             self.name, time.time() - start)
@@ -496,17 +623,17 @@ class StudyWrapper(StudyWrapperBase):
         index = 0
         seen = set()
         unique_family_variants = kwargs.get("unique_family_variants", False)
+        psc_query = query_transformer.extract_person_set_collection_query(
+            self, kwargs)
 
         started = time.time()
         try:
             logger.debug(
                 "study wrapper (%s) creating query_result_variants...",
                 self.name)
-            variants_result = \
-                self.genotype_data_study.query_result_variants(
-                    limit=max_variants_count, **kwargs)
-            if variants_result is None:
+            if len(runners) == 0:
                 return
+            variants_result = QueryResult(runners, limit=max_variants_count)
 
             logger.debug(
                 "study wrapper (%s) starting query_result_variants...",
@@ -516,8 +643,6 @@ class StudyWrapper(StudyWrapperBase):
             logger.info(
                 "study wrapper (%s) variant result started in %0.3fsec",
                 self.name, elapsed)
-
-            psc_query = kwargs.get("person_set_collection", None)
 
             with closing(variants_result) as variants:
                 for variant in variants:
@@ -549,7 +674,8 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached",
                             ]
                         break
-                    row_variant = self.response_transformer.build_variant_row(
+                    row_variant = response_transformer.build_variant_row(
+                        self,
                         v, sources,
                         person_set_collection=psc_query.psc_id if psc_query
                         else None)
@@ -563,34 +689,140 @@ class StudyWrapper(StudyWrapperBase):
                 "study wrapper (%s)  query returned %s variants; "
                 "closed in %0.3fsec", self.study_id, index, elapsed)
 
+    def _query_gene_view_summary_variants(
+        self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
+    ) -> Generator[SummaryVariant, None, None]:
+        study_filters = None
+        if kwargs.get("allowed_studies") is not None:
+            study_filters = set(kwargs.pop("allowed_studies"))
+
+        if kwargs.get("studyFilters"):
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
+
+        kwargs["study_filters"] = study_filters
+
+        limit = kwargs.pop("maxVariantsCount", None)
+        runners = []
+        for study_wrapper in self.children:
+            try:
+                query_kwargs = query_transformer.transform_kwargs(
+                    study_wrapper, **kwargs,
+                )
+            except ValueError:
+                logger.exception("Skipping study %s", study_wrapper.study_id)
+                continue
+            else:
+                if query_kwargs is None:
+                    logger.info(
+                        "study %s skipped", study_wrapper.study_id)
+                    continue
+            assert study_wrapper.genotype_data is not None
+
+            runners.extend(
+                study_wrapper.genotype_data.create_summary_query_runners(
+                    regions=query_kwargs.get("regions"),
+                    genes=query_kwargs.get("genes"),
+                    effect_types=query_kwargs.get("effect_types"),
+                    variant_type=query_kwargs.get("variant_type"),
+                    real_attr_filter=query_kwargs.get("real_attr_filter"),
+                    category_attr_filter=query_kwargs.get(
+                        "category_attr_filter"),
+                    ultra_rare=query_kwargs.get("ultra_rare"),
+                    frequency_filter=query_kwargs.get("frequency_filter"),
+                    return_reference=query_kwargs.get("return_reference"),
+                    return_unknown=query_kwargs.get("return_unknown"),
+                    limit=query_kwargs.get("limit"),
+                    study_filters=query_kwargs.get("study_filters"),
+                ),
+            )
+
+        try:
+            if not runners:
+                return
+
+            variants_result = QueryResult(runners, limit=limit)
+            started = time.time()
+            variants: dict[str, SummaryVariant] = {}
+            with closing(variants_result) as result:
+                result.start()
+
+                for v in result:
+                    print(v)
+                    if v is None:
+                        continue
+
+                    if v.svuid in variants:
+                        existing = variants[v.svuid]
+                        fv_count = existing.get_attribute(
+                            "family_variants_count")[0]
+                        if fv_count is None:
+                            continue
+                        fv_count += v.get_attribute("family_variants_count")[0]
+                        seen_in_status = existing.get_attribute(
+                            "seen_in_status")[0]
+                        seen_in_status = \
+                            seen_in_status | \
+                            v.get_attribute("seen_in_status")[0]
+
+                        seen_as_denovo = existing.get_attribute(
+                            "seen_as_denovo")[0]
+                        seen_as_denovo = \
+                            seen_as_denovo or \
+                            v.get_attribute("seen_as_denovo")[0]
+                        new_attributes = {
+                            "family_variants_count": [fv_count],
+                            "seen_in_status": [seen_in_status],
+                            "seen_as_denovo": [seen_as_denovo],
+                        }
+                        v.update_attributes(new_attributes)
+
+                    variants[v.svuid] = v
+                    if limit and len(variants) >= limit:
+                        break
+
+            elapsed = time.time() - started
+            logger.info(
+                "processing study %s elapsed: %.3f",
+                self.study_id, elapsed)
+
+        finally:
+            logger.debug("[DONE] executor closed...")
+
+        yield from variants.values()
+
     def get_gene_view_summary_variants(
-        self, frequency_column: str, **kwargs: Any,
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
-        kwargs = self.query_transformer.transform_kwargs(**kwargs)
-        limit = kwargs.pop("maxVariantsCount", None)
-        variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_summary_variants(
-                **kwargs),
-            cast(int | None, limit),
+
+        variants = self._query_gene_view_summary_variants(
+            query_transformer, **kwargs,
         )
-        for v in variants_from_studies:
-            yield from self.response_transformer.\
-                transform_gene_view_summary_variant(v, frequency_column)
+
+        for variant in variants:
+            yield from response_transformer.\
+                transform_gene_view_summary_variant(variant, frequency_column)
 
     def get_gene_view_summary_variants_download(
         self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
         **kwargs: Any,
     ) -> Iterable:
         """Return gene browser summary variants for downloading."""
-        kwargs = self.query_transformer.transform_kwargs(**kwargs)
-        limit = kwargs.get("limit", None)
+        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
 
-        summary_variant_ids = set(kwargs["summaryVariantIds"])
-        variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_summary_variants(**kwargs), limit,
+        variants = self._query_gene_view_summary_variants(
+            query_transformer, **kwargs,
         )
-        return self.response_transformer.\
+
+        return response_transformer.\
             transform_gene_view_summary_variant_download(
-                variants_from_studies, frequency_column, summary_variant_ids,
+                variants, frequency_column, summary_variant_ids,
             )

@@ -22,9 +22,21 @@ from rest_framework import status
         status.HTTP_200_OK,
     ),
     (
+        "/api/v3/gene_view/query_summary_variants",
+        "post",
+        {"datasetId": "t4c8_dataset"},
+        status.HTTP_200_OK,
+    ),
+    (
         "/api/v3/gene_view/download_summary_variants",
         "post",
         {"queryData": json.dumps({"datasetId": "t4c8_study_2"})},
+        status.HTTP_200_OK,
+    ),
+    (
+        "/api/v3/gene_view/download_summary_variants",
+        "post",
+        {"queryData": json.dumps({"datasetId": "t4c8_dataset"})},
         status.HTTP_200_OK,
     ),
 ])
@@ -66,6 +78,60 @@ def test_gene_view_summary_variants_query(
     assert len(res[3]["alleles"]) == 2
     assert len(res[4]["alleles"]) == 2
     assert len(res[5]["alleles"]) == 2
+
+
+def test_gene_view_summary_variants_query_group(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = {"datasetId": "t4c8_dataset"}
+    response = admin_client.post(
+        "/api/v3/gene_view/query_summary_variants",
+        json.dumps(data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    res = response.data  # type: ignore
+    assert len(res) == 9
+    assert len(res[0]["alleles"]) == 2
+    assert len(res[1]["alleles"]) == 1
+    assert len(res[2]["alleles"]) == 2
+    assert len(res[3]["alleles"]) == 2
+    assert len(res[4]["alleles"]) == 2
+    assert len(res[5]["alleles"]) == 2
+    assert len(res[6]["alleles"]) == 1
+    assert len(res[7]["alleles"]) == 1
+    assert len(res[8]["alleles"]) == 1
+
+
+def test_gene_view_summary_variants_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = {"queryData": json.dumps({"datasetId": "t4c8_study_1"})}
+    response = admin_client.post(
+        "/api/v3/gene_view/download_summary_variants",
+        json.dumps(data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    lines = list(response.streaming_content)  # type: ignore
+    assert len(lines) == 13
+
+
+def test_gene_view_summary_variants_download_group(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = {"queryData": json.dumps({"datasetId": "t4c8_dataset"})}
+    response = admin_client.post(
+        "/api/v3/gene_view/download_summary_variants",
+        json.dumps(data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    lines = list(response.streaming_content)  # type: ignore
+    assert len(lines) == 16
 
 
 def test_gene_view_config(

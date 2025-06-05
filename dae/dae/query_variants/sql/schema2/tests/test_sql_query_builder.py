@@ -496,55 +496,10 @@ def test_check_inheritance_denovo_only(
     assert result == expected
 
 
-@pytest.mark.parametrize(
-    "statuses_query,value,expected", [
-        ("affected", 1, False),
-        ("affected", 2, True),
-        ("affected", 3, True),
-        ("affected and unaffected", 1, False),
-        ("affected or unaffected", 2, True),
-        ("affected and unaffected", 3, True),
-        ("all([affected, unaffected])", 1, False),
-        ("any([affected, unaffected])", 2, True),
-        ("all([affected, unaffected])", 3, True),
-        ("unspecified", 0, False),
-        ("unspecified", 4, True),
-        ("all([affected, unspecified])", 4, False),
-        ("any([affected, unspecified])", 4, True),
-        ("all([affected, unspecified])", 6, True),
-    ])
-def test_check_statuses_query_values(
-    statuses_query: str,
-    value: int,
-    expected: bool,  # noqa: FBT001
+def test_check_roles_denovo_only_works_with_zygosity(
     sql_builder: SqlQueryBuilder,
 ) -> None:
-    result = sql_builder.check_statuses_query_value(statuses_query, value)
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    "sexes_query,value,expected", [
-        ("male", 1, True),
-        ("male", 2, False),
-        ("male", 3, True),
-        ("male and female", 1, False),
-        ("male or female", 2, True),
-        ("male and female", 3, True),
-        ("all([male, female])", 1, False),
-        ("any([male, female])", 2, True),
-        ("all([male, female])", 3, True),
-        ("unspecified", 0, False),
-        ("unspecified", 4, True),
-        ("all([male, unspecified])", 4, False),
-        ("any([male, unspecified])", 4, True),
-        ("all([male, unspecified])", 5, True),
-    ])
-def test_check_sexes_query_values(
-    sexes_query: str,
-    value: int,
-    expected: bool,  # noqa: FBT001
-    sql_builder: SqlQueryBuilder,
-) -> None:
-    result = sql_builder.check_sexes_query_value(sexes_query, value)
-    assert result == expected
+    result = sql_builder.check_roles_denovo_only(
+        "prb~homozygous and (not mom and not dad)",
+    )
+    assert result is True
