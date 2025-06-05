@@ -156,9 +156,11 @@ def test_find_resource_dir_simple(
     os.chdir(path / "sub" / "two(1.0)" / "gene_models")
 
     repo_dir = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
+    assert repo_dir is not None
     assert repo_dir == path
 
     resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME)
+    assert resource_dir is not None
     assert resource_dir == path / "sub" / "two(1.0)"
 
     path = pathlib.Path(resource_dir)

@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
 from typing import Any
 
 from dae.genomic_resources.fsspec_protocol import (
@@ -26,7 +25,7 @@ def test_scan_for_resource_one_files(
     assert resource_id == "one"
     assert version == (0, )
 
-    resource_files = sorted(list(_scan_for_resource_files(content, [])))
+    resource_files = sorted(_scan_for_resource_files(content, []))
 
     # Then
     assert len(resource_files) == 3
@@ -47,7 +46,7 @@ def test_scan_for_resource_two_0_files(
     assert resource_id == "sub/two"
     assert version == (0, )
 
-    resource_files = sorted(list(_scan_for_resource_files(content, [])))
+    resource_files = sorted(_scan_for_resource_files(content, []))
 
     # Then
     assert len(resource_files) == 1
@@ -66,7 +65,7 @@ def test_scan_for_resource_two_1_files(
     assert resource_id == "sub/two"
     assert version == (1, 0)
 
-    resource_files = sorted(list(_scan_for_resource_files(content, [])))
+    resource_files = sorted(_scan_for_resource_files(content, []))
 
     # Then
     assert len(resource_files) == 2
@@ -87,7 +86,7 @@ def test_scan_for_resource_three_files(
     assert resource_id == "three"
     assert version == (2, 0)
 
-    resource_files = sorted(list(_scan_for_resource_files(content, [])))
+    resource_files = sorted(_scan_for_resource_files(content, []))
 
     # Then
     assert len(resource_files) == 3
@@ -98,7 +97,8 @@ def test_scan_for_resource_three_files(
 
 
 def test_scan_path_for_resources(
-        content_fixture: dict[str, Any], tmp_path: pathlib.Path) -> None:
+    content_fixture: dict[str, Any],
+) -> None:
     proto = build_inmemory_test_protocol(content_fixture)
     result = list(proto._scan_path_for_resources([]))
 
@@ -108,8 +108,7 @@ def test_scan_path_for_resources(
     assert res_version == (0,)
     assert res_path == "one"
 
-    result_files = sorted(list(
-        proto._scan_resource_for_files(res_path, [])))
+    result_files = sorted(proto._scan_resource_for_files(res_path, []))
 
     assert len(result_files) == 3
 
@@ -127,8 +126,7 @@ def test_scan_path_for_resources(
     assert res_version == (2, 0)
     assert res_path == "three(2.0)"
 
-    result_files = sorted(list(
-        proto._scan_resource_for_files(res_path, [])))
+    result_files = sorted(proto._scan_resource_for_files(res_path, []))
 
     assert len(result_files) == 3
     print(result_files)
@@ -155,7 +153,6 @@ def test_load_manifest(content_fixture: dict[str, Any]) -> None:
     entry = manifest["genes.gtf"]
     assert entry.name == "genes.gtf"
     assert entry.size == 17
-    # assert entry.time == "2021-11-20T00:00:56+00:00"
     assert entry.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
@@ -168,5 +165,4 @@ def test_get_manifest(content_fixture: dict[str, Any]) -> None:
     entry = manifest["genes.gtf"]
     assert entry.name == "genes.gtf"
     assert entry.size == 17
-    # assert entry.time == "2021-11-20T00:00:56+00:00"
     assert entry.md5 == "d9636a8dca9e5626851471d1c0ea92b1"

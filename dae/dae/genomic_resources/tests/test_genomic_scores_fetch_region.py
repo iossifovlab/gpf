@@ -22,7 +22,7 @@ def position_score(tmp_path_factory: pytest.TempPathFactory) -> PositionScore:
     root_path = tmp_path_factory.mktemp("position_score")
     setup_directories(
         root_path, {
-            "genomic_resource.yaml": """
+            "genomic_resource.yaml": textwrap.dedent("""
                 type: position_score
                 table:
                   filename: data.txt.gz
@@ -41,7 +41,7 @@ def position_score(tmp_path_factory: pytest.TempPathFactory) -> PositionScore:
                 - id: s2
                   index: 4
                   type: float
-            """,
+            """),
         })
     setup_tabix(
         root_path / "data.txt.gz",
@@ -141,27 +141,27 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
-        "genomic_resource.yaml": """
-            type: allele_score
-            table:
-                filename: data.txt.gz
-                format: tabix
-                pos_begin:
-                    name: pos
-                reference:
-                  name: ref
-                alternative:
-                  name: alt
-            scores:
-                - id: s1
-                  type: float
-                  name: s1
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: allele_score
+                table:
+                    filename: data.txt.gz
+                    format: tabix
+                    pos_begin:
+                      name: pos
+                    reference:
+                      name: ref
+                    alternative:
+                      name: alt
+                scores:
+                    - id: s1
+                      type: float
+                      name: s1
 
-                - id: s2
-                  type: float
-                  name: s2
-        """,
-    })
+                    - id: s2
+                      type: float
+                      name: s2
+            """),
+        })
     setup_tabix(
         root_path / "data.txt.gz",
         textwrap.dedent("""
@@ -265,25 +265,25 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
-        "genomic_resource.yaml": """
-            type: np_score
-            table:
-                filename: data.txt.gz
-                format: tabix
-                reference:
-                  name: ref
-                alternative:
-                  name: alt
-            scores:
-                - id: s1
-                  type: float
-                  name: s1
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: np_score
+                table:
+                    filename: data.txt.gz
+                    format: tabix
+                    reference:
+                      name: ref
+                    alternative:
+                      name: alt
+                scores:
+                    - id: s1
+                      type: float
+                      name: s1
 
-                - id: s2
-                  type: float
-                  name: s2
-        """,
-    })
+                    - id: s2
+                      type: float
+                      name: s2
+            """),
+        })
     setup_tabix(
         root_path / "data.txt.gz",
         textwrap.dedent("""
@@ -399,16 +399,16 @@ def allele_score(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
-        "genomic_resource.yaml": """
-            type: allele_score
-            table:
-                filename: data.txt.gz
-                format: tabix
-                reference:
-                  name: ref
-                alternative:
-                  name: alt
-            scores:
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: allele_score
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                  reference:
+                    name: ref
+                  alternative:
+                    name: alt
+                scores:
                 - id: s1
                   type: float
                   name: s1
@@ -416,8 +416,8 @@ def allele_score(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
                 - id: s2
                   type: float
                   name: s2
-        """,
-    })
+            """),
+        })
     setup_tabix(
         root_path / "data.txt.gz",
         textwrap.dedent("""

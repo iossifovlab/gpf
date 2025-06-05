@@ -42,9 +42,10 @@ class CLIAnnotationContextProvider(CLIGenomicContextProvider):
             " an error.")
         CLIGenomicContextProvider.add_argparser_arguments(parser)
 
-    def init(self, **kwargs: Any) -> GenomicContext | None:
+    @staticmethod
+    def init(**kwargs: Any) -> GenomicContext | None:
         """Build a CLI genomic context."""
-        cli_context = super().init(**kwargs)
+        cli_context = CLIGenomicContextProvider.init(**kwargs)
         if cli_context is None:
             return None
 

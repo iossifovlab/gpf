@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import argparse
 import logging
 
@@ -13,11 +12,9 @@ logger = logging.getLogger("gpf_convert_study_config")
 
 def load_study_config(study_config_filename: str) -> dict:
     """Load study config."""
-    config = GPFConfigParser.load_config_raw(
+    return GPFConfigParser.load_config_raw(
         study_config_filename,
     )
-
-    return config
 
 
 def main(

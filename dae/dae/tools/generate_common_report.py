@@ -4,6 +4,8 @@ import sys
 import time
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pheno.pheno_data import PhenotypeData
+from dae.studies.study import GenotypeData
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_common_reports")
@@ -75,6 +77,7 @@ def main(
                 logger.error("study %s not found! skipping...", study_id)
                 continue
 
+            study: GenotypeData | PhenotypeData
             if study_id in available_studies:
                 study = gpf_instance.get_genotype_data(study_id)
             else:

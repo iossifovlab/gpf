@@ -69,7 +69,7 @@ def main(
 
     variants_loader = VcfLoader(
         families,
-        variants_filenames,  # type: ignore
+        variants_filenames,
         params=variants_params,
         genome=genome,
     )

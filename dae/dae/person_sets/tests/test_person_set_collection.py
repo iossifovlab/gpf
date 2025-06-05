@@ -13,7 +13,7 @@ from dae.person_sets import (
 from dae.testing import setup_pedigree
 
 
-@pytest.fixture()
+@pytest.fixture
 def status_config() -> PersonSetCollectionConfig:
     return parse_person_set_collection_config({
         "id": "affected_status",

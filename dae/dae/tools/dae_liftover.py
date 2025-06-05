@@ -12,7 +12,6 @@ from dae.genomic_resources.reference_genome import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
-from dae.tools.stats_liftover import save_liftover_stats
 from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -250,5 +249,3 @@ def main(
                 toomany_line.append(";".join(families_data))
                 output_toomany.write("\t".join(toomany_line))
                 output_toomany.write("\n")
-
-    save_liftover_stats(target_stats, args.stats)

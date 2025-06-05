@@ -5,13 +5,16 @@ import textwrap
 import pytest
 
 from dae.genomic_resources.cli import collect_dvc_entries
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    ReadWriteRepositoryProtocol,
+)
 from dae.genomic_resources.testing import build_inmemory_test_protocol
 
 
-@pytest.fixture()
-def proto_fixture(tmp_path):
-    proto = build_inmemory_test_protocol({
+@pytest.fixture
+def proto_fixture() -> ReadWriteRepositoryProtocol:
+    return build_inmemory_test_protocol({
         "one": {
             GR_CONF_FILE_NAME: "",
             "data.txt": "alabala",
@@ -33,7 +36,6 @@ def proto_fixture(tmp_path):
             },
         },
     })
-    return proto
 
 
 @pytest.mark.parametrize("use_dvc,filename,expected", [
@@ -43,7 +45,11 @@ def proto_fixture(tmp_path):
     (False, "b.big", ("d861877da56b8b4ceb35c8cbfdf65bb4", 3)),
 ])
 def test_build_build_manifest_use_dvc(
-        proto_fixture, use_dvc, filename, expected):
+    proto_fixture: ReadWriteRepositoryProtocol,
+    use_dvc: bool,  # noqa:FBT001
+    filename: str,
+    expected: tuple[str, int],
+) -> None:
 
     res = proto_fixture.get_resource("one")
     prebuild_entries = {}
@@ -65,8 +71,11 @@ def test_build_build_manifest_use_dvc(
     (False, "b.big", ("7de99d55a70b4e1215218f00d95a9720", 6)),
 ])
 def test_build_update_manifest_use_dvc(
-        proto_fixture, use_dvc, filename, expected):
-
+    proto_fixture: ReadWriteRepositoryProtocol,
+    use_dvc: bool,  # noqa:FBT001
+    filename: str,
+    expected: tuple[str, int],
+) -> None:
     res = proto_fixture.get_resource("one")
 
     prebuild_entries = {}

@@ -1,7 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
+import pathlib  # noqa: I001
 import textwrap
 from typing import Any, cast
+
+import numpy as np
 
 import pytest
 import pytest_mock
@@ -75,13 +77,13 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                                 is affected or unaffected
                     """),
                     "data.txt": convert_to_tab_separated(textwrap.dedent("""
-                chrom  pos_begin  pos_end  frequency  collection affected_status
-                1      10         20       0.02       SSC        affected
-                1      50         100      0.1        SSC        affected
-                2      1          8        0.00001    AGRE       unaffected
-                2      16         20       0.3        SSC        affected
-                2      200        203      0.0002     AGRE       unaffected
-                15     16         20       0.2        AGRE       affected
+            chrom  pos_begin  pos_end  frequency  collection affected_status
+            1      10         20       0.02       SSC        affected
+            1      50         100      0.1        SSC        affected
+            2      1          8        0.00001    AGRE       unaffected
+            2      16         20       0.3        SSC        affected
+            2      200        203      0.0002     AGRE       unaffected
+            15     16         20       0.2        AGRE       affected
                     """)),
                 },
             },
@@ -130,7 +132,7 @@ def test_cnv_collection_resource(
     beg: int,
     end: int,
     count: int,
-    attributes: dict[str, Any],
+    attributes: list[dict[str, Any]],
 ) -> None:
     with cnvs.open() as cnv_collection:
         aaa = cast(CnvCollection, cnv_collection).fetch_cnvs(
@@ -164,7 +166,7 @@ def test_cnv_collection_no_open(cnvs: CnvCollection) -> None:
 
 
 def test_cnv_collection_bad_chrom(cnvs: CnvCollection) -> None:
-    cnv_collection = cast(CnvCollection, cnvs.open())
+    cnv_collection = cnvs.open()
     res = cnv_collection.fetch_cnvs("3", 5, 15)
 
     assert len(res) == 0
@@ -220,8 +222,12 @@ def test_cnv_collection_implementation_histogram(
     assert isinstance(histograms["freq"], NumberHistogram)
     assert histograms["freq"].min_value == 1e-05
     assert histograms["freq"].max_value == 0.3
-    assert histograms["freq"].bars.tolist() == [2, 1]
-    assert histograms["freq"].bins.tolist() == [0, 0.15, 0.3]
+    bars = histograms["freq"].bars
+    assert isinstance(bars, np.ndarray)
+    assert cast(list[int], bars.tolist()) == [2, 1]
+
+    assert cast(list[float], histograms["freq"].bins.tolist()) \
+        == [0, 0.15, 0.3]
 
 
 def test_cnv_collection_implementation_do_min_max(

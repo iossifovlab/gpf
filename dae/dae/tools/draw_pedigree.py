@@ -3,13 +3,17 @@
 import argparse
 import logging
 import sys
+from collections.abc import Generator
+from typing import cast
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from dae.common_reports.family_report import FamiliesReport
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family
 from dae.pedigrees.layout import Layout
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
@@ -57,31 +61,33 @@ def build_families_report(families: FamiliesData) -> FamiliesReport:
         families, [status_collection], draw_all_families=False)
 
 
-def draw_pedigree(layout, title, show_family=True, tags=None):
-
+def draw_pedigree(
+    layout: list[Layout], title: str, *,
+    show_family: bool = True, tags: set[str] | None = None,
+) -> Figure:
+    """Draw a pedigree layout."""
     layout_drawer = OffsetLayoutDrawer(
         layout, show_family=show_family,
     )
-    figure = layout_drawer.draw(title=title, tags=tags)
-    return figure
+    return layout_drawer.draw(title=title, tags=tags)
 
 
-def build_family_layout(family):
-    # layout = Layout.from_family_layout(family)
-    # if layout is None:
+def build_family_layout(family: Family) -> list[Layout]:
     return Layout.from_family(family)
 
 
-def draw_families_report(families):
+def draw_families_report(
+    families: FamiliesData,
+) -> Generator[Figure, None, None]:
     """Draw families from families report."""
     families_report = build_families_report(families)
     assert len(families_report.families_counters) == 1
 
-    family_counters = list(families_report.families_counters.values())[0]
+    family_counters = next(iter(families_report.families_counters.values()))
     logger.info("total number family types: %s", len(family_counters.counters))
 
     for family_counter in family_counters.counters.values():
-        family_id = family_counter.family
+        family_id = cast(str, family_counter.family)
         family = families[family_id]
         layout = build_family_layout(family)
         logger.info(
@@ -97,7 +103,7 @@ def draw_families_report(families):
         yield figure
 
 
-def draw_families(families):
+def draw_families(families: FamiliesData) -> Generator[Figure, None, None]:
     """Draw families."""
     for family_id, family in families.items():
         layout = build_family_layout(family)
@@ -106,7 +112,7 @@ def draw_families(families):
         yield figure
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> None:
     """Run the CLI for draw_pedigree tool."""
     if argv is None:
         argv = sys.argv[1:]
@@ -139,25 +145,25 @@ def main(argv=None):
         "defaults: `report`",
     )
 
-    argv = parser.parse_args(argv)
-    if argv.verbose == 1:
+    args = parser.parse_args(argv)
+    if args.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
+    elif args.verbose == 2:
         logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
+    elif args.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.WARNING)
 
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
-    filenames, params = FamiliesLoader.parse_cli_arguments(argv)
+    filenames, params = FamiliesLoader.parse_cli_arguments(args)
     filename = filenames[0]
 
     families_loader = FamiliesLoader(filename, **params)
     families = families_loader.load()
 
-    mode = argv.mode
+    mode = args.mode
     assert mode in ("families", "report")
     logger.warning("using mode: %s", mode)
     if mode == "report":
@@ -165,7 +171,7 @@ def main(argv=None):
     else:
         generator = draw_families(families)
 
-    with PDFLayoutDrawer(argv.output) as pdf_drawer:
+    with PDFLayoutDrawer(args.output) as pdf_drawer:
 
         for fig in generator:
             pdf_drawer.savefig(fig)
