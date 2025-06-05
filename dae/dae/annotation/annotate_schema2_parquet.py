@@ -4,8 +4,10 @@ import pathlib
 import shutil
 
 from dae.annotation.annotate_utils import AnnotationTool
-from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.format_handlers import ParquetFormat
+from dae.annotation.genomic_context import (
+    CLIAnnotationContextProvider,
+)
 from dae.annotation.parquet import (
     backup_schema2_study,
     produce_regions,
@@ -15,7 +17,6 @@ from dae.annotation.parquet import (
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,
 )
@@ -28,8 +29,8 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 class AnnotateSchema2ParquetTool(AnnotationTool):
     """Annotation tool for the Parquet file format."""
 
-    def __init__(self, raw_args=None, gpf_instance=None):
-        super().__init__(raw_args, gpf_instance)
+    def __init__(self, raw_args=None):
+        super().__init__(raw_args)
 
         self.loader = None
         self.output_layout = None
@@ -82,7 +83,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             help="Annotate in batches of",
         )
 
-        CLIAnnotationContext.add_context_arguments(parser)
+        CLIAnnotationContextProvider.add_argparser_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
@@ -111,7 +112,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         pipeline = AnnotationTool.produce_annotation_pipeline(
             raw_pipeline,
             loader.meta["annotation_pipeline"]
-                if loader.has_annotation else None,
+            if loader.has_annotation else None,
             self.grr.definition,
             allow_repeated_attributes=self.args.allow_repeated_attributes,
             full_reannotation=self.args.full_reannotation,
@@ -154,7 +155,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         input_dir = os.path.abspath(self.args.input)
         output_dir = input_dir if self.args.in_place \
-                     else os.path.abspath(self.args.output)
+            else os.path.abspath(self.args.output)
 
         if not self.args.in_place:
             if os.path.exists(output_dir) and not self.args.force:
@@ -163,7 +164,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 self._remove_data(output_dir)
 
         input_layout = backup_schema2_study(input_dir) if self.args.in_place \
-                       else create_schema2_dataset_layout(input_dir)
+            else create_schema2_dataset_layout(input_dir)
         output_layout = create_schema2_dataset_layout(output_dir)
 
         if input_layout.summary is None:
@@ -206,7 +207,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             handler = ParquetFormat(
                 self.pipeline.raw,
                 self.loader.meta["annotation_pipeline"]
-                    if self.loader.has_annotation else None,
+                if self.loader.has_annotation else None,
                 vars(self.args),
                 self.grr.definition,
                 Region.from_str(region),
@@ -231,10 +232,9 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
 def cli(
     raw_args: list[str] | None = None,
-    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Entry method for AnnotateSchema2ParquetTool."""
-    tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
+    tool = AnnotateSchema2ParquetTool(raw_args)
     if tool.args.meta:
         tool.print_meta()
         return

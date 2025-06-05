@@ -17,12 +17,10 @@ from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
 from dae.genomic_resources.genomic_context import (
-    GC_GRR_KEY,
-    GC_REFERENCE_GENOME_KEY,
     GenomicContext,
     PriorityGenomicContext,
     SimpleGenomicContext,
-    get_registered_genomic_context,
+    get_genomic_context,
 )
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
@@ -33,6 +31,9 @@ from dae.genomic_resources.repository import (
 )
 
 logger = logging.getLogger(__name__)
+GC_GRR_KEY = "genomic_resources_repository"
+GC_REFERENCE_GENOME_KEY = "reference_genome"
+GC_GENE_MODELS_KEY = "gene_models"
 
 
 class Annotator(abc.ABC):
@@ -107,7 +108,7 @@ class AnnotationPipeline:
 
     def build_pipeline_genomic_context(self) -> GenomicContext:
         """Create a genomic context from the pipeline parameters."""
-        registered_context = get_registered_genomic_context()
+        registered_context = get_genomic_context()
         genome = None
         if self.preamble is not None:
             genome_res = self.preamble.input_reference_genome_res
@@ -151,8 +152,10 @@ class AnnotationPipeline:
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
 
-    def annotate(self, annotatable: Annotatable,
-                 context: dict | None = None) -> dict:
+    def annotate(
+        self, annotatable: Annotatable,
+        context: dict | None = None,
+    ) -> dict:
         """Apply all annotators to an annotatable."""
         if not self._is_open:
             self.open()
@@ -358,11 +361,14 @@ class ReannotationPipeline(AnnotationPipeline):
                              attribute.name)
         return converted_value
 
-    def annotate(self, annotatable: Annotatable, record: dict | None) -> dict:  # type: ignore # pylint: disable=arguments-renamed
+    def annotate(
+        self, annotatable: Annotatable,
+        context: dict | None = None,
+    ) -> dict:
         reused_context = None
-        if record is not None:
+        if context is not None:
             reused_context = {
-                attr.name: self._convert_attr(record[attr.name], attr)
+                attr.name: self._convert_attr(context[attr.name], attr)
                 for attr in self.attributes_reused.values()
             }
         return super().annotate(annotatable, reused_context)
@@ -370,25 +376,25 @@ class ReannotationPipeline(AnnotationPipeline):
     def get_attributes(self) -> list[AttributeInfo]:
         return self.pipeline_new.get_attributes()
 
-    def print(self):
+    def print(self) -> None:
         print("NEW ATTRIBUTES -")
         for anno in self.annotators_new:
             for attr in anno.attributes:
                 print("    +", attr.name)
         print("DELETED ATTRIBUTES -")
-        for attr in self.attributes_deleted:
-            print("    +", attr)
+        for dattr in self.attributes_deleted:
+            print("    +", dattr)
         print("REUSED ATTRIBUTES -")
-        for attr in self.attributes_reused:
-            print("    +", attr)
+        for rattr in self.attributes_reused:
+            print("    +", rattr)
         print("NEW ANNOTATORS -")
         for anno in self.annotators_new:
             print("    +", anno.annotator_id, anno.type,
-                           [res.resource_id for res in anno.resources])
+                  [res.resource_id for res in anno.resources])
         print("RE-RUNNING ANNOTATORS -")
         for anno in self.annotators_rerun:
             print("    +", anno.annotator_id, anno.type,
-                           [res.resource_id for res in anno.resources])
+                  [res.resource_id for res in anno.resources])
 
 
 class AnnotatorDecorator(Annotator):

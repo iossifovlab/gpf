@@ -21,9 +21,8 @@ from dae.annotation.annotate_utils import (
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
 )
-from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.format_handlers import VCFFormat
-from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -32,7 +31,7 @@ logger = logging.getLogger("annotate_vcf")
 
 
 def combine(
-    args,
+    args: argparse.Namespace,
     input_file_path: str,
     pipeline_config: RawAnnotatorsConfig,
     pipeline_config_old: str | None,
@@ -69,9 +68,8 @@ class AnnotateVCFTool(AnnotationTool):
 
     def __init__(
         self, raw_args: list[str] | None = None,
-        gpf_instance: GPFInstance | None = None,
     ):
-        super().__init__(raw_args, gpf_instance)
+        super().__init__(raw_args)
         self.output = None
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
@@ -80,18 +78,23 @@ class AnnotateVCFTool(AnnotationTool):
             description="Annotate VCF",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
-        parser.add_argument("input", default="-", nargs="?",
-                            help="the input vcf file")
-        parser.add_argument("-r", "--region-size", default=300_000_000,
-                            type=int, help="region size to parallelize by")
-        parser.add_argument("-w", "--work-dir",
-                            help="Directory to store intermediate output files",
-                            default="annotate_vcf_output")
-        parser.add_argument("-o", "--output",
-                            help="Filename of the output VCF result",
-                            default=None)
-        parser.add_argument("--reannotate", default=None,
-                            help="Old pipeline config to reannotate over")
+        parser.add_argument(
+            "input", default="-", nargs="?",
+            help="the input vcf file")
+        parser.add_argument(
+            "-r", "--region-size", default=300_000_000,
+            type=int, help="region size to parallelize by")
+        parser.add_argument(
+            "-w", "--work-dir",
+            help="Directory to store intermediate output files",
+            default="annotate_vcf_output")
+        parser.add_argument(
+            "-o", "--output",
+            help="Filename of the output VCF result",
+            default=None)
+        parser.add_argument(
+            "--reannotate", default=None,
+            help="Old pipeline config to reannotate over")
         parser.add_argument(
             "-i", "--full-reannotation",
             help="Ignore any previous annotation and run "
@@ -105,7 +108,7 @@ class AnnotateVCFTool(AnnotationTool):
             help="Annotate in batches of",
         )
 
-        CLIAnnotationContext.add_context_arguments(parser)
+        CLIAnnotationContextProvider.add_argparser_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser

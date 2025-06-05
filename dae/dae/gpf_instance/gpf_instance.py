@@ -587,7 +587,7 @@ class GPFInstance:
         pipeline_config = []
         if self.dae_config.annotation is not None:
             if "config" in self.dae_config.annotation and \
-                "conf_file" in self.dae_config.annotation:
+                    "conf_file" in self.dae_config.annotation:
                 logger.warning(
                     "Two annotation config files provided, "
                     "both inline and in file.",
@@ -597,7 +597,7 @@ class GPFInstance:
                 pipeline_config = [dict(annotator) for annotator in
                                    self.dae_config.annotation.config]
             elif "conf_file" in self.dae_config.annotation and \
-                isinstance(self.dae_config.annotation.conf_file, str):
+                    isinstance(self.dae_config.annotation.conf_file, str):
                 config_filename = self.dae_config.annotation.conf_file
                 if not os.path.abspath(config_filename):
                     config_filename = os.path.join(

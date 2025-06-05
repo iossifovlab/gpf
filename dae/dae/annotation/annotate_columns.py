@@ -19,13 +19,12 @@ from dae.annotation.annotate_utils import (
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
-from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.format_handlers import ColumnsFormat
+from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.record_to_annotatable import (
     add_record_to_annotable_arguments,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 
@@ -74,9 +73,8 @@ class AnnotateColumnsTool(AnnotationTool):
     def __init__(
         self,
         raw_args: list[str] | None = None,
-        gpf_instance: GPFInstance | None = None,
     ) -> None:
-        super().__init__(raw_args, gpf_instance)
+        super().__init__(raw_args)
         self.output = None
         self.ref_genome_id = None
 
@@ -122,7 +120,7 @@ class AnnotateColumnsTool(AnnotationTool):
             help="Annotate in batches of",
         )
 
-        CLIAnnotationContext.add_context_arguments(parser)
+        CLIAnnotationContextProvider.add_argparser_arguments(parser)
         add_record_to_annotable_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)

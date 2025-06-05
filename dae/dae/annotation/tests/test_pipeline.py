@@ -19,7 +19,7 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_context import (
     GenomicContext,
     SimpleGenomicContext,
-    get_registered_genomic_context,
+    get_genomic_context,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
@@ -112,7 +112,7 @@ def context_fixture(
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
         [test_context])
-    context = get_registered_genomic_context()
+    context = get_genomic_context()
     assert context is not None
 
     return context

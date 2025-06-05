@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -15,7 +15,7 @@ from dae.testing import (
 from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     root_path = tmp_path
     setup_directories(

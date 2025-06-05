@@ -7,12 +7,16 @@ from pathlib import Path
 
 import pysam
 
-from dae.annotation.context import CLIAnnotationContext
+from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.liftover_annotator import (
     basic_liftover_variant,
     bcf_liftover_variant,
 )
-from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.genomic_context import (
+    get_genomic_context,
+    init_context_providers,
+    register_context_provider,
+)
 from dae.genomic_resources.liftover_chain import (
     LiftoverChain,
     build_liftover_chain_from_resource,
@@ -33,7 +37,7 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="liftover VCF variants")
 
-    CLIAnnotationContext.add_context_arguments(parser)
+    CLIAnnotationContextProvider.add_argparser_arguments(parser)
     VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
@@ -116,6 +120,8 @@ def main(
     args = parser.parse_args(argv)
 
     VerbosityConfiguration.set(args)
+    register_context_provider(CLIAnnotationContextProvider())
+    init_context_providers(**vars(args))
 
     if grr is None:
         context = get_genomic_context()
@@ -151,10 +157,12 @@ def main(
                 output_filename, "w", header=output_header)) as outfile:
         for vcf_variant in infile.fetch(region=region):
             if vcf_variant.alts is None:
-                logger.warning("skipping variant without alts: %s", vcf_variant)
+                logger.warning(
+                    "skipping variant without alts: %s", vcf_variant)
                 continue
             if vcf_variant.ref is None:
-                logger.warning("skipping variant without ref: %s", vcf_variant)
+                logger.warning(
+                    "skipping variant without ref: %s", vcf_variant)
                 continue
             lo_variant = liftover_variant_func(
                     vcf_variant.chrom, vcf_variant.pos,
@@ -179,8 +187,10 @@ def main(
                 outfile.write(vcf_variant)
             except ValueError:
                 logger.exception(
-                    "skipping variant with invalid liftover: %s liftover to %s",
-                    report_vcf_variant(vcf_variant), report_variant(lo_variant))
+                    "skipping variant with invalid liftover: "
+                    "%s liftover to %s",
+                    report_vcf_variant(vcf_variant),
+                    report_variant(lo_variant))
                 raise
 
 
@@ -222,7 +232,7 @@ def liftover_header(
     target_contigs = target_genome.chromosomes[:]
 
     with tempfile.NamedTemporaryFile(
-        mode="wt", suffix=".vcf") as temp_vcf:
+            mode="wt", suffix=".vcf") as temp_vcf:
 
         with closing(pysam.VariantFile(vcffile)) as vcf, \
             closing(pysam.VariantFile(
