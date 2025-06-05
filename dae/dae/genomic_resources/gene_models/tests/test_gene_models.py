@@ -2,6 +2,7 @@
 import gzip
 import os
 import pathlib
+import tempfile
 import textwrap
 from collections.abc import Callable
 
@@ -13,6 +14,11 @@ from dae.genomic_resources.gene_models import (
     build_gene_models_from_resource,
     create_regions_from_genes,
     save_as_default_gene_models,
+)
+from dae.genomic_resources.gene_models.gene_models import (
+    Exon,
+    TranscriptModel,
+    join_gene_models,
 )
 from dae.genomic_resources.gene_models.parsing import (
     infer_gene_model_parser,
@@ -470,3 +476,255 @@ def test_create_regions_from_genes(
     assert len(result) == 1
     reg = result[0]
     assert str(reg) == expected
+
+
+def test_invalid_cds():
+    transcript = TranscriptModel(
+        gene="gene",
+        tr_id="transcript",
+        tr_name="transcript",
+        chrom="chr",
+        strand="+",
+        exons=[Exon(start=100, stop=200)],
+        cds=(300, 200),  # Invalid CDS range
+        tx=(100, 200),
+    )
+    cds_regions = transcript.cds_regions()
+    assert not cds_regions
+
+    utr3_regions = transcript.utr3_regions()
+    assert not utr3_regions
+
+    utr5_regions = transcript.utr5_regions()
+    assert not utr5_regions
+
+
+@pytest.fixture(scope="module")
+def transcript_with_utrs():
+    return TranscriptModel(
+        gene="gene",
+        tr_id="transcript",
+        tr_name="transcript",
+        chrom="chr",
+        strand="+",
+        exons=[
+            Exon(start=0, stop=1),  # UTR5 (2 bp)
+            Exon(start=2, stop=5),  # CDS (4 bp)
+            Exon(start=6, stop=9),  # UTR3 (4 bp)
+        ],
+        cds=(2, 5),
+        tx=(0, 9),
+    )
+
+
+def test_total_len_with_utrs(transcript_with_utrs):
+    assert transcript_with_utrs.total_len() == 10
+
+
+def test_cds_len_with_utrs(transcript_with_utrs):
+    assert transcript_with_utrs.cds_len() == 4
+
+
+def test_utr5_len_with_utrs(transcript_with_utrs):
+    assert transcript_with_utrs.utr5_len() == 2
+
+
+def test_utr3_len_with_utrs(transcript_with_utrs):
+    assert transcript_with_utrs.utr3_len() == 4
+
+
+@pytest.fixture
+def transcript_with_matching_frames():
+    return TranscriptModel(
+        gene="gene",
+        tr_id="transcript",
+        tr_name="transcript",
+        chrom="chr",
+        strand="+",
+        exons=[
+            Exon(start=0, stop=2, frame=0),
+            Exon(start=3, stop=5, frame=0),
+            Exon(start=6, stop=8, frame=0),
+        ],
+        cds=(0, 8),
+        tx=(0, 8),
+    )
+
+
+def test_test_frames_true(transcript_with_matching_frames):
+    assert transcript_with_matching_frames.test_frames() is True
+
+
+def test_test_frames_false(transcript_with_matching_frames):
+    transcript_with_matching_frames.exons[1].frame = 1
+    assert transcript_with_matching_frames.test_frames() is False
+
+
+def test_get_exon_number_for_out_of_bounds():
+    transcript = TranscriptModel(
+        gene="gene",
+        tr_id="transcript",
+        tr_name="transcript",
+        chrom="chr",
+        strand="+",
+        exons=[
+            Exon(start=0, stop=10),
+            Exon(start=20, stop=30),
+        ],
+        cds=(0, 30),
+        tx=(0, 30),
+    )
+
+    result = transcript.get_exon_number_for(start=100, stop=110)
+    assert result == 0
+
+
+def test_join_gene_models_invalid_count(fixture_dirname):
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    gene_models = build_gene_models_from_file(filename, "gtf")
+    gene_models.load()
+
+    with pytest.raises(ValueError, match="at least 2 arguments"):
+        join_gene_models(gene_models)
+
+
+def test_join_gene_models(
+    fixture_dirname,
+    t4c8_gene_models: GeneModels,
+) -> None:
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    example_gencode = build_gene_models_from_file(filename, "gtf")
+    example_gencode.load()
+    assert example_gencode.gene_names() == ["C2CD4C"]
+    assert len(example_gencode.transcript_models) == 1
+
+    t4c8_gene_models.load()
+    assert t4c8_gene_models.gene_names() == ["t4", "c8"]
+    assert len(t4c8_gene_models.transcript_models) == 2
+
+    combined = join_gene_models(example_gencode, t4c8_gene_models)
+    assert combined.gene_names() == ["C2CD4C", "t4", "c8"]
+    assert len(combined.transcript_models) == 3
+
+
+def test_relabel_chromosomes(fixture_dirname) -> None:
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    gene_model = build_gene_models_from_file(filename, "gtf")
+    gene_model.load()
+
+    transcript_id = "ENST00000332235.7"
+
+    assert gene_model.transcript_models[transcript_id].chrom == "chr19"
+    assert "chr19" in gene_model.utr_models
+
+    gene_model.relabel_chromosomes(relabel={"chr19": "19"})
+
+    assert gene_model.transcript_models[transcript_id].chrom == "19"
+    assert "chr19" not in gene_model.utr_models
+    assert "19" in gene_model.utr_models
+
+
+def test_relabel_chromosomes_from_mapfile(fixture_dirname) -> None:
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    gene_model = build_gene_models_from_file(filename, "gtf")
+    gene_model.load()
+
+    transcript_id = "ENST00000332235.7"
+    assert gene_model.transcript_models[transcript_id].chrom == "chr19"
+    assert "chr19" in gene_model.utr_models
+
+    with tempfile.NamedTemporaryFile("w+", delete=False) as tmp:
+        tmp.write("chr19 19")
+        tmp_path = tmp.name
+
+    gene_model.relabel_chromosomes(map_file=tmp_path)
+
+    assert gene_model.transcript_models[transcript_id].chrom == "19"
+    assert "chr19" not in gene_model.utr_models
+    assert "19" in gene_model.utr_models
+
+
+def test_is_loaded(fixture_dirname) -> None:
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    gene_model = build_gene_models_from_file(filename, "gtf")
+    assert gene_model.is_loaded() is False
+
+    gene_model.load()
+    assert gene_model.is_loaded() is True
+
+
+def test_gene_models_by_location(fixture_dirname) -> None:
+    filename = fixture_dirname("gene_models/test_ccds.txt")
+    gene_model = build_gene_models_from_file(filename, "ccds")
+    gene_model.load()
+
+    results = gene_model.gene_models_by_location("chr1", 69091)
+    assert len(results) == 1
+    assert results[0].tr_id == "CCDS30547.1_1"
+
+    results = gene_model.gene_models_by_location("chr1", 0, 500000)
+    assert len(results) == 2
+    assert results[0].tr_id == "CCDS30547.1_1"
+    assert results[1].tr_id == "CCDS41220.1_1"
+
+    results = gene_model.gene_models_by_location("chr1", 500000, 0)
+    assert len(results) == 2
+    assert results[0].tr_id == "CCDS30547.1_1"
+    assert results[1].tr_id == "CCDS41220.1_1"
+
+
+def test_all_regions(fixture_dirname) -> None:
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    gene_model = build_gene_models_from_file(filename, "gtf")
+    gene_model.load()
+
+    transcript = gene_model.transcript_models["ENST00000332235.7"]
+    regions = transcript.all_regions()
+    assert len(regions) == 2
+
+    assert regions[0].chrom == "chr19"
+    assert regions[0].start == 405438
+    assert regions[0].stop == 408401
+
+    assert regions[1].chrom == "chr19"
+    assert regions[1].start == 409006
+    assert regions[1].stop == 409170
+
+
+def test_all_regions_ss_extend() -> None:
+    res = build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gene_model.txt}",
+            "gene_model.txt": convert_to_tab_separated(textwrap.dedent("""
+chr	trID	gene	strand	tsBeg	txEnd	cdsStart	cdsEnd	exonStarts	exonEnds	exonFrames	atts
+1	transcript_1	gene_1	+	100	350	160	300	100,145,210,245,315	150,205,250,310,350	0,0,0,0,0	bin:1;cdsStartStat:cmpl;cdsEndStat:cmpl;exonCount:5;score:0
+""")),  # noqa: E501
+        })
+    gene_models = build_gene_models_from_resource(res)
+    gene_models.load()
+
+    transcript = gene_models.transcript_models["transcript_1"]
+    regions = transcript.all_regions(ss_extend=5)
+
+    assert len(regions) == 5
+
+    assert regions[0].chrom == "1"
+    assert regions[0].start == 100
+    assert regions[0].stop == 150
+
+    assert regions[1].chrom == "1"
+    assert regions[1].start == 145
+    assert regions[1].stop == 205 + 5
+
+    assert regions[2].chrom == "1"
+    assert regions[2].start == 210 - 5
+    assert regions[2].stop == 250 + 5
+
+    assert regions[3].chrom == "1"
+    assert regions[3].start == 245 - 5
+    assert regions[3].stop == 310
+
+    assert regions[4].chrom == "1"
+    assert regions[4].start == 315
+    assert regions[4].stop == 350
