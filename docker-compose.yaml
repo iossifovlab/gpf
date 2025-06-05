@@ -13,4 +13,4 @@ services:
     ports:
     - '8080:80'
     volumes:
-      - ./dae/dae/genomic_resources/tests/.test_grr:/usr/local/apache2/htdocs/
+      - ./dae/tests/.test_grr:/usr/local/apache2/htdocs/

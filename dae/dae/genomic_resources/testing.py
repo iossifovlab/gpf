@@ -378,8 +378,10 @@ def build_http_test_protocol(
     repository.
     """
     source_proto = build_filesystem_test_protocol(root_path, repair=repair)
-    http_path = pathlib.Path(__file__).parent
-    http_path = http_path / "tests" / ".test_grr" / root_path.name
+    http_path = pathlib.Path(__file__).parent.parent.parent
+    http_path = http_path / "tests" / ".test_grr"
+    assert http_path.parts[-3:] == ("dae", "tests", ".test_grr"), http_path
+    http_path = http_path / root_path.name
     http_path.mkdir(parents=True, exist_ok=True)
     dest_proto = build_filesystem_test_protocol(http_path)
     copy_proto_genomic_resources(
