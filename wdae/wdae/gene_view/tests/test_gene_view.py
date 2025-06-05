@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import operator
 from typing import Any
 
 import pytest
@@ -91,17 +92,18 @@ def test_gene_view_summary_variants_query_group(
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.data  # type: ignore
+    res = sorted(response.json(), key=operator.itemgetter("svuid"))
+
     assert len(res) == 9
     assert len(res[0]["alleles"]) == 2
-    assert len(res[1]["alleles"]) == 1
+    assert len(res[1]["alleles"]) == 2
     assert len(res[2]["alleles"]) == 2
     assert len(res[3]["alleles"]) == 2
-    assert len(res[4]["alleles"]) == 2
-    assert len(res[5]["alleles"]) == 2
+    assert len(res[4]["alleles"]) == 1
+    assert len(res[5]["alleles"]) == 1
     assert len(res[6]["alleles"]) == 1
     assert len(res[7]["alleles"]) == 1
-    assert len(res[8]["alleles"]) == 1
+    assert len(res[8]["alleles"]) == 2
 
 
 def test_gene_view_summary_variants_download(
