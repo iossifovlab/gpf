@@ -209,7 +209,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         return leafs
 
     @abstractmethod
-    def create_query_runners(
+    def create_query_runners(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
@@ -841,7 +841,7 @@ class GenotypeDataGroup(GenotypeData):
             person.set_attr(psc_id, person_set_value.id)
         return psc
 
-    def create_query_runners(
+    def create_query_runners(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
@@ -968,7 +968,7 @@ class GenotypeDataStudy(GenotypeData):
             person.set_attr(psc.id, person_set_value.id)
         return psc
 
-    def create_query_runners(
+    def create_query_runners(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,

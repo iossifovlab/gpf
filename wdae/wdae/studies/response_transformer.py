@@ -526,7 +526,7 @@ def get_or_create_response_transformer(
     gpf_instance: GPFInstance,
 ) -> ResponseTransformer:
     """Get or create response transformer singleton instance."""
-    global _RESPONSE_TRANSFORMER
+    global _RESPONSE_TRANSFORMER  # pylint: disable=global-statement
 
     with _RESPONSE_TRANSFORMER_LOCK:
         if _RESPONSE_TRANSFORMER is not None:

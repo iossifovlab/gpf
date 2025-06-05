@@ -692,7 +692,7 @@ def get_or_create_query_transformer(
     gpf_instance: GPFInstance,
 ) -> QueryTransformer:
     """Get or create query transformer singleton instance."""
-    global _QUERY_TRANSFORMER
+    global _QUERY_TRANSFORMER  # pylint: disable=global-statement
 
     with _QUERY_TRANSFORMER_LOCK:
         if _QUERY_TRANSFORMER is not None:

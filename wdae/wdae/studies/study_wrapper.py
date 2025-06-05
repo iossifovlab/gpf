@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class QueryTransformerProtocol(Protocol):
+    """Protocol for query transformer interface."""
 
     @abstractmethod
     def transform_kwargs(
@@ -38,6 +39,7 @@ class QueryTransformerProtocol(Protocol):
 
 
 class ResponseTransformerProtocol(Protocol):
+    """Protocol for response transformer interface."""
 
     @abstractmethod
     def variant_transformer(
@@ -53,6 +55,7 @@ class ResponseTransformerProtocol(Protocol):
         frequency_column: str,
         summary_variant_ids: set[str],
     ) -> Iterator[str]:
+        """Produce an iterator for a download file response."""
         raise NotImplementedError
 
     @abstractmethod
