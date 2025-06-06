@@ -537,7 +537,8 @@ def test_partition_descriptor_varint_dirs_full_integer_bins() -> None:
         ("region_bin", "10000"), ("frequency_bin", "0"), ("coding_bin", "0"),
     ]
     assert sum_parts[-1] == [
-        ("region_bin", "10000001"), ("frequency_bin", "3"), ("coding_bin", "1"),
+        ("region_bin", "10000001"), ("frequency_bin", "3"),
+        ("coding_bin", "1"),
     ]
 
     for i, fam_part in enumerate(fam_parts):
