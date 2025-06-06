@@ -277,7 +277,8 @@ class VariantsParquetWriter:
             + summary_index) * 10_000
 
     def _apply_attributes_to_allele(
-        self, summary_allele: SummaryAllele, attributes,
+        self, summary_allele: SummaryAllele,
+        attributes: dict[str, Any],
     ) -> None:
         if "allele_effects" in attributes:
             allele_effects = attributes["allele_effects"]
@@ -421,11 +422,11 @@ class VariantsParquetWriter:
         return filenames
 
     def _write_family_variants(
-            self, family_index,
-            summary_index,
-            sj_base_index,
-            summary_variant,
-            family_variants,
+            self, family_index: int,
+            summary_index: int,
+            sj_base_index: int,
+            summary_variant: SummaryVariant,
+            family_variants: list[FamilyVariant],
     ) -> tuple[int, int]:
         num_fam_alleles_written = 0
         seen_in_status = summary_variant.allele_count * [0]
@@ -458,11 +459,12 @@ class VariantsParquetWriter:
 
             denovo_reference = any(
                 i == Inheritance.denovo
-                for i in fv.ref_allele.inheritance_in_members)
+                for i in cast(
+                    FamilyAllele, fv.ref_allele).inheritance_in_members)
 
             family_alleles = []
             if is_unknown_genotype(fv.gt) or \
-                        is_all_reference_genotype(fv.gt):
+                    is_all_reference_genotype(fv.gt):
                 assert fv.ref_allele.allele_index == 0
                 family_alleles.append(fv.ref_allele)
                 num_fam_alleles_written += 1

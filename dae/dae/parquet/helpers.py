@@ -102,6 +102,8 @@ def _try_merge_parquets(
     row_group_size: int = 50_000,
     parqet_version: str | None = None,
 ) -> None:
+    if len(in_files) == 0:
+        raise OSError("no input files provided for merging")
     assert len(in_files) > 0
     out_parquet = None
 

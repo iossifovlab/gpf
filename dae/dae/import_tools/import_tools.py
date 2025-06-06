@@ -397,7 +397,7 @@ class ImportProject:
     def get_processing_annotation_batch_size(self) -> int:
         """Return processing parquet dataset dir if configured and exists."""
         processing_config = self.import_config.get("processing_config", {})
-        return processing_config.get("annotation_batch_size", 0)
+        return int(processing_config.get("annotation_batch_size", 0))
 
     def get_processing_parquet_dataset_dir(self) -> str | None:
         """Return processing parquet dataset dir if configured and exists."""

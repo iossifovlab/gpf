@@ -83,8 +83,8 @@ class AlleleParquetSerializer:
         extra_attributes: list[str] | None = None,
     ) -> None:
         self.annotation_schema = annotation_schema
-        self._schema_summary = None
-        self._schema_family = None
+        self._schema_summary: pa.Schema | None = None
+        self._schema_family: pa.Schema | None = None
 
         self.extra_attributes = []
         if extra_attributes:
@@ -105,7 +105,8 @@ class AlleleParquetSerializer:
         cls, annotation_schema: list[AttributeInfo],
     ) -> pa.Schema:
         """Build the schema for the summary alleles."""
-        fields = list(starmap(pa.field, cls.SUMMARY_ALLELE_BASE_SCHEMA.items()))
+        fields = list(
+            starmap(pa.field, cls.SUMMARY_ALLELE_BASE_SCHEMA.items()))
         fields.append(pa.field("summary_variant_data", pa.binary()))
 
         annotation_type_to_pa_type = {

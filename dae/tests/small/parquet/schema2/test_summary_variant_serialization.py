@@ -221,17 +221,17 @@ def test_summary_variant_from_record() -> None:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def sv() -> SummaryVariant:
     return SummaryVariantFactory.summary_variant_from_records(SV1)
 
 
-@pytest.fixture()
+@pytest.fixture
 def sv_schema_f() -> dict:
     return {key: index for index, key in enumerate(SUMMARY_SCHEMA)}
 
 
-@pytest.fixture()
+@pytest.fixture
 def sv_schema_b() -> dict:
     return dict(enumerate(SUMMARY_SCHEMA))
 

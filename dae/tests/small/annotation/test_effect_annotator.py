@@ -22,7 +22,7 @@ from dae.genomic_resources.testing import (
 from dae.testing.t4c8_import import GENOME_CONTENT, GMM_CONTENT
 
 
-@pytest.fixture()
+@pytest.fixture
 def grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     setup_genome(tmp_path / "t4c8_genome" / "chrAll.fa", GENOME_CONTENT)
     setup_genome(tmp_path / "t4c8_genome_implicit_A" / "chrAll.fa",
