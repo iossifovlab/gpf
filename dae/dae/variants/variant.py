@@ -359,7 +359,8 @@ class SummaryAllele(core.Allele):
 
         attributes = encode_attributes(self._attributes)
 
-        return {**attributes,
+        return {
+            **attributes,
             "chrom": self.chromosome,
             "position": self.position,
             "reference": self.reference,

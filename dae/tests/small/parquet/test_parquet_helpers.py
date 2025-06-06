@@ -6,6 +6,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
+from pyarrow.fs import PyFileSystem
 
 from dae.parquet.helpers import merge_parquets, url_to_pyarrow_fs
 
@@ -20,7 +21,7 @@ def test_url_to_pyarrow_fs() -> None:
 def test_url_to_pyarrow_fs_s3_url() -> None:
     filename = "s3://bucket/file.txt"
     fs, path = url_to_pyarrow_fs(filename)
-    assert isinstance(fs, pa.fs.PyFileSystem)
+    assert isinstance(fs, PyFileSystem)
     assert path == "bucket/file.txt"
 
 
@@ -43,16 +44,18 @@ def test_merge_parquets(
     })
 
     in_files = []
+    table = None
     for i in range(0, len(full_data), 2):
         table = pa.table(full_data.iloc[i:i + 2])
         in_files.append(str(tmp_path / f"p{i}.parquet"))
         writer = pq.ParquetWriter(
             in_files[-1],
             table.schema,
-            # version="1.0"
         )
         writer.write_table(table)
         writer.close()
+
+    assert table is not None
 
     out_file = str(tmp_path / "merged.parquet")
     merge_parquets(in_files, out_file, row_group_size=row_group_size)
@@ -79,7 +82,6 @@ def test_merge_parquets_single_file(tmp_path: pathlib.Path) -> None:
     in_file = str(tmp_path / "in.parquet")
     writer = pq.ParquetWriter(
         in_file, table.schema,
-        # version="1.0"
     )
     writer.write_table(table)
     writer.close()
@@ -94,7 +96,7 @@ def test_merge_parquets_single_file(tmp_path: pathlib.Path) -> None:
 
 
 def test_merge_parquets_no_files() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(OSError, match="no input files provided for merging"):
         merge_parquets([], "out.parquet")
     assert not os.path.exists("out.parquet")
 
@@ -118,7 +120,7 @@ def test_merge_parquets_broken_input_file(tmp_path: pathlib.Path) -> None:
 
     in_files = [str(tmp_path / "p1.parquet"), str(tmp_path / "p2.parquet")]
     out_file = str(tmp_path / "merged.parquet")
-    with pytest.raises(Exception):
+    with pytest.raises(pa.ArrowInvalid):
         merge_parquets(in_files, out_file)
 
     # assert no partial output file is left behind in case of error

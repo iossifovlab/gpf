@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def pedigree_parquet_schema() -> pa.Schema:
     """Return the schema for pedigree parquet file."""
-    fields = [
+    fields: list[pa.Field] = [
         pa.field("family_id", pa.string()),
         pa.field("person_id", pa.string()),
         pa.field("dad_id", pa.string()),
