@@ -129,6 +129,27 @@ class AlleleParquetSerializer:
 
         return pa.schema(fields)
 
+    @classmethod
+    def build_summary_blob_schema(
+        cls, annotation_schema: list[AttributeInfo],
+    ) -> dict[str, str]:
+
+        schema_summary = cls.build_summary_schema(annotation_schema)
+        result = {
+            f.name: str(f.type)
+            for f in schema_summary
+            if f.name not in {
+                "effect_gene", "summary_variant_data", "chromosome",
+            }
+        }
+        result["effects"] = "string"
+        result["chrom"] = "string"
+        result["alternative"] = "string"
+        result["allele_count"] = "int32"
+        result["af_ref_allele_count"] = "int32"
+        result["af_ref_allele_freq"] = "float"
+        return result
+
     @property
     def schema_family(self) -> pa.Schema:
         """Lazy construct and return the schema for the family alleles."""
