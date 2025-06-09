@@ -9,8 +9,13 @@ import django
 from dae import __version__ as VERSION
 
 sys.path.insert(0, os.path.abspath('..'))
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
-# django.setup()
+# Enabling Django
+import os
+import sys
+import django
+sys.path.insert(0, os.path.abspath(".."))
+os.environ["DJANGO_SETTINGS_MODULE"] = "wdae.settings"
+django.setup()
 
 
 # -*- coding: utf-8 -*-
@@ -76,7 +81,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GPF: Genotypes and Phenotypes in Families'
-copyright = u'2018-2022, iossifovlab.com'
+copyright = u'2018-2025, iossifovlab.com'
 author = u'iossifovlab.com'
 
 # The version info for the project you're documenting, acts as replacement for

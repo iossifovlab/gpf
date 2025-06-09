@@ -1,3 +1,6 @@
+/docs/wdae/modules
+/docs/wdae/routes
+/docs/dae/modules
 temp
 dae/reports
 *.pyc

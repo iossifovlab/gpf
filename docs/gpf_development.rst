@@ -2,9 +2,10 @@ GPF Development
 ===============
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 6
 
    changes
 
-   gpf/dae/dae/docs/index
-   gpf/wdae/wdae/docs/index
+   dae/index
+
+   wdae/index
