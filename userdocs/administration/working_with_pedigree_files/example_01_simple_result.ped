@@ -1,0 +1,7 @@
+familyId	personId	momId	dadId	sex	status	role	sampleId	generated	not_sequenced	member_index
+f1	f1.01	0	0	F	unaffected	mom	f1.01	False	False	0
+f1	f1.02	0	0	M	unaffected	dad	f1.02	False	False	1
+f1	f1.03	f1.01	f1.02	F	affected	prb	f1.03	False	False	2
+f1	f1.04	f1.01	f1.02	M	affected	sib	f1.04	False	False	3
+f1	f1.05	0	0	M	unaffected	step_dad	f1.05	False	False	4
+f1	f1.06	f1.01	f1.05	F	unaffected	maternal_half_sibling	f1.06	False	False	5
