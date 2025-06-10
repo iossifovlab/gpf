@@ -189,7 +189,7 @@ export class GeneSetsComponent implements OnInit {
       }
       // the gene set must be restored last, as that triggers the state update
       // otherwise, sharing a restored state won't work properly
-      this.selectedGeneSet = state.geneSet;
+      this.currentGeneSet = state.geneSet;
       this.validateState();
       this.onSearch();
     } else {
