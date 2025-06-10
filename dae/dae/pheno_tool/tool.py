@@ -1,5 +1,6 @@
 import logging
 from collections import Counter
+from collections.abc import Iterable
 from typing import Any, cast
 
 import numpy as np
@@ -12,7 +13,7 @@ from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.utils.lin_regress import LinearRegression
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role, Sex
-from dae.variants.family_variant import FamilyAllele
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 logger = logging.getLogger(__name__)
 
@@ -107,18 +108,18 @@ class PhenoToolHelper:
         return persons
 
     def genotype_data_variants(
-        self, data: dict, effect_groups: list[str],
+        self, variants: Iterable[FamilyVariant],
+        effect_types: list[str], effect_groups: list[str],
     ) -> dict[str, Counter]:
         """Collect effect groups variants."""
-        assert "effect_types" in data, data
-
-        effect_types = set(data["effect_types"])
         queried_effect_types = set(expand_effect_types(effect_types))
         variants_by_effect: dict[str, Counter] = {
             effect: Counter() for effect in queried_effect_types
         }
 
-        for variant in self.genotype_data.query_variants(**data):
+        for variant in variants:
+            if variant is None:
+                continue
             for allele in variant.matched_alleles:
                 fa = cast(FamilyAllele, allele)
                 assert fa.effects is not None
