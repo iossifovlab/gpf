@@ -59,7 +59,6 @@ export class FamilyTagsComponent implements OnInit {
     this.familyTags.selectedFamilyTags = selectedTags;
     this.familyTags.tagIntersection = intersection;
     this.onUpdateTags();
-    this.dispatchState();
   }
 
   public onChooseMode(intersected = true): void {
