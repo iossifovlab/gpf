@@ -8,26 +8,25 @@ import {
   SelectedDenovoTypes,
   SelectedPersonSetCollections } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
-import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngrx/store';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { selectDatasetId } from 'app/datasets/datasets.state';
-import { ComponentValidator } from 'app/common/component-validator';
 import { selectGeneSets, setGeneSetsValues } from './gene-sets.state';
 import { cloneDeep } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetHierarchy } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css']
 })
-export class GeneSetsComponent extends ComponentValidator implements OnInit {
+export class GeneSetsComponent implements OnInit {
   public geneSetsCollections: Array<GeneSetsCollection>;
   public geneSets: Array<GeneSet>;
   public searchQuery: string;
@@ -52,10 +51,10 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  @IsNotEmpty({message: 'Please select a gene set.'})
   public currentGeneSet: GeneSet;
   public currentGeneSetsCollection: GeneSetsCollection;
   public currentGeneSetsTypes: SelectedDenovoTypes[] = new Array<SelectedDenovoTypes>();
+  public errors: string[] = [];
 
   // The template needs local component reference to use Object static methods
   public object = Object;
@@ -66,13 +65,10 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
     public modalService: NgbModal,
     private datasetsTreeService: DatasetsTreeService,
     private datasetsService: DatasetsService
-  ) {
-    super(store, 'geneSets', selectGeneSets);
-  }
+  ) {}
 
   public ngOnInit(): void {
     this.geneSetsLoaded = null;
-    super.ngOnInit();
 
     combineLatest([
       this.datasetsTreeService.getDatasetHierarchy(),
@@ -140,6 +136,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
         for (const geneSet of this.geneSets) {
           if (geneSet.name === geneSetsStateClone.geneSet.name) {
             this.currentGeneSet = geneSet;
+            this.validateState();
             this.isLoading = false;
           }
         }
@@ -193,6 +190,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
       // the gene set must be restored last, as that triggers the state update
       // otherwise, sharing a restored state won't work properly
       this.selectedGeneSet = state.geneSet;
+      this.validateState();
       this.onSearch();
     } else {
       this.onSearch();
@@ -393,6 +391,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
   public set selectedGeneSetsCollection(selectedGeneSetsCollection: GeneSetsCollection) {
     this.currentGeneSetsCollection = selectedGeneSetsCollection;
     this.currentGeneSet = null;
+    this.validateState();
     this.currentGeneSetsTypes = new Array<SelectedDenovoTypes>();
     this.geneSets = [];
     this.searchQuery = '';
@@ -415,6 +414,9 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
   public set selectedGeneSet(geneSet) {
     this.currentGeneSet = geneSet;
+
+    this.validateState();
+
     this.store.dispatch(setGeneSetsValues({
       geneSet: this.currentGeneSet,
       geneSetsCollection: this.currentGeneSetsCollection,
@@ -428,5 +430,19 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
       this.currentGeneSet.name,
       this.currentGeneSetsTypes
     );
+  }
+
+  private validateState(): void {
+    this.errors = [];
+    if (!this.currentGeneSet) {
+      this.errors.push('Please select a gene set.');
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'geneSet', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'geneSet'}));
+    }
   }
 }
