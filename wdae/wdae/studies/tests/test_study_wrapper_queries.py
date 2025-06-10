@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
+import pytest_mock
 
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
@@ -542,6 +543,27 @@ def test_query_complex_query(
         t4c8_response_transformer,
     ))
     assert len(vs) == 2
+
+
+def test_query_unique_family_variants(
+    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    query = {"uniqueFamilyVariants": True}
+
+    spy = mocker.spy(
+        t4c8_query_transformer, "get_unique_family_variants")
+
+    list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
+    assert spy.call_count == 2
+    assert "uniqueFamilyVariants" in spy.call_args.args[0]
+    assert spy.call_args.args[0]["uniqueFamilyVariants"] is True
 
 
 @pytest.mark.parametrize(
