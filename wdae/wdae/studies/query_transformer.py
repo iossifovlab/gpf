@@ -479,7 +479,7 @@ class QueryTransformer(QueryTransformerProtocol):
             selected_family_tags=kwargs.get("selectedFamilyTags"),
             deselected_family_tags=kwargs.get("deselectedFamilyTags"),
             tags_or_mode=not bool(kwargs.get("tagIntersection", "True")),
-    )
+        )
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]
