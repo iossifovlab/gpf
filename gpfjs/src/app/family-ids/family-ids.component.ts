@@ -21,7 +21,7 @@ export class FamilyIdsComponent implements OnInit, OnDestroy {
     this.store.select(selectFamilyIds).pipe(take(1)).subscribe((familyIds: string[]) => {
       if (familyIds.length) {
         // restore state
-        this.setFamilyIds(familyIds.join('\n')); // must join on more conditions most likely
+        this.familyIds = familyIds.join('\n'); // must join on more conditions most likely
       } else {
         this.validateState('');
       }

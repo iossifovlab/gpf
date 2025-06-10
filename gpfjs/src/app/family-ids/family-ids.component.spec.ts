@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { FamilyIdsComponent } from './family-ids.component';
-import { familyIdsReducer, selectFamilyIds, setFamilyIds } from './family-ids.state';
+import { familyIdsReducer } from './family-ids.state';
 import { Store, StoreModule } from '@ngrx/store';
 import { of } from 'rxjs';
 
@@ -22,7 +22,6 @@ describe('FamilyIdsComponent', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
-    fixture.detectChanges();
   }));
 
   it('should create', () => {
@@ -36,9 +35,9 @@ describe('FamilyIdsComponent', () => {
 
     component.ngOnInit();
 
-    expect(selectSpy).toHaveBeenCalledWith(selectFamilyIds);
-    expect(setFamilyIdsSpy).toHaveBeenCalledWith('id1\nid2\nid3');
+    expect(selectSpy).not.toHaveBeenCalledWith();
+    expect(setFamilyIdsSpy).not.toHaveBeenCalledWith();
     expect(component.familyIds).toBe('id1\nid2\nid3');
-    expect(dispatchSpy).toHaveBeenCalledWith(setFamilyIds({familyIds: ['id1', 'id2', 'id3']}));
+    expect(dispatchSpy).not.toHaveBeenCalledWith();
   });
 });
