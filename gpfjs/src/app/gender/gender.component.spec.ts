@@ -3,8 +3,6 @@ import { GenderComponent } from './gender.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { Store, StoreModule } from '@ngrx/store';
 import { addGender, gendersReducer, removeGender } from './gender.state';
-import { Gender } from './gender';
-
 
 describe('GenderComponent', () => {
   let component: GenderComponent;
@@ -22,48 +20,41 @@ describe('GenderComponent', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
-    fixture.detectChanges();
   }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('both genders should be selected after create', () => {
-    expect(component.gender.male).toBeTruthy();
-    expect(component.gender.female).toBeTruthy();
+  it('all genders should be selected by default', () => {
+    component.ngOnInit();
+    expect(component.selectedGenders).toStrictEqual(['male', 'female', 'unspecified']);
   });
 
-  it('both genders should be selected after selectAll', () => {
+  it('all genders should be selected after selectAll', () => {
     component.selectAll();
-
-    expect(component.gender.male).toBeTruthy();
-    expect(component.gender.female).toBeTruthy();
+    expect(component.selectedGenders).toStrictEqual(['male', 'female', 'unspecified']);
   });
 
-  it('both genders should be un-selected after selectNone', () => {
+  it('all genders should be un-selected after selectNone', () => {
     component.selectNone();
-
-    expect(component.gender.male).toBe(false);
-    expect(component.gender.female).toBe(false);
+    expect(component.selectedGenders).toStrictEqual([]);
   });
 
   it('should set checked male value and save it to state', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
 
-    component.gender = new Gender();
-
     component.genderCheckValue('male', true);
     expect(dispatchSpy).toHaveBeenCalledWith(addGender({gender: 'male'}));
+    expect(component.selectedGenders).toStrictEqual(['male']);
   });
 
-  it('should unchecke male value and remove it to state', () => {
+  it('should uncheck male value and remove it from state', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component.gender = new Gender();
-    component.gender.male = true;
+    component.ngOnInit();
 
     component.genderCheckValue('male', false);
     expect(dispatchSpy).toHaveBeenCalledWith(removeGender({gender: 'male'}));
+    expect(component.selectedGenders).toStrictEqual(['female', 'unspecified']);
   });
 });
