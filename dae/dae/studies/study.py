@@ -440,7 +440,6 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
                 return_reference=return_reference,
                 return_unknown=return_unknown,
                 limit=limit,
-                **kwargs,
             ))
 
         if len(runners) == 0:
@@ -920,7 +919,6 @@ class GenotypeDataGroup(GenotypeData):
                 return_reference=return_reference,
                 return_unknown=return_unknown,
                 limit=limit,
-                **kwargs,
             ))
         return runners
 
