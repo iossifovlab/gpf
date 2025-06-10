@@ -17,7 +17,7 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapperBase, WDAEStudy
+from studies.study_wrapper import WDAEStudy
 from users_api.models import WdaeUser
 
 from datasets_api.permissions import (
@@ -103,7 +103,7 @@ class DatasetView(QueryBaseView):
         res = []
         for dataset in datasets:
             if dataset.is_genotype:
-                res.append(StudyWrapperBase.build_genotype_data_all_datasets(
+                res.append(WDAEStudy.build_genotype_data_all_datasets(
                             dataset.genotype_data))
             else:
                 res.append(self._collect_single_dataset(user, dataset))
@@ -138,7 +138,7 @@ class DatasetView(QueryBaseView):
                 psc.id: psc.domain_json()
                 for psc in dataset.genotype_data.person_set_collections.values()
             }
-            res = StudyWrapperBase.build_genotype_data_description(
+            res = WDAEStudy.build_genotype_data_description(
                 self.gpf_instance,
                 dataset.genotype_data,
                 person_set_collection_configs,

@@ -11,7 +11,7 @@ from federation.remote_study import (
     RemoteGenotypeData,
     RemoteGenotypeDataGroup,
 )
-from federation.remote_study_wrapper import RemoteStudyWrapper
+from federation.remote_study_wrapper import RemoteWDAEStudy
 from federation.rest_api_client import (
     RESTClient,
     RESTClientRequestError,
@@ -65,7 +65,7 @@ def load_extension(instance: WGPFInstance) -> None:
         instance.visible_datasets.extend(visible_studies)
         for study in studies:
             logger.info("register remote study %s", study.study_id)
-            wrapper = RemoteStudyWrapper(study)
+            wrapper = RemoteWDAEStudy(study)
 
             instance._variants_db.register_genotype_data(study)  # noqa: SLF001
             instance._study_wrappers[wrapper.study_id] = wrapper  # noqa: SLF001
@@ -76,7 +76,9 @@ def load_extension(instance: WGPFInstance) -> None:
                     wrapper.phenotype_data  # noqa: SLF001
 
             builder = RemoteEnrichmentBuilder(
-                instance.enrichment_helper, wrapper, client,
+                instance.enrichment_helper,
+                wrapper.remote_genotype_data,
+                client,
             )
 
             instance.register_enrichment_builder(wrapper.study_id, builder)

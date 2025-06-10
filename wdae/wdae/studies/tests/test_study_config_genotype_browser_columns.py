@@ -13,7 +13,7 @@ from dae.testing import (
     setup_pedigree,
     study_update,
 )
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 
 
 @pytest.fixture
@@ -143,7 +143,7 @@ def test_study_wrapper_preview_columns_ext(
                 - aaa
         """)),
     )
-    wrapper = StudyWrapper(study, None, None)  # type: ignore
+    wrapper = WDAEStudy(study, None)
     assert wrapper.preview_columns == [
         "family", "variant", "genotype", "effect", "frequency", "aaa",
     ]
@@ -166,7 +166,7 @@ def test_study_wrapper_download_columns_ext(
                 - aaa
         """)),
     )
-    wrapper = StudyWrapper(study, None, None)  # type: ignore
+    wrapper = WDAEStudy(study, None)
     assert wrapper.download_columns == [
         "family", "variant", "variant_extra",
         "family_person_ids", "family_structure", "best", "family_genotype",

@@ -4,7 +4,7 @@ from functools import cached_property
 from typing import Any, cast
 
 from studies.response_transformer import ResponseTransformer
-from studies.study_wrapper import StudyWrapperBase
+from studies.study_wrapper import WDAEStudy
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -15,7 +15,7 @@ from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
 logger = logging.getLogger(__name__)
 
 
-class RemoteStudyWrapper(StudyWrapperBase):
+class RemoteWDAEStudy(WDAEStudy):
     """Wrapper class for remote (federation) studies."""
 
     def __init__(self, remote_genotype_data: RemoteGenotypeData):
@@ -23,8 +23,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.remote_study_id = remote_genotype_data.remote_study_id
         self.rest_client = remote_genotype_data.rest_client
 
-        super().__init__(remote_genotype_data)
-
+        super().__init__(remote_genotype_data, None)
         pheno_id = self.config.get("phenotype_data")
         if pheno_id:
             self._phenotype_data = RemotePhenotypeData(
@@ -51,14 +50,12 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.remote_genotype_data.person_set_collections
 
     @property
-    def config_columns(self) -> list[dict[str, Any]]:
-        return cast(
-            list[dict[str, Any]],
-            self.config.genotype_browser.columns)
+    def config_columns(self) -> dict[str, Any]:
+        return cast(dict[str, Any], self.config["genotype_browser"]["columns"])
 
     @property
     def families(self) -> FamiliesData:
-        return self.remote_genotype_data._families  # noqa: SLF001
+        return self.remote_genotype_data.families
 
     @property
     def parents(self) -> set[str]:
@@ -125,7 +122,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 variant, family, list(map(get_source, sources)))
             # pylint: disable=protected-access
             row_variant = self.response_transformer.build_variant_row(
-                fv, sources, person_set_collection=person_set_collection_id)
+                fv, sources, [], person_set_collection=person_set_collection_id)
 
             yield row_variant
 

@@ -9,13 +9,13 @@ from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 
 
 def test_special_attrs_formatting(
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
     assert study_wrapper is not None

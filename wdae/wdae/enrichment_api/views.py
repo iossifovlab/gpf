@@ -146,7 +146,7 @@ class EnrichmentTestView(QueryBaseView):
         assert dataset is not None
 
         builder = self.gpf_instance \
-            .get_enrichment_builder(dataset)  # type: ignore
+            .get_enrichment_builder(dataset.genotype_data)  # type: ignore
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

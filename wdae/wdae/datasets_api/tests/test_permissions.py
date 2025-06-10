@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import override_settings
 from gpf_instance.gpf_instance import WGPFInstance
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 
 from dae.studies.study import GenotypeData, GenotypeDataGroup
 from datasets_api.models import Dataset
@@ -174,7 +174,7 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     assert dataset is not None
     assert dataset.study_id == "big_dataset"
 
-    dataset_wrapper = StudyWrapper(dataset, None, None)  # type: ignore
+    dataset_wrapper = WDAEStudy(dataset, None)  # type: ignore
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 

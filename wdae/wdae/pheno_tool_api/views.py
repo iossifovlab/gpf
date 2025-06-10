@@ -15,7 +15,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
 
@@ -70,7 +70,7 @@ class PhenoToolView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if study_wrapper.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        study_wrapper = cast(StudyWrapper, study_wrapper)
+        study_wrapper = cast(WDAEStudy, study_wrapper)
         adapter = cast(
             PhenoToolAdapter,
             self.gpf_instance.get_pheno_tool_adapter(
@@ -204,7 +204,7 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if study_wrapper.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        study_wrapper = cast(StudyWrapper, study_wrapper)
+        study_wrapper = cast(WDAEStudy, study_wrapper)
 
         data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
             data["effectTypes"],

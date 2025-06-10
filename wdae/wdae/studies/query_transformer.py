@@ -27,7 +27,7 @@ from dae.variants.attributes import Inheritance, Zygosity
 from dae.variants.core import Allele
 from studies.study_wrapper import (
     QueryTransformerProtocol,
-    StudyWrapper,
+    WDAEStudy,
 )
 
 logger = logging.getLogger(__name__)
@@ -246,7 +246,7 @@ class QueryTransformer(QueryTransformerProtocol):
 
     def _transform_filters_to_ids(
         self, filters: list[dict],
-        study_wrapper: StudyWrapper,
+        study_wrapper: WDAEStudy,
     ) -> set[str]:
         result = []
         for filter_conf in filters:
@@ -264,7 +264,7 @@ class QueryTransformer(QueryTransformerProtocol):
 
     def _transform_pheno_filters_to_ids(
         self, filters: list[dict],
-        study_wrapper: StudyWrapper,
+        study_wrapper: WDAEStudy,
     ) -> set[str]:
         result = []
         for filter_conf in filters:
@@ -291,7 +291,7 @@ class QueryTransformer(QueryTransformerProtocol):
         kwargs["inheritance"] = inheritance
 
     def extract_person_set_collection_query(
-            self, study_wrapper: StudyWrapper, kwargs: dict[str, Any],
+            self, study: WDAEStudy, kwargs: dict[str, Any],
     ) -> PSCQuery:
         psc_query_raw = kwargs.pop("personSetCollection", {})
         logger.debug("person set collection requested: %s", psc_query_raw)
@@ -303,7 +303,7 @@ class QueryTransformer(QueryTransformerProtocol):
         else:
             # use default (first defined) person set collection
             # we need it for meaningful pedigree display
-            person_set_collections = study_wrapper\
+            person_set_collections = study\
                 .genotype_data.person_set_collections
             psc_id = next(iter(person_set_collections))
             default_psc = person_set_collections[psc_id]
@@ -313,7 +313,7 @@ class QueryTransformer(QueryTransformerProtocol):
         return psc_query
 
     def _handle_person_set_collection(
-        self, study_wrapper: StudyWrapper, kwargs: dict[str, Any],
+        self, study_wrapper: WDAEStudy, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         psc_query = \
             self.extract_person_set_collection_query(study_wrapper, kwargs)
@@ -454,7 +454,7 @@ class QueryTransformer(QueryTransformerProtocol):
         return kwargs["uniqueFamilyVariants"]
 
     def transform_kwargs(
-        self, study_wrapper: StudyWrapper, **kwargs: Any,
+        self, study: WDAEStudy, **kwargs: Any,
     ) -> dict[str, Any]:
         """
         Transform WEB query variants params into genotype data params.
@@ -478,7 +478,7 @@ class QueryTransformer(QueryTransformerProtocol):
             kwargs,
         )
 
-        kwargs = self._handle_person_set_collection(study_wrapper, kwargs)
+        kwargs = self._handle_person_set_collection(study, kwargs)
 
         kwargs["tags_query"] = TagsQuery(
             selected_family_tags=kwargs.get("selectedFamilyTags"),
@@ -609,7 +609,7 @@ class QueryTransformer(QueryTransformerProtocol):
             if person_filters:
                 matching_person_ids = self._transform_filters_to_ids(
                     person_filters,
-                    study_wrapper,
+                    study,
                 )
                 if matching_person_ids is not None and kwargs.get("personIds"):
                     kwargs["personIds"] = set.intersection(
@@ -623,7 +623,7 @@ class QueryTransformer(QueryTransformerProtocol):
             if person_filters:
                 matching_person_ids = self._transform_pheno_filters_to_ids(
                     person_filters,
-                    study_wrapper,
+                    study,
                 )
                 if matching_person_ids is not None and kwargs.get("personIds"):
                     kwargs["personIds"] = set.intersection(
@@ -637,7 +637,7 @@ class QueryTransformer(QueryTransformerProtocol):
             if family_filters:
                 matching_family_ids = self._transform_filters_to_ids(
                     family_filters,
-                    study_wrapper,
+                    study,
                 )
                 if matching_family_ids is not None and kwargs.get("familyIds"):
                     kwargs["familyIds"] = set.intersection(
@@ -651,7 +651,7 @@ class QueryTransformer(QueryTransformerProtocol):
             if family_filters:
                 matching_family_ids = self._transform_pheno_filters_to_ids(
                     family_filters,
-                    study_wrapper,
+                    study,
                 )
                 if matching_family_ids is not None and kwargs.get("familyIds"):
                     kwargs["familyIds"] = set.intersection(

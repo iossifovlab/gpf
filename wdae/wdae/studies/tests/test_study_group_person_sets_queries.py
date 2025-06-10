@@ -18,7 +18,7 @@ from studies.response_transformer import (
     ResponseTransformer,
     make_response_transformer,
 )
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 
@@ -73,7 +73,7 @@ def wgpf_fixture(
 
 
 @pytest.fixture(scope="module")
-def study_1(wgpf_fixture: WGPFInstance) -> StudyWrapper:
+def study_1(wgpf_fixture: WGPFInstance) -> WDAEStudy:
     root_path = pathlib.Path(wgpf_fixture.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study_1" / "pedigree" / "in.ped",
@@ -108,7 +108,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
             },
         },
     }
-    return StudyWrapper(vcf_study(
+    return WDAEStudy(vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         wgpf_fixture,
@@ -158,7 +158,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
 
 
 @pytest.fixture(scope="module")
-def study_2(wgpf_fixture: WGPFInstance) -> StudyWrapper:
+def study_2(wgpf_fixture: WGPFInstance) -> WDAEStudy:
     root_path = pathlib.Path(wgpf_fixture.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study_2" / "pedigree" / "in.ped",
@@ -194,7 +194,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
             },
         },
     }
-    return StudyWrapper(vcf_study(
+    return WDAEStudy(vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
         wgpf_fixture,
@@ -246,13 +246,13 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
 @pytest.fixture
 def dataset(
     wgpf_fixture: WGPFInstance,
-    study_1: StudyWrapper,
-    study_2: StudyWrapper,
-) -> StudyWrapper:
+    study_1: WDAEStudy,
+    study_2: WDAEStudy,
+) -> WDAEStudyGroup:
     root_path = pathlib.Path(wgpf_fixture.dae_dir)
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return StudyWrapper(setup_dataset(
+    return WDAEStudyGroup(setup_dataset(
         "dataset", wgpf_fixture,
         study_1.genotype_data, study_2.genotype_data,
         dataset_config_update=textwrap.dedent(f"""
@@ -297,11 +297,11 @@ def response_transformer(wgpf_fixture: WGPFInstance) -> ResponseTransformer:
     return make_response_transformer(wgpf_fixture)
 
 
-def test_dataset_simple(dataset: StudyWrapper) -> None:
+def test_dataset_simple(dataset: WDAEStudyGroup) -> None:
     assert dataset is not None
     assert dataset.person_set_collections
     assert "phenotype" in dataset.person_set_collections
-    psc = dataset.get_person_set_collection("phenotype")
+    psc = dataset.genotype_data.get_person_set_collection("phenotype")
     assert psc is not None
 
     assert "autism" in psc.person_sets
@@ -324,7 +324,7 @@ def test_dataset_simple(dataset: StudyWrapper) -> None:
     ],
 )
 def test_dataset_person_sets_queries(
-    dataset: StudyWrapper,
+    dataset: WDAEStudy,
     query_transformer: QueryTransformer,
     response_transformer: ResponseTransformer,
     psc_query: PSCQuery,
