@@ -1,4 +1,4 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GeneSymbolsComponent } from './gene-symbols.component';
 import { Store, StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
@@ -50,39 +50,36 @@ describe('GeneSymbolsComponent', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
-    jest.spyOn(store, 'select').mockReturnValue(of([]));
     jest.spyOn(store, 'dispatch').mockReturnValue();
-
-    fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should get gene symbols from state', fakeAsync(() => {
+  it('should get gene symbols from state', () => {
     const setGeneSymbolsSpy = jest.spyOn(component, 'setGeneSymbols').mockImplementation();
-    const geneSymbolsInputSpy = jest.spyOn(component.geneSymbolsInput$, 'next');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     jest.spyOn(store, 'select').mockReturnValueOnce(of(['value1', 'value2']));
     expect(component.geneSymbols).toBe('');
     component.ngOnInit();
 
-    expect(geneSymbolsInputSpy).toHaveBeenCalledWith('value1\nvalue2');
-    tick(350);
-    expect(setGeneSymbolsSpy).toHaveBeenCalledWith('value1\nvalue2');
-  }));
+    expect(component.geneSymbols).toBe('value1\nvalue2');
+    expect(setGeneSymbolsSpy).not.toHaveBeenCalledWith();
+    expect(dispatchSpy).not.toHaveBeenCalledWith();
+  });
 
-  it('should get gene symbols from state when symbols are more than 3', fakeAsync(() => {
+  it('should get gene symbols from state when symbols are more than 3', () => {
     const setGeneSymbolsSpy = jest.spyOn(component, 'setGeneSymbols').mockImplementation();
-    const geneSymbolsInputSpy = jest.spyOn(component.geneSymbolsInput$, 'next');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     jest.spyOn(store, 'select').mockReturnValueOnce(of(['value1', 'value2', 'value3', 'value4']));
     expect(component.geneSymbols).toBe('');
     component.ngOnInit();
 
-    expect(geneSymbolsInputSpy).toHaveBeenCalledWith('value1, value2, value3, value4');
-    tick(350);
-    expect(setGeneSymbolsSpy).toHaveBeenCalledWith('value1, value2, value3, value4');
-  }));
+    expect(component.geneSymbols).toBe('value1, value2, value3, value4');
+    expect(setGeneSymbolsSpy).not.toHaveBeenCalledWith();
+    expect(dispatchSpy).not.toHaveBeenCalledWith();
+  });
 
   it('should dispatch to state when genes are valid', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');

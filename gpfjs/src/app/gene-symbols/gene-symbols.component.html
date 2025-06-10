@@ -3,10 +3,10 @@
     #textArea
     id="text-area"
     type="text"
-    (keyup)="geneSymbolsInput$.next(textArea.value)"
+    (keyup)="setGeneSymbols(textArea.value)"
     class="form-control"
     spellcheck="false"
-    >{{ geneSymbolsInput$ | async }}</textarea
+    >{{ geneSymbols }}</textarea
   >
   <span id="sensitivity-note" style="color: #acacac; font-style: italic">* Gene symbols are case-sensitive</span>
 

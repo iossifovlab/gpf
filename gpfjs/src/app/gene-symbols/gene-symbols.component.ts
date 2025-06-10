@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
-import { BehaviorSubject, distinctUntilChanged, Subscription, take } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
@@ -13,7 +13,6 @@ import { cloneDeep } from 'lodash';
 export class GeneSymbolsComponent implements OnInit, OnDestroy {
   public geneSymbols: string = '';
   public invalidGenes: string;
-  public geneSymbolsInput$: BehaviorSubject<string> = new BehaviorSubject<string>('');
   public errors: string[] = [];
   private validationSubscription = new Subscription();
 
@@ -29,24 +28,17 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
       if (geneSymbolsState.length >= 3) {
         separator = ', ';
       }
-      this.geneSymbolsInput$.next(geneSymbolsState.join(separator));
+      this.geneSymbols = geneSymbolsState.join(separator);
       this.validateState(geneSymbolsState);
-    });
-
-    this.geneSymbolsInput$.pipe(
-      distinctUntilChanged(),
-    ).subscribe(genes => {
-      this.setGeneSymbols(genes);
     });
   }
 
   public setGeneSymbols(geneSymbols: string): void {
     geneSymbols = geneSymbols.trim();
     if (!geneSymbols) {
-      this.errors = [];
       this.geneSymbols = '';
-      this.invalidGenes = '';
       this.validateState([]);
+      this.store.dispatch(setGeneSymbols({geneSymbols: []}));
       return;
     }
 
@@ -56,10 +48,13 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
     this.geneSymbols = geneSymbols;
 
     this.validateState(genes);
+    this.store.dispatch(setGeneSymbols({geneSymbols: genes}));
   }
 
   private validateState(genes: string[]): void {
     if (!genes.length) {
+      this.errors = [];
+      this.invalidGenes = '';
       this.errors.push('Please insert at least one gene symbol.');
       this.store.dispatch(setErrors({
         errors: {
@@ -77,7 +72,6 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
 
       if (!invalidGenes.length) {
         this.store.dispatch(resetErrors({componentId: 'geneSymbols'}));
-        this.store.dispatch(setGeneSymbols({geneSymbols: genes}));
       } else {
         this.invalidGenes = invalidGenes.join(', ');
         this.errors.push(`Invalid genes: ${this.invalidGenes}`);
