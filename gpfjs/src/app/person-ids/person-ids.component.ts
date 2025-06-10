@@ -1,31 +1,24 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { Store } from '@ngrx/store';
-import { ComponentValidator } from 'app/common/component-validator';
 import { selectPersonIds, setPersonIds } from './person-ids.state';
 import { take } from 'rxjs';
+import { resetErrors, setErrors } from 'app/common/errors.state';
+import { cloneDeep } from 'lodash';
 
-export class PersonIds {
-  @IsNotEmpty({message: 'Please insert at least one person id.'})
-  public personIds = '';
-}
 
 @Component({
   selector: 'gpf-person-ids',
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
 })
-export class PersonIdsComponent extends ComponentValidator implements OnInit {
-  @ValidateNested()
-  public personIds = new PersonIds();
+export class PersonIdsComponent implements OnInit {
+  public personIds = '';
+  public errors: string[] = [];
   @ViewChild('textArea') private textArea: ElementRef;
 
-  public constructor(protected store: Store) {
-    super(store, 'personIds', selectPersonIds);
-  }
+  public constructor(protected store: Store) { }
 
   public ngOnInit(): void {
-    super.ngOnInit();
     this.focusTextInputArea();
 
     this.store.select(selectPersonIds).pipe(take(1)).subscribe((personIds: string[]) => {
@@ -38,10 +31,13 @@ export class PersonIdsComponent extends ComponentValidator implements OnInit {
   }
 
   public setPersonIds(personIds: string): void {
+    this.validateState(personIds);
+
     const result = personIds
       .split(/[,\s]/)
       .filter(s => s !== '');
-    this.personIds.personIds = personIds;
+    this.personIds = personIds;
+
     this.store.dispatch(setPersonIds({personIds: result}));
   }
 
@@ -58,7 +54,24 @@ export class PersonIdsComponent extends ComponentValidator implements OnInit {
 
   private focusTextInputArea(): void {
     this.waitForTextInputAreaToLoad().then(() => {
-      this.textArea.nativeElement.focus();
+      (this.textArea.nativeElement as HTMLTextAreaElement).focus();
     });
+  }
+
+  private validateState(personIds: string): void {
+    this.errors = [];
+    if (!personIds) {
+      this.errors.push('Please insert at least one person id.');
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'personIds', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'personIds'}));
+    }
   }
 }
