@@ -33,7 +33,7 @@ export class UniqueFamilyVariantsFilterComponent implements OnChanges, OnInit {
   public ngOnInit(): void {
     // restore state
     this.store.select(selectUniqueFamilyVariantsFilter).subscribe(state => {
-      this.filterValue = state;
+      this.enabled = state;
     });
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
