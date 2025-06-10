@@ -26,7 +26,7 @@ export class PersonIdsComponent implements OnInit {
       if (personIds.length >= 3) {
         separator = ', ';
       }
-      this.setPersonIds(personIds.join(separator));
+      this.personIds = personIds.join(separator);
     });
   }
 
