@@ -2,7 +2,6 @@ import { RegionsFilter } from './regions-filter';
 import { Component, ElementRef, Input, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectRegionsFilters, setRegionsFilters } from './regions-filter.state';
-import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { resetErrors, setErrors } from 'app/common/errors.state';
@@ -11,7 +10,7 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
 })
-export class RegionsFilterComponent extends ComponentValidator implements OnInit, OnDestroy {
+export class RegionsFilterComponent implements OnInit, OnDestroy {
   @Input() public genome: string;
   public regionsFilter = new RegionsFilter();
   public errors: string[] = [];
@@ -20,9 +19,7 @@ export class RegionsFilterComponent extends ComponentValidator implements OnInit
 
   public constructor(
     protected store: Store,
-  ) {
-    super(store, 'regionsFilter', selectRegionsFilters);
-  }
+  ) {}
 
   public ngOnInit(): void {
     this.store.select(selectRegionsFilters).pipe(take(1))
@@ -59,7 +56,7 @@ export class RegionsFilterComponent extends ComponentValidator implements OnInit
 
   private focusTextInputArea(): void {
     this.waitForTextInputAreaToLoad().then(() => {
-      this.textArea.nativeElement.focus();
+      (this.textArea.nativeElement as HTMLTextAreaElement).focus();
     });
   }
 
