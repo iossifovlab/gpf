@@ -30,7 +30,7 @@ export class RegionsFilterComponent extends ComponentValidator implements OnInit
         this.focusTextInputArea();
         this.regionsFilter.genome = this.genome;
         this.validateState(regionsFilters);
-        this.setRegionsFilter(regionsFilters.join('\n'));
+        this.regionsFilter.regionsFilter = regionsFilters.join('\n');
       });
   }
 
