@@ -2,11 +2,14 @@
 import json
 import operator
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+
+from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize("url,method,body,status", [
@@ -144,3 +147,192 @@ def test_gene_view_config(
         "/api/v3/gene_view/config?datasetId=t4c8_study_1",
     )
     assert response.status_code == status.HTTP_200_OK
+
+
+summary_query_kwargs_expected = [
+    (
+        {"regions": ["chr1:1-100"]},
+        {"regions": [Region("chr1", 1, 100)]},
+
+    ),
+    (
+        {"genes": ["t4"]},
+        {"genes": ["t4"]},
+    ),
+    (
+        {
+            "effectTypes": [
+                "frame-shift", "nonsense", "splice-site",
+                "no-frame-shift-newStop", "missense", "no-frame-shift",
+                "noStart", "noEnd", "synonymous", "CNV+", "CNV-", "CDS",
+            ],
+        },
+        {
+            "effect_types": [
+                "frame-shift", "nonsense", "splice-site",
+                "no-frame-shift-newStop", "missense", "no-frame-shift",
+                "noStart", "noEnd", "synonymous", "CNV+", "CNV-", "CDS",
+            ],
+        },
+    ),
+    (
+        {"variantTypes": ["sub"]},
+        {"variant_type": "substitution"},
+    ),
+    (
+        {"studyFilters": ["t4c8_dataset", "t4c8_study_1"]},
+        {"study_filters": {"t4c8_dataset", "t4c8_study_1"}},
+    ),
+    (
+        {"limit": 10000},
+        {"limit": 10000},
+    ),
+    (
+        {"return_unknown": True},
+        {"return_unknown": True},
+    ),
+    (
+        {"return_reference": True},
+        {"return_reference": True},
+    ),
+    (
+        {"frequency_filter": True},
+        {"frequency_filter": True},
+    ),
+    (
+        {"category_attr_filter": [{"test": "test"}]},
+        {"category_attr_filter": [{"test": "test"}]},
+    ),
+    (
+        {"real_attr_filter": [{"test": "test"}]},
+        {"real_attr_filter": [{"test": "test"}]},
+    ),
+    (
+        {"ultra_rare": True},
+        {"ultra_rare": True},
+    ),
+]
+
+
+@pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
+def test_query_gene_view_summary_variants_dataset(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    data["geneSymbols"] = ["t4"]
+    with patch(
+        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+    ) as mock_create:
+        mock_create.return_value = []
+        response = admin_client.post(
+            "/api/v3/gene_view/query_summary_variants",
+            json.dumps(
+                dict(data, datasetId="t4c8_dataset", geneSymbols=["t4"]),
+            ),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+        mock_create.assert_called()
+
+        called_kwargs = mock_create.call_args.kwargs
+        for key, value in expected.items():
+            assert called_kwargs[key] == value
+
+
+@pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
+def test_query_gene_view_summary_variants_download_dataset(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    data["geneSymbols"] = ["t4"]
+    with patch(
+        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+    ) as mock_create:
+        mock_create.return_value = []
+        query_data = {
+            "queryData": json.dumps({
+                **data,
+                "geneSymbols": ["t4"],
+                "datasetId": "t4c8_study_1",
+                "download": True,
+            }),
+        }
+        response = admin_client.post(
+            "/api/v3/gene_view/download_summary_variants",
+            json.dumps(query_data),
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        _ = list(response.streaming_content)  # type: ignore
+        mock_create.assert_called()
+
+        called_kwargs = mock_create.call_args.kwargs
+        for key, value in expected.items():
+            assert called_kwargs[key] == value
+
+
+@pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
+def test_query_gene_view_summary_variants_study(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    data["geneSymbols"] = ["t4"]
+    with patch(
+        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+    ) as mock_create:
+        mock_create.return_value = []
+        response = admin_client.post(
+            "/api/v3/gene_view/query_summary_variants",
+            json.dumps(
+                dict(data, datasetId="t4c8_study_1", geneSymbols=["t4"]),
+            ),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+        mock_create.assert_called()
+
+        called_kwargs = mock_create.call_args.kwargs
+        for key, value in expected.items():
+            assert called_kwargs[key] == value
+
+
+@pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
+def test_query_gene_view_summary_variants_download_study(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    data["geneSymbols"] = ["t4"]
+    with patch(
+        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+    ) as mock_create:
+        mock_create.return_value = []
+        query_data = {
+            "queryData": json.dumps({
+                **data,
+                "geneSymbols": ["t4"],
+                "datasetId": "t4c8_dataset",
+                "download": True,
+            }),
+        }
+        response = admin_client.post(
+            "/api/v3/gene_view/download_summary_variants",
+            json.dumps(query_data),
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        _ = list(response.streaming_content)  # type: ignore
+        mock_create.assert_called()
+
+        called_kwargs = mock_create.call_args.kwargs
+        for key, value in expected.items():
+            assert called_kwargs[key] == value
