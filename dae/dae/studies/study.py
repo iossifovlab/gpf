@@ -415,7 +415,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> QueryResult | None:
         # pylint: disable=too-many-locals,too-many-arguments,unused-argument
         """Build a query result for summary variants only."""
@@ -903,7 +903,7 @@ class GenotypeDataGroup(GenotypeData):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> list[QueryRunner]:
         runners = []
         for study in self.get_query_leaf_studies(study_filters):
