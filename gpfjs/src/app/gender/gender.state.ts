@@ -1,6 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
-export const initialState = [];
+import { cloneDeep } from 'lodash';
+export const initialState: string[] = [];
 
 export const selectGenders = createFeatureSelector<string[]>('genders');
 
@@ -28,5 +29,5 @@ export const gendersReducer = createReducer(
   on(setGenders, (state: string[], {genders}) => [...genders]),
   on(addGender, (state: string[], {gender}) => [...state, gender]),
   on(removeGender, (state: string[], {gender}) => state.filter(gen => gen !== gender)),
-  on(reset, resetGenders, state => [...initialState]),
+  on(reset, resetGenders, state => cloneDeep(initialState)),
 );
