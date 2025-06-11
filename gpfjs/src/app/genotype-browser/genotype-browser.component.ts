@@ -26,7 +26,7 @@ import { selectPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.
 import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { selectPersonIds } from 'app/person-ids/person-ids.state';
 import { selectPresentInChild } from 'app/present-in-child/present-in-child.state';
-import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { selectPresentInParent, setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { selectRegionsFilters } from 'app/regions-filter/regions-filter.state';
 import { selectStudyFilters } from 'app/study-filters/study-filters.state';
 import { selectStudyTypes } from 'app/study-types/study-types.state';
@@ -46,7 +46,7 @@ import { selectZygosityFilter } from 'app/zygosity-filters/zygosity-filter.state
   styleUrls: ['./genotype-browser.component.css'],
 })
 export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
-  public genotypePreviewVariantsArray: GenotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
+  public genotypePreviewVariantsArray: GenotypePreviewVariantsArray = null;
   public showTable = false;
   public legend: Array<PersonSet>;
 
@@ -102,22 +102,40 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
     this.autoPreview = this.route.snapshot.queryParams.preview === 'true';
     this.store.select(selectDatasetId).pipe(
       take(1),
-      switchMap(datasetIdState => this.datasetsService.getDataset(datasetIdState))
-    ).subscribe(dataset => {
+      switchMap(datasetIdState => combineLatest([
+        this.datasetsService.getDataset(datasetIdState),
+        this.store.select(selectPresentInParent)
+      ]).pipe(take(1))),
+    ).subscribe(([
+      dataset,
+      presentInParentState
+    ]) => {
       if (!dataset) {
         return;
       }
       this.selectedDataset = dataset;
-      this.getGenotypeBrowserState().subscribe(state => {
-        this.genotypeBrowserState = { ...state };
-        if (!this.autoPreview) {
-          this.genotypePreviewVariantsArray = null;
-          if (this.queryService.isStreamingActive()) {
-            this.queryService.cancelStreamPost();
-            this.submitQuery();
-          }
+
+      if (!presentInParentState.presentInParent.length) {
+        let selectedPresentInParentValues = ['mother only', 'father only', 'mother and father', 'neither'];
+        let selectedRarityType = 'ultraRare';
+        const rarityIntervalStart = 0;
+        const rarityIntervalEnd = 1;
+        if (this.selectedDataset.hasDenovo) {
+          selectedPresentInParentValues = ['neither'];
+          selectedRarityType = '';
         }
-      });
+        this.store.dispatch(setPresentInParent({
+          presentInParent: {
+            presentInParent: selectedPresentInParentValues,
+            rarity: {
+              rarityType: selectedRarityType,
+              rarityIntervalStart: rarityIntervalStart,
+              rarityIntervalEnd: rarityIntervalEnd,
+            }
+          }
+        }));
+      }
+
       if (this.autoPreview) {
         this.router.navigate([], {
           relativeTo: this.route,
@@ -128,10 +146,21 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
         this.submitQuery();
       }
     });
+
+    this.getGenotypeBrowserState().subscribe(state => {
+      this.genotypeBrowserState = { ...state };
+      if (!this.autoPreview) {
+        this.genotypePreviewVariantsArray = null;
+        if (this.queryService.isStreamingActive()) {
+          this.queryService.cancelStreamPost();
+          this.submitQuery();
+        }
+      }
+    });
   }
 
   private getGenotypeBrowserState(): Observable<object> {
-    return combineLatest(
+    return combineLatest([
       this.store.select(selectVariantTypes),
       this.store.select(selectEffectTypes),
       this.store.select(selectGenders),
@@ -154,7 +183,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
       this.store.select(selectFamilyMeasureHistograms),
       this.store.select(selectPersonMeasureHistograms),
       this.store.select(selectZygosityFilter),
-    ).pipe(
+    ]).pipe(
       map(([
         variantTypesState,
         effectTypesState,

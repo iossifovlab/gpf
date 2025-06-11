@@ -450,6 +450,14 @@ describe('GenotypeBrowserComponent', () => {
   it('should create genotype browser state with rare rarity', () => {
     jest.clearAllMocks();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+      mockDataset,
+      {
+        presentInParent: [],
+        rarity: null
+      } as PresentInParent
+    ]));
+
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
     jest.spyOn(mockDatasetsService, 'getDataset').mockReturnValueOnce(of(mockDataset));
     component.ngAfterViewInit();
@@ -486,6 +494,14 @@ describe('GenotypeBrowserComponent', () => {
       rarity: {
         rarityType: 'ultraRare'
       }} as PresentInParent;
+
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+      mockDataset,
+      {
+        presentInParent: [],
+        rarity: null
+      } as PresentInParent
+    ]));
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
     jest.spyOn(mockDatasetsService, 'getDataset').mockReturnValueOnce(of(mockDataset));

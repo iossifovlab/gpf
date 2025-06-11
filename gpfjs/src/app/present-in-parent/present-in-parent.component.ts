@@ -1,13 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Validate, ValidateIf, Min, Max } from 'class-validator';
-import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
-import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
-import { SetNotEmpty } from '../utils/set.validators';
-import { ComponentValidator } from 'app/common/component-validator';
 import { selectPresentInParent, setPresentInParent } from './present-in-parent.state';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-present-in-parent',
@@ -15,22 +11,15 @@ import { cloneDeep } from 'lodash';
   styleUrls: ['./present-in-parent.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PresentInParentComponent extends ComponentValidator implements OnInit {
-  @ValidateIf((o: PresentInParentComponent) => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)
-  @Min(0) @Max(100)
-  @IsLessThanOrEqual('rarityIntervalEnd')
+export class PresentInParentComponent implements OnInit {
   public rarityIntervalStart = 0;
 
-  @ValidateIf((o: PresentInParentComponent) => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalEnd !== null)
-  @Min(0) @Max(100)
-  @IsMoreThanOrEqual('rarityIntervalStart')
   public rarityIntervalEnd = 1;
 
   public presentInParentValues: Set<string> = new Set([
     'mother only', 'father only', 'mother and father', 'neither'
   ]);
 
-  @Validate(SetNotEmpty, { message: 'Select at least one.' })
   public selectedValues: Set<string> = new Set();
 
   public rarityTypes: Set<string> = new Set([
@@ -39,15 +28,13 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
   public selectedRarityType = '';
   @Input() public hasDenovo = false;
   @Input() public hasZygosity: boolean;
+  public errors: string[] = [];
 
-  public constructor(protected store: Store) {
-    super(store, 'presentInParent', selectPresentInParent);
-  }
+  public constructor(protected store: Store) {}
 
   public ngOnInit(): void {
-    super.ngOnInit();
-
     this.store.select(selectPresentInParent).pipe(take(1)).subscribe(state => {
+      // remove when refactor pheno tool
       if (!state.presentInParent.length) {
         if (this.hasDenovo) {
           this.selectedValues = new Set(['neither']);
@@ -61,7 +48,7 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
         this.selectedRarityType = state.rarity.rarityType;
         this.rarityIntervalStart = state.rarity.rarityIntervalStart;
         this.rarityIntervalEnd = state.rarity.rarityIntervalEnd;
-        this.updateState();
+        this.validateState();
       }
     });
   }
@@ -101,6 +88,7 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
   }
 
   public updateState(): void {
+    this.validateState();
     this.store.dispatch(setPresentInParent({
       presentInParent: {
         presentInParent: [...this.selectedValues],
@@ -111,5 +99,47 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
         }
       }
     }));
+  }
+
+  private validateState(): void {
+    this.errors = [];
+    if (!this.selectedValues.size) {
+      this.errors.push('Select at least one.');
+    }
+
+    if (this.selectedRarityType === 'interval') {
+      if (this.rarityIntervalStart < 0) {
+        this.errors.push('rarityIntervalStart must not be less than 0');
+      }
+      if (this.rarityIntervalStart > 100) {
+        this.errors.push('rarityIntervalStart must not be greater than 100');
+      }
+      if (this.rarityIntervalStart >= this.rarityIntervalEnd) {
+        this.errors.push('rarityIntervalStart should be less than or equal to rarityIntervalEnd');
+      }
+      if (this.rarityIntervalEnd <= this.rarityIntervalStart) {
+        this.errors.push('rarityIntervalEnd should be more than or equal to rarityIntervalStart');
+      }
+    }
+
+    if (this.selectedRarityType === 'interval' || this.selectedRarityType === 'rare') {
+      if (this.rarityIntervalEnd < 0) {
+        this.errors.push('rarityIntervalEnd must not be less than 0');
+      }
+      if (this.rarityIntervalEnd > 100) {
+        this.errors.push('rarityIntervalEnd must not be greater than 100');
+      }
+    }
+
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'presentInParent', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'presentInParent'}));
+    }
   }
 }
