@@ -28,7 +28,7 @@ export class PresentInChildComponent extends ComponentValidator implements OnIni
     super.ngOnInit();
     this.store.select(selectPresentInChild).pipe(take(1)).subscribe(presentInChildState => {
       // restore state
-      this.updatePresentInChild(new Set([...presentInChildState]));
+      this.selectedValues = new Set(presentInChildState);
     });
   }
 

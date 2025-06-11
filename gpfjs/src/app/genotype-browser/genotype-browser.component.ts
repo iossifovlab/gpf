@@ -25,7 +25,7 @@ import { selectInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.st
 import { selectPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { selectPersonIds } from 'app/person-ids/person-ids.state';
-import { selectPresentInChild } from 'app/present-in-child/present-in-child.state';
+import { selectPresentInChild, setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { selectPresentInParent, setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { selectRegionsFilters } from 'app/regions-filter/regions-filter.state';
 import { selectStudyFilters } from 'app/study-filters/study-filters.state';
@@ -104,11 +104,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
       take(1),
       switchMap(datasetIdState => combineLatest([
         this.datasetsService.getDataset(datasetIdState),
-        this.store.select(selectPresentInParent)
+        this.store.select(selectPresentInParent),
+        this.store.select(selectPresentInChild),
       ]).pipe(take(1))),
     ).subscribe(([
       dataset,
-      presentInParentState
+      presentInParentState,
+      presentInChildState,
     ]) => {
       if (!dataset) {
         return;
@@ -133,6 +135,12 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
               rarityIntervalEnd: rarityIntervalEnd,
             }
           }
+        }));
+      }
+
+      if (!presentInChildState.length) {
+        this.store.dispatch(setPresentInChild({
+          presentInChild: ['proband only', 'proband and sibling']
         }));
       }
 
