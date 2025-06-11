@@ -1,48 +1,47 @@
 import { Component, OnInit, Input } from '@angular/core';
 import {
-  EffectTypes, CODING, NONCODING, CNV, ALL, LGDS,
+  CODING, NONCODING, CNV, ALL, LGDS,
   NONSYNONYMOUS, UTRS, GENOTYPE_BROWSER_INITIAL_VALUES
 } from './effect-types';
-import { ValidateNested } from 'class-validator';
 import { PHENO_TOOL_CNV } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 import * as lodash from 'lodash';
 import { addEffectType, removeEffectType, selectEffectTypes, setEffectTypes } from './effect-types.state';
 import { take } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { ComponentValidator } from 'app/common/component-validator';
+import { setErrors, resetErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-effect-types',
   templateUrl: './effect-types.component.html',
   styleUrls: ['./effect-types.css']
 })
-export class EffectTypesComponent extends ComponentValidator implements OnInit {
+export class EffectTypesComponent implements OnInit {
   @Input() public variantTypes: Set<string> = new Set();
 
   public codingColumn: Set<string> = CODING;
   public nonCodingColumn: Set<string> = NONCODING;
   public cnvColumn: Set<string> = CNV;
 
-  @ValidateNested()
-  public effectTypes = new EffectTypes();
+  public selectedEffectTypes: Set<string> = new Set();
+
   public effectTypesButtons: Map<string, Set<string>>;
+  public errors: string[] = [];
 
   public constructor(protected store: Store) {
-    super(store, 'effectTypes', selectEffectTypes);
     this.initButtonGroups();
   }
 
   public ngOnInit(): void {
     this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
       if (!effectTypesState) {
-        this.effectTypes.selected = GENOTYPE_BROWSER_INITIAL_VALUES;
+        this.selectedEffectTypes = GENOTYPE_BROWSER_INITIAL_VALUES;
         this.store.dispatch(
           setEffectTypes({effectTypes: [...GENOTYPE_BROWSER_INITIAL_VALUES.values()]})
         );
       } else {
-        this.effectTypes.selected = new Set(effectTypesState);
+        this.selectedEffectTypes = new Set(effectTypesState);
+        this.validateState();
       }
-      super.ngOnInit();
     });
   }
 
@@ -67,17 +66,37 @@ export class EffectTypesComponent extends ComponentValidator implements OnInit {
   }
 
   public setEffectTypes(effectTypes: Set<string>): void {
-    this.effectTypes.selected = new Set(effectTypes);
-    this.store.dispatch(setEffectTypes({effectTypes: [...this.effectTypes.selected]}));
+    this.selectedEffectTypes = new Set(effectTypes);
+    this.validateState();
+    this.store.dispatch(setEffectTypes({effectTypes: [...this.selectedEffectTypes]}));
   }
 
   public onEffectTypeChange(value: {checked: boolean; effectType: string}): void {
-    if (value.checked && !this.effectTypes.selected.has(value.effectType)) {
-      this.effectTypes.selected.add(value.effectType);
+    if (value.checked && !this.selectedEffectTypes.has(value.effectType)) {
+      this.selectedEffectTypes.add(value.effectType);
+      this.validateState();
       this.store.dispatch(addEffectType({effectType: value.effectType}));
-    } else if (!value.checked && this.effectTypes.selected.has(value.effectType)) {
-      this.effectTypes.selected.delete(value.effectType);
+    } else if (!value.checked && this.selectedEffectTypes.has(value.effectType)) {
+      this.selectedEffectTypes.delete(value.effectType);
+      this.validateState();
       this.store.dispatch(removeEffectType({effectType: value.effectType}));
+    }
+  }
+
+  private validateState(): void {
+    this.errors = [];
+    if (!this.selectedEffectTypes.size) {
+      this.errors.push('Select at least one.');
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'effectTypes', errors: lodash.cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'effectTypes'}));
     }
   }
 }

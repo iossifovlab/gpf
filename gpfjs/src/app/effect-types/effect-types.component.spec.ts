@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-
 import { EffectTypesComponent } from './effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types-column.component';
-import { ALL, CODING, EffectTypes, GENOTYPE_BROWSER_INITIAL_VALUES, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
+import { ALL, CODING, GENOTYPE_BROWSER_INITIAL_VALUES, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { of } from 'rxjs';
 import { addEffectType, effectTypesReducer, removeEffectType, setEffectTypes } from './effect-types.state';
 import { Store, StoreModule } from '@ngrx/store';
@@ -42,9 +41,8 @@ describe('EffectTypesComponent', () => {
   it('should initialize', () => {
     component.ngOnInit();
 
-    const expectedEffectTypes = new EffectTypes();
-    expectedEffectTypes.selected = new Set(['value1', 'value2', 'value3']);
-    expect(component.effectTypes).toStrictEqual(expectedEffectTypes);
+    const expectedEffectTypes = new Set(['value1', 'value2', 'value3']);
+    expect(component.selectedEffectTypes).toStrictEqual(expectedEffectTypes);
 
     component.ngOnInit();
   });
@@ -54,7 +52,7 @@ describe('EffectTypesComponent', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.ngOnInit();
 
-    expect(component.effectTypes.selected).toStrictEqual(GENOTYPE_BROWSER_INITIAL_VALUES);
+    expect(component.selectedEffectTypes).toStrictEqual(GENOTYPE_BROWSER_INITIAL_VALUES);
 
     expect(dispatchSpy).toHaveBeenCalledWith(setEffectTypes({ effectTypes: [...GENOTYPE_BROWSER_INITIAL_VALUES]}));
   });
@@ -74,52 +72,52 @@ describe('EffectTypesComponent', () => {
   });
 
   it('should update variant types', () => {
-    component.effectTypes.selected = undefined;
+    component.selectedEffectTypes = undefined;
     component['store'] = { dispatch: () => null } as never;
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.setEffectTypes(mockSet);
 
-    expect(component.effectTypes.selected).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setEffectTypes({ effectTypes: [...mockSet]}));
+    expect(component.selectedEffectTypes).toStrictEqual(mockSet);
+    expect(dispatchSpy).toHaveBeenNthCalledWith(2, setEffectTypes({ effectTypes: [...mockSet]}));
   });
 
   it('should effect type change', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
-    component.effectTypes.selected = new Set();
+    component.selectedEffectTypes = new Set();
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1']));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set(['effectType1']));
     expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType1'}));
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1', 'effectType2']));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set(['effectType1', 'effectType2']));
     expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType2'}));
 
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set(['effectType2']));
     expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType1'}));
 
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set(['effectType2']));
     expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType1'}));
 
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set(['effectType2']));
     expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType2'}));
 
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set([]));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set([]));
     expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType2'}));
 
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toStrictEqual(new Set([]));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set([]));
     expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType2'}));
   });
 
@@ -128,7 +126,7 @@ describe('EffectTypesComponent', () => {
     component.setEffectTypes(initial);
     component.onEffectTypeChange({effectType: 'newTestEffect', checked: true});
     // component has properly selected new effect
-    expect(component.effectTypes.selected).toStrictEqual(new Set(['testEffect', 'newTestEffect']));
+    expect(component.selectedEffectTypes).toStrictEqual(new Set(['testEffect', 'newTestEffect']));
     // but the original set is not modified
     expect(initial).toStrictEqual(new Set(['testEffect']));
   });

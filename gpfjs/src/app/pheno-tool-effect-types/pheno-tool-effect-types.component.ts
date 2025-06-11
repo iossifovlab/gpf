@@ -8,7 +8,6 @@ import {
 } from './pheno-tool-effect-types';
 import { take } from 'rxjs';
 import { selectEffectTypes, setEffectTypes } from 'app/effect-types/effect-types.state';
-import { EffectTypes } from 'app/effect-types/effect-types';
 
 @Component({
   selector: 'gpf-pheno-tool-effect-types',
@@ -19,17 +18,17 @@ export class PhenoToolEffectTypesComponent extends EffectTypesComponent implemen
   public phenoToolOthers: Set<string> = PHENO_TOOL_OTHERS;
   public phenoToolCNV: Set<string> = PHENO_TOOL_CNV;
   public phenoToolLGDs: Set<string> = PHENO_TOOL_LGDS;
-  public effectTypes: EffectTypes;
+  public effectTypes: Set<string>;
 
   public ngOnInit(): void {
     this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
       if (!effectTypesState) {
-        this.effectTypes.selected = PHENO_TOOL_INITIAL_VALUES;
+        this.effectTypes = PHENO_TOOL_INITIAL_VALUES;
         this.store.dispatch(
           setEffectTypes({effectTypes: [...PHENO_TOOL_INITIAL_VALUES.values()]})
         );
       } else {
-        this.effectTypes.selected = new Set(effectTypesState);
+        this.effectTypes = new Set(effectTypesState);
       }
       super.ngOnInit();
     });

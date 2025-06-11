@@ -13,7 +13,7 @@
       <gpf-effect-types-column
         [columnName]="'Coding'"
         [effectTypesLabels]="codingColumn"
-        [effectTypes]="effectTypes"
+        [effectTypes]="selectedEffectTypes"
         (effectTypeEvent)="onEffectTypeChange($event)"
         class="col-lg-6">
       </gpf-effect-types-column>
@@ -22,7 +22,7 @@
         <gpf-effect-types-column
           [columnName]="'Noncoding'"
           [effectTypesLabels]="nonCodingColumn"
-          [effectTypes]="effectTypes"
+          [effectTypes]="selectedEffectTypes"
           (effectTypeEvent)="onEffectTypeChange($event)">
         </gpf-effect-types-column>
 
@@ -30,7 +30,7 @@
           *ngIf="variantTypes && variantTypes.has('CNV')"
           [columnName]="'CNV'"
           [effectTypesLabels]="cnvColumn"
-          [effectTypes]="effectTypes"
+          [effectTypes]="selectedEffectTypes"
           (effectTypeEvent)="onEffectTypeChange($event)">
         </gpf-effect-types-column>
       </div>

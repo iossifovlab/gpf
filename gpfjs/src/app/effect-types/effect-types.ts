@@ -1,11 +1,3 @@
-import { Validate } from 'class-validator';
-import { SetNotEmpty } from '../utils/set.validators';
-
-export class EffectTypes {
-  @Validate(SetNotEmpty, {message: 'Select at least one.'})
-  public selected: Set<string> = new Set();
-}
-
 export const ALL: Set<string> = new Set([
   '3\'UTR',
   '3\'UTR-intron',
