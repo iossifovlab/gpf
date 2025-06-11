@@ -3,6 +3,7 @@ import { GenderComponent } from './gender.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { Store, StoreModule } from '@ngrx/store';
 import { addGender, gendersReducer, removeGender } from './gender.state';
+import { of } from 'rxjs';
 
 describe('GenderComponent', () => {
   let component: GenderComponent;
@@ -27,6 +28,7 @@ describe('GenderComponent', () => {
   });
 
   it('all genders should be selected by default', () => {
+    jest.spyOn(store, 'select').mockReturnValue(of(['male', 'female', 'unspecified']));
     component.ngOnInit();
     expect(component.selectedGenders).toStrictEqual(['male', 'female', 'unspecified']);
   });
@@ -50,6 +52,7 @@ describe('GenderComponent', () => {
   });
 
   it('should uncheck male value and remove it from state', () => {
+    jest.spyOn(store, 'select').mockReturnValue(of(['male', 'female', 'unspecified']));
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.ngOnInit();
 

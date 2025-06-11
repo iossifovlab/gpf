@@ -16,7 +16,7 @@ import { selectVariantTypes } from 'app/variant-types/variant-types.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
-import { selectGenders } from 'app/gender/gender.state';
+import { selectGenders, setGenders } from 'app/gender/gender.state';
 import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
@@ -106,11 +106,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
         this.datasetsService.getDataset(datasetIdState),
         this.store.select(selectPresentInParent),
         this.store.select(selectPresentInChild),
+        this.store.select(selectGenders),
       ]).pipe(take(1))),
     ).subscribe(([
       dataset,
       presentInParentState,
       presentInChildState,
+      gendersState,
     ]) => {
       if (!dataset) {
         return;
@@ -143,6 +145,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
           presentInChild: ['proband only', 'proband and sibling']
         }));
       }
+
+      if (!gendersState.length) {
+        this.store.dispatch(setGenders({
+          genders: ['male', 'female', 'unspecified']
+        }));
+      }
+
 
       if (this.autoPreview) {
         this.router.navigate([], {

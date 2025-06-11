@@ -1,6 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
-export const initialState = ['male', 'female', 'unspecified'];
+export const initialState = [];
 
 export const selectGenders = createFeatureSelector<string[]>('genders');
 
