@@ -50,7 +50,7 @@ OPEN_REGISTRATION = False
 DEFAULT_WDAE_DIR = GPF_INSTANCE_CONFIG_PATH.parent / "wdae"
 DEFAULT_WDAE_DIR.mkdir(exist_ok=True)
 
-LOG_DIR = os.environ.get("WDAE_LOG_DIR", DEFAULT_WDAE_DIR)
+LOG_DIR = os.environ.get("WDAE_LOG_DIR", str(DEFAULT_WDAE_DIR))
 
 if not os.environ.get("WDAE_DB_HOST"):
     DATABASES = {

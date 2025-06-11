@@ -3,6 +3,7 @@
 
 import logging
 import os
+from typing import ClassVar
 
 from gpf_instance.gpf_instance import get_wgpf_instance_path
 
@@ -33,7 +34,6 @@ except ValueError:
     print("Couldn't find GPF Instance")
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -70,7 +70,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_VERIFICATION_ENDPOINT = os.environ.get("WDAE_EMAIL_VERIFICATION_ENDPOINT", "http://localhost:8000")
+EMAIL_VERIFICATION_ENDPOINT = os.environ.get(
+    "WDAE_EMAIL_VERIFICATION_ENDPOINT", "http://localhost:8000")
 EMAIL_VERIFICATION_SET_PATH = "/api/v3/users/set_password?code={}"
 EMAIL_VERIFICATION_RESET_PATH = "/api/v3/users/reset_password?code={}"
 
@@ -105,40 +106,22 @@ ALLOWED_HOSTS = [
     os.environ.get("WDAE_ALLOWED_HOST", "*"),
 ]
 
-TIME_ZONE = "US/Eastern"
+TIME_ZONE = "America/New_York"
 
 LANGUAGE_CODE = "en-us"
 
 SITE_ID = 1
 
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
 USE_I18N = True
 
-# # If you set this to False, Django will not format dates, numbers and
-# # calendars according to the current locale.
-# USE_L10N = True
-
-# If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
 
-# Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/var/www/example.com/media/"
 MEDIA_ROOT = ""
 
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://example.com/media/", "http://media.example.com/"
 MEDIA_URL = ""
 
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/var/www/example.com/static/"
 STATIC_ROOT = ""
 
-# URL prefix for static files.
-# Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = "static/"
 
 APPEND_SLASH = False
@@ -255,8 +238,10 @@ DEFAULT_RENDERER_CLASSES = [
 ]
 
 if DEBUG:
-    DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + \
-        ["rest_framework.renderers.BrowsableAPIRenderer"]
+    DEFAULT_RENDERER_CLASSES = [
+        *DEFAULT_RENDERER_CLASSES,
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ]
 
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = DEFAULT_RENDERER_CLASSES
 
@@ -266,9 +251,6 @@ OAUTH2_PROVIDER = {
 }
 
 SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
-
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
 
 
 class CustomFormatter(logging.Formatter):
@@ -282,15 +264,22 @@ class CustomFormatter(logging.Formatter):
     fmt_normal = "%(levelname)s %(asctime)s [%(module)s] %(message)s"
     # fmt_invert highlights the `levelname` variable by swapping
     # the background and foreground colors
-    fmt_invert = "\x1b[7m%(levelname)s\x1b[27m %(asctime)s [%(module)s] %(message)s"
+    fmt_invert = (
+        "\x1b[7m%(levelname)s\x1b[27m %(asctime)s [%(module)s] %(message)s"
+    )
     time_fmt = "%H:%M:%S"
 
-    FORMATS = {
-        logging.DEBUG: logging.Formatter(grey + fmt_normal + reset, time_fmt),
-        logging.INFO: logging.Formatter(grey + fmt_normal + reset, time_fmt),
-        logging.WARNING: logging.Formatter(yellow + fmt_invert + reset, time_fmt),
-        logging.ERROR: logging.Formatter(red + fmt_invert + reset, time_fmt),
-        logging.CRITICAL: logging.Formatter(bold_red + fmt_invert + reset, time_fmt),
+    FORMATS: ClassVar[dict] = {
+        logging.DEBUG:
+        logging.Formatter(grey + fmt_normal + reset, time_fmt),
+        logging.INFO:
+        logging.Formatter(grey + fmt_normal + reset, time_fmt),
+        logging.WARNING:
+        logging.Formatter(yellow + fmt_invert + reset, time_fmt),
+        logging.ERROR:
+        logging.Formatter(red + fmt_invert + reset, time_fmt),
+        logging.CRITICAL:
+        logging.Formatter(bold_red + fmt_invert + reset, time_fmt),
     }
 
     def format(self, record):  # type: ignore
