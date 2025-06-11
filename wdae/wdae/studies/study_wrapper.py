@@ -37,6 +37,10 @@ class QueryTransformerProtocol(Protocol):
     ) -> PSCQuery:
         raise NotImplementedError
 
+    @abstractmethod
+    def get_unique_family_variants(self, kwargs: dict[str, Any]) -> bool:
+        raise NotImplementedError
+
 
 class ResponseTransformerProtocol(Protocol):
     """Protocol for response transformer interface."""
@@ -622,7 +626,8 @@ class StudyWrapper(StudyWrapperBase):
 
         index = 0
         seen = set()
-        unique_family_variants = kwargs.get("unique_family_variants", False)
+        unique_family_variants = query_transformer.get_unique_family_variants(
+            kwargs)
         psc_query = query_transformer.extract_person_set_collection_query(
             self, kwargs)
 

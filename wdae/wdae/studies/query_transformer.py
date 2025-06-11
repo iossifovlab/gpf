@@ -448,6 +448,11 @@ class QueryTransformer(QueryTransformerProtocol):
 
         return kwargs
 
+    def get_unique_family_variants(self, kwargs: dict[str, Any]) -> bool:
+        if "uniqueFamilyVariants" not in kwargs:
+            return False
+        return kwargs["uniqueFamilyVariants"]
+
     def transform_kwargs(
         self, study_wrapper: StudyWrapper, **kwargs: Any,
     ) -> dict[str, Any]:
@@ -486,7 +491,8 @@ class QueryTransformer(QueryTransformerProtocol):
             del kwargs["querySummary"]
 
         if "uniqueFamilyVariants" in kwargs:
-            kwargs["unique_family_variants"] = kwargs["uniqueFamilyVariants"]
+            kwargs["unique_family_variants"] = self.get_unique_family_variants(
+                kwargs)
             del kwargs["uniqueFamilyVariants"]
 
         if "regions" in kwargs:

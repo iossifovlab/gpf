@@ -1,9 +1,11 @@
 from collections import Counter
+from collections.abc import Iterable
 from typing import Any, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
+from dae.variants.family_variant import FamilyVariant
 
 
 class PhenoToolAdapterBase:
@@ -18,8 +20,16 @@ class PhenoToolAdapterBase:
         raise NotImplementedError
 
     def calc_variants(
-        self, data: dict[str, Any], effect_groups: list[str],
+        self,
+        measure_id: str,
+        family_ids: list[str] | None,
+        person_ids: set[str],
+        normalize_by: list[dict[str, str]],
+        variants: Iterable[FamilyVariant],
+        effect_types: list[str],
+        effect_groups: list[str],
     ) -> dict[str, Any]:
+        """Return pheno tool result for given variants."""
         raise NotImplementedError
 
 
@@ -104,21 +114,20 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         return f"{measure_id} ~ {' + '.join(normalize_by)}"
 
     def calc_variants(
-        self, data: dict[str, Any], effect_groups: list[str],
+        self,
+            measure_id: str,
+            family_ids: list[str] | None,
+            person_ids: set[str],
+            normalize_by: list[dict[str, str]],
+            variants: Iterable[FamilyVariant],
+            effect_types: list[str],
+            effect_groups: list[str],
     ) -> dict[str, Any]:
         """Run pheno tool on given data."""
-        measure_id = data["measureId"]
-        family_ids = data.get("phenoFilterFamilyIds")
-        person_ids = self.helper.genotype_data_persons(
-            data.get("family_ids", []),
-        )
-
-        normalize_by = data.get("normalizeBy")
-
         effect_groups = EffectTypesMixin.build_effect_types_list(effect_groups)
 
         people_variants = self.helper.genotype_data_variants(
-            data, effect_groups)
+            variants, effect_types, effect_groups)
 
         results = [
             self.calc_by_effect(
