@@ -31,7 +31,10 @@ export DAE_DB_DIR="${WD}/.tmp/data/data-hg38-hello"
 wdaemanage migrate
 wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:admin || true
 
+# clean up old docs build
+rm -rf ${WD}/docs/_build
 
+# generate docs
 sphinx-apidoc ${WD}/dae/dae -o docs/dae/modules/ -f 
 
 sphinx-apidoc ${WD}/wdae/wdae -o docs/wdae/modules/ -f 
@@ -43,3 +46,6 @@ ${WD}/docs/wdae/api_docs_generator.py \
 
 cd ${WD}/docs/
 sphinx-build -b html . _build/html
+
+# archive docs
+tar -czf ${WD}/docs/gpf-html.tar.gz -C _build/ html/
