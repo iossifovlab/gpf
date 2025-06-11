@@ -13,7 +13,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngrx/store';
 import { selectErrors } from 'app/common/errors.state';
 import { selectVariantTypes } from 'app/variant-types/variant-types.state';
-import { selectEffectTypes } from 'app/effect-types/effect-types.state';
+import { selectEffectTypes, setEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
 import { selectGenders, setGenders } from 'app/gender/gender.state';
@@ -38,6 +38,7 @@ import {
   selectPersonMeasureHistograms
 } from 'app/person-filters-selector/measure-histogram.state';
 import { selectZygosityFilter } from 'app/zygosity-filters/zygosity-filter.state';
+import { GENOTYPE_BROWSER_INITIAL_VALUES } from 'app/effect-types/effect-types';
 
 
 @Component({
@@ -107,12 +108,14 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
         this.store.select(selectPresentInParent),
         this.store.select(selectPresentInChild),
         this.store.select(selectGenders),
+        this.store.select(selectEffectTypes),
       ]).pipe(take(1))),
     ).subscribe(([
       dataset,
       presentInParentState,
       presentInChildState,
       gendersState,
+      effectTypesState
     ]) => {
       if (!dataset) {
         return;
@@ -152,6 +155,11 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
         }));
       }
 
+      if (!effectTypesState.length) {
+        this.store.dispatch(
+          setEffectTypes({effectTypes: [...GENOTYPE_BROWSER_INITIAL_VALUES.values()]})
+        );
+      }
 
       if (this.autoPreview) {
         this.router.navigate([], {

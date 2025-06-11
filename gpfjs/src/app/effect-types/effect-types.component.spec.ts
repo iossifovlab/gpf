@@ -47,14 +47,14 @@ describe('EffectTypesComponent', () => {
     component.ngOnInit();
   });
 
-  it('should set default default effect types when state is empty', () => {
-    jest.spyOn(store, 'select').mockReturnValueOnce(of(null));
+  it('should get effect types from state', () => {
+    jest.spyOn(store, 'select').mockReturnValueOnce(of(GENOTYPE_BROWSER_INITIAL_VALUES));
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.ngOnInit();
 
     expect(component.selectedEffectTypes).toStrictEqual(GENOTYPE_BROWSER_INITIAL_VALUES);
 
-    expect(dispatchSpy).toHaveBeenCalledWith(setEffectTypes({ effectTypes: [...GENOTYPE_BROWSER_INITIAL_VALUES]}));
+    expect(dispatchSpy).not.toHaveBeenCalledWith();
   });
 
   it('should initialize button groups', () => {

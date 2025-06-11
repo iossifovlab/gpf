@@ -1,6 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
-export const initialState: string[] = null;
+export const initialState: string[] = [];
 
 export const selectEffectTypes = createFeatureSelector<string[]>('effectTypes');
 
