@@ -50,6 +50,6 @@ describe('PresentInChildComponent', () => {
     component.updatePresentInChild(mockSet);
 
     expect(component.selectedValues).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setPresentInChild({presentInChild: [...mockSet]}));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(2, setPresentInChild({presentInChild: [...mockSet]}));
   });
 });
