@@ -29,6 +29,7 @@ class PhenoToolAdapterBase:
         effect_types: list[str],
         effect_groups: list[str],
     ) -> dict[str, Any]:
+        """Return pheno tool result for given variants."""
         raise NotImplementedError
 
 
