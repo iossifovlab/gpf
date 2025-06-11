@@ -2,6 +2,8 @@
 
 export WD=$(pwd)
 
+pip install -e ${WD}/dae
+pip install -e ${WD}/wdae
 
 # create GPF instance
 mkdir -p ${WD}/.tmp/data/data-hg38-hello
