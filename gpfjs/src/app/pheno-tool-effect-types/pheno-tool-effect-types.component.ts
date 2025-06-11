@@ -22,7 +22,7 @@ export class PhenoToolEffectTypesComponent extends EffectTypesComponent implemen
 
   public ngOnInit(): void {
     this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
-      if (!effectTypesState) {
+      if (!effectTypesState.length) {
         this.effectTypes = PHENO_TOOL_INITIAL_VALUES;
         this.store.dispatch(
           setEffectTypes({effectTypes: [...PHENO_TOOL_INITIAL_VALUES.values()]})
