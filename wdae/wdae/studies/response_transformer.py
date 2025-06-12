@@ -501,20 +501,6 @@ class ResponseTransformer(ResponseTransformerProtocol):
 
         return transformer
 
-    def transform_summary_variants(
-            self, study: WDAEStudy,
-            variants_iterable: Generator[SummaryVariant, None, None],
-    ) -> Generator[list, None, None]:
-        """Build variant rows for summary variants."""
-        for v in self._add_additional_columns_summary(
-            study, variants_iterable,
-        ):
-            yield self.build_variant_row(
-                study,
-                v,
-                study.summary_preview_descs,
-            )
-
 
 def make_response_transformer(
     gpf_instance: GPFInstance,
