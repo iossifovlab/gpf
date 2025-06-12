@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from box import Box
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 
 from dae.common_reports.common_report import CommonReport
 from dae.studies.study import GenotypeDataStudy
@@ -11,14 +11,14 @@ def test_make_wdae_wrapper(
     t4c8_wgpf_instance: WGPFInstance,
 ) -> None:
     wrapper = t4c8_wgpf_instance.make_wdae_wrapper("t4c8_study_1")
-    assert isinstance(wrapper, StudyWrapper)
+    assert isinstance(wrapper, WDAEStudy)
 
 
 def test_get_wdae_wrapper(
     t4c8_wgpf_instance: WGPFInstance,
 ) -> None:
     wrapper = t4c8_wgpf_instance.get_wdae_wrapper("t4c8_study_1")
-    assert isinstance(wrapper, StudyWrapper)
+    assert isinstance(wrapper, WDAEStudy)
 
 
 def test_get_wdae_wrapper_nonexistant(

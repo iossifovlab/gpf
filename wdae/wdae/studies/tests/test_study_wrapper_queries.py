@@ -5,11 +5,11 @@ import pytest_mock
 
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 
 
 def test_query_all_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
 ) -> None:
@@ -35,7 +35,7 @@ def test_query_all_variants(
     ],
 )
 def test_study_2_query_inheritance_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     inheritance_type: str, count: int,
@@ -63,7 +63,7 @@ def test_study_2_query_inheritance_variants(
     ],
 )
 def test_query_limit_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     max_variants_count: int | None,
@@ -90,7 +90,7 @@ def test_query_limit_variants(
     ],
 )
 def test_query_family_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     family_ids: list[str] | None, count: int,
@@ -117,7 +117,7 @@ def test_query_family_variants(
     ],
 )
 def test_query_sexes_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     sexes: list[str], count: int,
@@ -145,7 +145,7 @@ def test_query_sexes_variants(
     ],
 )
 def test_query_variant_type_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     variant_type: list[str], count: int,
@@ -173,7 +173,7 @@ def test_query_variant_type_variants(
     ],
 )
 def test_query_effect_types_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     effect_types: list[str], count: int,
@@ -200,7 +200,7 @@ def test_query_effect_types_variants(
     ],
 )
 def test_query_regions_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     regions: list[str], count: int,
@@ -232,7 +232,7 @@ def test_query_regions_variants(
     ],
 )
 def test_query_present_in_child(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     options: list[str], count: int,
@@ -273,7 +273,7 @@ def test_query_present_in_child(
     ],
 )
 def test_query_present_in_parent(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     options: dict, count: int,
@@ -307,7 +307,7 @@ def test_query_present_in_parent(
     ],
 )
 def test_query_present_in_parent_and_present_in_child(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_2_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     present_in_child: list[str],
@@ -356,7 +356,7 @@ def test_query_present_in_parent_and_present_in_child(
     ],
 )
 def test_query_gene_scores(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     option: dict, count: int,
@@ -375,7 +375,7 @@ def test_query_gene_scores(
 
 
 def test_query_person_filters(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
 ) -> None:
@@ -399,7 +399,7 @@ def test_query_person_filters(
 
 
 def test_query_family_filters(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
 ) -> None:
@@ -448,7 +448,7 @@ def test_query_family_filters(
     ],
 )
 def test_query_study_filters(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     query: dict, count: int,
@@ -473,7 +473,7 @@ def test_query_study_filters(
     ],
 )
 def test_query_gene_scores_formatting(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     float_format: str,
@@ -500,7 +500,7 @@ def test_query_gene_scores_formatting(
 
 
 def test_query_complex_query(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
 ) -> None:
@@ -546,7 +546,7 @@ def test_query_complex_query(
 
 
 def test_query_unique_family_variants(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     mocker: pytest_mock.MockFixture,
@@ -581,7 +581,7 @@ def test_query_unique_family_variants(
     ],
 )
 def test_query_present_in_parent_and_present_in_child_and_phenotypes(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
     present_in_child: list[str],
@@ -610,10 +610,10 @@ def test_query_present_in_parent_and_present_in_child_and_phenotypes(
 
 
 def test_query_inheritance_types(
-    t4c8_study_1_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: WDAEStudy,
     t4c8_query_transformer: QueryTransformer,
     t4c8_response_transformer: ResponseTransformer,
-):
+) -> None:
     query = {
         "inheritanceTypeFilter": [
             "denovo", "mendelian", "omission", "missing",

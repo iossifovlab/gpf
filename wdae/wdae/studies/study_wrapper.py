@@ -7,8 +7,6 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import closing
 from typing import Any, Protocol, cast
 
-from box import Box
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
@@ -27,13 +25,13 @@ class QueryTransformerProtocol(Protocol):
 
     @abstractmethod
     def transform_kwargs(
-        self, study_wrapper: StudyWrapper, **kwargs: Any,
+        self, study: WDAEStudy, **kwargs: Any,
     ) -> dict[str, Any]:
         raise NotImplementedError
 
     @abstractmethod
     def extract_person_set_collection_query(
-            self, study_wrapper: StudyWrapper, kwargs: dict[str, Any],
+            self, study: WDAEStudy, kwargs: dict[str, Any],
     ) -> PSCQuery:
         raise NotImplementedError
 
@@ -47,7 +45,7 @@ class ResponseTransformerProtocol(Protocol):
 
     @abstractmethod
     def variant_transformer(
-        self, study_wrapper: StudyWrapper,
+        self, study: WDAEStudy,
         pheno_values: dict[str, Any] | None,
     ) -> Callable[[FamilyVariant], FamilyVariant]:
         raise NotImplementedError
@@ -70,14 +68,14 @@ class ResponseTransformerProtocol(Protocol):
 
     @abstractmethod
     def build_variant_row(
-        self, study_wrapper: StudyWrapper,
+        self, study: WDAEStudy,
         v: SummaryVariant | FamilyVariant,
         column_descs: list[dict], **kwargs: str | None,
     ) -> list:
         raise NotImplementedError
 
 
-class WDAEStudy:
+class WDAEAbstractStudy:
     """A genotype and phenotype data wrapper for use in the wdae module."""
 
     def __init__(
@@ -86,17 +84,17 @@ class WDAEStudy:
         phenotype_data: PhenotypeData | None = None,
     ):
         if genotype_data is None and phenotype_data is None:
-            raise ValueError("Cannot create wrapper without providing data!")
+            raise ValueError("Cannot create study without providing data!")
         self._genotype_data = genotype_data
         self._phenotype_data = phenotype_data
 
-    @property
+    @property  # Remove when all external references are removed
     def genotype_data(self) -> GenotypeData:
         if self._genotype_data is None:
             raise ValueError
         return self._genotype_data
 
-    @property
+    @property  # Remove when all external references are removed
     def phenotype_data(self) -> PhenotypeData:
         if self._phenotype_data is None:
             raise ValueError
@@ -158,32 +156,174 @@ class WDAEStudy:
             return self.phenotype_data.families
         return self.genotype_data.families
 
-    def get_children_ids(self, *, leaves=True) -> list[str]:
+    def get_children_ids(self, *, leaves: bool = True) -> list[str]:
+        """Return the list of children ids."""
         if self.is_phenotype:
             return self.phenotype_data.get_children_ids(leaves=leaves)
         return self.genotype_data.get_studies_ids(leaves=leaves)
 
+    @abstractmethod
+    def query_variants_wdae_streaming(
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        max_variants_count: int | None = 10000,
+        *,
+        max_variants_message: bool = False,
+    ) -> Generator[list | None, None, None]:
+        """Wrap query variants method for WDAE streaming."""
 
-class StudyWrapperBase(WDAEStudy):
-    """Defines WDAE wrapper class to DAE genotype data object."""
+
+class WDAEStudy(WDAEAbstractStudy):
+    """A genotype and phenotype data wrapper for use in the wdae module."""
 
     def __init__(
-        self, genotype_data: GenotypeData, phenotype_data: PhenotypeData | None,
-    ):
+        self,
+        genotype_data: GenotypeData | None,
+        phenotype_data: PhenotypeData | None,
+    ) -> None:
         super().__init__(genotype_data, phenotype_data)
-        self.config = self.genotype_data.config
-        assert self.config is not None, self.genotype_data.study_id
+        self.children = [self]
+        self.config = WDAEStudy.make_config(
+            self._genotype_data,
+            self._phenotype_data,
+        )
+        self._pheno_values_cache = self._get_all_pheno_values()
+        self.is_remote = False
+        self._init_genotype_browser()
+
+    def _get_all_pheno_values(self) -> dict | None:
+        if not self.has_pheno_data \
+           or not self.config_columns \
+           or not self.config_columns["phenotype"]:
+            return None
+
+        pheno_values = {}
+
+        for column in self.config_columns["phenotype"].values():
+            assert column.role
+            result = {}
+            column_values_iter = self.phenotype_data.get_people_measure_values(
+                [column.source], roles=[Role.from_name(column.role)])
+            for column_value in column_values_iter:
+                result[column_value["family_id"]] = column_value[column.source]
+
+            pheno_column_name = f"{column.source}.{column.role}"
+            pheno_values[pheno_column_name] = result
+        return pheno_values
+
+    @staticmethod
+    def make_config(
+        genotype_data: GenotypeData | None,
+        phenotype_data: PhenotypeData | None,
+    ) -> dict[str, Any]:
+        """Create a configuration for the WDAEStudy."""
+        config: dict[str, Any] = {}
+        if genotype_data:
+            config = genotype_data.config
+        elif phenotype_data:
+            config = phenotype_data.config
+            config["id"] = phenotype_data.pheno_id
+            config["name"] = phenotype_data.name
+            config["phenotype_data"] = phenotype_data.pheno_id
+            config["study_type"] = "Phenotype study"
+            config["enabled"] = True
+            config["studies"] = phenotype_data.get_children_ids(leaves=False)
+            config["phenotype_browser"] = {"enabled": True}
+            config["gene_browser"] = {"enabled": False}
+            config["genotype_browser"] = False
+            config["phenotype_tool"] = False
+            config["enrichment_tool"] = False
+            config["has_present_in_child"] = False
+            config["has_present_in_parent"] = False
+            config["has_denovo"] = False
+            config["has_zygosity"] = False
+            config["has_transmitted"] = False
+            config["common_report"] = phenotype_data.config["common_report"]
+            config["description_editable"] = \
+                phenotype_data.config["description_editable"]
+        return config
+
+    @property
+    def config_columns(self) -> dict[str, Any] | None:
+        if not self.config["genotype_browser"]:
+            return None
+        return cast(dict, self.config["genotype_browser"]["columns"])
+
+    def _init_genotype_browser(self) -> None:
+        if self.is_genotype and self.genotype_data.config["genotype_browser"]:
+            genotype_browser_config = self.genotype_data.config.genotype_browser
+
+            # PERSON AND FAMILY FILTERS
+            self.person_filters = genotype_browser_config.person_filters or None
+            self.family_filters = genotype_browser_config.family_filters or None
+
+            # GENE SCORES
+            if genotype_browser_config.column_groups and \
+                    "gene_scores" in genotype_browser_config.column_groups:
+                self.gene_score_column_sources = [
+                    genotype_browser_config.columns.genotype[slot].source
+                    for slot in (
+                        genotype_browser_config.column_groups.gene_scores.columns
+                        or []
+                    )
+                ]
+            else:
+                self.gene_score_column_sources = []
+
+            # PREVIEW AND DOWNLOAD COLUMNS
+            self.columns = genotype_browser_config.columns
+            self.column_groups = genotype_browser_config.column_groups
+            self._validate_column_groups()
+            self.preview_columns = genotype_browser_config.preview_columns
+            if genotype_browser_config.preview_columns_ext:
+                self.preview_columns.extend(
+                    genotype_browser_config.preview_columns_ext)
+            self.download_columns = genotype_browser_config.download_columns
+            if genotype_browser_config.download_columns_ext:
+                self.download_columns.extend(
+                    genotype_browser_config.download_columns_ext)
+
+            self.summary_preview_columns = \
+                genotype_browser_config.summary_preview_columns
+            self.summary_download_columns = \
+                genotype_browser_config.summary_download_columns
+
+    def _validate_column_groups(self) -> bool:
+        genotype_cols = self.columns.get("genotype") or []
+        phenotype_cols = self.columns.get("phenotype") or []
+        for column_group_name, column_group in self.column_groups.items():
+            if column_group is None:
+                logger.warning(
+                    "bad configuration for column group %s",
+                    column_group_name)
+                continue
+            for column_id in column_group.columns:
+                if column_id not in genotype_cols \
+                   and column_id not in phenotype_cols:
+                    logger.warning(
+                        "column %s not defined in configuration", column_id)
+                    return False
+        return True
+
+    @property
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
+        # later
+        return self.genotype_data.person_set_collections
 
     @staticmethod
     def get_columns_as_sources(
-        config: Box, column_ids: list[str],
+        config: dict[str, Any], column_ids: list[str],
     ) -> list[dict[str, Any]]:
         """Return the list of column sources."""
-        column_groups = config.genotype_browser.column_groups
-        genotype_cols = config.genotype_browser.columns.get("genotype", {})
+        column_groups = config["genotype_browser"]["column_groups"]
+        genotype_cols = config["genotype_browser"]["columns"] \
+            .get("genotype", {})
         if genotype_cols is None:
             genotype_cols = {}
-        phenotype_cols = config.genotype_browser.columns.get("phenotype", {})
+        phenotype_cols = config["genotype_browser"]["columns"] \
+            .get("phenotype", {})
         if phenotype_cols is None:
             phenotype_cols = {}
         result = []
@@ -245,7 +385,7 @@ class StudyWrapperBase(WDAEStudy):
         person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
-        config = genotype_data.config
+        config = cast(dict, genotype_data.config)
         keys = [
             "id",
             "name",
@@ -263,7 +403,7 @@ class StudyWrapperBase(WDAEStudy):
         }
         result["has_denovo"] = genotype_data.has_denovo
         result["has_transmitted"] = genotype_data.has_transmitted
-        result["genotype_browser"] = config.genotype_browser.enabled
+        result["genotype_browser"] = config["genotype_browser"]["enabled"]
         result["phenotype_browser"] = config.get(
             "phenotype_browser",
             result["phenotype_data"] is not None,
@@ -274,7 +414,7 @@ class StudyWrapperBase(WDAEStudy):
             and result["has_denovo"] is True,
         )
         result["genotype_browser_config"] = {
-            key: config.genotype_browser.get(key, None) for key in [
+            key: config["genotype_browser"].get(key, None) for key in [
                 "has_family_filters",
                 "has_family_pheno_filters",
                 "has_person_filters",
@@ -295,40 +435,46 @@ class StudyWrapperBase(WDAEStudy):
         }
 
         if result["phenotype_data"] is not None \
-            and config.genotype_browser.get(
+            and config["genotype_browser"].get(
                 "has_family_structure_filter", None) is None \
             and result["genotype_browser_config"]["has_family_pheno_filters"] \
             is None:
             result["genotype_browser_config"]["has_family_pheno_filters"] = True
 
         if result["phenotype_data"] is not None \
-            and config.genotype_browser.get(
+            and config["genotype_browser"].get(
                 "has_person_structure_filter", None) is None \
             and result["genotype_browser_config"]["has_person_pheno_filters"] \
             is None:
             result["genotype_browser_config"]["has_person_pheno_filters"] = True
 
         table_columns = []
-        for column in config.genotype_browser.preview_columns:
+        for column in config["genotype_browser"].preview_columns:
             logger.info(
-                "processing preview column %s for study %s", column, config.id)
+                "processing preview column %s for study %s",
+                column,
+                config["id"],
+            )
 
-            if column in config.genotype_browser.column_groups:
-                new_col = dict(config.genotype_browser.column_groups[column])
-                new_col["columns"] = StudyWrapperBase.get_columns_as_sources(
+            if column in config["genotype_browser"].column_groups:
+                new_col = dict(
+                    config["genotype_browser"]["column_groups"][column],
+                )
+                new_col["columns"] = WDAEStudy.get_columns_as_sources(
                     config, [column],
                 )
                 table_columns.append(new_col)
             else:
-                if config.genotype_browser.columns.genotype and \
-                        column in config.genotype_browser.columns.genotype:
+                if config["genotype_browser"].columns.genotype and \
+                        column in config["genotype_browser"].columns.genotype:
                     table_columns.append(
-                        dict(config.genotype_browser.columns.genotype[column]),
+                        dict(config["genotype_browser"].columns.genotype[column]),
                     )
-                elif config.genotype_browser.columns.phenotype and \
-                        column in config.genotype_browser.columns.phenotype:
+                elif config["genotype_browser"]["columns"]["phenotype"] \
+                    and column in \
+                        config["genotype_browser"]["columns"]["phenotype"]:
                     table_columns.append(
-                        dict(config.genotype_browser.columns.phenotype[column]),
+                        dict(config["genotype_browser"].columns.phenotype[column]),
                     )
                 else:
                     raise KeyError(f"No such column {column} configured!")
@@ -336,13 +482,13 @@ class StudyWrapperBase(WDAEStudy):
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = \
-            config.enrichment.enabled or result["has_denovo"]
-        result["common_report"] = config.common_report.to_dict()
+            config["enrichment"]["enabled"] or result["has_denovo"]
+        result["common_report"] = config["common_report"].to_dict()
         del result["common_report"]["file_path"]
         result["person_set_collections"] = person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
-        result["enrichment"] = config.enrichment.to_dict()
+        result["enrichment"] = config["enrichment"].to_dict()
         if "background" in result["enrichment"]:
             if "coding_len_background_model" in \
                     result["enrichment"]["background"]:
@@ -355,7 +501,7 @@ class StudyWrapperBase(WDAEStudy):
 
         result["study_names"] = None
         if result["studies"] is not None:
-            logger.debug("found studies in %s", config.id)
+            logger.debug("found studies in %s", config["id"])
             study_names = []
             for study_id in result["studies"]:
                 wrapper = gpf_instance.get_wdae_wrapper(study_id)
@@ -388,159 +534,27 @@ class StudyWrapperBase(WDAEStudy):
             max_variants_count, max_variants_message=max_variants_message)
         return filter(None, variants_result)
 
-    @abstractmethod
-    def query_variants_wdae_streaming(
-        self, kwargs: dict[str, Any],
-        sources: list[dict[str, Any]],
-        query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
-        *,
-        max_variants_message: bool = False,
-    ) -> Generator[list | None, None, None]:
-        """Wrap query variants method for WDAE streaming."""
-
-
-class StudyWrapper(StudyWrapperBase):
-    """Genotype data study wrapper class for WDAE."""
-
-    # pylint: disable=too-many-instance-attributes
-    def __init__(  # type: ignore
-        self, genotype_data_study: GenotypeData,
-        pheno_data: PhenotypeData | None,
-        children: list[StudyWrapper] | None = None,
-    ) -> None:
-
-        assert genotype_data_study is not None
-
-        super().__init__(genotype_data_study, pheno_data)
-
-        if children is None:
-            self.children = [self]
-        else:
-            self.children = [*children]
-
-        self.is_remote = False
-
-        self._pheno_values_cache = self._get_all_pheno_values()
-
-        self._init_wdae_config()
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self.genotype_data, name)
-
-    def _get_all_pheno_values(self) -> dict | None:
-        if not self.has_pheno_data \
-           or not self.config_columns.phenotype:
-            return None
-
-        pheno_values = {}
-
-        for column in self.config_columns.phenotype.values():
-            assert column.role
-            result = {}
-            column_values_iter = self.phenotype_data.get_people_measure_values(
-                [column.source], roles=[Role.from_name(column.role)])
-            for column_value in column_values_iter:
-                result[column_value["family_id"]] = column_value[column.source]
-
-            pheno_column_name = f"{column.source}.{column.role}"
-            pheno_values[pheno_column_name] = result
-        return pheno_values
-
-    @property
-    def is_group(self) -> bool:
-        return self.genotype_data.is_group
-
-    @property
-    def person_set_collections(self) -> dict[str, PersonSetCollection]:
-        return self.genotype_data.person_set_collections
-
-    def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
-        return self.genotype_data.get_studies_ids(leaves=leaves)
-
-    def _init_wdae_config(self) -> None:
-        genotype_browser_config = self.config.genotype_browser
-        if not genotype_browser_config:
-            return
-
-        # PERSON AND FAMILY FILTERS
-        self.person_filters = genotype_browser_config.person_filters or None
-        self.family_filters = genotype_browser_config.family_filters or None
-
-        # GENE SCORES
-        if genotype_browser_config.column_groups and \
-                "gene_scores" in genotype_browser_config.column_groups:
-            self.gene_score_column_sources = [
-                genotype_browser_config.columns.genotype[slot].source
-                for slot in (
-                    genotype_browser_config.column_groups.gene_scores.columns
-                    or []
-                )
-            ]
-        else:
-            self.gene_score_column_sources = []
-
-        # PREVIEW AND DOWNLOAD COLUMNS
-        self.columns = genotype_browser_config.columns
-        self.column_groups = genotype_browser_config.column_groups
-        self._validate_column_groups()
-        self.preview_columns = genotype_browser_config.preview_columns
-        if genotype_browser_config.preview_columns_ext:
-            self.preview_columns.extend(
-                genotype_browser_config.preview_columns_ext)
-        self.download_columns = genotype_browser_config.download_columns
-        if genotype_browser_config.download_columns_ext:
-            self.download_columns.extend(
-                genotype_browser_config.download_columns_ext)
-
-        self.summary_preview_columns = \
-            genotype_browser_config.summary_preview_columns
-        self.summary_download_columns = \
-            genotype_browser_config.summary_download_columns
-
-    def _validate_column_groups(self) -> bool:
-        genotype_cols = self.columns.get("genotype") or []
-        phenotype_cols = self.columns.get("phenotype") or []
-        for column_group_name, column_group in self.column_groups.items():
-            if column_group is None:
-                logger.warning(
-                    "bad configuration for column group %s",
-                    column_group_name)
-                continue
-            for column_id in column_group.columns:
-                if column_id not in genotype_cols \
-                   and column_id not in phenotype_cols:
-                    logger.warning(
-                        "column %s not defined in configuration", column_id)
-                    return False
-        return True
-
-    @property
-    def config_columns(self) -> Box:
-        return cast(Box, self.config.genotype_browser.columns)
-
     def _collect_runners(
         self, kwargs: dict[str, Any],
         query_transformer: QueryTransformerProtocol,
     ) -> list[QueryRunner]:
         runners = []
-        for study_wrapper in self.children:
+        for study in self.children:
             try:
                 query_kwargs = query_transformer.transform_kwargs(
-                    study_wrapper, **kwargs,
+                    study, **kwargs,
                 )
             except ValueError:
-                logger.exception("Skipping study %s", study_wrapper.study_id)
+                logger.exception("Skipping study %s", study.study_id)
                 continue
             else:
                 if query_kwargs is None:
                     logger.info(
-                        "study %s skipped", study_wrapper.study_id)
+                        "study %s skipped", study.study_id)
                     continue
-            assert study_wrapper.genotype_data is not None
+            assert study.genotype_data is not None
 
-            runners.extend(study_wrapper.genotype_data.create_query_runners(
+            runners.extend(study.genotype_data.create_query_runners(
                 regions=query_kwargs.get("regions"),
                 genes=query_kwargs.get("genes"),
                 effect_types=query_kwargs.get("effect_types"),
@@ -831,3 +845,19 @@ class StudyWrapper(StudyWrapperBase):
             transform_gene_view_summary_variant_download(
                 variants, frequency_column, summary_variant_ids,
             )
+
+
+class WDAEStudyGroup(WDAEStudy):
+    """Genotype data study wrapper class for WDAE."""
+
+    def __init__(
+        self,
+        genotype_data: GenotypeData | None,
+        pheno_data: PhenotypeData | None,
+        children: list[WDAEStudy],
+    ) -> None:
+        super().__init__(genotype_data, pheno_data)
+        self.children = [*children]
+
+    def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
+        return self.genotype_data.get_studies_ids(leaves=leaves)

@@ -12,7 +12,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper, StudyWrapperBase
+from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set, expand_gene_syms
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
@@ -150,7 +150,7 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset = cast(StudyWrapper, dataset)
+        dataset = cast(WDAEStudy, dataset)
 
         if not dataset.genotype_data.is_remote:
             data = expand_gene_set(data)
@@ -169,7 +169,7 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
                 cols = study_config.genotype_browser.download_columns
             else:
                 cols = study_config.genotype_browser.preview_columns
-            sources = StudyWrapperBase.get_columns_as_sources(
+            sources = WDAEStudy.get_columns_as_sources(
                 dataset.genotype_data.config, cols,
             )
 

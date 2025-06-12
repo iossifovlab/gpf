@@ -26,9 +26,7 @@ from oauth2_provider.models import (
 )
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
-from studies.study_wrapper import (
-    StudyWrapper,
-)
+from studies.study_wrapper import WDAEStudy
 from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance, setup_wgpf_instance
 
@@ -296,30 +294,25 @@ def t4c8_dataset(t4c8_instance: GPFInstance) -> GenotypeData:
 @pytest.fixture(scope="session")
 def t4c8_study_1_wrapper(
     t4c8_instance: GPFInstance,
-) -> StudyWrapper:
+) -> WDAEStudy:
 
     data_study = t4c8_instance.get_genotype_data("t4c8_study_1")
     pheno_data = t4c8_instance.get_phenotype_data("study_1_pheno")
 
-    return StudyWrapper(
+    return WDAEStudy(
         data_study,
         pheno_data,
-        None,
     )
 
 
 @pytest.fixture(scope="session")
 def t4c8_study_2_wrapper(
     t4c8_instance: GPFInstance,
-) -> StudyWrapper:
+) -> WDAEStudy:
 
     data_study = t4c8_instance.get_genotype_data("t4c8_study_2")
 
-    return StudyWrapper(
-        data_study,
-        None,
-        None,
-    )
+    return WDAEStudy(data_study, None)
 
 
 @pytest.fixture(scope="session")

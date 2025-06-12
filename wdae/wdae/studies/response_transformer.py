@@ -30,7 +30,7 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant, VariantDesc
 from studies.study_wrapper import (
     ResponseTransformerProtocol,
-    StudyWrapper,
+    WDAEStudy,
 )
 
 logger = logging.getLogger(__name__)
@@ -198,10 +198,10 @@ class ResponseTransformer(ResponseTransformerProtocol):
         return pheno_values
 
     def _get_gene_scores_values(
-            self, study_wrapper: StudyWrapper,
+            self, study: WDAEStudy,
             allele: FamilyAllele, default: str | None = None,
     ) -> dict[str, Any]:
-        if not study_wrapper.gene_score_column_sources:
+        if not study.gene_score_column_sources:
             return {}
         if allele.effects is None:
             return {}
@@ -209,7 +209,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         gene = genes[0]
 
         gene_scores_values = {}
-        for gwc in study_wrapper.gene_score_column_sources:
+        for gwc in study.gene_score_column_sources:
             if gwc not in self.gene_scores_dicts:
                 continue
 
@@ -242,12 +242,12 @@ class ResponseTransformer(ResponseTransformerProtocol):
         ]
 
     def _generate_pedigree(
-        self, study_wrapper: StudyWrapper,
+        self, study: WDAEStudy,
         variant: FamilyVariant,
         psc_id: str | None,
     ) -> list:
         result = []
-        psc = study_wrapper.get_person_set_collection(psc_id)
+        psc = study.genotype_data.get_person_set_collection(psc_id)
         genotype = variant.family_genotype
 
         missing_members = set()
@@ -279,7 +279,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         return result
 
     def _add_additional_columns_summary(
-            self, study_wrapper: StudyWrapper,
+            self, study: WDAEStudy,
             variants_iterable: Generator[SummaryVariant, None, None],
     ) -> Generator[SummaryVariant, None, None]:
         for variants_chunk in split_iterable(
@@ -288,14 +288,14 @@ class ResponseTransformer(ResponseTransformerProtocol):
             for variant in variants_chunk:
                 for allele in variant.alt_alleles:
                     gene_scores_values = self._get_gene_scores_values(
-                        study_wrapper, allele)
+                        study, allele)
 
                     allele.update_attributes(gene_scores_values)
 
                 yield variant
 
     def build_variant_row(
-        self, study_wrapper: StudyWrapper,
+        self, study: WDAEStudy,
         v: SummaryVariant | FamilyVariant,
         column_descs: list[dict], **kwargs: str | None,
     ) -> list:
@@ -343,11 +343,11 @@ class ResponseTransformer(ResponseTransformerProtocol):
                     assert isinstance(v, FamilyVariant)
                     psc_id = kwargs["person_set_collection"]
                     row_variant.append(self._generate_pedigree(
-                        study_wrapper, v, psc_id,
+                        study, v, psc_id,
                     ))
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
-                        study_wrapper.person_set_collections.get(
+                        study.person_set_collections.get(
                             "phenotype",
                         )
                     if phenotype_person_sets is None:
@@ -358,7 +358,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
                             ",".join(fn_format(v, phenotype_person_sets)))
                 elif col_source == "study_phenotype":
                     row_variant.append(
-                        study_wrapper.config.study_phenotype,
+                        study.config["study_phenotype"],
                     )
                 else:
                     if col_source in self.SPECIAL_ATTRS:
@@ -474,11 +474,11 @@ class ResponseTransformer(ResponseTransformerProtocol):
         return map(join_line, itertools.chain([columns], rows))  # type: ignore
 
     def variant_transformer(
-        self, study_wrapper: StudyWrapper,
+        self, study: WDAEStudy,
         pheno_values: dict[str, Any] | None,
     ) -> Callable[[FamilyVariant], FamilyVariant]:
         """Build and return a variant transformer function."""
-        assert not study_wrapper.is_remote
+        assert not study.is_remote
 
         pheno_column_values = pheno_values
 
@@ -490,7 +490,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
             for allele in variant.alt_alleles:
                 fallele = cast(FamilyAllele, allele)
                 gene_scores_values = self._get_gene_scores_values(
-                    study_wrapper, fallele,
+                    study, fallele,
                 )
                 fallele.update_attributes(gene_scores_values)
 
@@ -500,18 +500,6 @@ class ResponseTransformer(ResponseTransformerProtocol):
             return variant
 
         return transformer
-
-    def transform_summary_variants(
-            self, study_wrapper: StudyWrapper,
-            variants_iterable: Generator[SummaryVariant, None, None],
-    ) -> Generator[list, None, None]:
-        """Build variant rows for summary variants."""
-        for v in self._add_additional_columns_summary(
-            study_wrapper, variants_iterable,
-        ):
-            yield self.build_variant_row(
-                study_wrapper, v, study_wrapper.summary_preview_descs,
-            )
 
 
 def make_response_transformer(

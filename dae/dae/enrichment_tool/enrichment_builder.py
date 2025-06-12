@@ -15,7 +15,9 @@ class BaseEnrichmentBuilder:
     ):
         self.enrichment_helper = enrichment_helper
         self.dataset = dataset
-        enrichment_config = EnrichmentHelper.get_enrichment_config(dataset)
+        enrichment_config = EnrichmentHelper.get_enrichment_config(
+            dataset,
+        )
         assert enrichment_config is not None
         self.enrichment_config = enrichment_config
 

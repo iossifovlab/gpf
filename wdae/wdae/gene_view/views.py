@@ -11,7 +11,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
@@ -67,7 +67,7 @@ class QueryVariantsView(QueryBaseView):
 
         freq_col = dataset.genotype_data.config.gene_browser.frequency_column
 
-        dataset = cast(StudyWrapper, dataset)
+        dataset = cast(WDAEStudy, dataset)
 
         return Response(list(
             dataset.get_gene_view_summary_variants(
@@ -86,7 +86,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
         self,
         data: dict,
         user: User,
-        dataset: StudyWrapper,
+        dataset: WDAEStudy,
     ) -> Generator[str, None, None]:
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
@@ -100,7 +100,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
             download_limit = self.DOWNLOAD_LIMIT
         data.update({"limit": download_limit})
 
-        freq_col = dataset.config.gene_browser.frequency_column
+        freq_col = dataset.config["gene_browser"]["frequency_column"]
         yield from dataset.get_gene_view_summary_variants_download(
             freq_col,
             self.query_transformer,
@@ -127,7 +127,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
         if dataset.genotype_data.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = cast(StudyWrapper, dataset)
+        dataset = cast(WDAEStudy, dataset)
 
         response = FileResponse(
             self.generate_variants(data, request.user, dataset),

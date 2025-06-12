@@ -59,7 +59,7 @@ class PhenoToolHelper:
 
     Arguments of the constructor are:
 
-    `genotype_data` -- an instance of StudyWrapper
+    `genotype_data` -- an instance of WDAEStudy
     """
 
     def __init__(
