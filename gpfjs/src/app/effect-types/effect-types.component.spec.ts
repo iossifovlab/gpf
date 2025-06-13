@@ -143,22 +143,4 @@ describe('EffectTypesComponent', () => {
       'no-frame-shift-newStop',
     ]));
   });
-
-  it('should select All button group in pheno tool', () => {
-    const setEffectTypesSpy = jest.spyOn(component, 'setEffectTypes');
-    component.variantTypes = new Set<string>(['PHENO_TOOL_ALL']);
-    component.effectTypesButtons.set('PHENO_TOOL_ALL', PHENO_TOOL_ALL);
-
-    component.selectButtonGroup('PHENO_TOOL_ALL');
-
-    expect(setEffectTypesSpy).toHaveBeenCalledWith(new Set([
-      'Missense',
-      'Nonsynonymous',
-      'Synonymous',
-      'LGDs',
-      'Nonsense',
-      'Frame-shift',
-      'Splice-site'
-    ]));
-  });
 });

@@ -3,7 +3,6 @@ import {
   CODING, NONCODING, CNV, ALL, LGDS,
   NONSYNONYMOUS, UTRS
 } from './effect-types';
-import { PHENO_TOOL_CNV } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 import * as lodash from 'lodash';
 import { addEffectType, removeEffectType, selectEffectTypes, setEffectTypes } from './effect-types.state';
 import { take } from 'rxjs';
@@ -50,11 +49,6 @@ export class EffectTypesComponent implements OnInit {
 
   public selectButtonGroup(groupId: string): void {
     const effectTypes: Set<string> = lodash.cloneDeep(this.effectTypesButtons.get(groupId));
-    if (groupId === 'PHENO_TOOL_ALL' && !this.variantTypes.has('CNV')) {
-      for (const effectType of PHENO_TOOL_CNV) {
-        effectTypes.delete(effectType);
-      }
-    }
     this.setEffectTypes(effectTypes);
   }
 
