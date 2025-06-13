@@ -1,26 +1,21 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Validate } from 'class-validator';
-import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
 import { selectInheritanceTypes, setInheritanceTypes } from './inheritancetypes.state';
-import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
+import { resetErrors, setErrors } from 'app/common/errors.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html'
 })
-export class InheritancetypesComponent extends ComponentValidator implements OnInit {
-  @Input()
-  public inheritanceTypes: Set<string>;
+export class InheritancetypesComponent implements OnInit {
+  @Input() public inheritanceTypes: Set<string>;
+  @Input() public selectedValues: Set<string> = new Set();
   public inheritanceTypeDisplayNames: Map<string, string>;
-
-  @Input()
-  @Validate(SetNotEmpty, { message: 'Select at least one.' })
-  public selectedValues: Set<string> = new Set();
+  public errors: string[] = [];
 
   public constructor(protected store: Store) {
-    super(store, 'inheritanceTypes', selectInheritanceTypes);
     this.inheritanceTypeDisplayNames = new Map();
     this.inheritanceTypeDisplayNames.set('reference', 'Reference');
     this.inheritanceTypeDisplayNames.set('mendelian', 'Mendelian');
@@ -36,11 +31,30 @@ export class InheritancetypesComponent extends ComponentValidator implements OnI
   public ngOnInit(): void {
     this.store.select(selectInheritanceTypes).pipe(take(1)).subscribe(inheritanceTypesState => {
       this.selectedValues = new Set(inheritanceTypesState);
+      this.validateState();
     });
   }
 
   public updateInheritanceTypes(newValues: Set<string>): void {
     this.selectedValues = newValues;
+    this.validateState();
     this.store.dispatch(setInheritanceTypes({inheritanceTypes: [...newValues]}));
+  }
+
+  private validateState(): void {
+    this.errors = [];
+    if (!this.selectedValues.size) {
+      this.errors.push('Select at least one.');
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'inheritanceTypes', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'inheritanceTypes'}));
+    }
   }
 }
