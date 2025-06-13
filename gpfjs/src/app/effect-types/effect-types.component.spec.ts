@@ -6,7 +6,6 @@ import { ALL, CODING, GENOTYPE_BROWSER_INITIAL_VALUES, LGDS, NONSYNONYMOUS, UTRS
 import { of } from 'rxjs';
 import { addEffectType, effectTypesReducer, removeEffectType, setEffectTypes } from './effect-types.state';
 import { Store, StoreModule } from '@ngrx/store';
-import { PHENO_TOOL_ALL } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 
 describe('EffectTypesComponent', () => {
   let component: EffectTypesComponent;
