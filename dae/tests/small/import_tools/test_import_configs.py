@@ -406,7 +406,8 @@ def test_annotation_file_and_external_input_config(
     input_config: dict[str, Any] = {}
     with fsspec.open(str(tmp_path / "input" / "input.yaml"), "wt") as out_file:
         assert out_file is not None
-        yaml.safe_dump(input_config, out_file)  # type: ignore
+        content = yaml.safe_dump(input_config)
+        out_file.write(content)  # pyright: ignore[reportAttributeAccessIssue]
 
     import_config = {
         "id": "test_import",

@@ -126,7 +126,6 @@ class AlleleParquetSerializer:
                             annotation_type_to_pa_type[attr.type],
                         ),
                     )
-
         return pa.schema(fields)
 
     @classmethod
@@ -135,20 +134,13 @@ class AlleleParquetSerializer:
     ) -> dict[str, str]:
 
         schema_summary = cls.build_summary_schema(annotation_schema)
-        result = {
+        return {
             f.name: str(f.type)
             for f in schema_summary
             if f.name not in {
                 "effect_gene", "summary_variant_data", "chromosome",
             }
         }
-        result["effects"] = "string"
-        result["chrom"] = "string"
-        result["alternative"] = "string"
-        result["allele_count"] = "int32"
-        result["af_ref_allele_count"] = "int32"
-        result["af_ref_allele_freq"] = "float"
-        return result
 
     @property
     def schema_family(self) -> pa.Schema:
