@@ -28,6 +28,7 @@ import {
   setPersonMeasureHistograms
 } from 'app/person-filters-selector/measure-histogram.state';
 import { setAllZygosityFilters } from 'app/zygosity-filters/zygosity-filter.state';
+import { setInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: 'genotype-browser',
@@ -124,6 +125,10 @@ export class LoadQueryComponent implements OnInit {
           rangeEnd: state.geneScores.rangeEnd,
           rangeStart: state.geneScores.rangeStart,
         }));
+      }
+
+      if (state.inheritanceTypes) {
+        this.store.dispatch(setInheritanceTypes({inheritanceTypes: state.inheritanceTypes}));
       }
 
       const extras = {};

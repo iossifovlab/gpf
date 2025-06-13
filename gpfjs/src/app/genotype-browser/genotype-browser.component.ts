@@ -274,7 +274,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
           ...variantTypesState?.length && {variantTypes: variantTypesState},
           ...effectTypesState?.length && {effectTypes: effectTypesState},
           ...gendersState?.length && {genders: gendersState},
-          ...{inheritanceTypeFilter: inheritanceTypesState},
+          ...inheritanceTypesState?.length && {inheritanceTypeFilter: inheritanceTypesState},
           ...presentInChildState?.length && {presentInChild: presentInChildState},
           ...studyTypesState?.length && {studyTypes: studyTypesState},
           ...familyIdsState?.length && {familyIds: familyIdsState},

@@ -15,6 +15,8 @@ export const resetInheritanceTypes = createAction(
 
 export const inheritanceTypesReducer = createReducer(
   initialState,
-  on(setInheritanceTypes, (state: string[], {inheritanceTypes}) => [...inheritanceTypes]),
+  on(setInheritanceTypes, (state: string[], {inheritanceTypes}) => {
+    return inheritanceTypes ? [...inheritanceTypes] : initialState;
+  }),
   on(reset, resetInheritanceTypes, state => [...initialState]),
 );
