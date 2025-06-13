@@ -21,7 +21,7 @@ import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { selectGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
-import { selectInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.state';
+import { selectInheritanceTypes, setInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.state';
 import { selectPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { selectPersonIds } from 'app/person-ids/person-ids.state';
@@ -110,6 +110,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
         this.store.select(selectGenders),
         this.store.select(selectEffectTypes),
         this.store.select(selectVariantTypes),
+        this.store.select(selectInheritanceTypes),
       ]).pipe(take(1))),
     ).subscribe(([
       dataset,
@@ -117,7 +118,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
       presentInChildState,
       gendersState,
       effectTypesState,
-      variantTypesState
+      variantTypesState,
+      inheritanceTypesState
     ]) => {
       if (!dataset) {
         return;
@@ -166,6 +168,14 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
       if (!variantTypesState.length) {
         this.store.dispatch(
           setVariantTypes({variantTypes: cloneDeep(this.selectedDataset.genotypeBrowserConfig.variantTypes)})
+        );
+      }
+
+      if (!inheritanceTypesState.length) {
+        this.store.dispatch(
+          setInheritanceTypes({
+            inheritanceTypes: cloneDeep(this.selectedDataset.genotypeBrowserConfig.inheritanceTypeFilter)
+          })
         );
       }
 

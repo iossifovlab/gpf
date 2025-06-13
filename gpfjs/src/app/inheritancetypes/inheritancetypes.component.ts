@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
@@ -10,7 +10,7 @@ import { take } from 'rxjs';
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html'
 })
-export class InheritancetypesComponent extends ComponentValidator implements OnChanges {
+export class InheritancetypesComponent extends ComponentValidator implements OnInit {
   @Input()
   public inheritanceTypes: Set<string>;
   public inheritanceTypeDisplayNames: Map<string, string>;
@@ -33,14 +33,9 @@ export class InheritancetypesComponent extends ComponentValidator implements OnC
     this.inheritanceTypeDisplayNames.set('unknown', 'Unknown');
   }
 
-  public ngOnChanges(): void {
+  public ngOnInit(): void {
     this.store.select(selectInheritanceTypes).pipe(take(1)).subscribe(inheritanceTypesState => {
-      // handle selected values input and/or restore state
-      if (inheritanceTypesState.length) {
-        this.selectedValues = new Set(inheritanceTypesState);
-      } else {
-        this.store.dispatch(setInheritanceTypes({inheritanceTypes: [...this.selectedValues]}));
-      }
+      this.selectedValues = new Set(inheritanceTypesState);
     });
   }
 

@@ -137,7 +137,7 @@ const genotypeBrowserStateResult = {
   variantTypes: ['ins'],
   effectTypes: ['missense'],
   genders: ['male'],
-  inheritanceTypeFilter: [],
+  inheritanceTypeFilter: ['denovo'],
   presentInChild: ['sibling only'],
   studyTypes: ['studyType'],
   familyIds: ['familyId1'],
@@ -217,7 +217,7 @@ const allStatesMock = [
   ['ins'],
   ['missense'],
   ['male'],
-  [],
+  ['denovo'],
   ['sibling only'],
   { presentInParent: ['neither'],
     rarity: {

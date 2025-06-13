@@ -32,10 +32,10 @@ describe('InheritancetypesComponent', () => {
   });
 
   it('should handle selected values input and/or restore state', () => {
-    component.ngOnChanges();
+    component.ngOnInit();
     expect(component.selectedValues).toStrictEqual(new Set(['value1', 'value2']));
     component.updateInheritanceTypes(new Set(['value3']));
-    component.ngOnChanges();
+    component.ngOnInit();
     expect(component.selectedValues).toStrictEqual(new Set(['value3']));
   });
 
