@@ -11,7 +11,6 @@ import pyarrow.parquet as pq
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
-    AttributeInfo,
 )
 from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.helpers import url_to_pyarrow_fs
@@ -48,17 +47,14 @@ class ContinuousParquetFileWriter:
     def __init__(
         self,
         filepath: str,
-        annotation_schema: list[AttributeInfo],
+        allele_serializer: AlleleParquetSerializer,
         row_group_size: int = 10_000,
         schema: str = "schema",
         blob_column: str | None = None,
     ) -> None:
 
         self.filepath = filepath
-        self.annotation_schema = annotation_schema
-        self.serializer = AlleleParquetSerializer(
-            self.annotation_schema,
-        )
+        self.serializer = allele_serializer
 
         self.schema = getattr(self.serializer, schema)
 
@@ -178,16 +174,12 @@ class VariantsParquetWriter:
         annotation_pipeline: AnnotationPipeline,
         partition_descriptor: PartitionDescriptor,
         *,
-        serializer: VariantsDataSerializer | None = None,
+        blob_serializer: VariantsDataSerializer | None = None,
         bucket_index: int = 1,
         row_group_size: int = 10_000,
         include_reference: bool = False,
     ) -> None:
         self.out_dir = out_dir
-
-        if serializer is None:
-            serializer = VariantsDataSerializer.build_serializer()
-        self.serializer = serializer
 
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
@@ -201,11 +193,22 @@ class VariantsParquetWriter:
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
         self.annotation_pipeline = annotation_pipeline
+
+        self.allele_serializer = AlleleParquetSerializer(
+            self.annotation_pipeline.get_attributes(),
+        )
         self._annotation_internal_attributes = {
             attribute.name
             for attribute in self.annotation_pipeline.get_attributes()
             if attribute.internal
         }
+        if blob_serializer is None:
+            blob_serializer = VariantsDataSerializer.build_serializer(
+                self.allele_serializer.build_summary_blob_schema(
+                    self.annotation_pipeline.get_attributes(),
+                ),
+            )
+        self.blob_serializer = blob_serializer
 
     def _build_family_filename(
         self, allele: FamilyAllele, *,
@@ -241,7 +244,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.annotation_pipeline.get_attributes(),
+                self.allele_serializer,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
                 blob_column="family_variant_data",
@@ -259,7 +262,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.annotation_pipeline.get_attributes(),
+                self.allele_serializer,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
                 blob_column="summary_variant_data",
@@ -455,7 +458,8 @@ class VariantsParquetWriter:
                     }
                 fa.update_attributes(extra_atts)
 
-            family_variant_data_json = self.serializer.serialize_family(fv)
+            family_variant_data_json = \
+                self.blob_serializer.serialize_family(fv)
 
             denovo_reference = any(
                 i == Inheritance.denovo
@@ -534,7 +538,8 @@ class VariantsParquetWriter:
                     "sj_index": sj_index,
                 }
                 summary_allele.update_attributes(extra_atts)
-        summary_blobs_json = self.serializer.serialize_summary(summary_variant)
+        summary_blobs_json = self.blob_serializer.serialize_summary(
+            summary_variant)
         if self.include_reference:
             stored_alleles = summary_variant.alleles
         else:

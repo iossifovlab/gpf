@@ -9,7 +9,6 @@ from dae.studies.study import GenotypeData
 from dae.testing import foobar_gpf, setup_dae_transmitted, setup_pedigree
 from dae.testing.import_helpers import dae_study
 from dae.utils.regions import Region
-from dae.utils.variant_utils import str2lists
 
 
 @pytest.fixture
@@ -73,4 +72,4 @@ def test_dae_read_counts_serialization(
         for fa in v.family_alt_alleles:
             read_counts = fa.get_attribute("read_counts")
             assert read_counts is not None
-            assert read_counts == str2lists(expected, col_sep=" ", row_sep="/")
+            assert read_counts == expected

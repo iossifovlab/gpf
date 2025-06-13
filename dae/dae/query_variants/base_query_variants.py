@@ -128,9 +128,14 @@ class QueryVariantsBase(QueryVariants):
 
     RUNNER_CLASS: type[QueryRunner]
 
-    def __init__(self, families: FamiliesData) -> None:
+    def __init__(
+        self, families: FamiliesData, *,
+        summary_schema: dict[str, Any] | None = None,
+    ) -> None:
         self.families = families
-        self.serializer = VariantsDataSerializer.build_serializer()
+
+        self.serializer: VariantsDataSerializer = \
+            VariantsDataSerializer.build_serializer(summary_schema)
 
     @staticmethod
     def transform_roles_to_single_role_string(

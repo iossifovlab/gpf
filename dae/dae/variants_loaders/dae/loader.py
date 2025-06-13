@@ -24,7 +24,6 @@ from dae.utils.variant_utils import (
     GenotypeType,
     get_locus_ploidy,
     str2gt,
-    str2lists,
     str2mat,
     str2mat_adjust_colsep,
 )
@@ -39,7 +38,6 @@ from dae.variants.variant import (
 from dae.variants_loaders.raw.loader import (
     CLIArgument,
     FamiliesGenotypes,
-    FamilyGenotypeIterator,
     FullVariantsIterator,
     TransmissionType,
     VariantsGenotypesLoader,
@@ -767,21 +765,22 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
     """Tuple of families and family data"""
     def __init__(
         self, families: FamiliesData,
-        family_data: dict[str, tuple[np.ndarray, np.ndarray]],
+        family_data: dict[str, tuple[np.ndarray, str]],
     ) -> None:
         super().__init__()
         self.families = families
         self.family_data = family_data
 
-    def get_family_read_counts(self, family: Family) -> np.ndarray | None:
+    def get_family_read_counts(self, family: Family) -> str | None:
         fdata = self.family_data.get(family.family_id, None)
         if fdata is None:
             return None
         return fdata[1]
 
-    def family_genotype_iterator(
+    def family_genotype_iterator(  # type: ignore
         self,
-    ) -> FamilyGenotypeIterator:
+    ) -> Generator[
+            tuple[Family, np.ndarray, str | None], None, None]:
         for family_id, (best_state, read_counts) in self.family_data.items():
             fam = self.families.get(family_id)
             if fam is None:
@@ -970,6 +969,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "af_allele_freq": float(rec.get("all.altFreq", 0.0)),
             "hw": rec.get("HW"),
         }
+
         return SummaryVariantFactory.summary_variant_from_records(
             [ref, alt], transmission_type=self.transmission_type,
         )
@@ -981,7 +981,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         return {
             fid: (
                 str2mat(bs, col_sep="", row_sep="/"),
-                str2lists(rc, col_sep=" ", row_sep="/"),
+                rc,
             )
             for (fid, bs, rc) in [
                 fg.split(":") for fg in family_data.split(";")
@@ -1003,6 +1003,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 summary_variant, fam, None, best_state)
             fv.gt, fv._genetic_model = self._calc_genotype(  # noqa: SLF001
                     fv, self.genome)
+
             for fa in fv.family_alleles:
                 fa.gt = fv.gt
                 # pylint: disable=protected-access
@@ -1060,7 +1061,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                                 assert rec["cshl_position"] == int(
                                     toomany_rec["cshl_position"],
                                 )
-
                             family_data = self._explode_family_data(
                                 family_data)
 

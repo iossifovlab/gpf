@@ -59,6 +59,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         ped_df = self._fetch_pedigree()
         families = FamiliesLoader\
             .build_families_data_from_pedigree(ped_df)
+
         super().__init__(families)
 
         self.partition_descriptor = PartitionDescriptor.parse_string(
@@ -67,7 +68,6 @@ class SqlSchema2Variants(QueryVariantsBase):
         self.combined_columns = {}
         self.summary_allele_schema = {}
         self.family_variant_schema = {}
-        self.serializer = None
 
         if self.has_variants:
             self.summary_allele_schema = self._fetch_summary_schema()
@@ -78,9 +78,8 @@ class SqlSchema2Variants(QueryVariantsBase):
                 **self.summary_allele_schema,
             }
 
-            variants_data_schema = self._fetch_variants_data_schema()
             self.serializer = VariantsDataSerializer.build_serializer(
-                variants_data_schema)
+                self.summary_allele_schema)
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         assert self.summary_allele_table is not None

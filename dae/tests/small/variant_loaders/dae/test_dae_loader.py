@@ -11,7 +11,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.testing import build_families_data
 from dae.testing import foobar_gpf
 from dae.utils.regions import Region
-from dae.utils.variant_utils import mat2str, str2mat
+from dae.utils.variant_utils import mat2str
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 
 
@@ -81,8 +81,7 @@ def test_dae_transmitted_loader_simple(
             read_counts = fa.get_attribute("read_counts")
             assert read_counts is not None
     assert np.all(
-        read_counts == str2mat(
-            "13 5 5/0 13 17/0 0 0", col_sep=" ", row_sep="/"))
+        read_counts == "13 5 5/0 13 17/0 0 0")
 
 
 def test_chromosomes_have_adjusted_chrom(

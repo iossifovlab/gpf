@@ -509,7 +509,8 @@ def test_reannotate_parquet_variants(
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+    assert sorted(result) == pytest.approx(
+        [0.21, 0.22, 0.23, 0.24, 0.25, 0.26], rel=1e-3)
 
 
 def test_reannotate_parquet_merging(
@@ -671,7 +672,8 @@ def test_reannotate_in_place(
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+    assert sorted(result) == pytest.approx(
+        [0.21, 0.22, 0.23, 0.24, 0.25, 0.26], rel=1e-3)
 
 
 def test_reannotate_in_place_increment_backup_filenames(
@@ -791,7 +793,7 @@ def test_region_option(
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == {0.23, 0.24}
+    assert sorted(result) == pytest.approx([0.23, 0.24], rel=1e-3)
 
 
 def test_region_option_invalid(

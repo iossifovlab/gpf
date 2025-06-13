@@ -137,7 +137,10 @@ class DuckDb2Variants(QueryVariantsBase):
         )
         partition_description = self._fetch_partition_descriptor()
         families = self._fetch_families()
-        super().__init__(families)
+        super().__init__(
+            families,
+            summary_schema=summary_schema,
+        )
 
         self.query_builder = SqlQueryBuilder(
             self.layout,

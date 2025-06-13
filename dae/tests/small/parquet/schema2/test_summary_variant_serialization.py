@@ -55,7 +55,7 @@ def test_json_serialization_deserialization(sv: SummaryVariant) -> None:
     sv2 = SummaryVariantFactory.summary_variant_from_records(record2)
     assert sv == sv2
 
-    assert len(data) == 4070  # 4075  # 4107, initially: 5909
+    assert len(data) == 4072  # 4075  # 4107, initially: 5909
 
 
 def test_json_with_schema_serialization_deserialization(
@@ -83,7 +83,7 @@ def test_json_with_schema_serialization_deserialization(
     assert sv == sv2
     assert sv.effects == sv2.effects
 
-    assert len(data) == 2930  # 2993  # 2999  # 3033
+    assert len(data) == 2932  # 2993  # 2999  # 3033
 
 
 def test_json_zstd_serialization_deserialization(sv: SummaryVariant) -> None:

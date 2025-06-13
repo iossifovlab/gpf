@@ -56,6 +56,8 @@ class VariantsDataSerializer(abc.ABC):
         """Build a serializer based on the metadata."""
         if metadata is None:
             return JsonVariantsDataSerializer(metadata)
+        return VariantsDataAvroSerializer(metadata)
+
         raise ValueError(f"Unknown serialization metadata version: {metadata}")
 
 
@@ -95,9 +97,30 @@ PA2AVRO_SCHEMA = {
 
 
 def construct_avro_summary_schema(
-    summary_schema: dict[str, str],
+    schema: dict[str, str],
 ) -> dict[str, Any]:
     """Construct an Avro schema from the summary schema."""
+
+    summary_schema = {
+        key: value
+        for key, value in schema.items()
+        if key not in {
+            "effect_gene", "summary_variant_data", "chromosome",
+            "effect_details", "gene_effects", "region_bin",
+            "frequency_bin", "coding_bin",
+        }
+    }
+
+    summary_schema["effects"] = "string"
+    summary_schema["chrom"] = "string"
+    summary_schema["alternative"] = "string"
+    summary_schema["allele_count"] = "int32"
+    summary_schema["af_ref_allele_count"] = "int32"
+    summary_schema["af_ref_allele_freq"] = "float"
+    summary_schema["hw"] = "string"
+    summary_schema["cshl_position"] = "int32"
+    summary_schema["cshl_variant"] = "string"
+
     return {
         "type": "record",
         "name": "SummaryVariant",
@@ -194,8 +217,10 @@ class VariantsDataAvroSerializer(VariantsDataSerializer):
         self,
         summary_blob_schema: dict[str, str],
     ) -> None:
+        self.summary_blob_schema = construct_avro_summary_schema(
+                summary_blob_schema)
         self.summary_avro_schema = avro.schema.parse(
-            json.dumps(construct_avro_summary_schema(summary_blob_schema)),
+            json.dumps(self.summary_blob_schema),
         )
         self.summary_avro_writer = avro.io.DatumWriter(
             self.summary_avro_schema)
@@ -216,6 +241,7 @@ class VariantsDataAvroSerializer(VariantsDataSerializer):
         self, variant: FamilyVariant,
     ) -> bytes:
         record = variant.to_record()
+
         self.family_bytes_writer.seek(0)
         self.family_avro_writer.write(
             record, self.family_encoder,
@@ -235,6 +261,7 @@ class VariantsDataAvroSerializer(VariantsDataSerializer):
     ) -> bytes:
         self.summary_bytes_writer.seek(0)
         data = variant.to_record()
+
         self.summary_avro_writer.write(
             {"alleles": data}, self.summary_encoder,
         )

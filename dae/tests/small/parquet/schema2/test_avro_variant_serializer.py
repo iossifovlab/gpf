@@ -92,8 +92,8 @@ def test_allele_parquet_serializer(
     schema_summary = AlleleParquetSerializer.build_summary_blob_schema(
         annotation_pipeline.get_attributes(),
     )
-    avro_schema = avro.schema.parse(
-        json.dumps(construct_avro_summary_schema(schema_summary)))
+    avro_summary = construct_avro_summary_schema(schema_summary)
+    avro_schema = avro.schema.parse(json.dumps(avro_summary))
 
     writer = avro.io.DatumWriter(avro_schema)
     bytes_writer = io.BytesIO()
@@ -102,11 +102,6 @@ def test_allele_parquet_serializer(
     for sv, _family_variants in variants:
         bytes_writer.seek(0)
         data = sv.to_record()
-        for allele in data:
-            for key in allele:
-                assert key in schema_summary, (
-                    f"Key {key} not found in summary schema: {allele[key]}",
-                )
         writer.write({"alleles": data}, encoder)
         raw_bytes = bytes_writer.getvalue()
         serialized_variants.append(raw_bytes)
@@ -160,7 +155,7 @@ def test_explore_avro_variant_serializer(
     data = sv.to_record()
     assert data is not None
 
-    assert len(json.dumps(data)) == 4070
+    assert len(json.dumps(data)) == 4072
 
     writer = avro.io.DatumWriter(avro_schema)
     bytes_writer = io.BytesIO()
@@ -170,10 +165,10 @@ def test_explore_avro_variant_serializer(
     print(raw_bytes)
     assert raw_bytes is not None
 
-    assert len(raw_bytes) == 2024
+    assert len(raw_bytes) == 2025
 
     compressed = pyzstd.compress(raw_bytes, 10)
-    assert len(compressed) == 548
+    assert len(compressed) == 551
 
     bytes_reader = io.BytesIO(raw_bytes)
     decoder = avro.io.BinaryDecoder(bytes_reader)
