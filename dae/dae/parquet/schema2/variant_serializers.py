@@ -126,13 +126,73 @@ def construct_avro_summary_schema(
     }
 
 
+def construct_avro_family_schema() -> dict[str, Any]:
+    """Construct an Avro schema for family variants."""
+    fields = [
+        {"name": "family_id", "type": "string"},
+        {"name": "summary_index", "type": ["int", "null"]},
+        {"name": "family_index", "type": ["int", "null"]},
+        {
+            "name": "genotype",
+            "type": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": "int",
+                },
+            },
+        },
+        {
+            "name": "best_state",
+            "type": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": "int",
+                },
+            },
+        },
+        {
+            "name": "inheritance_in_members",
+            "type": {
+                "type": "map",
+                "values": {
+                    "type": "array",
+                    "items": {"type": "int"},
+                },
+            },
+        },
+        {
+            "name": "family_variant_attributes",
+            "type": {
+                "type": "array",
+                "items": {
+                    "type": "map",
+                    "values": [
+                        "null",
+                        "int",
+                        "long",
+                        "float",
+                        "string",
+                        "boolean",
+                    ],
+                },
+            },
+        },
+    ]
+    return {
+        "type": "record",
+        "name": "FamilyVariant",
+        "fields": fields,
+    }
+
+
 class VariantsDataAvroSerializer(VariantsDataSerializer):
     """Interface for serializing family and summary alleles."""
 
     def __init__(
         self,
         summary_blob_schema: dict[str, str],
-        family_blob_schema: dict[str, str] | None = None,
     ) -> None:
         self.summary_avro_schema = avro.schema.parse(
             json.dumps(construct_avro_summary_schema(summary_blob_schema)),
@@ -140,18 +200,35 @@ class VariantsDataAvroSerializer(VariantsDataSerializer):
         self.summary_avro_writer = avro.io.DatumWriter(
             self.summary_avro_schema)
         self.summary_bytes_writer = io.BytesIO()
-        self.summar_encoder = avro.io.BinaryEncoder(
+        self.summary_encoder = avro.io.BinaryEncoder(
             self.summary_bytes_writer)
+
+        self.family_avro_schema = avro.schema.parse(
+            json.dumps(construct_avro_family_schema()),
+        )
+        self.family_avro_writer = avro.io.DatumWriter(
+            self.family_avro_schema)
+        self.family_bytes_writer = io.BytesIO()
+        self.family_encoder = avro.io.BinaryEncoder(
+            self.family_bytes_writer)
 
     def serialize_family(
         self, variant: FamilyVariant,
     ) -> bytes:
-        return b""
+        record = variant.to_record()
+        self.family_bytes_writer.seek(0)
+        self.family_avro_writer.write(
+            record, self.family_encoder,
+        )
+        return self.family_bytes_writer.getvalue()
 
     def deserialize_family_record(
         self, data: bytes,
     ) -> dict[str, Any]:
-        return {}
+        bytes_reader = io.BytesIO(data)
+        decoder = avro.io.BinaryDecoder(bytes_reader)
+        reader = avro.io.DatumReader(self.family_avro_schema)
+        return cast(dict, reader.read(decoder))
 
     def serialize_summary(
         self, variant: SummaryVariant,
@@ -159,7 +236,7 @@ class VariantsDataAvroSerializer(VariantsDataSerializer):
         self.summary_bytes_writer.seek(0)
         data = variant.to_record()
         self.summary_avro_writer.write(
-            {"alleles": data}, self.summar_encoder,
+            {"alleles": data}, self.summary_encoder,
         )
         return self.summary_bytes_writer.getvalue()
 

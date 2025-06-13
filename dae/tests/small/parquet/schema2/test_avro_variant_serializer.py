@@ -7,6 +7,7 @@ from typing import Any, cast
 
 import avro.io
 import avro.schema
+import numpy as np
 import pytest
 import pyzstd
 
@@ -17,9 +18,11 @@ from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.schema2.variant_serializers import (
     VariantsDataAvroSerializer,
+    construct_avro_family_schema,
     construct_avro_summary_schema,
 )
 from dae.pedigrees.loader import FamiliesLoader
+from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import (
     SummaryVariant,
@@ -184,7 +187,7 @@ def test_explore_avro_variant_serializer(
     assert sv1 == sv
 
 
-def test_avro_blob_serializer(
+def test_summary_blob_avro_serializer(
     annotation_pipeline: AnnotationPipeline,
     variants: list[tuple[SummaryVariant, list[FamilyVariant]]],
 ) -> None:
@@ -206,3 +209,67 @@ def test_avro_blob_serializer(
         )
         assert deserialized_sv is not None
         assert deserialized_sv == sv
+
+
+def test_experiment_with_family_blob_schema() -> None:
+    record = {
+        "family_id": "f1",
+        "summary_index": 0,
+        "family_index": None,
+        "genotype": [[1, 1, 1, 1], [1, 1, 0, 1]],
+        "best_state": [[0, 0, 1, 0], [2, 2, 1, 2]],
+        "inheritance_in_members": {
+            "0": [256, 256, 4, 128],
+            "1": [256, 256, 2, 2],
+        },
+        "family_variant_attributes": [{}],
+    }
+    avro_schema = avro.schema.parse(
+        json.dumps(construct_avro_family_schema()),
+    )
+    writer = avro.io.DatumWriter(avro_schema)
+    bytes_writer = io.BytesIO()
+    encoder = avro.io.BinaryEncoder(bytes_writer)
+    writer.write(record, encoder)
+    raw_bytes = bytes_writer.getvalue()
+    assert raw_bytes is not None
+
+
+def test_family_blob_avro_serializer(
+    annotation_pipeline: AnnotationPipeline,
+    variants: list[tuple[SummaryVariant, list[FamilyVariant]]],
+) -> None:
+    """Test the AlleleParquetSerializer."""
+
+    schema_summary = AlleleParquetSerializer.build_summary_blob_schema(
+        annotation_pipeline.get_attributes(),
+    )
+    serializer = VariantsDataAvroSerializer(schema_summary)
+
+    for sv, fvs in variants:
+        for fv in fvs:
+            serialized = serializer.serialize_family(fv)
+            assert len(serialized) > 0
+
+            fv_record = serializer.deserialize_family_record(serialized)
+
+            inheritance_in_members = {
+                int(k): [Inheritance.from_value(inh) for inh in v]
+                for k, v in fv_record["inheritance_in_members"].items()
+            }
+            deserialized_fv = FamilyVariant(
+                sv,
+                fv.family,
+                np.array(fv_record["genotype"]),
+                np.array(fv_record["best_state"]),
+                inheritance_in_members=inheritance_in_members,
+            )
+
+            fattributes = fv_record.get("family_variant_attributes")
+            if fattributes:
+                for fa, fattr in zip(
+                        deserialized_fv.family_alt_alleles, fattributes,
+                        strict=True):
+                    fa.update_attributes(fattr)
+
+            assert deserialized_fv == fv

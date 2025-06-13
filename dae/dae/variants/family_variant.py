@@ -814,10 +814,10 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     def _serialize_inheritance_in_members(
         self,
-    ) -> dict[int, list[int]]:
+    ) -> dict[str, list[int]]:
         result = {}
         for allele in self.family_alleles:
-            result[allele.allele_index] = [
+            result[str(allele.allele_index)] = [
                 inh.value for inh in allele.inheritance_in_members]
         return result
 
