@@ -9,7 +9,9 @@ import duckdb
 import pandas as pd
 import yaml
 
-from dae.duckdb_storage.duckdb_connection_factory import DuckDbConnectionFactory
+from dae.duckdb_storage.duckdb_connection_factory import (
+    DuckDbConnectionFactory,
+)
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
