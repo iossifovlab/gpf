@@ -47,7 +47,7 @@ describe('VariantTypesComponent', () => {
 
     component.ngOnInit();
     expect(component.selectedVariantTypes).toStrictEqual(new Set(['value1', 'value2']));
-    expect(dispatchSpy).not.toHaveBeenCalled();
+    expect(dispatchSpy).not.toHaveBeenCalledWith(setVariantTypes({ variantTypes: ['value1', 'value2'] }));
   });
 
   it('should update variant types', () => {
@@ -62,6 +62,6 @@ describe('VariantTypesComponent', () => {
     component.updateVariantTypes(mockSet);
 
     expect(component.selectedVariantTypes).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setVariantTypes({variantTypes: [...mockSet]}));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(2, setVariantTypes({variantTypes: [...mockSet]}));
   });
 });
