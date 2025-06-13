@@ -6,13 +6,13 @@ import { ConfigService } from '../config/config.service';
 import { Dataset, PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { filter, map, switchMap, take } from 'rxjs/operators';
-import { clone } from 'lodash';
+import { clone, cloneDeep } from 'lodash';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngrx/store';
 import { selectErrors } from 'app/common/errors.state';
-import { selectVariantTypes } from 'app/variant-types/variant-types.state';
+import { selectVariantTypes, setVariantTypes } from 'app/variant-types/variant-types.state';
 import { selectEffectTypes, setEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
@@ -109,13 +109,15 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
         this.store.select(selectPresentInChild),
         this.store.select(selectGenders),
         this.store.select(selectEffectTypes),
+        this.store.select(selectVariantTypes),
       ]).pipe(take(1))),
     ).subscribe(([
       dataset,
       presentInParentState,
       presentInChildState,
       gendersState,
-      effectTypesState
+      effectTypesState,
+      variantTypesState
     ]) => {
       if (!dataset) {
         return;
@@ -158,6 +160,12 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
       if (!effectTypesState.length) {
         this.store.dispatch(
           setEffectTypes({effectTypes: [...GENOTYPE_BROWSER_INITIAL_VALUES.values()]})
+        );
+      }
+
+      if (!variantTypesState.length) {
+        this.store.dispatch(
+          setVariantTypes({variantTypes: cloneDeep(this.selectedDataset.genotypeBrowserConfig.variantTypes)})
         );
       }
 

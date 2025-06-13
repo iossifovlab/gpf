@@ -5,7 +5,6 @@ import { Store } from '@ngrx/store';
 import { selectVariantTypes, setVariantTypes } from './variant-types.state';
 import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
-import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-variant-types',
@@ -26,11 +25,6 @@ export class VariantTypesComponent extends ComponentValidator implements OnInit 
   public ngOnInit(): void {
     super.ngOnInit();
     this.store.select(selectVariantTypes).pipe(take(1)).subscribe(variantTypesState => {
-      if (!variantTypesState) {
-        this.selectedVariantTypes = cloneDeep(this.variantTypes);
-        this.store.dispatch(setVariantTypes({variantTypes: [...this.selectedVariantTypes]}));
-        return;
-      }
       this.selectedVariantTypes = new Set(variantTypesState);
     });
   }

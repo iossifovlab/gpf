@@ -2,7 +2,7 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
-export const initialState: string[] = null;
+export const initialState: string[] = [];
 
 export const selectVariantTypes = createFeatureSelector<string[]>('variantTypes');
 

@@ -8,7 +8,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { initialState, setVariantTypes, variantTypesReducer } from './variant-types.state';
+import { setVariantTypes, variantTypesReducer } from './variant-types.state';
 import { Store, StoreModule } from '@ngrx/store';
 
 describe('VariantTypesComponent', () => {
@@ -38,31 +38,16 @@ describe('VariantTypesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should handle selected values input and/or restore state', () => {
-    let dispatchSpy;
+  it('should restore state', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
 
     jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2']));
-    jest.spyOn(store, 'dispatch').mockReturnValue();
-
-    dispatchSpy = jest.spyOn(store, 'dispatch');
 
     component.ngOnInit();
     expect(component.selectedVariantTypes).toStrictEqual(new Set(['value1', 'value2']));
     expect(dispatchSpy).not.toHaveBeenCalled();
-
-    component.variantTypes = new Set(['value3']);
-
-    jest.spyOn(store, 'select').mockReturnValue(of(initialState));
-    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-
-    component.ngOnInit();
-    expect(component.selectedVariantTypes).toStrictEqual(new Set(['value3']));
-    expect(dispatchSpy).toHaveBeenCalledWith({
-      type: '[Genotype] Set variant types',
-      variantTypes: ['value3']
-    });
   });
 
   it('should update variant types', () => {
