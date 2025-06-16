@@ -1,14 +1,11 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import {
-  Partitions,
-  GeneScoresLocalState,
-} from './gene-scores';
+import { Partitions } from './gene-scores';
 import { GeneScoresService } from './gene-scores.service';
 import { ReplaySubject, Observable, combineLatest, of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { ConfigService } from '../config/config.service';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
-import { ArrayNotEmpty, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, ValidateIf } from 'class-validator';
 import { environment } from 'environments/environment';
 import { ComponentValidator } from 'app/common/component-validator';
 import {
@@ -34,7 +31,13 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   public rangesCounts: Observable<Array<number>>;
   public downloadUrl: string;
 
-  @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
+  public score: GenomicScore = null;
+  public rangeStart: number = 0;
+  public rangeEnd: number = 0;
+
+  public domainMin = 0;
+  public domainMax = 0;
+
   @ValidateIf(
     (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScore.histogram)
   )
@@ -50,6 +53,9 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     private config: ConfigService
   ) {
     super(store, 'geneScores', selectGeneScores);
+  }
+
+  public ngOnInit(): void {
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
@@ -67,9 +73,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         [partitions.leftCount, partitions.midCount, partitions.rightCount]
       )
     );
-  }
 
-  public ngOnInit(): void {
     this.geneScoresService.getGeneScores().pipe(
       switchMap(geneScores =>
         combineLatest([of(geneScores), this.store.select(selectGeneScores).pipe(take(1))])
@@ -98,7 +102,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       super.ngOnInit();
     });
 
-    if (this.geneScoresLocalState.score !== null) {
+    if (this.score !== null) {
       if (this.rangeStart !== 0 && this.rangeEnd !== 0) {
         this.updateContinuousHistogramState();
       }
@@ -110,7 +114,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   private updateLabels(): void {
     this.rangeChanges.next([
-      this.geneScoresLocalState.score?.score,
+      this.score?.score,
       this.rangeStart,
       this.rangeEnd
     ]);
@@ -120,8 +124,8 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     this.updateLabels();
     this.store.dispatch(setGeneScoreContinuous({
       score: this.selectedGeneScore.score,
-      rangeStart: this.geneScoresLocalState.rangeStart,
-      rangeEnd: this.geneScoresLocalState.rangeEnd,
+      rangeStart: this.rangeStart,
+      rangeEnd: this.rangeEnd,
     }));
   }
 
@@ -143,22 +147,22 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   public get selectedGeneScore(): GenomicScore {
-    return this.geneScoresLocalState.score;
+    return this.score;
   }
 
   public set selectedGeneScore(selectedGeneScore: GenomicScore) {
     this.categoricalValues = [];
-    this.geneScoresLocalState.score = selectedGeneScore;
+    this.score = selectedGeneScore;
     this.downloadUrl = this.getDownloadUrl();
     if (selectedGeneScore !== undefined && this.isNumberHistogram(selectedGeneScore.histogram)) {
       this.changeDomain(selectedGeneScore.histogram);
-      this.rangeStart = this.geneScoresLocalState.domainMin;
-      this.rangeEnd = this.geneScoresLocalState.domainMax;
+      this.rangeStart = this.domainMin;
+      this.rangeEnd = this.domainMax;
       this.updateLabels();
       this.store.dispatch(setGeneScoreContinuous({
-        score: this.geneScoresLocalState.score.score,
-        rangeStart: this.geneScoresLocalState.rangeStart,
-        rangeEnd: this.geneScoresLocalState.rangeEnd,
+        score: this.score.score,
+        rangeStart: this.rangeStart,
+        rangeEnd: this.rangeEnd,
       }));
     } else if (this.isCategoricalHistogram(selectedGeneScore.histogram)) {
       this.rangeStart = null;
@@ -169,26 +173,18 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     }
   }
 
-  public set rangeStart(range: number) {
-    if (this.isNumberHistogram(this.geneScoresLocalState.score.histogram)) {
-      this.geneScoresLocalState.rangeStart = range;
+  public setRangeStart(range: number): void {
+    if (this.isNumberHistogram(this.score.histogram)) {
+      this.rangeStart = range;
       this.updateContinuousHistogramState();
     }
   }
 
-  public get rangeStart(): number {
-    return this.geneScoresLocalState.rangeStart;
-  }
-
-  public set rangeEnd(range: number) {
-    if (this.isNumberHistogram(this.geneScoresLocalState.score.histogram)) {
-      this.geneScoresLocalState.rangeEnd = range;
+  public setRangeEnd(range: number): void {
+    if (this.isNumberHistogram(this.score.histogram)) {
+      this.rangeEnd = range;
       this.updateContinuousHistogramState();
     }
-  }
-
-  public get rangeEnd(): number {
-    return this.geneScoresLocalState.rangeEnd;
   }
 
   private getDownloadUrl(): string {
@@ -199,11 +195,11 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   private changeDomain(histogram: NumberHistogram): void {
     if (histogram.rangeMin && histogram.rangeMax) {
-      this.geneScoresLocalState.domainMin = histogram.rangeMin;
-      this.geneScoresLocalState.domainMax = histogram.rangeMax;
+      this.domainMin = histogram.rangeMin;
+      this.domainMax = histogram.rangeMax;
     } else {
-      this.geneScoresLocalState.domainMin = histogram.bins[0];
-      this.geneScoresLocalState.domainMax = histogram.bins[histogram.bins.length - 1];
+      this.domainMin = histogram.bins[0];
+      this.domainMax = histogram.bins[histogram.bins.length - 1];
     }
   }
 

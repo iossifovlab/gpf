@@ -125,7 +125,7 @@ describe('GeneScoresComponent', () => {
 
   it('should toggle categorical histogram values and save to state', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.geneScoresLocalState.score = new GenomicScore('desc', 'help', 'score1', null);
+    component.score = new GenomicScore('desc', 'help', 'score1', null);
 
     const values = ['name5', 'name2'];
     component.categoricalValues = ['name1', 'name2', 'name3'];
@@ -139,7 +139,7 @@ describe('GeneScoresComponent', () => {
 
   it('should switch categorical histogram view', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.geneScoresLocalState.score = new GenomicScore('desc', 'help', 'score1', null);
+    component.score = new GenomicScore('desc', 'help', 'score1', null);
     component.selectedCategoricalHistogramView = 'range selector';
     component.categoricalValues = ['name1', 'name2', 'name3'];
 
@@ -210,8 +210,8 @@ describe('GeneScoresComponent', () => {
     );
 
     component.selectedGeneScore = score;
-    expect(component.geneScoresLocalState.domainMin).toBe(4);
-    expect(component.geneScoresLocalState.domainMax).toBe(5);
+    expect(component.domainMin).toBe(4);
+    expect(component.domainMax).toBe(5);
   });
 
   it('should set domain using number histogram min and max ranges', () => {
@@ -223,8 +223,8 @@ describe('GeneScoresComponent', () => {
     );
 
     component.selectedGeneScore = score;
-    expect(component.geneScoresLocalState.domainMin).toBe(2);
-    expect(component.geneScoresLocalState.domainMax).toBe(500);
+    expect(component.domainMin).toBe(2);
+    expect(component.domainMax).toBe(500);
   });
 
   it('should set and get range start', () => {
@@ -236,12 +236,12 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 2, 500, true, true),
     );
 
-    component.geneScoresLocalState.score = score;
-    component.geneScoresLocalState.rangeStart = 0;
-    component.geneScoresLocalState.rangeEnd = 10;
-    component.rangeStart = 3;
+    component.score = score;
+    component.setRangeStart(0);
+    component.setRangeEnd(10);
+    component.setRangeStart(3);
 
-    expect(component.geneScoresLocalState.rangeStart).toBe(3);
+    expect(component.rangeStart).toBe(3);
 
     expect(dispatchSpy).toHaveBeenCalledWith(setGeneScoreContinuous({
       score: 'score1',
@@ -260,12 +260,12 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 2, 500, true, true),
     );
 
-    component.geneScoresLocalState.score = score;
-    component.geneScoresLocalState.rangeStart = 0;
-    component.geneScoresLocalState.rangeEnd = 10;
-    component.rangeEnd = 3;
+    component.score = score;
+    component.setRangeStart(0);
+    component.setRangeEnd(10);
+    component.setRangeEnd(3);
 
-    expect(component.geneScoresLocalState.rangeEnd).toBe(3);
+    expect(component.rangeEnd).toBe(3);
 
     expect(dispatchSpy).toHaveBeenCalledWith(setGeneScoreContinuous({
       score: 'score1',

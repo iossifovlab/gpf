@@ -10,8 +10,8 @@
         </div>
         <gpf-helper-modal
           style="height: 32px; margin-left: 4px"
-          [style.visibility]="this.geneScoresLocalState.score.help ? 'visible' : 'hidden'"
-          [modalContent]="this.geneScoresLocalState.score.help"
+          [style.visibility]="this.score.help ? 'visible' : 'hidden'"
+          [modalContent]="this.score.help"
           [isMarkdown]="true"></gpf-helper-modal>
         <div *ngIf="isCategoricalHistogram(selectedGeneScore.histogram)">
           <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
@@ -69,8 +69,10 @@
         [smallValuesDesc]="selectedGeneScore.histogram.smallValuesDesc"
         [largeValuesDesc]="selectedGeneScore.histogram.largeValuesDesc"
         [rangesCounts]="rangesCounts | async"
-        [(rangeStart)]="rangeStart"
-        [(rangeEnd)]="rangeEnd">
+        (rangeStartChange)="setRangeStart($event)"
+        (rangeEndChange)="setRangeEnd($event)"
+        [rangeStart]="rangeStart"
+        [rangeEnd]="rangeEnd">
       </gpf-histogram>
       <gpf-categorical-histogram
         *ngIf="
