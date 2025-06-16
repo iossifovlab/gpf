@@ -178,11 +178,9 @@ def create_remote_studies(
 ) -> dict[str, RemoteWDAEStudy]:
     study_id = config["id"]
     logger.info("loading remote genotype study: %s", study_id)
-    print(study_id)
     genotype_data: RemoteGenotypeData | None = None
     phenotype_data: RemotePhenotypeData | None = None
     if config.get("has_genotype"):
-        print("has_genotype")
         if study_id not in genotype_datas:
             genotype_data = RemoteGenotypeData(
                 copy.deepcopy(config), rest_client)
