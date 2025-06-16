@@ -2,7 +2,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Generator, Iterable
-from typing import ClassVar
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import yaml
@@ -11,7 +11,7 @@ from pyarrow import dataset as ds
 from pyarrow import parquet as pq
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
+from dae.parquet.schema2.serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.schema2_storage.schema2_layout import (
@@ -170,14 +170,23 @@ class ParquetLoader:
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
-        summary_schema: dict | None = None
+        summary_schema: dict[str, Any] = {}
         if "summary_schema" in self.meta:
             schema_content = self.meta["summary_schema"].strip()
-            summary_schema = dict(
-                line.split("|") for line in schema_content.split("\n"))
+            summary_schema = cast(
+                dict[str, Any],
+                dict(
+                    line.split("|") for line in schema_content.split("\n")),
+            )
+        if "variants_blob_serializer" in self.meta:
+            variants_blob_serializer = \
+                str(self.meta["variants_blob_serializer"].strip())
+        else:
+            variants_blob_serializer = "json"
 
         self.serializer = VariantsDataSerializer.build_serializer(
             summary_schema,
+            variants_blob_serializer,
         )
 
         self.files_per_region = self._scan_region_bins()

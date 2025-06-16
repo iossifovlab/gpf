@@ -733,7 +733,8 @@ def test_output_argument_behaviour(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     t4c8_study_nonpartitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+    gpf_instance_genomic_context_fixture:
+        Callable[[GPFInstance], GenomicContext],
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     annotation_file_new = str(root_path / "new_annotation.yaml")

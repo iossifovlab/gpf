@@ -9,7 +9,6 @@ import pandas as pd
 from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
@@ -60,11 +59,6 @@ class SqlSchema2Variants(QueryVariantsBase):
         families = FamiliesLoader\
             .build_families_data_from_pedigree(ped_df)
 
-        super().__init__(families)
-
-        self.partition_descriptor = PartitionDescriptor.parse_string(
-                self._fetch_tblproperties())
-
         self.combined_columns = {}
         self.summary_allele_schema = {}
         self.family_variant_schema = {}
@@ -78,8 +72,14 @@ class SqlSchema2Variants(QueryVariantsBase):
                 **self.summary_allele_schema,
             }
 
-            self.serializer = VariantsDataSerializer.build_serializer(
-                self.summary_allele_schema)
+        super().__init__(
+            families,
+            summary_schema=self.summary_allele_schema,
+            variants_blob_serializer=self._fetch_variants_blob_serializer(),
+        )
+
+        self.partition_descriptor = PartitionDescriptor.parse_string(
+                self._fetch_tblproperties())
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         assert self.summary_allele_table is not None
@@ -100,6 +100,10 @@ class SqlSchema2Variants(QueryVariantsBase):
     @abc.abstractmethod
     def _fetch_pedigree(self) -> pd.DataFrame:
         """Fetch the pedigree and return it as a data frame."""
+
+    @abc.abstractmethod
+    def _fetch_variants_blob_serializer(self) -> str:
+        """Fetch the variants blob serializer from metadata table."""
 
     @abc.abstractmethod
     def _fetch_tblproperties(self) -> str:

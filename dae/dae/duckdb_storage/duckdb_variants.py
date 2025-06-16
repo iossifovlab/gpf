@@ -180,6 +180,18 @@ class DuckDbVariants(SqlSchema2Variants):
                 return cast(str, row[0])
             return ""
 
+    def _fetch_variants_blob_serializer(self) -> str:
+        query = f"""SELECT value FROM {self.meta_table}
+               WHERE key = 'variants_blob_serializer'
+               LIMIT 1
+            """  # noqa: S608
+
+        with self._get_connection_factory() as connection:
+            result = connection.execute(query).fetchall()
+            for row in result:
+                return cast(str, row[0])
+            return "json"
+
     def _fetch_summary_schema(self) -> dict[str, str]:
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'summary_schema'

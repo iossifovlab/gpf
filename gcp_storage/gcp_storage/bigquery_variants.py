@@ -109,6 +109,16 @@ class BigQueryVariants(SqlSchema2Variants):
             return cast(dict[str, Any], yaml.safe_load(row[0]))
         return None
 
+    def _fetch_variants_blob_serializer(self) -> str:
+        query = f"""SELECT value FROM {self.db}.{self.meta_table}
+               WHERE key = 'variants_blob_serializer'
+               LIMIT 1
+            """  # noqa: S608
+
+        for row in self.client.query(query).result():
+            return cast(str, row[0])
+        return "json"
+
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.db}.{self.pedigree_table}"  # noqa: S608
         ped_df = self.client.query(query).result().to_dataframe()

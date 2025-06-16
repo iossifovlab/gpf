@@ -130,6 +130,7 @@ class DuckDb2Variants(QueryVariantsBase):
         pedigree_schema = self._fetch_pedigree_schema()
         summary_schema = self._fetch_summary_schema()
         family_schema = self._fetch_family_schema()
+        variants_blob_serializer = self._fetch_variants_blob_serializer()
         schema = SqlQueryBuilder.build_schema(
             pedigree_schema=pedigree_schema,
             summary_schema=summary_schema,
@@ -140,6 +141,7 @@ class DuckDb2Variants(QueryVariantsBase):
         super().__init__(
             families,
             summary_schema=summary_schema,
+            variants_blob_serializer=variants_blob_serializer,
         )
 
         self.query_builder = SqlQueryBuilder(
@@ -165,6 +167,12 @@ class DuckDb2Variants(QueryVariantsBase):
             result = cursor.execute(query).fetchall()
             for row in result:
                 content = row[0]
+        return content
+
+    def _fetch_variants_blob_serializer(self) -> str:
+        content = self._fetch_meta_property("variants_blob_serializer")
+        if not content:
+            return "json"
         return content
 
     def _fetch_partition_descriptor(self) -> PartitionDescriptor:

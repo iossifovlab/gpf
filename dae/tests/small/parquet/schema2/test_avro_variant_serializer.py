@@ -15,8 +15,8 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.parquet.schema2.serializers import AlleleParquetSerializer
-from dae.parquet.schema2.variant_serializers import (
+from dae.parquet.schema2.serializers import (
+    AlleleParquetSerializer,
     VariantsDataAvroSerializer,
     construct_avro_family_schema,
     construct_avro_summary_schema,

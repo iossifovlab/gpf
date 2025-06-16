@@ -13,8 +13,8 @@ from dae.annotation.liftover_annotator import (
     bcf_liftover_variant,
 )
 from dae.genomic_resources.genomic_context import (
-    get_genomic_context,
     context_providers_init,
+    get_genomic_context,
     register_context_provider,
 )
 from dae.genomic_resources.liftover_chain import (

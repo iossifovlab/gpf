@@ -15,8 +15,8 @@ from dae.annotation.annotation_pipeline import (
 from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.serializers import AlleleParquetSerializer
-from dae.parquet.schema2.variant_serializers import (
+from dae.parquet.schema2.serializers import (
+    AlleleParquetSerializer,
     VariantsDataSerializer,
 )
 from dae.utils import fs_utils
@@ -178,6 +178,7 @@ class VariantsParquetWriter:
         bucket_index: int = 1,
         row_group_size: int = 10_000,
         include_reference: bool = False,
+        variants_blob_serializer: str = "json",
     ) -> None:
         self.out_dir = out_dir
 
@@ -207,6 +208,7 @@ class VariantsParquetWriter:
                 self.allele_serializer.build_summary_blob_schema(
                     self.annotation_pipeline.get_attributes(),
                 ),
+                serializer_type=variants_blob_serializer,
             )
         self.blob_serializer = blob_serializer
 
@@ -398,7 +400,8 @@ class VariantsParquetWriter:
 
     def write_dataset(
         self,
-        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
+        full_variants_iterator: Iterable[
+            tuple[SummaryVariant, list[FamilyVariant]]],
         *,
         annotation_batch_size: int = 0,
     ) -> list[str]:
