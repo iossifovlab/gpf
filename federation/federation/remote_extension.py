@@ -1,17 +1,23 @@
+import copy
 import logging
-from typing import Any
+from typing import Any, cast
 
+from dae.utils.regions import intersection
 from gpf_instance.gpf_instance import WGPFInstance
+from numpy import e
 
 from dae.genomic_scores.scores import ScoreDesc
 from federation.gene_sets_db import RemoteGeneSetCollection
 from federation.remote_enrichment_builder import RemoteEnrichmentBuilder
 from federation.remote_pheno_tool_adapter import RemotePhenoToolAdapter
+from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import (
     RemoteGenotypeData,
-    RemoteGenotypeDataGroup,
 )
-from federation.remote_study_wrapper import RemoteWDAEStudy
+from federation.remote_study_wrapper import (
+    RemoteWDAEStudy,
+    RemoteWDAEStudyGroup,
+)
 from federation.rest_api_client import (
     RESTClient,
     RESTClientRequestError,
@@ -65,31 +71,31 @@ def load_extension(instance: WGPFInstance) -> None:
         instance.visible_datasets.extend(visible_studies)
         for study in studies:
             logger.info("register remote study %s", study.study_id)
-            wrapper = RemoteWDAEStudy(study)
-
-            instance._variants_db.register_genotype_data(study)  # noqa: SLF001
-            instance._study_wrappers[wrapper.study_id] = wrapper  # noqa: SLF001
+            instance._study_wrappers[study.study_id] = study  # noqa: SLF001
             pheno_registry = instance._pheno_registry  # noqa: SLF001
 
-            if wrapper.has_pheno_data:
-                pheno_registry._cache[wrapper.phenotype_data.pheno_id] = \
-                    wrapper.phenotype_data  # noqa: SLF001
+            if study.has_pheno_data:
+                for candidate_study in studies:
+                    if candidate_study.study_id == \
+                            study.phenotype_data.pheno_id:
+                        study.phenotype_data.name = candidate_study.name
+                pheno_registry.register_phenotype_data(study.phenotype_data)
 
-            builder = RemoteEnrichmentBuilder(
-                instance.enrichment_helper,
-                wrapper.remote_genotype_data,
-                client,
-            )
+            if study.is_genotype:
+                instance._variants_db. \
+                    register_genotype_data(study.genotype_data)  # noqa: SLF001
 
-            instance.register_enrichment_builder(wrapper.study_id, builder)
+                builder = RemoteEnrichmentBuilder(
+                    instance.enrichment_helper, study.genotype_data, client,
+                )
+                instance.register_enrichment_builder(study.study_id, builder)
 
-            pheno_tool_adapter = RemotePhenoToolAdapter(
-                client, wrapper.remote_study_id,
-            )
-
-            instance.register_pheno_tool_adapter(
-                wrapper.study_id, pheno_tool_adapter,
-            )
+                pheno_tool_adapter = RemotePhenoToolAdapter(
+                    client, study.remote_study_id,
+                )
+                instance.register_pheno_tool_adapter(
+                    study.study_id, pheno_tool_adapter,
+                )
 
         gs_db = instance.gene_sets_db
         for collection in client.get_gene_set_collections():
@@ -137,50 +143,108 @@ def load_extension(instance: WGPFInstance) -> None:
 
 def fetch_studies_from_client(
     rest_client: RESTClient,
-) -> list[RemoteGenotypeData]:
+) -> list[RemoteWDAEStudy]:
     """Get all remote studies from a REST client."""
-    result = {}
-
     all_data = rest_client.get_datasets()
     if all_data is None:
         raise RESTClientRequestError(
             f"Failed to get studies from {rest_client.remote_id}",
         )
 
-    available_data_ids = [data["id"] for data in all_data]
-
+    genotype_data: dict[str, RemoteGenotypeData] = {}
+    phenotype_data: dict[str, RemotePhenotypeData] = {}
+    result: dict[str, RemoteWDAEStudy] = {}
+    all_configs = {data["id"]: data for data in all_data}
     for config in all_data:
-        study_id = config["id"]
-        logger.info("loading remote genotype study: %s", study_id)
-
-        # Update parents and children config values to have correctly
-        # adjusted data IDs - with prefix and only those that are available
-        if "parents" in config:
-            config["parents"] = [
-                rest_client.prefix_remote_identifier(parent_id)
-                for parent_id in config["parents"]
-                if parent_id in available_data_ids
-            ]
-        if "studies" in config:
-            config["studies"] = [
-                rest_client.prefix_remote_identifier(child_id)
-                for child_id in config["studies"]
-                if child_id in available_data_ids
-            ]
-
-        data: RemoteGenotypeData
-        if "studies" in config:
-            data = RemoteGenotypeDataGroup(config, rest_client)
-        else:
-            data = RemoteGenotypeData(config, rest_client)
-        result[data.study_id] = data
-
-    for data in result.values():
-        if not isinstance(data, RemoteGenotypeDataGroup):
+        if config["id"] in result:
             continue
-        data.studies = [
-            result[child_id]
-            for child_id in data.config["studies"]
-        ]
+        result_studies = create_remote_studies(
+            rest_client,
+            config,
+            all_configs,
+            genotype_data,
+            phenotype_data,
+        )
+        result.update(result_studies)
 
     return list(result.values())
+
+def create_remote_studies(
+    rest_client: RESTClient,
+    config: dict[str, Any],
+    all_configs: dict[str, dict[str, Any]],
+    genotype_datas: dict[str, RemoteGenotypeData],
+    phenotype_datas: dict[str, RemotePhenotypeData],
+) -> dict[str, RemoteWDAEStudy]:
+    study_id = config["id"]
+    logger.info("loading remote genotype study: %s", study_id)
+    print(study_id)
+    genotype_data: RemoteGenotypeData | None = None
+    phenotype_data: RemotePhenotypeData | None = None
+    if config.get("has_genotype"):
+        print("has_genotype")
+        if study_id not in genotype_datas:
+            genotype_data = RemoteGenotypeData(
+                copy.deepcopy(config), rest_client)
+            genotype_datas[study_id] = genotype_data
+        else:
+            genotype_data = genotype_datas[study_id]
+
+    pheno_id = cast(str | None, config.get("phenotype_data"))
+    if pheno_id is not None:
+        if study_id not in phenotype_datas:
+            pheno_config = copy.deepcopy(config)
+            pheno_config["id"] = pheno_id
+            phenotype_data = RemotePhenotypeData(
+                pheno_config, rest_client)
+            phenotype_datas[pheno_id] = phenotype_data
+        else:
+            phenotype_data = phenotype_datas[pheno_id]
+
+    if genotype_data is None and phenotype_data is not None:
+        study_id = pheno_id
+        if "name" in config:
+            phenotype_data.name = rest_client.prefix_remote_name(config["name"])
+        else:
+            phenotype_data.name = None
+
+    result: dict[str, RemoteWDAEStudy] = {}
+    if config.get("studies"):
+        children_ids = list(
+            filter(lambda x: x != study_id, config.get("studies", [])))
+        for child_id in children_ids:
+            if child_id in result:
+                continue
+            child_studies = create_remote_studies(
+                rest_client,
+                all_configs[child_id],
+                all_configs,
+                genotype_datas,
+                phenotype_datas,
+            )
+
+            if set(
+                child_studies.keys()).intersection(set(result.keys()),
+            ) != set():
+                raise ValueError("Tried to create an already created study!")
+
+            result.update(child_studies)
+        result[study_id] = RemoteWDAEStudyGroup(
+            study_id,
+            rest_client,
+            [result[child_id] for child_id in children_ids],
+            remote_genotype_data=genotype_data,
+            remote_phenotype_data=phenotype_data,
+        )
+    else:
+        if study_id in result:
+            raise ValueError("Tried to create an already created study!")
+
+        result[study_id] = RemoteWDAEStudy(
+            study_id,
+            rest_client,
+            remote_genotype_data=genotype_data,
+            remote_phenotype_data=phenotype_data,
+        )
+
+    return result

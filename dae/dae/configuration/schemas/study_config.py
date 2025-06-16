@@ -327,6 +327,7 @@ study_config_schema = {
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},
     "has_tandem_repeat": {"type": "boolean"},
+    "has_genotype": {"type": "boolean", "default": True},
     "genotype_storage": {
         "type": "dict",
         "schema": genotype_storage_schema,

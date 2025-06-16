@@ -5,25 +5,64 @@ from typing import Any, cast
 
 import pandas as pd
 
-from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Instrument, Measure, PhenotypeStudy
+from dae.common_reports.common_report import CommonReport
+from dae.pedigrees.families_data import FamiliesData
+from dae.person_sets.person_sets import (
+    PersonSetCollection,
+    PersonSetCollectionConfig,
+)
+from dae.pheno.common import ImportManifest, MeasureType
+from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
 from dae.variants.attributes import Role
 from federation.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
 
-class RemotePhenotypeData(PhenotypeStudy):
+class RemotePhenotypeData(PhenotypeData):
     """Phenotype data adapter for accessing remote instance phenotype data."""
 
     def __init__(
-        self, pheno_id: str, remote_dataset_id: str, rest_client: RESTClient,
+        self, config: dict[str, Any], rest_client: RESTClient,
     ):  # pylint: disable=super-init-not-called
-        self._remote_pheno_id = pheno_id
+        self._remote_pheno_id = config["id"]
         self.rest_client = rest_client
-        self._pheno_id = pheno_id
+        self._pheno_id = self.rest_client.prefix_remote_identifier(config["id"])
 
-        self.remote_dataset_id = remote_dataset_id
+        config["name"] = self.rest_client.prefix_remote_name(
+            config.get("name", self._pheno_id))
+
+        self._common_report: CommonReport | None = None
+        self._remote_common_report = None
+        self._is_group = False
+        if config.get("studies"):
+            self._is_group = True
+            config["studies"] = list(
+                map(
+                    self.rest_client.prefix_remote_identifier,
+                    config["studies"],
+                ),
+            )
+
+        super().__init__(self._pheno_id, config)
+        config["id"] = self.rest_client.prefix_remote_identifier(config["id"])
+
+    def _build_person_set_collection(
+        self,
+        psc_config: PersonSetCollectionConfig,
+        families: FamiliesData,
+    ) -> PersonSetCollection:
+        raise NotImplementedError
+
+    def generate_import_manifests(self) -> list[ImportManifest]:
+        """Collect all manifests in a phenotype data instance."""
+        raise NotImplementedError
+
+    def get_pedigree_df(self) -> pd.DataFrame:
+        raise NotImplementedError
+
+    def get_persons_df(self) -> pd.DataFrame:
+        raise NotImplementedError
 
     @property
     def measures(self) -> dict[str, Measure]:
@@ -44,7 +83,7 @@ class RemotePhenotypeData(PhenotypeStudy):
         if roles:
             roles_los = [r.name for r in roles]
         persons = self.rest_client.post_measures_values(
-            self.remote_dataset_id,
+            self._remote_pheno_id,
             measure_ids=measure_ids,
             person_ids=person_ids,
             family_ids=family_ids,
@@ -54,21 +93,21 @@ class RemotePhenotypeData(PhenotypeStudy):
 
     def has_measure(self, measure_id: str) -> bool:
         measure = self.rest_client.get_measure(
-            self.remote_dataset_id, measure_id,
+            self._remote_pheno_id, measure_id,
         )
 
         return measure is not None
 
     def get_measure(self, measure_id: str) -> Measure:
         measure = self.rest_client.get_measure(
-            self.remote_dataset_id, measure_id,
+            self._remote_pheno_id, measure_id,
         )
 
         return Measure.from_record(measure)
 
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         measure_description = self.rest_client.get_measure_description(
-            self.remote_dataset_id, measure_id)
+            self._remote_pheno_id, measure_id)
 
         return cast(dict[str, Any], measure_description)
 
@@ -78,7 +117,7 @@ class RemotePhenotypeData(PhenotypeStudy):
         measure_type: MeasureType | None = None,
     ) -> dict[str, Measure]:
         measures = self.rest_client.get_measures(
-            self.remote_dataset_id,
+            self._remote_pheno_id,
             instrument_name,
             measure_type,
         )
@@ -90,8 +129,16 @@ class RemotePhenotypeData(PhenotypeStudy):
         page: int | None = None,  # noqa: ARG002
     ) -> int:
         return self.rest_client.get_browser_measure_count(
-            self.remote_dataset_id, instrument, search_term,
+            self._remote_pheno_id, instrument, search_term,
         )
+
+    def get_children_ids(
+        self, *,
+        leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
+        if not self._is_group:
+            return [self.pheno_id]
+        return cast(list[str], self.config["studies"])
 
     def get_people_measure_values(  # type: ignore
         self,
@@ -108,14 +155,14 @@ class RemotePhenotypeData(PhenotypeStudy):
             logger.warning("Unsupported argument used: roles")
 
         return cast(dict[str, Any], self.rest_client.post_measures_values(
-            self.remote_dataset_id, measure_ids=measure_ids))
+            self._remote_pheno_id, measure_ids=measure_ids))
 
     @property
     def instruments(self) -> dict[str, Instrument]:
         if self._instruments is None:
             self._instruments = OrderedDict()
             instruments = self.rest_client.get_instruments_details(
-                self.remote_dataset_id)
+                self._remote_pheno_id)
             for name, instrument in instruments.items():
                 measures = [
                     Measure.from_record(m) for m in instrument["measures"]
@@ -128,14 +175,27 @@ class RemotePhenotypeData(PhenotypeStudy):
     def get_instruments(self) -> list[str]:
         return cast(
             list[str],
-            self.rest_client.get_instruments(self.remote_dataset_id),
+            self.rest_client.get_instruments(self._remote_pheno_id),
         )
 
     def get_regressions(self) -> dict[str, Any]:
         return cast(
             dict[str, Any],
-            self.rest_client.get_regressions(self.remote_dataset_id),
+            self.rest_client.get_regressions(self._remote_pheno_id),
         )
+
+    @property
+    def common_report(self) -> CommonReport | None:
+        """Property to lazily provide the common report."""
+        if self._remote_common_report is None:
+            self._remote_common_report = self.rest_client.get_common_report(
+                self.remote_study_id, full=True)
+            if "id" in self._remote_common_report:
+                self._common_report = CommonReport(self._remote_common_report)
+        return self._common_report
+
+    def get_common_report(self) -> CommonReport | None:
+        return self.common_report
 
     @staticmethod
     def _extract_pheno_dir(url: str) -> str:
@@ -145,7 +205,7 @@ class RemotePhenotypeData(PhenotypeStudy):
 
     def get_measures_info(self) -> dict[str, Any]:
         output = self.rest_client.get_browser_measures_info(
-            self.remote_dataset_id,
+            self._remote_pheno_id,
         )
         pheno_folder = self._extract_pheno_dir(output["base_image_url"])
         output["base_image_url"] = (
@@ -160,7 +220,7 @@ class RemotePhenotypeData(PhenotypeStudy):
         if image is None or mimetype is None:
             raise ValueError(
                 f"Cannot get remote image at {image_path} for "
-                f"{self.remote_dataset_id} with remote pheno"
+                f"{self._remote_pheno_id} with remote pheno"
                 f"{self._remote_pheno_id}",
             )
         return image, mimetype
@@ -174,7 +234,7 @@ class RemotePhenotypeData(PhenotypeStudy):
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.rest_client.get_browser_measures(
-            self.remote_dataset_id,
+            self._remote_pheno_id,
             instrument,
             search_term,
             page,

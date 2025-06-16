@@ -150,7 +150,7 @@ def test_datasets_federation(
     response = admin_client.get("/api/v3/datasets/federation")
     assert response
     assert response.status_code == 200
-    assert len(response.json()) == 4
+    assert len(response.json()) == 5
 
 
 def test_datasets_description_not_admin(

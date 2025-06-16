@@ -64,11 +64,28 @@ class PhenoRegistry:
             for file in config_files
         ]
 
+    def register_phenotype_data(
+        self, phenotype_data: PhenotypeData, *, lock: bool = True,
+    ) -> None:
+        """Register a phenotype data instance in the registry."""
+        if lock:
+            with self.CACHE_LOCK:
+                if phenotype_data.pheno_id in self._cache:
+                    return
+                self.register_study_config(phenotype_data.config, lock=False)
+                self._cache[phenotype_data.pheno_id] = phenotype_data
+        else:
+            if phenotype_data.pheno_id in self._cache:
+                return
+            self.register_study_config(phenotype_data.config, lock=False)
+            self._cache[phenotype_data.pheno_id] = phenotype_data
+
     def register_study_config(
         self, study_config: dict, *, lock: bool = True,
     ) -> None:
         """Register a configuration as a loadable phenotype data."""
-        if not study_config["enabled"]:
+        # Allow loading of phenotype data without enabled flag.
+        if not study_config.get("enabled", True):
             return
 
         if "person_set_collections" not in study_config:

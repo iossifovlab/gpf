@@ -230,11 +230,14 @@ class FederationDatasetsView(QueryBaseView):
         result = []
 
         for dataset_id in permitted_datasets:
-            dataset_config = \
-                self.gpf_instance.get_genotype_data_config(dataset_id)
-            if dataset_config is not None:
-                result.append(augment_with_parents(self.instance_id,
-                                                   dataset_config.to_dict()))
+            study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+            if study is not None and study.config is not None:
+                result.append(
+                    augment_with_parents(
+                        self.instance_id,
+                        study.config,
+                    ),
+                )
 
         return Response(result)
 

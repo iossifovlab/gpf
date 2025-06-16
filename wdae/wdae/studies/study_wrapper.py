@@ -87,6 +87,13 @@ class WDAEAbstractStudy:
             raise ValueError("Cannot create study without providing data!")
         self._genotype_data = genotype_data
         self._phenotype_data = phenotype_data
+        self._config: dict[str, Any] = self.make_config(
+            self._genotype_data, self._phenotype_data)
+        self._init_genotype_browser()
+
+    @property  # Remove when all external references are removed
+    def config(self) -> dict[str, Any]:
+        return self._config
 
     @property  # Remove when all external references are removed
     def genotype_data(self) -> GenotypeData:
@@ -162,59 +169,20 @@ class WDAEAbstractStudy:
             return self.phenotype_data.get_children_ids(leaves=leaves)
         return self.genotype_data.get_studies_ids(leaves=leaves)
 
-    @abstractmethod
-    def query_variants_wdae_streaming(
-        self, kwargs: dict[str, Any],
-        sources: list[dict[str, Any]],
-        query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
-        *,
-        max_variants_message: bool = False,
-    ) -> Generator[list | None, None, None]:
-        """Wrap query variants method for WDAE streaming."""
-
-
-class WDAEStudy(WDAEAbstractStudy):
-    """A genotype and phenotype data wrapper for use in the wdae module."""
-
-    def __init__(
-        self,
-        genotype_data: GenotypeData | None,
-        phenotype_data: PhenotypeData | None,
-    ) -> None:
-        super().__init__(genotype_data, phenotype_data)
-        self.children = [self]
-        self.config = WDAEStudy.make_config(
-            self._genotype_data,
-            self._phenotype_data,
-        )
-        self._pheno_values_cache = self._get_all_pheno_values()
-        self.is_remote = False
-        self._init_genotype_browser()
-
-    def _get_all_pheno_values(self) -> dict | None:
-        if not self.has_pheno_data \
-           or not self.config_columns \
-           or not self.config_columns["phenotype"]:
+    @property
+    def config_columns(self) -> dict[str, Any] | None:
+        print(self.config)
+        if not self.config["genotype_browser"]:
             return None
+        return cast(dict, self.config["genotype_browser"]["columns"])
 
-        pheno_values = {}
+    @property
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
+        # later
+        return self.genotype_data.person_set_collections
 
-        for column in self.config_columns["phenotype"].values():
-            assert column.role
-            result = {}
-            column_values_iter = self.phenotype_data.get_people_measure_values(
-                [column.source], roles=[Role.from_name(column.role)])
-            for column_value in column_values_iter:
-                result[column_value["family_id"]] = column_value[column.source]
-
-            pheno_column_name = f"{column.source}.{column.role}"
-            pheno_values[pheno_column_name] = result
-        return pheno_values
-
-    @staticmethod
     def make_config(
+        self,
         genotype_data: GenotypeData | None,
         phenotype_data: PhenotypeData | None,
     ) -> dict[str, Any]:
@@ -240,16 +208,11 @@ class WDAEStudy(WDAEAbstractStudy):
             config["has_denovo"] = False
             config["has_zygosity"] = False
             config["has_transmitted"] = False
+            config["has_genotype"] = False
             config["common_report"] = phenotype_data.config["common_report"]
             config["description_editable"] = \
                 phenotype_data.config["description_editable"]
         return config
-
-    @property
-    def config_columns(self) -> dict[str, Any] | None:
-        if not self.config["genotype_browser"]:
-            return None
-        return cast(dict, self.config["genotype_browser"]["columns"])
 
     def _init_genotype_browser(self) -> None:
         if not self.is_genotype or \
@@ -310,10 +273,51 @@ class WDAEStudy(WDAEAbstractStudy):
                     return False
         return True
 
-    @property
-    def person_set_collections(self) -> dict[str, PersonSetCollection]:
-        # later
-        return self.genotype_data.person_set_collections
+    @abstractmethod
+    def query_variants_wdae_streaming(
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        max_variants_count: int | None = 10000,
+        *,
+        max_variants_message: bool = False,
+    ) -> Generator[list | None, None, None]:
+        """Wrap query variants method for WDAE streaming."""
+
+
+class WDAEStudy(WDAEAbstractStudy):
+    """A genotype and phenotype data wrapper for use in the wdae module."""
+
+    def __init__(
+        self,
+        genotype_data: GenotypeData | None,
+        phenotype_data: PhenotypeData | None,
+    ) -> None:
+        self.children = [self]
+        super().__init__(genotype_data, phenotype_data)
+        self._pheno_values_cache = self._get_all_pheno_values()
+        self.is_remote = False
+
+    def _get_all_pheno_values(self) -> dict | None:
+        if not self.has_pheno_data \
+           or not self.config_columns \
+           or not self.config_columns["phenotype"]:
+            return None
+
+        pheno_values = {}
+
+        for column in self.config_columns["phenotype"].values():
+            assert column.role
+            result = {}
+            column_values_iter = self.phenotype_data.get_people_measure_values(
+                [column.source], roles=[Role.from_name(column.role)])
+            for column_value in column_values_iter:
+                result[column_value["family_id"]] = column_value[column.source]
+
+            pheno_column_name = f"{column.source}.{column.role}"
+            pheno_values[pheno_column_name] = result
+        return pheno_values
 
     @staticmethod
     def get_columns_as_sources(
@@ -889,7 +893,7 @@ class WDAEStudyGroup(WDAEStudy):
         children: list[WDAEStudy],
     ) -> None:
         super().__init__(genotype_data, pheno_data)
-        self.children = [*children]
+        self.children = children
 
     def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
         return self.genotype_data.get_studies_ids(leaves=leaves)
