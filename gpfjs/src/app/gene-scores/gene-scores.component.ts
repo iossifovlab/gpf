@@ -5,9 +5,7 @@ import { ReplaySubject, Observable, combineLatest, of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { ConfigService } from '../config/config.service';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
-import { ArrayNotEmpty, ValidateIf } from 'class-validator';
 import { environment } from 'environments/environment';
-import { ComponentValidator } from 'app/common/component-validator';
 import {
   selectGeneScores,
   setGeneScoreCategorical,
@@ -16,6 +14,7 @@ import {
 import { cloneDeep } from 'lodash';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { CategoricalHistogramView, CategoricalHistogram, NumberHistogram } from 'app/utils/histogram-types';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -23,7 +22,7 @@ import { CategoricalHistogramView, CategoricalHistogram, NumberHistogram } from 
   templateUrl: './gene-scores.component.html',
   styleUrls: ['./gene-scores.component.css'],
 })
-export class GeneScoresComponent extends ComponentValidator implements OnInit {
+export class GeneScoresComponent implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
@@ -38,12 +37,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   public domainMin = 0;
   public domainMax = 0;
 
-  @ValidateIf(
-    (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScore.histogram)
-  )
-  @ArrayNotEmpty({message: 'Please select at least one value.'})
   public categoricalValues: string[] = [];
   public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
+  private categoricalValueMax = 1000;
+  public errors: string[] = [];
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -51,9 +48,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     protected store: Store,
     private geneScoresService: GeneScoresService,
     private config: ConfigService
-  ) {
-    super(store, 'geneScores', selectGeneScores);
-  }
+  ) {}
 
   public ngOnInit(): void {
     this.partitions = this.rangeChanges.pipe(
@@ -93,13 +88,13 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
               this.rangeStart = state.rangeStart;
               this.rangeEnd = state.rangeEnd;
             }
+            this.validateState();
             break;
           }
         }
       } else {
         this.selectedGeneScore = this.geneScoresArray[0];
       }
-      super.ngOnInit();
     });
 
     if (this.score !== null) {
@@ -121,6 +116,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   private updateContinuousHistogramState(): void {
+    this.validateState();
     this.updateLabels();
     this.store.dispatch(setGeneScoreContinuous({
       score: this.selectedGeneScore.score,
@@ -130,6 +126,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   private updateCategoricalHistogramState(): void {
+    this.validateState();
     this.store.dispatch(setGeneScoreCategorical({
       score: this.selectedGeneScore.score,
       values: cloneDeep(this.categoricalValues),
@@ -159,6 +156,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       this.rangeStart = this.domainMin;
       this.rangeEnd = this.domainMax;
       this.updateLabels();
+      this.validateState();
       this.store.dispatch(setGeneScoreContinuous({
         score: this.score.score,
         rangeStart: this.rangeStart,
@@ -170,6 +168,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       if (!(this.selectedGeneScore.histogram as CategoricalHistogram).valueOrder) {
         this.selectedCategoricalHistogramView = 'click selector';
       }
+      this.validateState();
     }
   }
 
@@ -226,5 +225,55 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   public isCategoricalHistogram(arg: object): arg is CategoricalHistogram {
     return arg instanceof CategoricalHistogram;
+  }
+
+  private validateState(): void {
+    this.errors = [];
+
+    if (!this.score.score) {
+      this.errors.push('Empty gene scores are invalid.');
+    }
+    if (this.isNumberHistogram(this.score.histogram)) {
+      if (this.rangeStart !== null) {
+        if (typeof this.rangeStart !== 'number') {
+          this.errors.push('Range start should be a number.');
+        }
+        if (this.rangeStart > this.rangeEnd) {
+          this.errors.push('Range start should be less than or equal to range end.');
+        }
+        if (this.rangeStart < this.score.histogram.rangeMin) {
+          this.errors.push('Range start should be more than or equal to domain min.');
+        }
+      }
+      if (this.rangeEnd !== null) {
+        if (typeof this.rangeEnd !== 'number') {
+          this.errors.push('Range end should be a number.');
+        }
+        if (this.rangeEnd < this.rangeStart) {
+          this.errors.push('Range end should be more than or equal to range start.');
+        }
+        if (this.rangeEnd > this.score.histogram.rangeMax) {
+          this.errors.push('Range end should be less than or equal to domain max.');
+        }
+      }
+    }
+    if (this.isCategoricalHistogram(this.score.histogram)) {
+      if (!this.categoricalValues.length) {
+        this.errors.push('Please select at least one value.');
+      }
+      if (this.categoricalValues.length > this.categoricalValueMax) {
+        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
+      }
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'geneScores', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'geneScores'}));
+    }
   }
 }
