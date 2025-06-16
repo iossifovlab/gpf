@@ -769,7 +769,6 @@ class WDAEStudy(WDAEAbstractStudy):
                 result.start()
 
                 for v in result:
-                    print(v)
                     if v is None:
                         continue
 
