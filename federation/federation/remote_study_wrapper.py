@@ -41,7 +41,11 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     def study_id(self) -> str:
         return self._study_id
 
-    def get_children_ids(self, *, leaves: bool = True) -> list[str]:
+    def get_children_ids(
+        self,
+        *,
+        leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
         """Return the list of children ids."""
         return [self._study_id]
 
@@ -142,5 +146,9 @@ class RemoteWDAEStudyGroup(RemoteWDAEStudy):
         )
         self.children = children
 
-    def get_children_ids(self, *, leaves: bool = True) -> list[str]:
+    def get_children_ids(
+        self,
+        *,
+        leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
         return [child.study_id for child in self.children]

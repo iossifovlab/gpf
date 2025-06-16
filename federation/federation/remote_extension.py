@@ -2,9 +2,7 @@ import copy
 import logging
 from typing import Any, cast
 
-from dae.utils.regions import intersection
 from gpf_instance.gpf_instance import WGPFInstance
-from numpy import e
 
 from dae.genomic_scores.scores import ScoreDesc
 from federation.gene_sets_db import RemoteGeneSetCollection
@@ -169,6 +167,7 @@ def fetch_studies_from_client(
 
     return list(result.values())
 
+
 def create_remote_studies(
     rest_client: RESTClient,
     config: dict[str, Any],
@@ -176,6 +175,7 @@ def create_remote_studies(
     genotype_datas: dict[str, RemoteGenotypeData],
     phenotype_datas: dict[str, RemotePhenotypeData],
 ) -> dict[str, RemoteWDAEStudy]:
+    """Create studies sent from remote"""
     study_id = config["id"]
     logger.info("loading remote genotype study: %s", study_id)
     genotype_data: RemoteGenotypeData | None = None

@@ -150,15 +150,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
     ) -> PersonSetCollection:
         raise NotImplementedError
 
-    def get_studies_ids(
-        self, *, leaves: bool = True,  # noqa: ARG002
-    ) -> list[str]:
-        return [self.study_id]
-
-    @property
-    def is_group(self) -> bool:
-        return False
-
     def query_variants(
         self,
         *,
