@@ -13,7 +13,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.query_variants.base_query_variants import QueryVariantsBase
+from dae.query_variants.base_query_variants import QueryVariants
 from dae.query_variants.query_runners import QueryResult
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
-class ImpalaVariants(QueryVariantsBase):
+class ImpalaVariants(QueryVariants):
     # pylint: disable=too-many-instance-attributes
     """A backend implementing an impala backend."""
 
@@ -61,8 +61,8 @@ class ImpalaVariants(QueryVariantsBase):
 
         ped_df = self._fetch_pedigree()
         families = FamiliesData.from_pedigree_df(ped_df)
-
         super().__init__(families)
+
         # Temporary workaround for studies that are imported without tags
         # e.g. production data that is too large to reimport
         FamiliesLoader._build_families_tags(  # noqa: SLF001
@@ -89,7 +89,7 @@ class ImpalaVariants(QueryVariantsBase):
         }
         self._fetch_tblproperties()
 
-    def has_affected_status_queries(self):
+    def has_affected_status_queries(self) -> bool:
         """Schema1 does not support affected status queries."""
         return False
 

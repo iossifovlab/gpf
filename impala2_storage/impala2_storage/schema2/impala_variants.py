@@ -87,6 +87,20 @@ class ImpalaVariants(SqlSchema2Variants):
                 return str(row[0])
         return ""
 
+    def _fetch_variants_blob_serializer(self) -> str:
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"""SELECT value FROM {self.db}.{self.meta_table}
+                        WHERE key = 'variants_blob_serializer'
+                        LIMIT 1
+            """  # noqa: S608
+
+            cursor.execute(query)
+            row = cursor.fetchone()
+            if row:
+                return str(row[0])
+        return "json"
+
     def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'variants_data_schema'

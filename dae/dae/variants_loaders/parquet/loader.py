@@ -2,7 +2,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Generator, Iterable
-from typing import ClassVar
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import yaml
@@ -11,7 +11,7 @@ from pyarrow import dataset as ds
 from pyarrow import parquet as pq
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
+from dae.parquet.schema2.serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.schema2_storage.schema2_layout import (
@@ -42,7 +42,9 @@ class Reader:
             raise ValueError
         self.pq_file = pq.ParquetFile(path)
         self.iterator = self.pq_file.iter_batches(
-            columns=columns, batch_size=Reader.BATCH_SIZE)
+            columns=list(columns),
+            batch_size=Reader.BATCH_SIZE,
+        )
         self.batch: list[dict] = []
         self.exhausted = False
 
@@ -168,13 +170,23 @@ class ParquetLoader:
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
-        variants_data_meta = None
-        if "variants_data_schema" in self.meta:
-            variants_data_meta = yaml.safe_load(
-                self.meta["variants_data_schema"])
+        summary_schema: dict[str, Any] = {}
+        if "summary_schema" in self.meta:
+            schema_content = self.meta["summary_schema"].strip()
+            summary_schema = cast(
+                dict[str, Any],
+                dict(
+                    line.split("|") for line in schema_content.split("\n")),
+            )
+        if "variants_blob_serializer" in self.meta:
+            variants_blob_serializer = \
+                str(self.meta["variants_blob_serializer"].strip())
+        else:
+            variants_blob_serializer = "json"
 
         self.serializer = VariantsDataSerializer.build_serializer(
-            variants_data_meta,
+            summary_schema,
+            variants_blob_serializer,
         )
 
         self.files_per_region = self._scan_region_bins()
@@ -226,9 +238,12 @@ class ParquetLoader:
         parquet_file = pq.ParquetFile(path)
         ped_df = parquet_file.read().to_pandas()
         parquet_file.close()
-        ped_df.role = ped_df.role.apply(Role.from_value)
-        ped_df.sex = ped_df.sex.apply(Sex.from_value)
-        ped_df.status = ped_df.status.apply(Status.from_value)
+        ped_df.role = ped_df.role.apply(  # pyright: ignore[reportCallIssue]
+            Role.from_value)  # type: ignore
+        ped_df.sex = ped_df.sex.apply(
+            Sex.from_value)  # type: ignore
+        ped_df.status = ped_df.status.apply(
+            Status.from_value)  # type: ignore
         ped_df.loc[ped_df.layout.isna(), "layout"] = None
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 
@@ -343,7 +358,8 @@ class ParquetLoader:
             seen = set()
             for s_path in summary_paths:
                 table = pq.read_table(
-                    s_path, columns=self.SUMMARY_COLUMNS, filters=region_filter)
+                    s_path, columns=self.SUMMARY_COLUMNS,
+                    filters=region_filter)
                 for rec in table.to_pylist():
                     v_id = (rec["bucket_index"], rec["summary_index"])
                     if v_id not in seen:

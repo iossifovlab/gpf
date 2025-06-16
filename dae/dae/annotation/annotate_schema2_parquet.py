@@ -29,11 +29,11 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 class AnnotateSchema2ParquetTool(AnnotationTool):
     """Annotation tool for the Parquet file format."""
 
-    def __init__(self, raw_args=None):
+    def __init__(self, raw_args: list[str] | None = None):
         super().__init__(raw_args)
 
-        self.loader = None
-        self.output_layout = None
+        self.loader: ParquetLoader | None = None
+        self.output_layout: Schema2DatasetLayout | None = None
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
@@ -201,7 +201,10 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         regions = produce_regions(self.args.region,
                                   self.args.region_size,
                                   contig_lens)
-
+        variants_blob_serializer = self.loader.meta.get(
+            "variants_blob_serializer",
+            "json",
+        )
         tasks = []
         for idx, region in enumerate(regions):
             handler = ParquetFormat(
@@ -214,6 +217,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 self.loader.layout,
                 self.output_layout.study,
                 idx,
+                variants_blob_serializer,
             )
             tasks.append(self.task_graph.create_task(
                 f"part_{region}",

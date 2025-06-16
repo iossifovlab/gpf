@@ -14,8 +14,8 @@ from dae.annotation.genomic_context import (
     get_context_pipeline,
 )
 from dae.genomic_resources.genomic_context import (
+    context_providers_init,
     get_genomic_context,
-    init_context_providers,
     register_context_provider,
 )
 from dae.genomic_resources.genomic_scores import GenomicScore
@@ -49,7 +49,7 @@ def cli(raw_args: list[str] | None = None) -> None:
     args = parser.parse_args(raw_args)
     VerbosityConfiguration.set(args)
     register_context_provider(CLIAnnotationContextProvider())
-    init_context_providers(**vars(args))
+    context_providers_init(**vars(args))
 
     context = get_genomic_context()
     pipeline = get_context_pipeline(context)

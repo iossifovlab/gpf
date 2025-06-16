@@ -96,7 +96,7 @@ def annotate_parquet(
         internal_attributes = [
             attribute.name
             for annotator in (pipeline.annotators_new
-                                | pipeline.annotators_rerun)
+                              | pipeline.annotators_rerun)
             for attribute in annotator.attributes
             if attribute.internal
         ]

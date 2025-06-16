@@ -1,7 +1,8 @@
 import gzip
+import io
 import logging
 from abc import abstractmethod
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from itertools import islice, starmap
 from pathlib import Path
 from typing import Any
@@ -20,10 +21,15 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.record_to_annotatable import build_record_to_annotatable
+from dae.annotation.record_to_annotatable import (
+    RecordToAnnotable,
+    build_record_to_annotatable,
+)
 from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
     build_reference_genome_from_resource,
 )
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -72,8 +78,8 @@ class AbstractFormat:
         grr_definition: dict | None,
         region: Region | None,
     ):
-        self.pipeline = None
-        self.grr = None
+        self.pipeline: AnnotationPipeline | None = None
+        self.grr: GenomicResourceRepo | None = None
         self.grr_definition = grr_definition
         self.pipeline_config = pipeline_config
         self.pipeline_config_old = pipeline_config_old
@@ -84,17 +90,21 @@ class AbstractFormat:
 
     def open(self) -> None:
         """
-        Initialize all necessary member variables and process relevant metadata.
+        Initialize all member variables and process relevant metadata.
         """
         self.grr = \
             build_genomic_resource_repository(definition=self.grr_definition)
         self.pipeline = build_annotation_pipeline(
             self.pipeline_config, self.grr,
-            allow_repeated_attributes=self.cli_args["allow_repeated_attributes"],
+            allow_repeated_attributes=self.cli_args[
+                "allow_repeated_attributes"],
             work_dir=Path(self.cli_args["work_dir"]),
             config_old_raw=self.pipeline_config_old,
             full_reannotation=self.cli_args["full_reannotation"],
         )
+        if self.pipeline is None:
+            raise ValueError("No annotation pipeline was produced!")
+        assert self.pipeline is not None
         self.pipeline.open()
 
     def close(self) -> None:
@@ -150,7 +160,7 @@ class AbstractFormat:
         pos_end = region.stop if region.stop is not None else "_"
         return f"{chrom}_{pos_beg}_{pos_end}"
 
-    def process(self):
+    def process(self) -> None:
         """
         Iteratively carry out the annotation of the input.
 
@@ -168,7 +178,7 @@ class AbstractFormat:
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Error during iterative annotation")
 
-    def process_batched(self):
+    def process_batched(self) -> None:
         """
         Carry out the annotation of the input in batches.
 
@@ -239,13 +249,13 @@ class ColumnsFormat(AbstractFormat):
         self.input_separator = cli_args["input_separator"]
         self.separator = cli_args["output_separator"]
 
-        self.ref_genome = None
-        self.line_iterator = None
-        self.header_columns = None
-        self.record_to_annotatable = None
-        self.annotation_columns = None
-        self.input_file = None
-        self.output_file = None
+        self.ref_genome: ReferenceGenome | None = None
+        self.line_iterator: Iterable[str] | None = None
+        self.header_columns: list[str] | None = None
+        self.record_to_annotatable: RecordToAnnotable | None = None
+        self.annotation_columns: list[str] | None = None
+        self.input_file: TabixFile | io.TextIOBase | None = None
+        self.output_file: io.TextIOBase | None = None
 
     def open(self) -> None:
         # pylint: disable=consider-using-with
@@ -280,9 +290,13 @@ class ColumnsFormat(AbstractFormat):
         ]
 
         self.record_to_annotatable = build_record_to_annotatable(
-            self.cli_args, set(self.header_columns), ref_genome=self.ref_genome)
+            self.cli_args, set(self.header_columns),
+            ref_genome=self.ref_genome)
+
+        assert self.pipeline is not None
         self.annotation_columns = [
-            attr.name for attr in self.pipeline.get_attributes()  # type: ignore
+            attr.name
+            for attr in self.pipeline.get_attributes()
             if not attr.internal
         ]
         self.output_file = open(self.output_path, "w")  # noqa: SIM115
@@ -303,7 +317,7 @@ class ColumnsFormat(AbstractFormat):
         new_header = new_header + self.annotation_columns
         self.output_file.write(self.separator.join(new_header) + "\n")
 
-    def close(self):
+    def close(self) -> None:
         super().close()
         if self.input_file is not None:
             self.input_file.close()
@@ -333,9 +347,9 @@ class ColumnsFormat(AbstractFormat):
                 logger.error("line %s: %s", lnum, line)
                 logger.error("\t%s", error)
 
-    def _apply(self, variant: dict, annotations: list[dict]):
+    def _apply(self, variant: dict, annotations: list[dict]) -> None:
         if isinstance(self.pipeline, ReannotationPipeline):
-            for col in self.pipeline.attributes_deleted:  # type: ignore
+            for col in self.pipeline.attributes_deleted:
                 del variant[col]
 
         # No support for multi-allelic variants in columns format
@@ -345,7 +359,9 @@ class ColumnsFormat(AbstractFormat):
             variant[col] = annotation[col]
 
     def _convert(self, variant: dict) -> list[tuple[Annotatable, dict]]:
-        return [(self.record_to_annotatable.build(variant), dict(variant))]  # type: ignore
+        return [(
+            self.record_to_annotatable.build(variant),  # type: ignore
+            dict(variant))]
 
     def _write(self, variant: dict) -> None:
         result = self.separator.join(
@@ -374,9 +390,9 @@ class VCFFormat(AbstractFormat):
         self.input_path = input_path
         self.output_path = output_path
 
-        self.input_file = None
-        self.output_file = None
-        self.annotation_attributes = None
+        self.input_file: VariantFile | None = None
+        self.output_file: VariantFile | None = None
+        self.annotation_attributes: list[AttributeInfo] | None = None
 
     @staticmethod
     def _update_header(
@@ -426,11 +442,12 @@ class VCFFormat(AbstractFormat):
         self.annotation_attributes = self.pipeline.get_attributes()
 
         self.input_file = VariantFile(self.input_path, "r")
+        assert self.input_file is not None
         VCFFormat._update_header(self.input_file, self.pipeline, self.cli_args)
         self.output_file = VariantFile(self.output_path, "w",
                                        header=self.input_file.header)
 
-    def close(self):
+    def close(self) -> None:
         super().close()
         self.input_file.close()  # type: ignore
         self.output_file.close()  # type: ignore
@@ -465,12 +482,14 @@ class VCFFormat(AbstractFormat):
         self, variant: VariantRecord,
     ) -> list[tuple[Annotatable, dict]]:
         return [
-            (VCFAllele(variant.chrom, variant.pos, variant.ref, alt),  # type: ignore
+            (VCFAllele(
+                variant.chrom, variant.pos,
+                variant.ref, alt),  # type: ignore
              dict(variant.info))
             for alt in variant.alts  # type: ignore
         ]
 
-    def _apply(self, variant: VariantRecord, annotations: list[dict]):
+    def _apply(self, variant: VariantRecord, annotations: list[dict]) -> None:
         VCFFormat._update_vcf_variant(
             variant, annotations,
             self.annotation_attributes,  # type: ignore
@@ -538,6 +557,7 @@ class ParquetFormat(AbstractFormat):
         input_layout: Schema2DatasetLayout,
         output_dir: str,
         bucket_idx: int,
+        variants_blob_serializer: str = "json",
     ):
         super().__init__(pipeline_config, pipeline_config_old,
                          cli_args, grr_definition, region)
@@ -545,9 +565,10 @@ class ParquetFormat(AbstractFormat):
         self.output_dir = output_dir
         self.bucket_idx = bucket_idx
 
-        self.input_loader = None
-        self.writer = None
-        self.internal_attributes = None
+        self.input_loader: ParquetLoader | None = None
+        self.writer: VariantsParquetWriter | None = None
+        self.internal_attributes: list[str] | None = None
+        self.variants_blob_serializer = variants_blob_serializer
 
     def open(self) -> None:
         super().open()
@@ -557,6 +578,7 @@ class ParquetFormat(AbstractFormat):
             self.output_dir, self.pipeline,
             self.input_loader.partition_descriptor,
             bucket_index=self.bucket_idx,
+            variants_blob_serializer=self.variants_blob_serializer,
         )
         if isinstance(self.pipeline, ReannotationPipeline):
             self.internal_attributes = [
@@ -573,7 +595,7 @@ class ParquetFormat(AbstractFormat):
                 if attribute.internal
             ]
 
-    def close(self):
+    def close(self) -> None:
         super().close()
         assert self.writer is not None
         self.writer.close()
@@ -588,7 +610,7 @@ class ParquetFormat(AbstractFormat):
         return [(allele.get_annotatable(), allele.attributes)
                 for allele in variant.alt_alleles]
 
-    def _apply(self, variant: SummaryVariant, annotations: list[dict]):
+    def _apply(self, variant: SummaryVariant, annotations: list[dict]) -> None:
         for allele, annotation in zip(variant.alt_alleles, annotations,
                                       strict=True):
             if isinstance(self.pipeline, ReannotationPipeline):

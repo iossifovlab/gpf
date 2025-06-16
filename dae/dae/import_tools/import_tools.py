@@ -21,16 +21,16 @@ from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
 )
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.import_config import (
-    embedded_input_schema,
-    import_config_schema,
-)
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
+from dae.import_tools.import_config import (
+    embedded_input_schema,
+    import_config_schema,
+)
 from dae.parquet.partition_descriptor import (
     PartitionDescriptor,
 )
@@ -373,6 +373,14 @@ class ImportProject:
 
         return work_dir
 
+    def get_variants_blob_serializer(self) -> str:
+        """Return the variant blob serializer to use."""
+        processing_config = self.import_config.get("processing_config", {})
+        return cast(
+            str,
+            processing_config.get("variants_blob_serializer", "json"),
+        )
+
     @property
     def include_reference(self) -> bool:
         """Check if the import should include ref allele in the output data."""
@@ -397,7 +405,7 @@ class ImportProject:
     def get_processing_annotation_batch_size(self) -> int:
         """Return processing parquet dataset dir if configured and exists."""
         processing_config = self.import_config.get("processing_config", {})
-        return processing_config.get("annotation_batch_size", 0)
+        return int(processing_config.get("annotation_batch_size", 0))
 
     def get_processing_parquet_dataset_dir(self) -> str | None:
         """Return processing parquet dataset dir if configured and exists."""

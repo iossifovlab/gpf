@@ -36,8 +36,8 @@ from dae.annotation.record_to_annotatable import (
 )
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import (
+    context_providers_init,
     get_genomic_context,
-    init_context_providers,
     register_context_provider,
 )
 from dae.genomic_resources.repository_factory import (
@@ -159,7 +159,7 @@ class AnnotationTool:
         VerbosityConfiguration.set(self.args)
 
         register_context_provider(CLIAnnotationContextProvider())
-        init_context_providers(**vars(self.args))
+        context_providers_init(**vars(self.args))
 
         registered_context = get_genomic_context()
 

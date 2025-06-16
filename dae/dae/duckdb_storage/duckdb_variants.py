@@ -6,7 +6,9 @@ import duckdb
 import pandas as pd
 import yaml
 
-from dae.duckdb_storage.duckdb_connection_factory import DuckDbConnectionFactory
+from dae.duckdb_storage.duckdb_connection_factory import (
+    DuckDbConnectionFactory,
+)
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
@@ -178,6 +180,18 @@ class DuckDbVariants(SqlSchema2Variants):
                 return cast(str, row[0])
             return ""
 
+    def _fetch_variants_blob_serializer(self) -> str:
+        query = f"""SELECT value FROM {self.meta_table}
+               WHERE key = 'variants_blob_serializer'
+               LIMIT 1
+            """  # noqa: S608
+
+        with self._get_connection_factory() as connection:
+            result = connection.execute(query).fetchall()
+            for row in result:
+                return cast(str, row[0])
+            return "json"
+
     def _fetch_summary_schema(self) -> dict[str, str]:
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'summary_schema'
@@ -237,8 +251,14 @@ class DuckDbVariants(SqlSchema2Variants):
 
             return ped_df
 
-    def _deserialize_summary_variant(self, record: list[str]) -> SummaryVariant:
-        return self.deserialize_summary_variant(record[2])  # type: ignore
+    def _deserialize_summary_variant(
+        self, record: list[str],
+    ) -> SummaryVariant:
+        return self.deserialize_summary_variant(
+            record[2])  # type: ignore
 
-    def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
-        return self.deserialize_family_variant(record[4], record[5])  # type: ignore
+    def _deserialize_family_variant(
+        self, record: list[str],
+    ) -> FamilyVariant:
+        return self.deserialize_family_variant(
+            record[4], record[5])  # type: ignore

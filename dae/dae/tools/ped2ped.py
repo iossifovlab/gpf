@@ -6,8 +6,8 @@ import os
 import sys
 
 from dae.genomic_resources.genomic_context import (
+    context_providers_init,
     get_genomic_context,
-    init_context_providers,
 )
 from dae.genomic_resources.genomic_context_cli import (
     CLIGenomicContextProvider,
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> None:
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
-    init_context_providers(**vars(args))
+    context_providers_init(**vars(args))
     filenames, params = FamiliesLoader.parse_cli_arguments(args)
     filename = filenames[0]
 

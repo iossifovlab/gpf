@@ -31,7 +31,10 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import (
     VariantsParquetWriter,
 )
-from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.parquet.schema2.serializers import (
+    AlleleParquetSerializer,
+    VariantsDataSerializer,
+)
 from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
@@ -45,7 +48,8 @@ logger = logging.getLogger(__name__)
 
 
 def schema2_project_dataset_layout(
-        project: ImportProject) -> Schema2DatasetLayout:
+    project: ImportProject,
+) -> Schema2DatasetLayout:
     study_dir = fs_utils.join(project.work_dir, project.study_id)
     return create_schema2_dataset_layout(study_dir)
 
@@ -114,7 +118,7 @@ class Schema2ImportStorage(ImportStorage):
         reference_genome = gpf_instance.reference_genome.resource_id
         gene_models = gpf_instance.gene_models.resource_id
         annotation_pipeline_config = project.get_annotation_pipeline_config()
-        annotation_pipeline = yaml.dump(annotation_pipeline_config)
+        annotation_pipeline = yaml.safe_dump(annotation_pipeline_config)
         variants_types = project.get_variant_loader_types()
         contigs = ",".join(
             [f"{k}={v}" for k, v
@@ -142,7 +146,7 @@ class Schema2ImportStorage(ImportStorage):
                 "annotation_pipeline",
                 "study",
                 "contigs",
-
+                "variants_blob_serializer",
             ],
             [
                 cls._get_partition_description(project).serialize(),
@@ -155,7 +159,7 @@ class Schema2ImportStorage(ImportStorage):
                 annotation_pipeline,
                 study,
                 contigs,
-
+                project.get_variants_blob_serializer(),
             ])
 
     @classmethod
@@ -177,10 +181,17 @@ class Schema2ImportStorage(ImportStorage):
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
 
+        blob_serializer = VariantsDataSerializer.build_serializer(
+            AlleleParquetSerializer.build_summary_blob_schema(
+                annotation_pipeline.get_attributes(),
+            ),
+            project.get_variants_blob_serializer(),
+        )
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
             annotation_pipeline=annotation_pipeline,
             partition_descriptor=cls._get_partition_description(project),
+            blob_serializer=blob_serializer,
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,

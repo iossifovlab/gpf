@@ -9,7 +9,9 @@ import duckdb
 import pandas as pd
 import yaml
 
-from dae.duckdb_storage.duckdb_connection_factory import DuckDbConnectionFactory
+from dae.duckdb_storage.duckdb_connection_factory import (
+    DuckDbConnectionFactory,
+)
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
@@ -128,6 +130,7 @@ class DuckDb2Variants(QueryVariantsBase):
         pedigree_schema = self._fetch_pedigree_schema()
         summary_schema = self._fetch_summary_schema()
         family_schema = self._fetch_family_schema()
+        variants_blob_serializer = self._fetch_variants_blob_serializer()
         schema = SqlQueryBuilder.build_schema(
             pedigree_schema=pedigree_schema,
             summary_schema=summary_schema,
@@ -135,7 +138,11 @@ class DuckDb2Variants(QueryVariantsBase):
         )
         partition_description = self._fetch_partition_descriptor()
         families = self._fetch_families()
-        super().__init__(families)
+        super().__init__(
+            families,
+            summary_schema=summary_schema,
+            variants_blob_serializer=variants_blob_serializer,
+        )
 
         self.query_builder = SqlQueryBuilder(
             self.layout,
@@ -160,6 +167,12 @@ class DuckDb2Variants(QueryVariantsBase):
             result = cursor.execute(query).fetchall()
             for row in result:
                 content = row[0]
+        return content
+
+    def _fetch_variants_blob_serializer(self) -> str:
+        content = self._fetch_meta_property("variants_blob_serializer")
+        if not content:
+            return "json"
         return content
 
     def _fetch_partition_descriptor(self) -> PartitionDescriptor:

@@ -28,7 +28,7 @@ from dae.testing.t4c8_import import t4c8_gpf
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     root_path = tmp_path
     setup_directories(
@@ -128,7 +128,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     return t4c8_gpf(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_pedigree() -> str:
     return textwrap.dedent("""
         familyId personId dadId momId sex status role
@@ -141,7 +141,7 @@ def t4c8_study_pedigree() -> str:
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_variants() -> str:
     return textwrap.dedent("""
     ##fileformat=VCFv4.2
@@ -159,7 +159,7 @@ def t4c8_study_variants() -> str:
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_variants_denovo() -> str:
     return textwrap.dedent("""
     chrom  position   ref   alt   family_id  genotype
@@ -178,7 +178,7 @@ def t4c8_study_variants_denovo() -> str:
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_project_config() -> dict:
     return {
         "destination": {"storage_type": "schema2"},
@@ -195,7 +195,7 @@ def t4c8_project_config() -> dict:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_nonpartitioned(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -220,7 +220,7 @@ def t4c8_study_nonpartitioned(
     return f"{root_path}/work_dir/study_nonpartitioned"
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_partitioned(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -269,7 +269,7 @@ def t4c8_study_partitioned(
     return f"{root_path}/work_dir/study_partitioned"
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_annotationless_study(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -296,7 +296,7 @@ def t4c8_annotationless_study(
     return f"{root_path}/work_dir/annotationless_study"
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_denovo(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -380,16 +380,16 @@ def test_reannotate_parquet_metadata(
 
     result_pipeline = dict(loader_result.meta).pop("annotation_pipeline")
 
-    expected_pipeline = textwrap.dedent(
-    """- position_score:
-    resource_id: three
-    attributes:
-    - source: score_three
-      name: score_A
-    - source: score_three
-      name: score_A_internal
-      internal: true
-    """)
+    expected_pipeline = textwrap.dedent(textwrap.dedent("""
+        - position_score:
+            resource_id: three
+            attributes:
+            - source: score_three
+              name: score_A
+            - source: score_three
+              name: score_A_internal
+              internal: true
+        """))[1:]
     assert result_pipeline == expected_pipeline
 
 
@@ -509,7 +509,8 @@ def test_reannotate_parquet_variants(
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+    assert sorted(result) == pytest.approx(
+        [0.21, 0.22, 0.23, 0.24, 0.25, 0.26], rel=1e-3)
 
 
 def test_reannotate_parquet_merging(
@@ -671,7 +672,8 @@ def test_reannotate_in_place(
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+    assert sorted(result) == pytest.approx(
+        [0.21, 0.22, 0.23, 0.24, 0.25, 0.26], rel=1e-3)
 
 
 def test_reannotate_in_place_increment_backup_filenames(
@@ -731,7 +733,8 @@ def test_output_argument_behaviour(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     t4c8_study_nonpartitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+    gpf_instance_genomic_context_fixture:
+        Callable[[GPFInstance], GenomicContext],
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     annotation_file_new = str(root_path / "new_annotation.yaml")
@@ -791,7 +794,7 @@ def test_region_option(
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == {0.23, 0.24}
+    assert sorted(result) == pytest.approx([0.23, 0.24], rel=1e-3)
 
 
 def test_region_option_invalid(

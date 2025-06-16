@@ -13,8 +13,8 @@ from dae.annotation.liftover_annotator import (
     bcf_liftover_variant,
 )
 from dae.genomic_resources.genomic_context import (
+    context_providers_init,
     get_genomic_context,
-    init_context_providers,
     register_context_provider,
 )
 from dae.genomic_resources.liftover_chain import (
@@ -121,7 +121,7 @@ def main(
 
     VerbosityConfiguration.set(args)
     register_context_provider(CLIAnnotationContextProvider())
-    init_context_providers(**vars(args))
+    context_providers_init(**vars(args))
 
     if grr is None:
         context = get_genomic_context()

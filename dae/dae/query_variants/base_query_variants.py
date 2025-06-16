@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
+from dae.parquet.schema2.serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.family_tag_builder import check_family_tags_query
@@ -27,9 +27,68 @@ logger = logging.getLogger(__name__)
 class QueryVariants(abc.ABC):
     """Abstract class for querying variants interface."""
 
+    def __init__(self, families: FamiliesData) -> None:
+        self.families: FamiliesData = families
+
     @abc.abstractmethod
     def has_affected_status_queries(self) -> bool:
         """Return True if the storage supports affected status queries."""
+
+    @staticmethod
+    def transform_roles_to_single_role_string(
+        roles_in_parent: str | None, roles_in_child: str | None,
+        roles: str | None = None,
+    ) -> str | None:
+        """
+        Transform roles arguments into singular roles argument.
+
+        Helper method for supporting legacy backends.
+        """
+        if roles_in_child is None and roles_in_parent is None:
+            return roles
+        if roles_in_parent and roles_in_child:
+            return f"({roles_in_parent}) and ({roles_in_child})"
+        return roles_in_child or roles_in_parent
+
+    def tags_to_family_ids(
+        self, tags_query: TagsQuery | None = None,
+    ) -> set[str] | None:
+        """Transform a query for tags into a set of family IDs."""
+        if tags_query is None:
+            return None
+
+        if tags_query.selected_family_tags is None \
+                and tags_query.deselected_family_tags is None:
+            return None
+
+        if isinstance(tags_query.selected_family_tags, list):
+            include_tags = {
+                FamilyTag.from_label(label)
+                for label
+                in tags_query.selected_family_tags
+            }
+        else:
+            include_tags = set[FamilyTag]()
+        if isinstance(tags_query.deselected_family_tags, list):
+            exclude_tags = {
+                FamilyTag.from_label(label)
+                for label
+                in tags_query.deselected_family_tags
+            }
+        else:
+            exclude_tags = set[FamilyTag]()
+
+        family_ids: set[str] = set()
+        for family_id, family in self.families.items():
+            if check_family_tags_query(
+                family,
+                or_mode=tags_query.tags_or_mode,
+                include_tags=include_tags,
+                exclude_tags=exclude_tags,
+            ):
+                family_ids.add(family_id)
+
+        return family_ids
 
     @abc.abstractmethod
     def build_summary_variants_query_runner(
@@ -128,25 +187,18 @@ class QueryVariantsBase(QueryVariants):
 
     RUNNER_CLASS: type[QueryRunner]
 
-    def __init__(self, families: FamiliesData) -> None:
-        self.families = families
-        self.serializer = VariantsDataSerializer.build_serializer()
+    def __init__(
+        self, families: FamiliesData, *,
+        summary_schema: dict[str, Any],
+        variants_blob_serializer: str,
+    ) -> None:
+        super().__init__(families)
 
-    @staticmethod
-    def transform_roles_to_single_role_string(
-        roles_in_parent: str | None, roles_in_child: str | None,
-        roles: str | None = None,
-    ) -> str | None:
-        """
-        Transform roles arguments into singular roles argument.
-
-        Helper method for supporting legacy backends.
-        """
-        if roles_in_child is None and roles_in_parent is None:
-            return roles
-        if roles_in_parent and roles_in_child:
-            return f"({roles_in_parent}) and ({roles_in_child})"
-        return roles_in_child or roles_in_parent
+        self.serializer: VariantsDataSerializer = \
+            VariantsDataSerializer.build_serializer(
+                summary_schema,
+                variants_blob_serializer,
+            )
 
     def has_affected_status_queries(self) -> bool:
         """Schema2 do support affected status queries."""
@@ -186,43 +238,3 @@ class QueryVariantsBase(QueryVariants):
                     fv.family_alt_alleles, fattributes, strict=True):
                 fa.update_attributes(fattr)
         return fv
-
-    def tags_to_family_ids(
-        self, tags_query: TagsQuery | None = None,
-    ) -> set[str] | None:
-        """Transform a query for tags into a set of family IDs."""
-        if tags_query is None:
-            return None
-
-        if tags_query.selected_family_tags is None \
-                and tags_query.deselected_family_tags is None:
-            return None
-
-        if isinstance(tags_query.selected_family_tags, list):
-            include_tags = {
-                FamilyTag.from_label(label)
-                for label
-                in tags_query.selected_family_tags
-            }
-        else:
-            include_tags = set[FamilyTag]()
-        if isinstance(tags_query.deselected_family_tags, list):
-            exclude_tags = {
-                FamilyTag.from_label(label)
-                for label
-                in tags_query.deselected_family_tags
-            }
-        else:
-            exclude_tags = set[FamilyTag]()
-
-        family_ids: set[str] = set()
-        for family_id, family in self.families.items():
-            if check_family_tags_query(
-                family,
-                or_mode=tags_query.tags_or_mode,
-                include_tags=include_tags,
-                exclude_tags=exclude_tags,
-            ):
-                family_ids.add(family_id)
-
-        return family_ids

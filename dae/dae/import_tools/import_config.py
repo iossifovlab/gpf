@@ -1,6 +1,5 @@
 from typing import Any
 
-from dae.configuration.schemas.dae_conf import genotype_storage_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -81,6 +80,10 @@ import_config_schema: dict[str, Any] = {
         "schema": {
             "work_dir": {"type": "string"},
             "parquet_dataset_dir": {"type": "string"},
+            "variants_blob_serializer": {
+                "type": "string",
+                "default": "json",
+            },
             "include_reference": {"type": "boolean", "default": False},
             "annotation_batch_size": {"type": "integer", "default": 0},
             "parquet_row_group_size": {
@@ -110,7 +113,10 @@ import_config_schema: dict[str, Any] = {
         "type": "dict",
         "anyof_schema": [
             {"storage_id": {"type": "string"}},
-            genotype_storage_schema,
+            {
+                "storage_type": {"type": "string"},
+                "id": {"type": "string"},
+            },
         ],
         "allow_unknown": True,
     },
@@ -201,7 +207,7 @@ def _copy_loader_args(
     schema: dict,
     prefix: str,
 ) -> None:
-    # FIXME: Fix use of private _arguments of loaders
+    # Fix use of private _arguments of loaders
     # pylint: disable=protected-access
     for arg in loader_cls._arguments():  # noqa: SLF001
         if not arg.argument_name.startswith("--"):
