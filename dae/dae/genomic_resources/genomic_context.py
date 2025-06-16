@@ -207,11 +207,12 @@ def register_context_provider(
     _REGISTERED_CONTEXT_PROVIDERS.append(context_provider)
 
 
-def init_context_providers(**kwargs: Any) -> None:
+def context_providers_init(**kwargs: Any) -> None:
     """Initialize all registered genomic context providers."""
-    for provider in sorted(_REGISTERED_CONTEXT_PROVIDERS,
-                           key=lambda g: (- g.get_context_provider_priority(),
-                                          g.get_context_provider_type())):
+    for provider in sorted(
+            _REGISTERED_CONTEXT_PROVIDERS,
+            key=lambda g: (- g.get_context_provider_priority(),
+                           g.get_context_provider_type())):
         context = provider.init(**kwargs)
         if context is None:
             logger.warning(
@@ -222,11 +223,14 @@ def init_context_providers(**kwargs: Any) -> None:
         register_context(context)
 
 
-def context_provider_add_argparser_arguments(
+def context_providers_add_argparser_arguments(
     parser: argparse.ArgumentParser,
 ) -> None:
     """Add command line arguments for all registered context providers."""
-    for provider in _REGISTERED_CONTEXT_PROVIDERS:
+    for provider in sorted(
+            _REGISTERED_CONTEXT_PROVIDERS,
+            key=lambda g: (- g.get_context_provider_priority(),
+                           g.get_context_provider_type())):
         provider.add_argparser_arguments(parser)
 
 

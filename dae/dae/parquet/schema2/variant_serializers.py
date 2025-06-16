@@ -58,8 +58,6 @@ class VariantsDataSerializer(abc.ABC):
             return JsonVariantsDataSerializer(metadata)
         return VariantsDataAvroSerializer(metadata)
 
-        raise ValueError(f"Unknown serialization metadata version: {metadata}")
-
 
 class JsonVariantsDataSerializer(VariantsDataSerializer):
     """Serialize family and summary alleles to json."""
@@ -217,6 +215,8 @@ class VariantsDataAvroSerializer(VariantsDataSerializer):
         self,
         summary_blob_schema: dict[str, str],
     ) -> None:
+        super().__init__(summary_blob_schema)
+
         self.summary_blob_schema = construct_avro_summary_schema(
                 summary_blob_schema)
         self.summary_avro_schema = avro.schema.parse(
