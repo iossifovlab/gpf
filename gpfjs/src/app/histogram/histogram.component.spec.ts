@@ -1,226 +1,521 @@
-import { Component, ViewChild, SimpleChanges, SimpleChange } from '@angular/core';
-import { By } from '@angular/platform-browser';
+import { SimpleChanges, SimpleChange } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { Observable, of } from 'rxjs';
 import * as d3 from 'd3';
 
 import { FormsModule } from '@angular/forms';
 import { HistogramComponent } from './histogram.component';
 import { HistogramRangeSelectorLineComponent } from './histogram-range-selector-line.component';
 
-@Component({
-  template: `
-    <gpf-histogram #gpfhistogram
-      width="650" height="145"
-      [bins]="bins"
-      [bars]="bars"
-      [domainMin]="domainMin"
-      [domainMax]="domainMax"
-      [rangesCounts]="rangesCounts | async"
-      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-    </gpf-histogram>
-  `
-})
-class TestHostComponent {
-  public bins = [1, 2, 3, 4];
-  public bars = [2, 3, 4, 5];
-  public rangeStart = 2;
-  public rangeEnd = 4;
-  public domainMin = 1;
-  public domainMax = 12;
-  public rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
-
-  @ViewChild('gpfhistogram') public histogramEl;
-}
-
-@Component({
-  template: `
-    <gpf-histogram #gpfhistogram
-      width="650" height="145"
-      [bins]="bins"
-      [bars]="bars"
-      [rangesCounts]="rangesCounts | async"
-      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-    </gpf-histogram>
-  `
-})
-class TestHostComponentNoDomain {
-  public bins = [1, 2, 3, 4];
-  public bars = [2, 3, 4, 5];
-  public rangeStart = 2;
-  public rangeEnd = 4;
-  public rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
-
-  @ViewChild('gpfhistogram') public histogramEl;
-}
-
-@Component({
-  template: `
-    <gpf-histogram #gpfhistogram
-      width="650" height="145"
-      [bins]="bins"
-      [bars]="bars"
-      [domainMin]="domainMin"
-      [domainMax]="domainMax"
-      [rangesCounts]="rangesCounts | async"
-      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-    </gpf-histogram>
-  `
-})
-class TestHostComponentManyBins {
-  public bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  public bars = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  public rangeStart = 2;
-  public rangeEnd = 4;
-  public domainMin = 1;
-  public domainMax = 12;
-  public isInteractive = true;
-  public rangesCounts: Observable<Array<number>> = of([2, 7, 56]);
-
-  @ViewChild('gpfhistogram') public histogramEl;
-}
-
 describe('HistogramComponent', () => {
-  let component: TestHostComponent;
-  let fixture: ComponentFixture<TestHostComponent>;
+  let component: HistogramComponent;
+  let fixture: ComponentFixture<HistogramComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [FormsModule],
       declarations: [
-        HistogramComponent, HistogramRangeSelectorLineComponent,
-        TestHostComponent,
+        HistogramComponent, HistogramRangeSelectorLineComponent
       ]
     }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponent);
+    fixture = TestBed.createComponent(HistogramComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+
+    component.bins = [1, 2, 3, 4];
+    component.bars = [2, 3, 4, 5];
+    component.rangeStart = 2;
+    component.rangeEnd = 4;
+    component.domainMin = -20;
+    component.domainMax = 20;
+    component.xScale = d3.scaleBand();
   }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render an svg', () => {
-    expect(d3.select('svg')).not.toBeNull();
-  });
-
-  it('should have the correct width and height', () => {
-    expect(d3.select('svg').attr('width')).toBe('650');
-    expect(d3.select('svg').attr('height')).toBe('145');
-  });
-
-  it('should render the correct amount of bars', waitForAsync(() => {
-    fixture.whenStable().then(() => {
-      expect(d3.select('svg').selectAll('rect').nodes()).toHaveLength(6);
-    });
-  }));
-
-  it('should redraw the histogram on changes', waitForAsync(() => {
-    jest.spyOn(component.histogramEl, 'redrawHistogram');
+  it('should redraw the histogram on changes', () => {
     const bins = [7, 8, 9, 10];
     const bars = [8, 9, 10, 11];
+    component.bins = bins;
+    component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
     const changes = {bins: binsChange, bars: barsChange};
-    component.histogramEl.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnChanges(changes as SimpleChanges);
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(component.histogramEl.redrawHistogram).toHaveBeenCalledTimes(1);
-    });
-  }));
 
-  it('should render a correct label with the sum of bars within the range', waitForAsync(() => {
-    fixture.whenStable().then(() => {
-      const sumOfBarsLabelEl = fixture.debugElement.query(By.css('#sumOfBarsLabel'));
-      expect(sumOfBarsLabelEl).not.toBeNull();
-      expect((sumOfBarsLabelEl.nativeElement as HTMLElement).textContent.trim()).toBe('~7 (50.00%)');
-    });
-  }));
+    expect(component.xScale.domain()).toStrictEqual(['0', '1', '2', '3']);
+    expect(component.xScale.range()).toStrictEqual([0, 450.0]);
+    expect(component.xScale.padding()).toBe(0.1);
 
-  it('should render sliders', waitForAsync(() => {
-    const sliderEls = fixture.debugElement.queryAll(
-      el => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line')
+    expect(component.scaleYAxis.domain()).toStrictEqual([0, 11]);
+    expect(component.scaleYAxis.range()).toStrictEqual([50, 0]);
+
+    expect(component.scaleXAxis.domain()).toStrictEqual([7, 8, 9, Infinity]);
+    expect(component.scaleXAxis.range()).toStrictEqual([
+      0,
+      60.36585365853659,
+      170.1219512195122,
+      279.8780487804878,
+      450
+    ]);
+  });
+
+  it('should redraw the histogram when bins are more than 10', () => {
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    const bars = [-20, -19.7, -19.4, -19.1, -18.8, -18.5, -18.2, -17.9, -17.6, -17.3, -17, -16.7, -16.4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    expect(component.xScale.domain()).toStrictEqual(
+      ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
     );
-    expect(sliderEls).toHaveLength(2);
-  }));
+    expect(component.xScale.range()).toStrictEqual([0, 450.0]);
+    expect(component.xScale.padding()).toBe(0.1);
 
-  it('should set the correct labels to the sliders', () => {
-    const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
-    const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
-    expect(sliderLabels).toHaveLength(3);
-    expect(sliderLabelsText).toHaveLength(3);
-    expect(sliderLabelsText).toStrictEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
+    expect(component.scaleYAxis.domain()).toStrictEqual([0, -16.4]);
+    expect(component.scaleYAxis.range()).toStrictEqual([50, 0]);
+
+    expect(component.scaleXAxis.domain()).toStrictEqual(bins);
+    expect(component.scaleXAxis.range()).toStrictEqual([
+      0,
+      1.5957446808510467,
+      33.510638297872326,
+      65.4255319148936,
+      97.34042553191487,
+      129.25531914893617,
+      161.17021276595744,
+      193.08510638297872,
+      225,
+      256.9148936170213,
+      288.82978723404256,
+      320.74468085106383,
+      352.6595744680851,
+      384.5744680851064,
+      450
+    ]);
   });
 
-  it('should not render range input fields if less than 10 bins', waitForAsync(() => {
-    const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
-    const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
-    expect(rangeInputElFrom).toBeNull();
-    expect(rangeInputElTo).toBeNull();
-  }));
-});
+  it('should draw the histogram with log scale Y', () => {
+    const bins = [1, 2, 3];
+    const bars = [9, 10, 11];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
 
-describe('HistogramComponentManyBins', () => {
-  let component: TestHostComponentManyBins;
-  let fixture: ComponentFixture<TestHostComponentManyBins>;
+    component.logScaleY = true;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [FormsModule],
-      declarations: [
-        HistogramComponent, HistogramRangeSelectorLineComponent,
-        TestHostComponentManyBins,
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponentManyBins);
-    component = fixture.componentInstance;
+    component.ngOnChanges(changes as SimpleChanges);
+
+    expect(component.xScale.domain()).toStrictEqual(
+      ['0', '1', '2']
+    );
+    expect(component.xScale.range()).toStrictEqual([0, 450.0]);
+    expect(component.xScale.padding()).toBe(0.1);
+
+    expect(component.scaleYAxis.domain()).toStrictEqual([1, 11]);
+    expect(component.scaleYAxis.range()).toStrictEqual([50, 0]);
+
+    expect(component.scaleXAxis.domain()).toStrictEqual([1, 2, Infinity]);
+    expect(component.scaleXAxis.range()).toStrictEqual([
+      0,
+      79.83870967741937,
+      225,
+      450
+    ]);
+  });
+
+  it('should set a correct label with the sum of bars within the range', () => {
+    const rangesCounts = [1, 2, 3];
+    component.rangesCounts = rangesCounts;
+
+    const bins = [1, 2, 3];
+    const bars = [9, 10, 11];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+
+    const changes = {bins: binsChange, bars: barsChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    expect(component.insideRangeText).toBe('~10 (33.33%)');
+  });
+
+  it('should set a correct label with the estimate sum of bars within the range', () => {
+    const rangesCounts = [1, 2, 3];
+    component.rangesCounts = rangesCounts;
+    const rangesCountsChange = new SimpleChange(component.rangesCounts, rangesCounts, true);
+
+    const bins = [1, 2, 3];
+    const bars = [9, 10, 11];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+
+    const changes = {bins: binsChange, bars: barsChange, rangesCounts: rangesCountsChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    expect(component.insideRangeText).toBe('2 (6.67%)');
+  });
+
+  it('should set estimate values as labels to the sliders', () => {
+    const rangesCounts = [1, 2, 3];
+    component.rangesCounts = rangesCounts;
+
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+
+    const changes = {bins: binsChange, bars: barsChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+    component.selectedStartIndex = 1;
+    component.selectedEndIndex = 3;
+
+    expect(component.beforeRangeText).toBe('~9 (16.36%)');
+    expect(component.afterRangeText).toBe('~13 (23.64%)');
+  });
+
+  it('should hide range input fields if less than 10 bins', () => {
     fixture.detectChanges();
-  }));
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component.showMinMaxInputWithDefaultValue).toBe(false);
   });
 
-  it('should render range input fields if 10 or more bins', () => {
-    const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
-    const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
-    expect(rangeInputElFrom).not.toBeNull();
-    expect(rangeInputElTo).not.toBeNull();
+  it('should show range input fields if more than 10 bins', () => {
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    const bars = [-20, -19.7, -19.4, -19.1, -18.8, -18.5, -18.2, -17.9, -17.6, -17.3, -17, -16.7, -16.4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    expect(component.showMinMaxInputWithDefaultValue).toBe(true);
   });
 
-  it('should render buttons for the range input fields', () => {
-    const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
-    const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
-    expect(rangeInputElFrom.queryAll(By.css('button'))).toHaveLength(2);
-    expect(rangeInputElFrom.query(By.css('.step.up'))).not.toBeNull();
-    expect(rangeInputElFrom.query(By.css('.step.down'))).not.toBeNull();
-    expect(rangeInputElTo.queryAll(By.css('button'))).toHaveLength(2);
-    expect(rangeInputElTo.query(By.css('.step.up'))).not.toBeNull();
-    expect(rangeInputElTo.query(By.css('.step.down'))).not.toBeNull();
+  it('should set range start', () => {
+    const rangeStartEmitSpy = jest.spyOn(component.rangeStartChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+    component.selectedStartIndex = 1;
+
+    component.rangeStart = 2;
+    expect(component.rangeStartWithoutNull).toBe('2');
+    expect(component.beforeRangeText).toBe('~9 (16.36%)');
+    expect(rangeStartEmitSpy).toHaveBeenCalledWith(2);
   });
-});
 
-describe('HistogramComponentNoDomain', () => {
-  let fixture: ComponentFixture<TestHostComponentNoDomain>;
+  it('should set range end', () => {
+    const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [FormsModule],
-      declarations: [
-        HistogramComponent, HistogramRangeSelectorLineComponent,
-        TestHostComponentNoDomain,
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(TestHostComponentNoDomain);
-    fixture.detectChanges();
-  }));
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
 
-  it('should set the correct labels to the sliders', () => {
-    const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
-    const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
-    expect(sliderLabels).toHaveLength(3);
-    expect(sliderLabelsText).toHaveLength(3);
-    expect(sliderLabelsText).toStrictEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
+    component.ngOnInit();
+    component.selectedEndIndex = 2;
+
+    component.rangeEnd = 4;
+    expect(component.rangeEndWithoutNull).toBe('4');
+    expect(component.afterRangeText).toBe('~25 (45.45%)');
+    expect(rangeEndEmitSpy).toHaveBeenCalledWith(4);
+  });
+
+  it('should set first bin as range start when range start is set to null', () => {
+    const rangeStartEmitSpy = jest.spyOn(component.rangeStartChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    component.rangeStart = null;
+    expect(component.rangeStartWithoutNull).toBe('1');
+    expect(component.beforeRangeText).toBe('~0 (0.00%)');
+    expect(rangeStartEmitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should set last bin as range end when range end is set to null', () => {
+    const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    component.rangeEnd = null;
+    expect(component.rangeEndWithoutNull).toBe('5');
+    expect(component.afterRangeText).toBe('~13 (23.64%)');
+    expect(rangeEndEmitSpy).toHaveBeenCalledWith(5);
+  });
+
+  it('should get default labels of x axis when bins are less than 10', () => {
+    expect(component.xLabelsWithDefaultValue).toStrictEqual([1, 2, 3]);
+  });
+
+  it('should get default labels of x axis when bins are more than 10', () => {
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    const bars = [-20, -19.7, -19.4, -19.1, -18.8, -18.5, -18.2, -17.9, -17.6, -17.3, -17, -16.7, -16.4];
+    component.bins = bins;
+    component.bars = bars;
+
+    expect(component.xLabelsWithDefaultValue).toStrictEqual(bins);
+  });
+
+  it('should get default labels of x axis when bins are more than 10 and log scale of x is true', () => {
+    const bins = [100, 222, 378, 412, 555, 678, 732, 845, 977, 10456, 11433, 12789, 130124, 147896541];
+    const bars = [-20, -19.7, -19.4, -19.1, -18.8, -18.5, -18.2, -17.9, -17.6, -17.3, -17, -16.7, -16.4];
+    component.bins = bins;
+    component.bars = bars;
+    component.logScaleX = true;
+
+    expect(component.xLabelsWithDefaultValue).toStrictEqual([
+      100,
+      1000,
+      10000,
+      100000,
+      1000000,
+      10000000,
+      100000000
+    ]);
+  });
+
+  it('should get default labels of x axis when bins are more than 10, log scale x is true and first bin is 0', () => {
+    const bins = [0.0, 222, 378, 412, 555, 678, 732, 845, 977, 10456, 11433, 12789, 130124, 147896541];
+    const bars = [-20, -19.7, -19.4, -19.1, -18.8, -18.5, -18.2, -17.9, -17.6, -17.3, -17, -16.7, -16.4];
+    component.bins = bins;
+    component.bars = bars;
+    component.logScaleX = true;
+
+    expect(component.xLabelsWithDefaultValue).toStrictEqual([
+      1000,
+      10000,
+      100000,
+      1000000,
+      10000000,
+      100000000
+    ]);
+  });
+
+  it('should return labels of x axis if they are already set', () => {
+    component.xLabels = [1, 2, 3];
+    expect(component.xLabelsWithDefaultValue).toStrictEqual([1, 2, 3]);
+  });
+
+  it('should set range start via input', () => {
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeStartWithoutNull = '2';
+    expect(component.rangeStartWithoutNull).toBe('2');
+    expect(component.beforeRangeText).toBe('~9 (16.36%)');
+  });
+
+  it('should set range start with invalid input', () => {
+    const rangeStartEmitSpy = jest.spyOn(component.rangeStartChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeStart = null;
+    component.ngOnInit();
+
+    component.rangeStartWithoutNull = 'random text';
+    expect(component.rangeStartWithoutNull).toBe('1');
+    expect(component.beforeRangeText).toBe('~0 (0.00%)');
+    expect(rangeStartEmitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should set range end via input', () => {
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeEndWithoutNull = '4';
+    expect(component.rangeEndWithoutNull).toBe('4');
+    expect(component.afterRangeText).toBe('~25 (45.45%)');
+  });
+
+  it('should set range end with invalid input', () => {
+    const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeEnd = null;
+    component.ngOnInit();
+
+    component.rangeEndWithoutNull = 'random text';
+    expect(component.rangeEndWithoutNull).toBe('5');
+    expect(component.afterRangeText).toBe('~13 (23.64%)');
+    expect(rangeEndEmitSpy).toHaveBeenCalledWith(5);
+  });
+
+  it('should get min value rounded by the forth symbol', () => {
+    const bins = [1.365789, 2, 3, 4, 5];
+    component.bins = bins;
+
+    expect(component.minValue).toBe(1.3658);
+  });
+
+  it('should get max value rounded by the forth symbol', () => {
+    const bins = [1, 2, 3, 4, 5.378544];
+    component.bins = bins;
+
+    expect(component.maxValue).toBe(5.3785);
+  });
+
+  it('should increase range start by 1', () => {
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8];
+    const bars = [9, 10, 11, 12, 13, 14, 15, 16];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    component.selectedEndIndex = 5;
+    component.selectedStartIndex = 2;
+    component.startStepUp();
+    expect(component.selectedStartIndex).toBe(3);
+  });
+
+  it('should decrease range start by 1', () => {
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8];
+    const bars = [9, 10, 11, 12, 13, 14, 15, 16];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    component.selectedEndIndex = 5;
+    component.selectedStartIndex = 4;
+    component.startStepDown();
+    expect(component.selectedStartIndex).toBe(3);
+  });
+
+  it('should increase range end by 1', () => {
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8];
+    const bars = [9, 10, 11, 12, 13, 14, 15, 16];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    component.selectedEndIndex = 3;
+    component.selectedStartIndex = 2;
+    component.endStepUp();
+    expect(component.selectedEndIndex).toBe(4);
+  });
+
+  it('should decrease range end by 1', () => {
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5, 6, 7, 8];
+    const bars = [9, 10, 11, 12, 13, 14, 15, 16];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    component.selectedEndIndex = 5;
+    component.selectedStartIndex = 4;
+    component.endStepDown();
+    expect(component.selectedEndIndex).toBe(4);
   });
 });
