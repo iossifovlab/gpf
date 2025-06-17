@@ -241,8 +241,8 @@ class WDAEAbstractStudy:
 
     def _init_genotype_browser(self) -> None:
         if not self.is_genotype or \
-                not self.genotype_data.config["genotype_browser"]["enabled"]:
-            genotype_browser_config = self.genotype_data.config.genotype_browser
+                not self.genotype_data.config["genotype_browser"]:
+            return
 
         genotype_browser_config = self.genotype_data.config.genotype_browser
 
