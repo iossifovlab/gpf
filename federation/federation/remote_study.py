@@ -45,6 +45,16 @@ class RemoteGenotypeData(GenotypeDataStudy):
                 ),
             )
 
+        self._is_group = False
+        if config.get("studies"):
+            self._is_group = True
+            config["studies"] = list(
+                map(
+                    self.rest_client.prefix_remote_identifier,
+                    config["studies"],
+                ),
+            )
+
         self.config = FrozenBox(config)
 
         self._families: FamiliesData | None = None
@@ -68,6 +78,18 @@ class RemoteGenotypeData(GenotypeDataStudy):
             if "id" in self._remote_common_report:
                 self._common_report = CommonReport(self._remote_common_report)
         return self._common_report
+
+    def get_studies_ids(
+        self, *,
+        leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
+        if not self._is_group:
+            return [self.study_id]
+        return cast(list[str], self.config["studies"])
+
+    @property
+    def is_group(self) -> bool:
+        return self._is_group
 
     @property
     def families(self) -> FamiliesData:
@@ -127,15 +149,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
         families: FamiliesData,
     ) -> PersonSetCollection:
         raise NotImplementedError
-
-    def get_studies_ids(
-        self, *, leaves: bool = True,  # noqa: ARG002
-    ) -> list[str]:
-        return [self.study_id]
-
-    @property
-    def is_group(self) -> bool:
-        return False
 
     def query_variants(
         self,
@@ -199,26 +212,3 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
     def get_common_report(self) -> CommonReport | None:
         return self.common_report
-
-
-class RemoteGenotypeDataGroup(RemoteGenotypeData):
-    """Represents remote genotype data group."""
-
-    @property
-    def is_group(self) -> bool:
-        return True
-
-    def get_studies_ids(
-        self, *,
-        leaves: bool = True,
-    ) -> list[str]:
-        result = [self.study_id]
-        for study in self.studies:
-            result.append(study.study_id)
-            if leaves:
-                result.extend([
-                    child_id
-                    for child_id in study.get_studies_ids(leaves=True)
-                    if child_id not in result
-                ])
-        return result

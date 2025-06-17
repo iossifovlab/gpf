@@ -280,6 +280,198 @@ genotype_storage_schema = {
     },
 }
 
+common_report_schema = {
+    "type": "dict",
+    "schema": {
+        "enabled": {"type": "boolean", "required": True},
+        "selected_person_set_collections": {
+            "type": "dict",
+            "schema": {
+                "denovo_report": {
+                    "type": "list", "schema": {"type": "string"},
+                },
+                "family_report": {
+                    "type": "list", "schema": {"type": "string"},
+                },
+            },
+            "default": {},
+        },
+        "effect_groups": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": ["LGDs", "nonsynonymous", "UTRs"],
+        },
+        "effect_types": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": [
+                "Nonsense", "Frame-shift", "Splice-site", "Missense",
+                "No-frame-shift", "noStart", "noEnd", "Synonymous",
+                "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR",
+            ],
+        },
+        "draw_all_families": {"type": "boolean", "default": False},
+        "file_path": {
+            "type": "string",
+            "check_with": validate_path,
+            "coerce": "abspath",
+            "default": "common_report.json",
+        },
+    },
+    "default": {"enabled": False},
+}
+
+denovo_gene_sets_schema = {
+    "type": "dict",
+    "schema": {
+        "enabled": {"type": "boolean", "required": False},
+        "selected_person_set_collections": {
+            "type": "list",
+            "schema": {"type": "string"},
+        },
+        "selected_standard_criterias_values": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": [],
+        },
+        "standard_criterias": {
+            "type": "dict",
+            "valuesrules": {
+                "type": "dict",
+                "schema": {
+                    "segments": {
+                        "type": "dict",
+                        "valuesrules": {"type": "string"},
+                    },
+                },
+            },
+            "default": {
+                "effect_types": {
+                    "segments": {
+                        "LGDs": "LGDs",
+                        "Missense": "missense",
+                        "Synonymous": "synonymous",
+                    },
+                },
+                "sexes": {
+                    "segments": {
+                        "Female": "F",
+                        "Male": "M",
+                        "Unspecified": "U",
+                    },
+                },
+            },
+        },
+        "recurrency_criteria": {
+            "type": "dict",
+            "schema": {
+                "segments": {
+                    "type": "dict",
+                    "valuesrules": {
+                        "type": "dict",
+                        "schema": {
+                            "start": {"type": "integer"},
+                            "end": {"type": "integer"},
+                        },
+                    },
+                },
+            },
+            "default": {
+                "segments": {
+                    "Single": {
+                        "start": 1,
+                        "end": 2,
+                    },
+                    "Triple": {
+                        "start": 3,
+                        "end": -1,
+                    },
+                    "Recurrent": {
+                        "start": 2,
+                        "end": -1,
+                    },
+                },
+            },
+        },
+        "gene_sets_names": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": [
+                "LGDs", "LGDs.Male", "LGDs.Female",
+                "LGDs.Recurrent", "LGDs.Triple",
+                "Missense", "Missense.Male", "Missense.Female",
+                "Missense.Recurrent", "Missense.Triple",
+                "Synonymous", "Synonymous.Male", "Synonymous.Female",
+                "Synonymous.Recurrent", "Synonymous.Triple",
+            ],
+        },
+    },
+}
+
+enrichment_schema = {
+    "type": "dict",
+    "schema": {
+        "enabled": {"type": "boolean", "required": True},
+        "selected_person_set_collections": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": [],
+        },
+        "selected_background_models": {
+            "type": "list",
+            "required": True,
+            "schema": {"type": "string"},
+            "default": [],
+        },
+        "default_background_model": {"type": "string"},
+        "selected_counting_models": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": [],
+        },
+        "counting": {
+            "type": "dict",
+            "valuesrules": {"type": "dict", "schema": counting_schema},
+            "default": counting_defaults,
+        },
+        "default_counting_model": {
+            "type": "string",
+            "default": "enrichment_events_counting",
+        },
+        "effect_types": {
+            "type": "list",
+            "schema": {"type": "string"},
+            "default": ["LGDs", "missense", "synonymous"],
+        },
+    },
+    "default": {"enabled": False},
+}
+
+gene_browser_schema = {
+    "type": "dict",
+    "schema": {
+        "enabled": {"type": "boolean", "required": True},
+        "frequency_column": {"type": "string", "required": True},
+        "frequency_name": {"type": "string", "required": False},
+        "effect_column": {"type": "string", "required": True},
+        "location_column": {"type": "string", "required": True},
+        "domain_min": {
+            "type": "float",
+            "required": True,
+            "forbidden": [0.0],
+            "min": 0.0,
+            "max": 100.0,
+        },
+        "domain_max": {
+            "type": "float",
+            "required": True,
+            "forbidden": [0.0],
+            "min": 0.0,
+            "max": 100.0,
+        },
+        "has_affected_status": {"type": "boolean", "default": True},
+    },
+}
 
 study_config_schema = {
     "id": {"type": "string"},
@@ -338,194 +530,9 @@ study_config_schema = {
         "excludes": "genotype_storage",
     },
     "genotype_browser": genotype_browser_schema,
-    "common_report": {
-        "type": "dict",
-        "schema": {
-            "enabled": {"type": "boolean", "required": True},
-            "selected_person_set_collections": {
-                "type": "dict",
-                "schema": {
-                    "denovo_report": {
-                        "type": "list", "schema": {"type": "string"},
-                    },
-                    "family_report": {
-                        "type": "list", "schema": {"type": "string"},
-                    },
-                },
-                "default": {},
-            },
-            "effect_groups": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": ["LGDs", "nonsynonymous", "UTRs"],
-            },
-            "effect_types": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [
-                    "Nonsense", "Frame-shift", "Splice-site", "Missense",
-                    "No-frame-shift", "noStart", "noEnd", "Synonymous",
-                    "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR",
-                ],
-            },
-            "draw_all_families": {"type": "boolean", "default": False},
-            "file_path": {
-                "type": "string",
-                "check_with": validate_path,
-                "coerce": "abspath",
-                "default": "common_report.json",
-            },
-        },
-        "default": {"enabled": False},
-    },
-    "denovo_gene_sets": {
-        "type": "dict",
-        "schema": {
-            "enabled": {"type": "boolean", "required": False},
-            "selected_person_set_collections": {
-                "type": "list",
-                "schema": {"type": "string"},
-            },
-            "selected_standard_criterias_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "standard_criterias": {
-                "type": "dict",
-                "valuesrules": {
-                    "type": "dict",
-                    "schema": {
-                        "segments": {
-                            "type": "dict",
-                            "valuesrules": {"type": "string"},
-                        },
-                    },
-                },
-                "default": {
-                    "effect_types": {
-                        "segments": {
-                            "LGDs": "LGDs",
-                            "Missense": "missense",
-                            "Synonymous": "synonymous",
-                        },
-                    },
-                    "sexes": {
-                        "segments": {
-                            "Female": "F",
-                            "Male": "M",
-                            "Unspecified": "U",
-                        },
-                    },
-                },
-            },
-            "recurrency_criteria": {
-                "type": "dict",
-                "schema": {
-                    "segments": {
-                        "type": "dict",
-                        "valuesrules": {
-                            "type": "dict",
-                            "schema": {
-                                "start": {"type": "integer"},
-                                "end": {"type": "integer"},
-                            },
-                        },
-                    },
-                },
-                "default": {
-                    "segments": {
-                        "Single": {
-                            "start": 1,
-                            "end": 2,
-                        },
-                        "Triple": {
-                            "start": 3,
-                            "end": -1,
-                        },
-                        "Recurrent": {
-                            "start": 2,
-                            "end": -1,
-                        },
-                    },
-                },
-            },
-            "gene_sets_names": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [
-                    "LGDs", "LGDs.Male", "LGDs.Female",
-                    "LGDs.Recurrent", "LGDs.Triple",
-                    "Missense", "Missense.Male", "Missense.Female",
-                    "Missense.Recurrent", "Missense.Triple",
-                    "Synonymous", "Synonymous.Male", "Synonymous.Female",
-                    "Synonymous.Recurrent", "Synonymous.Triple",
-                ],
-            },
-        },
-    },
-    "enrichment": {
-        "type": "dict",
-        "schema": {
-            "enabled": {"type": "boolean", "required": True},
-            "selected_person_set_collections": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "selected_background_models": {
-                "type": "list",
-                "required": True,
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "default_background_model": {"type": "string"},
-            "selected_counting_models": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "counting": {
-                "type": "dict",
-                "valuesrules": {"type": "dict", "schema": counting_schema},
-                "default": counting_defaults,
-            },
-            "default_counting_model": {
-                "type": "string",
-                "default": "enrichment_events_counting",
-            },
-            "effect_types": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": ["LGDs", "missense", "synonymous"],
-            },
-        },
-        "default": {"enabled": False},
-    },
-    "gene_browser": {
-        "type": "dict",
-        "schema": {
-            "enabled": {"type": "boolean", "required": True},
-            "frequency_column": {"type": "string", "required": True},
-            "frequency_name": {"type": "string", "required": False},
-            "effect_column": {"type": "string", "required": True},
-            "location_column": {"type": "string", "required": True},
-            "domain_min": {
-                "type": "float",
-                "required": True,
-                "forbidden": [0.0],
-                "min": 0.0,
-                "max": 100.0,
-            },
-            "domain_max": {
-                "type": "float",
-                "required": True,
-                "forbidden": [0.0],
-                "min": 0.0,
-                "max": 100.0,
-            },
-            "has_affected_status": {"type": "boolean", "default": True},
-        },
-    },
+    "common_report": common_report_schema,
+    "denovo_gene_sets": denovo_gene_sets_schema,
+    "enrichment": enrichment_schema,
+    "gene_browser": gene_browser_schema,
     "person_set_collections": person_set_collections_schema,
 }

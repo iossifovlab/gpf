@@ -4,7 +4,7 @@ import sys
 import time
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pheno.pheno_data import PhenotypeData
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 from dae.studies.study import GenotypeData
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -54,7 +54,6 @@ def main(
 
     available_studies = [
         study.study_id for study in gpf_instance.get_all_genotype_data()
-        if not study.is_remote
     ]
     available_pheno_studies = gpf_instance.get_phenotype_data_ids()
 
@@ -80,7 +79,15 @@ def main(
             study: GenotypeData | PhenotypeData
             if study_id in available_studies:
                 study = gpf_instance.get_genotype_data(study_id)
+                if study.is_remote:
+                    continue
             else:
                 study = gpf_instance.get_phenotype_data(study_id)
+                if (
+                    not isinstance(study, PhenotypeStudy)
+                    and
+                    not isinstance(study, PhenotypeGroup)
+                ):
+                    continue
 
             study.build_and_save(force=args.force)
