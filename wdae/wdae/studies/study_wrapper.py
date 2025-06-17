@@ -122,7 +122,7 @@ class WDAEAbstractStudy:
     @property
     def name(self) -> str:
         if self.is_phenotype:
-            return self.phenotype_data.name
+            return cast(str, self.phenotype_data.name)
         return self.genotype_data.name
 
     @property
@@ -587,6 +587,29 @@ class WDAEStudy(WDAEAbstractStudy):
             ))
         return runners
 
+    def _extract_pre_kwargs(
+            self, query_transformer: QueryTransformerProtocol,
+            kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        pre_kwargs = {
+            "personFilters": kwargs.pop("personFilters", None),
+            "familyFilters": kwargs.pop("familyFilters", None),
+            "personFiltersBeta": kwargs.pop("personFiltersBeta", None),
+            "familyPhenoFilters": kwargs.pop("familyPhenoFilters", None),
+            "personIds": kwargs.pop("personIds", None),
+            "familyIds": kwargs.pop("familyIds", None),
+        }
+        pre_kwargs = {
+            k: v for k, v in pre_kwargs.items() if v is not None
+        }
+        pre_kwargs = query_transformer.transform_kwargs(
+            self, **pre_kwargs,
+        )
+        for key in ["person_ids", "family_ids"]:
+            if pre_kwargs.get(key) is not None:
+                kwargs[key] = pre_kwargs[key]
+        return kwargs
+
     def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
@@ -614,6 +637,7 @@ class WDAEStudy(WDAEAbstractStudy):
 
         kwargs["study_filters"] = study_filters
 
+        kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
         runners = self._collect_runners(kwargs, query_transformer)
 
         if summary_variant_ids is None:
@@ -715,22 +739,6 @@ class WDAEStudy(WDAEAbstractStudy):
                 "study wrapper (%s)  query returned %s variants; "
                 "closed in %0.3fsec", self.study_id, index, elapsed)
 
-    def _extract_pre_kwargs(self, query_transformer, kwargs):
-        pre_kwargs = {
-            "personFilters": kwargs.pop("personFilters", None),
-            "familyFilters": kwargs.pop("familyFilters", None),
-            "personFiltersBeta": kwargs.pop("personFiltersBeta", None),
-            "familyPhenoFilters": kwargs.pop("familyPhenoFilters", None),
-            "personIds": kwargs.pop("personIds", None),
-            "familyIds": kwargs.pop("familyIds", None),
-        }
-        pre_kwargs = {
-            k: v for k, v in pre_kwargs.items() if v is not None
-        }
-        return query_transformer.transform_kwargs(
-            self, **pre_kwargs,
-        )
-
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
@@ -746,14 +754,14 @@ class WDAEStudy(WDAEAbstractStudy):
 
         kwargs["study_filters"] = study_filters
 
-        pre_kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
+        kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
 
         limit = kwargs.pop("maxVariantsCount", None)
         runners = []
         for study_wrapper in self.children:
             try:
                 query_kwargs = query_transformer.transform_kwargs(
-                    study_wrapper, **kwargs, **pre_kwargs,
+                    study_wrapper, **kwargs,
                 )
             except ValueError:
                 logger.exception("Skipping study %s", study_wrapper.study_id)

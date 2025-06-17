@@ -52,7 +52,7 @@ class QueryTransformer(QueryTransformerProtocol):
     def __init__(
         self, gene_scores_db: GeneScoresDb,
         chromosomes: list[str], chr_prefix: str,
-    ):  # type: ignore
+    ) -> None:
         self.gene_scores_db = gene_scores_db
         self.chromosomes = chromosomes
         self.chr_prefix = chr_prefix
@@ -145,7 +145,7 @@ class QueryTransformer(QueryTransformerProtocol):
             return f"({result[0]}) and ({result[1]})"
 
         if len(result) == 1:
-            return result[0]
+            return cast(str, result[0])
 
         return None
 
@@ -451,7 +451,7 @@ class QueryTransformer(QueryTransformerProtocol):
     def get_unique_family_variants(self, kwargs: dict[str, Any]) -> bool:
         if "uniqueFamilyVariants" not in kwargs:
             return False
-        return kwargs["uniqueFamilyVariants"]
+        return bool(kwargs["uniqueFamilyVariants"])
 
     def transform_kwargs(
         self, study: WDAEStudy, **kwargs: Any,
