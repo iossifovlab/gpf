@@ -252,43 +252,46 @@ class WDAEStudy(WDAEAbstractStudy):
         return cast(dict, self.config["genotype_browser"]["columns"])
 
     def _init_genotype_browser(self) -> None:
-        if self.is_genotype and self.genotype_data.config["genotype_browser"]:
-            genotype_browser_config = self.genotype_data.config.genotype_browser
+        if not self.is_genotype or \
+                not self.genotype_data.config["genotype_browser"]:
+            return
 
-            # PERSON AND FAMILY FILTERS
-            self.person_filters = genotype_browser_config.person_filters or None
-            self.family_filters = genotype_browser_config.family_filters or None
+        genotype_browser_config = self.genotype_data.config.genotype_browser
 
-            # GENE SCORES
-            if genotype_browser_config.column_groups and \
-                    "gene_scores" in genotype_browser_config.column_groups:
-                self.gene_score_column_sources = [
-                    genotype_browser_config.columns.genotype[slot].source
-                    for slot in (
-                        genotype_browser_config.column_groups.gene_scores.columns
-                        or []
-                    )
-                ]
-            else:
-                self.gene_score_column_sources = []
+        # PERSON AND FAMILY FILTERS
+        self.person_filters = genotype_browser_config.person_filters or None
+        self.family_filters = genotype_browser_config.family_filters or None
 
-            # PREVIEW AND DOWNLOAD COLUMNS
-            self.columns = genotype_browser_config.columns
-            self.column_groups = genotype_browser_config.column_groups
-            self._validate_column_groups()
-            self.preview_columns = genotype_browser_config.preview_columns
-            if genotype_browser_config.preview_columns_ext:
-                self.preview_columns.extend(
-                    genotype_browser_config.preview_columns_ext)
-            self.download_columns = genotype_browser_config.download_columns
-            if genotype_browser_config.download_columns_ext:
-                self.download_columns.extend(
-                    genotype_browser_config.download_columns_ext)
+        # GENE SCORES
+        if genotype_browser_config.column_groups and \
+                "gene_scores" in genotype_browser_config.column_groups:
+            self.gene_score_column_sources = [
+                genotype_browser_config.columns.genotype[slot].source
+                for slot in (
+                    genotype_browser_config.column_groups.gene_scores.columns
+                    or []
+                )
+            ]
+        else:
+            self.gene_score_column_sources = []
 
-            self.summary_preview_columns = \
-                genotype_browser_config.summary_preview_columns
-            self.summary_download_columns = \
-                genotype_browser_config.summary_download_columns
+        # PREVIEW AND DOWNLOAD COLUMNS
+        self.columns = genotype_browser_config.columns
+        self.column_groups = genotype_browser_config.column_groups
+        self._validate_column_groups()
+        self.preview_columns = genotype_browser_config.preview_columns
+        if genotype_browser_config.preview_columns_ext:
+            self.preview_columns.extend(
+                genotype_browser_config.preview_columns_ext)
+        self.download_columns = genotype_browser_config.download_columns
+        if genotype_browser_config.download_columns_ext:
+            self.download_columns.extend(
+                genotype_browser_config.download_columns_ext)
+
+        self.summary_preview_columns = \
+            genotype_browser_config.summary_preview_columns
+        self.summary_download_columns = \
+            genotype_browser_config.summary_download_columns
 
     def _validate_column_groups(self) -> bool:
         genotype_cols = self.columns.get("genotype") or []
@@ -438,15 +441,17 @@ class WDAEStudy(WDAEAbstractStudy):
             and config["genotype_browser"].get(
                 "has_family_structure_filter", None) is None \
             and result["genotype_browser_config"]["has_family_pheno_filters"] \
-            is None:
-            result["genotype_browser_config"]["has_family_pheno_filters"] = True
+                is None:
+            result["genotype_browser_config"][
+                "has_family_pheno_filters"] = True
 
         if result["phenotype_data"] is not None \
             and config["genotype_browser"].get(
                 "has_person_structure_filter", None) is None \
             and result["genotype_browser_config"]["has_person_pheno_filters"] \
-            is None:
-            result["genotype_browser_config"]["has_person_pheno_filters"] = True
+                is None:
+            result["genotype_browser_config"][
+                "has_person_pheno_filters"] = True
 
         table_columns = []
         for column in config["genotype_browser"].preview_columns:
@@ -468,13 +473,15 @@ class WDAEStudy(WDAEAbstractStudy):
                 if config["genotype_browser"].columns.genotype and \
                         column in config["genotype_browser"].columns.genotype:
                     table_columns.append(
-                        dict(config["genotype_browser"].columns.genotype[column]),
+                        dict(config["genotype_browser"].columns
+                             .genotype[column]),
                     )
                 elif config["genotype_browser"]["columns"]["phenotype"] \
                     and column in \
                         config["genotype_browser"]["columns"]["phenotype"]:
                     table_columns.append(
-                        dict(config["genotype_browser"].columns.phenotype[column]),
+                        dict(config["genotype_browser"].columns
+                             .phenotype[column]),
                     )
                 else:
                     raise KeyError(f"No such column {column} configured!")
@@ -708,6 +715,22 @@ class WDAEStudy(WDAEAbstractStudy):
                 "study wrapper (%s)  query returned %s variants; "
                 "closed in %0.3fsec", self.study_id, index, elapsed)
 
+    def _extract_pre_kwargs(self, query_transformer, kwargs):
+        pre_kwargs = {
+            "personFilters": kwargs.pop("personFilters", None),
+            "familyFilters": kwargs.pop("familyFilters", None),
+            "personFiltersBeta": kwargs.pop("personFiltersBeta", None),
+            "familyPhenoFilters": kwargs.pop("familyPhenoFilters", None),
+            "personIds": kwargs.pop("personIds", None),
+            "familyIds": kwargs.pop("familyIds", None),
+        }
+        pre_kwargs = {
+            k: v for k, v in pre_kwargs.items() if v is not None
+        }
+        return query_transformer.transform_kwargs(
+            self, **pre_kwargs,
+        )
+
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
@@ -723,12 +746,14 @@ class WDAEStudy(WDAEAbstractStudy):
 
         kwargs["study_filters"] = study_filters
 
+        pre_kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
+
         limit = kwargs.pop("maxVariantsCount", None)
         runners = []
         for study_wrapper in self.children:
             try:
                 query_kwargs = query_transformer.transform_kwargs(
-                    study_wrapper, **kwargs,
+                    study_wrapper, **kwargs, **pre_kwargs,
                 )
             except ValueError:
                 logger.exception("Skipping study %s", study_wrapper.study_id)

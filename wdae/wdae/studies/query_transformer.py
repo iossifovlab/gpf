@@ -469,7 +469,7 @@ class QueryTransformer(QueryTransformerProtocol):
         start = time.time()
         logger.debug("kwargs in study wrapper: %s", kwargs)
 
-        if "personIds" in kwargs:
+        if kwargs.get("personIds"):
             # Temporarily transform to set for easier combining of person IDs.
             kwargs["personIds"] = set(kwargs["personIds"])
 
@@ -478,7 +478,8 @@ class QueryTransformer(QueryTransformerProtocol):
             kwargs,
         )
 
-        kwargs = self._handle_person_set_collection(study, kwargs)
+        if kwargs.get("personSetCollection"):
+            kwargs = self._handle_person_set_collection(study, kwargs)
 
         kwargs["tags_query"] = TagsQuery(
             selected_family_tags=kwargs.get("selectedFamilyTags"),
@@ -604,7 +605,7 @@ class QueryTransformer(QueryTransformerProtocol):
                 kwargs["effectTypes"],
             )
 
-        if "personFilters" in kwargs:
+        if kwargs.get("personFilters"):
             person_filters = kwargs.pop("personFilters")
             if person_filters:
                 matching_person_ids = self._transform_filters_to_ids(
@@ -618,7 +619,7 @@ class QueryTransformer(QueryTransformerProtocol):
                 else:
                     kwargs["personIds"] = matching_person_ids
 
-        if "personFiltersBeta" in kwargs:
+        if kwargs.get("personFiltersBeta"):
             person_filters = kwargs.pop("personFiltersBeta")
             if person_filters:
                 matching_person_ids = self._transform_pheno_filters_to_ids(
@@ -632,7 +633,7 @@ class QueryTransformer(QueryTransformerProtocol):
                 else:
                     kwargs["personIds"] = matching_person_ids
 
-        if "familyFilters" in kwargs:
+        if kwargs.get("familyFilters"):
             family_filters = kwargs.pop("familyFilters")
             if family_filters:
                 matching_family_ids = self._transform_filters_to_ids(
@@ -646,7 +647,7 @@ class QueryTransformer(QueryTransformerProtocol):
                 else:
                     kwargs["familyIds"] = matching_family_ids
 
-        if "familyPhenoFilters" in kwargs:
+        if kwargs.get("familyPhenoFilters"):
             family_filters = kwargs.pop("familyPhenoFilters")
             if family_filters:
                 matching_family_ids = self._transform_pheno_filters_to_ids(
@@ -660,7 +661,7 @@ class QueryTransformer(QueryTransformerProtocol):
                 else:
                     kwargs["familyIds"] = matching_family_ids
 
-        if "personIds" in kwargs:
+        if kwargs.get("personIds"):
             kwargs["personIds"] = list(kwargs["personIds"])
 
         if "affectedStatus" in kwargs:
