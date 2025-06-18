@@ -10,10 +10,11 @@ def test_get_datasets(rest_client: RESTClient) -> None:
     assert datasets is not None
     assert isinstance(datasets, list)
     assert {dataset["id"] for dataset in datasets} == {
+        "study_1_pheno",
+        "t4c8_dataset",
         "t4c8_study_1",
         "t4c8_study_2",
         "t4c8_study_4",
-        "t4c8_dataset",
     }
 
 
