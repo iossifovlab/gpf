@@ -10,7 +10,7 @@ from dae.genomic_resources.testing import (
     build_s3_test_filesystem,
     s3_test_server_endpoint,
 )
-from dae.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )

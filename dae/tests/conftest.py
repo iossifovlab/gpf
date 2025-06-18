@@ -6,9 +6,9 @@ from typing import Any, cast
 
 import pytest
 
-from dae.genotype_storage import get_genotype_storage_factory
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
+    get_genotype_storage_factory,
 )
 
 

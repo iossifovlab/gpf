@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 import pytest
 
-from dae.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
 

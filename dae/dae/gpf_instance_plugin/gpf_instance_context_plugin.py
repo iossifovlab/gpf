@@ -34,6 +34,8 @@ class GPFInstanceGenomicContext(GenomicContext):
             return self.gpf_instance.grr
         if key == "annotation_pipeline":
             return self.gpf_instance.get_annotation_pipeline()
+        if key == "genotype_storages":
+            return self.gpf_instance.genotype_storages
         if key == "gpf_instance":
             return self.gpf_instance
         logger.info(
