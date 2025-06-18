@@ -44,7 +44,7 @@ def test_parquet_files_are_generated(
     mocker.patch.object(import_tools.ImportProject, "_storage_type",
                         return_value="schema2")
     project = import_tools.ImportProject.build_from_config(
-        import_config, str(input_dir))
+        import_config, base_input_dir=str(input_dir))
 
     cli.run_with_project(project)
 
@@ -87,7 +87,9 @@ def test_import_with_add_chrom_prefix(
     }
 
     project = import_tools.ImportProject.build_from_config(
-        import_config, str(input_dir), gpf_instance=gpf_instance)
+        import_config,
+        base_input_dir=str(input_dir),
+        gpf_instance=gpf_instance)
     cli.run_with_project(project)
 
     files = os.listdir(tmp_path)
@@ -233,7 +235,8 @@ def test_project_input_dir_default_value() -> None:
         "id": "test_import",
         "input": {},
     }
-    project = import_tools.ImportProject.build_from_config(config, "")
+    project = import_tools.ImportProject.build_from_config(
+        config, base_input_dir="")
     assert project.input_dir == ""
 
 
@@ -245,7 +248,8 @@ def test_project_input_dir(input_dir: str) -> None:
             "input_dir": input_dir,
         },
     }
-    project = import_tools.ImportProject.build_from_config(config, "/dir")
+    project = import_tools.ImportProject.build_from_config(
+        config, base_input_dir="/dir")
     assert project.input_dir == os.path.join("/dir", input_dir)
 
 

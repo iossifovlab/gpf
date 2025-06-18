@@ -2,6 +2,11 @@ import argparse
 import logging
 import sys
 
+from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
+    context_providers_init,
+    get_genomic_context,
+)
 from dae.import_tools.import_tools import ImportProject
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.executor import (
@@ -32,11 +37,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("config", type=str,
                         help="Path to the import configuration")
     TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
+    context_providers_add_argparser_arguments(parser)
     VerbosityConfiguration.set_arguments(parser)
+
     args = parser.parse_args(argv or sys.argv[1:])
     VerbosityConfiguration.set(args)
+    context_providers_init(**vars(args))
 
-    project = ImportProject.build_from_file(args.config)
+    genomic_context = get_genomic_context()
+
+    project = ImportProject.build_from_file(
+        args.config,
+        genomic_context=genomic_context)
 
     if args.task_status_dir is None:
         args.task_status_dir = fs_utils.join(

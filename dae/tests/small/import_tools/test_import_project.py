@@ -30,7 +30,9 @@ def test_project_is_serializable_after_loader_reference_genome(
     t4c8_instance: GPFInstance,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
-    project = ImportProject.build_from_file(config_fn, t4c8_instance)
+    project = ImportProject.build_from_file(
+        config_fn,
+        gpf_instance=t4c8_instance)
     assert project.get_gpf_instance().reference_genome is not None
     pickled = cloudpickle.dumps(project)
     unpickled_project = cloudpickle.loads(pickled)
@@ -42,7 +44,9 @@ def test_project_is_serializable_instance_dir(
     t4c8_instance: GPFInstance,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
-    project = ImportProject.build_from_file(config_fn, t4c8_instance)
+    project = ImportProject.build_from_file(
+        config_fn,
+        gpf_instance=t4c8_instance)
     assert project.get_gpf_instance().dae_dir is not None
     pickled = cloudpickle.dumps(project)
     unpickled_project = cloudpickle.loads(pickled)
@@ -119,7 +123,7 @@ def test_tags_on_by_default(resources_dir: pathlib.Path) -> None:
 ])
 def test_has_genotype_storage(
     import_config: dict[str, dict[str, Any]],
-    expected: bool,
+    expected: bool,  # noqa: FBT001
 ) -> None:
     project = ImportProject.build_from_config(import_config)
     assert project.has_genotype_storage() == expected

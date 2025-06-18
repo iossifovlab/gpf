@@ -1,16 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
-import pathlib
-
 import pytest
-import pytest_mock
 
 from dae.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import (
-    GenomicContext,
     PriorityGenomicContext,
     SimpleGenomicContext,
     get_genomic_context,
@@ -24,29 +19,6 @@ from dae.genomic_resources.repository import (
     GenomicResourceProtocolRepo,
     GenomicResourceRepo,
 )
-
-
-@pytest.fixture
-def context_fixture(
-    tmp_path: pathlib.Path,
-    mocker: pytest_mock.MockerFixture,
-) -> GenomicContext:
-    conf_dir = str(tmp_path / "conf")
-    home_dir = os.environ["HOME"]
-    mocker.patch("os.environ", {
-        "DAE_DB_DIR": conf_dir,
-        "HOME": home_dir,
-    })
-    mocker.patch(
-        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
-        [])
-    mocker.patch(
-        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
-        [])
-    context = get_genomic_context()
-    assert context is not None
-
-    return context
 
 
 def test_get_reference_genome_ok(
