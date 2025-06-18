@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Partitions } from './gene-scores';
 import { GeneScoresService } from './gene-scores.service';
 import { ReplaySubject, Observable, combineLatest, of } from 'rxjs';
@@ -22,7 +22,7 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   templateUrl: './gene-scores.component.html',
   styleUrls: ['./gene-scores.component.css'],
 })
-export class GeneScoresComponent implements OnInit {
+export class GeneScoresComponent implements OnInit, OnDestroy {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
@@ -105,6 +105,10 @@ export class GeneScoresComponent implements OnInit {
         this.updateCategoricalHistogramState();
       }
     }
+  }
+
+  public ngOnDestroy(): void {
+    this.store.dispatch(resetErrors({componentId: 'geneScores'}));
   }
 
   private updateLabels(): void {
