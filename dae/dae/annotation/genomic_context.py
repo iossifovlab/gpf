@@ -8,6 +8,7 @@ from typing import Any
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.genomic_context import (
+    GC_ANNOTATION_PIPELINE_KEY,
     GenomicContext,
     PriorityGenomicContext,
     SimpleGenomicContext,
@@ -82,7 +83,7 @@ class CLIAnnotationContextProvider(CLIGenomicContextProvider):
                 allow_repeated_attributes=bool(kwargs.get(
                     "allow_repeated_attributes")),
                 work_dir=work_dir)
-            context_objects["annotation_pipeline"] = pipeline
+            context_objects[GC_ANNOTATION_PIPELINE_KEY] = pipeline
             pipeline_context = SimpleGenomicContext(
                 context_objects, source=("annotation_pipeline_cli",))
             return PriorityGenomicContext(
@@ -90,14 +91,15 @@ class CLIAnnotationContextProvider(CLIGenomicContextProvider):
         return cli_context
 
 
-def get_context_pipeline(context: GenomicContext) -> AnnotationPipeline:
+def get_context_pipeline(
+    context: GenomicContext,
+) -> AnnotationPipeline | None:
     """Construct an annotation pipeline."""
-    pipeline = context.get_context_object("annotation_pipeline")
+    pipeline = context.get_context_object(GC_ANNOTATION_PIPELINE_KEY)
     if pipeline is None:
-        raise ValueError(
-            "Unable to find annotation pipeline in genomic context")
+        return None
     if not isinstance(pipeline, AnnotationPipeline):
         raise TypeError(
-            "The annotation pipeline from the genomic "
-            " context is not an AnnotationPipeline")
+            f"The annotation pipeline from the genomic "
+            f" context is not an AnnotationPipeline: {type(pipeline)}")
     return pipeline

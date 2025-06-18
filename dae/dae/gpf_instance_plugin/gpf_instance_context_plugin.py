@@ -3,7 +3,10 @@ import logging
 from typing import Any
 
 from dae.genomic_resources.genomic_context import (
+    GC_ANNOTATION_PIPELINE_KEY,
     GC_GENE_MODELS_KEY,
+    GC_GENOTYPE_STORAGES_KEY,
+    GC_GPF_INSTANCE_KEY,
     GC_GRR_KEY,
     GC_REFERENCE_GENOME_KEY,
     GenomicContext,
@@ -32,11 +35,11 @@ class GPFInstanceGenomicContext(GenomicContext):
             return self.gpf_instance.reference_genome
         if key == GC_GRR_KEY:
             return self.gpf_instance.grr
-        if key == "annotation_pipeline":
+        if key == GC_ANNOTATION_PIPELINE_KEY:
             return self.gpf_instance.get_annotation_pipeline()
-        if key == "genotype_storages":
+        if key == GC_GENOTYPE_STORAGES_KEY:
             return self.gpf_instance.genotype_storages
-        if key == "gpf_instance":
+        if key == GC_GPF_INSTANCE_KEY:
             return self.gpf_instance
         logger.info(
             "can't find %s in GPF instance genomic context", key)
@@ -45,7 +48,8 @@ class GPFInstanceGenomicContext(GenomicContext):
     def get_context_keys(self) -> set[str]:
         return {
             GC_GENE_MODELS_KEY, GC_REFERENCE_GENOME_KEY,
-            GC_GRR_KEY, "annotation_pipeline", "gpf_instance",
+            GC_GRR_KEY, GC_GENOTYPE_STORAGES_KEY, GC_ANNOTATION_PIPELINE_KEY,
+            GC_GPF_INSTANCE_KEY,
         }
 
     def get_source(self) -> tuple[str, ...]:
@@ -72,8 +76,13 @@ class GPFInstanceContextProvider(GenomicContextProvider):
     @staticmethod
     def init(**kwargs: Any) -> GenomicContext | None:
         """Initialize the GPF instance genomic context."""
-        # pylint: disable=import-outside-toplevel
         from dae.gpf_instance.gpf_instance import GPFInstance
+        gpf_instance = kwargs.get("gpf_instance")
+        if gpf_instance is not None:
+            if not isinstance(gpf_instance, GPFInstance):
+                raise TypeError(
+                    f"Invalid type for gpf_instance: {type(gpf_instance)}")
+            return GPFInstanceGenomicContext(gpf_instance)
 
         try:
             gpf_instance = GPFInstance.build(
