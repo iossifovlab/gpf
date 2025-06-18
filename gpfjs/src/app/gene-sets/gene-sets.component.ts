@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import {
   GeneSetsCollection,
@@ -26,7 +26,7 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css']
 })
-export class GeneSetsComponent implements OnInit {
+export class GeneSetsComponent implements OnInit, OnDestroy {
   public geneSetsCollections: Array<GeneSetsCollection>;
   public geneSets: Array<GeneSet>;
   public searchQuery: string;
@@ -142,6 +142,10 @@ export class GeneSetsComponent implements OnInit {
         }
       });
     });
+  }
+
+  public ngOnDestroy(): void {
+    this.store.dispatch(resetErrors({componentId: 'geneSet'}));
   }
 
   private createDenovoGeneSetTypeHierarchy(
