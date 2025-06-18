@@ -143,6 +143,126 @@ test.describe('Gene scores tests', () => {
     const downloadedData = Buffer.concat(data);
     expect(downloadedData.toString()).toEqual(expectedFileLines.toString());
   });
+
+  test('should type invalid and valid range start and check error state', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('gpf-gene-scores select')
+    .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+
+    await page.locator('#from-input-field').clear();
+    await page.locator('#from-input-field').fill('-100');
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('#from-input-field').clear();
+    await page.locator('#from-input-field').fill('0');
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
+    await expect(page.locator('gpf-gene-scores').locator('gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should reset invalid gene scores state when switching to All tab', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('gpf-gene-scores select')
+    .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+
+    await page.locator('#from-input-field').clear();
+    await page.locator('#from-input-field').fill('-500');
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-genes-block').getByRole('tab', { name: 'All' }).click();
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should reset invalid gene scores state when switching to other tool', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+
+    await page.locator('#from-input-field').clear();
+    await page.locator('#from-input-field').fill('-1');
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should type range start less than domain min of number histogram', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+
+    await page.locator('#from-input-field').clear();
+    await page.locator('#from-input-field').fill('-1');
+    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('should type range end more than domain max of number histogram', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+
+    await page.locator('#to-input-field').clear();
+    await page.locator('#to-input-field').fill('10');
+    await expect(page.getByText('Range end should be less than or equal to domain max.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('should type range end less than range start of number histogram', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+
+    await page.locator('#to-input-field').clear();
+    await page.locator('#to-input-field').fill('-1');
+    await expect(page.getByText('Range start should be less than or equal to range end.')).toBeVisible();
+    await expect(page.getByText('Range end should be more than or equal to range start.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('should type range start more than range end of number histogram', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+     await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+
+    await page.locator('#from-input-field').clear();
+    await page.locator('#from-input-field').fill('2');
+    await expect(page.getByText('Range start should be less than or equal to range end.')).toBeVisible();
+    await expect(page.getByText('Range end should be more than or equal to range start.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
 });
 
 test.describe('Gene scores categorical histogram tests', () => {

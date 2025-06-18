@@ -227,56 +227,107 @@ test.describe('Genes sybmols tests', () => {
   });
 });
 
-test.describe('Genes block gene sets names and count tests', () => {
+test.describe('Genes sets tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
-    [
-        {
-          collection: 'Main',
-          expectedSearchCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
-            'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)',
-          expectedDownloadCount: '239'
-        },
-        {
-          collection: 'SFARI Genes',
-          expectedSearchCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
-          expectedDownloadCount: '910'
-        },
 
-      ].forEach(data => {
-        test('should properly display "' + data.expectedSearchCondition + '" in "' +
-        data.collection + '" collection, and the counts should match', async({ page }) => {
-            await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
-            await page.getByRole('tab', { name: 'Gene Sets' }).click();
-            await page.locator('select#selected-collection').selectOption(data.collection);
-            await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
-            await page.getByPlaceholder('Select or start typing to search').click();
+  [
+    {
+      collection: 'Main',
+      expectedSearchCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
+        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)',
+      expectedDownloadCount: '239'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedSearchCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
+      expectedDownloadCount: '910'
+    },
 
-            const expectedSetName = data.expectedSearchCondition;
-            const geneSetName = expectedSetName.substring(0, expectedSetName.indexOf('(') - 1);
+  ].forEach(data => {
+    test('should properly display "' + data.expectedSearchCondition + '" in "' +
+      data.collection + '" collection, and the counts should match', async({ page }) => {
+        await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+        await page.getByRole('tab', { name: 'Gene Sets' }).click();
+        await page.locator('select#selected-collection').selectOption(data.collection);
+        await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
+        await page.getByPlaceholder('Select or start typing to search').click();
 
-            await page.getByPlaceholder('Select or start typing to search').pressSequentially(geneSetName);
-            await page.waitForResponse(
-                resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
-            );
-            await page.waitForLoadState('load');
+        const expectedSetName = data.expectedSearchCondition;
+        const geneSetName = expectedSetName.substring(0, expectedSetName.indexOf('(') - 1);
 
-            await page.locator('.sets-dropdown mat-option').first().click();
+        await page.getByPlaceholder('Select or start typing to search').pressSequentially(geneSetName);
+        await page.waitForResponse(
+            resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+        );
+        await page.waitForLoadState('load');
 
-            await expect(page.locator('span#selected-value')).toContainText(expectedSetName);
+        await page.locator('.sets-dropdown mat-option').first().click();
 
-            const actualCountElement = await page.locator(
-                'span:has-text("Count:")'
-            ).textContent();
-            const actualCount = actualCountElement.replace('Count: ', '').replace(' (Download)', '').trim();
-            const expectedCount = data.expectedDownloadCount;
-            expect(actualCount).toEqual(expectedCount);
-          });
+        await expect(page.locator('span#selected-value')).toContainText(expectedSetName);
+
+        const actualCountElement = await page.locator(
+            'span:has-text("Count:")'
+        ).textContent();
+        const actualCount = actualCountElement.replace('Count: ', '').replace(' (Download)', '').trim();
+        const expectedCount = data.expectedDownloadCount;
+        expect(actualCount).toEqual(expectedCount);
         });
     });
+
+  test('should select gene set, share query then check the state of gene set', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await page.locator('select#selected-collection').selectOption('GO Terms');
+    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
+
+    await page.getByPlaceholder('Select or start typing to search').pressSequentially('GO:0000003');
+
+    await page.locator('.sets-dropdown mat-option').filter({hasText: 'GO:0000003 (10): reproduction'}).click();
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('span#selected-value')).toContainText('GO:0000003 (10): reproduction');
+    await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+  });
+
+  test('should reset invalid gene sets state when switching to All tab', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await expect(page.getByText('Please select a gene set.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-genes-block').getByRole('tab', { name: 'All' }).click();
+    await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should reset invalid gene sets state when switching to other tool', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await expect(page.getByText('Please select a gene set.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+});
 
 
 test.describe('Gene block download tests ', () => {
@@ -344,7 +395,7 @@ test.beforeEach(async({ page }) => {
   });
 });
 
-test.describe('Genes block denovo gene set gene symbols tests', () => {
+test.describe('Denovo gene set tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, { waitUntil: 'load' });
     await utils.loginAdmin(page);
