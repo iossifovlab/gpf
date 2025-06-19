@@ -6,6 +6,7 @@ import shutil
 import pytest
 import pytest_mock
 import yaml
+from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools import cli, import_tools
 from dae.testing.alla_import import alla_gpf
@@ -46,12 +47,18 @@ def simple_study_dir(
     return tmp_path
 
 
-def test_run(simple_study_dir: pathlib.Path) -> None:
+def test_run(
+    simple_study_dir: pathlib.Path,
+    context_fixture: GenomicContext,  # noqa: ARG001
+) -> None:
     import_config_fn = str(simple_study_dir / "import_config.yaml")
     assert cli.main([import_config_fn, "-j", "1"]) == 0
 
 
-def test_list(simple_study_dir: pathlib.Path) -> None:
+def test_list(
+    simple_study_dir: pathlib.Path,
+    context_fixture: GenomicContext,  # noqa: ARG001
+) -> None:
     import_config_fn = str(simple_study_dir / "import_config.yaml")
     assert cli.main([import_config_fn, "list"]) == 0
     assert cli.main([import_config_fn, "-j", "1"]) == 0
