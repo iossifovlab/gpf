@@ -3,7 +3,6 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
-
 from dae.genomic_resources.cached_repository import CachingProtocol
 from dae.genomic_resources.testing import (
     FsspecReadWriteProtocol,

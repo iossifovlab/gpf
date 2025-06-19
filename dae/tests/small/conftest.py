@@ -4,7 +4,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.reference_genome import (

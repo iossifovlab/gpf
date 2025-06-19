@@ -3,13 +3,12 @@ import argparse
 import pathlib
 import textwrap
 
+import dae.dask.named_cluster
 import dask.distributed
 import pytest
-from pytest_mock import MockerFixture
-
-import dae.dask.named_cluster
 from dae.task_graph import TaskGraphCli
 from dae.testing import setup_directories
+from pytest_mock import MockerFixture
 
 
 @pytest.mark.parametrize("argv", [

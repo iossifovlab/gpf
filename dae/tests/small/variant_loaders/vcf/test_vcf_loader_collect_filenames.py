@@ -2,7 +2,6 @@
 
 import pytest
 import pytest_mock
-
 from dae.genomic_resources.testing import (
     build_s3_test_bucket,
     build_s3_test_filesystem,

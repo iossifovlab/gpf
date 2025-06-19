@@ -3,14 +3,13 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import setup_pedigree
 from dae.variants.attributes import Sex, Status
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_a(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_a" / "ped.ped", textwrap.dedent("""
@@ -24,7 +23,7 @@ def ped_a(tmp_path: pathlib.Path) -> FamiliesData:
     return FamiliesLoader(str(ped_path)).load()
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_b(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_b" / "ped.ped", textwrap.dedent("""
@@ -37,7 +36,7 @@ def ped_b(tmp_path: pathlib.Path) -> FamiliesData:
     return FamiliesLoader(str(ped_path)).load()
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_c(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_c" / "ped.ped", textwrap.dedent("""
@@ -51,7 +50,7 @@ def ped_c(tmp_path: pathlib.Path) -> FamiliesData:
     return FamiliesLoader(str(ped_path)).load()
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_d(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_d" / "ped.ped", textwrap.dedent("""
@@ -65,7 +64,7 @@ def ped_d(tmp_path: pathlib.Path) -> FamiliesData:
     return FamiliesLoader(str(ped_path)).load()
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_e(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_e" / "ped.ped", textwrap.dedent("""
@@ -79,7 +78,7 @@ f1        f1.s2     f1.dad f1.mom 2    2       sib
     return FamiliesLoader(str(ped_path)).load()
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_f(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_a" / "ped.ped", textwrap.dedent("""
@@ -92,7 +91,7 @@ def ped_f(tmp_path: pathlib.Path) -> FamiliesData:
     return FamiliesLoader(str(ped_path)).load()
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_g(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_a" / "ped.ped", textwrap.dedent("""
@@ -172,7 +171,7 @@ def test_combine_families_sex_unspecified_mismatch(
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_gen_and_not_sequenced(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_a" / "ped.ped", textwrap.dedent("""
@@ -257,7 +256,7 @@ def test_combine_families_creates_copy(
     #     .get_attr("tag_family_type") is None
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_f1_all(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "ped_a" / "ped.ped", textwrap.dedent("""

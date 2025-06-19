@@ -1,6 +1,8 @@
 import logging
 from typing import Any, cast
 
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.studies.study import GenotypeData
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -9,9 +11,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.expand_gene_set import expand_gene_set
-
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 

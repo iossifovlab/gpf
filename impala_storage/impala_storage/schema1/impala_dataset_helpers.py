@@ -4,6 +4,7 @@ import os
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.dataset_helpers import DatasetHelpers
+
 from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 
 logger = logging.getLogger(__name__)

@@ -3,11 +3,11 @@ import pathlib
 
 import pytest
 from box import Box
-
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+
 from impala_storage.schema1.family_variants_query_builder import (
     FamilyVariantsQueryBuilder,
 )

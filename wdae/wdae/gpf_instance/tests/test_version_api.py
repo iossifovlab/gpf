@@ -9,7 +9,7 @@ from rest_framework import status
 from gpf_instance.gpf_instance import WGPFInstance
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_instance(
     mocker: pytest_mock.MockerFixture,
     t4c8_wgpf_instance: WGPFInstance,

@@ -13,22 +13,22 @@ from rest_framework.test import APIClient
 from users_api.models import WdaeUser
 
 
-@pytest.fixture()
+@pytest.fixture
 def user_model() -> Type[WdaeUser]:
     return get_user_model()
 
 
-@pytest.fixture()
+@pytest.fixture
 def empty_group(db: None) -> Group:
     return Group.objects.create(name="Empty group")
 
 
-@pytest.fixture()
+@pytest.fixture
 def empty_group_2(db: None) -> Group:
     return Group.objects.create(name="Empty group 2")
 
 
-@pytest.fixture()
+@pytest.fixture
 def active_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
     user = user_model.objects.create_user(
         email="new@new.com", password="secret",
@@ -38,7 +38,7 @@ def active_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
     return user
 
 
-@pytest.fixture()
+@pytest.fixture
 def inactive_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
     user = user_model.objects.create_user(email="new@new.com")
 
@@ -46,7 +46,7 @@ def inactive_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
     return user
 
 
-@pytest.fixture()
+@pytest.fixture
 def logged_in_user(
     active_user: WdaeUser, oauth_app: Application,
 ) -> tuple[WdaeUser, APIClient]:
@@ -95,14 +95,14 @@ def logged_in_user(
 #     return three_new_users, empty_group, empty_group_2
 
 
-@pytest.fixture()
+@pytest.fixture
 def admin_group(user: WdaeUser) -> Group:
     admin_group = Group.objects.create(name=WdaeUser.SUPERUSER_GROUP)
 
     return admin_group
 
 
-@pytest.fixture()
+@pytest.fixture
 def researcher(db: None) -> WdaeUser:
     res = WdaeUser.objects.create_user(email="fake@fake.com")
     res.name = "fname"
@@ -112,7 +112,7 @@ def researcher(db: None) -> WdaeUser:
     return res
 
 
-@pytest.fixture()
+@pytest.fixture
 def researcher_without_password(db: None) -> WdaeUser:
     res = WdaeUser.objects.create_user(email="fake@fake.com")
     res.name = "fname"
@@ -121,7 +121,7 @@ def researcher_without_password(db: None) -> WdaeUser:
     return res
 
 
-@pytest.fixture()
+@pytest.fixture
 def unique_test_user(db: None) -> WdaeUser:
     uid = uuid.uuid1()
     res = WdaeUser.objects.create_user(email=f"fake{uid}@unique.com")

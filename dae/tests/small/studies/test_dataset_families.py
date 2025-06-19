@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.studies.study import GenotypeDataGroup
 from dae.testing import (
     denovo_study,
@@ -14,7 +13,7 @@ from dae.testing import (
 from dae.testing.acgt_import import acgt_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset(
     tmp_path: pathlib.Path,
 ) -> GenotypeDataGroup:

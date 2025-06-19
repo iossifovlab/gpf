@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 import yaml
-
 from dae.testing import acgt_gpf
 from dae.testing.import_helpers import (
     StudyInputLayout,

@@ -2,6 +2,7 @@ from collections import Counter
 from typing import Any
 
 from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapterBase
+
 from federation.rest_api_client import RESTClient
 
 

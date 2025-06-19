@@ -4,8 +4,6 @@ import textwrap
 from typing import Any, cast
 
 import pytest
-from gpf_instance.gpf_instance import WGPFInstance
-
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
@@ -13,6 +11,8 @@ from dae.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
+from gpf_instance.gpf_instance import WGPFInstance
+
 from studies.query_transformer import QueryTransformer, make_query_transformer
 from studies.response_transformer import (
     ResponseTransformer,

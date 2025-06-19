@@ -6,7 +6,6 @@ from typing import cast
 import pysam
 import pytest
 import pytest_mock
-
 from dae.genomic_resources.genomic_position_table import (
     TabixGenomicPositionTable,
     VCFGenomicPositionTable,

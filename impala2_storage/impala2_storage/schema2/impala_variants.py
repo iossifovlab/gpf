@@ -4,9 +4,6 @@ from typing import Any, cast
 
 import pandas as pd
 import yaml
-from impala.util import as_pandas
-from sqlalchemy import pool
-
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
@@ -14,6 +11,9 @@ from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
+from impala.util import as_pandas
+from sqlalchemy import pool
+
 from impala2_storage.helpers.impala_helpers import ImpalaHelpers
 from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner
 

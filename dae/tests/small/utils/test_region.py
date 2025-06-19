@@ -4,7 +4,6 @@ import textwrap
 
 import pysam
 import pytest
-
 from dae.genomic_resources.testing import setup_tabix
 from dae.utils.regions import (
     BedRegion,

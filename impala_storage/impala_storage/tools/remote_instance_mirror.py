@@ -10,10 +10,10 @@ import sys
 from typing import Any, cast
 
 import yaml
-
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
+
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 logger = logging.getLogger("remote_instance_mirror")

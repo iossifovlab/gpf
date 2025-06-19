@@ -11,11 +11,10 @@ from threading import Lock
 from typing import Any, cast
 
 from box import Box
-from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.helpers import to_response_json
+from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
 
 logger = logging.getLogger(__name__)
 __all__ = ["get_wgpf_instance"]

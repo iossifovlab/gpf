@@ -3,7 +3,6 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -12,6 +11,7 @@ from dae.import_tools.import_tools import ImportProject
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
+
 from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 from impala_storage.schema1.impala_variants import ImpalaVariants
 from impala_storage.schema1.serializers import AlleleParquetSerializer

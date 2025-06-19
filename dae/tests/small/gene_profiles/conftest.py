@@ -4,16 +4,15 @@ import pathlib
 
 import pytest
 from box import Box
-from pytest_mock import MockerFixture
-
 from dae.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance import GPFInstance
 from dae.testing.alla_import import alla_gpf
+from pytest_mock import MockerFixture
 
 
-@pytest.fixture()
+@pytest.fixture
 def gp_config() -> Box:
     return Box({
         "gene_sets": [
@@ -80,7 +79,7 @@ def gp_config() -> Box:
     })
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_gp() -> GPStatistic:
     gene_sets = ["main_CHD8 target genes"]
     gene_scores = {
@@ -106,7 +105,7 @@ def sample_gp() -> GPStatistic:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def gp_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
@@ -148,14 +147,14 @@ def gp_gpf_instance(
 
     return gpf_instance
 
-@pytest.fixture()
+@pytest.fixture
 def gpdb_write(
         tmp_path: pathlib.Path,
         gp_config: Box) -> GeneProfileDBWriter:
     gpdb_filename = str(tmp_path / "gpdb")
     return GeneProfileDBWriter(gp_config, gpdb_filename)
 
-@pytest.fixture()
+@pytest.fixture
 def local_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,

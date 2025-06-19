@@ -7,7 +7,6 @@ import textwrap
 import numpy as np
 import pytest
 import pytest_mock
-
 from dae.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )

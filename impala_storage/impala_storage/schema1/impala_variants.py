@@ -5,9 +5,6 @@ from typing import Any, ClassVar, cast
 
 import pandas as pd
 import pyarrow as pa
-from impala.util import as_pandas
-from sqlalchemy import pool
-
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
@@ -20,6 +17,9 @@ from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
+from impala.util import as_pandas
+from sqlalchemy import pool
+
 from impala_storage.helpers.impala_helpers import ImpalaHelpers
 from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
 from impala_storage.schema1.family_variants_query_builder import (

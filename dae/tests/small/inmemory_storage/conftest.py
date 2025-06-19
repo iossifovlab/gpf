@@ -2,7 +2,6 @@
 import textwrap
 
 import pytest
-
 from dae.import_tools.import_tools import ImportProject
 from dae.testing import convert_to_tab_separated, setup_directories
 

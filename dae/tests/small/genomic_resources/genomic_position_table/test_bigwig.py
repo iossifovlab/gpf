@@ -4,7 +4,6 @@ import textwrap
 
 import pytest
 import pytest_mock
-
 from dae.genomic_resources.genomic_position_table.table_bigwig import (
     BigWigTable,
 )

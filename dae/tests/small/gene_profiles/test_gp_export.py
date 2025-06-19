@@ -3,15 +3,14 @@ import pathlib
 
 import pytest
 from box import Box
-from pytest_mock import MockerFixture
-
 from dae.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from dae.gene_profile.exporter import cli_export
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
+from pytest_mock import MockerFixture
 
 
-@pytest.fixture()
+@pytest.fixture
 def two_rows_gp(
     gp_config: Box, sample_gp: GPStatistic,
     gp_gpf_instance: GPFInstance,

@@ -6,7 +6,6 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
-
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.registry import PhenoRegistry

@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 import pytest_mock
 from box import Box
-
 from dae.pheno_tool.tool import PhenoToolHelper
 from dae.variants.attributes import Role
 

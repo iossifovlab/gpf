@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
-
 from dae.genomic_resources.repository import GenomicResource, Manifest
 from dae.genomic_resources.testing import build_inmemory_test_repository
 

@@ -2,7 +2,6 @@
 from typing import cast
 
 import pytest
-
 from dae.effect_annotation.annotator import (
     AnnotationRequestFactory,
     EffectAnnotator,

@@ -3,7 +3,6 @@ import pathlib
 from typing import Any, cast
 
 import pytest
-
 from dae.studies.study import GenotypeData
 from dae.testing import setup_denovo, setup_pedigree
 from dae.testing.foobar_import import foobar_gpf

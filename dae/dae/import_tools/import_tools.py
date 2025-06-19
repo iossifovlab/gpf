@@ -174,8 +174,7 @@ class ImportProject:
     def get_pedigree_filename(self) -> str:
         """Return the path to the pedigree file."""
         families_filename = self.import_config["input"]["pedigree"]["file"]
-        families_filename = fs_utils.join(self.input_dir, families_filename)
-        return cast(str, families_filename)
+        return fs_utils.join(self.input_dir, families_filename)
 
     def get_pedigree_loader(self) -> FamiliesLoader:
         families_filename, families_params = self.get_pedigree_params()

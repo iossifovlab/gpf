@@ -5,7 +5,6 @@ import textwrap
 
 import pytest
 import yaml
-
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.generate_gene_profile import main
 from dae.genomic_resources.testing import (
@@ -18,7 +17,7 @@ from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def gp_config() -> dict:
     return {
         "gene_links": [

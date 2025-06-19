@@ -2,13 +2,12 @@
 
 
 import pytest
-
 from dae.import_tools.import_tools import ImportProject
 from dae.testing import acgt_gpf, setup_denovo, setup_pedigree, setup_vcf
 from dae.testing.import_helpers import StudyInputLayout, setup_import_project
 
 
-@pytest.fixture()
+@pytest.fixture
 def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
     root_path = tmp_path_factory.mktemp("import_project_tests")
     gpf_instance = acgt_gpf(root_path)

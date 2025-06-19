@@ -2,8 +2,8 @@
 import os
 
 import pytest
-
 from dae.pedigrees.loader import FamiliesLoader
+
 from impala_storage.schema1.parquet_io import (
     ParquetWriter,
     VariantsParquetWriter,

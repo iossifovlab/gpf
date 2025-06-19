@@ -1,6 +1,5 @@
-from spliceai.utils import one_hot_encode as one_hot_encode_spliceai
-
 from dae.utils.variant_utils import reverse_complement
+from spliceai.utils import one_hot_encode as one_hot_encode_spliceai
 from spliceai_annotator.utils import (
     one_hot_decode,
     one_hot_encode,

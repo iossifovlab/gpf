@@ -2,7 +2,6 @@
 
 import pandas as pd
 import pytest
-
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import PhenotypeGroup
 from dae.pheno.registry import PhenoRegistry

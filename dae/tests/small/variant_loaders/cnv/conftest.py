@@ -3,13 +3,12 @@ import io
 import textwrap
 
 import pytest
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import convert_to_tab_separated
 
 
-@pytest.fixture()
+@pytest.fixture
 def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """

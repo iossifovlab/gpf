@@ -2,7 +2,6 @@
 from typing import Any, cast
 
 import pytest
-
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,

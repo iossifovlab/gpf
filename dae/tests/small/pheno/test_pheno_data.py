@@ -5,7 +5,6 @@ from typing import Any
 
 import pytest
 import pytest_mock
-
 from dae.pedigrees.family import Person
 from dae.pheno.common import ImportManifest, MeasureType, PhenoImportConfig
 from dae.pheno.pheno_data import (

@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 from dae.pheno.db import safe_db_name

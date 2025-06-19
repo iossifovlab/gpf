@@ -3,13 +3,12 @@ import pathlib
 from typing import Any
 
 import pytest
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import ImportProject
 from dae.testing.alla_import import alla_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     return alla_gpf(tmp_path)
 

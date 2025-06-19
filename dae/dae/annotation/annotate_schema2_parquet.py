@@ -105,6 +105,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         input_dir = os.path.abspath(self.args.input)
         loader = ParquetLoader.load_from_dir(input_dir)
 
+        assert self.pipeline is not None
         raw_pipeline = self.pipeline.raw \
             if isinstance(self.pipeline.raw, list) \
             else self.pipeline.raw["annotators"]
@@ -177,6 +178,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         return input_layout, output_layout
 
     def prepare_for_annotation(self) -> None:
+        assert self.pipeline is not None
+
         input_layout, self.output_layout = self._setup_io_layouts()
         self.loader = ParquetLoader(input_layout)
         write_new_meta(self.loader, self.pipeline, self.output_layout)
@@ -187,6 +190,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
     def add_tasks_to_graph(self) -> None:
         assert self.loader is not None
         assert self.output_layout is not None
+        assert self.pipeline is not None
 
         if "reference_genome" not in self.loader.meta:
             raise ValueError("No reference genome found in study metadata!")

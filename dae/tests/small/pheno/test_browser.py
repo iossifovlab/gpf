@@ -3,7 +3,6 @@ import pathlib
 
 import pytest
 import pytest_mock
-
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 

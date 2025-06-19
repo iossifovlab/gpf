@@ -3,7 +3,6 @@ import textwrap
 
 import pytest
 import yaml
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import (
@@ -13,6 +12,7 @@ from dae.testing import (
     setup_pedigree,
     study_update,
 )
+
 from studies.study_wrapper import WDAEStudy
 
 

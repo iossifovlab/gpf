@@ -10,7 +10,6 @@ import avro.schema
 import numpy as np
 import pytest
 import pyzstd
-
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo

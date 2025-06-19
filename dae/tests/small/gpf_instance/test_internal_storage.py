@@ -2,7 +2,6 @@
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )

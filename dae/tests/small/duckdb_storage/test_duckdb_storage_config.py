@@ -1,13 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from pydantic import ValidationError
-
 from dae.duckdb_storage.duckdb_storage_config import (
     DuckDbConf,
     DuckDbParquetConf,
     DuckDbS3Conf,
     parse_duckdb_config,
 )
+from pydantic import ValidationError
 
 
 def test_duckdb_config() -> None:

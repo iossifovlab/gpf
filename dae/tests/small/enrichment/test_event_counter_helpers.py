@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
 from dae.enrichment_tool.event_counters import (
     filter_denovo_one_event_per_family,
     filter_denovo_one_gene_per_events,

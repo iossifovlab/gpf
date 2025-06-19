@@ -7,7 +7,6 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-
 from dae.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_file,

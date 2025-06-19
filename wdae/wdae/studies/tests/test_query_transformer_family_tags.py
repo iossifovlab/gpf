@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import cast
 
+from dae.studies.study import GenotypeDataStudy
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.studies.study import GenotypeDataStudy
 from studies.query_transformer import make_query_transformer
 from studies.study_wrapper import WDAEStudy
 

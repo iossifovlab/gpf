@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from typing import cast
 
 import toml
-
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import (
     Bucket,
@@ -19,6 +18,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
 from dae.variants_loaders.raw.loader import VariantsLoader
+
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,
 )

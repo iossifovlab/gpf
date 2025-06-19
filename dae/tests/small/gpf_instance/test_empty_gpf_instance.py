@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -12,7 +11,7 @@ from dae.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def alla_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")

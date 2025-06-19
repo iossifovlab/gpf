@@ -4,7 +4,6 @@ import sys
 import textwrap
 
 import pytest
-
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.testing import setup_directories
 from dae.utils.regions import Region

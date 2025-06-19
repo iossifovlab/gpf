@@ -5,7 +5,6 @@ from typing import Any
 
 import pytest
 import pytest_mock
-
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.effect_annotation.effect import AnnotationEffect

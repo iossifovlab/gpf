@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )

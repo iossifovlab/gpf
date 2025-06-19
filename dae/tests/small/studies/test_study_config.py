@@ -3,7 +3,6 @@ import textwrap
 
 import pytest
 from box import Box
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
 

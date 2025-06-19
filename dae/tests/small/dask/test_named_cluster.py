@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import dae.dask.named_cluster
 import pytest
+from dae.dask.named_cluster import setup_client, setup_client_from_config
 from dask import config
 
-import dae.dask.named_cluster
-from dae.dask.named_cluster import setup_client, setup_client_from_config
 
-
-@pytest.fixture()
+@pytest.fixture
 def named_cluster_config():
     return {
         "default": "local",

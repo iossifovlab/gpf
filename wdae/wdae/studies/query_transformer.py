@@ -25,6 +25,7 @@ from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Zygosity
 from dae.variants.core import Allele
+
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     WDAEStudy,

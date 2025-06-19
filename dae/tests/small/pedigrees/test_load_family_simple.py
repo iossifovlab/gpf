@@ -4,7 +4,6 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-
 from dae.pedigrees.loader import FamiliesLoader
 
 

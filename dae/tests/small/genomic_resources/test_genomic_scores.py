@@ -5,8 +5,6 @@ from typing import cast
 
 import pytest
 import pytest_mock
-from pysam import VariantRecord
-
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.genomic_position_table import (
     VCFGenomicPositionTable,
@@ -39,6 +37,7 @@ from dae.genomic_resources.testing import (
     setup_vcf,
 )
 from dae.task_graph.graph import TaskGraph
+from pysam import VariantRecord
 
 
 @pytest.fixture

@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
     PersonSetCollection,

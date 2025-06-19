@@ -18,9 +18,6 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import toml
-from pyarrow import fs as pa_fs
-from typing_extensions import Protocol
-
 from dae.import_tools.import_tools import Bucket, ImportProject
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.parquet_writer import fill_family_bins, save_ped_df_to_parquet
@@ -37,6 +34,9 @@ from dae.variants.family_variant import (
 )
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import VariantsLoader
+from pyarrow import fs as pa_fs
+from typing_extensions import Protocol
+
 from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 logger = logging.getLogger(__name__)

@@ -3,7 +3,6 @@ import textwrap
 
 import numpy as np
 import pytest
-
 from dae.gene_scores.gene_scores import (
     build_gene_score_from_resource,
     build_gene_score_from_resource_id,

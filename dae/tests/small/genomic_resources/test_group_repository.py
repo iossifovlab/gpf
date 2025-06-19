@@ -2,7 +2,6 @@
 from typing import cast
 
 import pytest
-
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 from dae.genomic_resources.testing import build_inmemory_test_repository

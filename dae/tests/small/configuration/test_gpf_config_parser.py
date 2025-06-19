@@ -3,7 +3,6 @@ import os
 
 import pytest
 from box import BoxError  # type: ignore
-
 from dae.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,

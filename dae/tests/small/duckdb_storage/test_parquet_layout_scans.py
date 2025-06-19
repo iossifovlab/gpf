@@ -4,7 +4,6 @@ from typing import cast
 
 import pytest
 import pytest_mock
-
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )

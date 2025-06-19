@@ -4,7 +4,6 @@ from typing import Any
 
 import pytest
 import pyzstd
-
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 

@@ -3,7 +3,6 @@ import pathlib
 
 import pytest
 import yaml
-
 from dae.gpf_instance.adjustments.gpf_instance_adjustments import (
     cli,
 )

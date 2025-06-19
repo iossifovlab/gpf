@@ -3,8 +3,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from typing import Any
 
-from sqlglot import column
-
 import dae.utils.regions
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
@@ -16,6 +14,7 @@ from dae.query_variants.attribute_queries import (
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex
 from dae.variants.core import Allele
+from sqlglot import column
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]

@@ -3,7 +3,6 @@
 import textwrap
 
 import pytest
-
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.annotation.gene_score_annotator import GeneScoreAnnotator
 from dae.genomic_resources.repository import (

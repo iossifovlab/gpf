@@ -3,26 +3,26 @@ import textwrap
 
 import pytest
 import yaml
-
 from dae.annotation.annotate_utils import AnnotationTool
+
 from demo_annotator.adapter import DemoAnnotatorAdapter
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_1() -> str:
     return textwrap.dedent("""
         - external_demo_stream_annotator
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_2() -> str:
     return textwrap.dedent("""
         - external_demo_stream_annotator: {}
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_3() -> str:
     return textwrap.dedent("""
         - external_demo_stream_annotator:
@@ -31,7 +31,7 @@ def config_3() -> str:
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_4() -> str:
     return textwrap.dedent("""
         - external_demo_stream_annotator:
@@ -41,7 +41,7 @@ def config_4() -> str:
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_5() -> str:
     return textwrap.dedent("""
         - external_demo_stream_annotator:
@@ -53,7 +53,7 @@ def config_5() -> str:
     """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotation_configs(
     config_1: str,
     config_2: str,

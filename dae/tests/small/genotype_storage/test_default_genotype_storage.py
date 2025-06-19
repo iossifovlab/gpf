@@ -2,7 +2,6 @@
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -14,7 +13,7 @@ from dae.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("default_storage_test")
 

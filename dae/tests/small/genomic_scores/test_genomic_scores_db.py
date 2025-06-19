@@ -3,7 +3,6 @@
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.histogram import NumberHistogram
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -23,7 +22,7 @@ from dae.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def scores_repo() -> GenomicResourceProtocolRepo:
     return build_inmemory_test_repository({
         "phastCons": {
@@ -104,7 +103,7 @@ def scores_repo() -> GenomicResourceProtocolRepo:
     })
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotation_gpf(
     scores_repo: GenomicResourceProtocolRepo,
     tmp_path_factory: pytest.TempPathFactory,

@@ -3,7 +3,6 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-
 from dae.effect_annotation.effect import EffectGene
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData

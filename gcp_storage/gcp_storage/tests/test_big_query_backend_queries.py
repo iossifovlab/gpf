@@ -2,9 +2,9 @@
 from typing import Any, cast
 
 import pytest
-
 from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
+
 from gcp_storage.bigquery_variants import BigQueryVariants
 
 

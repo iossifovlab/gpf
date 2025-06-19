@@ -2,7 +2,6 @@
 import argparse
 
 import pytest
-
 from dae.task_graph import TaskGraphCli
 
 

@@ -5,8 +5,6 @@ import time
 from collections.abc import Generator
 
 import pytest
-from dask.distributed import Client
-
 from dae.task_graph.cache import FileTaskCache
 from dae.task_graph.executor import (
     AbstractTaskGraphExecutor,
@@ -14,6 +12,7 @@ from dae.task_graph.executor import (
     SequentialExecutor,
 )
 from dae.task_graph.graph import TaskGraph
+from dask.distributed import Client
 
 
 @pytest.fixture(scope="module")

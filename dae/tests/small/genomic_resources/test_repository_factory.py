@@ -2,7 +2,6 @@
 import pathlib
 
 import yaml
-
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.fsspec_protocol import (

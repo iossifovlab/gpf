@@ -6,12 +6,12 @@ from gpf_instance.gpf_instance import WGPFInstance
 from users_api.models import WdaeUser
 
 
-@pytest.fixture()
+@pytest.fixture
 def group(db: None) -> Group:  # noqa: ARG001
     return Group.objects.create(name="New Group")
 
 
-@pytest.fixture()
+@pytest.fixture
 def group_with_user(
     db: None,  # noqa: ARG001
     group: Group,
@@ -21,7 +21,7 @@ def group_with_user(
     return group, user
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset(
     db: None,  # noqa: ARG001
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001

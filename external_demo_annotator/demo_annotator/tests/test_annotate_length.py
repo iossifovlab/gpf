@@ -1,16 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import shutil
 import tempfile
-import pytest
 import textwrap
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
+import pytest
 from dae.genomic_resources.testing import setup_directories
+
 from demo_annotator.annotate_length import annotate_length_cli
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_input_output() -> tuple[str, str]:
     test_files_dirname = tempfile.mkdtemp(
         prefix="annotate_length", suffix="_test"

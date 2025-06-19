@@ -3,7 +3,6 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-
 from dae.pedigrees.family_role_builder import Family, FamilyRoleBuilder
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role

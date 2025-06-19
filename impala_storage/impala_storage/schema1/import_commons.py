@@ -10,8 +10,6 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 import fsspec
-from jinja2 import Template
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -27,6 +25,8 @@ from dae.variants_loaders.raw.loader import (
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
+from jinja2 import Template
+
 from impala_storage.helpers.partition_helper import MakefilePartitionHelper
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 from impala_storage.schema1.annotation_decorator import (

@@ -75,8 +75,8 @@ class AnnotateColumnsTool(AnnotationTool):
         raw_args: list[str] | None = None,
     ) -> None:
         super().__init__(raw_args)
-        self.output = None
-        self.ref_genome_id = None
+        self.output: str | None = None
+        self.ref_genome_id: str | None = None
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Configure argument parser."""

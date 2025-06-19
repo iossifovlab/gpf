@@ -2,9 +2,9 @@ import copy
 import logging
 from typing import Any, cast
 
+from dae.genomic_scores.scores import ScoreDesc
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.genomic_scores.scores import ScoreDesc
 from federation.gene_sets_db import RemoteGeneSetCollection
 from federation.remote_enrichment_builder import RemoteEnrichmentBuilder
 from federation.remote_pheno_tool_adapter import RemotePhenoToolAdapter

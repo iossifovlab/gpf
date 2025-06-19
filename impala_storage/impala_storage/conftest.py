@@ -7,7 +7,6 @@ import tempfile
 from collections.abc import Generator
 
 import pytest
-
 from dae.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,
@@ -30,6 +29,7 @@ from dae.import_tools.import_tools import (
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
+
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,
 )

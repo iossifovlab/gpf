@@ -3,7 +3,6 @@ import pathlib
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 from dae.variants_loaders.parquet.loader import MultiReader, Reader
 
 

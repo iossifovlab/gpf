@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.draw_score_histograms import main
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol

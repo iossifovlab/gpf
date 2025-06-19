@@ -1,7 +1,6 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import pytest
-
 from dae.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
 )

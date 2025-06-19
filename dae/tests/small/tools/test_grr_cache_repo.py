@@ -3,7 +3,6 @@ import os
 import pathlib
 
 import pytest
-
 from dae.tools.grr_cache_repo import cli_cache_repo
 
 

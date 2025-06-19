@@ -4,7 +4,6 @@ import textwrap
 
 import polars as pl
 import pytest
-
 from dae.enrichment_tool.build_coding_length_enrichment_background import cli
 from dae.genomic_resources.testing import setup_directories
 from dae.testing.t4c8_import import t4c8_genes

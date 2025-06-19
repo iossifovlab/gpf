@@ -1,11 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from sqlglot import diff, exp, parse_one
-from sqlglot.diff import Keep
-from sqlglot.executor import execute
-from sqlglot.expressions import replace_placeholders
-from sqlglot.schema import Schema, ensure_schema
-
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
@@ -15,6 +9,11 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
 )
 from dae.utils.regions import Region
+from sqlglot import diff, exp, parse_one
+from sqlglot.diff import Keep
+from sqlglot.executor import execute
+from sqlglot.expressions import replace_placeholders
+from sqlglot.schema import Schema, ensure_schema
 
 FAMILY_VARIANT_SCHEMA = {
     "bucket_index": "int",

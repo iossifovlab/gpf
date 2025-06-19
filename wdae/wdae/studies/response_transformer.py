@@ -28,6 +28,7 @@ from dae.utils.variant_utils import fgt2str, mat2str
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant, VariantDesc
+
 from studies.study_wrapper import (
     ResponseTransformerProtocol,
     WDAEStudy,

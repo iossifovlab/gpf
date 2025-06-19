@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Any
 
 import docker
 
@@ -46,7 +47,7 @@ class DockerAnnotator(AnnotatorBase):
         return
 
     @abstractmethod
-    def run(self, **kwargs) -> None:
+    def run(self, **kwargs: Any) -> None:
         raise NotImplementedError
 
     def open(self) -> Annotator:

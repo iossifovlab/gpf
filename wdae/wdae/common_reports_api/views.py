@@ -1,5 +1,9 @@
 from typing import Any
 
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import FamilyTag
+from dae.pedigrees.family_tag_builder import check_family_tags_query
+from dae.pedigrees.loader import FamiliesLoader
 from datasets_api.permissions import get_permissions_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
@@ -9,11 +13,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.query_params import parse_query_params
-
-from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.family import FamilyTag
-from dae.pedigrees.family_tag_builder import check_family_tags_query
-from dae.pedigrees.loader import FamiliesLoader
 
 
 class VariantReportsView(QueryBaseView):

@@ -7,7 +7,6 @@ from os.path import join
 
 import pyarrow.parquet as pq
 import pytest
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools import cli, import_tools

@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
 import pytest
-
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.gene_models import (

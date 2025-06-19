@@ -20,7 +20,7 @@ class LocalLayout:
     meta_file: str
 
 
-@pytest.fixture()
+@pytest.fixture
 def import_layout(
     resources_dir: pathlib.Path, tmpdir: pathlib.Path,
 ) -> LocalLayout:

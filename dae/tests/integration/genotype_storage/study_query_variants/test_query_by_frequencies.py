@@ -3,7 +3,6 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing import (

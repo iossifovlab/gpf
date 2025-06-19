@@ -3,11 +3,10 @@ import pathlib
 
 import box
 import duckdb
-from pytest import approx
-
 from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
+from pytest import approx
 
 
 def test_gpdb_table_building(

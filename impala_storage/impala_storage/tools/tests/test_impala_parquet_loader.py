@@ -2,6 +2,7 @@
 from typing import Callable
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+
 from impala_storage.tools.impala_parquet_loader import main
 
 

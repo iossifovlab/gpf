@@ -3,10 +3,9 @@ import os
 import pathlib
 import textwrap
 
+import dae.annotation.annotation_factory
 import pytest
 import pytest_mock
-
-import dae.annotation.annotation_factory
 from dae.annotation.annotatable import Position
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,

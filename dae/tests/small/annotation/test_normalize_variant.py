@@ -5,7 +5,6 @@ import textwrap
 
 import pytest
 import pytest_mock
-
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,

@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.implementations.annotation_pipeline_impl import (
     AnnotationPipelineImplementation,

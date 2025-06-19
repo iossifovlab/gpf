@@ -3,13 +3,13 @@ from typing import cast
 
 import pytest
 from box import Box
+from dae.studies.study import GenotypeData, GenotypeDataGroup
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import override_settings
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy
 
-from dae.studies.study import GenotypeData, GenotypeDataGroup
 from datasets_api.models import Dataset
 from datasets_api.permissions import (
     add_group_perm_to_dataset,

@@ -2,7 +2,6 @@
 from collections.abc import Callable
 
 import pytest
-
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
 

@@ -4,7 +4,6 @@ import textwrap
 
 import pytest
 import toml
-
 from dae.person_sets import (
     parse_person_set_collections_study_config,
 )

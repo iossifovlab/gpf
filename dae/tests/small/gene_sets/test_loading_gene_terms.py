@@ -3,7 +3,6 @@ import os
 from collections.abc import Callable
 
 import pytest
-
 from dae.gene_sets.gene_term import (
     load_gene_terms,
     load_ncbi_gene_info,
@@ -11,7 +10,7 @@ from dae.gene_sets.gene_term import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fixture_filename() -> Callable:
     def _fixture_filename(filename: str) -> str:
         return os.path.join(

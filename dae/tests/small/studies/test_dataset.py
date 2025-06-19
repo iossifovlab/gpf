@@ -2,7 +2,6 @@
 import time
 
 import pytest
-
 from dae.studies.study import GenotypeData
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf

@@ -4,7 +4,6 @@ import textwrap
 from typing import Any
 
 import pytest
-
 from dae.studies.study import GenotypeData
 from dae.testing import foobar_gpf, setup_dae_transmitted, setup_pedigree
 from dae.testing.import_helpers import dae_study

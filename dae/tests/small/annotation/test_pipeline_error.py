@@ -1,5 +1,4 @@
 import pytest
-
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,
     load_pipeline_from_yaml,

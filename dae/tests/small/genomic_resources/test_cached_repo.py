@@ -9,8 +9,6 @@ from contextlib import AbstractContextManager
 from typing import Any, cast
 
 import pytest
-from pytest_mock import MockerFixture
-
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cached_repository import (
     CachingProtocol,
@@ -28,6 +26,7 @@ from dae.genomic_resources.testing import (
     build_s3_test_bucket,
     s3_test_server_endpoint,
 )
+from pytest_mock import MockerFixture
 
 
 def test_create_definition_with_cache(tmp_path: pathlib.Path) -> None:

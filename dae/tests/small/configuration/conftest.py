@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from dae.configuration.utils import validate_path
 
 sample_conf_schema_1 = {

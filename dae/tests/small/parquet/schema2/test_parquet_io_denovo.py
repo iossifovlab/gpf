@@ -3,7 +3,6 @@ import pathlib
 
 import pytest
 import pytest_mock
-
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo

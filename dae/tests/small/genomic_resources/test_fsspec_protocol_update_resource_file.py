@@ -3,7 +3,6 @@ import time
 from typing import Any
 
 import pytest
-
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.testing import build_inmemory_test_protocol
 

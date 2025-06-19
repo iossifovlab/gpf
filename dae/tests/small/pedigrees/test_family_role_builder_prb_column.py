@@ -4,7 +4,6 @@ import textwrap
 
 import pandas as pd
 import pytest
-
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import setup_pedigree
 from dae.variants.attributes import Role

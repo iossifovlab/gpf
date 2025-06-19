@@ -14,6 +14,7 @@ from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
+
 from federation.rest_api_client import RESTClient
 
 

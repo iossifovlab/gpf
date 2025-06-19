@@ -2,7 +2,6 @@
 from pathlib import Path
 
 import pytest
-
 from dae.gene_sets.gene_sets_db import (
     build_gene_set_collection_from_resource_id,
 )

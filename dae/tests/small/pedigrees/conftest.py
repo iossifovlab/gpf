@@ -4,7 +4,6 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family, Person
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout

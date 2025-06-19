@@ -2,7 +2,6 @@
 from typing import cast
 
 import pytest
-
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
 from dae.studies.study import GenotypeData
 

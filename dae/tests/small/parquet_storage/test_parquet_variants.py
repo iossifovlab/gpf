@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )

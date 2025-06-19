@@ -4,7 +4,6 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study

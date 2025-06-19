@@ -4,7 +4,6 @@ import textwrap
 
 import pysam
 import pytest
-
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotation_factory import load_pipeline_from_yaml

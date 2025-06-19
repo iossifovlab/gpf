@@ -4,7 +4,6 @@ from typing import Any
 import numpy as np
 import pytest
 import yaml
-
 from dae.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,

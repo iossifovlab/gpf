@@ -5,7 +5,6 @@ import textwrap
 
 import pytest
 import pytest_mock
-
 from dae.genomic_resources.cli import cli_browse
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,

@@ -3,7 +3,6 @@ import textwrap
 from typing import cast
 
 import pytest
-
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,
     PositionScore,
