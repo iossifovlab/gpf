@@ -9,13 +9,14 @@ from dae.genomic_resources.testing import (
     setup_vcf,
 )
 from dae.pedigrees.loader import FamiliesLoader
+from dae.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("mutlivcf_split1")
-    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
+    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
@@ -32,10 +33,10 @@ def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("mutlivcf_split1")
-    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
+    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
@@ -52,7 +53,7 @@ def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -178,10 +179,10 @@ def test_vcf_loader_multi(
         assert np.all(s_gt_f5 == m_gt_f5)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_missing1")
-    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
+    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
@@ -195,10 +196,10 @@ def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_missing2")
-    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
+    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
@@ -278,3 +279,84 @@ def test_multivcf_loader_fill_missing(
     assert svs_fvs[3][0].ref_allele.position == 24
     assert svs_fvs[4][0].ref_allele.position == 44
     assert svs_fvs[5][0].ref_allele.position == 54
+
+
+@pytest.fixture(scope="module")
+def vcf_loader(
+    multivcf_ped: str,
+    multivcf_missing1: str,
+    multivcf_missing2: str,
+    acgt_genome: ReferenceGenome,
+) -> VcfLoader:
+    multivcf_files = [multivcf_missing1, multivcf_missing2]
+    families = FamiliesLoader(multivcf_ped).load()
+    params = {
+        "vcf_include_reference_genotypes": True,
+        "vcf_include_unknown_family_genotypes": True,
+        "vcf_include_unknown_person_genotypes": True,
+        "vcf_multi_loader_fill_in_mode": "reference",
+    }
+    return VcfLoader(
+        families, multivcf_files, acgt_genome,
+        params=params,
+    )
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 6),
+        (Region("chr1", 1, 1), 1),
+        (Region("chr1", 1, 4), 2),
+        (Region("chr1", 1, 14), 2),
+        (Region("chr1", 1, 15), 3),
+        (Region("chr1", 15, 15), 1),
+        (Region("chr1", 15, 54), 4),
+    ],
+)
+def test_fetch_variants(
+    vcf_loader: VcfLoader,
+    region: Region | None,
+    expected: int,
+) -> None:
+    result = list(vcf_loader.fetch(region=region))
+    assert len(result) == expected
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 6),
+        (Region("chr1", 1, 1), 1),
+        (Region("chr1", 1, 4), 2),
+        (Region("chr1", 1, 14), 2),
+        (Region("chr1", 1, 15), 3),
+        (Region("chr1", 15, 15), 1),
+        (Region("chr1", 15, 54), 4),
+    ],
+)
+def test_fetch_summary_variants(
+    vcf_loader: VcfLoader,
+    region: Region | None,
+    expected: int,
+) -> None:
+    result = list(vcf_loader.fetch_summary_variants(region=region))
+    assert len(result) == expected
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 30),
+        (Region("chr1", 1, 1), 5),
+        (Region("chr1", 1, 4), 10),
+        (Region("chr1", 1, 14), 10),
+        (Region("chr1", 1, 15), 15),
+        (Region("chr1", 15, 15), 5),
+        (Region("chr1", 15, 54), 20),
+    ],
+)
+def test_fetch_family_variants(
+    vcf_loader: VcfLoader,
+    region: Region | None,
+    expected: int,
+) -> None:
+    result = list(vcf_loader.fetch_family_variants(region=region))
+    assert len(result) == expected

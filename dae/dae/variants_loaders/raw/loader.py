@@ -5,7 +5,8 @@ import argparse
 import copy
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from typing import (
     Any,
@@ -32,6 +33,28 @@ logger = logging.getLogger(__name__)
 class ArgumentType(Enum):
     ARGUMENT = 1
     OPTION = 2
+
+
+FamilyGenotypeIterator = Generator[
+    tuple[Family, np.ndarray, np.ndarray | None], None, None]
+
+
+FullVariantsIterator = Generator[
+    tuple[SummaryVariant, list[FamilyVariant]], None, None]
+
+FamilyVariantsIterator = Generator[
+    FamilyVariant, None, None]
+
+
+@dataclass
+class FullVariant:
+    """A dataclass to hold a full variant with its families."""
+    variant: SummaryVariant
+    family_variants: Sequence[FamilyVariant]
+
+
+FullVariantsIterable = Iterable[FullVariant]
+FamilyVariantsIterable = Iterable[FamilyVariant]
 
 
 class CLIArgument:
@@ -150,10 +173,6 @@ class CLIArgument:
             setattr(argv, self.destination, self.default_value)
 
 
-FamilyGenotypeIterator = Generator[
-    tuple[Family, np.ndarray, np.ndarray | None], None, None]
-
-
 class FamiliesGenotypes(ABC):
     """A base class for family genotypes."""
 
@@ -245,13 +264,6 @@ class CLILoader(ABC):  # noqa: B024
         return [], {}
 
 
-FullVariantsIterator = Generator[
-    tuple[SummaryVariant, list[FamilyVariant]], None, None]
-
-FamilyVariantsIterator = Generator[
-    FamilyVariant, None, None]
-
-
 class VariantsLoader(CLILoader):
     """Base class for all variant loaders."""
 
@@ -312,6 +324,26 @@ class VariantsLoader(CLILoader):
     def family_variants_iterator(self) -> FamilyVariantsIterator:
         for _, fvs in self.full_variants_iterator():
             yield from fvs
+
+    def fetch(self, region: Region | None) -> FullVariantsIterable:
+        """Fetch variants for a given region."""
+        self.reset_regions([region] if region else None)
+        for variant, family_variants in self.full_variants_iterator():
+            yield FullVariant(variant, family_variants)
+
+    def fetch_summary_variants(
+        self, region: Region | None,
+    ) -> Iterable[SummaryVariant]:
+        """Fetch summary variants for a given region."""
+        for full_variant in self.fetch(region):
+            yield full_variant.variant
+
+    def fetch_family_variants(
+        self, region: Region | None,
+    ) -> Iterable[FamilyVariant]:
+        """Fetch summary variants for a given region."""
+        for full_variant in self.fetch(region):
+            yield from full_variant.family_variants
 
     @abstractmethod
     def close(self) -> None:
