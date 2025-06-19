@@ -208,8 +208,11 @@ def create_remote_studies(
 
     result: dict[str, RemoteWDAEStudy] = {}
     if config.get("studies"):
+        # Remove current study from studies to compile children
         children_ids = list(
             filter(lambda x: x != study_id, config.get("studies", [])))
+        # Remove children that cannot be accessed
+        children_ids = list(set(children_ids) & set(all_configs.keys()))
         for child_id in children_ids:
             if child_id in result:
                 continue
