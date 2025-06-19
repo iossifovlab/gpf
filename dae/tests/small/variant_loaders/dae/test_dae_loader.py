@@ -16,7 +16,7 @@ from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 
 @pytest.fixture(scope="session")
 def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("foobar_gpf_instance")
+    root_path = tmp_path_factory.mktemp("test_dae_loader_instance")
     return foobar_gpf(root_path)
 
 
@@ -36,7 +36,7 @@ def families_data() -> FamiliesData:
 
 @pytest.fixture(scope="session")
 def summary_data(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_path = tmp_path_factory.mktemp("dae_data")
+    root_path = tmp_path_factory.mktemp("test_dae_loader_data")
     summary_data, _toomany_data = setup_dae_transmitted(
         root_path,
         textwrap.dedent("""
@@ -151,3 +151,54 @@ def test_end_position(
         assert sv.position is not None
         assert sv.end_position is not None
         assert sv.position == sv.end_position
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 3),
+        (Region("foo", 10, 10), 1),
+        (Region("bar", 10, 10), 1),
+        (Region("bar", 10, 11), 2),
+    ],
+)
+def test_fetch_variants(
+    dae_transmitted: DaeTransmittedLoader,
+    region: Region | None,
+    expected: int,
+) -> None:
+    variants = list(dae_transmitted.fetch(region=region))
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 3),
+        (Region("foo", 10, 10), 1),
+        (Region("bar", 10, 10), 1),
+        (Region("bar", 10, 11), 2),
+    ],
+)
+def test_fetch_summary_variants(
+    dae_transmitted: DaeTransmittedLoader,
+    region: Region | None,
+    expected: int,
+) -> None:
+    variants = list(dae_transmitted.fetch_summary_variants(region=region))
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 4),
+        (Region("foo", 10, 10), 1),
+        (Region("bar", 10, 10), 1),
+        (Region("bar", 10, 11), 3),
+    ],
+)
+def test_fetch_family_variants(
+    dae_transmitted: DaeTransmittedLoader,
+    region: Region | None,
+    expected: int,
+) -> None:
+    variants = list(dae_transmitted.fetch_family_variants(region=region))
+    assert len(variants) == expected
