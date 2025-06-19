@@ -54,6 +54,14 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         return ResponseTransformer(self)
 
     @property
+    def description(self) -> str | None:
+        return ""
+
+    @description.setter
+    def description(self, input_text: str) -> None:  # noqa: ARG002
+        return
+
+    @property
     def families(self) -> FamiliesData:
         if self._families is None:
             self._families = build_remote_families(

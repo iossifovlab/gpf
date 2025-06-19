@@ -153,17 +153,14 @@ class WDAEAbstractStudy:
         return self.genotype_data.name
 
     @property
+    @abstractmethod
     def description(self) -> str | None:
-        if self.is_phenotype:
-            return self.phenotype_data.description
-        return self.genotype_data.description
+        pass
 
     @description.setter
+    @abstractmethod
     def description(self, input_text: str) -> None:
-        if self.is_phenotype:
-            self.phenotype_data.description = input_text
-        else:
-            self.genotype_data.description = input_text
+        pass
 
     @property
     def is_group(self) -> bool:
@@ -346,6 +343,19 @@ class WDAEStudy(WDAEAbstractStudy):
             pheno_column_name = f"{column.get('source')}.{column.get('role')}"
             pheno_values[pheno_column_name] = result
         return pheno_values
+
+    @property
+    def description(self) -> str | None:
+        if self.is_phenotype:
+            return self.phenotype_data.description
+        return self.genotype_data.description
+
+    @description.setter
+    def description(self, input_text: str) -> None:
+        if self.is_phenotype:
+            self.phenotype_data.description = input_text
+        else:
+            self.genotype_data.description = input_text
 
     @staticmethod
     def get_columns_as_sources(
