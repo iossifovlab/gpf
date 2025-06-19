@@ -26,7 +26,10 @@ describe('HistogramComponent', () => {
     component.rangeEnd = 4;
     component.domainMin = -20;
     component.domainMax = 20;
-    component.xScale = d3.scaleBand();
+    component.xScale = d3.scaleBand()
+      .padding(0.1)
+      .domain(Array.from(component.bars.keys()).map(x => x.toString()))
+      .range([0, 450.0]);
   }));
 
   it('should create', () => {
@@ -214,7 +217,7 @@ describe('HistogramComponent', () => {
     expect(component.showMinMaxInputWithDefaultValue).toBe(true);
   });
 
-  it('should set range start', () => {
+  it('should set range start, check input value and start slider text', () => {
     const rangeStartEmitSpy = jest.spyOn(component.rangeStartChange, 'emit');
 
     // trigger redrawHistogram() to set sum of bars
@@ -236,7 +239,7 @@ describe('HistogramComponent', () => {
     expect(rangeStartEmitSpy).toHaveBeenCalledWith(2);
   });
 
-  it('should set range end', () => {
+  it('should set range end, check input value and end slider text', () => {
     const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
 
     // trigger redrawHistogram() to set sum of bars
@@ -517,5 +520,141 @@ describe('HistogramComponent', () => {
     component.selectedStartIndex = 4;
     component.endStepDown();
     expect(component.selectedEndIndex).toBe(4);
+  });
+
+  it('should transform range start slider position into index', () => {
+    // trigger redrawHistogram()
+    const bins = [1, 2, 3, 4];
+    const bars = [9, 10, 11, 12];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.startX = 215;
+    expect(component.selectedStartIndex).toBe(2);
+  });
+
+  it('should transform range start slider position into index when the slider is moved outside the range', () => {
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeStart = 3;
+    component.startX = 870;
+
+    expect(component.selectedStartIndex).toBe(2);
+  });
+
+  it('should transform range end slider position into index', () => {
+    // trigger redrawHistogram()
+    const bins = [1, 2, 3, 4];
+    const bars = [9, 10, 11, 12];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.endX = 215;
+    expect(component.selectedEndIndex).toBe(1);
+  });
+
+  it('should transform range end slider position into index when the slider is moved outside the range', () => {
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeEnd = 2;
+    component.endX = -130;
+
+    expect(component.selectedEndIndex).toBe(0);
+  });
+
+  it('should check if single score is valid', () => {
+    component.singleScoreValue = 2;
+    expect(component.singleScoreValueIsValid()).toBe(true);
+
+    component.singleScoreValue = undefined;
+    expect(component.singleScoreValueIsValid()).toBe(false);
+
+    component.singleScoreValue = null;
+    expect(component.singleScoreValueIsValid()).toBe(false);
+
+    component.singleScoreValue = NaN;
+    expect(component.singleScoreValueIsValid()).toBe(false);
+  });
+
+  it('should set first and last bins as range start and end when mode is not interactive', () => {
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.isInteractive = false;
+
+    component.ngOnInit();
+
+    expect(component.rangeStart).toBe(1);
+    expect(component.rangeEnd).toBe(4);
+  });
+
+  it('should emit min value to parent when range start is null', () => {
+    const rangeStartEmitSpy = jest.spyOn(component.rangeStartChange, 'emit');
+
+    const bins = [10, 20, 30, 40, 50];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeStart = null;
+    component.ngOnInit();
+
+    expect(component.minValue).toBe(10);
+    expect(rangeStartEmitSpy).toHaveBeenLastCalledWith(10);
+  });
+
+  it('should emit max value to parent when range end is null', () => {
+    jest.clearAllMocks();
+    const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
+
+    const bins = [11, 13, 15, 17, 19];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeEnd = null;
+    component.ngOnInit();
+
+    expect(component.maxValue).toBe(19);
+    expect(rangeEndEmitSpy).toHaveBeenLastCalledWith(19);
   });
 });
