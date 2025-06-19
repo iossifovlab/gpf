@@ -6,7 +6,6 @@ from typing import Any, ClassVar
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest_mock
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 from dae.pheno.graphs import gender_palette, stripplot, violinplot

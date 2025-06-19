@@ -2,7 +2,6 @@
 from typing import Any
 
 import pytest
-
 from dae.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,

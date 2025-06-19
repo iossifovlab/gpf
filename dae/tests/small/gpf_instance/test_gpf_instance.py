@@ -1,7 +1,6 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
 import pytest
-
 from dae.gpf_instance import GPFInstance
 from dae.testing.setup_helpers import setup_gpf_instance
 

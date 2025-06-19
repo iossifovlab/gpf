@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 import pytest_mock
-
 from dae.genomic_resources.testing import setup_directories
 from dae.pheno.common import PhenoImportConfig
 from dae.pheno.import_tools import main

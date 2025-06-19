@@ -22,6 +22,7 @@ from dae.genomic_resources.gene_models import (
     gene_models_to_gtf,
 )
 from dae.genomic_resources.repository import GenomicResource
+
 from vep_annotator.vep_attributes import effect_attributes, full_attributes
 
 logger = logging.getLogger(__name__)

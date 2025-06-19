@@ -2,7 +2,6 @@
 import os
 
 import pytest
-
 from dae.person_sets import PersonSet, PersonSetCollection
 from dae.studies.study import GenotypeData
 from dae.variants.family_variant import FamilyVariant

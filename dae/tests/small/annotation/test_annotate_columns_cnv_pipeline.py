@@ -5,7 +5,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
@@ -14,7 +13,7 @@ from dae.testing import convert_to_tab_separated, setup_directories
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotate_cnv_fixture(tmp_path: Path) -> Path:
     root_path = tmp_path / "annotate_columns_cnv_pipeline"
 

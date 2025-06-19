@@ -3,7 +3,6 @@ import os
 
 import pytest
 import pytest_mock
-
 from dae.utils import fs_utils
 
 

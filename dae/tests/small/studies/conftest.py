@@ -5,7 +5,6 @@ from typing import cast
 
 import pytest
 from box import Box
-
 from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,

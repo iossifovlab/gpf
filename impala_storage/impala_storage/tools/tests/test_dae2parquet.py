@@ -6,8 +6,8 @@ from collections.abc import Callable
 
 import pyarrow.parquet as pq
 from box import Box
-
 from dae.gpf_instance.gpf_instance import GPFInstance
+
 from impala_storage.tools.dae2parquet import main
 
 

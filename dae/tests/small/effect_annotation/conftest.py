@@ -1,7 +1,6 @@
 from typing import cast
 
 import pytest
-
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.genomic_resources.gene_models import Exon
 from dae.genomic_resources.reference_genome import ReferenceGenome

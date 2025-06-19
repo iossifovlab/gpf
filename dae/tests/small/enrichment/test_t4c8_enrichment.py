@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.enrichment_tool.enrichment_cache_builder import cli
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.gene_weights_background import (

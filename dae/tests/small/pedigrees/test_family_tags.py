@@ -2,7 +2,6 @@
 from collections.abc import Callable
 
 import pytest
-
 from dae.pedigrees.family import Family, FamilyTag
 from dae.pedigrees.family_tag_builder import (
     check_family_tags_query,

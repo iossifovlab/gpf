@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 
 from dae.utils.regions import Region
+
 from impala_storage.schema1.family_variants_query_builder import (
     FamilyVariantsQueryBuilder,
 )

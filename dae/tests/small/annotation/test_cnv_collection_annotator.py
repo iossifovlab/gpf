@@ -3,7 +3,6 @@
 import textwrap
 
 import pytest
-
 from dae.annotation.annotatable import Annotatable, Position, Region
 
 # VCFAllele

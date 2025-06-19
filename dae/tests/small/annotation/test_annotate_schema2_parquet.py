@@ -9,7 +9,6 @@ from glob import glob
 
 import pytest
 import pytest_mock
-
 from dae.annotation.annotate_schema2_parquet import cli
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.annotation.parquet import produce_regions

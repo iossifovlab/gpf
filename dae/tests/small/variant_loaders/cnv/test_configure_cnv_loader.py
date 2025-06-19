@@ -4,7 +4,6 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader

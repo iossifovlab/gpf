@@ -5,10 +5,19 @@ from collections.abc import Callable
 from typing import Any, cast
 
 import pytest
-
-from dae.genotype_storage import get_genotype_storage_factory
+import pytest_mock
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    get_genomic_context,
+    register_context,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
+    get_genotype_storage_factory,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
+    GPFInstanceGenomicContext,
 )
 
 
@@ -297,3 +306,47 @@ def _generate_grr_schemes_fixtures(metafunc: pytest.Metafunc) -> None:
         "grr_scheme",
         schemes,
         scope="module")
+
+
+@pytest.fixture
+def context_fixture(
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> GenomicContext:
+    conf_dir = str(tmp_path / "conf")
+    mocker.patch("os.environ", {
+        "DAE_DB_DIR": conf_dir,
+    })
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        [])
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [])
+    context = get_genomic_context()
+    assert context is not None
+
+    return context
+
+
+@pytest.fixture
+def gpf_instance_genomic_context_fixture(
+    mocker: pytest_mock.MockerFixture,
+) -> Callable[[GPFInstance], GenomicContext]:
+
+    def builder(gpf_instance: GPFInstance) -> GenomicContext:
+        mocker.patch(
+            "dae.genomic_resources.genomic_context."
+            "_REGISTERED_CONTEXT_PROVIDERS",
+            [])
+        mocker.patch(
+            "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+            [])
+
+        context = GPFInstanceGenomicContext(gpf_instance)
+        register_context(context)
+        assert context is not None
+
+        return context
+
+    return builder

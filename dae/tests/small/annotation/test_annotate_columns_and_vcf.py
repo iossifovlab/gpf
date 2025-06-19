@@ -4,10 +4,9 @@ import os
 import pathlib
 import textwrap
 
+import dae.annotation.annotatable
 import pysam
 import pytest
-
-import dae.annotation.annotatable
 from dae.annotation.annotatable import Annotatable, Position, VCFAllele
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf

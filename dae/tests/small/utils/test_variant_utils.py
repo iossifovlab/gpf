@@ -5,7 +5,6 @@ from enum import Enum
 
 import numpy as np
 import pytest
-
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,

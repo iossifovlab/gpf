@@ -1,5 +1,4 @@
 import pytest
-
 from dae.variants.variant import VariantDetails
 
 

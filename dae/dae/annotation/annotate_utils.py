@@ -167,12 +167,15 @@ class AnnotationTool:
         # the pipeline arguments are registered as a context above, where
         # the pipeline is also written into the context, only to be accessed
         # 3 lines down
-        self.pipeline = get_context_pipeline(registered_context)
-
+        pipeline = get_context_pipeline(registered_context)
+        if pipeline is None:
+            raise ValueError(
+                "no valid annotation pipeline configured")
+        self.pipeline = pipeline
         self.context = self.pipeline.build_pipeline_genomic_context()
         grr = self.context.get_genomic_resources_repository()
         if grr is None:
-            raise ValueError("No valid GRR configured. Aborting.")
+            raise ValueError("no valid GRR configured")
         self.grr = grr
 
         self.task_graph = TaskGraph()

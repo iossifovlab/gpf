@@ -2,6 +2,7 @@
 
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+
 from spliceai_annotator.spliceai_annotator import SpliceAIAnnotator
 
 

@@ -4,13 +4,12 @@ from typing import Any, cast
 
 import pytest
 import pytest_mock
+from dae.pheno.pheno_data import PhenotypeStudy
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from rest_framework.response import Response
 from users_api.models import User
-
-from dae.pheno.pheno_data import PhenotypeStudy
 
 URL = "/api/v3/pheno_browser/instruments"
 MEASURES_URL = "/api/v3/pheno_browser/measures"

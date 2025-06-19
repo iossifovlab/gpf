@@ -1,5 +1,4 @@
 import pytest
-
 from dae.genomic_resources.statistics.min_max import (
     MinMaxValue,
     MinMaxValueStatisticMixin,

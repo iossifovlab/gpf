@@ -5,7 +5,6 @@ import textwrap
 from typing import Any, cast
 
 import pytest
-
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene_sets.denovo_gene_set_helpers import (
     DenovoGeneSetHelpers,

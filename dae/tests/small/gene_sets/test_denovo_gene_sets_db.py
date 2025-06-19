@@ -2,7 +2,6 @@
 from typing import Any, cast
 
 import pytest
-
 from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.studies.study import GenotypeData
 

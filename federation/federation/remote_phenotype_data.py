@@ -4,7 +4,6 @@ from collections.abc import Generator, Iterable
 from typing import Any, cast
 
 import pandas as pd
-
 from dae.common_reports.common_report import CommonReport
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets.person_sets import (
@@ -14,6 +13,7 @@ from dae.person_sets.person_sets import (
 from dae.pheno.common import ImportManifest, MeasureType
 from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
 from dae.variants.attributes import Role
+
 from federation.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)

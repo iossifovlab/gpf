@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from copy import deepcopy
 from typing import Any, cast
 
+from dae.gene_sets.gene_sets_db import GeneSet
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
@@ -16,8 +17,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.gene_sets import get_denovo_gene_set_spec
-
-from dae.gene_sets.gene_sets_db import GeneSet
 
 logger = logging.getLogger(__name__)
 

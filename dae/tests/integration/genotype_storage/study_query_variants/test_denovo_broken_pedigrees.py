@@ -4,7 +4,6 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree

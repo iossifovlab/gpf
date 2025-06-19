@@ -4,7 +4,6 @@ from typing import Any
 
 import pytest
 import yaml
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
 from dae.configuration.study_config_builder import StudyConfigBuilder

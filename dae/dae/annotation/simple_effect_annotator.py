@@ -1,5 +1,6 @@
 import logging
 import textwrap
+from collections.abc import Sequence
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable
@@ -70,8 +71,10 @@ Simple effect annotator.
         self.gene_models.load()
         return super().open()
 
-    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
-            -> dict[str, Any]:
+    def _do_annotate(
+        self, annotatable: Annotatable,
+        context: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()
 
@@ -101,7 +104,7 @@ Simple effect annotator.
                 region.append(Region(transcript.chrom, beg, end))
         return region
 
-    def utr_regions(self, transcript: TranscriptModel) -> list[Region]:
+    def utr_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
         """Return whether the region is classified as UTR."""
         region: list[Region] = []
         if not transcript.is_coding():

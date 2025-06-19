@@ -4,7 +4,6 @@ import pathlib
 
 import pytest
 import pytest_mock
-
 from dae.genomic_resources.cli import _find_resource, cli_manage
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,

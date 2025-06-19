@@ -5,7 +5,6 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.import_tools.import_tools import ImportProject
 from dae.testing import (

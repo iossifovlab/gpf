@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from box import Box
+from dae.gene_profile.statistic import GPStatistic
+from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture
-
-from dae.gene_profile.statistic import GPStatistic
-from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
 
 ROUTE_PREFIX = "/api/v3/gene_profiles"
 

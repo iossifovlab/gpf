@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import setup_denovo, setup_pedigree

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 
 import pytest
 import pytest_mock
-
 from dae.pheno.pheno_data import PhenotypeGroup, PhenotypeStudy
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry

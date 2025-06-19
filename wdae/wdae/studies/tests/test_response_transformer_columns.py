@@ -2,11 +2,11 @@
 from typing import Any
 
 import pytest
-
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
+
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import WDAEStudy

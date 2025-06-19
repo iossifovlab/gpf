@@ -6,6 +6,7 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 from dae.import_tools.import_tools import get_import_storage_factory
 from dae.studies.study import GenotypeDataStudy
+
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 from gcp_storage.gcp_import_storage import GcpImportStorage
 

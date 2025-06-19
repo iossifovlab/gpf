@@ -2,17 +2,10 @@
 import logging
 import pathlib
 import textwrap
-from collections.abc import Callable
 
 import pytest
-import pytest_mock
-
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.genomic_context import (
-    GenomicContext,
-    register_context,
-)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
@@ -29,9 +22,6 @@ from dae.genomic_resources.testing import (
     setup_gzip,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
-    GPFInstanceGenomicContext,
-)
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
@@ -48,29 +38,6 @@ from dae.tools.generate_denovo_gene_sets import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture
-def gpf_instance_genomic_context_fixture(
-    mocker: pytest_mock.MockerFixture,
-) -> Callable[[GPFInstance], GenomicContext]:
-
-    def builder(gpf_instance: GPFInstance) -> GenomicContext:
-        mocker.patch(
-            "dae.genomic_resources.genomic_context."
-            "_REGISTERED_CONTEXT_PROVIDERS",
-            [])
-        mocker.patch(
-            "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
-            [])
-
-        context = GPFInstanceGenomicContext(gpf_instance)
-        register_context(context)
-        assert context is not None
-
-        return context
-
-    return builder
 
 
 @pytest.fixture(scope="module")

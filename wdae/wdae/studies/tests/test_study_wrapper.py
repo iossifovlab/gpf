@@ -1,8 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from gpf_instance.gpf_instance import WGPFInstance
-
 from dae.studies.study import GenotypeData
+from gpf_instance.gpf_instance import WGPFInstance
 
 
 def test_t4c8_study_1(t4c8_study_1: GenotypeData) -> None:

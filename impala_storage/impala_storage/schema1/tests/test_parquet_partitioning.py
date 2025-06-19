@@ -3,6 +3,7 @@ import os
 from collections.abc import Callable
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
+
 from impala_storage.schema1.parquet_io import VariantsParquetWriter
 
 PARTITION_STUDY_DATA = "backends/partition"

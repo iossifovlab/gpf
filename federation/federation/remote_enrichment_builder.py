@@ -4,6 +4,7 @@ from typing import Any, cast
 from dae.enrichment_tool.enrichment_builder import BaseEnrichmentBuilder
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
+
 from federation.rest_api_client import RESTClient
 
 

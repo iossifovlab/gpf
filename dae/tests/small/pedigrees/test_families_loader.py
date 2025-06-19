@@ -4,11 +4,10 @@ import os
 from collections.abc import Callable
 
 import pytest
-from pandas.api.types import is_string_dtype
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
+from pandas.api.types import is_string_dtype
 
 
 @pytest.mark.parametrize(

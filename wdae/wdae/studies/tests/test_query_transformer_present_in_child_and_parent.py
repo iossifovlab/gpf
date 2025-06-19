@@ -1,11 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
 from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
 )
 from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
 from dae.variants.attributes import Inheritance, Role
+
 from studies.query_transformer import QueryTransformer
 
 

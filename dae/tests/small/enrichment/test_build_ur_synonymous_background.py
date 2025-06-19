@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.enrichment_tool.build_ur_synonymous_enrichment_background import cli
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData

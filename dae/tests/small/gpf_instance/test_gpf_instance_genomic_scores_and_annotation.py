@@ -3,7 +3,6 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing import (
     setup_directories,

@@ -3,7 +3,6 @@ import pathlib
 
 import pandas as pd
 import pytest
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.sql.schema2.base_query_builder import (
     BaseQueryBuilder,

@@ -3,8 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-from pysam import TabixFile
-
 from dae.annotation.annotatable import (
     Annotatable,
     CNVAllele,
@@ -20,6 +18,7 @@ from dae.genomic_resources.genomic_context import (
 )
 from dae.genomic_resources.testing import setup_tabix
 from dae.testing import setup_denovo, setup_directories, setup_genome
+from pysam import TabixFile
 
 
 @pytest.mark.parametrize(

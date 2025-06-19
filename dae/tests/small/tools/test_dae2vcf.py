@@ -4,7 +4,6 @@ import textwrap
 
 import pysam
 import pytest
-
 from dae.genomic_resources.repository_factory import (
     GenomicResourceRepo,
 )

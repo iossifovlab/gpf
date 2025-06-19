@@ -6,7 +6,6 @@ from typing import Any
 
 import pytest
 import pytest_mock
-
 from dae.genomic_resources import register_implementation
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.histogram import (

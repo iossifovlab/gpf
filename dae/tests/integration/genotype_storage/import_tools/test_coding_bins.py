@@ -4,7 +4,6 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -19,7 +18,7 @@ from dae.testing import (
 from dae.testing.import_helpers import StudyInputLayout
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_import_data(
     tmp_path: pathlib.Path,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
@@ -56,7 +55,7 @@ chr1   143 .  C   A   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         "vcf_fixture", ped_path, [vcf_path], [], [], [])
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_fixture(
     vcf_import_data: tuple[
         pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
@@ -143,7 +142,7 @@ def test_vcf_import_coding_bin_queries(
     assert len(vs) == count
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_import_data(
     tmp_path: pathlib.Path,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
@@ -177,7 +176,7 @@ def denovo_import_data(
         "denovo_fixture", ped_path, [], [denovo_path], [], [])
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_fixture(
     denovo_import_data: tuple[
         pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],

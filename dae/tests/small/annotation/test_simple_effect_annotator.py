@@ -2,7 +2,6 @@
 import textwrap
 
 import pytest
-
 from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import (

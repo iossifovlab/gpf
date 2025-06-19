@@ -3,8 +3,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-
-from dae.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeData
 from dae.testing import (
@@ -170,14 +169,14 @@ def test_query_effect(
 def test_query_complex(imported_study: GenotypeData) -> None:
     vs = list(
         imported_study.
-            query_variants(
-                effect_types=["noStart"],
-                person_ids=["s1"],
-                frequency_filter=[("af_allele_freq", (10, 27))],
-                regions=[Region("bar", 3, 17)],
-                genes=["g2"],
-            ),
-        )
+        query_variants(
+            effect_types=["noStart"],
+            person_ids=["s1"],
+            frequency_filter=[("af_allele_freq", (10, 27))],
+            regions=[Region("bar", 3, 17)],
+            genes=["g2"],
+        ),
+    )
     assert len(vs) == 1
 
 

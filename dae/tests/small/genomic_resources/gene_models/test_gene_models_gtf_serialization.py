@@ -4,7 +4,6 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
 from dae.genomic_resources.gene_models import (
     Exon,
     GeneModels,

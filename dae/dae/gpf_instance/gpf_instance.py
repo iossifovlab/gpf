@@ -140,7 +140,7 @@ class GPFInstance:
 
         cache_dir = self.dae_config.get("cache_path")
         if cache_dir:
-            self.cache_dir = Path(self.dae_dir, cache_dir)
+            self.cache_dir: Path | None = Path(self.dae_dir, cache_dir)
         else:
             self.cache_dir = None
 

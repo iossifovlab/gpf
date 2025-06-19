@@ -3,6 +3,7 @@ import itertools
 import logging
 from typing import Any, cast
 
+from dae.utils.dae_utils import join_line
 from datasets_api.permissions import (
     handle_partial_permissions,
     user_has_permission,
@@ -17,8 +18,6 @@ from utils.expand_gene_set import expand_gene_set, expand_gene_syms
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
 from utils.streaming_response_util import iterator_to_json
-
-from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
 

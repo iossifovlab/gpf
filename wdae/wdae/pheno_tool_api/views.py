@@ -4,6 +4,13 @@ from collections.abc import Generator, Iterable
 from io import StringIO
 from typing import Any, cast
 
+from dae.effect_annotation.effect import EffectTypesMixin
+from dae.pheno.common import MeasureType
+from dae.pheno.pheno_data import Measure
+from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapter
+from dae.pheno_tool.tool import PhenoResult, PhenoTool
+from dae.query_variants.query_runners import QueryResult
+from dae.variants.family_variant import FamilyVariant
 from datasets_api.permissions import (
     get_permissions_etag,
     user_has_permission,
@@ -18,14 +25,6 @@ from rest_framework.response import Response
 from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
-
-from dae.effect_annotation.effect import EffectTypesMixin
-from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Measure
-from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapter
-from dae.pheno_tool.tool import PhenoResult, PhenoTool
-from dae.query_variants.query_runners import QueryResult
-from dae.variants.family_variant import FamilyVariant
 
 logger = logging.getLogger(__name__)
 

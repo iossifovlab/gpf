@@ -8,6 +8,16 @@ from typing import cast
 
 import pytest
 import pytest_mock
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import (
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
 from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
@@ -29,17 +39,6 @@ from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import WDAEStudy
 from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance, setup_wgpf_instance
-
-from dae.genomic_resources.repository import (
-    GR_CONF_FILE_NAME,
-    GenomicResourceRepo,
-)
-from dae.genomic_resources.testing import (
-    build_inmemory_test_repository,
-    convert_to_tab_separated,
-)
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,6 @@
 import re
 
 import pytest
-
 from dae.import_tools.cli import run_with_project
 from dae.inmemory_storage.inmemory_genotype_storage import (
     InmemoryGenotypeStorage,

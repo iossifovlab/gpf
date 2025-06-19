@@ -4,7 +4,6 @@ import textwrap
 from contextlib import closing
 
 import pysam
-
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     setup_vcf,

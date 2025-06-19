@@ -5,7 +5,6 @@ import pathlib
 from collections.abc import Generator
 
 import pytest
-
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     GenotypeStorageRegistry,

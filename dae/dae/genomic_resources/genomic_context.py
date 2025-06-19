@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 GC_GRR_KEY = "genomic_resources_repository"
 GC_REFERENCE_GENOME_KEY = "reference_genome"
 GC_GENE_MODELS_KEY = "gene_models"
+GC_ANNOTATION_PIPELINE_KEY = "annotation_pipeline"
+GC_GENOTYPE_STORAGES_KEY = "genotype_storages"
+GC_GPF_INSTANCE_KEY = "gpf_instance"
 
 
 class GenomicContext(ABC):
@@ -215,7 +218,7 @@ def context_providers_init(**kwargs: Any) -> None:
                            g.get_context_provider_type())):
         context = provider.init(**kwargs)
         if context is None:
-            logger.warning(
+            logger.info(
                 "genomic context provider %s unable to create a context",
                 provider.get_context_provider_type(),
             )

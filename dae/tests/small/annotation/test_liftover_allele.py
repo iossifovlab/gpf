@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_mock
-
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.liftover_annotator import (
     AbstractLiftoverAnnotator,

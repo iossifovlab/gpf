@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.testing import (
     convert_to_tab_separated,
@@ -18,7 +17,7 @@ def get_file_content_as_string(file: str) -> str:
         return "".join(infile.readlines())
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "annotate_columns_cshl"
     setup_directories(

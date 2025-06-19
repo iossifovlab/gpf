@@ -5,7 +5,6 @@ import os
 import sys
 
 import toml
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
 

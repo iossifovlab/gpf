@@ -1,6 +1,8 @@
 from itertools import islice
 from typing import Any
 
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
+from dae.utils.regions import Region
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -8,9 +10,6 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from dae.genomic_resources.gene_models import Exon, TranscriptModel
-from dae.utils.regions import Region
 
 
 class DefaultGeneModelsId(QueryBaseView):

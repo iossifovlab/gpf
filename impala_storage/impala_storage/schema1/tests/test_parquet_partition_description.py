@@ -4,7 +4,6 @@ from typing import cast
 
 import numpy as np
 import pytest
-
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader

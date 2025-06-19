@@ -1,7 +1,6 @@
 from typing import Any
 
 import pytest
-
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 SUMMARY_SCHEMA = {

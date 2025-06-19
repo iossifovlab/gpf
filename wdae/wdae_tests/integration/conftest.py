@@ -34,7 +34,7 @@ def _module_cleaner(root_module: str) -> None:
         del module
 
 
-@pytest.fixture()
+@pytest.fixture
 def wdae_django_setup(
     mocker: pytest_mock.MockerFixture,
     tmp_path: pathlib.Path,
@@ -99,7 +99,7 @@ def wdae_django_setup(
     return builder
 
 
-@pytest.fixture()
+@pytest.fixture
 def wdae_django_server(
     mocker: pytest_mock.MockerFixture,
     wdae_django_setup: Callable[[WGPFInstance, str], ContextManager[Any]],

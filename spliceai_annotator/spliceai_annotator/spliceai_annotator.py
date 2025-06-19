@@ -8,8 +8,6 @@ from typing import Any
 
 import numpy as np
 import tensorflow as tf
-from pkg_resources import resource_filename
-
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
@@ -34,6 +32,8 @@ from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
 )
+from pkg_resources import resource_filename
+
 from spliceai_annotator.utils import one_hot_encode
 
 logger = logging.getLogger(__name__)

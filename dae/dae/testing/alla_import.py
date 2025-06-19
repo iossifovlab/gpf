@@ -4,7 +4,7 @@ import pathlib
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance import GPFInstance
 from dae.testing import (
     setup_empty_gene_models,

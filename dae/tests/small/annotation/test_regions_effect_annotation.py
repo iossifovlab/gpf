@@ -3,7 +3,6 @@
 import textwrap
 
 import pytest
-
 from dae.annotation.annotatable import Annotatable, CNVAllele, Position, Region
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
@@ -15,7 +14,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fixture_repo(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> GenomicResourceProtocolRepo:

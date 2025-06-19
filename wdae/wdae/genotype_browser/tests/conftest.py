@@ -19,7 +19,7 @@ summary_download_columns = [
 ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def preview_sources() -> list[dict]:
     return [
         {"source": "family", "format": "%s"},
@@ -44,7 +44,7 @@ def preview_sources() -> list[dict]:
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def download_sources() -> list[dict]:
     return [
         {"name": "family id", "source": "family", "format": "%s"},
@@ -73,7 +73,7 @@ def download_sources() -> list[dict]:
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def summary_preview_sources() -> list[dict]:
     return [
         {"source": "location", "format": "%s"},
@@ -95,7 +95,7 @@ def summary_preview_sources() -> list[dict]:
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def summary_download_sources() -> list[dict]:
     return [
         {"source": "location", "format": "%s"},

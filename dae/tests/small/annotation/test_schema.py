@@ -1,13 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
-
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture()
+@pytest.fixture
 def genomic_resources_repo() -> GenomicResourceRepo:
     repo = build_inmemory_test_repository({
         "position_score1": {

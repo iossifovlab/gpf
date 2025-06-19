@@ -3,7 +3,6 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
-
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     RepositoryProtocol,

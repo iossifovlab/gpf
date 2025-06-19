@@ -2,7 +2,6 @@
 from inspect import isgenerator
 
 import pytest
-
 from dae.utils.dae_utils import split_iterable
 
 

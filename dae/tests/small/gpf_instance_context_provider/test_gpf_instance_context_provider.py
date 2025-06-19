@@ -2,7 +2,6 @@
 from collections.abc import Callable
 
 import pytest
-
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
 
@@ -42,8 +41,9 @@ def test_gpf_instance_context_keys(
     context_fixture: GenomicContext,
 ) -> None:
     keys = context_fixture.get_context_keys()
-    assert len(keys) == 5
+    assert len(keys) == 6
     assert keys == {
         "gene_models", "reference_genome",
         "genomic_resources_repository", "annotation_pipeline", "gpf_instance",
+        "genotype_storages",
     }

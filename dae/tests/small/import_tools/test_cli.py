@@ -6,19 +6,18 @@ import shutil
 import pytest
 import pytest_mock
 import yaml
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools import cli, import_tools
 from dae.testing.alla_import import alla_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(__name__)
     return alla_gpf(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_study_dir(
     tmp_path: pathlib.Path, gpf_instance: GPFInstance,
     mocker: pytest_mock.MockerFixture,

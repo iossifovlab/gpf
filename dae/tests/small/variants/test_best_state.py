@@ -3,7 +3,6 @@ from io import StringIO
 
 import numpy as np
 import pytest
-
 from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.variant_utils import GenotypeType

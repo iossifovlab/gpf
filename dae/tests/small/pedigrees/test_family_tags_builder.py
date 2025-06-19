@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.pedigrees.families_data import tag_families_data
 from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.loader import FamiliesLoader

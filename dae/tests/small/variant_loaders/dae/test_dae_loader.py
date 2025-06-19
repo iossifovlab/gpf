@@ -4,7 +4,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from dae.genomic_resources.testing import setup_dae_transmitted
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData

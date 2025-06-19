@@ -2,7 +2,6 @@
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.genomic_scores import AlleleScore, ScoreValue
 from dae.genomic_resources.testing import (
     build_filesystem_test_resource,

@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import pytest_mock
-
 from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno_tool.tool import PhenoResult, PhenoTool
 from dae.variants.attributes import Sex

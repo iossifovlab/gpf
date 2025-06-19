@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbStorage,
 )

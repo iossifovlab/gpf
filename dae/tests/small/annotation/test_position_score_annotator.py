@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.annotation.annotatable import Position, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.genomic_scores import PositionScore
@@ -17,7 +16,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def position_score_repo() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "position_score1": {

@@ -4,8 +4,8 @@ from typing import Any, cast
 
 import ijson
 import requests
-
 from dae.pheno.common import MeasureType
+
 from rest_client.rest_client import GPFAnonymousClient, GPFConfidentialClient
 from rest_client.rest_client import RESTClient as GPFRESTClient
 

@@ -8,14 +8,14 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from pytest_mock import MockerFixture
-
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from pytest_mock import MockerFixture
+
 from vep_annotator.vep_annotator import VEPCacheAnnotator
 
 
-@pytest.fixture()
+@pytest.fixture
 def vep_annotator(
     mocker: MockerFixture,
     vep_fixtures: Path,

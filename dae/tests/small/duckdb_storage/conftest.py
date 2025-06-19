@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
-
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )
@@ -10,7 +9,7 @@ from dae.genomic_resources.testing import (
     build_s3_test_filesystem,
     s3_test_server_endpoint,
 )
-from dae.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )

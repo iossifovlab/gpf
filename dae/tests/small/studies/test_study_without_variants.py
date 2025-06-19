@@ -1,7 +1,6 @@
 """Tests genotype study without genotype data."""
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
 from dae.import_tools.cli import run_with_project
 from dae.studies.study import GenotypeData
 from dae.testing import StudyInputLayout, setup_import_project, setup_pedigree

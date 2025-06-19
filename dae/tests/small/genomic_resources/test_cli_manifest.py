@@ -3,7 +3,6 @@ import pathlib
 from typing import Any
 
 import pytest
-
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import (

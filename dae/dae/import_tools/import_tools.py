@@ -21,6 +21,9 @@ from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
 )
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+)
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
@@ -73,11 +76,13 @@ class ImportProject:
 
     # pylint: disable=too-many-public-methods
     def __init__(
-            self, import_config: dict[str, Any],
-            base_input_dir: str | None,
-            base_config_dir: str | None = None,
-            gpf_instance: GPFInstance | None = None,
-            config_filenames: list[str] | None = None) -> None:
+        self, import_config: dict[str, Any], *,
+        base_input_dir: str | None,
+        base_config_dir: str | None = None,
+        config_filenames: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
+        genomic_context: GenomicContext | None,
+    ) -> None:
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -95,15 +100,17 @@ class ImportProject:
         self._base_input_dir = base_input_dir
         self._base_config_dir = base_config_dir or base_input_dir
         self._gpf_instance = gpf_instance
+        self._genomic_context = genomic_context
         self.config_filenames = config_filenames or []
         self.stats: StatsCollection = StatsCollection()
         self._input_filenames_cache: dict[str, list[str]] = {}
 
     @staticmethod
     def build_from_config(
-        import_config: dict[str, Any],
+        import_config: dict[str, Any], *,
         base_input_dir: str = "",
         gpf_instance: GPFInstance | None = None,
+        genomic_context: GenomicContext | None = None,
     ) -> ImportProject:
         """Create a new project from the provided config.
 
@@ -119,14 +126,19 @@ class ImportProject:
         import_config, base_input_dir, external_files = \
             normalizer.normalize(import_config, base_input_dir)
         return ImportProject(
-            import_config, base_input_dir, base_config_dir,
+            import_config,
+            base_input_dir=base_input_dir,
+            base_config_dir=base_config_dir,
             gpf_instance=gpf_instance, config_filenames=external_files,
+            genomic_context=genomic_context,
         )
 
     @staticmethod
     def build_from_file(
-            import_filename: str | os.PathLike,
-            gpf_instance: GPFInstance | None = None) -> ImportProject:
+        import_filename: str | os.PathLike, *,
+        gpf_instance: GPFInstance | None = None,
+        genomic_context: GenomicContext | None = None,
+    ) -> ImportProject:
         """Create a new project from the provided config filename.
 
         The file is first parsed, validated and normalized. The path to the
@@ -139,7 +151,10 @@ class ImportProject:
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename, conf_dir=base_input_dir)
         project = ImportProject.build_from_config(
-            import_config, base_input_dir, gpf_instance=gpf_instance)
+            import_config,
+            base_input_dir=base_input_dir,
+            gpf_instance=gpf_instance,
+            genomic_context=genomic_context)
         # the path to the import filename should be the first config file
         project.config_filenames.insert(0, str(import_filename))
         return project
@@ -159,8 +174,7 @@ class ImportProject:
     def get_pedigree_filename(self) -> str:
         """Return the path to the pedigree file."""
         families_filename = self.import_config["input"]["pedigree"]["file"]
-        families_filename = fs_utils.join(self.input_dir, families_filename)
-        return cast(str, families_filename)
+        return fs_utils.join(self.input_dir, families_filename)
 
     def get_pedigree_loader(self) -> FamiliesLoader:
         families_filename, families_params = self.get_pedigree_params()

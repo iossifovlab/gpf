@@ -2,8 +2,6 @@
 import pathlib
 import textwrap
 
-from gpf_instance.gpf_instance import WGPFInstance
-
 from dae.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
@@ -24,6 +22,7 @@ from dae.testing import (
 )
 from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gpf_instance.gpf_instance import WGPFInstance
 
 
 def setup_t4c8_grr(

@@ -5,7 +5,6 @@ import pathlib
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.genomic_resources.implementations.reference_genome_impl import (
     ReferenceGenomeImplementation,

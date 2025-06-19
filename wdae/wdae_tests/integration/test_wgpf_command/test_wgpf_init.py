@@ -3,8 +3,8 @@ from typing import Callable, ContextManager
 
 import pytest
 from gpf_instance.gpf_instance import WGPFInstance
-
 from wdae.wgpf import cli  # type: ignore
+
 from wdae_tests.integration.testing import LiveServer
 
 

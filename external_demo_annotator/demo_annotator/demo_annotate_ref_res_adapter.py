@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any, TextIO
 
 import fsspec
-
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (

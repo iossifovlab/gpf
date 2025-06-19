@@ -6,8 +6,6 @@ from typing import Callable, ContextManager
 
 import pytest
 import requests
-from gpf_instance.gpf_instance import WGPFInstance
-
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -19,10 +17,12 @@ from dae.testing import (
     setup_vcf,
     vcf_study,
 )
+from gpf_instance.gpf_instance import WGPFInstance
+
 from wdae_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("alla_wgpf_instance")
 

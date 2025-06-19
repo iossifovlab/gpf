@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from dae.task_graph.cache import CacheRecordType, FileTaskCache
 from dae.task_graph.executor import SequentialExecutor
 from dae.task_graph.graph import Task, TaskGraph
@@ -16,7 +15,7 @@ def noop(*args: Any, **kwargs: Any) -> None:
     pass
 
 
-@pytest.fixture()
+@pytest.fixture
 def graph() -> TaskGraph:
     graph = TaskGraph()
     first_task = graph.create_task("First", noop, [], [])

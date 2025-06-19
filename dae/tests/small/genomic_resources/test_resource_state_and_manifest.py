@@ -3,7 +3,6 @@
 import textwrap
 
 import pytest
-
 from dae.genomic_resources.cli import collect_dvc_entries
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,

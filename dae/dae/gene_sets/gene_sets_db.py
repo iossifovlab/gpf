@@ -3,6 +3,7 @@
 import abc
 import logging
 import os
+from collections.abc import Sequence
 from functools import cached_property
 from typing import Annotated, Any, Literal
 
@@ -277,7 +278,7 @@ class GeneSetsDb:
 
     def __init__(
         self,
-        gene_set_collections: list[BaseGeneSetCollection],
+        gene_set_collections: Sequence[BaseGeneSetCollection],
     ) -> None:
         self.gene_set_collections: dict[str, BaseGeneSetCollection] = {
             gsc.collection_id: gsc

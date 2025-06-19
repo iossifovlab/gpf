@@ -6,9 +6,9 @@ from collections.abc import Callable
 
 import pyarrow.parquet as pq
 from box import Box
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
+
 from impala_storage.schema1.utils import generate_file_access_glob
 from impala_storage.tools.denovo2parquet import main
 

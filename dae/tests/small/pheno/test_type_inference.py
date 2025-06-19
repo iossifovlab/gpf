@@ -3,8 +3,6 @@ import textwrap
 
 import pytest
 import yaml
-from pydantic import ValidationError
-
 from dae.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,
@@ -20,6 +18,7 @@ from dae.pheno.pheno_import import (
     merge_inference_configs,
 )
 from dae.pheno.prepare.measure_classifier import InferenceReport
+from pydantic import ValidationError
 
 
 def test_valid_config_loads() -> None:

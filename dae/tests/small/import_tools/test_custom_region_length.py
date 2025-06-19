@@ -7,7 +7,6 @@ from os.path import join
 
 import pyarrow.parquet as pq
 import pytest
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools import cli, import_tools
@@ -33,7 +32,9 @@ def test_import_task_bin_size(
 
     # Running the import
     project = import_tools.ImportProject.build_from_config(
-        import_config, str(input_dir), gpf_instance=gpf_fixture)
+        import_config,
+        base_input_dir=str(input_dir),
+        gpf_instance=gpf_fixture)
     cli.run_with_project(project)
 
     # Assert the expected output files and dirs are created in the work_dir

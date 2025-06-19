@@ -3,7 +3,6 @@ import pathlib
 
 import pysam
 import pytest
-
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.pedigrees.loader import FamiliesLoader

@@ -28,17 +28,17 @@ def load_object(url_code, client):
     return response.data
 
 
-@pytest.fixture()
+@pytest.fixture
 def query_load(db, user_client):
 
     return functools.partial(load_object, client=user_client)
 
 
-@pytest.fixture()
+@pytest.fixture
 def query_save(db, user_client):
     return functools.partial(save_object, client=user_client)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_query_data():
     return {"some": "data", "list": [1, 2, 3]}

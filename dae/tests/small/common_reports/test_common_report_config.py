@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree
 from dae.testing.foobar_import import foobar_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         "common_reports_trios2")

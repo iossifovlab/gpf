@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-
 from dae.gpf_instance import GPFInstance
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf

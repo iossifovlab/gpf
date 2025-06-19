@@ -7,6 +7,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
+
 from impala_storage.schema1.base_query_builder import BaseQueryBuilder
 from impala_storage.schema1.serializers import AlleleParquetSerializer
 

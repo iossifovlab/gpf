@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 import toml
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.gpf_instance import GPFInstance

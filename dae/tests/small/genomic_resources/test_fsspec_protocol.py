@@ -6,14 +6,13 @@ import time
 from typing import Any, cast
 
 import pytest
-from pytest_mock import MockerFixture
-
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     ReadWriteRepositoryProtocol,
 )
 from dae.genomic_resources.testing import build_inmemory_test_protocol
+from pytest_mock import MockerFixture
 
 
 @pytest.mark.grr_rw

@@ -2,8 +2,6 @@
 import pathlib
 from typing import Any
 
-from gpf_instance.gpf_instance import WGPFInstance
-
 from dae.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
@@ -14,6 +12,7 @@ from dae.genomic_resources.reference_genome import (
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import setup_directories
+from gpf_instance.gpf_instance import WGPFInstance
 
 
 def setup_wgpf_instance(

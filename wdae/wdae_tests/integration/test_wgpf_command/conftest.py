@@ -2,16 +2,16 @@
 import textwrap
 
 import pytest
-from gpf_instance.gpf_instance import WGPFInstance
-
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.testing import setup_directories, setup_empty_gene_models, setup_genome
+from gpf_instance.gpf_instance import WGPFInstance
+
 from wdae_tests.integration.testing import setup_wgpf_instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("wgpf_command")
 

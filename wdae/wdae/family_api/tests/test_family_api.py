@@ -3,11 +3,10 @@ import json
 from unittest.mock import ANY
 
 import pytest
+from dae.variants.attributes import Role, Sex, Status
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
-
-from dae.variants.attributes import Role, Sex, Status
 
 
 @pytest.mark.parametrize("url,method,body", [

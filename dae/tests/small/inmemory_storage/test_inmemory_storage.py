@@ -2,7 +2,6 @@
 import re
 
 import pytest
-
 from dae.inmemory_storage.inmemory_genotype_storage import (
     InmemoryGenotypeStorage,
 )
