@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Any, cast
+from typing import Any
 
 from dae.genomic_scores.scores import ScoreDesc
 from gpf_instance.gpf_instance import WGPFInstance
@@ -57,6 +57,7 @@ def load_extension(instance: WGPFInstance) -> None:
 
     for client in clients.values():
         studies = fetch_studies_from_client(client)
+
         available_studies_ids = [study.study_id for study in studies]
 
         visible_studies = [
@@ -180,6 +181,7 @@ def create_remote_studies(
     logger.info("loading remote genotype study: %s", study_id)
     genotype_data: RemoteGenotypeData | None = None
     phenotype_data: RemotePhenotypeData | None = None
+
     if config.get("has_genotype"):
         if study_id not in genotype_datas:
             genotype_data = RemoteGenotypeData(
@@ -188,8 +190,8 @@ def create_remote_studies(
         else:
             genotype_data = genotype_datas[study_id]
 
-    pheno_id = cast(str | None, config.get("phenotype_data"))
-    if pheno_id is not None:
+    pheno_id = config.get("phenotype_data", "")
+    if pheno_id:
         if study_id not in phenotype_datas:
             pheno_config = copy.deepcopy(config)
             pheno_config["id"] = pheno_id
