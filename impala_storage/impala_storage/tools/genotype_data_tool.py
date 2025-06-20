@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import logging
 import sys
@@ -72,6 +70,8 @@ def main(
     helpers = ImpalaDatasetHelpers(gpf_instance)
 
     genotype_storage = helpers.get_genotype_storage(args.source_id)
+    assert genotype_storage is not None, \
+        f"Genotype storage for {args.source_id} not found"
 
     assert helpers.check_dataset_hdfs_directories(
         genotype_storage, args.source_id)

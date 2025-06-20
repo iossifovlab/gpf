@@ -2,9 +2,13 @@ import glob
 import logging
 import os
 import shutil
+from typing import Any, cast
 
 import toml
 from box import Box
+
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 logger = logging.getLogger(__name__)
 
@@ -12,20 +16,19 @@ logger = logging.getLogger(__name__)
 class DatasetHelpers:
     """Helper class for work with studies in impala genotype storage."""
 
-    def __init__(self, gpf_instance=None):
+    def __init__(self, gpf_instance: GPFInstance | None = None) -> None:
         if gpf_instance is None:
-            # pylint: disable=import-outside-toplevel
-            from dae.gpf_instance.gpf_instance import GPFInstance
             self.gpf_instance = GPFInstance.build()
         else:
             self.gpf_instance = gpf_instance
 
-    def find_genotype_data_config_file(self, dataset_id):
+    def find_genotype_data_config_file(
+        self, dataset_id: str,
+    ) -> str | None:
         """Find and return config filename for a dataset."""
         config = self.gpf_instance.get_genotype_data_config(dataset_id)
         if config is None:
-            # pylint: disable=protected-access
-            self.gpf_instance._variants_db.reload()
+            self.gpf_instance.reload()
             config = self.gpf_instance.get_genotype_data_config(dataset_id)
             if config is None:
                 return None
@@ -41,32 +44,38 @@ class DatasetHelpers:
         assert os.path.exists(config_file)
         return config_file
 
-    def find_genotype_data_config(self, dataset_id):
+    def find_genotype_data_config(self, dataset_id: str) -> Box | None:
         """Find and return configuration of a dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
         if config_file is None:
             return None
         with open(config_file, "r") as infile:
             short_config = toml.load(infile)
-            short_config = Box(short_config)
-        return short_config
+            return Box(short_config)
 
-    def get_genotype_storage(self, dataset_id):
+    def get_genotype_storage(self, dataset_id: str) -> GenotypeStorage | None:
         """Find the genotype storage that stores a dataset."""
         config = self.find_genotype_data_config(dataset_id)
         if config is None:
             return None
         gpf_instance = self.gpf_instance
-        genotype_storage = gpf_instance \
-            .genotype_storages \
+        return cast(
+            GenotypeStorage | None,
+            gpf_instance
+            .genotype_storages
             .get_genotype_storage(
-                config.genotype_storage.id)
-        return genotype_storage
+                config.genotype_storage.id))
 
     def rename_study_config(
-            self, dataset_id, new_id, config_content, dry_run=None):
+        self, dataset_id: str, new_id: str,
+        config_content: dict[str, Any], *,
+        dry_run: bool | None = None,
+    ) -> None:
         """Rename study config for a dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
+        if config_file is None:
+            return
+
         logger.info("going to disable config file %s", config_file)
         if not dry_run:
             os.rename(config_file, f"{config_file}_bak")
@@ -87,15 +96,25 @@ class DatasetHelpers:
                 content = toml.dumps(config_content)
                 outfile.write(content)
 
-    def remove_study_config(self, dataset_id):
+    def remove_study_config(self, dataset_id: str) -> None:
+        """Remove study config for a dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
-        config_dir = os.path.dirname(config_file)
+        if config_file is None:
+            logger.warning("config file for dataset %s not found", dataset_id)
+            return
 
+        config_dir = os.path.dirname(config_file)
         shutil.rmtree(config_dir)
 
-    def disable_study_config(self, dataset_id, dry_run=None):
+    def disable_study_config(
+        self, dataset_id: str, *,
+        dry_run: bool | None = None,
+    ) -> None:
         """Disable dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
+        if config_file is None:
+            logger.warning("config file for dataset %s not found", dataset_id)
+            return
         config_dir = os.path.dirname(config_file)
 
         logger.info("going to disable study_config %s", config_file)

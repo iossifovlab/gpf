@@ -1,6 +1,8 @@
 # pylint: disable=W0603
 import logging
 from contextlib import AbstractContextManager
+from types import TracebackType
+from typing import Generic, Protocol, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -8,7 +10,17 @@ logger = logging.getLogger(__name__)
 LIVE_CONNECTIONS = 0
 
 
-class closing(AbstractContextManager):
+class HasClose(Protocol):
+    """Protocol for objects that have a close method."""
+
+    def close(self) -> None:
+        """Close the object."""
+
+
+T = TypeVar("T", bound=HasClose)
+
+
+class closing(AbstractContextManager, Generic[T]):  # pylint: disable=C0103
     """Context to automatically close something at the end of a block.
 
     Code like this:
@@ -26,10 +38,10 @@ class closing(AbstractContextManager):
 
     """
 
-    def __init__(self, thing):
+    def __init__(self, thing: T) -> None:
         self.thing = thing
 
-    def __enter__(self):
+    def __enter__(self) -> T:
         global LIVE_CONNECTIONS
 
         LIVE_CONNECTIONS += 1
@@ -38,7 +50,11 @@ class closing(AbstractContextManager):
         )
         return self.thing
 
-    def __exit__(self, *exc_info):
+    def __exit__(
+        self, exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         global LIVE_CONNECTIONS
         self.thing.close()
 
@@ -47,12 +63,5 @@ class closing(AbstractContextManager):
             "[closing] exit %s; live %s", id(self.thing), LIVE_CONNECTIONS,
         )
 
-    async def __aenter__(self):
-        logger.info("[closing] aenter...")
-        return self
-
-    async def __aexit__(self, *exc_details):
-        logger.info("[closing] aexit...")
-
-    def close(self):
+    def close(self) -> None:
         self.thing.close()

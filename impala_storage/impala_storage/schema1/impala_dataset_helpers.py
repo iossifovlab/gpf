@@ -3,9 +3,11 @@ import os
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.dataset_helpers import DatasetHelpers
+from dae.tools.dataset_helpers import DatasetHelpers
 
-from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
+from impala_storage.schema1.impala_genotype_storage import (
+    ImpalaGenotypeStorage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,10 @@ class ImpalaDatasetHelpers(DatasetHelpers):
     def is_impala_genotype_storage(self, dataset_id: str) -> bool:
         """Check if genotype storage is an impala genotype storage."""
         genotype_storage = self.get_genotype_storage(dataset_id)
+        if genotype_storage is None:
+            logger.warning(
+                "genotype storage for dataset %s is None", dataset_id)
+            return False
         return "impala" in genotype_storage.get_storage_types()
 
     def check_dataset_hdfs_directories(
@@ -138,30 +144,42 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         return (None, None)
 
     def dataset_rename_hdfs_directory(
-        self, old_id: str, new_id: str, dry_run: bool = False,
+        self, old_id: str, new_id: str,
+        dry_run: bool = False,  # noqa: FBT001,FBT002
     ) -> None:
         """Rename dataset HDFS directory."""
         source_dir, dest_dir = \
             self.check_dataset_rename_hdfs_directory(old_id, new_id)
-        if not dry_run:
-            assert (source_dir is not None) and (dest_dir is not None), (
-                old_id, new_id)
 
         genotype_storage = self.get_genotype_storage(old_id)
+        if genotype_storage is None:
+            logger.warning(
+                "genotype storage for dataset %s is None", old_id)
+            return
+        assert isinstance(genotype_storage, ImpalaGenotypeStorage)
         hdfs_helpers = genotype_storage.hdfs_helpers
 
         logger.info("going to rename %s to %s", source_dir, dest_dir)
         if not dry_run:
+            assert source_dir is not None
+            assert dest_dir is not None
             hdfs_helpers.rename(source_dir, dest_dir)
 
     def dataset_remove_hdfs_directory(
-        self, dataset_id: str, dry_run: bool = False,
+        self, dataset_id: str,
+        dry_run: bool = False,  # noqa: FBT001,FBT002
     ) -> None:
         """Remove dataset HDFS directory."""
         genotype_storage = self.get_genotype_storage(dataset_id)
+        if genotype_storage is None:
+            logger.warning(
+                "genotype storage for dataset %s is None", dataset_id)
+            return
+
         assert self.check_dataset_hdfs_directories(
             genotype_storage, dataset_id)
 
+        assert isinstance(genotype_storage, ImpalaGenotypeStorage)
         hdfs_helpers = genotype_storage.hdfs_helpers
 
         study_dir = genotype_storage.default_hdfs_study_path(dataset_id)
@@ -171,27 +189,39 @@ class ImpalaDatasetHelpers(DatasetHelpers):
             hdfs_helpers.delete(study_dir, recursive=True)
 
     def dataset_recreate_impala_tables(
-        self, old_id: str, new_id: str, dry_run: bool = False,
-    ) -> tuple[str, str | None]:
+        self, old_id: str, new_id: str,
+        dry_run: bool = False,  # noqa: FBT001,FBT002
+    ) -> tuple[str | None, str | None]:
         """Recreate impala tables for a dataset."""
         genotype_storage = self.get_genotype_storage(old_id)
+        if genotype_storage is None:
+            logger.warning(
+                "genotype storage for dataset %s is None", old_id)
+            return (None, None)
 
+        assert isinstance(genotype_storage, ImpalaGenotypeStorage)
         assert genotype_storage.storage_type == "impala"
         if not dry_run:
             assert self.check_dataset_hdfs_directories(
                 genotype_storage, new_id)
 
-        impala_db = genotype_storage.storage_config.impala.db
+        impala_db = genotype_storage.storage_config.get("impala", {}).get("db")
+        assert impala_db is not None
+
         impala_helpers = genotype_storage.impala_helpers
 
         new_hdfs_pedigree = genotype_storage \
             .default_pedigree_hdfs_filename(new_id)
         new_hdfs_pedigree = os.path.dirname(new_hdfs_pedigree)
         # pylint: disable=protected-access
-        new_pedigree_table = genotype_storage._construct_pedigree_table(new_id)
+        new_pedigree_table = \
+            genotype_storage._construct_pedigree_table(new_id)  # noqa: SLF001
 
         config = self.find_genotype_data_config(old_id)
-
+        if config is None:
+            logger.warning(
+                "genotype data config for dataset %s is None", old_id)
+            return (None, None)
         pedigree_table = config.genotype_storage.tables.pedigree
 
         logger.info(
@@ -211,7 +241,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
             # pylint: disable=protected-access
             new_variants_table = genotype_storage \
-                ._construct_variants_table(new_id)
+                ._construct_variants_table(new_id)  # noqa: SLF001
 
             logger.info(
                 "going to recreate variants table %s from %s",
@@ -225,18 +255,27 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         return new_pedigree_table, new_variants_table
 
     def dataset_drop_impala_tables(
-        self, dataset_id: str, dry_run: bool = False,
+        self, dataset_id: str,
+        dry_run: bool = False,  # noqa: FBT001,FBT002
     ) -> None:
         """Drop impala tables for a dataset."""
         assert self.check_dataset_impala_tables(dataset_id)
 
         genotype_storage = self.get_genotype_storage(dataset_id)
+        if genotype_storage is None:
+            logger.warning(
+                "genotype storage for dataset %s is None", dataset_id)
+            return
+        assert isinstance(genotype_storage, ImpalaGenotypeStorage)
+        impala_db = genotype_storage.storage_config.get("impala", {}).get("db")
 
-        impala_db = genotype_storage.storage_config.impala.db
         impala_helpers = genotype_storage.impala_helpers
 
         config = self.find_genotype_data_config(dataset_id)
-
+        if config is None:
+            logger.warning(
+                "genotype data config for dataset %s is None", dataset_id)
+            return
         pedigree_table = config.genotype_storage.tables.pedigree
         logger.info(
             "going to drop pedigree impala table %s.%s",
@@ -257,12 +296,19 @@ class ImpalaDatasetHelpers(DatasetHelpers):
     def check_dataset_impala_tables(self, dataset_id: str) -> bool:
         """Check if impala tables for a dataset are OK."""
         genotype_storage = self.get_genotype_storage(dataset_id)
-
-        impala_db = genotype_storage.storage_config.impala.db
+        if genotype_storage is None:
+            logger.warning(
+                "genotype storage for dataset %s is None", dataset_id)
+            return False
+        assert isinstance(genotype_storage, ImpalaGenotypeStorage)
+        impala_db = genotype_storage.storage_config.get("impala", {}).get("db")
         impala_helpers = genotype_storage.impala_helpers
 
         config = self.find_genotype_data_config(dataset_id)
-
+        if config is None:
+            logger.warning(
+                "genotype data config for dataset %s is None", dataset_id)
+            return False
         pedigree_table = config.genotype_storage.tables.pedigree
 
         logger.info(
@@ -275,6 +321,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
         create_statement = impala_helpers.get_table_create_statement(
             impala_db, pedigree_table)
+        assert create_statement is not None
 
         logger.info(
             "pedigree table %s.%s should be external table: "
@@ -299,6 +346,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
             create_statement = impala_helpers.get_table_create_statement(
                 impala_db, variants_table)
+            assert create_statement is not None
 
             logger.info(
                 "variants table %s.%s should be external table: "
