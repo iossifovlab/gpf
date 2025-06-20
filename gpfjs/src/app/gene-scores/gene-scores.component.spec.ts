@@ -12,6 +12,8 @@ import { geneScoresReducer, setGeneScoreCategorical, setGeneScoreContinuous } fr
 import { Store, StoreModule } from '@ngrx/store';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
+import { resetErrors, setErrors } from 'app/common/errors.state';
+import { range } from 'lodash';
 
 
 class MockGeneScoresService {
@@ -273,6 +275,192 @@ describe('GeneScoresComponent', () => {
       rangeEnd: 3,
     }));
     expect(component.rangeEnd).toBe(3);
+  });
+
+  it('should show error message when score is missing', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore(
+      'empty',
+      'no help',
+      null,
+      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
+    );
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Empty gene scores are invalid.']
+    }}));
+  });
+
+  it('should show error message when range start is less than domain min', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore(
+      'empty',
+      'no help',
+      'score',
+      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
+    );
+
+    component.setRangeStart(-12);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Range start should be more than or equal to domain min.']
+    }}));
+  });
+
+  it('should show error message when range end is more than domain max', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore(
+      'empty',
+      'no help',
+      'score',
+      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
+    );
+
+    component.setRangeEnd(200);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Range end should be less than or equal to domain max.']
+    }}));
+  });
+
+  it('should show error message when range start is more than range end', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore(
+      'empty',
+      'no help',
+      'score',
+      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
+    );
+
+    component.setRangeEnd(50);
+    component.setRangeStart(53);
+
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: [
+        'Range start should be less than or equal to range end.',
+        'Range end should be more than or equal to range start.'
+      ]
+    }}));
+  });
+
+  it('should show error message when range start input is not a number', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore(
+      'empty',
+      'no help',
+      'score',
+      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
+    );
+
+    component.setRangeStart(undefined);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Range start should be a number.']
+    }}));
+  });
+
+  it('should show error message when range end input is not a number', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore(
+      'empty',
+      'no help',
+      'score',
+      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
+    );
+
+    component.setRangeEnd(undefined);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Range end should be a number.']
+    }}));
+  });
+
+  it('should show error message when no values are selected in categorical histogram', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', new CategoricalHistogram(
+      [
+        {name: 'name1', value: 10},
+        {name: 'name2', value: 20},
+        {name: 'name3', value: 30},
+      ],
+      null,
+      'large value descriptions',
+      'small value descriptions',
+      true,
+      0
+    ));
+
+    component.toggleCategoricalValues([]);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Please select at least one value.']
+    }}));
+  });
+
+  it('should show error message when more than max values are selected in categorical histogram', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', new CategoricalHistogram(
+      [
+        {name: 'name1', value: 10},
+        {name: 'name2', value: 20},
+        {name: 'name3', value: 30},
+      ],
+      null,
+      'large value descriptions',
+      'small value descriptions',
+      true,
+      0
+    ));
+
+    const vals: string[] = range(1003).map(v => String(v));
+
+    component.toggleCategoricalValues(vals);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+      componentId: 'geneScores', errors: ['Please select less than 1000 values.']
+    }}));
+  });
+
+  it('should set list with categorical values', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    const histogram = new CategoricalHistogram(
+      [
+        {name: 'name1', value: 10},
+        {name: 'name2', value: 20},
+        {name: 'name3', value: 30},
+      ],
+      null,
+      'large value descriptions',
+      'small value descriptions',
+      true,
+      0
+    );
+
+    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score', histogram);
+
+    const vals: string[] = ['val1', 'val2'];
+
+    component.replaceCategoricalValues(vals);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(resetErrors({
+      componentId: 'geneScores'
+    }));
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setGeneScoreCategorical({
+      score: 'score',
+      values: vals,
+      categoricalView: 'click selector',
+    }));
   });
 });
 

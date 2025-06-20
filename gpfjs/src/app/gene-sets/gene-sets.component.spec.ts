@@ -712,7 +712,7 @@ describe('GeneSetsComponent', () => {
     expect(searchSpy).toHaveBeenCalledWith();
   });
 
-  it('should select first person set type from the first dataset as default', () => {
+  it('should select first person set type from the first dataset as default in denovo modal', () => {
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
