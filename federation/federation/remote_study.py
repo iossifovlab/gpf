@@ -30,7 +30,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
             config.get("name", self.remote_study_id),
         )
         config["phenotype_tool"] = False
-        if config["phenotype_data"]:
+        if config.get("phenotype_data"):
             config["phenotype_data"] = \
                 self.rest_client.prefix_remote_identifier(
                     config["phenotype_data"])

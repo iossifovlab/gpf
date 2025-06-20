@@ -12,7 +12,7 @@ from dae.configuration.schemas.wdae_study_config import wdae_study_config_schema
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
-from dae.pheno.pheno_data import PhenotypeData
+from dae.pheno.pheno_data import Measure, MeasureType, PhenotypeData
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
@@ -307,6 +307,13 @@ class WDAEAbstractStudy:
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
 
+    def get_measures(
+        self,
+        instrument_name: str | None = None,
+        measure_type: MeasureType | None = None,
+    ) -> dict[str, Measure]:
+        return self.phenotype_data.get_measures(instrument_name, measure_type)
+
 
 class WDAEStudy(WDAEAbstractStudy):
     """A genotype and phenotype data wrapper for use in the wdae module."""
@@ -573,6 +580,16 @@ class WDAEStudy(WDAEAbstractStudy):
                 result["study_names"] = study_names
 
         return result
+
+    def get_measures_json(
+        self,
+        used_types: list[str],
+    ) -> list[dict[str, Any]]:
+        """Get list of measures in json format"""
+        measures = list(self.get_measures().values())
+        measures = [m for m in measures if m.measure_type.name in used_types]
+
+        return [m.to_json() for m in measures]
 
     def query_variants_wdae(
         self, kwargs: dict[str, Any],

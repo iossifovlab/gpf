@@ -448,7 +448,7 @@ class DatasetHierarchyView(QueryBaseView):
             result["has_denovo"] = dataset.genotype_data.has_denovo
             result["has_transmitted"] = dataset.genotype_data.has_transmitted
             result["phenotype_data"] = \
-                dataset.genotype_data.config["phenotype_data"]
+                dataset.genotype_data.config.get("phenotype_data")
         else:
             result["has_denovo"] = False
             result["has_transmitted"] = False

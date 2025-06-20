@@ -78,7 +78,7 @@ wdae_study_config_schema = {
     "conf_dir": {
         "type": "string",
     },
-    "phenotype_data": {"type": "string", "default": ""},
+    "phenotype_data": {"type": "string"},
     "phenotype_browser": {"type": "boolean"},
     "phenotype_tool": {"type": "boolean"},
     "description_file": {

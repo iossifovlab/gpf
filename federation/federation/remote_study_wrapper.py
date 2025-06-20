@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Generator
 from functools import cached_property
-from typing import Any
+from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
 from studies.response_transformer import ResponseTransformer
@@ -128,6 +128,15 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
                 fv, sources, person_set_collection=person_set_collection_id)
 
             yield row_variant
+
+    def get_measures_json(
+        self,
+        used_types: list[str],  # noqa: ARG002
+    ) -> list[dict[str, Any]]:
+        return cast(
+            list[dict[str, Any]],
+            self.rest_client.get_measures_list(self.remote_study_id),
+        )
 
     def _init_pheno(self, *_, **__) -> None:
         # This method is not necessary for remote studies, as the phenotype

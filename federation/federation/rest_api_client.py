@@ -341,6 +341,20 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
+    def get_measures_list(
+        self,
+        dataset_id: str,
+    ) -> Any:
+        """Get pheno measures in a list format."""
+        response = self._get(
+            "measures/list",
+            query_values={
+                "datasetId": dataset_id,
+            },
+            stream=True,
+        )
+        return response.json()
+
     def get_instruments(self, dataset_id: str) -> Any:
         """Get instruments for a pheno measure."""
         response = self._get(
