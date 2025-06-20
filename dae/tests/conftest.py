@@ -117,7 +117,8 @@ def _populate_default_genotype_storage_factories(
         pathlib.Path.cwd())
     storage_factories = {}
     for storage_type in default_storage_configs:
-        storage_factories[storage_type] = _default_storage_factory(storage_type)
+        storage_factories[storage_type] = \
+            _default_storage_factory(storage_type)
     return storage_factories
 
 
@@ -191,7 +192,6 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     # pylint: disable=too-many-branches
-    # flake8: noqa: C901
     if "genotype_storage_factory" in metafunc.fixturenames:
         _generate_genotype_storage_fixtures(metafunc)
     if "grr_scheme" in metafunc.fixturenames:
