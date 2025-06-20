@@ -109,8 +109,9 @@ class WGPFInstance(GPFInstance):
         config_filename: str | pathlib.Path | None = None,
         **kwargs: Any,
     ) -> WGPFInstance:
-        dae_config, dae_dir, dae_config_path = GPFInstance._build_gpf_config(  # noqa: SLF001
-            config_filename)
+        dae_config, dae_dir, dae_config_path = \
+            GPFInstance._build_gpf_config(  # noqa: SLF001
+                config_filename)
         return WGPFInstance(dae_config, dae_dir, dae_config_path, **kwargs)
 
     def get_main_description_path(self) -> str:
@@ -180,7 +181,7 @@ class WGPFInstance(GPFInstance):
         """Get the IDs of all available data - genotypic and phenotypic."""
         available: set[str] = set()
         for data_id in self.get_genotype_data_ids() \
-                     + self.get_phenotype_data_ids():
+                + self.get_phenotype_data_ids():
             if data_id in available:
                 raise ValueError(f"Duplicate study {data_id}!")
             available.add(data_id)

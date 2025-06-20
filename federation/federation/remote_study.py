@@ -32,7 +32,8 @@ class RemoteGenotypeData(GenotypeDataStudy):
         config["phenotype_tool"] = False
         if config["phenotype_data"]:
             config["phenotype_data"] = \
-                self.rest_client.prefix_remote_identifier(config["phenotype_data"])
+                self.rest_client.prefix_remote_identifier(
+                    config["phenotype_data"])
 
         config["description_editable"] = False
         if config.get("gene_browser"):
