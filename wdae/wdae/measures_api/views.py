@@ -76,17 +76,14 @@ class PhenoMeasureListView(QueryBaseView):
         assert dataset is not None
 
         if not dataset.has_pheno_data:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        res: list[dict[str, Any]] = []
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         used_types = ["continuous", "categorical"]
-        measures = list(dataset.phenotype_data.get_measures().values())
-        measures = [m for m in measures if m.measure_type.name in used_types]
 
-        res = [m.to_json() for m in measures]
-
-        return Response(res, status=status.HTTP_200_OK)
+        return Response(
+            dataset.get_measures_json(used_types),
+            status=status.HTTP_200_OK,
+        )
 
 
 class PhenoMeasureHistogramView(QueryBaseView):
