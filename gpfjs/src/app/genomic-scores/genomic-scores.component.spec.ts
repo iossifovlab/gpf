@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { setErrors } from 'app/common/errors.state';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { CategoricalHistogram, NumberHistogram } from 'app/utils/histogram-types';
+import { range } from 'lodash';
 
 describe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
@@ -336,5 +337,60 @@ describe('GenomicScoresComponent', () => {
 
     expect(component.domainMin).toBe(4);
     expect(component.domainMax).toBe(20);
+  });
+
+  it('should set dropdown view as default when histogram bars count is more than the max', () => {
+    const histogram = new CategoricalHistogram(
+      [
+        {name: 'name1', value: 10},
+        {name: 'name2', value: 20},
+        {name: 'name3', value: 30},
+      ],
+      null,
+      'large value descriptions',
+      'small value descriptions',
+      true,
+      0,
+      40
+    );
+
+    component.selectedGenomicScore = new GenomicScore(
+      'desc',
+      'help',
+      'score',
+      histogram
+    );
+
+    component.ngOnInit();
+
+    expect(component.localState.categoricalView).toBe('dropdown selector');
+  });
+
+  it('should set dropdown view as default when histogram bars percent is more than the max', () => {
+    const vals: {name: string, value: number}[] = range(30).map(v => {
+      return {name: `name${v}`, value: v};
+    });
+
+    const histogram = new CategoricalHistogram(
+      vals,
+      null,
+      'large value descriptions',
+      'small value descriptions',
+      true,
+      0,
+      null,
+      100
+    );
+
+    component.selectedGenomicScore = new GenomicScore(
+      'desc',
+      'help',
+      'score',
+      histogram
+    );
+
+    component.ngOnInit();
+
+    expect(component.localState.categoricalView).toBe('dropdown selector');
   });
 });
