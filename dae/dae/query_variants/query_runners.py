@@ -103,17 +103,17 @@ class QueryRunner(abc.ABC):
                 break
             except queue.Full:
                 logger.debug(
-                    "runner (%s) nobody interested",
-                    self.study_id)
+                    "runner (%s) nobody interested %s",
+                    self.study_id, no_interest)
 
                 if self.is_closed():
                     break
                 no_interest += 1
-                if no_interest % 1_000 == 0:
+                if no_interest % 500 == 0:
                     logger.warning(
                         "runner (%s) nobody interested %s",
                         self.study_id, no_interest)
-                if no_interest > 5_000:
+                if no_interest > 1_000:
                     logger.warning(
                         "runner (%s) nobody interested %s"
                         "closing...",
@@ -129,7 +129,7 @@ class QueryResult:
     """
 
     def __init__(self, runners: list[QueryRunner], limit: int | None = -1):
-        self.result_queue: queue.Queue = queue.Queue(maxsize=1_000)
+        self.result_queue: queue.Queue = queue.Queue(maxsize=5_000)
 
         if limit is None:
             limit = -1
@@ -213,10 +213,11 @@ class QueryResult:
         logger.info("closing query result...")
         logger.info("closing %s query runners", len(self.runners))
         for runner in self.runners[::-1]:
+            # pylint: disable=broad-except
             try:
                 runner.close()
                 logger.debug("runner %s closed", runner.study_id)
-            except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 logger.info(
                     "exception in result close: %s", type(ex), exc_info=True)
         logger.debug("emptying result queue %s", self.result_queue.qsize())
