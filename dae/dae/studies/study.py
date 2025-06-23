@@ -53,15 +53,20 @@ class PSCQueryAdjustments:
 class CommonStudyMixin:
     "Mixin class for common study functionality to be reused."
 
+    def __init__(self, config: dict) -> None:
+        self._description: str | None = None
+        self.config = config
+
     @property
     def description(self) -> str | None:
         """Load and return description of a genotype data."""
         if self._description is None:
-            description_file = self.config["description_file"]  # type: ignore
+            description_file = self.config["description_file"]
             if basename(description_file) != "description.md" \
                and not exists(description_file):
                 # If a non-default description file was given, assert it exists
-                raise ValueError(f"missing description file {description_file}")
+                raise ValueError(
+                    f"missing description file {description_file}")
 
             if exists(description_file):
                 # the default description file may not yet exist
@@ -71,14 +76,15 @@ class CommonStudyMixin:
     @description.setter
     def description(self, input_text: str) -> None:
         self._description = None
-        Path(self.config["description_file"]).write_text(input_text)  # type: ignore
+        Path(self.config["description_file"]).write_text(input_text)
 
 
-class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-methods
+class GenotypeData(CommonStudyMixin, ABC):
     """Abstract base class for genotype data."""
 
+    # pylint: disable=too-many-public-methods
     def __init__(self, config: Box, studies: list[GenotypeData]):
-        self.config = config
+        super().__init__(config)
         self.studies = studies
 
         self._description: str | None = None
@@ -555,7 +561,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         result = {}
         for psc_id, psc_config in pscs_config.items():
             result[psc_id] = self._build_person_set_collection(
-            psc_config, families)
+                psc_config, families)
         return result
 
     def get_person_set_collection(
@@ -567,9 +573,9 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
 
     def build_report(self) -> CommonReport:
         """Generate common report JSON from genotpye data study."""
-        config = self.config.common_report
+        config = self.config.get("common_report", {})
 
-        assert config.enabled, self.study_id
+        assert config.get("enabled", False), self.study_id
 
         start = time.time()
 
@@ -619,9 +625,9 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         )
 
         person_sets_config = \
-            self.config.person_set_collections
+            self.config.get("person_set_collections", {})
 
-        assert person_sets_config.selected_person_set_collections \
+        assert person_sets_config.get("selected_person_set_collections") \
             is not None, config
 
         collection = self.get_person_set_collection(
@@ -685,9 +691,10 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         the report. You can force building the report by
         passing `force=True` to the function.
         """
-        if not self.config.common_report.enabled:
+        common_report_config = self.config.get("common_report", {})
+        if not common_report_config.get("enabled"):
             return None
-        report_filename = self.config.common_report.file_path
+        report_filename = common_report_config.get("file_path")
         try:
             if os.path.exists(report_filename) and not force:
                 logger.info(
@@ -704,10 +711,11 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
 
     def get_common_report(self) -> CommonReport | None:
         """Return a study's common report."""
-        if not self.config.common_report.enabled:
+        common_report_config = self.config.get("common_report", {})
+        if not common_report_config.get("enabled"):
             return None
 
-        report = CommonReport.load(self.config.common_report.file_path)
+        report = CommonReport.load(common_report_config.get("file_path"))
         if report is None:
             report = self.build_and_save()
         return report
@@ -951,7 +959,7 @@ class GenotypeDataStudy(GenotypeData):
 
     @property
     def families(self) -> FamiliesData:
-        return cast(FamiliesData, self._backend.families)
+        return self._backend.families
 
     def _build_person_set_collection(
         self, psc_config: PersonSetCollectionConfig,

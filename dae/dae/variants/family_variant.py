@@ -42,7 +42,7 @@ def calculate_simple_best_state(
         alt_gt = np.zeros(genotype.shape, dtype=GenotypeType)
         alt_gt[genotype == allele_index] = 1
 
-        alt = np.sum(alt_gt, axis=0, dtype=GenotypeType)
+        alt = cast(np.ndarray, np.sum(alt_gt, axis=0, dtype=GenotypeType))
         best_st[0] = best_st[0] - alt
         best_st.append(alt)
 
@@ -776,9 +776,9 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     def family_best_state(self) -> np.ndarray:
         return self.best_state[self.allele_indexes, :]
 
-    @property  # type: ignore
+    @property
     @deprecated(details="Replace usage of `best_st` with `best_state`")
-    def best_st(self):
+    def best_st(self) -> np.ndarray:
         return self.best_state
 
     @staticmethod

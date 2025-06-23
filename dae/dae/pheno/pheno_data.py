@@ -57,7 +57,8 @@ def get_pheno_db_dir(dae_config: dict | None) -> str:
         else:
             pheno_data_dir = dae_config["phenotype_data"]["dir"]
     else:
-        pheno_data_dir = os.path.join(os.environ.get("DAE_DB_DIR", ""), "pheno")
+        pheno_data_dir = os.path.join(
+            os.environ.get("DAE_DB_DIR", ""), "pheno")
 
     return pheno_data_dir
 
@@ -237,9 +238,10 @@ class Measure:
         return result
 
 
-class PhenotypeData(ABC, CommonStudyMixin):
+class PhenotypeData(CommonStudyMixin, ABC):
     """Base class for all phenotype data studies and datasets."""
 
+    # pylint: disable=too-many-public-methods
     def __init__(
         self,
         pheno_id: str,
@@ -247,7 +249,8 @@ class PhenotypeData(ABC, CommonStudyMixin):
         cache_path: Path | None = None,
     ) -> None:
         self._pheno_id: str = pheno_id
-        self.config = config if config is not None else {}
+        super().__init__(config if config is not None else {})
+
         self.name = self.config.get("name", pheno_id) \
             if self.config is not None \
             else pheno_id
@@ -390,7 +393,7 @@ class PhenotypeData(ABC, CommonStudyMixin):
 
     def get_person_roles(self) -> list[str]:
         "Return individuals distinct role data from phenotype database."
-        distinct_roles = set()
+        distinct_roles: set[str] = set()
         df = self.get_persons_df()
         distinct_roles.update(
             Role.from_value(row["role"]).name for row in df.to_dict("records")
@@ -936,7 +939,7 @@ class PhenotypeGroup(PhenotypeData):
         leaves = []
         for child in self.children:
             if child.config["type"] == "study":
-                leaves.append(child)
+                leaves.append(cast(PhenotypeStudy, child))
             else:
                 leaves.extend(cast(PhenotypeGroup, child).get_leaves())
         return leaves
@@ -1033,7 +1036,7 @@ class PhenotypeGroup(PhenotypeData):
 
     @cached_property
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
-        collection_ids = set()
+        collection_ids: set[str] = set()
         for child in self.children:
             collection_ids.update(child.person_set_collections.keys())
         collections = {}
@@ -1112,12 +1115,12 @@ class PhenotypeGroup(PhenotypeData):
 
     def get_person_roles(self) -> list[str]:
         leaves = self.get_leaves()
-        distinct_roles = set()
+        distinct_roles: set[str] = set()
         for leaf in leaves:
             df = leaf.get_persons_df()
             distinct_roles.update(
                 Role.from_value(row["role"]).name
-                    for row in df.to_dict("records")
+                for row in df.to_dict("records")
             )
         return sorted(distinct_roles)
 
