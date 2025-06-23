@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Any, TextIO
 
 from django.core.management.base import BaseCommand
 
@@ -9,20 +10,22 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand, DatasetBaseMixin):
+    """Export all existing datasets to a CSV file."""
+
     help = "Export all existing datasets"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         gpf_instance = kwargs.pop("gpf_instance", None)
         DatasetBaseMixin.__init__(self, gpf_instance=gpf_instance)
         BaseCommand.__init__(self, **kwargs)
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument("--file", type=str)
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
 
         if options["file"]:
-            outfile = open(options["file"], "w")
+            outfile: TextIO = open(options["file"], "w")  # noqa: SIM115
         else:
             outfile = sys.stdout
 
@@ -30,10 +33,11 @@ class Command(BaseCommand, DatasetBaseMixin):
         for genotype_data_id in self.gpf_instance.get_genotype_data_ids():
             try:
                 dataset = self.get_dataset(genotype_data_id)
+                assert dataset is not None, "dataset not found"
+
                 authorized = ";".join([
                     group.name for group in dataset.groups.all()
                 ])
                 print(f"{genotype_data_id},{authorized}", file=outfile)
-            except Exception as ex:
-                logger.warning(f"dataset {genotype_data_id} not found")
-                logger.exception(ex)
+            except Exception:
+                logger.exception("dataset %s not found", genotype_data_id)

@@ -147,7 +147,8 @@ def liftover_grr_fixture(
 
 @pytest.fixture(scope="module")
 def liftover_grr_fixture_reverse_strand(
-        tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("liftover_grr_fixture_2")
     setup_directories(root_path, {
         "target_genome": {

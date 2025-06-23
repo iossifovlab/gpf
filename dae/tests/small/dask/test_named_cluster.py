@@ -1,12 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any
+
 import dae.dask.named_cluster
 import pytest
+import pytest_mock
 from dae.dask.named_cluster import setup_client, setup_client_from_config
 from dask import config
 
 
 @pytest.fixture
-def named_cluster_config():
+def named_cluster_config() -> dict[str, Any]:
     return {
         "default": "local",
         "clusters": [{
@@ -22,7 +25,10 @@ def named_cluster_config():
     }
 
 
-def test_default(mocker, named_cluster_config):
+def test_default(
+    mocker: pytest_mock.MockerFixture,
+    named_cluster_config: dict[str, Any],
+) -> None:
     mocked_local = mocker.patch(
         "dask.distributed.LocalCluster", autospec=True)
 
@@ -41,7 +47,10 @@ def test_default(mocker, named_cluster_config):
     }
 
 
-def test_default_with_number_of_threads(mocker, named_cluster_config):
+def test_default_with_number_of_threads(
+    mocker: pytest_mock.MockerFixture,
+    named_cluster_config: dict[str, Any],
+) -> None:
     mocked_local = mocker.patch(
         "dask.distributed.LocalCluster", autospec=True)
     mocker.patch(
@@ -56,7 +65,10 @@ def test_default_with_number_of_threads(mocker, named_cluster_config):
     assert mocked_local.call_args.kwargs["n_workers"] == 1
 
 
-def test_config_access(mocker, named_cluster_config):
+def test_config_access(
+    mocker: pytest_mock.MockerFixture,
+    named_cluster_config: dict[str, Any],
+) -> None:
     mocked_local = mocker.patch(
         "dask.distributed.LocalCluster", autospec=True)
     mocker.patch(
@@ -73,7 +85,9 @@ def test_config_access(mocker, named_cluster_config):
     }
 
 
-def test_setup_cluster_from_config_simple(mocker):
+def test_setup_cluster_from_config_simple(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
     mocked_factory = mocker.patch(
         "dae.dask.named_cluster.set_up_local_cluster", autospec=True)
     mocker.patch.dict(
@@ -96,7 +110,7 @@ def test_setup_cluster_from_config_simple(mocker):
         })
 
 
-def test_setup_sge_cluster(mocker):
+def test_setup_sge_cluster(mocker: pytest_mock.MockerFixture) -> None:
     mocked_sge = mocker.patch(
         "dask_jobqueue.SGECluster", autospec=True)
 
@@ -112,7 +126,7 @@ def test_setup_sge_cluster(mocker):
     assert "number_of_workers" not in mocked_sge.call_args.kwargs
 
 
-def test_setup_slurm_cluster(mocker):
+def test_setup_slurm_cluster(mocker: pytest_mock.MockerFixture) -> None:
     mocked_slurm = mocker.patch(
         "dask_jobqueue.SLURMCluster", autospec=True)
 

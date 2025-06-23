@@ -1,3 +1,4 @@
+# ruff: noqa: ARG002
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 import textwrap
 from unittest.mock import MagicMock, patch
@@ -784,7 +785,8 @@ def test_liftover_allele(
 
     class TestLiftoverAnnotator(AbstractLiftoverAnnotator):
         def _internal_liftover_allele(
-            self, allele: VCFAllele) -> tuple[str, int, str, str] | None:  # noqa: ARG002
+            self, allele: VCFAllele,
+        ) -> tuple[str, int, str, str] | None:
             return ("chrFoo", 5678, "T", "C")
     mock_pipeline = MagicMock()
     annotator = TestLiftoverAnnotator(
@@ -828,7 +830,8 @@ def test_liftover_allele_none_allele(
 
     class TestLiftoverAnnotatorNone(AbstractLiftoverAnnotator):
         def _internal_liftover_allele(
-            self, allele: VCFAllele) -> tuple[str, int, str, str] | None:  # noqa: ARG002
+            self, allele: VCFAllele,
+        ) -> tuple[str, int, str, str] | None:
             return None
     mock_pipeline = MagicMock()
     annotator = TestLiftoverAnnotatorNone(
@@ -864,7 +867,8 @@ def test_basic_liftover_allele_coordinates_none(
     target_genome = build_reference_genome_from_resource(res).open()
     assert target_genome is not None
 
-    liftover_chain.convert_coordinate = MagicMock(return_value=None)
+    liftover_chain.convert_coordinate = MagicMock(  # type: ignore
+        return_value=None)
 
     chrom = "chrFoo"
     pos = 1000
@@ -983,7 +987,7 @@ def test_liftover_variant_different_positions(
     assert result is None
 
 
-def test_liftover_sequence_anchors_none():
+def test_liftover_sequence_anchors_none() -> None:
     liftover_chain = MagicMock()
     target_genome = MagicMock()
 
@@ -1001,7 +1005,7 @@ def test_liftover_sequence_anchors_none():
     liftover_chain.convert_coordinate.assert_called()
 
 
-def test_liftover_sequence_anchors_different_chromosomes():
+def test_liftover_sequence_anchors_different_chromosomes() -> None:
     liftover_chain = MagicMock()
     target_genome = MagicMock()
 
@@ -1021,7 +1025,7 @@ def test_liftover_sequence_anchors_different_chromosomes():
     assert result is None
 
 
-def test_liftover_sequence_length_change_too_large():
+def test_liftover_sequence_length_change_too_large() -> None:
     liftover_chain = MagicMock()
     target_genome = MagicMock()
 
@@ -1043,7 +1047,7 @@ def test_liftover_sequence_length_change_too_large():
     assert result is None
 
 
-def test_liftover_sequence_tseq_equals_alt():
+def test_liftover_sequence_tseq_equals_alt() -> None:
     liftover_chain = MagicMock()
     target_genome = MagicMock()
 
@@ -1068,7 +1072,7 @@ def test_liftover_sequence_tseq_equals_alt():
 
 def test_liftover_snp_simple(
     mocker: pytest_mock.MockerFixture,
-    liftover_grr_fixture_reverse_strand,
+    liftover_grr_fixture_reverse_strand: GenomicResourceRepo,
 ) -> None:
     target_genome_mock = mocker.Mock()
     mocker.patch.object(
