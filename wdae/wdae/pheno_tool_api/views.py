@@ -1,16 +1,9 @@
 import logging
 import math
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from io import StringIO
 from typing import Any, cast
 
-from dae.effect_annotation.effect import EffectTypesMixin
-from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Measure
-from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapter
-from dae.pheno_tool.tool import PhenoResult, PhenoTool
-from dae.query_variants.query_runners import QueryResult
-from dae.variants.family_variant import FamilyVariant
 from datasets_api.permissions import (
     get_permissions_etag,
     user_has_permission,
@@ -25,6 +18,13 @@ from rest_framework.response import Response
 from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
+
+from dae.effect_annotation.effect import EffectTypesMixin
+from dae.pheno.common import MeasureType
+from dae.pheno.pheno_data import Measure
+from dae.pheno_tool.tool import PhenoResult
+from dae.query_variants.query_runners import QueryResult
+from pheno_tool_api.adapter import PhenoToolAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class PhenoToolView(QueryBaseView):
         normalize_desc = " + ".join(normalize_by)
         return f"{measure_id} ~ {normalize_desc}"
 
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request) -> Response | StreamingHttpResponse:
         """Return pheno tool results based on POST request."""
         data = expand_gene_set(request.data)
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
@@ -72,9 +72,7 @@ class PhenoToolView(QueryBaseView):
         study_wrapper = cast(WDAEStudy, study_wrapper)
         adapter = cast(
             PhenoToolAdapter,
-            self.gpf_instance.get_pheno_tool_adapter(
-                study_wrapper.genotype_data,
-            ),
+            self.gpf_instance.get_pheno_tool_adapter(study_wrapper),
         )
         data["phenoFilterFamilyIds"] = None
         if data.get("familyFilters") is not None:
@@ -97,33 +95,8 @@ class PhenoToolView(QueryBaseView):
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        effect_groups = list(data["effectTypes"])
-        effect_types = EffectTypesMixin.build_effect_types(data["effectTypes"])
-
-        data = self.query_transformer.transform_kwargs(study_wrapper, **data)
-
-        measure_id = data["measureId"]
-        family_ids = data.get("phenoFilterFamilyIds")
-        person_ids = adapter.helper.genotype_data_persons(
-            data.get("family_ids", []),
-        )
-
-        normalize_by = cast(list[dict[str, str]], data.get("normalizeBy"))
-
-        runners = study_wrapper._collect_runners(  # noqa: SLF001
-            data, self.query_transformer)
-        qr = QueryResult(runners)
-        qr.start()
-        variants = list(cast(
-            Iterable[FamilyVariant], qr,
-        ))
-
         try:
-            result = adapter.calc_variants(
-                measure_id, family_ids, person_ids,
-                normalize_by, variants,
-                effect_types, effect_groups,
-            )
+            result = adapter.calc_variants(data)
         except KeyError:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -135,47 +108,13 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
 
     def generate_columns(
             self,
-            measure_id: str,
-            family_ids: list[str] | None,
-            person_ids: set[str],
-            normalize_by: list[dict[str, str]],
+            query_data: dict[str, Any],
             adapter: PhenoToolAdapter,
-            effect_types: list[Any],
-            effect_groups: list[Any],
-            variants: Iterable[FamilyVariant],
     ) -> Generator[str, None, None]:
         """Pheno tool download generator function."""
         # Return a response instantly and make download more responsive
         yield ""
-        tool = adapter.pheno_tool
-
-        result_df = tool.create_df(
-            measure_id, person_ids=cast(list[str], person_ids),
-            family_ids=family_ids, normalize_by=normalize_by,
-        )
-
-        adapted_variants = adapter.helper.genotype_data_variants(
-            variants, effect_types, effect_groups,
-        )
-
-        for effect in effect_groups:
-            result_df = PhenoTool.join_pheno_df_with_variants(
-                result_df, adapted_variants[effect],
-            )
-            result_df = result_df.rename(columns={"variant_count": effect})
-
-        if normalize_by:
-            normalize_by_measures = tool.init_normalize_measures(
-                measure_id, normalize_by,
-            )
-            column_name = self._build_report_description(
-                measure_id, normalize_by_measures,
-            )
-            result_df = result_df.rename(columns={"normalized": column_name})
-            result_df[column_name] = result_df[column_name].round(decimals=5)
-
-        result_df[measure_id] = \
-            result_df[measure_id].round(decimals=5)
+        result_df = adapter.produce_download_df(query_data)
 
         columns = [
             col
@@ -189,7 +128,7 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
 
         yield from csv_buffer.readlines()
 
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request) -> Response | StreamingHttpResponse:
         """Pheno tool download."""
         data = expand_gene_set(parse_query_params(request.data))
 
@@ -208,8 +147,6 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
         data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
             data["effectTypes"],
         )
-        effect_groups = list(data["effectTypes"])
-        effect_types = EffectTypesMixin.build_effect_types(data["effectTypes"])
 
         data["phenoFilterFamilyIds"] = None
         if data.get("familyFilters") is not None:
@@ -233,12 +170,11 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
             data, self.query_transformer)
         qr = QueryResult(runners)
         qr.start()
-        variants = cast(Iterable[FamilyVariant], qr)
 
         adapter = cast(
             PhenoToolAdapter,
             self.gpf_instance.get_pheno_tool_adapter(
-                study_wrapper.genotype_data,
+                study_wrapper,
             ),
         )
         print("adapter finished")
@@ -246,24 +182,10 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        measure_id = data["measureId"]
-        family_ids = data.get("phenoFilterFamilyIds")
-        person_ids = adapter.helper.genotype_data_persons(
-            data.get("family_ids", []),
-        )
-
-        normalize_by = cast(list[dict[str, str]], data.get("normalizeBy"))
-
         response = StreamingHttpResponse(
             self.generate_columns(
-                measure_id,
-                family_ids,
-                person_ids,
-                normalize_by,
+                data,
                 adapter,
-                effect_types,
-                effect_groups,
-                variants,
             ),
             content_type="text/csv",
         )
