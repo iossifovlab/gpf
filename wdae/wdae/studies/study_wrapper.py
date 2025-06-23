@@ -7,8 +7,12 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import closing
 from typing import Any, Protocol, cast
 
+from matplotlib.dviread import Box
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.wdae_study_config import wdae_study_config_schema
+from dae.configuration.schemas.wdae_study_config import (
+    wdae_study_config_schema,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
@@ -205,7 +209,10 @@ class WDAEAbstractStudy:
         """Create a configuration for the WDAEStudy."""
         config: dict[str, Any] = {}
         if genotype_data:
-            config = genotype_data.config.to_dict()
+            if isinstance(genotype_data.config, Box):
+                config = genotype_data.config.to_dict()  # type: ignore
+            else:
+                config = cast(dict[str, Any], genotype_data.config)
         elif phenotype_data:
             config["id"] = phenotype_data.pheno_id
             config["name"] = phenotype_data.name
@@ -241,11 +248,14 @@ class WDAEAbstractStudy:
                 not self.genotype_data.config["genotype_browser"]:
             return
 
-        genotype_browser_config = self.genotype_data.config.genotype_browser
+        genotype_browser_config = \
+            self.genotype_data.config.get("genotype_browser", {})
 
         # PERSON AND FAMILY FILTERS
-        self.person_filters = genotype_browser_config.person_filters or None
-        self.family_filters = genotype_browser_config.family_filters or None
+        self.person_filters = \
+            genotype_browser_config.get("person_filters") or None
+        self.family_filters = \
+            genotype_browser_config.get("family_filters") or None
 
         # GENE SCORES
         if genotype_browser_config.column_groups and \
@@ -414,11 +424,14 @@ class WDAEStudy(WDAEAbstractStudy):
         result["has_denovo"] = genotype_data.has_denovo
         result["has_transmitted"] = genotype_data.has_transmitted
         result["name"] = result["name"] or result["id"]
-        result["genotype_browser"] = config.genotype_browser.enabled
-        result["common_report"] = {"enabled": config.common_report.enabled}
+        result["genotype_browser"] = \
+            config.get("genotype_browser", {}).get("enabled")
+        result["common_report"] = {
+            "enabled": config.get("common_report", {}).get("enabled"),
+        }
         result["enrichment_tool"] = \
-            config.enrichment.enabled or result["has_denovo"]
-        result["gene_browser"] = config.gene_browser
+            config.get("enrichment", {}).get("enabled") or result["has_denovo"]
+        result["gene_browser"] = config.get("gene_browser")
         result["phenotype_browser"] = config.get(
             "phenotype_browser",
             result["phenotype_data"] is not None,
@@ -437,7 +450,7 @@ class WDAEStudy(WDAEAbstractStudy):
         person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
-        config = cast(dict, genotype_data.config)
+        config = genotype_data.config
         keys = [
             "id",
             "name",
@@ -521,12 +534,12 @@ class WDAEStudy(WDAEAbstractStudy):
             else:
                 if config["genotype_browser"]["columns"]["genotype"] and \
                         column in \
-                            config["genotype_browser"]["columns"]["genotype"]:
+                        config["genotype_browser"]["columns"]["genotype"]:
                     table_columns.append(
                         dict(
                             config
-                                ["genotype_browser"]["columns"]
-                                ["genotype"][column],
+                            ["genotype_browser"]["columns"]
+                            ["genotype"][column],
                         ),
                     )
                 elif config["genotype_browser"]["columns"]["phenotype"] \
@@ -535,8 +548,8 @@ class WDAEStudy(WDAEAbstractStudy):
                     table_columns.append(
                         dict(
                             config
-                                ["genotype_browser"]["columns"]
-                                ["phenotype"][column]),
+                            ["genotype_browser"]["columns"]
+                            ["phenotype"][column]),
                     )
                 else:
                     raise KeyError(f"No such column {column} configured!")

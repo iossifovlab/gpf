@@ -3,21 +3,12 @@
 
 import logging
 import pathlib
+from collections.abc import Sequence
 from datetime import timedelta
 from typing import cast
 
 import pytest
 import pytest_mock
-from dae.genomic_resources.repository import (
-    GR_CONF_FILE_NAME,
-    GenomicResourceRepo,
-)
-from dae.genomic_resources.testing import (
-    build_inmemory_test_repository,
-    convert_to_tab_separated,
-)
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeData
 from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
@@ -40,6 +31,17 @@ from studies.study_wrapper import WDAEStudy
 from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance, setup_wgpf_instance
 
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import (
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,7 @@ logger = logging.getLogger(__name__)
 def hundred_users(
     db: None,  # noqa: ARG001
     user: WdaeUser,  # noqa: ARG001
-) -> list[AbstractUser]:
+) -> Sequence[WdaeUser]:
     user_model = get_user_model()
     users_data = [
         user_model(
@@ -58,13 +60,13 @@ def hundred_users(
             is_superuser=False,
         ) for i in range(100)
     ]
-    return user_model.objects.bulk_create(users_data)
+    return cast(Sequence[WdaeUser], user_model.objects.bulk_create(users_data))
 
 
 @pytest.fixture
 def user_without_password(
     db: None,  # noqa: ARG001
-) -> AbstractUser:
+) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user_without_password@example.com",
@@ -75,13 +77,13 @@ def user_without_password(
     )
     new_user.save()
 
-    return new_user
+    return cast(WdaeUser, new_user)  # type: ignore
 
 
 @pytest.fixture
 def admin(
     db: None,  # noqa: ARG001
-) -> AbstractUser:
+) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="admin@example.com",
@@ -96,7 +98,7 @@ def admin(
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
     new_user.groups.add(admin_group)
 
-    return new_user
+    return cast(WdaeUser, new_user)  # type: ignore
 
 
 @pytest.fixture
@@ -227,7 +229,7 @@ def hundred_groups(
 @pytest.fixture
 def user(
     db: None,  # noqa: ARG001
-) -> AbstractUser:
+) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user@example.com",
@@ -239,7 +241,7 @@ def user(
     new_user.set_password("secret")
     new_user.save()
 
-    return new_user
+    return cast(WdaeUser, new_user)  # type: ignore
 
 
 @pytest.fixture

@@ -6,6 +6,7 @@ from typing import Any, cast
 
 import pytest
 import pytest_mock
+
 from dae.genomic_resources.genomic_context import (
     GenomicContext,
     get_genomic_context,

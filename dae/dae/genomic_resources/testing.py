@@ -387,7 +387,7 @@ def build_http_test_protocol(
     copy_proto_genomic_resources(
         dest_proto, source_proto)
 
-    host = os.environ.get("HTTP_HOST", "localhost:8080")
+    host = os.environ.get("HTTP_HOST", "localhost:28080")
     server_address = f"http://{host}/{http_path.name}"
 
     try:

@@ -11,10 +11,11 @@ from threading import Lock
 from typing import Any, cast
 
 from box import Box
+from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
+
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.helpers import to_response_json
-from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
 
 logger = logging.getLogger(__name__)
 __all__ = ["get_wgpf_instance"]
@@ -124,9 +125,10 @@ class WGPFInstance(GPFInstance):
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
         if genotype_data is not None:
-            if genotype_data.config.phenotype_data:
+            if genotype_data.config.get("phenotype_data"):
+                pheno_id = genotype_data.config.get("phenotype_data")
                 phenotype_data = self._pheno_registry.get_phenotype_data(
-                    genotype_data.config.phenotype_data,
+                    cast(str, pheno_id),
                 )
             else:
                 phenotype_data = None
