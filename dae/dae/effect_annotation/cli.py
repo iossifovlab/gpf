@@ -1,9 +1,9 @@
+import argparse
 import gzip
 import logging
 import sys
-from argparse import ArgumentParser
 from collections.abc import Iterator
-from typing import Dict, List, Tuple
+from typing import ClassVar
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
@@ -29,8 +29,11 @@ logger = logging.getLogger(__name__)
 
 
 class EffectAnnotatorBuilder:
+    """A class to build an EffectAnnotator instance based on CLI arguments."""
+
     @staticmethod
-    def set_arguments(parser: ArgumentParser) -> None:
+    def set_arguments(parser: argparse.ArgumentParser) -> None:
+        """Set command line arguments for the effect annotator."""
         genomic_repository_group = parser.add_argument_group(
             "Genomic repository options")
 
@@ -84,7 +87,7 @@ class EffectAnnotatorBuilder:
             type=int,
         )
 
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self._gc: GenomicContext | None = None
 
@@ -94,6 +97,7 @@ class EffectAnnotatorBuilder:
         return self._gc
 
     def get_grr(self) -> GenomicResourceRepo:
+        """Get the genomic resources repository."""
         grr: GenomicResourceRepo | None = None
 
         if self.args.genomic_repository_config_filename:
@@ -106,6 +110,7 @@ class EffectAnnotatorBuilder:
         return build_genomic_resource_repository()
 
     def get_gene_models(self) -> GeneModels:
+        """Get the gene models based on the CLI arguments."""
         if self.args.gene_models_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.gene_models_resource_id)
@@ -123,6 +128,7 @@ class EffectAnnotatorBuilder:
         raise ValueError("No gene models could be found!")
 
     def get_refernce_genome(self) -> ReferenceGenome:
+        """Get the reference genome based on the CLI arguments."""
         if self.args.reference_genome_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.reference_genome_resource_id)
@@ -137,7 +143,8 @@ class EffectAnnotatorBuilder:
             return ref
         raise ValueError("No reference genome could be found!")
 
-    def build_effect_annotator(self):
+    def build_effect_annotator(self) -> EffectAnnotator:
+        """Build the EffectAnnotator instance based on the CLI arguments."""
         ref = self.get_refernce_genome()
         gm = self.get_gene_models()
         logger.info(
@@ -151,11 +158,15 @@ class EffectAnnotatorBuilder:
 
 
 class VariantColumnInputFile:
-    variant_columns = ["chrom", "pos",
-                       "location", "variant", "ref", "alt"]
+    """A class to handle input files with variant columns."""
+
+    variant_columns: ClassVar[list[str]] = [
+        "chrom", "pos",
+        "location", "variant", "ref", "alt"]
 
     @staticmethod
-    def set_argument(parser: ArgumentParser):
+    def set_argument(parser: argparse.ArgumentParser) -> None:
+        """Set command line arguments for the variant column input file."""
         variant_columns_group = parser.add_argument_group(
             "Variant columns")
         for variant_column in VariantColumnInputFile.variant_columns:
@@ -168,7 +179,7 @@ class VariantColumnInputFile:
                                       nargs="?", default="-")
         input_file_group.add_argument("--input-sep", default="\t")
 
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
 
         # open file
@@ -177,17 +188,17 @@ class VariantColumnInputFile:
             self.file = sys.stdin
         else:
             if filename.endswith("gz"):
-                self.file = gzip.open(filename, "rt")
+                self.file = gzip.open(filename, "rt")  # noqa: SIM115
             else:
-                self.file = open(filename, "rt")  # pylint: disable=R1732
+                self.file = open(filename, "rt")  # noqa: SIM115
 
         # read header
-        self.header: List[str] = self.file.readline(). \
+        self.header: list[str] = self.file.readline(). \
             strip("\n\r").split(self.args.input_sep)
 
         # prepare the variant_attribute_index
         args_dict = vars(self.args)
-        self.variant_attribute_index: Dict[str, int] = {}
+        self.variant_attribute_index: dict[str, int] = {}
         for variant_attribute in VariantColumnInputFile.variant_columns:
             col = args_dict[f"{variant_attribute}_col"]
             idx = [i for i, h in enumerate(self.header) if h == col]
@@ -198,10 +209,10 @@ class VariantColumnInputFile:
             if len(idx) == 1:
                 self.variant_attribute_index[variant_attribute] = idx[0]
 
-    def get_header(self) -> List[str]:
+    def get_header(self) -> list[str]:
         return self.header
 
-    def get_lines(self) -> Iterator[Tuple[List[str], Dict[str, str]]]:
+    def get_lines(self) -> Iterator[tuple[list[str], dict[str, str]]]:
         for line in self.file:
             columns = line.strip("\n\r").split(self.args.input_sep)
             variant_attributes = {
@@ -214,15 +225,17 @@ class VariantColumnInputFile:
 
 
 class VariantColumnOutputFile:
+    """A class to handle output files with variant columns."""
+
     @staticmethod
-    def set_argument(parser: ArgumentParser):
+    def set_argument(parser: argparse.ArgumentParser) -> None:
         output_file_group = parser.add_argument_group(
             "Output file")
         output_file_group.add_argument("output_filename",
                                        nargs="?", default="-")
         output_file_group.add_argument("--output-sep", default="\t")
 
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
 
         filename = self.args.output_filename
@@ -230,11 +243,11 @@ class VariantColumnOutputFile:
             self.file = sys.stdout
         else:
             if filename.endswith("gz"):
-                self.file = gzip.open(filename, "wt")
+                self.file = gzip.open(filename, "wt")  # noqa: SIM115
             else:
-                self.file = open(filename, "wt")  # pylint: disable=R1732
+                self.file = open(filename, "wt")  # noqa: SIM115
 
-    def write_columns(self, columns) -> None:
+    def write_columns(self, columns: list[str]) -> None:
         print(*columns, sep=self.args.output_sep, file=self.file)
 
     def close(self) -> None:
@@ -242,12 +255,18 @@ class VariantColumnOutputFile:
 
 
 class AnnotationAttributes:
-    ALL_ATTRIBUTE_IDXS = {aa: aai for aai, aa in enumerate(
-        ["worst_effect", "gene_effects", "effect_details"])}
+    """A class to handle annotation attributes for variant effects."""
+
+    ALL_ATTRIBUTE_IDXS: ClassVar[dict[str, int]] = {
+        aa: aai for aai, aa in enumerate(
+            ["worst_effect", "gene_effects", "effect_details"])}
 
     @staticmethod
-    def set_argument(parser: ArgumentParser, default_columns: str =
-                     "worst_effect,gene_effects,effect_details"):
+    def set_argument(
+        parser: argparse.ArgumentParser,
+        default_columns: str = "worst_effect,gene_effects,effect_details",
+    ) -> None:
+        """Set command line arguments for annotation attributes."""
         annotation_attributes_group = parser.add_argument_group(
             "Annotation attributes.")
         annotation_attributes_group. \
@@ -261,10 +280,10 @@ class AnnotationAttributes:
                          "ED: effect_details'"
                          f"The default is : '{default_columns}'.")
 
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
-        self.out_attributes: List[str] = []
-        self.source_attributes: List[str] = []
+        self.out_attributes: list[str] = []
+        self.source_attributes: list[str] = []
 
         for attribute_def in self.args.annotation_attributes.split(","):
             parts = attribute_def.split(":")
@@ -287,19 +306,20 @@ class AnnotationAttributes:
         self.value_idxs = [AnnotationAttributes.ALL_ATTRIBUTE_IDXS[aa]
                            for aa in self.source_attributes]
 
-    def get_out_attributes(self) -> List[str]:
+    def get_out_attributes(self) -> list[str]:
         return self.out_attributes
 
-    def get_source_attributes(self) -> List[str]:
+    def get_source_attributes(self) -> list[str]:
         return self.source_attributes
 
-    def get_values(self, effect) -> List[str]:
+    def get_values(self, effect: list[AnnotationEffect]) -> list[str]:
         full_desc = AnnotationEffect.effects_description(effect)
         return [full_desc[idx] for idx in self.value_idxs]
 
 
-def cli_columns():
-    parser = ArgumentParser(
+def cli_columns() -> None:
+    """CLI interface for annotating variant effects in a column file."""
+    parser = argparse.ArgumentParser(
         description="Annotate Variant Effects in a Column File.")
 
     VerbosityConfiguration.set_arguments(parser)
@@ -319,18 +339,18 @@ def cli_columns():
         input_file.get_header() + annotation_attributes.get_out_attributes())
     for columns, vdef in input_file.get_lines():
         logger.debug("vdef: %s AAA", vdef)
-        effect = annotator.do_annotate_variant(**vdef)
+        effect = annotator.do_annotate_variant(**vdef)  # type: ignore
         output_file.write_columns(
             columns + annotation_attributes.get_values(effect),
         )
 
 
-def cli_vcf():
+def cli_vcf() -> None:
+    """CLI interface for annotating variant effects in a VCF file."""
     # pylint: disable=C0415
-    # type: ignore
     import pysam
 
-    parser = ArgumentParser(
+    parser = argparse.ArgumentParser(
         description="Annotate Variant Effects in a VCF file.")
 
     VerbosityConfiguration.set_arguments(parser)
@@ -341,7 +361,8 @@ def cli_vcf():
 
     parser.add_argument("input_filename", help="input VCF variants file name")
     parser.add_argument(
-        "output_filename", nargs="?", help="output file name (default: stdout)",
+        "output_filename", nargs="?",
+        help="output file name (default: stdout)",
     )
     args = parser.parse_args(sys.argv[1:])
     VerbosityConfiguration.set(args)
@@ -353,7 +374,7 @@ def cli_vcf():
     if args.output_filename is None:
         outfile = sys.stdout
     else:
-        outfile = open(args.output_filename, "w")  # pylint: disable=R1732
+        outfile = open(args.output_filename, "w")  # noqa: SIM115
 
     # handling the header
     header = infile.header
@@ -368,8 +389,9 @@ def cli_vcf():
         "gene_effects": "Gene effects.",
         "effect_details": "Detailed effects.",
     }
-    for out_a, src_a in zip(annotation_attributes.get_out_attributes(),
-                            annotation_attributes.get_source_attributes()):
+    for out_a, src_a in zip(
+            annotation_attributes.get_out_attributes(),
+            annotation_attributes.get_source_attributes(), strict=True):
         header.info.add(out_a, "A", "String",
                         source_attribute_description[src_a])
 
@@ -378,7 +400,14 @@ def cli_vcf():
     # handling the variants
     out_as = annotation_attributes.get_out_attributes()
     for variant in infile:
-        buffers = [list([]) for _ in out_as]
+        buffers: list[list[str]] = [[] for _ in out_as]
+        if variant is None:
+            break
+        if not variant.alts:
+            logger.warning(
+                "Variant %s:%s has no alternate alleles, skipping.",
+                variant.chrom, variant.pos)
+            continue
 
         for alt in variant.alts:
             effect = annotator.do_annotate_variant(
@@ -387,11 +416,12 @@ def cli_vcf():
                 ref=variant.ref,
                 alt=alt,
             )
-            for buff, v in zip(buffers,
-                               annotation_attributes.get_values(effect)):
+            for buff, v in zip(
+                    buffers,
+                    annotation_attributes.get_values(effect), strict=True):
                 buff.append(v)
 
-        for out_a, buff in zip(out_as, buffers):
+        for out_a, buff in zip(out_as, buffers, strict=True):
             variant.info[out_a] = ",".join(buff)
         print(str(variant), file=outfile, end="")
 

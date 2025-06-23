@@ -236,7 +236,8 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 
             try:
                 result = self._exec(task_node.func, args, [], params)
-            except Exception as exp:  # noqa: BLE001 pylint: disable=broad-except
+            except Exception as exp:  # noqa: BLE001
+                # pylint: disable=broad-except
                 result = exp
                 is_error = True
             finished_tasks += 1
@@ -303,7 +304,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 f"unexpected dask executor return None: {task_node}, {args}, "
                 f"{deps}, {params}")
         self._task2future[task_node] = future
-        self._future_key2task[future.key] = task_node
+        self._future_key2task[str(future.key)] = task_node
         return future
 
     def _get_future_or_result(self, task: Task) -> Any:
@@ -342,7 +343,8 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             for future in completed:
                 try:
                     result = future.result()
-                except Exception as exp:  # noqa: BLE001 pylint: disable=broad-except
+                except Exception as exp:  # noqa: BLE001
+                    # pylint: disable=broad-except
                     result = exp
                 task = self._future_key2task[future.key]
                 self._task2result[task] = result
@@ -450,14 +452,16 @@ def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
     If there are tasks, that need to run, the function returns False.
     """
     # pylint: disable=protected-access
-    AbstractTaskGraphExecutor._check_for_cyclic_deps(task_graph)  # noqa: SLF001
+    AbstractTaskGraphExecutor._check_for_cyclic_deps(  # noqa: SLF001
+        task_graph)
 
     already_computed_tasks = {}
     for task_node, record in task_cache.load(task_graph):
         if record.type == CacheRecordType.COMPUTED:
             already_computed_tasks[task_node] = record.result
 
-    for task_node in AbstractTaskGraphExecutor._in_exec_order(task_graph):  # noqa: SLF001
+    for task_node in AbstractTaskGraphExecutor._in_exec_order(  # noqa: SLF001
+            task_graph):
         if task_node not in already_computed_tasks:
             return False
 

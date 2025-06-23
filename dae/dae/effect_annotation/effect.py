@@ -264,7 +264,8 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             result = [
                 gene_effect
                 for gene_effect in gene_effects
-                if gene_effect[1] in EffectTypesMixin.EFFECT_GROUPS[effect_type]
+                if gene_effect[1] in EffectTypesMixin.EFFECT_GROUPS[
+                    effect_type]
             ]
         elif effect_type in EffectTypesMixin.EFFECT_TYPES:
             result = [
@@ -793,7 +794,7 @@ class EffectTypesMixin:
         cls, *, safe: bool = True, **kwargs: Any,
     ) -> list[str] | None:
         """Process effect types from kwargs."""
-        effect_types = kwargs.get("effectTypes", None)
+        effect_types = kwargs.get("effectTypes")
         if effect_types is None:
             return None
 

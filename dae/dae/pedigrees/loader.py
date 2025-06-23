@@ -8,7 +8,7 @@ import warnings
 from collections import defaultdict
 from collections.abc import Callable
 from functools import partial
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 import pandas as pd
 
@@ -186,7 +186,8 @@ class FamiliesLoader(CLILoader):
                 "--ped-sex",
                 default_value="sex",
                 help_text="specify the name of the column in the pedigree"
-                " file that holds the sex of the person [default: %(default)s]",
+                " file that holds the sex of the person "
+                "[default: %(default)s]",
             ),
             CLIArgument(
                 "--ped-status",
@@ -261,8 +262,8 @@ class FamiliesLoader(CLILoader):
                 " Available options are `generate` and `load`. When "
                 "layout mode option is set to generate the loader"
                 "tryes to generate a layout for the family pedigree. "
-                "When `load` is specified, the loader tries to load the layout "
-                "from the layout column of the pedigree. "
+                "When `load` is specified, the loader tries to load the "
+                "layout from the layout column of the pedigree. "
                 "[default: %(default)s]",
             ),
             CLIArgument(
@@ -343,7 +344,8 @@ class FamiliesLoader(CLILoader):
             filter(lambda col: isinstance(col[0], int), header))
         for col in header:
             assert isinstance(col[0], int), col[0]
-        header = tuple(sorted(header, key=operator.itemgetter(0)))  # type: ignore
+        header = tuple(
+            sorted(header, key=operator.itemgetter(0)))  # type: ignore
         _, file_header = zip(*header, strict=True)
         return file_header
 
@@ -393,7 +395,7 @@ class FamiliesLoader(CLILoader):
                 ped_status: Status.from_name,
             })
         converters.update(dict.fromkeys(ALL_FAMILY_TAG_LABELS, str2bool))
-        dtypes = defaultdict(lambda: str)
+        dtypes: dict[str, Any] = defaultdict(lambda: str)
 
         read_csv_func = partial(
             pd.read_csv,
@@ -440,12 +442,15 @@ class FamiliesLoader(CLILoader):
                 ped_generated = PEDIGREE_COLUMN_NAMES["generated"]
                 ped_not_sequenced = PEDIGREE_COLUMN_NAMES["not_sequenced"]
                 ped_sample_id = PEDIGREE_COLUMN_NAMES["sample id"]
-                ped_df = read_csv_func(
-                    pedigree_filepath, header=None,
-                    names=file_header,
-                )
+                ped_df = cast(
+                    pd.DataFrame,
+                    read_csv_func(
+                        pedigree_filepath, header=None,
+                        names=file_header,
+                    ))
             else:
-                ped_df = read_csv_func(pedigree_filepath)
+                ped_df = cast(
+                    pd.DataFrame, read_csv_func(pedigree_filepath))
 
         for warn in warn_messages:
             warnings.showwarning(
@@ -456,22 +461,24 @@ class FamiliesLoader(CLILoader):
 
                 def fill_sample_id(rec: pd.Series) -> pd.Series:
                     if not pd.isna(rec.sample_id):
-                        return pd.Series([rec.sample_id])
+                        return cast(pd.Series, pd.Series([rec.sample_id]))
                     if rec.generated or rec.not_sequenced:
                         return pd.Series([None])
-                    return pd.Series([rec.personId])
+                    return cast(pd.Series, pd.Series([rec.personId]))
 
             else:
 
                 def fill_sample_id(rec: pd.Series) -> pd.Series:
                     if not pd.isna(rec.sample_id):
-                        return pd.Series([rec.sample_id])
-                    return pd.Series([rec.personId])
+                        return cast(pd.Series, pd.Series([rec.sample_id]))
+                    return cast(pd.Series, pd.Series([rec.personId]))
 
-            sample_ids = ped_df.apply(
-                fill_sample_id, axis=1,
-                result_type="reduce",
-            )
+            sample_ids = cast(
+                pd.Series,
+                ped_df.apply(
+                    fill_sample_id, axis=1,
+                    result_type="reduce",
+                ))
             ped_df[ped_sample_id] = sample_ids
         else:
             sample_ids = pd.Series(
