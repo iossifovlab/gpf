@@ -1,7 +1,9 @@
+# ruff: noqa: ARG001, S106
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import uuid
 from datetime import timedelta
-from typing import Type
+from typing import cast
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -14,8 +16,8 @@ from users_api.models import WdaeUser
 
 
 @pytest.fixture
-def user_model() -> Type[WdaeUser]:
-    return get_user_model()
+def user_model() -> type[WdaeUser]:
+    return cast(type[WdaeUser], get_user_model())  # type: ignore
 
 
 @pytest.fixture
@@ -29,8 +31,8 @@ def empty_group_2(db: None) -> Group:
 
 
 @pytest.fixture
-def active_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
-    user = user_model.objects.create_user(
+def active_user(db: None, user_model: type[WdaeUser]) -> WdaeUser:
+    user = user_model.objects.create_user(  # type: ignore
         email="new@new.com", password="secret",
     )
 
@@ -39,8 +41,8 @@ def active_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
 
 
 @pytest.fixture
-def inactive_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
-    user = user_model.objects.create_user(email="new@new.com")
+def inactive_user(db: None, user_model: type[WdaeUser]) -> WdaeUser:
+    user = user_model.objects.create_user(email="new@new.com")  # type: ignore
 
     assert not user.is_active
     return user
@@ -64,47 +66,14 @@ def logged_in_user(
     return active_user, client
 
 
-# @pytest.fixture()
-# def three_new_users(db, user_model):
-#     users = []
-#     for email_id in range(3):
-#         user = user_model.objects.create(
-#             email=f"user{email_id + 1}@example.com"
-#         )
-#         users.append(user)
-
-#     return users
-
-
-# @pytest.fixture()
-# def three_users_in_a_group(db, three_new_users, empty_group):
-#     empty_group.user_set.add(*three_new_users)
-#     for user in three_new_users:
-#         user.refresh_from_db()
-
-#     return three_new_users, empty_group
-
-
-# @pytest.fixture()
-# def three_users_in_groups(db, three_new_users, empty_group, empty_group_2):
-#     empty_group.user_set.add(*three_new_users)
-#     empty_group_2.user_set.add(*three_new_users)
-#     for user in three_new_users:
-#         user.refresh_from_db()
-
-#     return three_new_users, empty_group, empty_group_2
-
-
 @pytest.fixture
 def admin_group(user: WdaeUser) -> Group:
-    admin_group = Group.objects.create(name=WdaeUser.SUPERUSER_GROUP)
-
-    return admin_group
+    return Group.objects.create(name=WdaeUser.SUPERUSER_GROUP)
 
 
 @pytest.fixture
 def researcher(db: None) -> WdaeUser:
-    res = WdaeUser.objects.create_user(email="fake@fake.com")
+    res = WdaeUser.objects.create_user(email="fake@fake.com")  # type: ignore
     res.name = "fname"
     res.set_password("alabala")
     res.save()
@@ -114,7 +83,7 @@ def researcher(db: None) -> WdaeUser:
 
 @pytest.fixture
 def researcher_without_password(db: None) -> WdaeUser:
-    res = WdaeUser.objects.create_user(email="fake@fake.com")
+    res = WdaeUser.objects.create_user(email="fake@fake.com")  # type: ignore
     res.name = "fname"
     res.save()
 
@@ -124,7 +93,8 @@ def researcher_without_password(db: None) -> WdaeUser:
 @pytest.fixture
 def unique_test_user(db: None) -> WdaeUser:
     uid = uuid.uuid1()
-    res = WdaeUser.objects.create_user(email=f"fake{uid}@unique.com")
+    res = WdaeUser.objects.create_user(  # type: ignore
+        email=f"fake{uid}@unique.com")
     res.name = f"fname{uid}"
     res.set_password("alabala")
     res.save()
