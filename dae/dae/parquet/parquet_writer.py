@@ -11,7 +11,7 @@ from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.parquet import helpers as parquet_helpers
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.parquet.schema2.serializers import build_summary_schema
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils import fs_utils
 from dae.variants.attributes import Role, Sex, Status
@@ -185,7 +185,7 @@ def serialize_summary_schema(
     partition_descriptor: PartitionDescriptor,
 ) -> str:
     """Serialize the summary schema."""
-    summary_schema = AlleleParquetSerializer.build_summary_schema(
+    summary_schema = build_summary_schema(
         annotation_attributes,
     )
     schema = [

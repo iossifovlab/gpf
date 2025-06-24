@@ -16,8 +16,11 @@ from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import (
-    AlleleParquetSerializer,
+    AlleleParquetSerializerBase,
+    FamilyAlleleParquetSerializer,
+    SummaryAlleleParquetSerializer,
     VariantsDataSerializer,
+    build_summary_blob_schema,
 )
 from dae.utils import fs_utils
 from dae.utils.variant_utils import (
@@ -47,16 +50,14 @@ class ContinuousParquetFileWriter:
     def __init__(
         self,
         filepath: str,
-        allele_serializer: AlleleParquetSerializer,
+        allele_serializer: AlleleParquetSerializerBase,
         row_group_size: int = 10_000,
-        schema: str = "schema",
-        blob_column: str | None = None,
     ) -> None:
 
         self.filepath = filepath
         self.serializer = allele_serializer
 
-        self.schema = getattr(self.serializer, schema)
+        self.schema = self.serializer.schema()
 
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
@@ -65,6 +66,8 @@ class ContinuousParquetFileWriter:
 
         filesystem, filepath = url_to_pyarrow_fs(filepath)
         compression: str | dict[str, str] = self.DEFAULT_COMPRESSION
+
+        blob_column = self.serializer.blob_column()
         if blob_column is not None:
             compression = {}
             for name in self.schema.names:
@@ -123,7 +126,7 @@ class ContinuousParquetFileWriter:
         """Append the data for an entire variant to the correct file."""
         assert self._data is not None
 
-        data = self.serializer.build_summary_allele_batch_dict(
+        data = self.serializer.build_allele_record_dict(
             allele, json_data,
         )
 
@@ -141,7 +144,7 @@ class ContinuousParquetFileWriter:
         """Append the data for an entire variant to the correct file."""
         assert self._data is not None
 
-        data = self.serializer.build_family_allele_batch_dict(
+        data = self.serializer.build_allele_record_dict(
             allele, json_data,
         )
 
@@ -195,7 +198,10 @@ class VariantsParquetWriter:
         self.partition_descriptor = partition_descriptor
         self.annotation_pipeline = annotation_pipeline
 
-        self.allele_serializer = AlleleParquetSerializer(
+        self.summary_serializer = SummaryAlleleParquetSerializer(
+            self.annotation_pipeline.get_attributes(),
+        )
+        self.family_serializer = FamilyAlleleParquetSerializer(
             self.annotation_pipeline.get_attributes(),
         )
         self._annotation_internal_attributes = {
@@ -203,9 +209,10 @@ class VariantsParquetWriter:
             for attribute in self.annotation_pipeline.get_attributes()
             if attribute.internal
         }
+
         if blob_serializer is None:
             blob_serializer = VariantsDataSerializer.build_serializer(
-                self.allele_serializer.build_summary_blob_schema(
+                build_summary_blob_schema(
                     self.annotation_pipeline.get_attributes(),
                 ),
                 serializer_type=variants_blob_serializer,
@@ -246,10 +253,8 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.allele_serializer,
+                self.family_serializer,
                 row_group_size=self.row_group_size,
-                schema="schema_family",
-                blob_column="family_variant_data",
             )
 
         return self.data_writers[filename]
@@ -264,10 +269,8 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.allele_serializer,
+                self.summary_serializer,
                 row_group_size=self.row_group_size,
-                schema="schema_summary",
-                blob_column="summary_variant_data",
             )
 
         return self.data_writers[filename]
