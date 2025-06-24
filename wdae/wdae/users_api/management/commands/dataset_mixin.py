@@ -1,6 +1,6 @@
 import logging
 
-from dae.studies.dataset_helpers import DatasetHelpers
+from dae.tools.dataset_helpers import DatasetHelpers
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from django.db.models import Q
@@ -20,12 +20,13 @@ class DatasetBaseMixin(DatasetHelpers):
                 return None
 
             return Dataset.objects.get(dataset_id=dataset_id)
-        except Exception:
+        except Exception:  # noqa: BLE001
             logger.debug("dataset %s not found", dataset_id, exc_info=True)
         return None
 
     def rename_wdae_dataset_and_groups(
-            self, dataset_id: str, new_id: str, dry_run: bool = False) -> None:
+            self, dataset_id: str, new_id: str, *,
+            dry_run: bool = False) -> None:
         """Rename WDAE dataset and groups."""
         dataset = self.get_dataset(dataset_id)
         assert dataset is not None, f"can't find WDAE dataset {dataset_id}"
@@ -61,7 +62,8 @@ class DatasetBaseMixin(DatasetHelpers):
                     group.save()
 
     def remove_wdae_dataset_and_groups(
-            self, dataset_id: str, dry_run: bool = False) -> None:
+            self, dataset_id: str, *,
+            dry_run: bool = False) -> None:
         """Remove WDAE dataset and groups."""
         dataset = self.get_dataset(dataset_id)
         assert dataset is not None, f"can't find WDAE dataset {dataset_id}"

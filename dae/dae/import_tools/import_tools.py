@@ -887,33 +887,42 @@ def register_import_storage_factory(
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
 
 
+def _find_study_config(
+    base_dir: pathlib.Path, study_id: str,
+) -> pathlib.Path:
+    for config_file in base_dir.glob("**/*.yaml"):
+        content = yaml.safe_load(config_file.read_text(encoding="utf8"))
+        if content.get("id") == study_id:
+            return config_file
+    return base_dir / study_id / f"{study_id}.yaml"
+
+
 def save_study_config(
         dae_config: Box, study_id: str,
         study_config: str, *,
         force: bool = False) -> None:
     """Save the study config to a file."""
-    dirname = os.path.join(dae_config.studies.dir, study_id)
-    filename = os.path.join(dirname, f"{study_id}.yaml")
+    config_file = _find_study_config(
+        pathlib.Path(dae_config.studies.dir), study_id)
 
-    if os.path.exists(filename):
+    if config_file.exists():
         logger.info(
-            "configuration file already exists: %s", filename)
-        bak_name = os.path.basename(filename) + "." + str(time.time_ns())
-        bak_path = os.path.join(os.path.dirname(filename), bak_name)
+            "configuration file already exists: %s", config_file)
+        bak_path = config_file.with_suffix(f".{time.time_ns()}")
 
         if not force:
             logger.info(
                 "skipping overwring the old config file... "
                 "storing new config in %s", bak_path)
-            pathlib.Path(bak_path).write_text(study_config)
+            bak_path.write_text(study_config)
             return
 
         logger.info(
             "Backing up configuration for %s in %s", study_id, bak_path)
-        os.rename(filename, bak_path)
+        os.rename(config_file, bak_path)
 
-    os.makedirs(dirname, exist_ok=True)
-    pathlib.Path(filename).write_text(study_config)
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text(study_config)
 
 
 def construct_import_annotation_pipeline_config(

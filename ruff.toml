@@ -55,6 +55,7 @@ ignore = [
     "S404",
     "B019",
     "FURB192",
+    "S301",
 ]
 fixable = ["ALL"]
 preview = true
