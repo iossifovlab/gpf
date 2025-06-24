@@ -314,8 +314,8 @@ class WDAEAbstractStudy:
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
         *,
+        max_variants_count: int | None = 10000,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
@@ -623,7 +623,8 @@ class WDAEStudy(WDAEAbstractStudy):
         """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
             kwargs, sources, query_transformer, response_transformer,
-            max_variants_count, max_variants_message=max_variants_message)
+            max_variants_count=max_variants_count,
+            max_variants_message=max_variants_message)
         return filter(None, variants_result)
 
     def _collect_runners(
@@ -803,8 +804,8 @@ class WDAEStudy(WDAEAbstractStudy):
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
         *,
+        max_variants_count: int | None = 10000,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
@@ -1075,6 +1076,7 @@ class WDAEStudyGroup(WDAEStudy):
         genotype_data: GenotypeData | None,
         pheno_data: PhenotypeData | None,
         children: list[WDAEStudy],
+        *,
         query_transformer: QueryTransformerProtocol | None = None,
         response_transformer: ResponseTransformerProtocol | None = None,
     ) -> None:

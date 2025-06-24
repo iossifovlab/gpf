@@ -129,6 +129,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
     def calc_by_effect(
         self, measure_id: str, effect: str, people_variants: Counter,
+        *,
         person_ids: list[str] | None = None,
         family_ids: list[str] | None = None,
         normalize_by: list[dict[str, str]] | None = None,
