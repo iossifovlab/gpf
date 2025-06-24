@@ -2,10 +2,10 @@ import copy
 import logging
 from typing import Any
 
+from dae.genomic_scores.scores import ScoreDesc
 from gpf_instance.extension import GPFExtensionBase
 from studies.study_wrapper import WDAEAbstractStudy
 
-from dae.genomic_scores.scores import ScoreDesc
 from federation.gene_sets_db import RemoteGeneSetCollection
 from federation.remote_enrichment_builder import RemoteEnrichmentBuilder
 from federation.remote_phenotype_data import RemotePhenotypeData

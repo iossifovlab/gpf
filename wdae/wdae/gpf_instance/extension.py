@@ -31,7 +31,7 @@ class GPFExtensionBase:
 
         self.setup()
 
-    def setup(self):
+    def setup(self) -> None:
         pass
 
     @staticmethod
@@ -56,6 +56,11 @@ class GPFExtensionBase:
 
 
 class GPFTool:
+    """
+    Base class for implementing GPF tools.
+
+    GPF tools are classes which interact with studies to provide data.
+    """
     def __init__(self, tool_id: str):
         self._id = tool_id
 

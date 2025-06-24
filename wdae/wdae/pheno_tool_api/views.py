@@ -4,6 +4,11 @@ from collections.abc import Generator
 from io import StringIO
 from typing import Any, cast
 
+from dae.effect_annotation.effect import EffectTypesMixin
+from dae.pheno.common import MeasureType
+from dae.pheno.pheno_data import Measure
+from dae.pheno_tool.tool import PhenoResult
+from dae.query_variants.query_runners import QueryResult
 from datasets_api.permissions import (
     get_permissions_etag,
     user_has_permission,
@@ -19,11 +24,6 @@ from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
 
-from dae.effect_annotation.effect import EffectTypesMixin
-from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Measure
-from dae.pheno_tool.tool import PhenoResult
-from dae.query_variants.query_runners import QueryResult
 from pheno_tool_api.adapter import PhenoToolAdapter
 
 logger = logging.getLogger(__name__)

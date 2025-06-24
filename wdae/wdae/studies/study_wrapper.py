@@ -7,8 +7,6 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import closing
 from typing import Any, Protocol, cast
 
-from matplotlib.dviread import Box
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.wdae_study_config import (
     wdae_study_config_schema,
@@ -22,6 +20,7 @@ from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant
+from matplotlib.dviread import Box
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +145,7 @@ class WDAEAbstractStudy:
 
     @property
     def has_genotype_data(self) -> bool:
-        return self._config["has_genotype"]
+        return cast(bool, self._config["has_genotype"])
 
     @property
     def study_id(self) -> str:

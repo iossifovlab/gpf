@@ -13,7 +13,7 @@ from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 class PhenoToolAdapterBase(GPFTool):
     """Base class for pheno tool adapters."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("pheno_tool")
 
     @abstractmethod
@@ -133,6 +133,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         family_ids: list[str] | None = None,
         normalize_by: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
+        """Run the base pheno tool calc on given variant counts."""
         result = self.pheno_tool.calc(
             measure_id, people_variants,
             sex_split=True,
@@ -170,6 +171,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
     def build_report_description(
         self, measure_id: str, normalize_by: Any,
     ) -> str:
+        """Build a description for a report."""
         normalize_by = self.pheno_tool.init_normalize_measures(
             measure_id, normalize_by,
         )

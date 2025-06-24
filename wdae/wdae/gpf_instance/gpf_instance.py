@@ -127,7 +127,7 @@ class WGPFInstance(GPFInstance):
                 if not isinstance(pheno_tool_adapter, PhenoToolAdapterBase):
                     raise ValueError(
                         f"{ext_name} returned an invalid pheno tool adapter!")
-                return cast(PhenoToolAdapterBase, pheno_tool_adapter)
+                return pheno_tool_adapter
         return cast(PhenoToolAdapter, PhenoToolAdapter.make_tool(study))
 
     @staticmethod
