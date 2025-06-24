@@ -3,12 +3,11 @@ from collections import Counter
 from typing import Any, cast
 
 import pandas as pd
-from gpf_instance.extension import GPFTool
-from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
-
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
+from gpf_instance.extension import GPFTool
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
 
 class PhenoToolAdapterBase(GPFTool):
@@ -67,7 +66,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         measure_id = query_data["measureId"]
         family_ids = query_data.get("phenoFilterFamilyIds")
         person_ids = self.helper.genotype_data_persons(
-            query_data.get("family_ids", []),
+            query_data.get("familyIds", []),
         )
 
         normalize_by = cast(
@@ -191,7 +190,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         measure_id = query_data["measureId"]
         family_ids = query_data.get("phenoFilterFamilyIds")
         person_ids = self.helper.genotype_data_persons(
-            query_data.get("family_ids", []),
+            query_data.get("familyIds", []),
         )
 
         normalize_by = cast(
