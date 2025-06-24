@@ -32,8 +32,9 @@ from dae.parquet.schema2.parquet_io import (
     VariantsParquetWriter,
 )
 from dae.parquet.schema2.serializers import (
-    AlleleParquetSerializer,
     VariantsDataSerializer,
+    build_family_schema,
+    build_summary_blob_schema,
 )
 from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
@@ -88,7 +89,7 @@ class Schema2ImportStorage(ImportStorage):
 
     @classmethod
     def _serialize_family_schema(cls, project: ImportProject) -> str:
-        summary_schema = AlleleParquetSerializer.build_family_schema()
+        summary_schema = build_family_schema()
         schema = [
             (f.name, f.type) for f in summary_schema
         ]
@@ -182,7 +183,7 @@ class Schema2ImportStorage(ImportStorage):
         annotation_pipeline = project.build_annotation_pipeline()
 
         blob_serializer = VariantsDataSerializer.build_serializer(
-            AlleleParquetSerializer.build_summary_blob_schema(
+            build_summary_blob_schema(
                 annotation_pipeline.get_attributes(),
             ),
             project.get_variants_blob_serializer(),

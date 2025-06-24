@@ -15,8 +15,8 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.parquet.schema2.serializers import (
-    AlleleParquetSerializer,
     VariantsDataAvroSerializer,
+    build_summary_blob_schema,
     construct_avro_family_schema,
     construct_avro_summary_schema,
 )
@@ -88,7 +88,7 @@ def test_allele_parquet_serializer(
 ) -> None:
     """Test the AlleleParquetSerializer."""
 
-    schema_summary = AlleleParquetSerializer.build_summary_blob_schema(
+    schema_summary = build_summary_blob_schema(
         annotation_pipeline.get_attributes(),
     )
     avro_summary = construct_avro_summary_schema(schema_summary)
@@ -187,7 +187,7 @@ def test_summary_blob_avro_serializer(
 ) -> None:
     """Test the AlleleParquetSerializer."""
 
-    schema_summary = AlleleParquetSerializer.build_summary_blob_schema(
+    schema_summary = build_summary_blob_schema(
         annotation_pipeline.get_attributes(),
     )
 
@@ -235,7 +235,7 @@ def test_family_blob_avro_serializer(
 ) -> None:
     """Test the AlleleParquetSerializer."""
 
-    schema_summary = AlleleParquetSerializer.build_summary_blob_schema(
+    schema_summary = build_summary_blob_schema(
         annotation_pipeline.get_attributes(),
     )
     serializer = VariantsDataAvroSerializer(schema_summary)
