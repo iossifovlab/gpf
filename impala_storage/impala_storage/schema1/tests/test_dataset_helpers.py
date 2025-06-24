@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from pytest_mock.plugin import MockerFixture
 
+from dae.gpf_instance.gpf_instance import GPFInstance
 from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 
 
@@ -42,7 +42,7 @@ def test_rename_study_config(
     mocker.patch("os.rename", mock_rename)
 
     mock_open = mocker.mock_open()
-    mocker.patch("dae.studies.dataset_helpers.open", mock_open)
+    mocker.patch("dae.tools.dataset_helpers.open", mock_open)
 
     spy = mocker.spy(os, "rename")
 
