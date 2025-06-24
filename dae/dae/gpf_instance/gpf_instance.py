@@ -681,14 +681,13 @@ class GPFInstance:
         self, dataset: GenotypeData,
     ) -> PhenoToolAdapterBase:
         """Create a pheno tool adapter for dataset."""
-        if dataset.config.phenotype_data is None \
-                or dataset.config.phenotype_data == "":
+        phenotype_data_id = dataset.config.get("phenotype_data")
+        if phenotype_data_id is None or phenotype_data_id == "":
             raise ValueError(
                 f"{dataset.study_id} has no phenotype data "
                 "configured!",
             )
 
-        phenotype_data_id = dataset.config.phenotype_data
         phenotype_data_ids = self.get_phenotype_data_ids()
 
         if phenotype_data_id not in phenotype_data_ids:

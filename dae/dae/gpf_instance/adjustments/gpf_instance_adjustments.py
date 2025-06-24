@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any
 
 import toml
 import yaml
@@ -63,8 +63,7 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
 
             study_id = study_config["id"]
 
-            result_config = self.adjust_study(
-                study_id, cast(dict[str, Any], study_config))
+            result_config = self.adjust_study(study_id, study_config)
 
             with open(config_filename, "w", encoding="utf8") as outfile:
                 if config_format == "toml":
@@ -95,8 +94,7 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                     raise ValueError(f"unknown config format {config_format}")
 
             dataset_id = dataset_config["id"]
-            result_config = self.adjust_dataset(
-                dataset_id, cast(dict[str, Any], dataset_config))
+            result_config = self.adjust_dataset(dataset_id, dataset_config)
 
             with open(config_filename, "w", encoding="utf8") as outfile:
                 if config_format == "toml":

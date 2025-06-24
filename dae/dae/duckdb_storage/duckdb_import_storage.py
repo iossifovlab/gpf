@@ -73,7 +73,8 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
                 "has_transmitted": bool({"dae", "vcf"} & variants_types),
             }
             if has_cnv:
-                genotype_browser["variant_types"] = ["sub", "ins", "del", "CNV"]
+                genotype_browser["variant_types"] = [
+                    "sub", "ins", "del", "CNV"]
                 genotype_browser["selected_variant_types"] = [
                     "sub", "ins", "del", "CNV",
                 ]
@@ -239,8 +240,7 @@ class DuckDbImportStorage(AbstractDuckDbImportStorage):
         work_db_filename = os.path.join(
             work_dir, genotype_storage.config.db)
         with closing(create_database_connection(
-                work_db_filename, read_only=False),
-            ) as connection:
+                work_db_filename, read_only=False)) as connection:
             work_tables = create_duckdb_tables(
                 connection,
                 project.study_id,
@@ -284,8 +284,7 @@ class DuckDbS3ImportStorage(AbstractDuckDbImportStorage):
         work_db_filename = os.path.join(
             work_dir, genotype_storage.config.db)
         with closing(create_database_connection(
-                work_db_filename, read_only=False),
-            ) as connection:
+                work_db_filename, read_only=False)) as connection:
             work_tables = create_duckdb_tables(
                 connection,
                 project.study_id,

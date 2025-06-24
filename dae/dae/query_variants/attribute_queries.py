@@ -47,11 +47,18 @@ types:
 
 from collections.abc import Callable
 from enum import Enum
-from typing import Protocol
+from typing import Protocol, cast
 
 from lark import Lark, Token, Transformer, Tree
 from sqlglot import not_, parse_one
-from sqlglot.expressions import BitwiseAnd, Column, Expression, Paren, and_, or_
+from sqlglot.expressions import (
+    BitwiseAnd,
+    Column,
+    Expression,
+    Paren,
+    and_,
+    or_,
+)
 
 from dae.utils.variant_utils import BitmaskEnumTranslator
 
@@ -91,7 +98,7 @@ QUERY_PARSER = Lark(QUERY_GRAMMAR)
 
 class SyntaxSugarTransformer(Transformer):
     """Transformer for adapting syntax sugar to regular queries."""
-    def all(self, values):
+    def all(self, values: list[Tree]) -> Tree | None:
         """Transform all into a sequence of and nodes."""
         list_node = values[0]
         current = None
@@ -104,7 +111,7 @@ class SyntaxSugarTransformer(Transformer):
 
         return current
 
-    def any(self, values):
+    def any(self, values: list[Tree]) -> Tree | None:
         """Transform any into a sequence of or nodes."""
         list_node = values[0]
         current = None
@@ -119,9 +126,10 @@ class SyntaxSugarTransformer(Transformer):
 
 
 class CompoundStripTransformer(Transformer):
-    def compound(self, values):
+    def compound(self, values: list[Token]) -> Tree:
         assert len(values) == 2
-        return Tree("literal", children=[Token("__ANON_0", values[0].value)])
+        return Tree(
+            "literal", children=[Token("__ANON_0", values[0].value)])
 
 
 class QueryCompoundAdditionTransformer(Transformer):
@@ -135,7 +143,7 @@ class QueryCompoundAdditionTransformer(Transformer):
         super().__init__()
         self._compound_value = compound_value
 
-    def literal(self, values) -> str:
+    def literal(self, values: list[Token]) -> str:
         assert len(values) == 1
         str_value = values[0].value
 
@@ -147,37 +155,37 @@ class QueryCompoundAdditionTransformer(Transformer):
             "not eligible for compound addition transformation!",
         )
 
-    def and_(self, values) -> str:
+    def and_(self, values: list[Token]) -> str:
         assert len(values) == 2
 
         return f"{values[0]} and {values[1]}"
 
-    def or_(self, values) -> str:
+    def or_(self, values: list[Token]) -> str:
         assert len(values) == 2
 
         return f"{values[0]} or {values[1]}"
 
-    def grouping(self, values) -> str:
+    def grouping(self, values: list[Token]) -> str:
         assert len(values) == 1
 
         return f"({values[0]})"
 
-    def neg(self, values) -> str:
+    def neg(self, values: list[Token]) -> str:
         assert len(values) == 1
 
         return f"not {values[0]}"
 
-    def all(self, values) -> str:
+    def all(self, values: list[Tree]) -> str:
         list_node = values[0]
-        values = ", ".join(list_node.children)
+        res = ", ".join(str(ch) for ch in list_node.children)
 
-        return f"all([{values}])"
+        return f"all([{res}])"
 
-    def any(self, values):
+    def any(self, values: list[Tree]) -> str:
         list_node = values[0]
-        values = ", ".join(list_node.children)
+        res = ", ".join(str(ch) for ch in list_node.children)
 
-        return f"any([{values}])"
+        return f"any([{res}])"
 
 
 class AttributeQueryTransformer(Transformer):
@@ -214,7 +222,9 @@ class AttributeQueryTransformer(Transformer):
 class AttributeQueryTransformerFunction(AttributeQueryTransformer):
     """Class for transforming attribute Lark trees into function calls."""
 
-    def compound(self, values) -> Callable[[int, int | None], bool]:
+    def compound(
+        self, values: list[Token],
+    ) -> Callable[[int, int | None], bool]:
         """Transform compounds into a function that compares two values."""
         assert len(values) == 2
         if self._bitmask_transformer is None:
@@ -248,7 +258,9 @@ class AttributeQueryTransformerFunction(AttributeQueryTransformer):
 
         return compare_compound
 
-    def literal(self, values) -> Callable[[int, int | None], bool]:
+    def literal(
+        self, values: list[Token],
+    ) -> Callable[[int, int | None], bool]:
         """Transform literals into a direct comparison function."""
         assert len(values) == 1
         value = values[0].value.lower()
@@ -257,35 +269,51 @@ class AttributeQueryTransformerFunction(AttributeQueryTransformer):
         def compare_literal(
             x: int, y: int | None = None,  # noqa: ARG001
         ) -> bool:
-            return self._values[value].value & x == self._values[value].value
+            return bool(
+                self._values[value].value & x == self._values[value].value)
         return compare_literal
 
-    def and_(self, values) -> Callable[[int, int | None], bool]:
+    def and_(
+        self, values: list[Callable[[int, int | None], bool]],
+    ) -> Callable[[int, int | None], bool]:
+        """Transform and_ into a function that combines two comparisons."""
         assert len(values) == 2
 
         def compare_and(x: int, y: int | None = None) -> bool:
             return values[0](x, y) and values[1](x, y)
+
         return compare_and
 
-    def or_(self, values) -> Callable[[int, int | None], bool]:
+    def or_(
+        self, values: list[Callable[[int, int | None], bool]],
+    ) -> Callable[[int, int | None], bool]:
+        """Transform or_ into a function that combines two comparisons."""
         assert len(values) == 2
 
         def compare_or(x: int, y: int | None = None) -> bool:
             return values[0](x, y) or values[1](x, y)
+
         return compare_or
 
-    def grouping(self, values) -> Callable[[int, int | None], bool]:
+    def grouping(
+        self, values: list[Callable[[int, int | None], bool]],
+    ) -> Callable[[int, int | None], bool]:
+        """Transform grouping into a function that evaluates the expression."""
         assert len(values) == 1
 
         def compare_grouping(x: int, y: int | None = None) -> bool:
             return values[0](x, y)
         return compare_grouping
 
-    def neg(self, values) -> Callable[[int, int | None], bool]:
+    def neg(
+        self, values: list[Callable[[int, int | None], bool]],
+    ) -> Callable[[int, int | None], bool]:
+        """Transform neg into a function that negates the comparison."""
         assert len(values) == 1
 
         def compare_neg(x: int, y: int | None = None) -> bool:
             return not values[0](x, y)
+
         return compare_neg
 
 
@@ -304,7 +332,7 @@ class AttributeQueryTransformerSQL(AttributeQueryTransformer):
         self._column = main_column
         self._complementary_column = complementary_column
 
-    def literal(self, values) -> Expression:
+    def literal(self, values: list[Token]) -> Expression:
         """Transform literals into a direct comparison function."""
         assert len(values) == 1
         value_name = values[0].value.lower()
@@ -316,7 +344,7 @@ class AttributeQueryTransformerSQL(AttributeQueryTransformer):
             expression=str(self._values[value_name].value),
         ).neq(0)
 
-    def compound(self, values) -> Expression:
+    def compound(self, values: list[Token]) -> Expression:
         """Convert compounds into a query statement for two enums."""
         assert len(values) == 2
         if self._bitmask_transformer is None:
@@ -352,22 +380,22 @@ class AttributeQueryTransformerSQL(AttributeQueryTransformer):
             ).neq(0),
         )
 
-    def and_(self, values) -> Expression:
+    def and_(self, values: list[Expression]) -> Expression:
         assert len(values) == 2
 
         return and_(*values)
 
-    def or_(self, values) -> Expression:
+    def or_(self, values: list[Expression]) -> Expression:
         assert len(values) == 2
 
         return or_(*values)
 
-    def grouping(self, values) -> Expression:
+    def grouping(self, values: list[Expression]) -> Expression:
         assert len(values) == 1
 
         return Paren(this=values[0])
 
-    def neg(self, values) -> Expression:
+    def neg(self, values: list[Expression]) -> Expression:
         assert len(values) == 1
 
         return not_(values[0])
@@ -379,7 +407,7 @@ class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
 
     Intended for use with legacy Impala schema1 storage.
     """
-    def literal(self, values):
+    def literal(self, values: list[Token]) -> Expression:
         assert len(values) == 1
         value_name = values[0].value.lower()
         assert value_name in self._values, \
@@ -391,7 +419,7 @@ class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
             ") != 0",
         )
 
-    def compound(self, values):
+    def compound(self, values: list[Token]) -> Expression:
         raise NotImplementedError(
             "Compounds are not supported for legacy backends",
         )
@@ -416,7 +444,7 @@ def update_attribute_query_with_compounds(
     tree = QUERY_PARSER.parse(query)
     transformer = QueryCompoundAdditionTransformer(compound_value)
 
-    return transformer.transform(tree)
+    return str(transformer.transform(tree))
 
 
 def transform_attribute_query_to_function(
@@ -448,7 +476,7 @@ def transform_attribute_query_to_function(
         enum_type, aliases, complementary_type=complementary_type,
     )
     tree = syntax_sugar_transformer.transform(tree)
-    return transformer.transform(tree)
+    return cast(Matcher, transformer.transform(tree))
 
 
 def transform_attribute_query_to_sql_expression(
@@ -486,7 +514,7 @@ def transform_attribute_query_to_sql_expression(
     )
 
     tree = syntax_sugar_transformer.transform(tree)
-    return transformer.transform(tree)
+    return cast(Expression, transformer.transform(tree))
 
 
 def transform_attribute_query_to_sql_expression_schema1(
@@ -524,7 +552,7 @@ def transform_attribute_query_to_sql_expression_schema1(
     )
 
     tree = syntax_sugar_transformer.transform(tree)
-    return transformer.transform(tree)
+    return cast(Expression, transformer.transform(tree))
 
 
 def create_or_node(left: Tree, right: Tree) -> Tree:
