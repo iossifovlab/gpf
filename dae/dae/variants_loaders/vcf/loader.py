@@ -71,10 +71,10 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self, family: Family,
         fill_value: int,
     ) -> tuple[
-            list[tuple[int, int]],
-            list[tuple[int, int]],
-            tuple[bool, bool, bool],
-        ]:
+                list[tuple[int, int]],
+                list[tuple[int, int]],
+                tuple[bool, bool, bool],
+            ]:
         genotypes: list[tuple[int, int]] = []
         independent_genotypes: list[tuple[int, int]] = []
         all_reference = True

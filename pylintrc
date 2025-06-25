@@ -504,6 +504,8 @@ max-statements=80
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=1
 
+max-positional-arguments=6
+
 
 [CLASSES]
 

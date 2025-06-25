@@ -162,6 +162,7 @@ class AnnotatablesBatchFilter(abc.ABC):
             annotations_iter = iter(annotations)
             result: list[AnnotationsWithContext] = []
             for awc in batch_with_context:
+                # pylint: disable=stop-iteration-return
                 annos: list[Annotation] = [
                     next(annotations_iter)
                     for _ in range(len(awc.annotatables))
