@@ -7,8 +7,6 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import closing
 from typing import Any, Protocol, cast
 
-from matplotlib.dviread import Box
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.wdae_study_config import (
     wdae_study_config_schema,
@@ -22,6 +20,7 @@ from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant
+from matplotlib.dviread import Box
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +142,10 @@ class WDAEAbstractStudy:
     @property
     def has_pheno_data(self) -> bool:
         return self._phenotype_data is not None
+
+    @property
+    def has_genotype_data(self) -> bool:
+        return cast(bool, self._config["has_genotype"])
 
     @property
     def study_id(self) -> str:
@@ -311,8 +314,8 @@ class WDAEAbstractStudy:
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
         *,
+        max_variants_count: int | None = 10000,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
@@ -332,8 +335,12 @@ class WDAEStudy(WDAEAbstractStudy):
         self,
         genotype_data: GenotypeData | None,
         phenotype_data: PhenotypeData | None,
+        query_transformer: QueryTransformerProtocol | None = None,
+        response_transformer: ResponseTransformerProtocol | None = None,
     ) -> None:
         self.children = [self]
+        self.query_transformer = query_transformer
+        self.response_transformer = response_transformer
         super().__init__(genotype_data, phenotype_data)
         self._pheno_values_cache = self._get_all_pheno_values()
         self.is_remote = False
@@ -616,7 +623,8 @@ class WDAEStudy(WDAEAbstractStudy):
         """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
             kwargs, sources, query_transformer, response_transformer,
-            max_variants_count, max_variants_message=max_variants_message)
+            max_variants_count=max_variants_count,
+            max_variants_message=max_variants_message)
         return filter(None, variants_result)
 
     def _collect_runners(
@@ -688,13 +696,116 @@ class WDAEStudy(WDAEAbstractStudy):
                 kwargs[key] = pre_kwargs[key]
         return kwargs
 
+    def query_variants_raw(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        max_variants_count: int | None = 10000,
+    ) -> Generator[FamilyVariant | None, None, None]:
+        """Wrap query variants method for WDAE streaming of variants."""
+        # pylint: disable=too-many-locals,too-many-branches
+
+        max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
+        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
+
+        study_filters = None
+        if kwargs.get("allowed_studies") is not None:
+            study_filters = set(kwargs.pop("allowed_studies"))
+
+        if kwargs.get("studyFilters"):
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
+
+        kwargs["study_filters"] = study_filters
+
+        kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
+        runners = self._collect_runners(kwargs, query_transformer)
+
+        if summary_variant_ids is None:
+            # pylint: disable=unused-argument
+            def filter_allele(
+                allele: FamilyAllele,  # noqa: ARG001
+            ) -> bool:
+                return True
+
+        elif len(summary_variant_ids) > 0:
+            summary_variant_ids = set(summary_variant_ids)
+
+            def filter_allele(allele: FamilyAllele) -> bool:
+                svid = f"{allele.cshl_location}:{allele.cshl_variant}"
+                return svid in summary_variant_ids
+
+        else:
+            # passed empty list of summary variants; empty result
+            return
+
+        index = 0
+        seen = set()
+        unique_family_variants = query_transformer.get_unique_family_variants(
+            kwargs)
+
+        started = time.time()
+        try:
+            logger.debug(
+                "study wrapper (%s) creating query_result_variants...",
+                self.name)
+            if len(runners) == 0:
+                return
+            variants_result = QueryResult(runners, limit=max_variants_count)
+
+            logger.debug(
+                "study wrapper (%s) starting query_result_variants...",
+                self.name)
+            variants_result.start()
+            elapsed = time.time() - started
+            logger.info(
+                "study wrapper (%s) variant result started in %0.3fsec",
+                self.name, elapsed)
+
+            with closing(variants_result) as variants:
+                for variant in variants:
+                    if variant is None:
+                        yield None
+                        continue
+                    yield variant
+
+                    matched = True
+                    for aa in variant.matched_alleles:
+                        assert not aa.is_reference_allele
+                        if not filter_allele(cast(FamilyAllele, aa)):
+                            matched = False
+                            break
+                    if not matched:
+                        yield None
+                        continue
+
+                    fvuid = variant.fvuid
+                    if unique_family_variants and fvuid in seen:
+                        continue
+                    seen.add(fvuid)
+
+                    index += 1
+                    if max_variants_count and index > max_variants_count:
+                        break
+
+                    yield variant
+        except GeneratorExit:
+            pass
+        finally:
+            elapsed = time.time() - started
+            logger.info(
+                "study wrapper (%s)  query returned %s variants; "
+                "closed in %0.3fsec", self.study_id, index, elapsed)
+
     def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
         *,
+        max_variants_count: int | None = 10000,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
@@ -965,8 +1076,15 @@ class WDAEStudyGroup(WDAEStudy):
         genotype_data: GenotypeData | None,
         pheno_data: PhenotypeData | None,
         children: list[WDAEStudy],
+        *,
+        query_transformer: QueryTransformerProtocol | None = None,
+        response_transformer: ResponseTransformerProtocol | None = None,
     ) -> None:
-        super().__init__(genotype_data, pheno_data)
+        super().__init__(
+            genotype_data, pheno_data,
+            query_transformer=query_transformer,
+            response_transformer=response_transformer,
+        )
         self.children = children
 
     def get_studies_ids(self, *, leaves: bool = True) -> list[str]:

@@ -48,11 +48,6 @@ from dae.pheno.storage import (
     PhenotypeStorage,
     PhenotypeStorageRegistry,
 )
-from dae.pheno_tool.pheno_tool_adapter import (
-    PhenoToolAdapter,
-    PhenoToolAdapterBase,
-)
-from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.studies.study import GenotypeData
 from dae.studies.variants_db import VariantsDb
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -133,7 +128,6 @@ class GPFInstance:
             kwargs.get("gene_models"),
         )
         self._enrichment_builders: dict[str, BaseEnrichmentBuilder] = {}
-        self._pheno_tool_adapters: dict[str, PhenoToolAdapterBase] = {}
         self._annotation_pipeline: AnnotationPipeline | None = None
 
         self.enrichment_helper = EnrichmentHelper(self.grr)
@@ -666,58 +660,3 @@ class GPFInstance:
             )
 
         return self._enrichment_builders[dataset.study_id]
-
-    def register_pheno_tool_adapter(
-        self, dataset_id: str, adapter: PhenoToolAdapterBase,
-    ) -> None:
-        """Register a new enrichment builder to a given dataset ID."""
-        if dataset_id in self._pheno_tool_adapters:
-            raise ValueError(
-                f"Pheno tool adapter for {dataset_id} already registered!",
-            )
-        self._pheno_tool_adapters[dataset_id] = adapter
-
-    def make_pheno_tool_adapter(
-        self, dataset: GenotypeData,
-    ) -> PhenoToolAdapterBase:
-        """Create a pheno tool adapter for dataset."""
-        phenotype_data_id = dataset.config.get("phenotype_data")
-        if phenotype_data_id is None or phenotype_data_id == "":
-            raise ValueError(
-                f"{dataset.study_id} has no phenotype data "
-                "configured!",
-            )
-
-        phenotype_data_ids = self.get_phenotype_data_ids()
-
-        if phenotype_data_id not in phenotype_data_ids:
-            raise KeyError(
-                f"Phenotype data {phenotype_data_id} "
-                "found in registry!\n"
-                f"Available phenotype datas: {phenotype_data_ids}",
-            )
-
-        phenotype_data = self.get_phenotype_data(phenotype_data_id)
-
-        helper = PhenoToolHelper(
-            dataset, phenotype_data,
-        )
-
-        tool = PhenoTool(helper.phenotype_data)
-
-        return PhenoToolAdapter(tool, helper)
-
-    def get_pheno_tool_adapter(
-        self, dataset: GenotypeData,
-    ) -> PhenoToolAdapterBase:
-        """
-        Get enrichment builder for specific dataset.
-
-        Will create and register new one if one isn't found.
-        """
-        if dataset.study_id not in self._pheno_tool_adapters:
-            self.register_pheno_tool_adapter(
-                dataset.study_id, self.make_pheno_tool_adapter(dataset),
-            )
-
-        return self._pheno_tool_adapters[dataset.study_id]

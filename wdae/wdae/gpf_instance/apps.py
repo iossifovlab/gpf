@@ -4,7 +4,7 @@ import logging
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance
 
 logger = logging.getLogger(__name__)
 
@@ -13,17 +13,6 @@ class WDAEConfig(AppConfig):
     """Configure WDAE django application."""
 
     name = "gpf_instance"
-
-    @staticmethod
-    def load_extensions(gpf_instance: WGPFInstance) -> None:
-        """Load WDAE GPF instance extensions."""
-        # pylint: disable=import-outside-toplevel
-        logger.info("Loading extensions")
-        from importlib.metadata import entry_points
-        discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
-        for entry in discovered_entries:
-            extension_loader = entry.load()
-            extension_loader(gpf_instance)
 
     def ready(self) -> None:
         logger.info("WGPConfig application starting...")
@@ -40,7 +29,6 @@ class WDAEConfig(AppConfig):
 
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
-            self.load_extensions(gpf_instance)
             return
 
         for phenotype_data_id in gpf_instance.get_phenotype_data_ids():
@@ -67,4 +55,3 @@ class WDAEConfig(AppConfig):
             logger.exception(
                 "problem while eager loading of studies")
         logger.info("Eager loading DONE")
-        self.load_extensions(gpf_instance)

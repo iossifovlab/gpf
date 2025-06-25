@@ -108,7 +108,7 @@ class PhenoToolHelper:
         return persons
 
     def genotype_data_variants(
-        self, variants: Iterable[FamilyVariant],
+        self, variants: Iterable[FamilyVariant | None],
         effect_types: list[str], effect_groups: list[str],
     ) -> dict[str, Counter]:
         """Collect effect groups variants."""

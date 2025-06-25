@@ -7,15 +7,20 @@ import os
 import pathlib
 import time
 from collections.abc import Callable
+from importlib.metadata import entry_points
 from threading import Lock
 from typing import Any, cast
 
 from box import Box
-from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.helpers import to_response_json
+from pheno_tool_api.adapter import PhenoToolAdapter, PhenoToolAdapterBase
+from studies.query_transformer import make_query_transformer
+from studies.response_transformer import make_response_transformer
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy, WDAEStudyGroup
+
+from gpf_instance.extension import GPFExtensionBase
 
 logger = logging.getLogger(__name__)
 __all__ = ["get_wgpf_instance"]
@@ -88,6 +93,7 @@ class WGPFInstance(GPFInstance):
         self._remote_study_db: None = None
         self._study_wrappers: dict[str, WDAEStudy] = {}
         self._gp_configuration: dict[str, Any] | None = None
+        self.extensions: dict[str, GPFExtensionBase] = {}
         super().__init__(
             cast(Box, dae_config), dae_dir, dae_config_path, **kwargs)
 
@@ -104,6 +110,25 @@ class WGPFInstance(GPFInstance):
                 os.utime(about_description, None)
         set_instance_timestamp()
         set_permission_timestamp()
+
+    def load_extensions(self) -> None:
+        discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
+        for entry in discovered_entries:
+            extension_class = entry.load()
+            self.extensions[entry.name] = extension_class(self)
+
+    def get_pheno_tool_adapter(
+        self, study: WDAEAbstractStudy,
+    ) -> PhenoToolAdapterBase:
+        """Get pheno tool adapter using tool framework."""
+        for ext_name, extension in self.extensions.items():
+            pheno_tool_adapter = extension.get_tool(study, "pheno_tool")
+            if pheno_tool_adapter is not None:
+                if not isinstance(pheno_tool_adapter, PhenoToolAdapterBase):
+                    raise ValueError(
+                        f"{ext_name} returned an invalid pheno tool adapter!")
+                return pheno_tool_adapter
+        return cast(PhenoToolAdapter, PhenoToolAdapter.make_tool(study))
 
     @staticmethod
     def build(
@@ -158,13 +183,19 @@ class WGPFInstance(GPFInstance):
                 for child_id in children_ids
             ]
 
+        query_transformer = make_query_transformer(self)
+        response_transformer = make_response_transformer(self)
         if children is None:
             return WDAEStudy(
                 genotype_data, phenotype_data,
+                query_transformer=query_transformer,
+                response_transformer=response_transformer,
             )
         return WDAEStudyGroup(
             genotype_data, phenotype_data,
             children=cast(list[WDAEStudy], children),
+            query_transformer=query_transformer,
+            response_transformer=response_transformer,
         )
 
     def get_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
