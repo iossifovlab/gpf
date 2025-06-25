@@ -24,17 +24,17 @@ class VariantsSource(abc.ABC):
         """Fetch variants."""
 
 
-class VariantsSink(abc.ABC):
+class VariantsConsumer(abc.ABC):
     """A terminator for variant processing pipelines."""
 
     @abc.abstractmethod
-    def write_one(self, full_variant: FullVariant) -> None:
-        """Write a single variant to the sink."""
+    def consume_one(self, full_variant: FullVariant) -> None:
+        """Consume a single variant."""
 
-    def write(self, variants: Iterable[FullVariant]) -> None:
-        """Write variants to the sink."""
+    def consume(self, variants: Iterable[FullVariant]) -> None:
+        """Consume variants."""
         for full_variant in variants:
-            self.write_one(full_variant)
+            self.consume_one(full_variant)
 
 
 class VariantsFilter(abc.ABC):
@@ -62,19 +62,21 @@ class VariantsBatchSource(abc.ABC):
         """Fetch variants in batches."""
 
 
-class VariantsBatchSink(VariantsSink):
+class VariantsBatchConsumer(abc.ABC):
     """A sink that can write variants in batches."""
 
     @abc.abstractmethod
-    def write_batch(
+    def consume_batch(
         self, batch: Sequence[FullVariant],
     ) -> None:
-        """Write a single batch of variants."""
+        """Consume a single batch of variants."""
 
-    def write_batches(self, batches: Iterable[Sequence[FullVariant]]) -> None:
-        """Write variants in batches."""
+    def consume_batches(
+        self, batches: Iterable[Sequence[FullVariant]],
+    ) -> None:
+        """Consume variants in batches."""
         for batch in batches:
-            self.write_batch(batch)
+            self.consume_batch(batch)
 
 
 class VariantsBatchFilter(abc.ABC):
@@ -247,6 +249,7 @@ class AnnotationPipelineVariantsFilterMixin:
         self, summary_allele: SummaryAllele,
         annotation: Annotation,
     ) -> None:
+
         if "allele_effects" in annotation.annotations:
             allele_effects = annotation.annotations["allele_effects"]
             assert isinstance(allele_effects, AlleleEffects)
@@ -373,7 +376,7 @@ class VariantsPipelineProcessor:
         self,
         source: VariantsSource,
         filters: Sequence[VariantsFilter],
-        sink: VariantsSink,
+        sink: VariantsConsumer,
     ) -> None:
         self.source = source
         self.filters = filters
@@ -383,17 +386,17 @@ class VariantsPipelineProcessor:
         for full_variant in self.source.fetch(region):
             for variant_filter in self.filters:
                 full_variant = variant_filter.filter_one(full_variant)
-            self.sink.write_one(full_variant)
+            self.sink.consume_one(full_variant)
 
 
-class VariantsPipelineBatchProcessor:
+class VariantsBatchPipelineProcessor:
     """A processor that can be used to process variants in a pipeline."""
 
     def __init__(
         self,
         source: VariantsBatchSource,
         filters: Sequence[VariantsBatchFilter],
-        sink: VariantsBatchSink,
+        sink: VariantsBatchConsumer,
     ) -> None:
         self.source = source
         self.filters = filters
@@ -403,4 +406,4 @@ class VariantsPipelineBatchProcessor:
         for batch in self.source.fetch_batches(region):
             for variant_filter in self.filters:
                 batch = variant_filter.filter_batch(batch)
-            self.sink.write_batch(batch)
+            self.sink.consume_batch(batch)

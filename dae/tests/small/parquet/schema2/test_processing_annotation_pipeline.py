@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 
 import pathlib
+from collections.abc import Sequence
 from typing import Any
 
 import pytest
@@ -17,7 +18,12 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
+    VariantsBatchConsumer,
+    VariantsBatchPipelineProcessor,
+    VariantsConsumer,
     VariantsLoaderBatchSource,
+    VariantsLoaderSource,
+    VariantsPipelineProcessor,
 )
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.raw.loader import (
@@ -55,7 +61,21 @@ def create_effect_annotator(
         info=AnnotatorInfo(
             "effect_annotator",
             annotator_id="A0",
-            attributes=[],
+            attributes=[
+                AttributeInfo.create(
+                    source="allele_effects",
+                    name="allele_effects",
+                    internal=True,
+                ),
+                AttributeInfo.create("worst_effect"),
+                AttributeInfo.create("gene_effects"),
+                AttributeInfo.create("effect_details"),
+                AttributeInfo.create(
+                    "gene_list",
+                    name="gene_list",
+                    internal=True,
+                ),
+            ],
             parameters={
                 "genome": "t4c8_genome",
                 "gene_models": "t4c8_genes",
@@ -205,3 +225,119 @@ def test_variants_loader_batch_source(
         study_1_loader, batch_size=batch_size)
     batches = list(batch_source.fetch_batches())
     assert len(batches) == expected_batches
+
+
+class DummyBatchConsumer(VariantsBatchConsumer):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.batches: list[list[FullVariant]] = []
+
+    def consume_batch(self, batch: Sequence[FullVariant]) -> None:
+        self.batches.append(list(batch))
+
+
+@pytest.mark.parametrize(
+    "batch_size, expected_batches",
+    [
+        (1, 6),
+        (2, 3),
+        (3, 2),
+        (4, 2),
+        (5, 2),
+        (6, 1),
+        (7, 1),
+        (500, 1),
+    ],
+)
+def test_variants_batch_pipeline_processor(
+    study_1_loader: VariantsGenotypesLoader,
+    dummy_annotation_pipeline: AnnotationPipeline,
+    batch_size: int,
+    expected_batches: int,
+) -> None:
+    batch_source = VariantsLoaderBatchSource(
+        study_1_loader, batch_size=batch_size,
+    )
+    batch_consumer = DummyBatchConsumer()
+    batch_filter = AnnotationPipelineVariantsBatchFilter(
+        dummy_annotation_pipeline,
+    )
+
+    batch_processor = VariantsBatchPipelineProcessor(
+        batch_source, [batch_filter], batch_consumer,
+    )
+    batch_processor.process()
+
+    assert len(batch_consumer.batches) == expected_batches
+
+
+class DummyConsumer(VariantsConsumer):
+    """A dummy variants batch consumer."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.variants: list[FullVariant] = []
+
+    def consume_one(self, full_variant: FullVariant) -> None:
+        self.variants.append(full_variant)
+
+
+def test_variants_pipeline_processor(
+    study_1_loader: VariantsGenotypesLoader,
+    dummy_annotation_pipeline: AnnotationPipeline,
+) -> None:
+    source = VariantsLoaderSource(
+        study_1_loader,
+    )
+    consumer = DummyConsumer()
+    annotation_filter = AnnotationPipelineVariantsFilter(
+        dummy_annotation_pipeline,
+    )
+
+    processor = VariantsPipelineProcessor(
+        source, [annotation_filter], consumer,
+    )
+    processor.process()
+
+    assert len(consumer.variants) == 6
+
+
+def test_variants_consumer_consume(
+    study_1_loader: VariantsGenotypesLoader,
+) -> None:
+    source = VariantsLoaderSource(
+        study_1_loader,
+    )
+    consumer = DummyConsumer()
+    consumer.consume(source.fetch())
+
+    assert len(consumer.variants) == 6
+
+
+@pytest.mark.parametrize(
+    "batch_size, expected_batches",
+    [
+        (1, 6),
+        (2, 3),
+        (3, 2),
+        (4, 2),
+        (5, 2),
+        (6, 1),
+        (7, 1),
+        (500, 1),
+    ],
+)
+def test_variants_batch_consumer_consume(
+    study_1_loader: VariantsGenotypesLoader,
+    batch_size: int,
+    expected_batches: int,
+) -> None:
+    source = VariantsLoaderBatchSource(
+        study_1_loader,
+        batch_size=batch_size,
+    )
+    consumer = DummyBatchConsumer()
+    consumer.consume_batches(source.fetch_batches())
+
+    assert len(consumer.batches) == expected_batches

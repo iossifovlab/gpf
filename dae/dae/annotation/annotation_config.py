@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import fnmatch
 import logging
@@ -106,6 +108,20 @@ class AttributeInfo:
         if self._documentation is None:
             return self.description
         return self._documentation
+
+    @staticmethod
+    def create(
+        source: str,
+        name: str | None = None, *,
+        internal: bool = False,
+    ) -> AttributeInfo:
+        """Create an AttributeInfo instance."""
+        if name is None:
+            name = source
+        return AttributeInfo(
+            name, source, internal=internal,
+            parameters={},
+        )
 
 
 @dataclass(init=False)
