@@ -49,7 +49,7 @@ FamilyVariantsIterator = Generator[
 @dataclass
 class FullVariant:
     """A dataclass to hold a full variant with its families."""
-    variant: SummaryVariant
+    summary_variant: SummaryVariant
     family_variants: Sequence[FamilyVariant]
 
 
@@ -325,21 +325,21 @@ class VariantsLoader(CLILoader):
         for _, fvs in self.full_variants_iterator():
             yield from fvs
 
-    def fetch(self, region: Region | None) -> FullVariantsIterable:
+    def fetch(self, region: Region | None = None) -> FullVariantsIterable:
         """Fetch variants for a given region."""
         self.reset_regions([region] if region else None)
         for variant, family_variants in self.full_variants_iterator():
             yield FullVariant(variant, family_variants)
 
     def fetch_summary_variants(
-        self, region: Region | None,
+        self, region: Region | None = None,
     ) -> Iterable[SummaryVariant]:
         """Fetch summary variants for a given region."""
         for full_variant in self.fetch(region):
-            yield full_variant.variant
+            yield full_variant.summary_variant
 
     def fetch_family_variants(
-        self, region: Region | None,
+        self, region: Region | None = None,
     ) -> Iterable[FamilyVariant]:
         """Fetch summary variants for a given region."""
         for full_variant in self.fetch(region):

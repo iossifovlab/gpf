@@ -182,10 +182,11 @@ class AnnotationConfigParser:
                 labels_query[k] = v
 
         def match(resource: GenomicResource) -> bool:
-            return (resource.get_type() == annotator_type
-               and fnmatch.fnmatch(resource.get_id(), wildcard)
-               and AnnotationConfigParser.match_labels_query(labels_query,
-                                                             resource.get_labels()))
+            return (
+                resource.get_type() == annotator_type
+                and fnmatch.fnmatch(resource.get_id(), wildcard)
+                and AnnotationConfigParser.match_labels_query(
+                   labels_query, resource.get_labels()))
 
         return [resource.get_id()
                 for resource in grr.get_all_resources()
@@ -243,7 +244,8 @@ class AnnotationConfigParser:
             attributes = AnnotationConfigParser.parse_raw_attributes(
                 ann_details["attributes"],
             )
-        parameters = {k: v for k, v in ann_details.items() if k != "attributes"}
+        parameters = {
+            k: v for k, v in ann_details.items() if k != "attributes"}
 
         if "resource_id" in parameters \
            and AnnotationConfigParser.has_wildcard(parameters["resource_id"]):

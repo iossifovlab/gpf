@@ -50,7 +50,8 @@ c8        tx1  chr1  -      100     204   112      169    3         100,145,195 
 
 
 def t4c8_genome(root_path: pathlib.Path) -> ReferenceGenome:
-    return setup_genome(root_path / "t4c8_genome" / "chrAll.fa", GENOME_CONTENT)
+    return setup_genome(
+        root_path / "t4c8_genome" / "chrAll.fa", GENOME_CONTENT)
 
 
 def t4c8_genes(root_path: pathlib.Path) -> GeneModels:

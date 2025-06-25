@@ -18,7 +18,7 @@ from dae.parquet.schema2.processing_pipeline import (
 class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
 
     def filter_batch(
-        self, batch: Iterable[Annotatable],
+        self, batch: Iterable[Annotatable | None],
     ) -> Sequence[Annotation]:
 
         """Mock filter that returns all annotatables as annotations."""

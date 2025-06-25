@@ -6,6 +6,10 @@ import textwrap
 import pytest
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_resource_id,
+)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
@@ -330,12 +334,12 @@ def setup_t4c8_instance(
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    root_path = tmp_path_factory.mktemp("t4c8_gpf_instance")
     return setup_t4c8_instance(root_path)
 
 
 def _t4c8_study_1_ped(
-        root_path: pathlib.Path,
+    root_path: pathlib.Path,
 ) -> pathlib.Path:
     return setup_pedigree(
         root_path / "t4c8_study_1" / "pedigree" / "in.ped",
@@ -352,19 +356,10 @@ f1.3     s3       dad3  mom3  2   1      sib  unaffected
         """)
 
 
-@pytest.fixture
-def t4c8_study_1_ped(
-    tmp_path: pathlib.Path,
-) -> pathlib.Path:
-    return _t4c8_study_1_ped(tmp_path)
-
-
-def _t4c8_study_1(
+def _t4c8_study_1_vcf(
     root_path: pathlib.Path,
-    t4c8_instance: GPFInstance,
-) -> None:
-    ped_path = _t4c8_study_1_ped(root_path)
-    vcf_path1 = setup_vcf(
+) -> pathlib.Path:
+    return setup_vcf(
         root_path / "t4c8_study_1" / "vcf" / "in.vcf.gz",
         """
 ##fileformat=VCFv4.2
@@ -381,6 +376,27 @@ chr1   119 .  A   G,C  .    .      .    GT     0/0  0/0  0/2 0/2 0/1  0/2  0/1 0
 chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0/1
         """)  # noqa: E501
 
+
+@pytest.fixture
+def t4c8_study_1_ped(
+    tmp_path: pathlib.Path,
+) -> pathlib.Path:
+    return _t4c8_study_1_ped(tmp_path)
+
+
+@pytest.fixture
+def t4c8_study_1_data(
+    tmp_path: pathlib.Path,
+) -> tuple[pathlib.Path, pathlib.Path]:
+    return _t4c8_study_1_ped(tmp_path), _t4c8_study_1_vcf(tmp_path)
+
+
+def _t4c8_study_1(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> None:
+    ped_path = _t4c8_study_1_ped(root_path)
+    vcf_path1 = _t4c8_study_1_vcf(root_path)
     vcf_study(
         root_path,
         "t4c8_study_1", ped_path, [vcf_path1],
@@ -1129,3 +1145,19 @@ def normalize_genome_1(t4c8_grr: GenomicResourceRepo) -> ReferenceGenome:
 def normalize_genome_2(t4c8_grr: GenomicResourceRepo) -> ReferenceGenome:
     return build_reference_genome_from_resource_id(
         "normalize_genome_2", t4c8_grr)
+
+
+@pytest.fixture(scope="session")
+def t4c8_reference_genome(
+    t4c8_grr: GenomicResourceRepo,
+) -> ReferenceGenome:
+    return build_reference_genome_from_resource_id(
+        "t4c8_genome", t4c8_grr)
+
+
+@pytest.fixture(scope="session")
+def t4c8_gene_models(
+    t4c8_grr: GenomicResourceRepo,
+) -> GeneModels:
+    return build_gene_models_from_resource_id(
+        "t4c8_genes", t4c8_grr)
