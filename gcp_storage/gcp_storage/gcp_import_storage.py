@@ -92,10 +92,10 @@ class GcpImportStorage(Schema2ImportStorage):
             import_task = graph.create_task(
                 "Import Dataset into GCP genotype storage",
                 self._do_import_dataset,
-                [project], all_parquet_tasks)
+                args=[project], deps=all_parquet_tasks)
 
             graph.create_task(
                 "Create study config",
                 self._do_study_config,
-                [project], [import_task])
+                args=[project], deps=[import_task])
         return graph

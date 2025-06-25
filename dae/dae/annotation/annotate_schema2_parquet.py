@@ -226,8 +226,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             tasks.append(self.task_graph.create_task(
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
-                [handler, self.args.batch_size > 0],
-                [],
+                args=[handler, self.args.batch_size > 0],
+                deps=[],
             ))
 
         produce_schema2_merging_tasks(

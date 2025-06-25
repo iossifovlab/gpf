@@ -170,26 +170,27 @@ class AnnotateColumnsTool(AnnotationTool):
                 region_tasks.append(self.task_graph.create_task(
                     task_id,
                     AnnotateColumnsTool.annotate,
-                    [handler, self.args.batch_size > 0],
-                    []))
+                    args=[handler, self.args.batch_size > 0],
+                    deps=[]))
 
             combine_task = self.task_graph.create_task(
                 "combine",
                 combine,
-                [self.args,
-                 self.pipeline.raw,
-                 pipeline_config_old,
-                 self.grr.definition,
-                 file_paths,
-                 self.output,
-                 self.ref_genome_id],
-                region_tasks)
+                args=[
+                    self.args,
+                    self.pipeline.raw,
+                    pipeline_config_old,
+                    self.grr.definition,
+                    file_paths,
+                    self.output,
+                    self.ref_genome_id],
+                deps=region_tasks)
 
             self.task_graph.create_task(
                 "compress_and_tabix",
                 produce_tabix_index,
-                [self.output, self.args],
-                [combine_task])
+                args=[self.output, self.args],
+                deps=[combine_task])
         else:
             handler = ColumnsFormat(
                 self.pipeline.raw,
@@ -204,8 +205,8 @@ class AnnotateColumnsTool(AnnotationTool):
             self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
-                [handler, self.args.batch_size > 0],
-                [])
+                args=[handler, self.args.batch_size > 0],
+                deps=[])
 
 
 def cli(raw_args: list[str] | None = None) -> None:

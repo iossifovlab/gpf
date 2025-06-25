@@ -39,8 +39,8 @@ def do_work(timeout: float) -> None:
 
 def test_dependancy_chain(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
-    task_1 = graph.create_task("Task 1", do_work, [0.01], [])
-    graph.create_task("Task 2", do_work, [0], [task_1])
+    task_1 = graph.create_task("Task 1", do_work, args=[0.01], deps=[])
+    graph.create_task("Task 2", do_work, args=[0], deps=[task_1])
 
     tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
@@ -52,11 +52,11 @@ def test_multiple_dependancies(executor: AbstractTaskGraphExecutor) -> None:
 
     tasks = []
     for i in range(10):
-        task = graph.create_task(f"Task {i}", do_work, [0], [])
+        task = graph.create_task(f"Task {i}", do_work, args=[0], deps=[])
         tasks.append(task)
 
     for i in range(100, 105):
-        graph.create_task(f"Task {i}", do_work, [0], tasks)
+        graph.create_task(f"Task {i}", do_work, args=[0], deps=tasks)
 
     tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
@@ -71,12 +71,14 @@ def test_implicit_dependancies(executor: AbstractTaskGraphExecutor) -> None:
         where.append(what)
         return where
 
-    last_task = graph.create_task("0", add_to_list, [0, []], [])
+    last_task = graph.create_task("0", add_to_list, args=[0, []], deps=[])
     for i in range(1, 9):
-        last_task = graph.create_task(f"{i}", add_to_list, [i, last_task], [])
+        last_task = graph.create_task(
+            f"{i}", add_to_list, args=[i, last_task], deps=[])
 
-    graph.create_task("9", add_to_list, [9, last_task], [])
+    graph.create_task("9", add_to_list, args=[9, last_task], deps=[])
 
+    full_list = []
     for task, result in executor.execute(graph):
         print(task, result)
         if task == last_task:
@@ -87,12 +89,12 @@ def test_implicit_dependancies(executor: AbstractTaskGraphExecutor) -> None:
 
 def test_calling_execute_twice(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
-    first_task = graph.create_task("First", lambda: None, [], [])
+    first_task = graph.create_task("First", lambda: None, args=[], deps=[])
     second_layer_tasks = [
-        graph.create_task(f"{i}", lambda: None, [], [first_task])
+        graph.create_task(f"{i}", lambda: None, args=[], deps=[first_task])
         for i in range(10)
     ]
-    graph.create_task("Third", lambda: None, [], second_layer_tasks)
+    graph.create_task("Third", lambda: None, args=[], deps=second_layer_tasks)
 
     # cannot execute a graph while executing another one
     tasks_iter = executor.execute(graph)
@@ -129,7 +131,7 @@ def test_executing_with_cache(
 
 def _create_graph_with_result_passing() -> TaskGraph:
     def add_to_list(what: int, where: list[int]) -> list[int]:
-        return where + [what]
+        return [*where, what]
 
     def concat_lists(*lists: list[int]) -> list[int]:
         res = []
@@ -139,11 +141,10 @@ def _create_graph_with_result_passing() -> TaskGraph:
 
     # create the task graph
     graph = TaskGraph()
-    first_task = graph.create_task("0", add_to_list, [0, []], [])
-    add_tasks = []
-    for i in range(1, 8):
-        add_tasks.append(
-            graph.create_task(f"{i}", add_to_list, [i, first_task], []),
-        )
-    graph.create_task("final", concat_lists, add_tasks, [])
+    first_task = graph.create_task("0", add_to_list, args=[0, []], deps=[])
+    add_tasks = [
+        graph.create_task(f"{i}", add_to_list, args=[i, first_task], deps=[])
+        for i in range(1, 8)
+    ]
+    graph.create_task("final", concat_lists, args=add_tasks, deps=[])
     return graph

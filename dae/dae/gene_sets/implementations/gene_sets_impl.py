@@ -2,7 +2,7 @@ import copy
 import json
 from collections import Counter
 from functools import lru_cache
-from typing import Any
+from typing import Any, cast
 
 from jinja2 import Template
 from markdown2 import markdown
@@ -31,7 +31,7 @@ class GeneSetCollectionImpl(
     InfoImplementationMixin,
     ResourceConfigValidationMixin,
 ):
-    """Class used to represent gene sets collection resource implementations."""
+    """Gene sets collection resource implementations."""
 
     def __init__(self, resource: GenomicResource) -> None:
         super().__init__(resource)
@@ -104,8 +104,8 @@ class GeneSetCollectionImpl(
             task_graph.create_task(
                 f"{self.resource.resource_id}_calc_and_save_statistics",
                 self._calc_and_save_statistics,
-                [],
-                [],
+                args=[],
+                deps=[],
             ),
         ]
 
@@ -180,16 +180,11 @@ class GeneSetCollectionImpl(
         resource: GenomicResource,
     ) -> NumberHistogram | CategoricalHistogram:
         gene_set_collection = build_gene_set_collection_from_resource(resource)
-        config = (
-            gene_set_collection.config.model_dump()
-            if gene_set_collection.config
-            else {}
-        )
 
-        config = gene_set_collection.config
+        gs_config = gene_set_collection.config
         gene_sets_per_gene_schema = (
-            config.histograms.get("gene_sets_per_gene")
-            if config and config.histograms
+            gs_config.histograms.get("gene_sets_per_gene")
+            if gs_config and gs_config.histograms
             else None
         )
 
@@ -287,19 +282,20 @@ class GeneSetCollectionImpl(
         return histogram
 
     @lru_cache(maxsize=64)
-    def get_gene_collection_count_statistics(self) -> dict | None:  # pylint: disable=missing-function-docstring
+    def get_gene_collection_count_statistics(self) -> dict | None:
+        """Get gene collection count statistics from the resource."""
         try:
             with self.resource.proto.open_raw_file(
                 self.resource,
                 "statistics/gene_collection_count_statistics.json",
                 "rt",
             ) as statistics_file:
-                return json.load(statistics_file)
+                return cast(dict, json.load(statistics_file))
         except FileNotFoundError:
             return None
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         raise NotImplementedError
 
 

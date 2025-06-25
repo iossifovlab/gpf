@@ -200,7 +200,8 @@ class GenomicScoreImplementation(
                             for line in
                             self.score.table.get_records_in_region(chrom))
                 elif isinstance(self.score.table, BigWigTable):
-                    chrom_length = self.score.table.get_chromosome_length(chrom)
+                    chrom_length = \
+                        self.score.table.get_chromosome_length(chrom)
                 else:
                     assert isinstance(self.score.table,
                                       TabixGenomicPositionTable)
@@ -247,16 +248,17 @@ class GenomicScoreImplementation(
             start = region.start
             end = region.stop
             min_max_tasks.append(graph.create_task(
-                f"{self.resource.get_full_id()}_calculate_min_max_{chrom}_{start}_{end}",
+                f"{self.resource.get_full_id()}_calculate_min_max"
+                f"_{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_min_max,
-                [self.resource, score_ids, chrom, start, end],
-                [],
+                args=[self.resource, score_ids, chrom, start, end],
+                deps=[],
             ))
         merge_task = graph.create_task(
             f"{self.resource.get_full_id()}_merge_min_max",
             GenomicScoreImplementation._merge_min_max,
-            [score_ids, *min_max_tasks],
-            [],
+            args=[score_ids, *min_max_tasks],
+            deps=[],
         )
         return min_max_tasks, merge_task
 
@@ -343,8 +345,8 @@ class GenomicScoreImplementation(
         update_hist_confs = graph.create_task(
             f"{self.resource.get_full_id()}_update_hist_confs",
             GenomicScoreImplementation._update_hist_confs,
-            [all_hist_confs, minmax_task],
-            [],
+            args=[all_hist_confs, minmax_task],
+            deps=[],
         )
 
         histogram_tasks = []
@@ -356,20 +358,20 @@ class GenomicScoreImplementation(
                 f"{self.resource.get_full_id()}_calculate_histogram_"
                 f"{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_histogram,
-                [self.resource, update_hist_confs, chrom, start, end],
-                [],
+                args=[self.resource, update_hist_confs, chrom, start, end],
+                deps=[],
             ))
         merge_task = graph.create_task(
             f"{self.resource.get_full_id()}_merge_histograms",
             GenomicScoreImplementation._merge_histograms,
-            [self.resource, update_hist_confs, *histogram_tasks],
-            [],
+            args=[self.resource, update_hist_confs, *histogram_tasks],
+            deps=[],
         )
         save_task = graph.create_task(
             f"{self.resource.get_full_id()}_save_histograms",
             GenomicScoreImplementation._save_histograms,
-            [self.resource, merge_task],
-            [],
+            args=[self.resource, merge_task],
+            deps=[],
         )
         return histogram_tasks, merge_task, save_task
 
@@ -576,10 +578,8 @@ def build_score_implementation_from_resource(
 ) -> GenomicScoreImplementation | CnvCollectionImplementation:
     """Builds score implementation based on resource type"""
     if resource.get_type() == "cnv_collection":
-        impl = CnvCollectionImplementation(resource)
-    else:
-        impl = GenomicScoreImplementation(resource)
-    return impl
+        return CnvCollectionImplementation(resource)
+    return GenomicScoreImplementation(resource)
 
 
 GENOMIC_SCORES_TEMPLATE = """

@@ -1,6 +1,6 @@
 import itertools
 import pathlib
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from typing import Any, ClassVar, cast
 
 from cerberus import Validator
@@ -21,7 +21,7 @@ from dae.inmemory_storage.raw_variants import (
     RawVariantsQueryRunner,
     RealAttrFilterType,
 )
-from dae.pedigrees.families_data import FamiliesData
+from dae.query_variants.base_query_variants import QueryVariants
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
 )
@@ -33,10 +33,12 @@ from dae.schema2_storage.schema2_layout import (
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
 from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
-class ParquetLoaderVariants:
+class ParquetLoaderVariants(QueryVariants):
     """Variants class that utilizes ParquetLoader to fetch variants."""
 
     def __init__(
@@ -46,12 +48,54 @@ class ParquetLoaderVariants:
         gene_models: GeneModels | None = None,
     ) -> None:
         self.loader = ParquetLoader.load_from_dir(data_dir)
+        super().__init__(self.loader.families)
         self.reference_genome = reference_genome
         self.gene_models = gene_models
 
-    @property
-    def families(self) -> FamiliesData:
-        return self.loader.families
+    def has_affected_status_queries(self) -> bool:
+        return False
+
+    def query_summary_variants(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        **kwargs: Any,
+    ) -> Generator[SummaryVariant, None, None]:
+        """Execute the summary variants query and yields summary variants."""
+        raise NotImplementedError
+
+    def query_variants(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        inheritance: list[str] | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        affected_statuses: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        **kwargs: Any,
+    ) -> Generator[FamilyVariant, None, None]:
+        """Execute the family variants query and yields family variants."""
+        raise NotImplementedError
 
     def build_summary_variants_query_runner(
         self, *,
@@ -186,12 +230,12 @@ class ParquetGenotypeStorage(GenotypeStorage):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)
-        if not validator.validate(config):
+        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore[call-arg]
+        if not validator.validate(config):  # type: ignore[no-untyped-call]
             raise ValueError(
                 f"wrong config format for parquet storage: "
-                f"{validator.errors}")
-        return cast(dict, validator.document)
+                f"{validator.errors}")  # type: ignore[no-untyped-call]
+        return cast(dict, validator.document)  # type: ignore[no-untyped-call]
 
     def start(self) -> GenotypeStorage:
         return self
@@ -235,7 +279,9 @@ class ParquetImportStorage(Schema2ImportStorage):
     """Import storage for Parquet files."""
 
     @classmethod
-    def _do_import_dataset(cls, project: ImportProject) -> Schema2DatasetLayout:
+    def _do_import_dataset(
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, ParquetGenotypeStorage)
         layout = load_schema2_dataset_layout(project.get_parquet_dataset_dir())
@@ -248,11 +294,11 @@ class ParquetImportStorage(Schema2ImportStorage):
         if project.has_genotype_storage():
             import_task = graph.create_task(
                 "Import dataset", self._do_import_dataset,
-                [project], graph.tasks,
+                args=[project], deps=graph.tasks,
             )
             graph.create_task(
                 "Creating a study config",
                 DuckDbLegacyImportStorage.do_study_config,
-                [project, import_task], [import_task],
+                args=[project, import_task], deps=[import_task],
             )
         return graph

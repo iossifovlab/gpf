@@ -97,74 +97,74 @@ class GeneModelsImpl(
 
     def get_template(self) -> Template:
         return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block extra_styles %}
-            #chromosomes-table {
-                border-collapse: separate;
-                border-spacing: 0;
-            }
-            #chromosomes-table th {
-                border-top: 1px solid;
-                border-bottom: 1px solid;
-                border-right: 1px solid;
-            }
-            #chromosomes-table td {
-                border-bottom: 1px solid;
-                border-right: 1px solid;
-            }
-            #chromosomes-table th:first-child,
-            #chromosomes-table td:first-child {
-                border-left: 1px solid;
-            }
-            #chromosomes-table thead tr:nth-of-type(2) th {
-                border-top: none;
-            }
-            #chromosomes-table thead {
-                position: sticky; top: 0; background-color: white;
-            }
-            {% endblock %}
+{% extends base %}
+{% block extra_styles %}
+#chromosomes-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#chromosomes-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table th:first-child,
+#chromosomes-table td:first-child {
+    border-left: 1px solid;
+}
+#chromosomes-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#chromosomes-table thead {
+    position: sticky; top: 0; background-color: white;
+}
+{% endblock %}
 
-            {% block content %}
-            <h1>Configuration</h1>
-                Gene models file:
-                <p><a href="{{ data.config.filename }}">
-                {{ data.config.filename }}
-                </a></p>
+{% block content %}
+<h1>Configuration</h1>
+    Gene models file:
+    <p><a href="{{ data.config.filename }}">
+    {{ data.config.filename }}
+    </a></p>
 
-                <p>Format: {{ data.config.format }}</p>
-            <h1>Statistics</h1>
-                <h2>Chromosome statistics</h2>
-                <div style="max-height: 50%; overflow-y: auto; width: fit-content">
-                    <table id="chromosomes-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Transcript number</th>
-                                <th>Protein coding transcript number</th>
-                                <th>Gene number</th>
-                                <th>Protein coding gene number</th>
-                            </tr>
-                            <tr>
-                                <th>Global</th>
-                                <td>{{ '{:,}'.format(data.stats.global_statistic.transcript_number)}}</td>
-                                <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_transcript_number)}}</td>
-                                <td>{{ '{:,}'.format(data.stats.global_statistic.gene_number)}}</td>
-                                <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_gene_number)}}</td>
-                            </tr>
-                        </thead>
-                        {% for chrom, stat in data.stats.chrom_statistics.items() %}
-                            <tr>
-                                <td>{{ chrom }}</td>
-                                <td>{{ '{:,}'.format(stat.transcript_number)}}</td>
-                                <td>{{ '{:,}'.format(stat.protein_coding_transcript_number)}}</td>
-                                <td>{{ '{:,}'.format(stat.gene_number)}}</td>
-                                <td>{{ '{:,}'.format(stat.protein_coding_gene_number)}}</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-            {% endblock %}
-        """))
+    <p>Format: {{ data.config.format }}</p>
+<h1>Statistics</h1>
+    <h2>Chromosome statistics</h2>
+    <div style="max-height: 50%; overflow-y: auto; width: fit-content">
+        <table id="chromosomes-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Transcript number</th>
+                    <th>Protein coding transcript number</th>
+                    <th>Gene number</th>
+                    <th>Protein coding gene number</th>
+                </tr>
+                <tr>
+                    <th>Global</th>
+                    <td>{{ '{:,}'.format(data.stats.global_statistic.transcript_number)}}</td>
+                    <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_transcript_number)}}</td>
+                    <td>{{ '{:,}'.format(data.stats.global_statistic.gene_number)}}</td>
+                    <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_gene_number)}}</td>
+                </tr>
+            </thead>
+            {% for chrom, stat in data.stats.chrom_statistics.items() %}
+                <tr>
+                    <td>{{ chrom }}</td>
+                    <td>{{ '{:,}'.format(stat.transcript_number)}}</td>
+                    <td>{{ '{:,}'.format(stat.protein_coding_transcript_number)}}</td>
+                    <td>{{ '{:,}'.format(stat.gene_number)}}</td>
+                    <td>{{ '{:,}'.format(stat.protein_coding_gene_number)}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}
+        """))  # noqa: E501
 
     def _get_template_data(self) -> dict[str, Any]:
         return {"config": self.config,
@@ -196,7 +196,7 @@ class GeneModelsImpl(
         task = task_graph.create_task(
             f"{self.resource_id}_cals_stats",
             self._do_statistics,
-            [self.resource], [])
+            args=[self.resource], deps=[])
         return [task]
 
     @staticmethod
@@ -242,11 +242,12 @@ class GeneModelsImpl(
             stats_file.write(gene_models_stats.serialize())
         return gene_models_stats
 
-    @lru_cache(maxsize=64)  # noqa: B019
+    @lru_cache(maxsize=64)
     def get_statistics(self) -> GeneModelsStatistics | None:  # type: ignore
         try:
             with self.resource.proto.open_raw_file(
-                    self.resource, "statistics/stats.yaml", "rt") as stats_file:
+                    self.resource,
+                    "statistics/stats.yaml", "rt") as stats_file:
                 return GeneModelsStatistics.deserialize(
                     stats_file.read())
         except FileExistsError:

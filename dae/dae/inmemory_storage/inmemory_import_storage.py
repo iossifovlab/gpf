@@ -145,6 +145,6 @@ class InmemoryImportStorage(ImportStorage):
         graph = TaskGraph()
         graph.create_task(
             "study import", self._do_study_import,
-            [project], [])
+            args=[project], deps=[])
 
         return graph

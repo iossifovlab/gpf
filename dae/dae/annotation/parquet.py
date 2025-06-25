@@ -179,10 +179,11 @@ def produce_schema2_annotation_tasks(
         tasks.append(task_graph.create_task(
             f"part_{region}",
             annotate_parquet,
-            [loader.layout, output_dir,
-             raw_pipeline, region, grr.definition,
-             idx, allow_repeated_attributes, full_reannotation],
-            [],
+            args=[
+                loader.layout, output_dir,
+                raw_pipeline, region, grr.definition,
+                idx, allow_repeated_attributes, full_reannotation],
+            deps=[],
         ))
     return tasks
 
@@ -208,10 +209,11 @@ def produce_schema2_merging_tasks(
             task_graph.create_task(
                 f"merge_{path}",
                 merge_partitioned,
-                [output_layout.summary,
-                 path,
-                 loader.partition_descriptor],
-                annotation_tasks,
+                args=[
+                    output_layout.summary,
+                    path,
+                    loader.partition_descriptor],
+                deps=annotation_tasks,
             ) for path in to_join
         ]
     else:
@@ -219,8 +221,8 @@ def produce_schema2_merging_tasks(
             task_graph.create_task(
                 "merge",
                 merge_non_partitioned,
-                [output_layout.summary],
-                annotation_tasks,
+                args=[output_layout.summary],
+                deps=annotation_tasks,
             ),
         ]
     return tasks

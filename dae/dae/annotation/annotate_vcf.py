@@ -140,8 +140,8 @@ class AnnotateVCFTool(AnnotationTool):
             self.task_graph.create_task(
                 "all_variants_annotate",
                 AnnotateVCFTool.annotate,
-                [handler, self.args.batch_size > 0],
-                [],
+                args=[handler, self.args.batch_size > 0],
+                deps=[],
             )
         else:
             with closing(TabixFile(self.args.input)) as pysam_file:
@@ -165,28 +165,30 @@ class AnnotateVCFTool(AnnotationTool):
                 region_tasks.append(self.task_graph.create_task(
                     f"part-{index}",
                     AnnotateVCFTool.annotate,
-                    [handler, self.args.batch_size > 0],
-                    [],
+                    args=[handler, self.args.batch_size > 0],
+                    deps=[],
                 ))
 
             assert self.grr is not None
             combine_task = self.task_graph.create_task(
                 "combine",
                 combine,
-                [self.args,
-                 self.args.input,
-                 self.pipeline.raw,
-                 pipeline_config_old,
-                 self.grr.definition,
-                 file_paths,
-                 self.output],
-                region_tasks,
+                args=[
+                    self.args,
+                    self.args.input,
+                    self.pipeline.raw,
+                    pipeline_config_old,
+                    self.grr.definition,
+                    file_paths,
+                    self.output,
+                ],
+                deps=region_tasks,
             )
             self.task_graph.create_task(
                 "compress_and_tabix",
                 produce_tabix_index,
-                [self.output],
-                [combine_task])
+                args=[self.output],
+                deps=[combine_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:

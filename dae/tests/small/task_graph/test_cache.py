@@ -18,18 +18,20 @@ def noop(*args: Any, **kwargs: Any) -> None:
 @pytest.fixture
 def graph() -> TaskGraph:
     graph = TaskGraph()
-    first_task = graph.create_task("First", noop, [], [])
+    first_task = graph.create_task("First", noop, args=[], deps=[])
     second_layer_tasks = [
-        graph.create_task(f"Second {i}", noop, [], [first_task])
+        graph.create_task(f"Second {i}", noop, args=[], deps=[first_task])
         for i in range(10)
     ]
     intermediate_task = graph.create_task(
-        "Intermediate", noop, [], second_layer_tasks[-1:],  # just the last one
+        "Intermediate", noop,
+        args=[], deps=second_layer_tasks[-1:],  # just the last one
     )
     third_task = graph.create_task(
-        "Third", noop, [], second_layer_tasks + [intermediate_task],
+        "Third", noop, args=[],
+        deps=[*second_layer_tasks, intermediate_task],
     )
-    graph.create_task("Fourth", noop, [], [third_task])
+    graph.create_task("Fourth", noop, args=[], deps=[third_task])
     return graph
 
 
@@ -107,7 +109,7 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
 
     cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
-    for _task, record in task2record.items():
+    for record in task2record.values():
         assert record.type == CacheRecordType.COMPUTED
 
     first_task = get_task_by_id(graph, "First")
@@ -129,7 +131,7 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
 
 def test_file_cache_very_large_task_name(tmp_path: Path) -> None:
     graph = TaskGraph()
-    graph.create_task("Task" * 500, noop, [], [])
+    graph.create_task("Task" * 500, noop, args=[], deps=[])
 
     executor = SequentialExecutor(FileTaskCache(cache_dir=str(tmp_path)))
     for _ in executor.execute(graph):
@@ -162,7 +164,6 @@ def get_task_descendants(
 def is_task_descendant(child_task: Task, parent_task: Task) -> bool:
     if parent_task in child_task.deps:
         return True
-    for dep in child_task.deps:
-        if is_task_descendant(dep, parent_task):
-            return True
-    return False
+    return any(
+        is_task_descendant(dep, parent_task) for dep in child_task.deps
+    )

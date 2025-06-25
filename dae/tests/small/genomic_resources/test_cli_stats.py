@@ -46,8 +46,8 @@ class SomeTestImplementation(GenomicResourceImplementation):
         task = task_graph.create_task(
             "test_resource_sample_statistic",
             self._do_sample_statistic,
-            [],
-            [],
+            args=[],
+            deps=[],
         )
         return [task]
 
