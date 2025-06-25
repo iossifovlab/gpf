@@ -8,7 +8,6 @@ from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure
 from dae.pheno_tool.tool import PhenoResult
-from dae.query_variants.query_runners import QueryResult
 from datasets_api.permissions import (
     get_permissions_etag,
     user_has_permission,
@@ -165,11 +164,6 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
                     study_wrapper,
                 ),
             )
-
-        runners = study_wrapper._collect_runners(  # noqa: SLF001
-            data, self.query_transformer)
-        qr = QueryResult(runners)
-        qr.start()
 
         adapter = cast(
             PhenoToolAdapter,
