@@ -5,28 +5,31 @@ from dae.variants.attributes import Inheritance, bitmask2inheritance
 
 
 @pytest.mark.parametrize("bitmask, expected", [
-    (388, set([
-        Inheritance.denovo, Inheritance.missing, Inheritance.unknown])),
-    (386, set([
-        Inheritance.mendelian, Inheritance.missing, Inheritance.unknown])),
-    (384, set([
-        Inheritance.missing, Inheritance.unknown])),
-    (258, set([
-        Inheritance.mendelian, Inheritance.unknown])),
-    (260, set([
-        Inheritance.denovo, Inheritance.unknown])),
-    (290, set([
+    (388, {
+        Inheritance.denovo, Inheritance.missing, Inheritance.unknown}),
+    (386, {
+        Inheritance.mendelian, Inheritance.missing, Inheritance.unknown}),
+    (384, {
+        Inheritance.missing, Inheritance.unknown}),
+    (258, {
+        Inheritance.mendelian, Inheritance.unknown}),
+    (260, {
+        Inheritance.denovo, Inheritance.unknown}),
+    (290, {
         Inheritance.possible_omission, Inheritance.mendelian,
-        Inheritance.unknown])),
-    (8, set([
-        Inheritance.possible_denovo])),
-    (32, set([
-        Inheritance.possible_omission])),
-    (150, set([
+        Inheritance.unknown}),
+    (8, {
+        Inheritance.possible_denovo}),
+    (32, {
+        Inheritance.possible_omission}),
+    (150, {
         Inheritance.omission, Inheritance.denovo,
-        Inheritance.missing, Inheritance.mendelian])),
-    (290 & 32, set([
-        Inheritance.possible_omission])),
+        Inheritance.missing, Inheritance.mendelian}),
+    (290 & 32, {
+        Inheritance.possible_omission}),
 ])
-def test_bitmask2inheritance(bitmask, expected):
+def test_bitmask2inheritance(
+    bitmask: int,
+    expected: set[Inheritance],
+) -> None:
     assert bitmask2inheritance(bitmask) == expected

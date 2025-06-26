@@ -1,20 +1,12 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 
-import pathlib
 from collections.abc import Sequence
-from typing import Any
+from types import TracebackType
 
 import pytest
 from dae.annotation.annotation_pipeline import (
-    Annotatable,
     AnnotationPipeline,
-    Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
 )
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
@@ -25,125 +17,10 @@ from dae.parquet.schema2.processing_pipeline import (
     VariantsLoaderSource,
     VariantsPipelineProcessor,
 )
-from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.raw.loader import (
     FullVariant,
     VariantsGenotypesLoader,
 )
-from dae.variants_loaders.vcf.loader import VcfLoader
-
-
-@pytest.fixture
-def study_1_loader(
-    t4c8_study_1_data: tuple[pathlib.Path, pathlib.Path],
-    t4c8_reference_genome: ReferenceGenome,
-) -> VariantsGenotypesLoader:
-    """Fixture to create a dummy loader for study 1."""
-    ped_path, vcf_path = t4c8_study_1_data
-
-    families = FamiliesLoader.load_pedigree_file(ped_path)
-
-    return VcfLoader(
-        families=families,
-        vcf_files=[str(vcf_path)],
-        genome=t4c8_reference_genome,
-    )
-
-
-def create_effect_annotator(
-    pipeline: AnnotationPipeline,
-    root_path: pathlib.Path,
-) -> EffectAnnotatorAdapter:
-    """Fixture to create a dummy effect annotator."""
-
-    return EffectAnnotatorAdapter(
-        pipeline=pipeline,
-        info=AnnotatorInfo(
-            "effect_annotator",
-            annotator_id="A0",
-            attributes=[
-                AttributeInfo.create(
-                    source="allele_effects",
-                    name="allele_effects",
-                    internal=True,
-                ),
-                AttributeInfo.create("worst_effect"),
-                AttributeInfo.create("gene_effects"),
-                AttributeInfo.create("effect_details"),
-                AttributeInfo.create(
-                    "gene_list",
-                    name="gene_list",
-                    internal=True,
-                ),
-            ],
-            parameters={
-                "genome": "t4c8_genome",
-                "gene_models": "t4c8_genes",
-                "work_dir": root_path / "effect_annotator" / "work",
-            },
-        ),
-    )
-
-
-@pytest.fixture
-def effect_annotation_pipeline(
-    t4c8_grr: GenomicResourceRepo,
-    tmp_path: pathlib.Path,
-) -> AnnotationPipeline:
-    """Fixture to create a dummy annotation pipeline."""
-    pipeline = AnnotationPipeline(
-        t4c8_grr,
-    )
-    effect_annotator = create_effect_annotator(pipeline, tmp_path)
-    pipeline.add_annotator(effect_annotator)
-    return pipeline.open()
-
-
-class DummyAnnotator(Annotator):
-    """A dummy annotator that does nothing."""
-
-    def __init__(self) -> None:
-        attributes = [AttributeInfo(
-            "index", "index",
-            internal=False,
-            parameters={})]
-        info = AnnotatorInfo(
-            "dummy_annotator",
-            annotator_id="dummy",
-            attributes=attributes,
-            parameters={},
-        )
-        super().__init__(None, info)
-        self.index = 0
-
-    def open(self) -> Annotator:
-        """Reset the annotator state."""
-        self.index = 0
-        return self
-
-    def annotate(
-        self, annotatable: Annotatable | None,
-        context: dict[str, Any],  # noqa: ARG002
-    ) -> dict[str, Any]:
-        """Produce annotation attributes for an annotatable."""
-        if annotatable is None:
-            return {}
-        self.index += 1
-        return {"index": self.index, "annotatable": annotatable}
-
-
-@pytest.fixture
-def dummy_annotation_pipeline(
-    t4c8_grr: GenomicResourceRepo,
-) -> AnnotationPipeline:
-    """Fixture to create a dummy annotation pipeline."""
-    pipeline = AnnotationPipeline(
-        t4c8_grr,
-    )
-    dummy_annotator = DummyAnnotator()
-    pipeline.add_annotator(dummy_annotator)
-
-    return pipeline.open()
 
 
 def test_study_1_loader(
@@ -161,6 +38,8 @@ def test_effect_annotation_pipeline_variants_batch_filter(
     batch_filter = AnnotationPipelineVariantsBatchFilter(
         effect_annotation_pipeline)
     variants = list(study_1_loader.fetch())
+    with batch_filter as batch_filter:
+        result = list(batch_filter.filter_batch(variants))
     result = list(batch_filter.filter_batch(variants))
     assert len(result) == 6
 
@@ -172,7 +51,10 @@ def test_dummy_annotation_pipeline_variants_batch_filter(
     batch_filter = AnnotationPipelineVariantsBatchFilter(
         dummy_annotation_pipeline)
     variants = list(study_1_loader.fetch())
-    result = list(batch_filter.filter_batch(variants))
+
+    result = []
+    with batch_filter as batch_filter:
+        result = list(batch_filter.filter_batch(variants))
     assert len(result) == 6
     index = 0
     for full_variant in result:
@@ -191,7 +73,9 @@ def test_dummy_annotation_pipeline_variants_filter(
     annotation_filter = AnnotationPipelineVariantsFilter(
         dummy_annotation_pipeline)
     variants = list(study_1_loader.fetch())
-    result = list(annotation_filter.filter(variants))
+    result = []
+    with annotation_filter as annotation_filter:
+        result = list(annotation_filter.filter(variants))
     assert len(result) == 6
     index = 0
     for full_variant in result:
@@ -235,6 +119,13 @@ class DummyBatchConsumer(VariantsBatchConsumer):
 
     def consume_batch(self, batch: Sequence[FullVariant]) -> None:
         self.batches.append(list(batch))
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        return exc_type is not None
 
 
 @pytest.mark.parametrize(
@@ -281,6 +172,13 @@ class DummyConsumer(VariantsConsumer):
 
     def consume_one(self, full_variant: FullVariant) -> None:
         self.variants.append(full_variant)
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        return exc_type is not None
 
 
 def test_variants_pipeline_processor(

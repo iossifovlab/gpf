@@ -1,20 +1,27 @@
+from __future__ import annotations
+
 import functools
 import logging
 import os
+import pathlib
 import time
-from collections.abc import Iterable
-from itertools import islice
-from typing import Any, cast
+from collections.abc import Sequence
+from contextlib import AbstractContextManager
+from types import TracebackType
+from typing import cast
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
+    AttributeInfo,
 )
-from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.processing_pipeline import (
+    VariantsBatchConsumer,
+    VariantsConsumer,
+)
 from dae.parquet.schema2.serializers import (
     AlleleParquetSerializer,
     FamilyAlleleParquetSerializer,
@@ -32,6 +39,9 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import (
     SummaryAllele,
     SummaryVariant,
+)
+from dae.variants_loaders.raw.loader import (
+    FullVariant,
 )
 
 logger = logging.getLogger(__name__)
@@ -152,13 +162,15 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter:
+class VariantsParquetWriter(
+        VariantsConsumer, VariantsBatchConsumer,
+        AbstractContextManager):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
         self,
-        out_dir: str,
-        annotation_pipeline: AnnotationPipeline,
+        out_dir: pathlib.Path | str,
+        annotation_schema: list[AttributeInfo],
         partition_descriptor: PartitionDescriptor,
         *,
         blob_serializer: VariantsDataSerializer | None = None,
@@ -167,7 +179,7 @@ class VariantsParquetWriter:
         include_reference: bool = False,
         variants_blob_serializer: str = "json",
     ) -> None:
-        self.out_dir = out_dir
+        self.out_dir = str(out_dir)
 
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
@@ -180,28 +192,37 @@ class VariantsParquetWriter:
         self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
-        self.annotation_pipeline = annotation_pipeline
+        self.annotation_schema = annotation_schema
 
         self.summary_serializer = SummaryAlleleParquetSerializer(
-            self.annotation_pipeline.get_attributes(),
+            self.annotation_schema,
         )
         self.family_serializer = FamilyAlleleParquetSerializer(
-            self.annotation_pipeline.get_attributes(),
+            self.annotation_schema,
         )
-        self._annotation_internal_attributes = {
-            attribute.name
-            for attribute in self.annotation_pipeline.get_attributes()
-            if attribute.internal
-        }
 
         if blob_serializer is None:
             blob_serializer = VariantsDataSerializer.build_serializer(
                 build_summary_blob_schema(
-                    self.annotation_pipeline.get_attributes(),
+                    self.annotation_schema,
                 ),
                 serializer_type=variants_blob_serializer,
             )
         self.blob_serializer = blob_serializer
+        self.summary_index = 0
+        self.family_index = 0
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        self.close()
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return True
 
     def _build_family_filename(
         self, allele: FamilyAllele, *,
@@ -268,159 +289,40 @@ class VariantsParquetWriter:
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
 
-    def _apply_attributes_to_allele(
-        self, summary_allele: SummaryAllele,
-        attributes: dict[str, Any],
+    def consume_one(
+        self, full_variant: FullVariant,
     ) -> None:
-        if "allele_effects" in attributes:
-            allele_effects = attributes["allele_effects"]
-            assert isinstance(allele_effects, AlleleEffects), attributes
-            # pylint: disable=protected-access
-            summary_allele._effects = allele_effects  # noqa: SLF001
-            del attributes["allele_effects"]
-        public_attributes = {
-            key: value for key, value in attributes.items()
-            if key not in self._annotation_internal_attributes
-        }
-        summary_allele.update_attributes(public_attributes)
+        """Consume a single full variant."""
+        summary_index = self.summary_index
+        sj_base_index = self._calc_sj_base_index(summary_index)
+        family_index, num_fam_alleles_written = \
+            self._write_family_variants(
+                self.family_index, summary_index, sj_base_index,
+                full_variant.summary_variant,
+                full_variant.family_variants,
+            )
+        if num_fam_alleles_written > 0:
+            self.write_summary_variant(
+                full_variant.summary_variant,
+                sj_base_index=sj_base_index,
+            )
 
-    def _annotate_summary_variant(
-        self, summary_variant: SummaryVariant,
+        self.summary_index += 1
+        self.family_index = family_index
+
+    def consume_batch(
+        self, batch: Sequence[FullVariant],
     ) -> None:
-        for sallele in summary_variant.alt_alleles:
-            attributes = self.annotation_pipeline.annotate(
-                sallele.get_annotatable())
-            self._apply_attributes_to_allele(sallele, attributes)
-
-    def _annotate_batch(
-        self, batch: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],
-    ) -> None:
-        summary_alleles: list[SummaryAllele] = [
-            sallele
-            for summary_variant, _ in batch
-            for sallele in summary_variant.alt_alleles
-        ]
-        annotations = iter(self.annotation_pipeline.batch_annotate(
-            [sa.get_annotatable() for sa in summary_alleles],
-        ))
-        for sa, attributes in zip(summary_alleles, annotations, strict=True):
-            self._apply_attributes_to_allele(sa, attributes)
-
-    def _write_iterative(
-        self,
-        full_variants_iterator:
-            Iterable[tuple[SummaryVariant, list[FamilyVariant]]],
-    ) -> tuple[int, int]:
-        logger.info("Working in iterative annotation mode")
-        summary_index = 0
-        family_index = 0
-        for summary_index, (
-            summary_variant,
-            family_variants,
-        ) in enumerate(full_variants_iterator):
-            assert summary_index < 1_000_000_000, \
-                "too many summary variants"
-            self._annotate_summary_variant(summary_variant)
-            sj_base_index = self._calc_sj_base_index(summary_index)
-
-            family_index, num_fam_alleles_written = \
-                self._write_family_variants(
-                    family_index, summary_index, sj_base_index,
-                    summary_variant, family_variants,
-                )
-            if num_fam_alleles_written > 0:
-                self.write_summary_variant(
-                        summary_variant,
-                        sj_base_index=sj_base_index,
-                    )
-
-            if summary_index % 1000 == 0 and summary_index > 0:
-                elapsed = time.time() - self.start
-                logger.info(
-                    "progress bucket %s; "
-                    "summary variants: %s; family variants: %s; "
-                    "elapsed time: %0.2f sec",
-                    self.bucket_index,
-                    summary_index, family_index,
-                    elapsed)
-
-        return summary_index, family_index
-
-    def _write_batched(
-        self,
-        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
-        annotation_batch_size: int,
-    ) -> tuple[int, int]:
-        logger.info("Working in batch annotation mode")
-        summary_index = 0
-        family_index = 0
-        iterator = iter(full_variants_iterator)
-        while batch := tuple(islice(iterator, annotation_batch_size)):
-            self._annotate_batch(batch)
-            for summary_variant, family_variants in batch:
-                assert summary_index < 1_000_000_000, \
-                    "too many summary variants"
-
-                sj_base_index = self._calc_sj_base_index(summary_index)
-                family_index, num_fam_alleles_written = \
-                    self._write_family_variants(
-                        family_index, summary_index, sj_base_index,
-                        summary_variant, family_variants,
-                    )
-                if num_fam_alleles_written > 0:
-                    self.write_summary_variant(
-                        summary_variant,
-                        sj_base_index=sj_base_index,
-                    )
-
-                summary_index += 1
-
-                if summary_index % 1000 == 0 and summary_index > 0:
-                    elapsed = time.time() - self.start
-                    logger.info(
-                        "progress bucket %s; "
-                        "summary variants: %s; family variants: %s; "
-                        "elapsed time: %0.2f sec",
-                        self.bucket_index,
-                        summary_index, family_index,
-                        elapsed)
-        return summary_index, family_index
-
-    def write_dataset(
-        self,
-        full_variants_iterator: Iterable[
-            tuple[SummaryVariant, list[FamilyVariant]]],
-        *,
-        annotation_batch_size: int = 0,
-    ) -> list[str]:
-        """Write variant to partitioned parquet dataset."""
-        with self.annotation_pipeline.open():
-            if annotation_batch_size > 0:
-                summary_index, family_index = \
-                    self._write_batched(full_variants_iterator,
-                                        annotation_batch_size)
-            else:
-                summary_index, family_index = \
-                    self._write_iterative(full_variants_iterator)
-
-        filenames = list(self.data_writers.keys())
-
-        self.close()
-
-        elapsed = time.time() - self.start
-        logger.info(
-            "finished bucket %s; summary variants: %s; family variants: %s; "
-            "elapsed time: %0.2f sec",
-            self.bucket_index, summary_index, family_index,
-            elapsed)
-        return filenames
+        """Consume a batch of full variants."""
+        for full_variant in batch:
+            self.consume_one(full_variant)
 
     def _write_family_variants(
             self, family_index: int,
             summary_index: int,
             sj_base_index: int,
             summary_variant: SummaryVariant,
-            family_variants: list[FamilyVariant],
+            family_variants: Sequence[FamilyVariant],
     ) -> tuple[int, int]:
         num_fam_alleles_written = 0
         seen_in_status = summary_variant.allele_count * [0]

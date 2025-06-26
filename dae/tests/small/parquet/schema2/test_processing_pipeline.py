@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 
 from collections.abc import Iterable, Sequence
+from types import TracebackType
 
 import pytest
 from dae.annotation.annotatable import (
@@ -29,6 +30,13 @@ class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
             )
             for index, annotatable in enumerate(batch)
         ]
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        return exc_type is not None
 
 
 @pytest.mark.parametrize(

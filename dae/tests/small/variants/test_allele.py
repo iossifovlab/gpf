@@ -4,7 +4,7 @@ from dae.variants.core import Allele
 from dae.variants.variant import SummaryAllele, SummaryVariantFactory
 
 
-def test_position_allele():
+def test_position_allele() -> None:
     allele = Allele.build_position_allele("1", 3)
     assert allele.allele_type == Allele.Type.position
     assert allele.end_position == 3
@@ -30,7 +30,7 @@ def test_vcf_allele(
     assert result.allele_type == allele_type
 
 
-def test_to_records():
+def test_to_records() -> None:
     effect = "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68"
     in_allele = SummaryAllele(
         "1", 11539, "T", "G", 0, 1,

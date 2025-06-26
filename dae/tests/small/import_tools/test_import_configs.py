@@ -107,7 +107,7 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(
                         return_value=gpf_instance)
     project = import_tools.ImportProject.build_from_file(config_fn)
     loader = project._get_variant_loader("vcf")
-    assert loader._chrom_prefix == "chr"  # type: ignore
+    assert loader._chrom_prefix == "chr"
 
 
 @pytest.mark.parametrize("row_group_size, expected", [

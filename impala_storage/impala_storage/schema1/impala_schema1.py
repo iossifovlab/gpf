@@ -17,7 +17,7 @@ from dae.parquet.parquet_writer import merge_variants_parquets
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
-from dae.variants_loaders.raw.loader import VariantsLoader
+from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,
@@ -76,14 +76,14 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
     @classmethod
     def build_variants_loader_pipeline(
-        cls, variants_loader: VariantsLoader,
+        cls, variants_loader: VariantsGenotypesLoader,
         project: ImportProject,
-    ) -> VariantsLoader:
+    ) -> VariantsGenotypesLoader:
         """Create an annotation pipeline around variants_loader."""
         annotation_pipeline = project.build_annotation_pipeline()
         if annotation_pipeline is not None:
             variants_loader = cast(
-                VariantsLoader,
+                VariantsGenotypesLoader,
                 AnnotationPipelineDecorator(
                     variants_loader, annotation_pipeline,
                 ))

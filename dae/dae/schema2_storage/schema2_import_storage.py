@@ -28,13 +28,18 @@ from dae.parquet.parquet_writer import (
     serialize_summary_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.parquet_io import (
-    VariantsParquetWriter,
+from dae.parquet.schema2.processing_pipeline import (
+    AnnotationPipelineVariantsFilter,
+    VariantsLoaderSource,
+    VariantsPipelineProcessor,
 )
 from dae.parquet.schema2.serializers import (
     VariantsDataSerializer,
     build_family_schema,
     build_summary_blob_schema,
+)
+from dae.parquet.schema2.variants_parquet_writer import (
+    VariantsParquetWriter,
 )
 from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
@@ -164,21 +169,20 @@ class Schema2ImportStorage(ImportStorage):
             ])
 
     @classmethod
-    def _do_write_variant(
-            cls, project: ImportProject, bucket: Bucket) -> None:
+    def _create_import_processing_pipeline(
+        cls, project: ImportProject,
+        bucket: Bucket,
+        row_group_size: int | None = None,
+    ) -> VariantsPipelineProcessor:
+        """Create the import processing pipeline."""
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
+
         variants_loader = project.get_variant_loader(
             bucket, reference_genome=gpf_instance.reference_genome)
-        if bucket.region_bin is not None and \
-                bucket.region_bin not in {"none", "all"}:
-            logger.info(
-                "resetting regions (rb: %s): %s",
-                bucket.region_bin, bucket.regions)
-            variants_loader.reset_regions([
-                Region.from_str(r) for r in bucket.regions])
+        if row_group_size is None:
+            row_group_size = cls.BATCH_SIZE
 
-        row_group_size = cls.BATCH_SIZE
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
 
@@ -190,18 +194,43 @@ class Schema2ImportStorage(ImportStorage):
         )
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
-            annotation_pipeline=annotation_pipeline,
+            annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
             blob_serializer=blob_serializer,
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,
         )
-        variants_writer.write_dataset(
-            variants_loader.full_variants_iterator(),
-            annotation_batch_size=project
-            .get_processing_annotation_batch_size(),
+
+        source = VariantsLoaderSource(
+            variants_loader,
         )
+        annotation_filter = AnnotationPipelineVariantsFilter(
+            annotation_pipeline,
+        )
+        return VariantsPipelineProcessor(
+            source,
+            [annotation_filter],
+            variants_writer,
+        )
+
+    @classmethod
+    def _do_write_variant(
+            cls, project: ImportProject, bucket: Bucket) -> None:
+        regions: list[Region] | None = None
+        if bucket.region_bin is not None and \
+                bucket.region_bin not in {"none", "all"}:
+            logger.info(
+                "creating regions (rb: %s): %s",
+                bucket.region_bin, bucket.regions)
+            regions = [
+                Region.from_str(r) for r in bucket.regions]
+
+        processing_pipeline = cls._create_import_processing_pipeline(
+            project, bucket,
+        )
+        with processing_pipeline as pipeline:
+            pipeline.process(regions)
 
     @classmethod
     def _variant_partitions(
