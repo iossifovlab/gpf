@@ -520,12 +520,9 @@ class VariantsParquetWriter:
 
     def write_summary_variant(
         self, summary_variant: SummaryVariant,
-        attributes: dict[str, Any] | None = None,
         sj_base_index: int | None = None,
     ) -> None:
         """Write a single summary variant to the correct parquet file."""
-        if attributes is not None:
-            summary_variant.update_attributes(attributes)
         if sj_base_index is not None:
             for summary_allele in summary_variant.alleles:
                 sj_index = sj_base_index + summary_allele.allele_index

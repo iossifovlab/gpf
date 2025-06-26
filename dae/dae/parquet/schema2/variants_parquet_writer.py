@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import functools
 import logging
 import os
 import pathlib
 import time
 from collections.abc import Sequence
-from typing import Any, cast
+from contextlib import AbstractContextManager
+from types import TracebackType
+from typing import cast
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -158,7 +162,9 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter(VariantsConsumer, VariantsBatchConsumer):
+class VariantsParquetWriter(
+        VariantsConsumer, VariantsBatchConsumer,
+        AbstractContextManager):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -205,6 +211,18 @@ class VariantsParquetWriter(VariantsConsumer, VariantsBatchConsumer):
         self.blob_serializer = blob_serializer
         self.summary_index = 0
         self.family_index = 0
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        self.close()
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return True
 
     def _build_family_filename(
         self, allele: FamilyAllele, *,
@@ -404,12 +422,9 @@ class VariantsParquetWriter(VariantsConsumer, VariantsBatchConsumer):
 
     def write_summary_variant(
         self, summary_variant: SummaryVariant,
-        attributes: dict[str, Any] | None = None,
         sj_base_index: int | None = None,
     ) -> None:
         """Write a single summary variant to the correct parquet file."""
-        if attributes is not None:
-            summary_variant.update_attributes(attributes)
         if sj_base_index is not None:
             for summary_allele in summary_variant.alleles:
                 sj_index = sj_base_index + summary_allele.allele_index

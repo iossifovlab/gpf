@@ -287,7 +287,7 @@ def effect_annotation_pipeline(
     )
     effect_annotator = create_effect_annotator(pipeline, tmp_path)
     pipeline.add_annotator(effect_annotator)
-    return pipeline.open()
+    return pipeline
 
 
 class DummyAnnotator(Annotator):

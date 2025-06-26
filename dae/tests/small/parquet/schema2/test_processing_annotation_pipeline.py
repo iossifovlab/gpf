@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 
 from collections.abc import Sequence
+from types import TracebackType
 
 import pytest
 from dae.annotation.annotation_pipeline import (
@@ -37,6 +38,8 @@ def test_effect_annotation_pipeline_variants_batch_filter(
     batch_filter = AnnotationPipelineVariantsBatchFilter(
         effect_annotation_pipeline)
     variants = list(study_1_loader.fetch())
+    with batch_filter as batch_filter:
+        result = list(batch_filter.filter_batch(variants))
     result = list(batch_filter.filter_batch(variants))
     assert len(result) == 6
 
@@ -48,7 +51,10 @@ def test_dummy_annotation_pipeline_variants_batch_filter(
     batch_filter = AnnotationPipelineVariantsBatchFilter(
         dummy_annotation_pipeline)
     variants = list(study_1_loader.fetch())
-    result = list(batch_filter.filter_batch(variants))
+
+    result = []
+    with batch_filter as batch_filter:
+        result = list(batch_filter.filter_batch(variants))
     assert len(result) == 6
     index = 0
     for full_variant in result:
@@ -67,7 +73,9 @@ def test_dummy_annotation_pipeline_variants_filter(
     annotation_filter = AnnotationPipelineVariantsFilter(
         dummy_annotation_pipeline)
     variants = list(study_1_loader.fetch())
-    result = list(annotation_filter.filter(variants))
+    result = []
+    with annotation_filter as annotation_filter:
+        result = list(annotation_filter.filter(variants))
     assert len(result) == 6
     index = 0
     for full_variant in result:
@@ -111,6 +119,13 @@ class DummyBatchConsumer(VariantsBatchConsumer):
 
     def consume_batch(self, batch: Sequence[FullVariant]) -> None:
         self.batches.append(list(batch))
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        return exc_type is not None
 
 
 @pytest.mark.parametrize(
@@ -157,6 +172,13 @@ class DummyConsumer(VariantsConsumer):
 
     def consume_one(self, full_variant: FullVariant) -> None:
         self.variants.append(full_variant)
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        return exc_type is not None
 
 
 def test_variants_pipeline_processor(

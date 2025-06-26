@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import abc
 import itertools
+import logging
 from collections.abc import Iterable, Sequence
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from types import TracebackType
 from typing import Any, cast
 
 from dae.annotation.annotatable import Annotatable
@@ -16,15 +21,17 @@ from dae.variants_loaders.raw.loader import (
     VariantsGenotypesLoader,
 )
 
+logger = logging.getLogger(__name__)
 
-class VariantsSource(abc.ABC):
+
+class VariantsSource(AbstractContextManager):
 
     @abc.abstractmethod
     def fetch(self, region: Region | None = None) -> Iterable[FullVariant]:
         """Fetch variants."""
 
 
-class VariantsConsumer(abc.ABC):
+class VariantsConsumer(AbstractContextManager):
     """A terminator for variant processing pipelines."""
 
     @abc.abstractmethod
@@ -37,7 +44,7 @@ class VariantsConsumer(abc.ABC):
             self.consume_one(full_variant)
 
 
-class VariantsFilter(abc.ABC):
+class VariantsFilter(AbstractContextManager):
     """A filter that can be used to filter variants."""
 
     def filter(self, variants: Iterable[FullVariant]) -> Iterable[FullVariant]:
@@ -52,7 +59,7 @@ class VariantsFilter(abc.ABC):
         """Filter a single variant."""
 
 
-class VariantsBatchSource(abc.ABC):
+class VariantsBatchSource(AbstractContextManager):
     """A source that can fetch variants in batches."""
 
     @abc.abstractmethod
@@ -62,7 +69,7 @@ class VariantsBatchSource(abc.ABC):
         """Fetch variants in batches."""
 
 
-class VariantsBatchConsumer(abc.ABC):
+class VariantsBatchConsumer(AbstractContextManager):
     """A sink that can write variants in batches."""
 
     @abc.abstractmethod
@@ -79,7 +86,7 @@ class VariantsBatchConsumer(abc.ABC):
             self.consume_batch(batch)
 
 
-class VariantsBatchFilter(abc.ABC):
+class VariantsBatchFilter(AbstractContextManager):
     """A filter that can filter variants in batches."""
 
     @abc.abstractmethod
@@ -118,7 +125,7 @@ class AnnotationsWithContext:
     context: Any
 
 
-class AnnotatablesFilter(abc.ABC):
+class AnnotatablesFilter(AbstractContextManager):
     """A filter that can filter annotatables."""
 
     @abc.abstractmethod
@@ -151,7 +158,7 @@ class AnnotatablesFilter(abc.ABC):
             yield self.filter_one_with_context(annotatables)
 
 
-class AnnotatablesBatchFilter(abc.ABC):
+class AnnotatablesBatchFilter(AbstractContextManager):
     """A filter that can filter annotatables in batches."""
 
     @abc.abstractmethod
@@ -202,11 +209,33 @@ class AnnotatablesBatchFilter(abc.ABC):
             yield self.filter_batch_with_context(batch_with_context)
 
 
-class AnnotationPipelineAnnotatablesFilter(AnnotatablesFilter):
-    """A filter that can filter annotatables in batches."""
+class AnnotationPipelineContextManager(AbstractContextManager):
+    """A context manager for annotation pipelines."""
 
     def __init__(self, annotation_pipeline: AnnotationPipeline) -> None:
         self.annotation_pipeline = annotation_pipeline
+
+    def __enter__(self) -> AnnotationPipelineContextManager:
+        """Enter the context manager."""
+        self.annotation_pipeline.open()
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        self.annotation_pipeline.close()
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+
+class AnnotationPipelineAnnotatablesFilter(
+        AnnotatablesFilter, AnnotationPipelineContextManager):
+    """A filter that can filter annotatables in batches."""
 
     def filter_one(
         self, annotatable: Annotatable | None,
@@ -216,11 +245,9 @@ class AnnotationPipelineAnnotatablesFilter(AnnotatablesFilter):
         return Annotation(annotatable=annotatable, annotations=annotations)
 
 
-class AnnotationPipelineAnnotatablesBatchFilter(AnnotatablesBatchFilter):
+class AnnotationPipelineAnnotatablesBatchFilter(
+        AnnotatablesBatchFilter, AnnotationPipelineContextManager):
     """A filter that can filter annotatables in batches."""
-
-    def __init__(self, annotation_pipeline: AnnotationPipeline) -> None:
-        self.annotation_pipeline = annotation_pipeline
 
     def filter_batch(
         self, batch: Sequence[Annotatable | None],
@@ -295,6 +322,18 @@ class AnnotationPipelineVariantsFilter(
             self._apply_annotation_to_allele(summary_allele, annotation)
         return full_variant
 
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        self.annotation_pipeline.close()
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
 
 class AnnotationPipelineVariantsBatchFilter(
         VariantsBatchFilter, AnnotationPipelineVariantsFilterMixin):
@@ -337,6 +376,18 @@ class AnnotationPipelineVariantsBatchFilter(
             result.append(full_variant)
         return result
 
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        self.annotation_pipeline.close()
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return True
+
 
 class VariantsLoaderSource(VariantsSource):
     """A source that can fetch variants from a loader."""
@@ -347,6 +398,13 @@ class VariantsLoaderSource(VariantsSource):
     def fetch(self, region: Region | None = None) -> Iterable[FullVariant]:
         """Fetch full variants from a variant loader."""
         yield from self.loader.fetch(region)
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        return exc_type is not None
 
 
 class VariantsLoaderBatchSource(VariantsBatchSource):
@@ -368,25 +426,71 @@ class VariantsLoaderBatchSource(VariantsBatchSource):
                 itertools.islice(variants, self.batch_size)):
             yield batch
 
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
 
-class VariantsPipelineProcessor:
+
+class VariantsPipelineProcessor(AbstractContextManager):
     """A processor that can be used to process variants in a pipeline."""
 
     def __init__(
         self,
         source: VariantsSource,
         filters: Sequence[VariantsFilter],
-        sink: VariantsConsumer,
+        consumer: VariantsConsumer,
     ) -> None:
         self.source = source
         self.filters = filters
-        self.sink = sink
+        self.consumer = consumer
 
-    def process(self, region: Region | None = None) -> None:
+    def process_region(self, region: Region | None = None) -> None:
         for full_variant in self.source.fetch(region):
             for variant_filter in self.filters:
                 full_variant = variant_filter.filter_one(full_variant)
-            self.sink.consume_one(full_variant)
+            self.consumer.consume_one(full_variant)
+
+    def process(self, regions: Iterable[Region] | None = None) -> None:
+        """Process variants in batches for the given regions."""
+        if regions is None:
+            self.process_region(None)
+            return
+        for region in regions:
+            self.process_region(region)
+
+    def __enter__(self) -> VariantsPipelineProcessor:
+        """Enter the context manager."""
+
+        self.source.__enter__()
+        for variant_filter in self.filters:
+            variant_filter.__enter__()
+        self.consumer.__enter__()
+
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.source.__exit__(exc_type, exc_value, exc_tb)
+        for variant_filter in self.filters:
+            variant_filter.__exit__(exc_type, exc_value, exc_tb)
+        self.consumer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
 
 
 class VariantsBatchPipelineProcessor:
@@ -396,14 +500,47 @@ class VariantsBatchPipelineProcessor:
         self,
         source: VariantsBatchSource,
         filters: Sequence[VariantsBatchFilter],
-        sink: VariantsBatchConsumer,
+        consumer: VariantsBatchConsumer,
     ) -> None:
         self.source = source
         self.filters = filters
-        self.sink = sink
+        self.consumer = consumer
 
-    def process(self, region: Region | None = None) -> None:
+    def process_region(self, region: Region | None = None) -> None:
         for batch in self.source.fetch_batches(region):
             for variant_filter in self.filters:
                 batch = variant_filter.filter_batch(batch)
-            self.sink.consume_batch(batch)
+            self.consumer.consume_batch(batch)
+
+    def process(self, regions: Iterable[Region] | None = None) -> None:
+        """Process variants in batches for the given regions."""
+        if regions is None:
+            self.process_region(None)
+            return
+        for region in regions:
+            self.process_region(region)
+
+    def __enter__(self) -> VariantsBatchPipelineProcessor:
+        """Enter the context manager."""
+        self.source.__enter__()
+        for variant_filter in self.filters:
+            variant_filter.__enter__()
+        self.consumer.__enter__()
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.source.__exit__(exc_type, exc_value, exc_tb)
+        for variant_filter in self.filters:
+            variant_filter.__exit__(exc_type, exc_value, exc_tb)
+        self.consumer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None

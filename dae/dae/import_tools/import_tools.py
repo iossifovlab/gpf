@@ -45,7 +45,7 @@ from dae.utils.regions import Region
 from dae.utils.stats_collection import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import VariantsLoader
+from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)
@@ -257,7 +257,7 @@ class ImportProject:
         self,
         bucket: Bucket | None = None, loader_type: str | None = None,
         reference_genome: ReferenceGenome | None = None,
-    ) -> VariantsLoader:
+    ) -> VariantsGenotypesLoader:
         """Get the appropriate variant loader for the specified bucket."""
         if bucket is None and loader_type is None:
             raise ValueError("loader_type or bucket is required")
@@ -306,7 +306,7 @@ class ImportProject:
     def _get_variant_loader(
         self, loader_type: str,
         reference_genome: ReferenceGenome | None = None,
-    ) -> VariantsLoader:
+    ) -> VariantsGenotypesLoader:
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
         if reference_genome is None:
@@ -319,7 +319,7 @@ class ImportProject:
             "cnv": CNVLoader,
             "dae": DaeTransmittedLoader,
         }[loader_type]
-        loader: VariantsLoader = loader_cls(
+        loader: VariantsGenotypesLoader = loader_cls(
             self.get_pedigree(),
             variants_filenames,
             params=variants_params,
@@ -627,7 +627,7 @@ class ImportProject:
 
     @staticmethod
     def _check_chrom_prefix(
-            loader: VariantsLoader,
+            loader: VariantsGenotypesLoader,
             variants_params: dict[str, Any]) -> None:
         prefix = variants_params.get("add_chrom_prefix")
         if prefix:
