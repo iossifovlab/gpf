@@ -5,9 +5,9 @@ from dae.task_graph.graph import TaskGraph
 
 def test_creating_two_tasks_with_the_same_id() -> None:
     graph = TaskGraph()
-    graph.create_task("ID", lambda: None, [], [])
-    with pytest.raises(ValueError):
-        graph.create_task("ID", lambda: None, [], [])
+    graph.create_task("ID", lambda: None, args=[], deps=[])
+    with pytest.raises(ValueError):  # noqa
+        graph.create_task("ID", lambda: None, args=[], deps=[])
 
 
 def test_pruning() -> None:
@@ -29,12 +29,12 @@ def test_pruning_non_existent_ids() -> None:
 def _create_simple_graph() -> TaskGraph:
     graph = TaskGraph()
     graph.input_files.extend(["file1", "file2"])
-    first_task = graph.create_task("1", lambda: None, [], [])
-    mid_tasks = []
-    for i in range(2, 10):
-        mid_tasks.append(
-            graph.create_task(str(i), lambda: None, [], [first_task]),
-        )
-    graph.create_task("final", lambda: None, [], mid_tasks)
+    first_task = graph.create_task("1", lambda: None, args=[], deps=[])
+    mid_tasks = [
+        graph.create_task(
+            str(i), lambda: None, args=[], deps=[first_task])
+        for i in range(2, 10)
+    ]
+    graph.create_task("final", lambda: None, args=[], deps=mid_tasks)
 
     return graph

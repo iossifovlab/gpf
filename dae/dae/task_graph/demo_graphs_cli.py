@@ -31,9 +31,9 @@ def _build_graph_a(graph_params: list[str] | None) -> TaskGraph:
         time.sleep(float(summary_sleep))
 
     parts = [task_graph.create_task(
-        f"part {p}", task_part, [], [])
+        f"part {p}", task_part, args=[], deps=[])
         for p in range(int(num_of_parts))]
-    task_graph.create_task("summary", task_summary, [], parts)
+    task_graph.create_task("summary", task_summary, args=[], deps=parts)
     return task_graph
 
 
@@ -63,9 +63,10 @@ def _build_graph_d(graph_params: list[str] | None) -> TaskGraph:
 
     for click in range(int(num_of_clicks)):
         parts = [task_graph.create_task(
-            f"part {click}:{p}", task_part, [], [])
+            f"part {click}:{p}", task_part, args=[], deps=[])
             for p in range(int(num_of_parts))]
-        task_graph.create_task(f"summary {click}", task_summary, [], parts)
+        task_graph.create_task(
+            f"summary {click}", task_summary, args=[], deps=parts)
     return task_graph
 
 
@@ -97,9 +98,9 @@ def _build_graph_b(graph_params: list[str] | None) -> TaskGraph:
         return "c".join(args[:5])
 
     parts = [task_graph.create_task(
-        f"part {p}", task_part, [], [])
+        f"part {p}", task_part, args=[], deps=[])
         for p in range(int(num_of_parts))]
-    task_graph.create_task("summary", task_summary, parts, parts)
+    task_graph.create_task("summary", task_summary, args=[], deps=parts)
     return task_graph
 
 
@@ -131,15 +132,17 @@ def _build_graph_c(graph_params: list[str] | None) -> TaskGraph:
         return "c".join(args[:5])
 
     parts = [
-        task_graph.create_task(f"part {p}", task_part, [], [])
+        task_graph.create_task(f"part {p}", task_part, args=[], deps=[])
         for p in range(int(num_of_parts))
     ]
-    summary = task_graph.create_task("summary", task_summary, parts, parts)
+    summary = task_graph.create_task(
+        "summary", task_summary, args=[], deps=parts)
     parts2 = [
-        task_graph.create_task(f"part2 {p}", task_part, [summary], [summary])
+        task_graph.create_task(
+            f"part2 {p}", task_part, args=[summary], deps=[summary])
         for p in range(int(num_of_parts))
     ]
-    task_graph.create_task("summary2", task_summary, parts2, parts2)
+    task_graph.create_task("summary2", task_summary, args=[], deps=parts2)
     return task_graph
 
 

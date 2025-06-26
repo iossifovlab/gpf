@@ -543,15 +543,15 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
     graph.create_task(
         f"{impl.resource.get_full_id()}_store_stats_hash",
         _store_stats_hash,
-        [proto, impl.resource],
-        tasks,
+        args=[proto, impl.resource],
+        deps=tasks,
     )
 
     graph.create_task(
         f"{impl.resource.get_full_id()}_manifest_rebuild",
         _do_resource_manifest_command,
-        [proto, impl.resource, dry_run, force, use_dvc],
-        tasks,
+        args=[proto, impl.resource, dry_run, force, use_dvc],
+        deps=tasks,
     )
 
 

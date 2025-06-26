@@ -28,7 +28,12 @@ class QueryVariants(abc.ABC):
     """Abstract class for querying variants interface."""
 
     def __init__(self, families: FamiliesData) -> None:
-        self.families: FamiliesData = families
+        self._families: FamiliesData = families
+
+    @property
+    def families(self) -> FamiliesData:
+        """Return families data."""
+        return self._families
 
     @abc.abstractmethod
     def has_affected_status_queries(self) -> bool:

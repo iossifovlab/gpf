@@ -384,7 +384,7 @@ def import_pheno_data(  # pylint: disable=R0912
         )
 
     destination_storage_id, data_copy_destination, config_copy_destination = \
-            determine_destination(gpf_instance, config)
+        determine_destination(gpf_instance, config)
 
     pheno_db_filename = os.path.join(config.work_dir, f"{config.id}.db")
 
@@ -591,7 +591,7 @@ def collect_instruments(
 
     all_instruments: dict[str, ImportInstrument] = {}
 
-    def handle_path(raw_path: str):
+    def handle_path(raw_path: str) -> None:
         path = Path(import_config.input_dir, raw_path)
         matched_paths: list[Path] = []
         if "*" in raw_path:
@@ -603,10 +603,10 @@ def collect_instruments(
         elif path.is_dir():
             for root, _, filenames in os.walk(path):
                 matched_paths.extend(Path(root, filename).absolute()
-                                    for filename in filenames)
+                                     for filename in filenames)
 
-        matched_paths = list(filter(lambda m: m.suffixes[0] in (".csv", ".txt"),
-                                    matched_paths))
+        matched_paths = list(
+            filter(lambda m: m.suffixes[0] in (".csv", ".txt"), matched_paths))
 
         for match in matched_paths:
             logger.debug("instrument matched: %s", match.name)
@@ -620,7 +620,7 @@ def collect_instruments(
                 )
             all_instruments[instrument_name].files.append(match)
 
-    def handle_conf(conf: InstrumentConfig):
+    def handle_conf(conf: InstrumentConfig) -> None:
         path = Path(import_config.input_dir, conf.path).absolute()
         instrument = conf.instrument \
             if conf.instrument is not None \
@@ -680,7 +680,7 @@ def read_and_classify_measure(
     """Read a measure's values and classify from an instrument file."""
 
     person_id_column = import_config.person_column
-    transformed_measures = defaultdict(dict)
+    transformed_measures: dict[str, dict[str, Any]] = defaultdict(dict)
     seen_person_ids = set()
     person_ids = []
 
@@ -802,7 +802,7 @@ def write_to_parquet(
     column_order = []
     string_cols = set()
 
-    fields = []
+    fields: list[pa.Field] = []
 
     fields.append(
         pa.field(
@@ -820,7 +820,7 @@ def write_to_parquet(
             )
         val_type = report.inference_report.value_type
         if val_type is int:
-            col_dtype = pa.int32()
+            col_dtype: pa.DataType = pa.int32()
         elif val_type is float:
             col_dtype = pa.float32()
         elif val_type is str:
@@ -840,7 +840,7 @@ def write_to_parquet(
         filepath, schema,
     )
 
-    batch = pa.RecordBatch.from_pydict(values_table, schema)  # type: ignore
+    batch = pa.RecordBatch.from_pydict(values_table, schema)
 
     table = pa.Table.from_batches([batch], schema)
 
@@ -1181,7 +1181,8 @@ def load_measure_description_file(
     with open_file(abspath) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=config.delimiter)
         for row in reader:
-            instrument_name = config.instrument or row[config.instrument_column]
+            instrument_name = config.instrument or \
+                row[config.instrument_column]
             measure_name = row[config.measure_column]
             measure_id = f"{instrument_name}.{measure_name}"
             out[measure_id] = row[config.description_column]
@@ -1225,7 +1226,8 @@ def load_instrument_description_file(
     with open_file(abspath) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=config.delimiter)
         for row in reader:
-            instrument_name = config.instrument or row[config.instrument_column]
+            instrument_name = config.instrument or \
+                row[config.instrument_column]
             out[instrument_name] = row[config.description_column]
     return out
 
@@ -1288,6 +1290,7 @@ def merge_histogram_configs(
     measure_report: MeasureReport,
 ) -> HistogramConfig | None:
     """Merge configs by order of specificity"""
+    histogram_config: HistogramConfig | None
     if measure_report.inference_report.histogram_type is \
             NumberHistogram:
         histogram_config = NumberHistogramConfig.default_config(None)
@@ -1388,7 +1391,7 @@ def create_import_tasks(
         task_graph.create_task(
             f"{instrument.name}_read_and_classify",
             read_and_classify_measure,
-            [
+            args=[
                 instrument,
                 group_measure_names,
                 import_config,
@@ -1396,7 +1399,7 @@ def create_import_tasks(
                 group_inf_configs,
                 histogram_configs,
             ],
-            [],
+            deps=[],
         )
 
 
@@ -1406,7 +1409,7 @@ def write_reports_to_parquet(
     hist_configs: MeasureHistogramConfigs | None,
 ) -> Path:
     """Write inferred instrument measure values to parquet file."""
-    fields = [
+    fields: list[pa.Field] = [
         pa.field("measure_id", pa.string()),
         pa.field("db_column_name", pa.string()),
         pa.field("measure_name", pa.string()),
@@ -1422,7 +1425,7 @@ def write_reports_to_parquet(
         pa.field("values_domain", pa.string()),
         pa.field("rank", pa.int32()),
     ]
-    batch_values = {
+    batch_values: dict[str, list[Any]] = {
         "measure_id": [],
         "db_column_name": [],
         "measure_name": [],
@@ -1481,7 +1484,7 @@ def write_reports_to_parquet(
         output_file, schema,
     )
 
-    batch = pa.RecordBatch.from_pydict(batch_values, schema)  # type: ignore
+    batch = pa.RecordBatch.from_pydict(batch_values, schema)
 
     table = pa.Table.from_batches([batch], schema)
 
@@ -1491,6 +1494,7 @@ def write_reports_to_parquet(
 
 
 if __name__ == "__main__":
-    logger.warning("%s tool is deprecated! Use import_phenotypes.", sys.argv[0])
+    logger.warning(
+        "%s tool is deprecated! Use import_phenotypes.", sys.argv[0])
 
     main(sys.argv[1:])

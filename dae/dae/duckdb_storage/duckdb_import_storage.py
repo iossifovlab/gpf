@@ -123,11 +123,13 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
         if project.has_genotype_storage():
             tables_task = graph.create_task(
                 "Create DuckDb import dataset", self._do_import_dataset,
-                [project], all_parquet_tasks)
+                args=[project],
+                deps=all_parquet_tasks)
 
             graph.create_task(
                 "Creating a study config", self.do_study_config,
-                [project, tables_task], [tables_task])
+                args=[project, tables_task],
+                deps=[tables_task])
 
         return graph
 

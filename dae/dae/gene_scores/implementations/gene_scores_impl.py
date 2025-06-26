@@ -72,14 +72,14 @@ class GeneScoreImplementation(
             create_task = task_graph.create_task(
                 f"{self.resource.resource_id}_{score_id}_calc_histogram",
                 self._calc_histogram,
-                [self.resource, score_id],
-                [],
+                args=[self.resource, score_id],
+                deps=[],
             )
             save_task = task_graph.create_task(
                 f"{self.resource.resource_id}_{score_id}_save_histogram",
                 self._save_histogram,
-                [create_task, self.resource, score_id],
-                [create_task],
+                args=[create_task, self.resource, score_id],
+                deps=[create_task],
             )
             save_tasks.append(save_task)
         return save_tasks

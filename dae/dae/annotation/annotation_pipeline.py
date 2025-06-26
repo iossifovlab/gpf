@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from types import TracebackType
 from typing import Any
 
@@ -55,7 +55,7 @@ class Annotator(abc.ABC):
         """Produce annotation attributes for an annotatable."""
 
     def batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self, annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> Iterable[dict[str, Any]]:
@@ -153,7 +153,7 @@ class AnnotationPipeline:
         self.annotators.append(annotator)
 
     def annotate(
-        self, annotatable: Annotatable,
+        self, annotatable: Annotatable | None,
         context: dict | None = None,
     ) -> dict:
         """Apply all annotators to an annotatable."""
@@ -170,7 +170,7 @@ class AnnotationPipeline:
         return context
 
     def batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self, annotatables: Sequence[Annotatable | None],
         contexts: list[dict] | None = None,
         batch_work_dir: str | None = None,
     ) -> list[dict]:
@@ -362,7 +362,7 @@ class ReannotationPipeline(AnnotationPipeline):
         return converted_value
 
     def annotate(
-        self, annotatable: Annotatable,
+        self, annotatable: Annotatable | None,
         context: dict | None = None,
     ) -> dict:
         reused_context = None

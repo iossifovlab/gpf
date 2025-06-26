@@ -219,7 +219,8 @@ class GenomeStatistic(Statistic):
             self, chromosomes: list[str], length: int = 0,
             nucleotide_distribution: dict[str, float] | None = None,
             bi_nucleotide_distribution: dict[str, float] | None = None,
-            chromosome_statistics: dict[str, ChromosomeStatistic] | None = None,
+            chromosome_statistics: dict[
+                str, ChromosomeStatistic] | None = None,
     ):
         super().__init__("global", "")
         self.chromosomes = chromosomes
@@ -502,8 +503,8 @@ class ReferenceGenomeImplementation(
                 f"{self.resource.resource_id}_count_nucleotides_"
                 f"{reg}",
                 ReferenceGenomeImplementation._do_chrom_statistic,
-                [self.resource, reg.chrom, reg.start, reg.end],
-                [],
+                args=[self.resource, reg.chrom, reg.start, reg.end],
+                deps=[],
             )
             for reg in regions
         ]
@@ -511,14 +512,14 @@ class ReferenceGenomeImplementation(
         merge_task = task_graph.create_task(
             f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._merge_chrom_statistics,
-            [*chrom_tasks],
-            [],
+            args=[*chrom_tasks],
+            deps=[],
         )
         save_task = task_graph.create_task(
             f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._save_chrom_statistic,
-            [self.resource, chrom, merge_task],
-            [],
+            args=[self.resource, chrom, merge_task],
+            deps=[],
         )
 
         return chrom_tasks, merge_task, save_task
@@ -529,8 +530,8 @@ class ReferenceGenomeImplementation(
         return task_graph.create_task(
             f"{self.resource.resource_id}_save_chrom_statistics",
             ReferenceGenomeImplementation._do_global_statistic,
-            [self.resource, *chrom_stats_save_tasks],
-            [],
+            args=[self.resource, *chrom_stats_save_tasks],
+            deps=[],
         )
 
     @staticmethod

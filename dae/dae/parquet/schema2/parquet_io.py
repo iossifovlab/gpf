@@ -324,7 +324,8 @@ class VariantsParquetWriter:
 
     def _write_iterative(
         self,
-        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
+        full_variants_iterator:
+            Iterable[tuple[SummaryVariant, list[FamilyVariant]]],
     ) -> tuple[int, int]:
         logger.info("Working in iterative annotation mode")
         summary_index = 0

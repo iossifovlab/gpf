@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,11 @@ class TaskGraph:
         self.input_files: list[str] = []
         self._task_ids: set[str] = set()
 
-    def create_task(self, task_id: str, func: Callable[..., Any], args: list,
-                    deps: list[Task],
-                    input_files: list[str] | None = None) -> Task:
+    def create_task(
+            self, task_id: str, func: Callable[..., Any], *,
+            args: list,
+            deps: list[Task],
+            input_files: list[str] | None = None) -> Task:
         """Create a new task and add it to the graph.
 
         :param name: Name of the task (used for debugging purposes)
@@ -85,7 +87,7 @@ class TaskGraph:
         res = TaskGraph()
         res.tasks = new_tasks
         res.input_files = self.input_files
-        res._task_ids |= tasks_to_keep  # noqa: SLF001
+        res._task_ids |= tasks_to_keep
         return res
 
     @staticmethod

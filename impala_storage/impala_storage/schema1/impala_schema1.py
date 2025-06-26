@@ -22,7 +22,9 @@ from dae.variants_loaders.raw.loader import VariantsLoader
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,
 )
-from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
+from impala_storage.schema1.impala_genotype_storage import (
+    ImpalaGenotypeStorage,
+)
 from impala_storage.schema1.parquet_io import ParquetWriter
 from impala_storage.schema1.parquet_io import (
     VariantsParquetWriter as S1VariantsWriter,
@@ -278,47 +280,51 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         graph = TaskGraph()
 
         pedigree_task = graph.create_task(
-            "Generating Pedigree", self._do_write_pedigree, [project], [],
+            "Generating Pedigree", self._do_write_pedigree,
+            args=[project], deps=[],
         )
         meta_task = graph.create_task(
-            "Write Meta", self._do_write_meta, [project], [],
+            "Write Meta", self._do_write_meta, args=[project], deps=[],
         )
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
                 f"Converting Variants {bucket}", self._do_write_variants,
-                [project, bucket], [],
+                args=[project, bucket], deps=[],
             )
             bucket_tasks.append(task)
 
         # merge small parquet files into larger ones
         bucket_sync = graph.create_task(
-            "Sync Parquet Generation", lambda: None, [], bucket_tasks,
+            "Sync Parquet Generation", lambda: None,
+            args=[], deps=bucket_tasks,
         )
         output_dir_tasks = []
         for output_dir, partitions in self._variant_partitions(project):
             output_dir_tasks.append(graph.create_task(
                 f"Merging {output_dir}", self._merge_parquets,
-                [project, output_dir, partitions], [bucket_sync],
+                args=[project, output_dir, partitions], deps=[bucket_sync],
             ))
 
         # dummy task used for running the parquet generation w/o impala import
         all_parquet_task = graph.create_task(
-            "Parquet Tasks", lambda: None, [],
-            [*output_dir_tasks, bucket_sync],
+            "Parquet Tasks", lambda: None,
+            args=[],
+            deps=[*output_dir_tasks, bucket_sync],
         )
 
         if project.has_genotype_storage():
             hdfs_task = graph.create_task(
                 "Copying to HDFS", self._do_load_in_hdfs,
-                [project], [pedigree_task, meta_task, all_parquet_task])
+                args=[project],
+                deps=[pedigree_task, meta_task, all_parquet_task])
 
             impala_task = graph.create_task(
                 "Importing into Impala", self._do_load_in_impala,
-                [project], [hdfs_task])
+                args=[project], deps=[hdfs_task])
 
             graph.create_task(
                 "Creating a study config", self._do_study_config,
-                [project], [impala_task])
+                args=[project], deps=[impala_task])
         return graph

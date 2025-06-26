@@ -444,7 +444,7 @@ class PreparePhenoBrowserBase:
         graph.create_task(
             f"build_{measure.measure_id}",
             PreparePhenoBrowserBase.do_measure_build,
-            [
+            args=[
                 self.pheno_id,
                 measure,
                 storage_registry,
@@ -453,7 +453,7 @@ class PreparePhenoBrowserBase:
                 pheno_dir,
                 cache_dir,
             ],
-            [],
+            deps=[],
         )
 
     @classmethod

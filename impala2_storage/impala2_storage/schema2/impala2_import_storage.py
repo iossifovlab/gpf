@@ -116,13 +116,13 @@ class Impala2ImportStorage(Schema2ImportStorage):
         if project.has_genotype_storage():
             hdfs_task = graph.create_task(
                 "Copying to HDFS", self._do_load_in_hdfs,
-                [project], all_parquet_tasks)
+                args=[project], deps=all_parquet_tasks)
 
             impala_task = graph.create_task(
                 "Importing into Impala", self._do_load_in_impala,
-                [project, hdfs_task], [hdfs_task])
+                args=[project, hdfs_task], deps=[hdfs_task])
             graph.create_task(
                 "Creating a study config", self._do_study_config,
-                [project], [impala_task])
+                args=[project], deps=[impala_task])
 
         return graph
