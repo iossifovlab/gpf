@@ -1,11 +1,13 @@
 import logging
 from collections.abc import Generator
-from functools import cached_property
 from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
-from studies.response_transformer import ResponseTransformer
-from studies.study_wrapper import WDAEAbstractStudy
+from studies.study_wrapper import (
+    QueryTransformerProtocol,
+    ResponseTransformerProtocol,
+    WDAEAbstractStudy,
+)
 
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
@@ -35,6 +37,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
             self.remote_study_id,
         )
 
+        self.query_transformer = None
+        self.response_transformer = None
+
         self.is_remote = True
 
     @property
@@ -48,10 +53,6 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     ) -> list[str]:
         """Return the list of children ids."""
         return [self._study_id]
-
-    @cached_property
-    def response_transformer(self) -> ResponseTransformer:
-        return ResponseTransformer(self)
 
     @property
     def description(self) -> str | None:
@@ -71,11 +72,13 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
             self.genotype_data._families = self._families  # noqa: SLF001
         return self._families
 
-    def query_variants_wdae_streaming(  # pylint: disable=arguments-differ
+    def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
+        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
         *,
-        max_variants_count: int = 10000,
+        max_variants_count: int | None = 10000,
         max_variants_message: bool = False,  # noqa: ARG002
     ) -> Generator[list, None, None]:
         study_filters = kwargs.get("study_filters")

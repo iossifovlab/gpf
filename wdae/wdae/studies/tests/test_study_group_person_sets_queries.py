@@ -330,7 +330,7 @@ def test_dataset_person_sets_queries(
     psc_query: PSCQuery,
     count: int,
 ) -> None:
-    vs = list(dataset.query_variants_wdae_streaming(
+    vs = list(dataset.query_variants_wdae(
         {
             "personSetCollection": {
                 "id": psc_query.psc_id,
