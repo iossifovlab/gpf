@@ -396,39 +396,41 @@ class QueryBuilderBase:
             family_bins=heuristics_family_bins,
         )
 
+    def split_heuristics(
+        self, heuristics: QueryHeuristics,
+    ) -> list[QueryHeuristics]:
+        return [
+            QueryHeuristics(
+                region_bins=[f"{rb}"],
+                coding_bins=heuristics.coding_bins,
+                frequency_bins=heuristics.frequency_bins,
+                family_bins=heuristics.family_bins,
+            )
+            for rb in self.all_region_bins()
+        ]
+
     def calc_batched_heuristics(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        inheritance: Sequence[str] | None = None,
-        roles: str | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        family_ids: Iterable[str] | None = None,
-        person_ids: Iterable[str] | None = None,
+        self, heuristics: QueryHeuristics,
     ) -> list[QueryHeuristics]:
         """Calculate heuristics baches for a query."""
-        heuristics = self.calc_heuristics(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            inheritance=inheritance,
-            roles=roles,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            family_ids=family_ids,
-            person_ids=person_ids,
-        )
 
         if heuristics.region_bins:
             # single batch if we have region bins in heuristics
             return [heuristics]
 
-        if heuristics.frequency_bins:
-            # single batch if we dont search for rare and common variants
-            rare_and_common_bins = {"1", "2", "3"}
-            if not rare_and_common_bins & set(heuristics.frequency_bins):
+        if (
+            heuristics.coding_bins
+            and heuristics.frequency_bins
+            and heuristics.family_bins
+        ):
+            coding_bin = "1"
+            rare_bin = "2"
+            if (
+                coding_bin in heuristics.coding_bins
+                and rare_bin in heuristics.frequency_bins
+            ):
+                if len(heuristics.family_bins) > 0:
+                    return self.split_heuristics(heuristics)
                 return [heuristics]
 
         if heuristics.coding_bins and heuristics.frequency_bins:
@@ -439,17 +441,15 @@ class QueryBuilderBase:
                     common_bin not in heuristics.frequency_bins:
                 return [heuristics]
 
+        if heuristics.frequency_bins:
+            # single batch if we dont search for rare and common variants
+            rare_and_common_bins = {"1", "2", "3"}
+            if not rare_and_common_bins & set(heuristics.frequency_bins):
+                return [heuristics]
+
         if self.partition_descriptor and \
                 self.partition_descriptor.has_region_bins():
-            return [
-                QueryHeuristics(
-                    region_bins=[f"{rb}"],
-                    coding_bins=heuristics.coding_bins,
-                    frequency_bins=heuristics.frequency_bins,
-                    family_bins=heuristics.family_bins,
-                )
-                for rb in self.all_region_bins()
-            ]
+            return self.split_heuristics(heuristics)
         return [heuristics]
 
     @staticmethod
@@ -1165,13 +1165,14 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
-        batched_heuristics = self.calc_batched_heuristics(
+        heuristics = self.calc_heuristics(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
         )
+        batched_heuristics = self.calc_batched_heuristics(heuristics)
         result = []
 
         for heuristics in batched_heuristics:
@@ -1264,7 +1265,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             tags_query=tags_query,
         )
 
-        batched_heuristics = self.calc_batched_heuristics(
+        heuristics = self.calc_heuristics(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -1274,6 +1275,8 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             frequency_filter=frequency_filter,
             family_ids=family_ids,
         )
+
+        batched_heuristics = self.calc_batched_heuristics(heuristics)
         result = []
         for heuristics in batched_heuristics:
             query = self.family_variants(
