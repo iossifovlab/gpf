@@ -16,7 +16,7 @@ from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import (
-    AlleleParquetSerializerBase,
+    AlleleParquetSerializer,
     FamilyAlleleParquetSerializer,
     SummaryAlleleParquetSerializer,
     VariantsDataSerializer,
@@ -50,7 +50,7 @@ class ContinuousParquetFileWriter:
     def __init__(
         self,
         filepath: str,
-        allele_serializer: AlleleParquetSerializerBase,
+        allele_serializer: AlleleParquetSerializer,
         row_group_size: int = 10_000,
     ) -> None:
 
@@ -121,13 +121,15 @@ class ContinuousParquetFileWriter:
         self._writer.write_table(self.build_table())
         self._batches = []
 
-    def append_summary_allele(
-            self, allele: SummaryAllele, json_data: bytes) -> None:
-        """Append the data for an entire variant to the correct file."""
+    def append_allele(
+        self, allele: SummaryAllele | FamilyAllele,
+        variant_blob: bytes,
+    ) -> None:
+        """Append the data for entire allele to the correct partition file."""
         assert self._data is not None
 
         data = self.serializer.build_allele_record_dict(
-            allele, json_data,
+            allele, variant_blob,
         )
 
         for k, v in self._data.items():
@@ -136,24 +138,6 @@ class ContinuousParquetFileWriter:
         if self.size() >= self.BATCH_ROWS:
             logger.debug(
                 "parquet writer %s create summary batch at len %s",
-                self.filepath, self.size())
-            self._write_batch()
-
-    def append_family_allele(
-            self, allele: FamilyAllele, json_data: bytes) -> None:
-        """Append the data for an entire variant to the correct file."""
-        assert self._data is not None
-
-        data = self.serializer.build_allele_record_dict(
-            allele, json_data,
-        )
-
-        for k, v in self._data.items():
-            v.extend(data[k])
-
-        if self.size() >= self.BATCH_ROWS:
-            logger.debug(
-                "parquet writer %s create family batch at len %s",
                 self.filepath, self.size())
             self._write_batch()
 
@@ -465,7 +449,7 @@ class VariantsParquetWriter:
                     }
                 fa.update_attributes(extra_atts)
 
-            family_variant_data_json = \
+            family_variant_blob = \
                 self.blob_serializer.serialize_family(fv)
 
             denovo_reference = any(
@@ -506,8 +490,12 @@ class VariantsParquetWriter:
 
                 family_bin_writer = self._get_bin_writer_family(
                     fa, seen_as_denovo=sad)
-                family_bin_writer.append_family_allele(
-                    fa, family_variant_data_json)
+                assert isinstance(
+                    family_bin_writer.serializer,
+                    FamilyAlleleParquetSerializer)
+
+                family_bin_writer.append_allele(
+                    fa, family_variant_blob)
 
                 family_variants_count[fa.allele_index] += 1
                 num_fam_alleles_written += 1
@@ -556,5 +544,5 @@ class VariantsParquetWriter:
             seen_as_denovo = summary_allele.get_attribute("seen_as_denovo")
             summary_writer = self._get_bin_writer_summary(
                 summary_allele, seen_as_denovo=seen_as_denovo)
-            summary_writer.append_summary_allele(
+            summary_writer.append_allele(
                 summary_allele, summary_blobs_json)

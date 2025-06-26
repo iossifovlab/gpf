@@ -131,7 +131,7 @@ def build_family_schema() -> pa.Schema:
     return pa.schema(fields)
 
 
-class AlleleParquetSerializerBase(abc.ABC):
+class AlleleParquetSerializer(abc.ABC):
     """Base class for serializing alleles to parquet format."""
 
     def __init__(
@@ -180,7 +180,7 @@ class AlleleParquetSerializerBase(abc.ABC):
         """Build a record from allele data in the form of a dict."""
 
 
-class SummaryAlleleParquetSerializer(AlleleParquetSerializerBase):
+class SummaryAlleleParquetSerializer(AlleleParquetSerializer):
     """Serialize summary alleles for parquet storage."""
 
     def schema(self) -> pa.Schema:
@@ -253,7 +253,7 @@ class SummaryAlleleParquetSerializer(AlleleParquetSerializerBase):
         return allele_data
 
 
-class FamilyAlleleParquetSerializer(AlleleParquetSerializerBase):
+class FamilyAlleleParquetSerializer(AlleleParquetSerializer):
     """Serialize family alleles."""
 
     def schema(self) -> pa.Schema:
@@ -275,28 +275,20 @@ class FamilyAlleleParquetSerializer(AlleleParquetSerializerBase):
         variant_blob: bytes,
     ) -> dict[str, Any]:
         """Build a batch of family allele data in the form of a dict."""
-        family_header = []
-        family_properties = []
+        allele_data: dict[str, Any] = {
+            "family_variant_data": variant_blob,
+        }
 
         for spr in FAMILY_ALLELE_BASE_SCHEMA:
             prop_value = self._get_searchable_prop_value(allele, spr)
 
-            family_header.append(spr)
-            family_properties.append(prop_value)
+            allele_data[spr] = prop_value
 
-        assert family_header[-1] == "allele_in_members"
-        family_properties[-1] = [v for v in family_properties[-1] if v]
+        allele_in_member = allele_data["allele_in_members"]
+        allele_data["allele_in_members"] = [
+            m for m in allele_in_member if m is not None
+        ]
 
-        allele_data: dict[str, list] = {
-            name: [] for name in self.schema().names
-        }
-        for name, value in zip(
-                family_header,
-                family_properties,
-                strict=True):
-            allele_data[name].append(value)
-
-        allele_data["family_variant_data"] = [variant_blob]
         return allele_data
 
 
