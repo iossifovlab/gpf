@@ -21,11 +21,11 @@ from dae.parquet.parquet_writer import (
     serialize_summary_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 def backup_schema2_study(directory: str) -> Schema2DatasetLayout:

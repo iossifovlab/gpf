@@ -21,6 +21,7 @@ from dae.inmemory_storage.raw_variants import (
     RawVariantsQueryRunner,
     RealAttrFilterType,
 )
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.query_variants.base_query_variants import QueryVariants
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
@@ -35,7 +36,6 @@ from dae.utils import fs_utils
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 class ParquetLoaderVariants(QueryVariants):

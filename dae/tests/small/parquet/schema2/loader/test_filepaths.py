@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.utils.regions import Region
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 def test_get_summary_pq_filepaths_nonpartitioned(
@@ -70,6 +70,7 @@ def test_get_family_filepaths_case_a(t4c8_study_partitioned: str) -> None:
     family_path = os.path.join(
         t4c8_study_partitioned,
         "family/region_bin=chr1_1/frequency_bin=1/coding_bin=1/family_bin=1/"
-        "merged_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1.parquet",
+        "merged_region_bin_chr1_1_"
+        "frequency_bin_1_coding_bin_1_family_bin_1.parquet",
     )
     assert loader.get_family_pq_filepaths(summary_path) == [family_path]

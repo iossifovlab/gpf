@@ -28,6 +28,7 @@ from dae.parquet.parquet_writer import (
     serialize_summary_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsFilter,
     VariantsLoaderSource,
@@ -48,7 +49,6 @@ from dae.schema2_storage.schema2_layout import (
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
 from dae.utils.regions import Region
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 logger = logging.getLogger(__name__)
 

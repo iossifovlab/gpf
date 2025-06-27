@@ -1,43 +1,44 @@
 import copy
 import logging
 import os
-from typing import Any, Dict, Tuple
+from collections.abc import Callable
+from typing import Any, cast
 
 import dask
 from distributed.client import Client
+from distributed.deploy import Cluster  # pyright: ignore
 
-_CLUSTER_TYPES = {}
+_CLUSTER_TYPES: dict[str, Callable[[dict[str, Any]], Cluster]] = {}
 logger = logging.getLogger(__name__)
 
 
-def set_up_local_cluster(cluster_conf):
+def set_up_local_cluster(cluster_conf: dict[str, Any]) -> Cluster:
     """Create a local cluster using the passed cluster configuration."""
     # pylint: disable=import-outside-toplevel
     from dask.distributed import LocalCluster
     kwargs = copy.copy(cluster_conf)
     number_of_workers = kwargs.pop("number_of_workers", None)
-    if number_of_workers is not None:
-        if "n_workers" not in kwargs and "cores" not in kwargs:
-            kwargs["n_workers"] = 1
-    cluster = LocalCluster(**kwargs)
-    return cluster
+    if number_of_workers is not None and \
+            "n_workers" not in kwargs and "cores" not in kwargs:
+        kwargs["n_workers"] = 1
+    return LocalCluster(**kwargs)
 
 
-def set_up_sge_cluster(cluster_conf):
+def set_up_sge_cluster(cluster_conf: dict[str, Any]) -> Cluster:
     # pylint: disable=import-outside-toplevel
-    from dask_jobqueue import SGECluster
+    from dask_jobqueue import SGECluster  # pyright: ignore
     cluster_conf.pop("number_of_workers", None)
     return SGECluster(**cluster_conf)
 
 
-def set_up_slurm_cluster(cluster_conf):
+def set_up_slurm_cluster(cluster_conf: dict[str, Any]) -> Cluster:
     # pylint: disable=import-outside-toplevel
-    from dask_jobqueue import SLURMCluster
+    from dask_jobqueue import SLURMCluster  # pyright: ignore
     cluster_conf.pop("number_of_workers", None)
     return SLURMCluster(**cluster_conf)
 
 
-def set_up_kubernetes_cluster(cluster_conf):
+def set_up_kubernetes_cluster(cluster_conf: dict[str, Any]) -> Cluster:
     """Create a kubernetes cluster."""
     # pylint: disable=import-outside-toplevel
     from dask_kubernetes.operator.kubecluster import (
@@ -64,8 +65,7 @@ def set_up_kubernetes_cluster(cluster_conf):
         spec["spec"]["worker"]["spec"]["imagePullSecrets"] = secrets
         spec["spec"]["scheduler"]["spec"]["imagePullSecrets"] = secrets
 
-    cluster = KubeCluster(n_workers=1, custom_cluster_spec=spec)
-    return cluster
+    return cast(Cluster, KubeCluster(n_workers=1, custom_cluster_spec=spec))
 
 
 _CLUSTER_TYPES["local"] = set_up_local_cluster
@@ -74,9 +74,10 @@ _CLUSTER_TYPES["slurm"] = set_up_slurm_cluster
 _CLUSTER_TYPES["kubernetes"] = set_up_kubernetes_cluster
 
 
-def setup_client_from_config(cluster_config,
-                             number_of_threads_param: int | None = None) \
-        -> Tuple[Client, Dict[str, Any]]:
+def setup_client_from_config(
+    cluster_config: dict[str, Any],
+    number_of_threads_param: int | None = None,
+) -> tuple[Client, dict[str, Any]]:
     """Create a dask client from the provided config."""
     logger.info("CLUSTER CONFIG: %s", cluster_config)
     cluster_type = cluster_config["type"]
@@ -86,7 +87,7 @@ def setup_client_from_config(cluster_config,
 
     cluster = _CLUSTER_TYPES[cluster_type](cluster_params)
 
-    number_of_threads = cluster_config.get("number_of_threads", None)
+    number_of_threads = cluster_config.get("number_of_threads")
     if number_of_threads_param is not None:
         number_of_threads = number_of_threads_param
     if number_of_threads is not None:
@@ -100,13 +101,16 @@ def setup_client_from_config(cluster_config,
 
 def setup_client(cluster_name: str | None = None,
                  number_of_threads: int | None = None) \
-        -> Tuple[Client, Dict[str, Any]]:
+        -> tuple[Client, dict[str, Any]]:
     """Create a dask client from the provided cluster name."""
     if cluster_name is None:
-        cluster_name = dask.config.get("dae_named_cluster.default")
+        cluster_name = dask.config.get(  # pyright: ignore
+            "dae_named_cluster.default")
 
-    clusters = {conf["name"]: conf
-                for conf in dask.config.get("dae_named_cluster.clusters")}
+    clusters = {
+        conf["name"]: conf
+        for conf in dask.config.get(  # pyright: ignore
+            "dae_named_cluster.clusters")}
 
     cluster_config = clusters[cluster_name]
     return setup_client_from_config(cluster_config, number_of_threads)

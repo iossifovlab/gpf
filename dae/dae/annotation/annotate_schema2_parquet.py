@@ -17,13 +17,13 @@ from dae.annotation.parquet import (
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,
 )
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.regions import Region
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 class AnnotateSchema2ParquetTool(AnnotationTool):

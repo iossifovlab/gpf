@@ -3,9 +3,9 @@ import pathlib
 
 import pytest
 from dae.gpf_instance import GPFInstance
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.utils.regions import Region
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 @pytest.fixture(scope="module")

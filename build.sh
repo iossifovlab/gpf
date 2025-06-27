@@ -194,7 +194,7 @@ EOT
       cd /wd/;
       wdae_files=$(find wdae/wdae -name "*.py" -not -path "**/migrations/*");
       /opt/conda/bin/conda run --no-capture-output -n gpf
-      pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
+      pylint dae/dae  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_report || true'
 
     # pyright
@@ -207,7 +207,7 @@ EOT
 
     # mypy
     build_run_detached bash -c '
-      cd /wd/dae;
+      cd /wd/;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
           --exclude dae/docs/ \
           --exclude dae/docs/conf.py \
@@ -217,17 +217,7 @@ EOT
           > /wd/results/mypy_dae_report || true'
 
     build_run_detached bash -c '
-      cd /wd/dae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy tests \
-          --exclude dae/docs/ \
-          --exclude dae/docs/conf.py \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_dae_tests_report || true'
-
-    build_run_detached bash -c '
-      cd /wd/wdae;
+      cd /wd/;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
           --exclude wdae/docs/ \
           --exclude wdae/docs/conf.py \
@@ -237,29 +227,29 @@ EOT
           --no-incremental \
           > /wd/results/mypy_wdae_report || true'
 
-    build_run_detached bash -c '
-      cd /wd/impala_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_impala_report || true'
+    # build_run_detached bash -c '
+    #   cd /wd/impala_storage;
+    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
+    #       --pretty \
+    #       --show-error-context \
+    #       --no-incremental \
+    #       > /wd/results/mypy_impala_report || true'
 
-    build_run_detached bash -c '
-      cd /wd/impala2_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala2_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_impala2_report || true'
+    # build_run_detached bash -c '
+    #   cd /wd/impala2_storage;
+    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala2_storage \
+    #       --pretty \
+    #       --show-error-context \
+    #       --no-incremental \
+    #       > /wd/results/mypy_impala2_report || true'
 
-    build_run_detached bash -c '
-      cd /wd/gcp_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy gcp_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_gcp_report || true'
+    # build_run_detached bash -c '
+    #   cd /wd/gcp_storage;
+    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy gcp_storage \
+    #       --pretty \
+    #       --show-error-context \
+    #       --no-incremental \
+    #       > /wd/results/mypy_gcp_report || true'
 
     build_run_container wait
 
@@ -268,16 +258,29 @@ EOT
       /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
           results/pyright_report_raw.json > results/pyright_report || true'
 
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_mypy_output.py \
+          results/mypy_dae_report > results/mypy_dae_pylint_report || true'
+
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_mypy_output.py \
+          results/mypy_wdae_report > results/mypy_wdae_pylint_report || true'
+
     build_run_local cp ./results/mypy_dae_report \
-      ./results/mypy_dae_tests_report \
-      ./results/mypy_wdae_report \
-      ./results/mypy_impala_report \
-      ./results/mypy_impala2_report \
-      ./results/mypy_gcp_report \
-      ./results/pyright_report \
-      ./results/ruff_report \
-      ./results/pylint_report \
-      ./test-results/
+        ./results/mypy_dae_pylint_report \
+        ./results/mypy_wdae_report \
+        ./results/mypy_wdae_pylint_report \
+        ./results/pyright_report \
+        ./results/ruff_report \
+        ./results/pylint_report \
+        ./test-results/
+
+        #   ./results/mypy_impala_report \
+        #   ./results/mypy_impala2_report \
+        #   ./results/mypy_gcp_report \
+
   }
 
   build_stage "Tests"
