@@ -33,13 +33,13 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.utils.regions import (
     Region,
 )
 from dae.variants.variant import SummaryVariant
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 logger = logging.getLogger("format_handlers")
 

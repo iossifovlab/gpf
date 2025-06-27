@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.utils.regions import Region
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 def test_fetch_summary_variants_nonpartitioned(
@@ -45,11 +45,14 @@ def test_fetch_summary_variants_count_acgt(
     loader = ParquetLoader.load_from_dir(acgt_study_partitioned)
     assert len(list(loader.fetch_summary_variants())) == 9
     assert len(
-        list(loader.fetch_summary_variants(region=Region("chr1", 1, 100)))) == 3
+        list(loader.fetch_summary_variants(
+            region=Region("chr1", 1, 100)))) == 3
     assert len(
-        list(loader.fetch_summary_variants(region=Region("chr2", 1, 100)))) == 3
+        list(loader.fetch_summary_variants(
+            region=Region("chr2", 1, 100)))) == 3
     assert len(
-        list(loader.fetch_summary_variants(region=Region("chr3", 1, 100)))) == 3
+        list(loader.fetch_summary_variants(
+            region=Region("chr3", 1, 100)))) == 3
 
 
 def test_fetch_summary_variants_pedigree_only(

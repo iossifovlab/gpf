@@ -15,6 +15,7 @@ from dae.annotation.parquet import produce_regions
 from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.testing import (
     denovo_study,
     setup_denovo,
@@ -24,7 +25,6 @@ from dae.testing import (
     vcf_study,
 )
 from dae.testing.t4c8_import import t4c8_gpf
-from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 @pytest.fixture
