@@ -89,6 +89,7 @@ class QueryBuilderBase:
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
     GENE_REGIONS_HEURISTIC_EXTEND = 20000
     REGION_BINS_HEURISTIC_CUTOFF = 20
+    FAMILY_BIN_HEURISTIC_CUTOFF = 10
 
     def __init__(
         self,
@@ -328,7 +329,12 @@ class QueryBuilderBase:
             family_bins.update(
                 str(self.partition_descriptor.make_family_bin(family_id))
                 for family_id in family_ids)
-        if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
+
+        cutoff = min(
+            self.FAMILY_BIN_HEURISTIC_CUTOFF,
+            self.partition_descriptor.family_bin_size // 2,
+        )
+        if len(family_bins) >= cutoff:
             return []
         return list(family_bins)
 
@@ -421,7 +427,6 @@ class QueryBuilderBase:
         if (
             heuristics.coding_bins
             and heuristics.frequency_bins
-            and heuristics.family_bins
         ):
             coding_bin = "1"
             rare_bin = "2"
@@ -430,8 +435,8 @@ class QueryBuilderBase:
                 and rare_bin in heuristics.frequency_bins
             ):
                 if len(heuristics.family_bins) > 0:
-                    return self.split_heuristics(heuristics)
-                return [heuristics]
+                    return [heuristics]
+                return self.split_heuristics(heuristics)
 
         if heuristics.coding_bins and heuristics.frequency_bins:
             # single batch if we search for rare coding variants
