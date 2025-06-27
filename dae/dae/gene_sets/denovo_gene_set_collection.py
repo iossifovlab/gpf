@@ -304,7 +304,8 @@ class DenovoGeneSetCollection:
         if dgsc_query.gene_set_id not in self.gene_sets_ids:
             raise ValueError(
                 f"Invalid gene set id: {dgsc_query.gene_set_id}")
-        if dgsc_query.psc_id not in self.config.selected_person_set_collections:
+        if dgsc_query.psc_id not in self.config\
+                .selected_person_set_collections:
             raise ValueError(
                 f"Invalid person set collection id: {dgsc_query.psc_id}")
         result: dict[str, set[str]] = defaultdict(set)

@@ -2,14 +2,14 @@ import math
 import os
 
 import numpy as np
-from box import Box  # type: ignore
+from box import Box
 
 
-def study_id_from_path(filepath):
+def study_id_from_path(filepath: str) -> str:
     return os.path.splitext(os.path.basename(filepath))[0]
 
 
-def str2bool(value):
+def str2bool(value: str | None) -> bool:
     if value is None:
         return False
     if isinstance(value, bool):
@@ -17,7 +17,7 @@ def str2bool(value):
     return value.lower() in {"true", "yes", "1", "1.0", "t", "y"}
 
 
-def isnan(val):
+def isnan(val: float | None) -> bool:
     return val is None or np.isnan(val)
 
 
@@ -26,7 +26,7 @@ def camelize_string(data: str) -> str:
     return tokens[0] + "".join(x.title() for x in tokens[1:])
 
 
-def to_response_json(data) -> dict:
+def to_response_json(data: dict) -> dict:
     """Convert a dict or Box to an acceptable response JSON."""
     result: dict = {}
 
@@ -59,6 +59,6 @@ def convert_size(size_bytes: int) -> str:
     if size_bytes == 0:
         return "0B"
     suffix = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-    exponent = int(math.floor(math.log(size_bytes, 1024)))
+    exponent = math.floor(math.log(size_bytes, 1024))
     size = round(size_bytes / math.pow(1024, exponent), 2)
     return f"{size} {suffix[exponent]}"

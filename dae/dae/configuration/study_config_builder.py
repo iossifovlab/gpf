@@ -1,27 +1,31 @@
-import typing
+from __future__ import annotations
+
 from collections import UserDict, UserList
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 from jinja2 import Template
 
 
 class ConfigDumper(yaml.Dumper):
-
-    def increase_indent(self, flow=False, indentless=False):
-        return super().increase_indent(flow, False)
+    # pylint: disable=too-many-ancestors
+    def increase_indent(
+        self, flow: bool = False,  # noqa: FBT001,FBT002
+        indentless: bool = False,  # noqa: FBT001,FBT002, ARG002
+    ) -> None:
+        super().increase_indent(flow, False)  # noqa: FBT003
 
 
 class StudyConfigBuilder:
     """Class used for building study configurations from dictionaries."""
 
-    def __init__(self, config_dict: Dict[str, Any]):
+    def __init__(self, config_dict: dict[str, Any]):
         assert config_dict
         assert config_dict["genotype_storage"]
         self._config_dict = self._cleanup_dict(config_dict)
 
     @classmethod
-    def _cleanup_dict(cls, config_dict):
+    def _cleanup_dict(cls, config_dict: dict[str, Any]) -> dict[str, Any]:
         for k, v in list(config_dict.items()):
             if v is None:
                 del config_dict[k]
@@ -35,19 +39,19 @@ class StudyConfigBuilder:
         return config_dict
 
     def build_config(self) -> str:
-        return typing.cast(str, yaml.dump(
+        return yaml.dump(
             self._config_dict,
             default_flow_style=False,
             sort_keys=False,
             Dumper=ConfigDumper,
-        ))
+        )
 
 
 class TOMLDict(UserDict):
     """Class that transforms Python dictionaries to TOML dictionaries."""
 
     @staticmethod
-    def from_dict(input_dict):
+    def from_dict(input_dict: dict[str, Any]) -> TOMLDict:
         """
         Construct TOMLDict from a Python dictionary.
 
@@ -65,7 +69,7 @@ class TOMLDict(UserDict):
         return output
 
     @staticmethod
-    def _get_val_str(val):
+    def _get_val_str(val: Any) -> str:
         if isinstance(val, str):
             output = f'"{val}"'
         elif isinstance(val, bool):
@@ -74,7 +78,7 @@ class TOMLDict(UserDict):
             output = str(val)
         return output
 
-    def __str__(self):
+    def __str__(self) -> str:
         if len(self) == 0:
             return "{}"
         output = "{ "
@@ -94,7 +98,7 @@ class TOMLList(UserList):
     """Class that transforms Python dictionaries to TOML dictionaries."""
 
     @staticmethod
-    def from_list(input_list):
+    def from_list(input_list: list[Any]) -> TOMLList:
         """
         Construct TOMLList from a Python list.
 
@@ -112,7 +116,7 @@ class TOMLList(UserList):
         return output
 
     @staticmethod
-    def _get_val_str(val):
+    def _get_val_str(val: Any) -> str:
         if isinstance(val, str):
             output = f'"{val}"'
         elif isinstance(val, bool):
@@ -121,7 +125,7 @@ class TOMLList(UserList):
             output = str(val)
         return output
 
-    def __str__(self):
+    def __str__(self) -> str:
         if len(self) == 0:
             return "[]"
         output = "["
