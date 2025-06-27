@@ -1,6 +1,43 @@
 Release Notes
 =============
 
+* 2025.6.4
+    * Reorganization of variants processing in Schema2 import genotypes.
+
+* 2025.6.3
+    * Reorganization of phenotype tool adapter class.
+    * Bump PyArrow to version 20.0.0.
+    * Reorganization of storing study configs in import storages.
+    * Reorganization of variants parquet writer classes.
+    * Improved unit testing of histogram component in GPFjs.
+
+* 2025.6.2
+    * Fix error state reset for gene sets and gene scores user interface
+      components.
+    * Start using genomic context in Schema2 import gentotypes tool.
+    * Fix handling of study description in GPF federation.
+    * Bump DuckDb version to 1.3.1.
+    * Support for fetch variants in variant loaders.
+    * Fix support for phenotype studies in GPF federation.
+
+* 2025.6.1
+    * Improved unit testing of gene models.
+    * Improved handling of Lark variant queries.
+    * Reorganization of genomic contexts workflow.
+    * Fix ped2ped initialization using genomic context.
+    * Move GPF user documentation from gpf_documentation to the GPF repository.
+    * Reorganization of phenotype tool in GPF federation.
+    * Support for serialization of variant blobs into Avro format.
+    * Fix handling of phenotype measure filters in phenotype groups.
+    * Support for phenotype studies in GPF federation.
+    * Reorganization of initial state loading for user interface components
+      of genotype browser.
+
+* 2025.6.0
+    * Bump DuckDb to 1.3.0
+    * Improve error handling in genotype browser variants rows creation.
+    * Improve tooltip color scheme.
+
 * 2025.5.10
     * Clean up federation plugin testing.
     * Fix and improve support for gene sets in federation plugin.
