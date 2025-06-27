@@ -54,7 +54,6 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
-    BATCH_ROWS = 500
     DEFAULT_COMPRESSION = "SNAPPY"
 
     def __init__(
@@ -92,44 +91,22 @@ class ContinuousParquetFileWriter:
             write_page_index=True,
         )
         self.row_group_size = row_group_size
-        self._batches: list[pa.RecordBatch] = []
-        self._data: dict[str, list] | None = None
-        self.data_reset()
+        self._data: dict[str, list]
+        self._data_reset()
 
-    def data_reset(self) -> None:
+    def _data_reset(self) -> None:
         self._data = {name: [] for name in self.schema.names}
 
     def size(self) -> int:
-        assert self._data is not None
         return len(self._data["bucket_index"])
 
-    def build_table(self) -> pa.Table:
-        logger.debug(
-            "writing %s rows to parquet %s",
-            sum(len(b) for b in self._batches),
-            self.filepath)
-        return pa.Table.from_batches(self._batches, self.schema)
-
-    def build_batch(self) -> pa.RecordBatch:
-        assert self._data is not None
-        return pa.RecordBatch.from_pydict(self._data, self.schema)
-
-    def _write_batch(self) -> None:
+    def _flush(self) -> None:
         if self.size() == 0:
             return
-        batch = self.build_batch()
-        self._batches.append(batch)
-        self.data_reset()
-        if len(self._batches) >= self.row_group_size // self.BATCH_ROWS:
-            self._flush_batches()
 
-    def _flush_batches(self) -> None:
-        if len(self._batches) == 0:
-            return
-        logger.debug(
-            "flushing %s batches", len(self._batches))
-        self._writer.write_table(self.build_table())
-        self._batches = []
+        batch = pa.RecordBatch.from_pydict(self._data, self.schema)
+        table = pa.Table.from_batches([batch], self.schema)
+        self._writer.write_table(table)
 
     def append_allele(
         self, allele: SummaryAllele | FamilyAllele,
@@ -145,11 +122,12 @@ class ContinuousParquetFileWriter:
         for k, v in self._data.items():
             v.append(data[k])
 
-        if self.size() >= self.BATCH_ROWS:
+        if self.size() >= self.row_group_size:
             logger.debug(
                 "parquet writer %s create summary batch at len %s",
                 self.filepath, self.size())
-            self._write_batch()
+            self._flush()
+            self._data_reset()
 
     def close(self) -> None:
         """Close the parquet writer and write any remaining data."""
@@ -157,8 +135,7 @@ class ContinuousParquetFileWriter:
             "closing parquet writer %s with %d rows",
             self.filepath, self.size())
 
-        self._write_batch()
-        self._flush_batches()
+        self._flush()
         self._writer.close()
 
 
@@ -279,10 +256,6 @@ class VariantsParquetWriter(
             )
 
         return self.data_writers[filename]
-
-    def _calc_sj_index(self, summary_index: int, allele_index: int) -> int:
-        assert allele_index < 10_000, "too many alleles"
-        return self._calc_sj_base_index(summary_index) + allele_index
 
     def _calc_sj_base_index(self, summary_index: int) -> int:
         return (
@@ -427,6 +400,8 @@ class VariantsParquetWriter(
         """Write a single summary variant to the correct parquet file."""
         if sj_base_index is not None:
             for summary_allele in summary_variant.alleles:
+                assert summary_allele.allele_index < 10_000, "too many alleles"
+
                 sj_index = sj_base_index + summary_allele.allele_index
                 extra_atts = {
                     "sj_index": sj_index,
