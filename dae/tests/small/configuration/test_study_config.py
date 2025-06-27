@@ -17,7 +17,7 @@ def test_study_with_study_filters_fails() -> None:
             "has_study_filters": True,
         },
     }
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError, match=r".*has_study_filters.*") as err:
         GPFConfigParser.validate_config(
             study_config, study_config_schema, conf_dir=os.path.abspath("."),
         )
@@ -366,16 +366,18 @@ def test_structural_config_generation() -> None:
 
     temp = {"field2": "ghjk"}
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".*field 'field1' is required.*"):
         GPFConfigParser.validate_config(temp, schema)
-        temp = {"field1": "asdf", "field3": "ghjk"}
+
+    temp = {"field1": "asdf", "field3": "ghjk"}
+    with pytest.raises(ValueError, match=r".*'field1' must not be present.*"):
         GPFConfigParser.validate_config(temp, schema)
 
     temp = {"field1": "asdf", "field2": "ghjk"}
 
     structural_schema = build_structural_schema(schema)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".*field3.*required field.*"):
         GPFConfigParser.validate_config(temp, structural_schema)
 
     temp["field3"] = "zxc"
@@ -384,7 +386,7 @@ def test_structural_config_generation() -> None:
 
     temp["field4"] = "asdf"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".*field4.*unknown field.*"):
         GPFConfigParser.validate_config(temp, structural_schema)
 
 

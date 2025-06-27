@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import pytest
 from dae.configuration.utils import validate_path
@@ -58,37 +59,39 @@ sample_conf_schema_5 = {
 }
 
 
-def relative_to_this_test_folder(path):
+def relative_to_this_test_folder(
+    path: str,
+) -> str:
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
 
 @pytest.fixture(scope="session")
-def fixtures_dir():
+def fixtures_dir() -> str:
     return relative_to_this_test_folder("fixtures")
 
 
 @pytest.fixture(scope="session")
-def conf_schema_basic():
+def conf_schema_basic() -> dict[str, Any]:
     return sample_conf_schema_1
 
 
 @pytest.fixture(scope="session")
-def conf_schema_strings():
+def conf_schema_strings() -> dict[str, Any]:
     return sample_conf_schema_2
 
 
 @pytest.fixture(scope="session")
-def conf_schema_set():
+def conf_schema_set() -> dict[str, Any]:
     return sample_conf_schema_3
 
 
 @pytest.fixture(scope="session")
-def conf_schema_path():
+def conf_schema_path() -> dict[str, Any]:
     return sample_conf_schema_5
 
 
 @pytest.fixture(scope="session")
-def conf_schema_nested():
+def conf_schema_nested() -> dict[str, Any]:
     return {
         "id": {"type": "string"},
         "name": {"type": "string"},
