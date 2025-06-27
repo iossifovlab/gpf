@@ -7,9 +7,10 @@ from dae.person_filters import (
     make_pheno_filter,
 )
 from dae.person_filters.person_filters import make_pheno_filter_beta
+from dae.pheno.pheno_data import PhenotypeData
 
 
-def test_pheno_filter_set_apply(t4c8_study_1_pheno):
+def test_pheno_filter_set_apply(t4c8_study_1_pheno: PhenotypeData) -> None:
     df = t4c8_study_1_pheno.get_people_measure_values_df(["i1.m5"])
     assert len(df) == 16
 
@@ -27,13 +28,17 @@ def test_pheno_filter_set_apply(t4c8_study_1_pheno):
     assert set(filtered_df["i1.m5"]) == {"val1"}
 
 
-def test_pheno_filter_set_noncategorical_measure(t4c8_study_1_pheno):
+def test_pheno_filter_set_noncategorical_measure(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     measure = t4c8_study_1_pheno.get_measure("i1.m1")
     with pytest.raises(AssertionError):
         PhenoFilterSet(measure, ["a", "b", "c"], t4c8_study_1_pheno)
 
 
-def test_pheno_filter_set_values_set_type(t4c8_study_1_pheno):
+def test_pheno_filter_set_values_set_type(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     measure = t4c8_study_1_pheno.get_measure("i1.m5")
     with pytest.raises(TypeError):
         PhenoFilterSet(measure, "a", t4c8_study_1_pheno)
@@ -43,9 +48,15 @@ def test_pheno_filter_set_values_set_type(t4c8_study_1_pheno):
 
 
 @pytest.mark.parametrize(
-    "values_range", [((0.1234, 1.5678)), ([0.1234, 1.5678])],
+    "values_range", [
+        ((0.1234, 1.5678)),
+        ([0.1234, 1.5678]),
+    ],
 )
-def test_pheno_filter_min_max_assignment(t4c8_study_1_pheno, values_range):
+def test_pheno_filter_min_max_assignment(
+    t4c8_study_1_pheno: PhenotypeData,
+    values_range: tuple[float, float] | list[float],
+) -> None:
     measure = t4c8_study_1_pheno.get_measure("i1.m1")
     pheno_filter = PhenoFilterRange(measure, values_range, t4c8_study_1_pheno)
     assert hasattr(pheno_filter, "values_min")
@@ -54,7 +65,7 @@ def test_pheno_filter_min_max_assignment(t4c8_study_1_pheno, values_range):
     assert pheno_filter.values_max == pytest.approx(1.5678, abs=1e-5)
 
 
-def test_pheno_filter_range_apply(t4c8_study_1_pheno):
+def test_pheno_filter_range_apply(t4c8_study_1_pheno: PhenotypeData) -> None:
     df = t4c8_study_1_pheno.get_people_measure_values_df(["i1.m1"])
     assert len(df) == 16
 
@@ -96,13 +107,17 @@ def test_pheno_filter_range_apply(t4c8_study_1_pheno):
     assert len(filtered_df) == 0
 
 
-def test_pheno_filter_range_measure_type(t4c8_study_1_pheno):
+def test_pheno_filter_range_measure_type(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     measure = t4c8_study_1_pheno.get_measure("i1.m5")
     with pytest.raises(AssertionError):
         PhenoFilterRange(measure, (0, 0), t4c8_study_1_pheno)
 
 
-def test_pheno_filter_range_values_range_type(t4c8_study_1_pheno):
+def test_pheno_filter_range_values_range_type(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     measure = t4c8_study_1_pheno.get_measure("i1.m1")
     with pytest.raises(TypeError):
         PhenoFilterRange(measure, 0, t4c8_study_1_pheno)  # type: ignore
@@ -114,7 +129,9 @@ def test_pheno_filter_range_values_range_type(t4c8_study_1_pheno):
         PhenoFilterRange(measure, {0, 1}, t4c8_study_1_pheno)
 
 
-def test_make_pheno_filter_categorical(t4c8_study_1_pheno):
+def test_make_pheno_filter_categorical(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     pheno_filter = make_pheno_filter({
         "source": "i1.m5",
         "sourceType": "categorical",
@@ -123,7 +140,9 @@ def test_make_pheno_filter_categorical(t4c8_study_1_pheno):
     assert isinstance(pheno_filter, PhenoFilterSet)
 
 
-def test_make_pheno_filter_categorical_beta(t4c8_study_1_pheno):
+def test_make_pheno_filter_categorical_beta(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     pheno_filter = make_pheno_filter_beta({
         "source": "i1.m5",
         "histogramType": "categorical",
@@ -133,7 +152,7 @@ def test_make_pheno_filter_categorical_beta(t4c8_study_1_pheno):
     assert isinstance(pheno_filter, PhenoFilterSet)
 
 
-def test_make_pheno_filter_raw(t4c8_study_1_pheno):
+def test_make_pheno_filter_raw(t4c8_study_1_pheno: PhenotypeData) -> None:
     with pytest.raises(AssertionError):
         make_pheno_filter({
             "source": "i1.m9",
@@ -142,7 +161,7 @@ def test_make_pheno_filter_raw(t4c8_study_1_pheno):
         }, t4c8_study_1_pheno)
 
 
-def test_make_pheno_filter_raw_beta(t4c8_study_1_pheno):
+def test_make_pheno_filter_raw_beta(t4c8_study_1_pheno: PhenotypeData) -> None:
     with pytest.raises(AssertionError):
         make_pheno_filter_beta({
             "source": "i1.m9",
@@ -152,7 +171,9 @@ def test_make_pheno_filter_raw_beta(t4c8_study_1_pheno):
         }, t4c8_study_1_pheno)
 
 
-def test_make_pheno_filter_continuous(t4c8_study_1_pheno):
+def test_make_pheno_filter_continuous(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     pheno_filter = make_pheno_filter({
         "source": "i1.m1",
         "sourceType": "continuous",
@@ -161,7 +182,9 @@ def test_make_pheno_filter_continuous(t4c8_study_1_pheno):
     assert isinstance(pheno_filter, PhenoFilterRange)
 
 
-def test_make_pheno_filter_continuous_beta(t4c8_study_1_pheno):
+def test_make_pheno_filter_continuous_beta(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     pheno_filter = make_pheno_filter_beta({
         "source": "i1.m1",
         "histogramType": "continuous",
@@ -172,7 +195,7 @@ def test_make_pheno_filter_continuous_beta(t4c8_study_1_pheno):
     assert isinstance(pheno_filter, PhenoFilterRange)
 
 
-def test_make_pheno_filter_ordinal(t4c8_study_1_pheno):
+def test_make_pheno_filter_ordinal(t4c8_study_1_pheno: PhenotypeData) -> None:
     pheno_filter = make_pheno_filter({
         "source": "i1.m4",
         "sourceType": "continuous",
@@ -181,7 +204,9 @@ def test_make_pheno_filter_ordinal(t4c8_study_1_pheno):
     assert isinstance(pheno_filter, PhenoFilterRange)
 
 
-def test_make_pheno_filter_ordinal_beta(t4c8_study_1_pheno):
+def test_make_pheno_filter_ordinal_beta(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     pheno_filter = make_pheno_filter_beta({
         "source": "i1.m4",
         "histogramType": "continuous",
@@ -192,7 +217,9 @@ def test_make_pheno_filter_ordinal_beta(t4c8_study_1_pheno):
     assert isinstance(pheno_filter, PhenoFilterRange)
 
 
-def test_make_pheno_filter_nonexistent_measure(t4c8_study_1_pheno):
+def test_make_pheno_filter_nonexistent_measure(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     with pytest.raises(AssertionError):
         make_pheno_filter({
             "source": "??.??",
@@ -201,7 +228,9 @@ def test_make_pheno_filter_nonexistent_measure(t4c8_study_1_pheno):
         }, t4c8_study_1_pheno)
 
 
-def test_make_pheno_filter_nonexistent_measure_beta(t4c8_study_1_pheno):
+def test_make_pheno_filter_nonexistent_measure_beta(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     with pytest.raises(AssertionError):
         make_pheno_filter_beta({
             "source": "??.??",
@@ -212,7 +241,7 @@ def test_make_pheno_filter_nonexistent_measure_beta(t4c8_study_1_pheno):
         }, t4c8_study_1_pheno)
 
 
-def test_make_pheno_filter_family(t4c8_study_1_pheno):
+def test_make_pheno_filter_family(t4c8_study_1_pheno: PhenotypeData) -> None:
     pheno_filter = make_pheno_filter({
         "source": "i1.m4",
         "sourceType": "continuous",
@@ -223,7 +252,9 @@ def test_make_pheno_filter_family(t4c8_study_1_pheno):
     assert isinstance(pheno_filter.person_filter, PhenoFilterRange)
 
 
-def test_make_pheno_filter_family_beta(t4c8_study_1_pheno):
+def test_make_pheno_filter_family_beta(
+    t4c8_study_1_pheno: PhenotypeData,
+) -> None:
     pheno_filter = make_pheno_filter_beta({
         "source": "i1.m4",
         "histogramType": "continuous",

@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
@@ -19,14 +20,16 @@ from dae.pheno.pheno_data import (
 from dae.variants.attributes import Role
 
 
-def _remove_common_report_cache(study: PhenotypeStudy):
+def _remove_common_report_cache(study: PhenotypeStudy) -> None:
     report_filename = study.config["common_report"]["file_path"]
     if os.path.exists(report_filename):
         os.remove(report_filename)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def auto_setup_fixture(fake_phenotype_data: PhenotypeStudy):
+def auto_setup_fixture(
+    fake_phenotype_data: PhenotypeStudy,
+) -> Generator[None, None, None]:
     # Remove common_report.json if it was built. Done both before and
     # after a test has ran to ensure the file does not exist between tests.
     _remove_common_report_cache(fake_phenotype_data)
@@ -107,7 +110,7 @@ def test_measure_to_json(
     }
 
 
-def test_data_get_persons(fake_phenotype_data: PhenotypeStudy):
+def test_data_get_persons(fake_phenotype_data: PhenotypeStudy) -> None:
     persons = fake_phenotype_data.get_persons()
     assert persons is not None
     assert len(persons) == 195
@@ -115,7 +118,9 @@ def test_data_get_persons(fake_phenotype_data: PhenotypeStudy):
     assert isinstance(persons["f1.p1"], Person)
 
 
-def test_data_get_person_roles(fake_phenotype_data: PhenotypeStudy):
+def test_data_get_person_roles(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     roles = fake_phenotype_data.get_person_roles()
     assert roles is not None
     assert roles == ["dad", "mom", "prb", "sib"]
@@ -142,7 +147,9 @@ def test_data_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
     assert all(fake_phenotype_data.has_measure(m) for m in measures)
 
 
-def test_data_get_measure_description(fake_phenotype_data: PhenotypeStudy):
+def test_data_get_measure_description(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     assert fake_phenotype_data.get_measure_description("i1.m1") == {
         "instrument_name": "i1",
         "measure_name": "m1",
@@ -164,14 +171,18 @@ def test_data_get_instruments(fake_phenotype_data: PhenotypeStudy) -> None:
     assert fake_phenotype_data.get_instruments() == ["i1", "i2", "i3", "i4"]
 
 
-def test_data_get_instrument_measures(fake_phenotype_data: PhenotypeStudy):
+def test_data_get_instrument_measures(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     assert fake_phenotype_data.get_instrument_measures("i1") == [
         "i1.m1", "i1.m2", "i1.m9", "i1.age", "i1.iq", "i1.m3", "i1.m4",
         "i1.m5", "i1.m6", "i1.m7", "i1.m8", "i1.m10",
     ]
 
 
-def test_data_get_person_set_collection(fake_phenotype_data: PhenotypeStudy):
+def test_data_get_person_set_collection(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     assert fake_phenotype_data\
         .get_person_set_collection("phenotype") is not None
     assert fake_phenotype_data\
@@ -272,14 +283,18 @@ def test_data_is_browser_outdated_count_mismatch(
     assert is_outdated is True
 
 
-def test_study_families(fake_phenotype_data: PhenotypeStudy):
+def test_study_families(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     families = fake_phenotype_data.families
     assert families is not None
     assert len(families) == 39
     assert len(families.persons) == 195
 
 
-def test_study_person_sets(fake_phenotype_data: PhenotypeStudy):
+def test_study_person_sets(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     person_set_collections = fake_phenotype_data.person_set_collections
 
     assert len(person_set_collections) == 1
@@ -293,7 +308,9 @@ def test_study_person_sets(fake_phenotype_data: PhenotypeStudy):
     assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 129  # noqa: E501
 
 
-def test_study_common_report(fake_phenotype_data: PhenotypeStudy):
+def test_study_common_report(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     common_report = fake_phenotype_data.get_common_report()
     assert common_report is not None
     assert common_report.people_report is not None
@@ -301,7 +318,9 @@ def test_study_common_report(fake_phenotype_data: PhenotypeStudy):
     assert common_report.families_report.families_counters is not None
 
 
-def test_study_get_children_ids(fake_phenotype_data: PhenotypeStudy):
+def test_study_get_children_ids(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
     assert fake_phenotype_data.get_children_ids() == ["fake"]
 
 
