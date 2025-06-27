@@ -102,15 +102,15 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore
-        if not validator.validate(config):  # type: ignore
+        validator = Validator(cls.VALIDATION_SCHEMA)  # pyright: ignore
+        if not validator.validate(config):  # pyright: ignore
             logger.error(
                 "wrong config format for duckdb genotype storage: %s",
-                validator.errors)  # type: ignore
+                validator.errors)  # pyright: ignore
             raise ValueError(
                 f"wrong config format for duckdb storage: "
-                f"{validator.errors}")  # type: ignore
-        result = cast(dict, validator.document)  # type: ignore
+                f"{validator.errors}")  # pyright: ignore
+        result = cast(dict, validator.document)  # pyright: ignore
         base_dir = result.get("base_dir")
         if base_dir and not (
                 os.path.isabs(base_dir) or fs_utils.is_s3url(base_dir)):
