@@ -2,9 +2,11 @@
 import pytest
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.sql.schema2.sql_query_builder import (
     Db2Layout,
+    QueryHeuristics,
     RealAttrFilterType,
     SqlQueryBuilder,
 )
@@ -124,6 +126,47 @@ def sql_builder(
         gene_models=t4c8_genes,
         reference_genome=t4c8_genome,
         partition_descriptor=None,
+        families=t4c8_families_1,
+    )
+
+
+@pytest.fixture
+def sql_builder_with_descriptor(
+    sql_schema: Schema,
+    t4c8_genes: GeneModels,
+    t4c8_genome: ReferenceGenome,
+    t4c8_families_1: FamiliesData,
+) -> SqlQueryBuilder:
+    db_layout = Db2Layout(
+        db="test_db",
+        study="test_study",
+        pedigree="pedigree_table",
+        summary="summary_table",
+        family="family_table",
+        meta="meta_table",
+
+    )
+
+    partition_descriptor = PartitionDescriptor.parse_dict({
+        "region_bin": {
+            "chromosomes": ["chr1", "chr2"],
+            "region_length": 10,
+            "integer_region_bins": True,
+        },
+        "frequency_bin": {
+            "rare_boundary": 5,
+        },
+        "coding_bin": {"coding_effect_types": ["frame-shift"]},
+        "family_bin": {
+            "family_bin_size": 10,
+        },
+    })
+    return SqlQueryBuilder(
+        db_layout=db_layout,
+        schema=sql_schema,
+        gene_models=t4c8_genes,
+        reference_genome=t4c8_genome,
+        partition_descriptor=partition_descriptor,
         families=t4c8_families_1,
     )
 
@@ -502,3 +545,44 @@ def test_check_roles_denovo_only_works_with_zygosity(
         "prb~homozygous and (not mom and not dad)",
     )
     assert result is True
+
+
+@pytest.mark.parametrize(
+    "region_bins,coding_bins,frequency_bins,family_bins,expected_count",
+    [
+        ([], [], [], [], 21),
+        ([], ["1"], ["0"], ["0"], 1),   # no
+        ([], ["1"], ["0"], [], 1),      # no
+        ([], ["1"], ["1"], ["0"], 1),   # no
+        ([], ["1"], ["1"], [], 1),      # no
+        ([], ["1"], ["2"], ["0"], 1),   # no
+        ([], ["1"], ["2"], [], 21),     # yes
+        ([], ["1"], ["3"], ["0"], 21),  # yes
+        ([], ["1"], ["3"], [], 21),     # yes
+        ([], ["0"], ["0"], ["0"], 1),   # no
+        ([], ["0"], ["0"], [], 1),      # no
+        ([], ["0"], ["1"], ["0"], 21),  # no
+        ([], ["0"], ["1"], [], 21),     # no
+        ([], ["0"], ["2"], ["0"], 21),  # yes
+        ([], ["0"], ["2"], [], 21),     # yes
+        ([], ["0"], ["3"], ["0"], 21),  # yes
+        ([], ["0"], ["3"], [], 21),     # yes
+    ],
+)
+def test_batched_heuristics(
+    sql_builder_with_descriptor: SqlQueryBuilder,
+    region_bins: list[str],
+    coding_bins: list[str],
+    frequency_bins: list[str],
+    family_bins: list[str],
+    expected_count: int,
+) -> None:
+    heuristics = QueryHeuristics(
+        region_bins,
+        coding_bins,
+        frequency_bins,
+        family_bins,
+    )
+
+    batched = sql_builder_with_descriptor.calc_batched_heuristics(heuristics)
+    assert len(batched) == expected_count, heuristics
