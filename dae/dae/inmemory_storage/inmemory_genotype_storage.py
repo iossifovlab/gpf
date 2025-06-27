@@ -56,15 +56,15 @@ class InmemoryGenotypeStorage(GenotypeStorage):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore
-        if not validator.validate(config):  # type: ignore
+        validator = Validator(cls.VALIDATION_SCHEMA)  # pyright: ignore
+        if not validator.validate(config):  # pyright: ignore
             logger.error(
                 "wrong config format for inmemory genotype storage: %s",
-                validator.errors)  # type: ignore
+                validator.errors)  # pyright: ignore
             raise ValueError(
                 f"wrong config format for inmemory storage: "
-                f"{validator.errors}")  # type: ignore
-        return cast(dict, validator.document)  # type: ignore
+                f"{validator.errors}")  # pyright: ignore
+        return cast(dict, validator.document)  # pyright: ignore
 
     def start(self) -> GenotypeStorage:
         return self

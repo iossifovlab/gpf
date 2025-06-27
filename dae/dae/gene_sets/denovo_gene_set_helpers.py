@@ -20,7 +20,9 @@ class DenovoGeneSetHelpers:
             logger.info(
                 "No denovo gene set collection for %s", study.study_id)
             return None
-        cache_dir = study.config.conf_dir
+        cache_dir = study.config.get("conf_dir")
+        assert cache_dir is not None
+
         dgsc.load(cache_dir)
         return dgsc
 
@@ -53,13 +55,15 @@ class DenovoGeneSetHelpers:
                 "no denovo gene set collection defined for %s", study.study_id)
             return None
 
-        cache_dir = study.config.conf_dir
+        cache_dir = study.config.get("conf_dir")
+        assert cache_dir is not None
         if dgsc.is_cached(cache_dir) and not force:
             logger.info(
                 "denovo gene set collection for %s already cached",
                 study.study_id,
             )
-            return dgsc.load(cache_dir)
+            dgsc.load(cache_dir)
+            return dgsc
 
         dgsc = DenovoGeneSetCollection.build_collection(study)
         if dgsc is None:
