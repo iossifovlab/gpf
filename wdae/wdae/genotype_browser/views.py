@@ -178,14 +178,14 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
         response: FileResponse | StreamingHttpResponse | None = None
+        result = dataset.query_variants_wdae(
+            data, sources,
+            self.query_transformer,
+            self.response_transformer,
+            max_variants_count=max_variants,
+            max_variants_message=is_download,
+        )
         if is_download:
-            result = dataset.query_variants_wdae(
-                data, sources,
-                self.query_transformer,
-                self.response_transformer,
-                max_variants_count=max_variants,
-                max_variants_message=is_download,
-            )
             columns = [s.get("name", s["source"]) for s in sources]
             result = map(
                 join_line, itertools.chain([columns], result))  # type: ignore
@@ -197,15 +197,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
                 "attachment; filename=variants.tsv"
             response["Expires"] = "0"
         else:
-            stream = dataset.query_variants_wdae_streaming(
-                data, sources,
-                self.query_transformer,
-                self.response_transformer,
-                max_variants_count=max_variants,
-                max_variants_message=is_download,
-            )
             response = StreamingHttpResponse(
-                iterator_to_json(stream),
+                iterator_to_json(result),
                 status=status.HTTP_200_OK,
                 content_type="text/event-stream",
             )

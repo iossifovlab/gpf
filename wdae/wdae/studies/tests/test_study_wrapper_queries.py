@@ -495,6 +495,7 @@ def test_query_gene_scores_formatting(
         t4c8_response_transformer,
     ))
     v = variants[0]
+    assert v is not None
 
     assert v[0] == [float_val]
 

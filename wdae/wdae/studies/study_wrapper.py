@@ -309,7 +309,7 @@ class WDAEAbstractStudy:
         return True
 
     @abstractmethod
-    def query_variants_wdae_streaming(
+    def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
@@ -611,22 +611,6 @@ class WDAEStudy(WDAEAbstractStudy):
 
         return [m.to_json() for m in measures]
 
-    def query_variants_wdae(
-        self, kwargs: dict[str, Any],
-        sources: list[dict[str, Any]],
-        query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,
-        max_variants_count: int | None = 10000,
-        *,
-        max_variants_message: bool = False,
-    ) -> Iterable[list]:
-        """Wrap query variants method for WDAE streaming."""
-        variants_result = self.query_variants_wdae_streaming(
-            kwargs, sources, query_transformer, response_transformer,
-            max_variants_count=max_variants_count,
-            max_variants_message=max_variants_message)
-        return filter(None, variants_result)
-
     def _collect_runners(
         self, kwargs: dict[str, Any],
         query_transformer: QueryTransformerProtocol,
@@ -799,7 +783,7 @@ class WDAEStudy(WDAEAbstractStudy):
                 "study wrapper (%s)  query returned %s variants; "
                 "closed in %0.3fsec", self.study_id, index, elapsed)
 
-    def query_variants_wdae_streaming(
+    def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
