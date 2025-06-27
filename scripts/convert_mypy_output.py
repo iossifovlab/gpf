@@ -73,7 +73,7 @@ def _parse_mypy_output(text: str) -> list[MypyError]:
     return result
 
 
-def main(filepath: str):
+def main(filepath: str) -> None:
     """Main function to read mypy output and print it in a PyLint format."""
 
     if not (content := pathlib.Path(filepath).read_text()):

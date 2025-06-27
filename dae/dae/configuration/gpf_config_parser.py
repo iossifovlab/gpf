@@ -58,7 +58,7 @@ class GPFConfigValidator(Validator):
             return
 
         field_path = constraint.split(".")
-        current_parent = self.root_document  # type: ignore
+        current_parent = self.root_document  # pyright: ignore
         failed_to_find = False
         for field_name in field_path:
             next_field = current_parent.get(field_name, None)
@@ -68,11 +68,11 @@ class GPFConfigValidator(Validator):
             current_parent = next_field
 
         if failed_to_find:
-            self._error(  # type: ignore
+            self._error(  # pyright: ignore
                 field, f"Depends on {constraint}, which is missing!")
 
     def _normalize_coerce_abspath(self, value: str) -> str:
-        directory = self._config["conf_dir"]  # type: ignore
+        directory = self._config["conf_dir"]  # pyright: ignore
         if directory is None:
             return value
         if not os.path.isabs(value):
@@ -112,7 +112,7 @@ class GPFConfigParser:
     @classmethod
     def _get_file_contents(cls, filename: str | os.PathLike) -> str:
         with fsspec.open(filename, "r") as infile:
-            return cast(str, infile.read())  # type: ignore
+            return cast(str, infile.read())  # pyright: ignore
 
     @staticmethod
     def parse_and_interpolate(
@@ -191,15 +191,15 @@ class GPFConfigParser:
         schema_copy = deepcopy(schema)
 
         validator = GPFConfigValidator(
-            schema_copy, conf_dir=conf_dir,  # type: ignore
+            schema_copy, conf_dir=conf_dir,  # pyright: ignore
         )
-        if not validator.validate(config):  # type: ignore
+        if not validator.validate(config):  # pyright: ignore
             if conf_dir:
                 raise ValueError(
-                    f"{conf_dir}: {validator.errors}")  # type: ignore
+                    f"{conf_dir}: {validator.errors}")  # pyright: ignore
 
-            raise ValueError(f"{validator.errors}")  # type: ignore
-        return cast(dict, validator.document)  # type: ignore
+            raise ValueError(f"{validator.errors}")  # pyright: ignore
+        return cast(dict, validator.document)  # pyright: ignore
 
     @staticmethod
     def process_config_raw(
