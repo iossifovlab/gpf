@@ -23,13 +23,13 @@ def test_special_attrs_formatting(
     download_sources = study_wrapper.get_columns_as_sources(
         study_wrapper.config, study_wrapper.download_columns,
     )
-    vs = study_wrapper.query_variants_wdae(
+    vs = list(study_wrapper.query_variants_wdae(
         {}, download_sources,
         t4c8_query_transformer,
         t4c8_response_transformer,
-    )
-    vs = list(vs)
+    ))
     row = vs[0]
+    assert row is not None
     assert row == [
         ["f1.1"],
         ["t4c8_study_1"],
