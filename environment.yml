@@ -10,7 +10,7 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - python=3.11
+  - python=3.12
   - pysam=0.22.1
   - htslib=1.21
   - samtools=1.21
