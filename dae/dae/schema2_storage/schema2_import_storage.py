@@ -30,7 +30,10 @@ from dae.parquet.parquet_writer import (
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.processing_pipeline import (
+    AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
+    VariantsBatchPipelineProcessor,
+    VariantsLoaderBatchSource,
     VariantsLoaderSource,
     VariantsPipelineProcessor,
 )
@@ -173,7 +176,7 @@ class Schema2ImportStorage(ImportStorage):
         cls, project: ImportProject,
         bucket: Bucket,
         row_group_size: int | None = None,
-    ) -> VariantsPipelineProcessor:
+    ) -> VariantsPipelineProcessor | VariantsBatchPipelineProcessor:
         """Create the import processing pipeline."""
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
@@ -202,13 +205,32 @@ class Schema2ImportStorage(ImportStorage):
             include_reference=project.include_reference,
         )
 
-        source = VariantsLoaderSource(
+        source: VariantsLoaderSource | VariantsLoaderBatchSource
+        annotation_filter: AnnotationPipelineVariantsFilter \
+            | AnnotationPipelineVariantsBatchFilter
+
+        batch_size = project.get_processing_annotation_batch_size()
+        if batch_size == 0:
+            source = VariantsLoaderSource(
+                variants_loader,
+            )
+            annotation_filter = AnnotationPipelineVariantsFilter(
+                annotation_pipeline,
+            )
+            return VariantsPipelineProcessor(
+                source,
+                [annotation_filter],
+                variants_writer,
+            )
+
+        source = VariantsLoaderBatchSource(
             variants_loader,
+            batch_size=batch_size,
         )
-        annotation_filter = AnnotationPipelineVariantsFilter(
+        annotation_filter = AnnotationPipelineVariantsBatchFilter(
             annotation_pipeline,
         )
-        return VariantsPipelineProcessor(
+        return VariantsBatchPipelineProcessor(
             source,
             [annotation_filter],
             variants_writer,
