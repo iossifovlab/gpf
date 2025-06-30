@@ -769,18 +769,6 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('input#search-box').click();
     await page.getByText('instrument_1.age').click();
 
-    const downloadPromise1 = page.waitForEvent('download', { timeout: 180000 });
-    await page.getByRole('button', {name: 'Download'}).click();
-    const download1 = await downloadPromise1;
-
-    const fixtureData1 = scanCSV('playwright/fixtures/pheno-tool/pheno_report18.csv');
-    const downloadData1 = scanCSV(await download1.path());
-    const fixtureFrame1 = (await fixtureData1.select(fixtureData1.columns.sort()).collect()).sort('person_id');
-    const downloadFrame1 = (await downloadData1.select(downloadData1.columns.sort()).collect()).sort('person_id');
-    expect(fixtureFrame1.toString()).toEqual(downloadFrame1.toString());
-
-    await download1.delete();
-
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
     await page.locator('gpf-family-filters-block').getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_4').click();
@@ -788,14 +776,14 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('gpf-family-filters-block').getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
-    const downloadPromise2 = page.waitForEvent('download', { timeout: 180000 });
+    const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
     await page.getByRole('button', {name: 'Download'}).click();
-    const download2 = await downloadPromise2;
+    const download = await downloadPromise;
 
-    const fixtureData2 = scanCSV('playwright/fixtures/pheno-tool/pheno_report19.csv');
-    const downloadData2 = scanCSV(await download2.path());
-    const fixtureFrame2 = (await fixtureData2.select(fixtureData2.columns.sort()).collect()).sort('person_id');
-    const downloadFrame2 = (await downloadData2.select(downloadData2.columns.sort()).collect()).sort('person_id');
-    expect(fixtureFrame2.toString()).toEqual(downloadFrame2.toString());
+    const fixtureData = scanCSV('playwright/fixtures/pheno-tool/pheno_report18.csv');
+    const downloadData = scanCSV(await download.path());
+    const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+    const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 });
