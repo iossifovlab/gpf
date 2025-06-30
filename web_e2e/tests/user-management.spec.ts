@@ -580,9 +580,11 @@ test.describe('Datasets management', () => {
 
     await deleteGroup(page, groupName);
 
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${datasetName1}-groups-cell"]`)).not.toContainText(groupName);
-    await expect(page.locator(`[id="${datasetName2}-groups-cell"]`)).not.toContainText(groupName);
+    await expect(async() => {
+      await page.getByRole('tab', { name: 'Datasets' }).click();
+      await expect(page.locator(`[id="${datasetName1}-groups-cell"]`)).not.toContainText(groupName);
+      await expect(page.locator(`[id="${datasetName2}-groups-cell"]`)).not.toContainText(groupName);
+    }).toPass({intervals: [1000]});
   });
 
   test('should create group, add dataset and users and check data in Datasets', async({ page }) => {
