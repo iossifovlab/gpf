@@ -53,7 +53,7 @@ class PSCQueryAdjustments:
 class CommonStudyMixin:
     "Mixin class for common study functionality to be reused."
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: Box) -> None:
         self._description: str | None = None
         self.config = config
 

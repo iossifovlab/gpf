@@ -110,6 +110,7 @@ class WGPFInstance(GPFInstance):
                 os.utime(about_description, None)
         set_instance_timestamp()
         set_permission_timestamp()
+        self.load_extensions()
 
     def load_extensions(self) -> None:
         discovered_entries = entry_points(group="wdae.gpf_instance.extensions")

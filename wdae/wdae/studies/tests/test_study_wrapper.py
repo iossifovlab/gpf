@@ -3,6 +3,8 @@
 from dae.studies.study import GenotypeData
 from gpf_instance.gpf_instance import WGPFInstance
 
+from studies.study_wrapper import WDAEStudy
+
 
 def test_t4c8_study_1(t4c8_study_1: GenotypeData) -> None:
     assert t4c8_study_1 is not None
@@ -28,3 +30,13 @@ def test_is_group_dataset(t4c8_wgpf_instance: WGPFInstance) -> None:
     wrapper = t4c8_wgpf_instance.get_wdae_wrapper("t4c8_dataset")
     assert wrapper is not None
     assert wrapper.is_group is True
+
+
+def test_make_config(t4c8_dataset: GenotypeData) -> None:
+    config = WDAEStudy.make_config(
+        genotype_data=t4c8_dataset,
+        phenotype_data=None,
+    )
+    assert isinstance(config, dict)
+    assert config.get("id") == "t4c8_dataset"
+    assert config.get("phenotype_data") is None
