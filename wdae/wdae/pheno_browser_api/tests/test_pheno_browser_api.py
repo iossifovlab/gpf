@@ -1,14 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from collections.abc import Iterator
 from typing import Any, cast
 
 import pytest
 import pytest_mock
 from dae.pheno.pheno_data import PhenotypeStudy
+from django.http import StreamingHttpResponse
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
-from rest_framework.response import Response
 from users_api.models import User
 
 URL = "/api/v3/pheno_browser/instruments"
@@ -158,7 +159,7 @@ def test_anonymous_measures_allowed(
 ) -> None:
     print(user.groups.all())
     url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
-    response = cast(Response, user_client.get(url))
+    response = user_client.get(url)
 
     assert response.status_code == 200
 
@@ -171,15 +172,15 @@ def test_download(
         "dataset_id": "t4c8_study_1",
         "instrument": "i1",
     }
-    response = cast(Response, admin_client.get(
+    response = cast(StreamingHttpResponse, admin_client.get(
         DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
 
-    first_line = next(response.streaming_content)
-    header = first_line.decode("utf-8")
-    header = header.split()[0].split(",")
+    first_line = next(cast(Iterator[bytes], response.streaming_content))
+    header_line = first_line.decode("utf-8")
+    header = header_line.split()[0].split(",")
     assert header[0] == "person_id"
 
 
@@ -192,13 +193,13 @@ def test_download_specific_measures(
         "instrument": "i1",
         "search_term": "i1.age",
     }
-    response = cast(Response, admin_client.get(
+    response = cast(StreamingHttpResponse, admin_client.get(
         DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
 
-    first_line = next(response.streaming_content)
+    first_line = next(cast(Iterator[bytes], response.streaming_content))
     content = first_line.decode("utf-8")
     header = content.split()[0].split(",")
     assert len(header) == 2
@@ -215,15 +216,15 @@ def test_download_all_instruments(
         "instrument": "",
         "search_term": "",
     }
-    response = cast(Response, admin_client.get(
+    response = cast(StreamingHttpResponse, admin_client.get(
         DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
 
-    first_line = next(response.streaming_content)
-    header = first_line.decode("utf-8")
-    header = header.split()[0].split(",")
+    first_line = next(cast(Iterator[bytes], response.streaming_content))
+    header_line = first_line.decode("utf-8")
+    header = header_line.split()[0].split(",")
 
     print("header:\n", header)
     assert len(header) == 9
@@ -248,15 +249,15 @@ def test_download_all_instruments_specific_measures(
         "dataset_id": "t4c8_study_1",
         "search_term": "i1",
     }
-    response = cast(Response, admin_client.get(
+    response = cast(StreamingHttpResponse, admin_client.get(
         DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
 
-    first_line = next(response.streaming_content)
-    header = first_line.decode("utf-8")
-    header = header.split()[0].split(",")
+    first_line = next(cast(Iterator[bytes], response.streaming_content))
+    header_line = first_line.decode("utf-8")
+    header = header_line.split()[0].split(",")
 
     print("header:\n", header)
     assert len(header) == 8
@@ -303,12 +304,13 @@ def test_get_specific_measure_values(
         "instrument": "i1",
         "measure_ids": ["i1.age", "i1.iq"],
     }
-    response = cast(Response, admin_client.post(
+    response = cast(StreamingHttpResponse, admin_client.post(
         MEASURE_VALUES_URL, json.dumps(data), "application/json",
     ))
 
     assert response.status_code == 200
-    content = json.loads(b"".join(list(response.streaming_content)))
+    content = json.loads(b"".join(list(
+        cast(Iterator[bytes], response.streaming_content))))
     print(content)
 
     assert len(content) == 16
@@ -341,12 +343,13 @@ def test_get_measure_values(
         "dataset_id": "t4c8_study_1",
         "instrument": "i1",
     }
-    response = cast(Response, admin_client.post(
+    response = cast(StreamingHttpResponse, admin_client.post(
         MEASURE_VALUES_URL, json.dumps(data), "application/json",
     ))
 
     assert response.status_code == 200
-    content = json.loads(b"".join(list(response.streaming_content)))
+    content = json.loads(b"".join(list(
+        cast(Iterator[bytes], response.streaming_content))))
     assert len(content) == 16
     assert content[0]["i1.age"] == pytest.approx(455.741, rel=1e-3)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from threading import Lock
+from typing import cast
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
@@ -159,7 +160,7 @@ class PhenoRegistry:
             return self._cache[pheno_id]
         return self._load(pheno_id)
 
-    def _load(self, pheno_id: str):
+    def _load(self, pheno_id: str) -> PhenotypeData:
         config = self._study_configs[pheno_id]
 
         if config["type"] == "study":
@@ -178,7 +179,8 @@ class PhenoRegistry:
         if self.browser_cache_path is None:
             return None
 
-        path = self.browser_cache_path / study_config["id"]
+        assert self.browser_cache_path is not None
+        path = self.browser_cache_path / cast(str, study_config["id"])
         path.mkdir(parents=True, exist_ok=True)
         return path
 

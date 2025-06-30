@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -86,31 +87,31 @@ def build_pheno_browser(
     **kwargs: dict[str, Any],
 ) -> None:
     """Calculate and save pheno browser values to db."""
-    browser = PhenotypeData.create_browser(
+    with closing(PhenotypeData.create_browser(
         pheno_data,
         read_only=False,
-    )
-    rebuild = pheno_data.is_browser_outdated(browser)
-    if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
-        new_browser = PhenotypeData.create_browser(
-            pheno_data,
-            read_only=False,
-            suffix="browser_new",
-        )
-        prep = PreparePhenoBrowserBase(
-            pheno_db_dir,
-            storage_registry,
-            pheno_data,
-            new_browser,
-            cache_dir,
-            images_dir,
-            pheno_regressions=pheno_regressions,
-        )
-        prep.run(**kwargs)
+    )) as browser:
+        rebuild = pheno_data.is_browser_outdated(browser)
+        if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
+            with closing(PhenotypeData.create_browser(
+                pheno_data,
+                read_only=False,
+                suffix="browser_new",
+            )) as new_browser:
+                prep = PreparePhenoBrowserBase(
+                    pheno_db_dir,
+                    storage_registry,
+                    pheno_data,
+                    new_browser,
+                    cache_dir=cache_dir,
+                    images_dir=images_dir,
+                    pheno_regressions=pheno_regressions,
+                )
+                prep.run(**kwargs)
 
-        old_browser_path = Path(browser.dbfile)
-        new_browser_path = Path(new_browser.dbfile)
-        new_browser_path.rename(old_browser_path)
+            old_browser_path = Path(browser.dbfile)
+            new_browser_path = Path(new_browser.dbfile)
+            new_browser_path.rename(old_browser_path)
 
 
 def main(argv: list[str] | None = None) -> int:
