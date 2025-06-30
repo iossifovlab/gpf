@@ -7,7 +7,9 @@ from typing import Any
 
 import duckdb
 import sqlglot
-from duckdb import ConstraintException
+from duckdb import (
+    ConstraintException,
+)
 from sqlglot import column, expressions, select
 from sqlglot.expressions import (
     Count,
@@ -44,6 +46,7 @@ class PhenoBrowser:
         self.instrument_descriptions = table_("instrument_descriptions")
         self.measure_descriptions = table_("measure_descriptions")
         self.is_legacy = self._is_browser_legacy()
+        self._closed = False
 
     def _is_browser_legacy(self) -> bool:
         """Handle legacy databases."""
@@ -53,6 +56,12 @@ class PhenoBrowser:
         return bool(
             "instrument_descriptions" not in tables
             or "measure_descriptions" not in tables)
+
+    def close(self) -> None:
+        """Close the connection to the database."""
+        if self.connection is not None and not self._closed:
+            self.connection.close()
+            self._closed = True
 
     @staticmethod
     def create_browser_tables(conn: duckdb.DuckDBPyConnection) -> None:

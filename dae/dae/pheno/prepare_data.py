@@ -48,7 +48,7 @@ class PreparePhenoBrowserBase:
         pheno_db_dir: Path,
         storage_registry: PhenotypeStorageRegistry,
         phenotype_data: PhenotypeData,
-        browser: PhenoBrowser,
+        browser: PhenoBrowser, *,
         cache_dir: Path | None = None,
         images_dir: Path | None = None,
         pheno_regressions: Box | None = None,
@@ -73,6 +73,13 @@ class PreparePhenoBrowserBase:
             for reg_data in self.pheno_regressions.values():
                 if "measure_names" in reg_data:
                     reg_data["measure_name"] = reg_data["measure_names"][0]
+        self._closed = False
+
+    def close(self) -> None:
+        """Close the browser connection."""
+        if self.browser is not None:
+            self.browser.close()
+            self._closed = True
 
     @staticmethod
     def _augment_measure_values_df(
@@ -213,12 +220,12 @@ class PreparePhenoBrowserBase:
             jitter,  # type: ignore
         )
         res["pvalue_regression_male"] = (
-            res_male.pvalues[1]  # type: ignore
+            res_male.pvalues[1]
             if res_male is not None
             else None
         )
         res["pvalue_regression_female"] = (
-            res_female.pvalues[1]  # type: ignore
+            res_female.pvalues[1]
             if res_female is not None
             else None
         )
