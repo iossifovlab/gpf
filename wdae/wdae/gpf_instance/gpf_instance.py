@@ -198,9 +198,15 @@ class WGPFInstance(GPFInstance):
             response_transformer=response_transformer,
         )
 
-    def get_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
+    def get_wdae_wrapper(self, dataset_id: str) -> WDAEAbstractStudy | None:
         """Return wdae study wrapper."""
-        wrapper: WDAEStudy | None = None
+        wrapper: WDAEAbstractStudy | None = None
+
+        for extension in self.extensions.values():
+            wrapper = extension.get_wdae_wrapper(dataset_id)
+            if wrapper is not None:
+                return wrapper
+
         if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:

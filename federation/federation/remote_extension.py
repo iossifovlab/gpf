@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class GPFRemoteExtension(GPFExtensionBase):
     """Class for adding federation functionality to GPF."""
 
-    def setup(self):
+    def setup(self) -> None:
         clients = self.load_clients()
 
         self.studies = {}
@@ -142,6 +142,12 @@ class GPFRemoteExtension(GPFExtensionBase):
             except ConnectionError:
                 logger.exception("Failed to create remote %s", remote["id"])
         return clients
+
+    def get_wdae_wrapper(self, dataset_id: str) -> WDAEAbstractStudy | None:
+        """Return wdae study wrapper."""
+        if dataset_id not in self.studies:
+            return None
+        return self.studies[dataset_id]
 
     def fetch_studies_from_client(
         self,

@@ -47,6 +47,10 @@ class GPFExtensionBase:
     def get_studies_ids(self) -> list[str]:
         pass
 
+    @abstractmethod
+    def get_wdae_wrapper(self, dataset_id: str) -> WDAEAbstractStudy | None:
+        pass
+
     def get_tool(
         self, study: WDAEAbstractStudy, tool_id: str,
     ) -> GPFTool | None:
