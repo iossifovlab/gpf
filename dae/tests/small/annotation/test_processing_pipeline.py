@@ -9,7 +9,7 @@ from dae.annotation.annotatable import (
     Position,
     Region,
 )
-from dae.parquet.schema2.processing_pipeline import (
+from dae.annotation.processing_pipeline import (
     AnnotatablesBatchFilter,
     AnnotatablesWithContext,
     Annotation,
