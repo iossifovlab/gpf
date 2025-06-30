@@ -238,7 +238,7 @@ def setup_genome(out_path: pathlib.Path, content: str) -> ReferenceGenome:
     setup_directories(out_path, convert_to_tab_separated(content))
 
     # pylint: disable=no-member
-    pysam.faidx(str(out_path))  # type: ignore
+    pysam.faidx(str(out_path))
 
     setup_directories(out_path.parent, {
         "genomic_resource.yaml": textwrap.dedent(f"""
