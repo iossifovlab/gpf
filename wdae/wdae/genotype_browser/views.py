@@ -188,7 +188,7 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         if is_download:
             columns = [s.get("name", s["source"]) for s in sources]
             result = map(
-                join_line, itertools.chain([columns], result))  # type: ignore
+                join_line, itertools.chain([columns], filter(None, result)))  # type: ignore
             response = FileResponse(
                 result, filename="variants.tsv",
                 as_attachment=True, content_type="text/tsv",
