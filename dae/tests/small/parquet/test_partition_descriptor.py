@@ -295,10 +295,19 @@ def test_partition_directory() -> None:
      "merged_region_bin_1_bucket_index_000001.parquet"),
     ("merged", [], None,
      "merged.parquet"),
+    ("merged", Partition("chr_1"), None,
+     "merged_region_bin_chr_1.parquet"),
+    ("merged", Partition("chr_1", "0"), None,
+     "merged_region_bin_chr_1_frequency_bin_0.parquet"),
+    ("merged", Partition("chr_1", "0", "1"), None,
+     "merged_region_bin_chr_1_frequency_bin_0_coding_bin_1.parquet"),
+    ("merged", Partition("chr_1", "0", "1", "5"), None,
+     "merged_region_bin_chr_1_frequency_bin_0_coding_bin_1_"
+     "family_bin_5.parquet"),
 ])
 def test_partition_filename(
     prefix: str,
-    partition: list[tuple[str, str]],
+    partition: Partition | list[tuple[str, str]],
     bucket_index: int | None,
     expected: str,
 ) -> None:

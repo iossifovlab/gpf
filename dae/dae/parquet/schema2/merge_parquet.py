@@ -1,47 +1,55 @@
 from __future__ import annotations
 
 import logging
+import pathlib
 
 from dae.parquet.helpers import merge_parquets
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 
 
-def merge_variants_parquets(
-    partition_descriptor: PartitionDescriptor,
-    variants_dir: str,
-    partition: list[tuple[str, str]],
+def _collect_input_parquet_files(
+    parquets_dir: str,
+) -> list[str]:
+    parquet_files = fs_utils.glob(
+        fs_utils.join(parquets_dir, "*.parquet"),
+    )
+    return sorted(parquet_files)
+
+
+def _filter_output_parquet_file(
+    parquet_files: list[str],
+    output_parquet_filename: str,
+) -> list[str]:
+    """Filter out the output parquet file from the list of input files."""
+    return [
+        fn for fn in parquet_files
+        if not fn.endswith(output_parquet_filename)
+    ]
+
+
+def merge_parquet_directory(
+    parquets_dir: pathlib.Path | str,
+    output_parquet_filename: str,
     row_group_size: int = 50_000,
     parquet_version: str | None = None,
 ) -> None:
-    """Merge parquet files in variants_dir."""
-    output_parquet_file = fs_utils.join(
-        variants_dir,
-        partition_descriptor.partition_filename(
-            "merged", partition, bucket_index=None,
-        ),
-    )
-    parquet_files = sorted(fs_utils.glob(
-        fs_utils.join(variants_dir, "*.parquet"),
-    ))
+    """Merge all parquet files from parquets_dir into a single parquet file."""
+    if isinstance(parquets_dir, pathlib.Path):
+        parquets_dir = str(parquets_dir)
 
-    is_output_in_input = \
-        any(fn.endswith(output_parquet_file) for fn in parquet_files)
-    if is_output_in_input:
-        # a leftover file from a previous run. Remove from list of files.
-        # we use endswith instead of == because of path normalization
-        for i, filename in enumerate(parquet_files):
-            if filename.endswith(output_parquet_file):
-                parquet_files.pop(i)
-                break
+    parquet_files = _collect_input_parquet_files(parquets_dir)
+
+    parquet_files = _filter_output_parquet_file(
+        parquet_files, output_parquet_filename,
+    )
 
     if len(parquet_files) > 0:
         logger.info(
-            "Merging %d files in %s", len(parquet_files), variants_dir,
+            "Merging %d files in %s", len(parquet_files), parquets_dir,
         )
         merge_parquets(
-            parquet_files, output_parquet_file,
+            parquet_files, output_parquet_filename,
             row_group_size=row_group_size,
             parquet_version=parquet_version)

@@ -616,7 +616,7 @@ class PartitionDescriptor:
 
     @staticmethod
     def partition_filename(
-        prefix: str, partition: list[tuple[str, str]],
+        prefix: str, partition: Partition | list[tuple[str, str]],
         bucket_index: int | None,
     ) -> str:
         """Construct a partition dataset base filename.
@@ -625,6 +625,8 @@ class PartitionDescriptor:
         `family_partition` methods, this function constructs the file name
         corresponding to the partition.
         """
+        if isinstance(partition, Partition):
+            partition = partition.to_pylist()
         partition_parts = [
             f"{bin_name}_{bin_value}" for (bin_name, bin_value) in partition]
         parts = [
