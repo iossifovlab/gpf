@@ -38,7 +38,7 @@ class ProfileView(QueryBaseView):
         if isinstance(gp_config, dict):
             gene_link_templates = gp_config.get("geneLinks")
             if gene_link_templates:
-                gene_symbol, transcript_models = \
+                gene_symbol_canon, transcript_models = \
                     self.gpf_instance.get_transcript_models(gene_symbol)
                 if not transcript_models:
                     return Response(status=status.HTTP_404_NOT_FOUND)
@@ -56,19 +56,18 @@ class ProfileView(QueryBaseView):
 
                 chromosome_prefix = "" if genome == "hg38" else "chr"
 
-                gene_links = []
-                for template in gene_link_templates:
-                    gene_links.append({
+                result["geneLinks"] = [
+                    {
                         "name": template["name"],
                         "url": template["url"].format(
                             gpf_prefix=gpf_prefix,
-                            gene=gene_symbol,
+                            gene=gene_symbol_canon,
                             genome=genome,
                             chromosome_prefix=chromosome_prefix,
                             chromosome=chromosome,
                             gene_start_position=gene_start_position,
                             gene_stop_position=gene_stop_position,
                         ),
-                    })
-                result["geneLinks"] = gene_links
+                    } for template in gene_link_templates
+                ]
         return Response(result)

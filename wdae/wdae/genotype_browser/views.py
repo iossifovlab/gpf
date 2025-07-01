@@ -149,7 +149,6 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset = cast(WDAEStudy, dataset)
 
         if not dataset.genotype_data.is_remote:
             data = expand_gene_set(data)
@@ -162,12 +161,11 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             sources = data.pop("sources")
         else:
             # TODO Handle summary variant preview and download sources
-
             study_config = dataset.genotype_data.config
             if is_download:
-                cols = study_config.genotype_browser.download_columns
+                cols = study_config["genotype_browser"]["download_columns"]
             else:
-                cols = study_config.genotype_browser.preview_columns
+                cols = study_config["genotype_browser"]["preview_columns"]
             sources = WDAEStudy.get_columns_as_sources(
                 dataset.genotype_data.config, cols,
             )

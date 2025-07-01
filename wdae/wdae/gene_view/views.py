@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Generator
-from typing import cast
 
 from datasets_api.permissions import get_permissions_etag
 from django.contrib.auth.models import User
@@ -39,7 +38,7 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(dataset.genotype_data.config.gene_browser,
+        return Response(dataset.genotype_data.config["gene_browser"],
                         status=status.HTTP_200_OK)
 
 
@@ -49,7 +48,7 @@ class QueryVariantsView(QueryBaseView):
     @method_decorator(etag(get_permissions_etag))
     def post(self, request: Request) -> Response:
         """Query gene view summary variants."""
-        data = expand_gene_set(request.data)
+        data = expand_gene_set(request.data)  # pyright: ignore
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -65,9 +64,8 @@ class QueryVariantsView(QueryBaseView):
         if dataset.genotype_data.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        freq_col = dataset.genotype_data.config.gene_browser.frequency_column
-
-        dataset = cast(WDAEStudy, dataset)
+        freq_col = \
+            dataset.genotype_data.config["gene_browser"]["frequency_column"]
 
         return Response(list(
             dataset.get_gene_view_summary_variants(
@@ -109,7 +107,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
         )
 
     @request_logging(LOGGER)
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request) -> Response | FileResponse:
         """Summary variants download."""
         data = expand_gene_set(parse_query_params(request.data))
         dataset_id = data.pop("datasetId", None)
@@ -126,8 +124,6 @@ class DownloadSummaryVariantsView(QueryBaseView):
 
         if dataset.genotype_data.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dataset = cast(WDAEStudy, dataset)
 
         response = FileResponse(
             self.generate_variants(data, request.user, dataset),

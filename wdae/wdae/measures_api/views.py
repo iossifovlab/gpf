@@ -115,7 +115,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
 
         m = df[pheno_measure]
         bars, bins = np.histogram(
-            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25,
+            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25,  # type: ignore
         )
 
         m_range = cast(
@@ -171,7 +171,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
         m = df[pheno_measure]
         df = df[np.logical_not(pd.isna(m.values))]
 
-        result = {
+        result: dict = {
             "measure": measure.measure_id,
             "description": measure.description,
             "histogram": None,
@@ -205,7 +205,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
                 "max_value": np.max(bins).item(),
             }).to_dict()
         elif measure.histogram_type is CategoricalHistogram:
-            counts = {}
+            counts: dict = {}
             for value in measure.domain:
                 counts[value] = len(df[df[pheno_measure] == value])
 

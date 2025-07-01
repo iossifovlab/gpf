@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Iterable
+from typing import Any
 
 from django.contrib.auth.models import Group
 from django.db import models
@@ -67,10 +68,10 @@ class DatasetHierarchy(models.Model):
     """Data for dataset hierarchy and inheritance."""
 
     instance_id: models.TextField = models.TextField()
-    ancestor: models.ForeignKey = models.ForeignKey(
+    ancestor: models.ForeignKey[Any, Dataset] = models.ForeignKey(
         Dataset, on_delete=models.CASCADE, related_name="ancestor",
     )
-    descendant: models.ForeignKey = models.ForeignKey(
+    descendant: models.ForeignKey[Any, Dataset] = models.ForeignKey(
         Dataset, on_delete=models.CASCADE, related_name="descendant",
     )
     direct: models.BooleanField = models.BooleanField()
@@ -91,7 +92,8 @@ class DatasetHierarchy(models.Model):
         descendant = Dataset.objects.get(dataset_id=descendant_id)
         cls.objects.create(
             instance_id=instance_id,
-            ancestor=ancestor, descendant=descendant,
+            ancestor=ancestor,
+            descendant=descendant,
             direct=direct,
         )
 
@@ -103,8 +105,9 @@ class DatasetHierarchy(models.Model):
         A dataset without children is a study and not a group.
         """
         return len(cls.objects.filter(
-            instance_id=instance_id, ancestor_id=dataset.id,
-        ).exclude(descendant_id=dataset.id)) == 0
+            instance_id=instance_id,
+            ancestor_id=dataset.pk,
+        ).exclude(descendant_id=dataset.pk)) == 0
 
     @classmethod
     def get_parents(
@@ -114,12 +117,15 @@ class DatasetHierarchy(models.Model):
         """Return all parents of a given dataset."""
         if direct is True:
             relations = cls.objects.filter(
-                instance_id=instance_id, descendant_id=dataset.id, direct=True,
-            ).exclude(ancestor_id=dataset.id)
+                instance_id=instance_id,
+                descendant_id=dataset.pk,
+                direct=True,
+            ).exclude(ancestor_id=dataset.pk)
         else:
             relations = cls.objects.filter(
-                instance_id=instance_id, descendant_id=dataset.id,
-            ).exclude(ancestor_id=dataset.id)
+                instance_id=instance_id,
+                descendant_id=dataset.pk,
+            ).exclude(ancestor_id=dataset.pk)
         return [relation.ancestor for relation in relations]
 
     @classmethod
@@ -127,7 +133,7 @@ class DatasetHierarchy(models.Model):
         cls, instance_id: str, datasets: Iterable[Dataset],
     ) -> dict[str, list[str]]:
         """Return dictionary of parents for a list of DB datasets."""
-        dataset_ids = [ds.id for ds in datasets]
+        dataset_ids = [ds.pk for ds in datasets]
         relations = cls.objects.filter(
             instance_id=instance_id, descendant_id__in=dataset_ids,
         )
@@ -148,10 +154,13 @@ class DatasetHierarchy(models.Model):
         """Return all children of a given dataset."""
         if direct is True:
             relations = cls.objects.filter(
-                instance_id=instance_id, ancestor_id=dataset.id, direct=True,
-            ).exclude(descendant_id=dataset.id)
+                instance_id=instance_id,
+                ancestor_id=dataset.pk,
+                direct=True,
+            ).exclude(descendant_id=dataset.pk)
         else:
             relations = cls.objects.filter(
-                instance_id=instance_id, ancestor_id=dataset.id,
-            ).exclude(descendant_id=dataset.id)
+                instance_id=instance_id,
+                ancestor_id=dataset.pk,
+            ).exclude(descendant_id=dataset.pk)
         return [relation.descendant for relation in relations]

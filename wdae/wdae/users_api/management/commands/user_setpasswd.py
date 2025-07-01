@@ -6,10 +6,10 @@ from django.core.management.base import BaseCommand, CommandError
 class Command(BaseCommand):
     help = "Change the password of a user with the given email"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser):  # type: ignore
         parser.add_argument("email", type=str)
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # type: ignore
         UserModel = get_user_model()
         try:
             call_command(
