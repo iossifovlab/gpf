@@ -138,7 +138,7 @@ class FileTaskCache(TaskCache):
         with fsspec.open(output_fn, "rb") as cache_file:
             res_record = cast(
                 CacheRecord,
-                pickle.load(cache_file))  # type: ignore
+                pickle.load(cache_file))  # pyright: ignore
             task2record[task_node] = res_record
             return res_record
 
@@ -167,7 +167,7 @@ class FileTaskCache(TaskCache):
         cache_fn = self._get_flag_filename(task_node)
         try:
             with fsspec.open(cache_fn, "wb") as cache_file:
-                pickle.dump(record, cache_file)  # type: ignore
+                pickle.dump(record, cache_file)  # pyright: ignore
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Cannot write cache for task %s. Ignoring and continuing.",
