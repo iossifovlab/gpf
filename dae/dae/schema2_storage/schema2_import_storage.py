@@ -23,12 +23,12 @@ from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     collect_pedigree_parquet_schema,
     fill_family_bins,
-    merge_variants_parquets,
     save_ped_df_to_parquet,
     serialize_summary_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
+from dae.parquet.schema2.merge_parquet import merge_parquet_directory
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
@@ -282,16 +282,23 @@ class Schema2ImportStorage(ImportStorage):
     def _merge_parquets(
         cls,
         project: ImportProject, out_dir: str,
-        partitions: list[tuple[str, str]],
+        partition: list[tuple[str, str]],
     ) -> None:
         layout = schema2_project_dataset_layout(project)
-        full_out_dir = fs_utils.join(layout.study, out_dir)
-
+        variants_dir = fs_utils.join(layout.study, out_dir)
+        partition_descriptor = cls._get_partition_description(project)
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
 
-        merge_variants_parquets(
-            cls._get_partition_description(project), full_out_dir, partitions,
+        output_parquet_file = fs_utils.join(
+            variants_dir,
+            partition_descriptor.partition_filename(
+                "merged", partition, bucket_index=None,
+            ),
+        )
+
+        merge_parquet_directory(
+            variants_dir, output_parquet_file,
             row_group_size=row_group_size,
         )
 
@@ -322,10 +329,10 @@ class Schema2ImportStorage(ImportStorage):
         )
         output_dir_tasks = []
 
-        for output_dir, partitions in self._variant_partitions(project):
+        for output_dir, partition in self._variant_partitions(project):
             output_dir_tasks.append(graph.create_task(
                 f"merge_parquet_files_{output_dir}", self._merge_parquets,
-                args=[project, output_dir, partitions],
+                args=[project, output_dir, partition],
                 deps=[bucket_sync],
             ))
 
