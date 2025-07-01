@@ -103,7 +103,7 @@ class Schema2ImportStorage(ImportStorage):
         ]
         partition_descriptor = cls._get_partition_description(project)
         schema.extend(
-            list(partition_descriptor.dataset_family_partition()))
+            list(partition_descriptor.family_partition_schema()))
         return "\n".join([
             f"{n}|{t}" for n, t in schema
         ])

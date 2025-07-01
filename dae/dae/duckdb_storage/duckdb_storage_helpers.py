@@ -112,7 +112,7 @@ def _create_table_partitioned(
 ) -> None:
     """Create a table from a partitioned parquet dataset."""
     with connection.cursor() as cursor:
-        dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
+        dataset_path = f"{parquet_path}/{'*/' * len(partition)}*.parquet"
         logger.debug("creating table %s from %s", table_name, dataset_path)
 
         query = f"DROP TABLE IF EXISTS {table_name}"
@@ -158,11 +158,11 @@ def create_duckdb_tables(
     _create_table_partitioned(
         connection,
         layout.summary, tables_layout.summary,
-        partition_descriptor.dataset_summary_partition())
+        partition_descriptor.summary_partition_schema())
     _create_table_partitioned(
         connection,
         layout.family, tables_layout.family,
-        partition_descriptor.dataset_family_partition())
+        partition_descriptor.family_partition_schema())
     return tables_layout
 
 
@@ -225,9 +225,9 @@ def create_relative_parquet_scans_layout(
     pedigree_path = fs_utils.join(study_dir, "pedigree")
     meta_path = fs_utils.join(study_dir, "meta")
     summary_path = fs_utils.join(study_dir, "summary")
-    summary_partition = partition_descriptor.dataset_summary_partition()
+    summary_partition = partition_descriptor.summary_partition_schema()
     family_path = fs_utils.join(study_dir, "family")
-    family_partition = partition_descriptor.dataset_family_partition()
+    family_partition = partition_descriptor.family_partition_schema()
     study_dir = fs_utils.join(base_url, study_dir)
     paths = Schema2DatasetLayout(
         study_dir,
@@ -298,7 +298,7 @@ def create_s3_secret_clause(
 
 
 def create_s3_attach_db_clause(db_url: str) -> str:
-    return f"ATTACH DATABASE '{ db_url }' (type duckdb, read_only);"
+    return f"ATTACH DATABASE '{db_url}' (type duckdb, read_only);"
 
 
 def create_s3_filesystem(endpoint_url: str | S3Path | None) -> S3FileSystem:

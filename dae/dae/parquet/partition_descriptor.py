@@ -364,7 +364,7 @@ class PartitionDescriptor:
 
         return "3"
 
-    def dataset_summary_partition(self) -> list[tuple[str, str]]:
+    def summary_partition_schema(self) -> list[tuple[str, str]]:
         """Build summary parquet dataset partition for table creation.
 
         When creating an Impala or BigQuery table it is helpful to have
@@ -379,13 +379,13 @@ class PartitionDescriptor:
             result.append(("coding_bin", "int8"))
         return result
 
-    def dataset_family_partition(self) -> list[tuple[str, str]]:
+    def family_partition_schema(self) -> list[tuple[str, str]]:
         """Build family dataset partition for table creation.
 
         When creating an Impala or BigQuery table it is helpful to have
         the list of partitions and types used in the parquet dataset.
         """
-        result = self.dataset_summary_partition()
+        result = self.summary_partition_schema()
         if self.has_family_bins():
             result.append(("family_bin", "int8"))
         return result

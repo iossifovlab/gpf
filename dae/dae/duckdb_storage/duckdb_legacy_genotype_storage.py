@@ -340,9 +340,9 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
         pedigree_path = fs_utils.join(study_dir, "pedigree")
         meta_path = fs_utils.join(study_dir, "meta")
         summary_path = fs_utils.join(study_dir, "summary")
-        summary_partition = partition_descriptor.dataset_summary_partition()
+        summary_partition = partition_descriptor.summary_partition_schema()
         family_path = fs_utils.join(study_dir, "family")
-        family_partition = partition_descriptor.dataset_family_partition()
+        family_partition = partition_descriptor.family_partition_schema()
         study_dir = self._base_dir_join(study_dir)
         paths = Schema2DatasetLayout(
             study_dir,
@@ -362,8 +362,8 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
             layout: Schema2DatasetLayout,
             partition_descriptor: PartitionDescriptor) -> Schema2DatasetLayout:
         """Construct DuckDb parquet scans for all studies tables."""
-        summary_partition = partition_descriptor.dataset_summary_partition()
-        family_partition = partition_descriptor.dataset_family_partition()
+        summary_partition = partition_descriptor.summary_partition_schema()
+        family_partition = partition_descriptor.family_partition_schema()
         paths = Schema2DatasetLayout(
             layout.study,
             f"{layout.pedigree}",
@@ -454,11 +454,11 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
         self.create_table_partitioned(
             connection,
             layout.summary, tables_layout.summary,
-            partition_descriptor.dataset_summary_partition())
+            partition_descriptor.summary_partition_schema())
         self.create_table_partitioned(
             connection,
             layout.family, tables_layout.family,
-            partition_descriptor.dataset_family_partition())
+            partition_descriptor.family_partition_schema())
         return tables_layout
 
     def _import_into_database(

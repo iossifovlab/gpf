@@ -52,15 +52,15 @@ class GcpGenotypeStorage(GenotypeStorage):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore
-        if not validator.validate(config):  # type: ignore
+        validator = Validator(cls.VALIDATION_SCHEMA)  # pyright: ignore
+        if not validator.validate(config):  # pyright: ignore
             logger.error(
                 "wrong config format for impala genotype storage: %s",
-                validator.errors)  # type: ignore
+                validator.errors)  # pyright: ignore
             raise ValueError(
                 f"wrong config format for impala storage: "
-                f"{validator.errors}")  # type: ignore
-        return cast(dict, validator.document)  # type: ignore
+                f"{validator.errors}")  # pyright: ignore
+        return cast(dict, validator.document)  # pyright: ignore
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
@@ -246,18 +246,18 @@ class GcpGenotypeStorage(GenotypeStorage):
         job_config.source_format = bigquery.SourceFormat.PARQUET
 
         parquet_options = bigquery\
-            .format_options.ParquetOptions()  # type: ignore
+            .format_options.ParquetOptions()  # pyright: ignore
         parquet_options.enable_list_inference = True
         job_config.parquet_options = parquet_options
 
         if partition_descriptor.has_summary_partitions():
             hive_partitioning = bigquery\
-                .external_config.HivePartitioningOptions()  # type: ignore
+                .external_config.HivePartitioningOptions()  # pyright: ignore
             hive_partitioning.mode = "CUSTOM"
             summary_partition = "/".join([
                 f"{{{bname}:{type_convertions[btype]}}}"
                 for (bname, btype) in
-                partition_descriptor.dataset_summary_partition()
+                partition_descriptor.summary_partition_schema()
             ])
             hive_partitioning.source_uri_prefix = \
                 f"{bucket_layout.summary}/{summary_partition}"
@@ -275,18 +275,18 @@ class GcpGenotypeStorage(GenotypeStorage):
         job_config.source_format = bigquery.SourceFormat.PARQUET
         job_config.autodetect = True
         parquet_options = bigquery\
-            .format_options.ParquetOptions()  # type: ignore
+            .format_options.ParquetOptions()  # pyright: ignore
         parquet_options.enable_list_inference = True
         job_config.parquet_options = parquet_options
 
         if partition_descriptor.has_family_partitions():
             hive_partitioning = bigquery\
-                .external_config.HivePartitioningOptions()  # type: ignore
+                .external_config.HivePartitioningOptions()  # pyright: ignore
             hive_partitioning.mode = "CUSTOM"
             family_partition = "/".join([
                 f"{{{bname}:{type_convertions[btype]}}}"
                 for (bname, btype) in
-                partition_descriptor.dataset_family_partition()
+                partition_descriptor.family_partition_schema()
             ])
             hive_partitioning.source_uri_prefix = \
                 f"{bucket_layout.family}/{family_partition}"
