@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import os
+from collections.abc import Sequence
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
@@ -55,7 +56,8 @@ class AnnotatorBase(Annotator):
                 for attribute_config in self._info.attributes}
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self,
+        annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
@@ -69,7 +71,8 @@ class AnnotatorBase(Annotator):
         ))
 
     def batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self,
+        annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:

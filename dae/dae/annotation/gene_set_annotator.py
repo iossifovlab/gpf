@@ -93,10 +93,10 @@ class GeneSetAnnotator(AnnotatorBase):
         return (self.input_gene_list,)
 
     def _do_annotate(
-        self, _: Annotatable | None,
+        self,
+        annotatable: Annotatable | None,  # noqa: ARG002
         context: dict[str, Any],
     ) -> dict[str, Any]:
-
         genes = context.get(self.input_gene_list)
         if genes is None:
             return self._empty_result()

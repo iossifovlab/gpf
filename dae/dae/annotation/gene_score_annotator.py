@@ -108,10 +108,11 @@ class GeneScoreAnnotator(Annotator):
     def used_context_attributes(self) -> tuple[str, ...]:
         return (self.input_gene_list,)
 
-    def annotate(self, _: Annotatable | None,
-                 context: dict[str, Any]) \
-            -> dict[str, Any]:
-
+    def annotate(
+        self,
+        annotatable: Annotatable | None,  # noqa: ARG002
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
         genes = context.get(self.input_gene_list)
         if genes is None:
             return self._empty_result()

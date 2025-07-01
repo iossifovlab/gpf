@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess
 import textwrap
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, TextIO, cast
 
@@ -295,7 +296,8 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         return full_attributes
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self,
+        annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
@@ -434,7 +436,8 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         return effect_attributes
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self,
+        annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
