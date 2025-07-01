@@ -2,13 +2,15 @@
 import os
 
 import pytest
+import yaml
+from gpf_instance.gpf_instance import WGPFInstance
+from utils.testing import setup_t4c8_instance
 
 from federation.rest_api_client import RESTClient
 from rest_client.rest_client import GPFConfidentialClient
 
 
-@pytest.fixture
-def remote_config() -> dict[str, str]:
+def build_remote_config() -> dict[str, str]:
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     return {
         "id": "TEST_REMOTE",
@@ -21,7 +23,8 @@ def remote_config() -> dict[str, str]:
 
 
 @pytest.fixture
-def rest_client(remote_config: dict[str, str]) -> RESTClient:
+def rest_client() -> RESTClient:
+    remote_config = build_remote_config()
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],
@@ -37,3 +40,16 @@ def rest_client(remote_config: dict[str, str]) -> RESTClient:
         "Failed to get auth token for REST client"
 
     return client
+
+
+@pytest.fixture(scope="session")
+def t4c8_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> WGPFInstance:
+    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    instance = setup_t4c8_instance(root_path)
+
+    with open(instance.dae_config_path, "a") as f:
+        f.write(yaml.dump({"remotes": [build_remote_config()]}))
+
+    return WGPFInstance.build(instance.dae_config_path, grr=instance.grr)
