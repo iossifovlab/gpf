@@ -40,3 +40,18 @@ def test_make_config(t4c8_dataset: GenotypeData) -> None:
     assert isinstance(config, dict)
     assert config.get("id") == "t4c8_dataset"
     assert config.get("phenotype_data") is None
+
+
+def test_genotype_data_config_immutability(
+    t4c8_wgpf_instance: WGPFInstance,
+    t4c8_dataset: GenotypeData,
+) -> None:
+    description = WDAEStudy.build_genotype_data_description(
+        t4c8_wgpf_instance,
+        t4c8_dataset,
+        person_set_collection_configs=None,
+    )
+    assert description["common_report"]["file_path"] is None
+    assert (
+        "datasets/t4c8_dataset/common_report.json"
+    ) in t4c8_dataset.config["common_report"]["file_path"]
