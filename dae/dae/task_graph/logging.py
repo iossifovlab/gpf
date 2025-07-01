@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import uuid
-from typing import Any, cast
+from typing import Any
 
 from dae.utils import fs_utils
 
@@ -50,7 +50,7 @@ def ensure_log_dir(**kwargs: Any) -> str:
     if not fs_utils.exists(log_dir):
         fs, path = fs_utils.url_to_fs(log_dir)
         fs.mkdir(path, exists_ok=True)
-    return cast(str, log_dir)
+    return log_dir
 
 
 def configure_task_logging(

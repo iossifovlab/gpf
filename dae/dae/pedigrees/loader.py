@@ -309,7 +309,7 @@ class FamiliesLoader(CLILoader):
         assert argv.ped_file_format in ("simple", "pedigree")
         assert argv.ped_layout_mode in ("generate", "load")
 
-        res = {}
+        res: dict[str, Any] = {}
 
         res["ped_no_header"] = str2bool(argv.ped_no_header)
         res["ped_no_role"] = str2bool(argv.ped_no_role)

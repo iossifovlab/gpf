@@ -51,7 +51,7 @@ class StatsCollection(MutableMapping):
         if result:
             if len(result) == 1 and key in result:
                 return result[key]
-            return result  # type: ignore
+            return result
         return default
 
     def __iter__(self) -> Iterator[tuple[str, ...]]:

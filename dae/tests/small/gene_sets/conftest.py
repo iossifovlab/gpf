@@ -2,7 +2,7 @@
 
 import os
 import textwrap
-from typing import Any, cast
+from typing import Any
 
 import pytest
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
@@ -23,15 +23,10 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree
 from dae.testing.foobar_import import foobar_gpf
-from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
 def fixtures_dir() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures"))
-
-
-def path_to_fixtures(*args: Any) -> str:
-    return cast(str, _path_to_fixtures("gene", *args))
 
 
 @pytest.fixture(scope="session")
@@ -204,7 +199,9 @@ def grr_contents() -> dict[str, Any]:
 
 
 @pytest.fixture
-def gene_sets_repo_in_memory(grr_contents) -> GenomicResourceRepo:
+def gene_sets_repo_in_memory(
+    grr_contents: dict[str, Any],
+) -> GenomicResourceRepo:
     return build_inmemory_test_repository(grr_contents)
 
 

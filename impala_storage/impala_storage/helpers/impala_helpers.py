@@ -145,7 +145,7 @@ class ImpalaHelpers:
     def _build_impala_partitions(
         partition_descriptor: PartitionDescriptor,
     ) -> str:
-        partitions = partition_descriptor.dataset_family_partition()
+        partitions = partition_descriptor.family_partition_schema()
         type_convertion = {
             "int32": "INT",
             "int16": "SMALLINT",

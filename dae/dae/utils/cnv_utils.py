@@ -1,6 +1,6 @@
 
-def cnv_variant_type(variant):
-    variant = variant.lower()
+def cnv_variant_type(variant_type: str) -> str | None:
+    variant = variant_type.lower()
     if variant in {"cnv+", "duplication", "large_insertion", "gain"}:
         return "LARGE_DUPLICATION"
     if variant in {"cnv-", "deletion", "large_deletion", "loss"}:
@@ -8,7 +8,7 @@ def cnv_variant_type(variant):
     return None
 
 
-def cshl2cnv_variant(location, variant, *args):
+def cshl2cnv_variant(location: str, variant: str) -> tuple[str, int, int, str]:
     # pylint: disable=unused-argument
     """Parse location and variant into CNV variant."""
     parts = location.split(":")

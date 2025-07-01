@@ -5,7 +5,7 @@ import copy
 import itertools
 import logging
 from collections import defaultdict, deque
-from collections.abc import Container, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 from functools import reduce
 from typing import Any, cast
 
@@ -62,10 +62,12 @@ class FamilyConnections:
             for child in mating_unit.children_set():
                 assert child.member is not None
                 graph.add_edge(
-                    mating_unit.mother.member.person_id, child.member.person_id,
+                    mating_unit.mother.member.person_id,
+                    child.member.person_id,
                 )
                 graph.add_edge(
-                    mating_unit.father.member.person_id, child.member.person_id,
+                    mating_unit.father.member.person_id,
+                    child.member.person_id,
                 )
         return graph
 
@@ -182,7 +184,7 @@ class FamilyConnections:
             individual.member = member
 
             if not family.member_has_both_parents(
-                member.person_id, allow_missing=True):
+                    member.person_id, allow_missing=True):
                 continue
             assert member.mom_id is not None
             assert member.dad_id is not None
@@ -222,8 +224,8 @@ class FamilyConnections:
         mating_units = self.get_mating_units()
         sibship_units = self.get_sibship_units()
 
-        all_vertices: Container[IndividualGroup] = \
-            individuals | mating_units | sibship_units
+        all_vertices: frozenset[IndividualGroup] = \
+            frozenset(individuals | mating_units | sibship_units)
 
         # Ea-: individuals of same rank should not intersect
         same_rank_edges: set[tuple[IndividualGroup, IndividualGroup]] = {
@@ -299,15 +301,15 @@ class FamilyConnections:
         }
         intergenerational_edges -= mates_siblings_edges
 
-        required_set: Container[tuple[IndividualGroup, IndividualGroup]] = \
-            mating_edges | sibship_edges | mates_siblings_edges
+        required_set: frozenset[tuple[IndividualGroup, IndividualGroup]] = \
+            frozenset(mating_edges | sibship_edges | mates_siblings_edges)
         forbidden_set: set[tuple[IndividualGroup, IndividualGroup]] = \
             same_rank_edges.union(same_generation_not_mates).union(
                     same_generation_not_siblings).union(
                         intergenerational_edges)
 
         return SandwichInstance.from_sets(
-            set(all_vertices), set(required_set), set(forbidden_set))
+            all_vertices, required_set, frozenset(forbidden_set))
 
     @property
     def members(self) -> list[Person]:
@@ -696,7 +698,7 @@ class Realization:
             return False
 
         # pylint: disable=protected-access
-        if temp_realization._exceeds_max_width():  # noqa: SLF001
+        if temp_realization._exceeds_max_width():
             return False
 
         if not self._old_dangling_same(new_vertex, temp_realization):
@@ -907,7 +909,7 @@ class SandwichInstance:
     """
 
     def __init__(
-        self, vertices: set[IndividualGroup],
+        self, vertices: frozenset[IndividualGroup],
         required_graph: nx.Graph,
         forbidden_graph: nx.Graph,
     ) -> None:
@@ -917,9 +919,9 @@ class SandwichInstance:
 
     @staticmethod
     def from_sets(
-        all_vertices: set[IndividualGroup],
-        required_set: set[tuple[IndividualGroup, IndividualGroup]],
-        forbidden_set: set[tuple[IndividualGroup, IndividualGroup]],
+        all_vertices: frozenset[IndividualGroup],
+        required_set: frozenset[tuple[IndividualGroup, IndividualGroup]],
+        forbidden_set: frozenset[tuple[IndividualGroup, IndividualGroup]],
     ) -> SandwichInstance:
         """Create a SandwichInstance object.
 

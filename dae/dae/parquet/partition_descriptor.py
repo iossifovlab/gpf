@@ -7,6 +7,7 @@ import sys
 import textwrap
 from collections import defaultdict
 from collections.abc import Iterable
+from dataclasses import dataclass
 from math import ceil
 from typing import Any, cast
 
@@ -25,6 +26,53 @@ from dae.utils.regions import (
 from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import SummaryAllele
+
+
+@dataclass(frozen=True, eq=True)
+class Partition:
+    """Class to represent a partition of a genotype dataset."""
+    region_bin: str | None = None
+    frequency_bin: str | None = None
+    coding_bin: str | None = None
+    family_bin: str | None = None
+
+    def to_pylist(self) -> list[tuple[str, str]]:
+        """Convert the partition to a list of tuples."""
+        result = []
+        if self.region_bin is not None:
+            result.append(("region_bin", self.region_bin))
+        if self.frequency_bin is not None:
+            result.append(("frequency_bin", self.frequency_bin))
+        if self.coding_bin is not None:
+            result.append(("coding_bin", self.coding_bin))
+        if self.family_bin is not None:
+            result.append(("family_bin", self.family_bin))
+        return result
+
+    @staticmethod
+    def from_pylist(
+        partition: list[tuple[str, str]],
+    ) -> Partition:
+        """Create a partition from a list of tuples."""
+        region_bin = None
+        frequency_bin = None
+        coding_bin = None
+        family_bin = None
+        for name, value in partition:
+            if name == "region_bin":
+                region_bin = value
+            elif name == "frequency_bin":
+                frequency_bin = value
+            elif name == "coding_bin":
+                coding_bin = value
+            elif name == "family_bin":
+                family_bin = value
+        return Partition(
+            region_bin=region_bin,
+            frequency_bin=frequency_bin,
+            coding_bin=coding_bin,
+            family_bin=family_bin,
+        )
 
 
 class PartitionDescriptor:
@@ -364,8 +412,8 @@ class PartitionDescriptor:
 
         return "3"
 
-    def dataset_summary_partition(self) -> list[tuple[str, str]]:
-        """Build summary parquet dataset partition for table creation.
+    def summary_partition_schema(self) -> list[tuple[str, str]]:
+        """Build summary parquet dataset partition schema for table creation.
 
         When creating an Impala or BigQuery table it is helpful to have
         the list of partitions and types used in the parquet dataset.
@@ -379,13 +427,13 @@ class PartitionDescriptor:
             result.append(("coding_bin", "int8"))
         return result
 
-    def dataset_family_partition(self) -> list[tuple[str, str]]:
-        """Build family dataset partition for table creation.
+    def family_partition_schema(self) -> list[tuple[str, str]]:
+        """Build family dataset partition schema for table creation.
 
         When creating an Impala or BigQuery table it is helpful to have
         the list of partitions and types used in the parquet dataset.
         """
-        result = self.dataset_summary_partition()
+        result = self.summary_partition_schema()
         if self.has_family_bins():
             result.append(("family_bin", "int8"))
         return result
@@ -486,6 +534,14 @@ class PartitionDescriptor:
         self, chromosome_lengths: dict[str, int],
     ) -> tuple[list[list[tuple[str, str]]], list[list[tuple[str, str]]]]:
         """Return the output summary and family variant partition names."""
+        summary_parts = self._build_summary_partitions(chromosome_lengths)
+        family_parts = self._build_family_partitions(chromosome_lengths)
+        return summary_parts, family_parts
+
+    def _build_summary_partitions(
+        self, chromosome_lengths: dict[str, int],
+    ) -> list[list[tuple[str, str]]]:
+        """Build summary partitions for all variants in the dataset."""
         summary_parts: list[list[tuple[str, str]]] = []
         if self.has_region_bins():
             summary_parts.extend(
@@ -500,16 +556,37 @@ class PartitionDescriptor:
             summary_parts = self._add_product(
                 summary_parts, [("coding_bin", str(i)) for i in range(2)],
             )
+        return summary_parts
 
+    def build_summary_partitions(
+        self, chromosome_lengths: dict[str, int],
+    ) -> list[Partition]:
+        """Build summary partitions for all variants in the dataset."""
+        return [
+            Partition.from_pylist(partition)
+            for partition in self._build_summary_partitions(chromosome_lengths)
+        ]
+
+    def _build_family_partitions(
+        self, chromosome_lengths: dict[str, int],
+    ) -> list[list[tuple[str, str]]]:
+        """Build family partitions for all variants in the dataset."""
+        family_parts = self._build_summary_partitions(chromosome_lengths)
         if self.has_family_bins():
             family_parts = self._add_product(
-                summary_parts,
+                family_parts,
                 [("family_bin", str(i)) for i in range(self.family_bin_size)],
             )
-        else:
-            family_parts = summary_parts
+        return family_parts
 
-        return summary_parts, family_parts
+    def build_family_partitions(
+        self, chromosome_lengths: dict[str, int],
+    ) -> list[Partition]:
+        """Build summary partitions for all variants in the dataset."""
+        return [
+            Partition.from_pylist(partition)
+            for partition in self._build_family_partitions(chromosome_lengths)
+        ]
 
     @staticmethod
     def _add_product(
@@ -539,16 +616,19 @@ class PartitionDescriptor:
 
     @staticmethod
     def partition_filename(
-            prefix: str, partition: list[tuple[str, str]],
-            bucket_index: int | None) -> str:
+        prefix: str, partition: Partition | list[tuple[str, str]],
+        bucket_index: int | None,
+    ) -> str:
         """Construct a partition dataset base filename.
 
         Given a partition in the format returned by `summary_parition` or
         `family_partition` methods, this function constructs the file name
         corresponding to the partition.
         """
+        if isinstance(partition, Partition):
+            partition = partition.to_pylist()
         partition_parts = [
-            f"{bname}_{bvalue}" for (bname, bvalue) in partition]
+            f"{bin_name}_{bin_value}" for (bin_name, bin_value) in partition]
         parts = [
             prefix, *partition_parts]
         if bucket_index is not None:

@@ -7,7 +7,7 @@ def generate_file_access_glob(
     partition_descriptor: PartitionDescriptor,
 ) -> str:
     """Return a glob for accessing every parquet file in the partition."""
-    partition = partition_descriptor.dataset_family_partition()
+    partition = partition_descriptor.family_partition_schema()
     glob_parts = ["*" for _ in partition]
     glob_parts.append("*.parquet")
     return "/".join(glob_parts)
@@ -17,7 +17,7 @@ def variants_filename_basedir(
     partition_descriptor: PartitionDescriptor, filename: str,
 ) -> str | None:
     """Extract the variants basedir from filename."""
-    partition = partition_descriptor.dataset_family_partition()
+    partition = partition_descriptor.family_partition_schema()
     regex_parts = [
         "^(?P<basedir>.+)",
         *[f"({bname}=.+)" for (bname, _) in partition],

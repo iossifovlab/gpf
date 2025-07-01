@@ -107,6 +107,8 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
             chrom, pos_begin, pos_end, cnv_type = cshl2cnv_variant(
                 record[self.location_col],
                 record[self.variant_col])
+
+            assert cnv_type is not None
             return CNVAllele(
                 chrom, pos_begin, pos_end,
                 CNVAllele.Type.from_string(cnv_type))

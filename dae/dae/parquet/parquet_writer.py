@@ -192,7 +192,7 @@ def serialize_summary_schema(
         (f.name, f.type) for f in summary_schema
     ]
     schema.extend(
-        list(partition_descriptor.dataset_summary_partition()))
+        list(partition_descriptor.summary_partition_schema()))
     return "\n".join([
         f"{n}|{t}" for n, t in schema
     ])
