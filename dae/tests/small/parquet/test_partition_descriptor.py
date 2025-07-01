@@ -4,7 +4,10 @@ import sys
 import textwrap
 
 import pytest
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.partition_descriptor import (
+    Partition,
+    PartitionDescriptor,
+)
 from dae.testing import setup_directories
 from dae.utils.regions import Region
 
@@ -279,10 +282,29 @@ def test_partition_directory() -> None:
         "s3://work", []) == "s3://work"
 
 
-def test_partition_filename() -> None:
+@pytest.mark.parametrize("prefix,partition,bucket_index,expected", [
+    ("summary", [("region_bin", "1")], 1,
+     "summary_region_bin_1_bucket_index_000001.parquet"),
+    ("summary", [("region_bin", "1"), ("frequency_bin", "0")], 1,
+     "summary_region_bin_1_frequency_bin_0_bucket_index_000001.parquet"),
+    ("summary", [("region_bin", "1"), ("frequency_bin", "0"),
+                 ("coding_bin", "1")], 0,
+     "summary_region_bin_1_frequency_bin_0_coding_bin_1_"
+     "bucket_index_000000.parquet"),
+    ("merged", [("region_bin", "1")], 1,
+     "merged_region_bin_1_bucket_index_000001.parquet"),
+    ("merged", [], None,
+     "merged.parquet"),
+])
+def test_partition_filename(
+    prefix: str,
+    partition: list[tuple[str, str]],
+    bucket_index: int | None,
+    expected: str,
+) -> None:
     assert PartitionDescriptor.partition_filename(
-        "summary", [("region_bin", "1")], 1) == \
-        "summary_region_bin_1_bucket_index_000001.parquet"
+        prefix, partition, bucket_index) == \
+        expected
 
 
 def test_partition_descriptor_serialization() -> None:
@@ -770,3 +792,198 @@ def test_region_to_region_bins_additional(
     chrom_lens = {"chr1": 300}
 
     assert pd.region_to_region_bins(region, chrom_lens) == region_bins
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"chr1": 100, "chr2": 50},
+     [Partition("chr1_0"), Partition("chr2_0")]),
+    ({"chr1": 100, "chr2": 50, "chr3": 20},
+     [Partition("chr1_0"), Partition("chr2_0"), Partition("other_0")]),
+    ({"chr1": 150, "chr2": 50},
+     [Partition("chr1_0"), Partition("chr1_1"), Partition("chr2_0")]),
+])
+def test_build_summary_partitions_region_bins(
+    chrom_lens: dict[str, int],
+    expected: list[Partition],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = 100
+    """)
+
+    result = pd.build_summary_partitions(chrom_lens)
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"chr1": 100},
+     [Partition("chr1_0", "0"), Partition("chr1_0", "1"),
+      Partition("chr1_0", "2"), Partition("chr1_0", "3")]),
+    ({"chr1": 150},
+     [Partition("chr1_0", "0"), Partition("chr1_0", "1"),
+      Partition("chr1_0", "2"), Partition("chr1_0", "3"),
+      Partition("chr1_1", "0"), Partition("chr1_1", "1"),
+      Partition("chr1_1", "2"), Partition("chr1_1", "3")]),
+])
+def test_build_summary_partitions_region_and_frequency_bins(
+    chrom_lens: dict[str, int],
+    expected: list[Partition],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = 100
+
+        [frequency_bin]
+        rare_boundary = 50
+
+    """)
+
+    result = pd.build_summary_partitions(chrom_lens)
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"chr1": 100},
+     [Partition("chr1_0", coding_bin="0"),
+      Partition("chr1_0", coding_bin="1")]),
+    ({"chr1": 150},
+     [Partition("chr1_0", coding_bin="0"),
+      Partition("chr1_0", coding_bin="1"),
+      Partition("chr1_1", coding_bin="0"),
+      Partition("chr1_1", coding_bin="1")]),
+])
+def test_build_summary_partitions_region_and_coding_bins(
+    chrom_lens: dict[str, int],
+    expected: list[Partition],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = 100
+
+        [coding_bin]
+        coding_effect_types = missense,splice-site,frame-shift
+    """)
+
+    result = pd.build_summary_partitions(chrom_lens)
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"chr1": 100},
+     [Partition("chr1_0", coding_bin="0"),
+      Partition("chr1_0", coding_bin="1")]),
+    ({"chr1": 150},
+     [Partition("chr1_0", coding_bin="0"),
+      Partition("chr1_0", coding_bin="1"),
+      Partition("chr1_1", coding_bin="0"),
+      Partition("chr1_1", coding_bin="1")]),
+])
+def test_build_summary_partitions_region_and_coding_and_family_bins(
+    chrom_lens: dict[str, int],
+    expected: list[Partition],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = 100
+
+        [coding_bin]
+        coding_effect_types = missense,splice-site,frame-shift
+
+        [family_bin]
+        family_bin_size = 2
+
+    """)
+
+    result = pd.build_summary_partitions(chrom_lens)
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"chr1": 100},
+     [Partition("chr1_0", coding_bin="0"),
+      Partition("chr1_0", coding_bin="1")]),
+    ({"chr1": 150},
+     [Partition("chr1_0", coding_bin="0"),
+      Partition("chr1_0", coding_bin="1"),
+      Partition("chr1_1", coding_bin="0"),
+      Partition("chr1_1", coding_bin="1")]),
+])
+def test_build_family_partitions_region_and_coding_bins(
+    chrom_lens: dict[str, int],
+    expected: list[Partition],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = 100
+
+        [coding_bin]
+        coding_effect_types = missense,splice-site,frame-shift
+
+    """)
+
+    result = pd.build_family_partitions(chrom_lens)
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"chr1": 100},
+     [Partition("chr1_0", coding_bin="0", family_bin="0"),
+      Partition("chr1_0", coding_bin="0", family_bin="1"),
+      Partition("chr1_0", coding_bin="1", family_bin="0"),
+      Partition("chr1_0", coding_bin="1", family_bin="1")]),
+    ({"chr1": 150},
+     [Partition("chr1_0", coding_bin="0", family_bin="0"),
+      Partition("chr1_0", coding_bin="0", family_bin="1"),
+      Partition("chr1_0", coding_bin="1", family_bin="0"),
+      Partition("chr1_0", coding_bin="1", family_bin="1"),
+      Partition("chr1_1", coding_bin="0", family_bin="0"),
+      Partition("chr1_1", coding_bin="0", family_bin="1"),
+      Partition("chr1_1", coding_bin="1", family_bin="0"),
+      Partition("chr1_1", coding_bin="1", family_bin="1")]),
+])
+def test_build_family_partitions_region_and_coding_and_family_bins(
+    chrom_lens: dict[str, int],
+    expected: list[Partition],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = 100
+
+        [coding_bin]
+        coding_effect_types = missense,splice-site,frame-shift
+
+        [family_bin]
+        family_bin_size = 2
+    """)
+
+    result = pd.build_family_partitions(chrom_lens)
+    assert result == expected
+
+
+def test_partition_equality() -> None:
+    p1 = Partition(region_bin="foo_0", frequency_bin="1", coding_bin="0")
+    p2 = Partition(region_bin="foo_0", frequency_bin="1", coding_bin="0")
+    p3 = Partition(region_bin="foo_1", frequency_bin="1", coding_bin="0")
+    p4 = Partition(
+        region_bin="foo_1", coding_bin="0", family_bin="1")
+    p5 = Partition(
+        region_bin="foo_1", coding_bin="0", family_bin="1")
+    p6 = Partition(
+        region_bin="foo_1", coding_bin="0", family_bin="0")
+
+    assert p1 == p2
+    assert p1 != p3
+    assert p2 != p3
+
+    assert hash(p1) == hash(p2)
+    assert hash(p1) != hash(p3)
+    assert hash(p2) != hash(p3)
+
+    assert p4 == p5
+    assert p4 != p6
