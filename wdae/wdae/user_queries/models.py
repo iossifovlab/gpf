@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from query_state_save.models import QueryState
@@ -8,7 +10,7 @@ class UserQuery(models.Model):
 
     user: models.ForeignKey = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE)
-    query: models.ForeignKey = models.ForeignKey(
+    query: models.ForeignKey[Any, QueryState] = models.ForeignKey(
         QueryState, on_delete=models.CASCADE)
     name: models.CharField = models.CharField(
         blank=False, null=False, max_length=256)

@@ -263,7 +263,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         query = IsDatasetAllowed.prepare_allowed_datasets_query()
 
         with connection.cursor() as cursor:
-            cursor.execute(query, [user.id, instance_id])  # type: ignore
+            cursor.execute(query, [user.pk, instance_id])
 
             allowed_datasets_ids = {row[1] for row in cursor.fetchall()}
 

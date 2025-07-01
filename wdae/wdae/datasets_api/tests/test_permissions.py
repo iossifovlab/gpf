@@ -163,7 +163,7 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     assert dataset2_wrapper is not None
     assert dataset2_wrapper.genotype_data.is_group
 
-    ds_config = Box(dataset1_wrapper.genotype_data.config.to_dict())
+    ds_config = Box(dataset1_wrapper.genotype_data.config)
     ds_config.studies = ("dataset_1", "dataset_2")
     ds_config.id = "big_dataset"
 
@@ -174,7 +174,7 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     assert dataset is not None
     assert dataset.study_id == "big_dataset"
 
-    dataset_wrapper = WDAEStudy(dataset, None)  # type: ignore
+    dataset_wrapper = WDAEStudy(dataset, None)
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 

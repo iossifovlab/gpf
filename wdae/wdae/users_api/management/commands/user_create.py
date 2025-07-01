@@ -8,7 +8,7 @@ from .import_base import ImportUsersBase
 class Command(BaseCommand, ImportUsersBase):
     help = "Create new user"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser) -> None:  # type: ignore
         parser.add_argument(
             "-g",
             action="store",
@@ -37,7 +37,7 @@ class Command(BaseCommand, ImportUsersBase):
 
         parser.add_argument("email", help="The emails of the new user")
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:  # type: ignore
         UserModel = get_user_model()
         if UserModel.objects.filter(email=options["email"]).exists():
             raise CommandError("User exists")

@@ -87,7 +87,7 @@ class DatasetView(QueryBaseView):
     """
 
     def _collect_datasets_summary(
-        self, user: User, *, studies_only=False,
+        self, user: User, *, studies_only: bool = False,
     ) -> list[dict[str, Any]]:
         datasets: list[WDAEStudy] = list(filter(None, [
             self.gpf_instance.get_wdae_wrapper(data_id)
@@ -131,8 +131,7 @@ class DatasetView(QueryBaseView):
 
     def _collect_single_dataset(
         self, user: User, dataset: WDAEStudy,
-    ) -> dict | None:
-
+    ) -> dict:
         if dataset.is_genotype:
             person_set_collection_configs = {
                 psc.id: psc.domain_json()
@@ -308,10 +307,10 @@ class BaseDatasetPermissionsView(QueryBaseView):
                 groups__name=group.name,
             ).all()
             for user in users:
+                user = cast(WdaeUser, user)  # type: ignore
                 if user.email not in users_found:
-                    wdaeuser = cast(WdaeUser, user)
                     users_list += [
-                        {"name": wdaeuser.name, "email": wdaeuser.email},
+                        {"name": user.name, "email": user.email},
                     ]
                     users_found.add(user.email)
         users_list = sorted(users_list, key=itemgetter("email"))

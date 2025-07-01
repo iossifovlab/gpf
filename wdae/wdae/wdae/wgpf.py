@@ -197,9 +197,9 @@ def cli(argv: list[str] | None = None) -> None:
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.wgpf_settings")
     if args.verbose == 1:
-        settings.LOGGING["handlers"]["console"]["level"] = logging.INFO
+        settings.LOGGING["handlers"]["console"]["level"] = logging.INFO  # type: ignore
     elif args.verbose >= 2:
-        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG
+        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG  # type: ignore
     logging.config.dictConfig(settings.LOGGING)
 
     django.setup()

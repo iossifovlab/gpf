@@ -37,7 +37,8 @@ class QueryStateLoadView(views.APIView):
     """Query state load view."""
     def post(self, request: Request) -> Response:
         """Get query state"""
-        query_state = get_object_or_404(QueryState, uuid=request.data["uuid"])
+        request_uuid: str = request.data["uuid"]  # pyright: ignore
+        query_state = get_object_or_404(QueryState, uuid=request_uuid)
 
         return Response(
             {"data": json.loads(query_state.data), "page": query_state.page},
@@ -54,7 +55,8 @@ class QueryStateDeleteView(views.APIView):
 
         stored_queries = UserQuery.objects.filter(user=request.user)
         for user_stored_query in stored_queries:
-            if str(user_stored_query.query.uuid) == request.data["uuid"]:
+            request_uuid: str = request.data["uuid"]  # pyright: ignore
+            if str(user_stored_query.query.uuid) == request_uuid:
                 user_stored_query.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
 

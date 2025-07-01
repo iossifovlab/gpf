@@ -60,17 +60,13 @@ class UserQueryCollectView(views.APIView):
 
         return Response(
             {
-                "queries": list(
-                    map(
-                        lambda q: {
-                            "query_uuid": q.query.uuid,
-                            "name": q.name,
-                            "description": q.description,
-                            "page": q.query.page,
-                        },
-                        stored_queries,
-                    ),
-                ),
+                "queries": [
+                    {"query_uuid": q.query.uuid,
+                     "name": q.name,
+                     "description": q.description,
+                     "page": q.query.page}
+                    for q in stored_queries
+                ],
             },
             status=status.HTTP_200_OK,
         )
