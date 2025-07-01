@@ -20,7 +20,7 @@ from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant
-from matplotlib.dviread import Box
+from box import Box
 
 logger = logging.getLogger(__name__)
 
@@ -204,8 +204,8 @@ class WDAEAbstractStudy:
         # later
         return self.genotype_data.person_set_collections
 
+    @staticmethod
     def make_config(
-        self,
         genotype_data: GenotypeData | None,
         phenotype_data: PhenotypeData | None,
     ) -> dict[str, Any]:
@@ -213,9 +213,9 @@ class WDAEAbstractStudy:
         config: dict[str, Any] = {}
         if genotype_data:
             if isinstance(genotype_data.config, Box):
-                config = genotype_data.config.to_dict()  # type: ignore
+                config = genotype_data.config.to_dict()
             else:
-                config = cast(dict[str, Any], genotype_data.config)
+                config = cast(dict[str, Any], genotype_data.config.to_dict())
         elif phenotype_data:
             config["id"] = phenotype_data.pheno_id
             config["name"] = phenotype_data.name
@@ -261,12 +261,13 @@ class WDAEAbstractStudy:
             genotype_browser_config.get("family_filters") or None
 
         # GENE SCORES
-        if genotype_browser_config.column_groups and \
-                "gene_scores" in genotype_browser_config.column_groups:
+        if genotype_browser_config["column_groups"] and \
+                "gene_scores" in genotype_browser_config["column_groups"]:
             self.gene_score_column_sources = [
-                genotype_browser_config.columns.genotype[slot].source
+                genotype_browser_config["columns"]["genotype"][slot]["source"]
                 for slot in (
-                    genotype_browser_config.column_groups.gene_scores.columns
+                    genotype_browser_config[
+                        "column_groups"]["gene_scores"]["columns"]
                     or []
                 )
             ]
@@ -274,22 +275,22 @@ class WDAEAbstractStudy:
             self.gene_score_column_sources = []
 
         # PREVIEW AND DOWNLOAD COLUMNS
-        self.columns = genotype_browser_config.columns
-        self.column_groups = genotype_browser_config.column_groups
+        self.columns = genotype_browser_config["columns"]
+        self.column_groups = genotype_browser_config["column_groups"]
         self._validate_column_groups()
-        self.preview_columns = genotype_browser_config.preview_columns
-        if genotype_browser_config.preview_columns_ext:
+        self.preview_columns = genotype_browser_config["preview_columns"]
+        if genotype_browser_config.get("preview_columns_ext"):
             self.preview_columns.extend(
-                genotype_browser_config.preview_columns_ext)
-        self.download_columns = genotype_browser_config.download_columns
-        if genotype_browser_config.download_columns_ext:
+                genotype_browser_config["preview_columns_ext"])
+        self.download_columns = genotype_browser_config["download_columns"]
+        if genotype_browser_config.get("download_columns_ext"):
             self.download_columns.extend(
-                genotype_browser_config.download_columns_ext)
+                genotype_browser_config["download_columns_ext"])
 
         self.summary_preview_columns = \
-            genotype_browser_config.summary_preview_columns
+            genotype_browser_config["summary_preview_columns"]
         self.summary_download_columns = \
-            genotype_browser_config.summary_download_columns
+            genotype_browser_config["summary_download_columns"]
 
     def _validate_column_groups(self) -> bool:
         genotype_cols = self.columns.get("genotype") or []
@@ -523,14 +524,14 @@ class WDAEStudy(WDAEAbstractStudy):
                 "has_person_pheno_filters"] = True
 
         table_columns = []
-        for column in config["genotype_browser"].preview_columns:
+        for column in config["genotype_browser"]["preview_columns"]:
             logger.info(
                 "processing preview column %s for study %s",
                 column,
                 config["id"],
             )
 
-            if column in config["genotype_browser"].column_groups:
+            if column in config["genotype_browser"]["column_groups"]:
                 new_col = dict(
                     config["genotype_browser"]["column_groups"][column],
                 )
@@ -565,21 +566,21 @@ class WDAEStudy(WDAEAbstractStudy):
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = \
             config["enrichment"]["enabled"] or result["has_denovo"]
-        result["common_report"] = config["common_report"].to_dict()
-        del result["common_report"]["file_path"]
+        result["common_report"] = config["common_report"]
+        result["common_report"].pop("file_path", None)
         result["person_set_collections"] = person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
-        result["enrichment"] = config["enrichment"].to_dict()
+        result["enrichment"] = config["enrichment"]
         if "background" in result["enrichment"]:
             if "coding_len_background_model" in \
                     result["enrichment"]["background"]:
-                del result["enrichment"]["background"][
-                    "coding_len_background_model"]["file"]
+                result["enrichment"]["background"][
+                    "coding_len_background_model"].pop("file", None)
             if "samocha_background_model" in \
                     result["enrichment"]["background"]:
-                del result["enrichment"]["background"][
-                    "samocha_background_model"]["file"]
+                result["enrichment"]["background"][
+                    "samocha_background_model"].pop("file", None)
 
         result["study_names"] = None
         if result["studies"] is not None:
