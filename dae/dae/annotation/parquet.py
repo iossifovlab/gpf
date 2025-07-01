@@ -6,13 +6,12 @@ import yaml
 
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_config import (
-    RawAnnotatorsConfig,
     RawPipelineConfig,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
-    ReannotationPipeline,
 )
+from dae.annotation.format_handlers import ParquetFormat
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.parquet.parquet_writer import (
@@ -22,7 +21,6 @@ from dae.parquet.parquet_writer import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
@@ -66,65 +64,6 @@ def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
     )
 
 
-def annotate_parquet(
-    input_layout: Schema2DatasetLayout,
-    output_dir: str,
-    pipeline_config: RawAnnotatorsConfig,
-    region: str,
-    grr_definition: dict,
-    bucket_idx: int,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    full_reannotation: bool,  # noqa: FBT001
-) -> None:
-    """Run annotation over a given directory of Parquet files."""
-    loader = ParquetLoader(input_layout)
-    pipeline = AnnotationTool.produce_annotation_pipeline(
-        pipeline_config,
-        loader.meta["annotation_pipeline"] if loader.has_annotation else None,
-        grr_definition,
-        allow_repeated_attributes=allow_repeated_attributes,
-        full_reannotation=full_reannotation,
-    )
-
-    writer = VariantsParquetWriterDeprecated(
-        output_dir, pipeline,
-        loader.partition_descriptor,
-        bucket_index=bucket_idx,
-    )
-
-    if isinstance(pipeline, ReannotationPipeline):
-        internal_attributes = [
-            attribute.name
-            for annotator in (pipeline.annotators_new
-                              | pipeline.annotators_rerun)
-            for attribute in annotator.attributes
-            if attribute.internal
-        ]
-    else:
-        internal_attributes = [
-            attribute.name
-            for attribute in pipeline.get_attributes()
-            if attribute.internal
-        ]
-
-    region_obj = Region.from_str(region)
-    for variant in loader.fetch_summary_variants(region=region_obj):
-        for allele in variant.alt_alleles:
-            if isinstance(pipeline, ReannotationPipeline):
-                for attr in pipeline.attributes_deleted:
-                    del allele.attributes[attr]
-                result = pipeline.annotate(allele.get_annotatable(),
-                                           allele.attributes)
-            else:
-                result = pipeline.annotate(allele.get_annotatable())
-            for attr in internal_attributes:
-                del result[attr]
-            allele.update_attributes(result)
-        writer.write_summary_variant(variant)
-
-    writer.close()
-
-
 def produce_regions(
     target_region: str | None,
     region_size: int,
@@ -155,9 +94,10 @@ def produce_schema2_annotation_tasks(
     raw_pipeline: RawPipelineConfig,
     grr: GenomicResourceRepo,
     region_size: int,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    target_region: str | None = None,
+    work_dir: str,
     *,
+    target_region: str | None = None,
+    allow_repeated_attributes: bool = False,
     full_reannotation: bool = False,
 ) -> list[Task]:
     """Produce TaskGraph tasks for Parquet file annotation."""
@@ -173,16 +113,32 @@ def produce_schema2_annotation_tasks(
         contig_lens[contig] = genome.get_chrom_length(contig)
 
     regions = produce_regions(target_region, region_size, contig_lens)
+    variants_blob_serializer = loader.meta.get(
+        "variants_blob_serializer",
+        "json",
+    )
 
     tasks = []
     for idx, region in enumerate(regions):
+        handler = ParquetFormat(
+            raw_pipeline,
+            loader.meta["annotation_pipeline"]
+                if loader.has_annotation else None,
+            {"allow_repeated_attributes": allow_repeated_attributes,
+             "full_reannotation": full_reannotation,
+             "work_dir": work_dir},
+            grr.definition,
+            Region.from_str(region),
+            loader.layout,
+            output_dir,
+            idx,
+            variants_blob_serializer,
+        )
+
         tasks.append(task_graph.create_task(
             f"part_{region}",
-            annotate_parquet,
-            args=[
-                loader.layout, output_dir,
-                raw_pipeline, region, grr.definition,
-                idx, allow_repeated_attributes, full_reannotation],
+            AnnotationTool.annotate,
+            args=[handler, False],
             deps=[],
         ))
     return tasks

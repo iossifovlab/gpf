@@ -83,10 +83,10 @@ class ReannotateInstanceTool:
         study: GenotypeData,
         gpf_instance: GPFInstance,
     ) -> Any:
-        if study.config.genotype_storage is None:
+        if study.config["genotype_storage"] is None:
             genotype_storage_id = None
         else:
-            genotype_storage_id = study.config.genotype_storage.id
+            genotype_storage_id = study.config["genotype_storage"]["id"]
 
         if genotype_storage_id is None:
             genotype_storage = \
@@ -108,7 +108,7 @@ class ReannotateInstanceTool:
         assert not study.is_group
         study = cast(GenotypeDataStudy, study)
         storage = gpf_instance.genotype_storages.get_genotype_storage(
-            study.config.genotype_storage.id,
+            study.config["genotype_storage"]["id"],
         )
         backend = study.backend
         if storage.storage_type == "duckdb_parquet":
@@ -192,9 +192,10 @@ class ReannotateInstanceTool:
             study_dir = self._get_parquet_dir(study, self.gpf_instance)
             graph = Schema2ImportStorage.generate_reannotate_task_graph(
                 self.gpf_instance, study_dir,
-                self.args.region_size, self.args.allow_repeated_attributes,
+                self.args.region_size,
+                pipeline_work_dir,
+                allow_repeated_attributes=self.args.allow_repeated_attributes,
                 full_reannotation=self.args.full_reannotation,
-                work_dir=pipeline_work_dir,
             )
             kwargs = {**vars(self.args),
                       "task_status_dir": task_status_dir,
