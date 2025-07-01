@@ -90,7 +90,6 @@ class WGPFInstance(GPFInstance):
         dae_config_path: pathlib.Path,
         **kwargs: dict[str, Any],
     ) -> None:
-        self._remote_study_db: None = None
         self._study_wrappers: dict[str, WDAEStudy] = {}
         self._gp_configuration: dict[str, Any] | None = None
         self.extensions: dict[str, GPFExtensionBase] = {}
@@ -239,12 +238,6 @@ class WGPFInstance(GPFInstance):
         return [dataset_id for dataset_id
                 in self.visible_datasets
                 if dataset_id in self.get_available_data_ids()]
-
-    @property
-    def remote_studies(self) -> list[str]:
-        if self._remote_study_db is None:
-            return []
-        return list(self._remote_study_db.get_genotype_data_ids())
 
     def _gp_find_category_section(
         self, configuration: dict[str, Any], category: str,
