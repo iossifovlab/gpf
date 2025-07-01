@@ -4,6 +4,7 @@ import csv
 import os
 import select
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, TextIO, cast
 
@@ -46,23 +47,25 @@ class DemoAnnotatorAdapter(DockerAnnotator):
         }
 
     def _do_annotate(
-        self, _annotatable: Annotatable | None,
-        _context: dict[str, Any],
+        self,
+        annotatable: Annotatable | None,
+        context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
             "External annotator supports only batch mode",
         )
 
     def annotate(
-        self, _annotatable: Annotatable | None,
-        _context: dict[str, Any],
+        self,
+        annotatable: Annotatable | None,
+        context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
             "External annotator supports only batch mode",
         )
 
     def prepare_input(
-        self, file: TextIO, annotatables: list[Annotatable | None],
+        self, file: TextIO, annotatables: Sequence[Annotatable | None],
     ) -> None:
         writer = csv.writer(file, delimiter="\t")
         for annotatable in annotatables:
@@ -80,7 +83,8 @@ class DemoAnnotatorAdapter(DockerAnnotator):
             contexts[idx]["annotatable_length"] = int(row[-1])
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self,
+        annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
@@ -123,7 +127,8 @@ class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
     """Annotation pipeline adapter for annotate_length using streams."""
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self,
+        annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
