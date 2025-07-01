@@ -7,6 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 import pytest_mock
+from dae.parquet.schema2 import merge_parquet
 from dae.parquet.schema2.merge_parquet import merge_parquet_directory
 from dae.utils import fs_utils
 
@@ -72,7 +73,8 @@ def multi_parquet_dir(tmp_path: pathlib.Path) -> pathlib.Path:
     for i in range(0, len(full_data), 2):
         for j in (0, 1):
             table = pa.table(full_data.iloc[i + j:i + j + 1])
-            in_file = str(tmp_path / f"p{i}_{j}.parquet")
+            (tmp_path / f"d{i}" / f"d{j}").mkdir(parents=True, exist_ok=True)
+            in_file = str(tmp_path / f"d{i}" / f"d{j}" / f"p{i}_{j}.parquet")
             writer = pq.ParquetWriter(
                 in_file,
                 table.schema,
@@ -117,7 +119,7 @@ def test_merge_multi_parquets_randomized(
     # Mock the sorted function to return a randomized order
 
     def randomized_glob() -> list[str]:
-        files = fs_utils.glob(str(multi_parquet_dir / "*.parquet"))
+        files = fs_utils.glob(str(multi_parquet_dir / "**/*.parquet"))
         return sorted(files, key=lambda _: random.random())  # noqa: S311
 
     mocker.patch(
@@ -135,3 +137,34 @@ def test_merge_multi_parquets_randomized(
     assert len(data) == 8
     assert data.value.to_numpy().tolist() == list(range(8))
     assert data.label.to_numpy().tolist() == [f"l0{i}" for i in range(8)]
+
+
+def test_merge_parquet_directory_no_files(tmp_path: pathlib.Path) -> None:
+    """Test merging an empty directory."""
+    out_file = str(tmp_path / "merged.parquet")
+    merge_parquet_directory(tmp_path, out_file)
+
+    assert not pathlib.Path(out_file).exists()
+
+
+def test_merge_parquet_directory_with_output_in_input(
+    parquet_dir: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    """Test merging when output file is already in the input directory."""
+    out_file = str(parquet_dir / "merged.parquet")
+    # Create an empty output file
+    pathlib.Path(out_file).touch()
+    # Spy on the merge_parquets function to check how it is called
+    spy = mocker.spy(merge_parquet, "merge_parquets")
+
+    merge_parquet_directory(parquet_dir, out_file)
+
+    merged = pq.ParquetFile(out_file)
+    assert merged.num_row_groups == 1
+
+    data = merged.read().to_pandas()
+    assert len(data) == 6
+
+    assert spy.call_count == 1
+    assert not any("merged_parquet" in fn for fn in spy.call_args[0][0])

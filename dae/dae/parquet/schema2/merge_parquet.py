@@ -13,7 +13,7 @@ def _collect_input_parquet_files(
     parquets_dir: str,
 ) -> list[str]:
     parquet_files = fs_utils.glob(
-        fs_utils.join(parquets_dir, "*.parquet"),
+        fs_utils.join(parquets_dir, "**/*.parquet"),
     )
     return sorted(parquet_files)
 
