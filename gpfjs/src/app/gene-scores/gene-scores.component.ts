@@ -177,14 +177,14 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
   }
 
   public setRangeStart(range: number): void {
-    if (this.isNumberHistogram(this.score.histogram)) {
+    if (range !== this.rangeStart && this.isNumberHistogram(this.score.histogram)) {
       this.rangeStart = range;
       this.updateContinuousHistogramState();
     }
   }
 
   public setRangeEnd(range: number): void {
-    if (this.isNumberHistogram(this.score.histogram)) {
+    if (range !== this.rangeEnd && this.isNumberHistogram(this.score.histogram)) {
       this.rangeEnd = range;
       this.updateContinuousHistogramState();
     }

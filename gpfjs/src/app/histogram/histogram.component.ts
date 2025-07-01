@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 
 import * as d3 from 'd3';
-import { Subject } from 'rxjs';
 
 interface BinBar {
   index: number;
@@ -26,14 +25,8 @@ interface BinBar {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HistogramComponent implements OnInit, OnChanges {
-  private rangeStartSubject = new Subject<number>();
-  private rangeEndSubject = new Subject<number>();
-
-  private internalRangeStart: number;
-  private internalRangeEnd: number;
-
-  private internalRangeStartField: number;
-  private internalRangeEndField: number;
+  public rangeStartDisplay: string;
+  public rangeEndDisplay: string;
 
   @Output() public rangeStartChange = new EventEmitter();
   @Output() public rangeEndChange = new EventEmitter();
@@ -48,6 +41,9 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() public bars: Array<number>;
   @Input() public domainMin: number;
   @Input() public domainMax: number;
+
+  @Input() public rangeStart: number;
+  @Input() public rangeEnd: number;
 
   @Input() public rangesCounts: Array<number>;
 
@@ -80,11 +76,6 @@ export class HistogramComponent implements OnInit, OnChanges {
                      | d3.ScaleLogarithmic<number, number, never>;
 
   public ngOnInit(): void {
-    this.rangeStartSubject.subscribe((start) => this.rangeStartChange.emit(start));
-    this.rangeEndSubject.subscribe((end) => this.rangeEndChange.emit(end));
-    this.rangeStartSubject.next(this.rangeStart !== null ? this.rangeStart : this.minValue);
-    this.rangeEndSubject.next(this.rangeEnd !== null ? this.rangeEnd : this.maxValue);
-
     if (!this.isInteractive) {
       this.rangeStart = this.bins[0];
       this.rangeEnd = this.bins[this.bins.length - 1];
@@ -114,6 +105,8 @@ export class HistogramComponent implements OnInit, OnChanges {
         this.rangeEnd = null;
       }
       this.resetRange = true;
+      this.rangeStartDisplay = this.minValue.toString();
+      this.rangeEndDisplay = this.maxValue.toString();
     }
 
     if ('rangesCounts' in changes) {
@@ -121,6 +114,25 @@ export class HistogramComponent implements OnInit, OnChanges {
         this.beforeRangeText = this.formatEstimateText(this.rangesCounts[0], false);
         this.insideRangeText = this.formatEstimateText(this.rangesCounts[1], false);
         this.afterRangeText = this.formatEstimateText(this.rangesCounts[2], false);
+      }
+    }
+    if ('rangeStart' in changes) {
+      if (this.rangeStart === null) {
+        this.rangeStart = this.bins[0];
+      }
+
+      if (this.rangeStartDisplay !== '') {
+        this.rangeStartDisplay = this.transform(this.rangeStart).toString();
+      }
+    }
+
+    if ('rangeEnd' in changes) {
+      if (this.rangeEnd === null) {
+        this.rangeEnd = this.bins[this.bins.length - 1];
+      }
+
+      if (this.rangeEndDisplay !== '') {
+        this.rangeEndDisplay = this.transform(this.rangeEnd).toString();
       }
     }
   }
@@ -299,74 +311,48 @@ export class HistogramComponent implements OnInit, OnChanges {
       ).style('font-size', '12px');
   }
 
-  @Input()
-  public set rangeStart(rangeStart) {
-    if (rangeStart !== this.internalRangeStart) {
-      this.setRangeStart(rangeStart);
-      this.internalRangeStartField = Number(this.transform(this.internalRangeStart));
-    }
-  }
-
-  public get rangeStart(): number {
-    return this.internalRangeStart;
-  }
-
-  private setRangeStart(rangeStart: number): void {
-    if (rangeStart === null) {
-      this.internalRangeStart = this.bins[0];
+  private setRangeStart(newRangeStart: number): void {
+    if (newRangeStart === null) {
+      this.rangeStart = this.bins[0];
+      this.rangeStartDisplay = '';
+      this.rangeStartChange.emit(this.minValue);
     } else {
-      this.internalRangeStart = rangeStart;
+      this.rangeStart = newRangeStart;
+      this.rangeStartDisplay = this.transform(this.rangeStart).toString();
+      this.rangeStartChange.emit(this.rangeStart);
     }
     this.onRangeChange();
-    this.rangeStartSubject.next(this.internalRangeStart);
   }
 
-  @Input()
-  public set rangeEnd(rangeEnd) {
-    if (rangeEnd !== this.internalRangeEnd) {
-      this.setRangeEnd(rangeEnd);
-      this.internalRangeEndField = Number(this.transform(this.internalRangeEnd));
-    }
-  }
-
-  public get rangeEnd(): number {
-    return this.internalRangeEnd;
-  }
-
-  private setRangeEnd(rangeEnd: number): void {
-    if (rangeEnd === null) {
-      this.internalRangeEnd = this.bins[this.bins.length - 1];
+  private setRangeEnd(newRangeEnd: number): void {
+    if (newRangeEnd === null) {
+      this.rangeEnd = this.bins[this.bins.length - 1];
+      this.rangeEndDisplay = '';
+      this.rangeEndChange.emit(this.maxValue);
     } else {
-      this.internalRangeEnd = rangeEnd;
+      this.rangeEnd = newRangeEnd;
+      this.rangeEndDisplay = this.transform(this.rangeEnd).toString();
+      this.rangeEndChange.emit(this.rangeEnd);
     }
     this.onRangeChange();
-    this.rangeEndSubject.next(this.internalRangeEnd);
   }
 
-  public set rangeStartWithoutNull(rangeStart: string) {
+  public setRangeStartFromInput(rangeStart: string): void {
     const rangeStartFloat = parseFloat(rangeStart);
     if (!isNaN(rangeStartFloat)) {
-      this.setRangeStart(parseFloat(rangeStart));
+      this.setRangeStart(rangeStartFloat);
     } else {
       this.setRangeStart(null);
     }
   }
 
-  public get rangeStartWithoutNull(): string {
-    return this.internalRangeStartField.toString();
-  }
-
-  public set rangeEndWithoutNull(rangeEnd: string) {
+  public setRangeEndFromInput(rangeEnd: string): void {
     const rangeEndFloat = parseFloat(rangeEnd);
     if (!isNaN(rangeEndFloat)) {
-      this.setRangeEnd(parseFloat(rangeEnd));
+      this.setRangeEnd(rangeEndFloat);
     } else {
       this.setRangeEnd(null);
     }
-  }
-
-  public get rangeEndWithoutNull(): string {
-    return this.internalRangeEndField.toString();
   }
 
   public get minValue(): number {
@@ -397,7 +383,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     if (index < 0 || index > this.selectedEndIndex) {
       return;
     }
-    this.rangeStart = this.bins[index];
+    this.setRangeStart(this.bins[index]);
   }
 
   public get selectedStartIndex(): number {
@@ -413,7 +399,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     if (index < this.selectedStartIndex || index >= this.bars.length - 1) {
       return;
     }
-    this.rangeEnd = this.bins[index + 1];
+    this.setRangeEnd(this.bins[index + 1]);
   }
 
   public get selectedEndIndex(): number {
@@ -474,14 +460,14 @@ export class HistogramComponent implements OnInit, OnChanges {
     return `${pos} ${this.width} ${this.height}`;
   }
 
-  private transform(value: number): string {
+  private transform(value: number): number {
     if (!value) {
-      return '0';
+      return 0;
     }
     if (value < 1e-4) {
-      return value.toExponential(2);
+      return Number(value.toExponential(2));
     } else {
-      return value.toFixed(3);
+      return Number(value.toFixed(3));
     }
   }
 

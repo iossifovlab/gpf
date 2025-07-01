@@ -233,8 +233,8 @@ describe('HistogramComponent', () => {
     component.ngOnInit();
     component.selectedStartIndex = 1;
 
-    component.rangeStart = 2;
-    expect(component.rangeStartWithoutNull).toBe('2');
+    expect(component.rangeStart).toBe(2);
+    expect(component.rangeStartDisplay).toBe('2');
     expect(component.beforeRangeText).toBe('~9 (16.36%)');
     expect(rangeStartEmitSpy).toHaveBeenCalledWith(2);
   });
@@ -255,8 +255,8 @@ describe('HistogramComponent', () => {
     component.ngOnInit();
     component.selectedEndIndex = 2;
 
-    component.rangeEnd = 4;
-    expect(component.rangeEndWithoutNull).toBe('4');
+    expect(component.rangeEnd).toBe(4);
+    expect(component.rangeEndDisplay).toBe('4');
     expect(component.afterRangeText).toBe('~25 (45.45%)');
     expect(rangeEndEmitSpy).toHaveBeenCalledWith(4);
   });
@@ -276,11 +276,59 @@ describe('HistogramComponent', () => {
 
     component.ngOnInit();
 
-    component.rangeStart = null;
-    expect(component.rangeStartWithoutNull).toBe('1');
+    component.setRangeStartFromInput(null);
+    expect(component.rangeStart).toBe(1);
+    expect(component.rangeStartDisplay).toBe('');
     expect(component.beforeRangeText).toBe('~0 (0.00%)');
     expect(rangeStartEmitSpy).toHaveBeenCalledWith(1);
   });
+
+  it('should set range start to first bin when parent set it to null', () => {
+    const rangeStartEmitSpy = jest.spyOn(component.rangeStartChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const rangeStartChange = new SimpleChange(component.rangeStart, null, true);
+    component.rangeStart = null;
+    const changes = {bins: binsChange, bars: barsChange, rangeStart: rangeStartChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    expect(component.rangeStart).toBe(1);
+    expect(component.rangeStartDisplay).toBe('1');
+    expect(rangeStartEmitSpy).not.toHaveBeenCalledWith();
+  });
+
+  it('should set range end to last bin when parent set it to null', () => {
+    const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
+
+    // trigger redrawHistogram() to set sum of bars
+    const bins = [1, 2, 3, 4, 5];
+    const bars = [9, 10, 11, 12, 13];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const rangeEndChange = new SimpleChange(component.rangeEnd, null, true);
+    component.rangeEnd = null;
+    const changes = {bins: binsChange, bars: barsChange, rangeEnd: rangeEndChange};
+
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.ngOnInit();
+
+    expect(component.rangeEnd).toBe(5);
+    expect(component.rangeEndDisplay).toBe('5');
+    expect(rangeEndEmitSpy).not.toHaveBeenCalledWith();
+  });
+
 
   it('should set last bin as range end when range end is set to null', () => {
     const rangeEndEmitSpy = jest.spyOn(component.rangeEndChange, 'emit');
@@ -297,8 +345,9 @@ describe('HistogramComponent', () => {
 
     component.ngOnInit();
 
-    component.rangeEnd = null;
-    expect(component.rangeEndWithoutNull).toBe('5');
+    component.setRangeEndFromInput(null);
+    expect(component.rangeEnd).toBe(5);
+    expect(component.rangeEndDisplay).toBe('');
     expect(component.afterRangeText).toBe('~13 (23.64%)');
     expect(rangeEndEmitSpy).toHaveBeenCalledWith(5);
   });
@@ -367,8 +416,9 @@ describe('HistogramComponent', () => {
     const changes = {bins: binsChange, bars: barsChange};
     component.ngOnChanges(changes as SimpleChanges);
 
-    component.rangeStartWithoutNull = '2';
-    expect(component.rangeStartWithoutNull).toBe('2');
+    component.setRangeStartFromInput('2');
+    expect(component.rangeStart).toBe(2);
+    expect(component.rangeStartDisplay).toBe('2');
     expect(component.beforeRangeText).toBe('~9 (16.36%)');
   });
 
@@ -388,8 +438,9 @@ describe('HistogramComponent', () => {
     component.rangeStart = null;
     component.ngOnInit();
 
-    component.rangeStartWithoutNull = 'random text';
-    expect(component.rangeStartWithoutNull).toBe('1');
+    component.setRangeStartFromInput('random text');
+    expect(component.rangeStart).toBe(1);
+    expect(component.rangeStartDisplay).toBe('');
     expect(component.beforeRangeText).toBe('~0 (0.00%)');
     expect(rangeStartEmitSpy).toHaveBeenCalledWith(1);
   });
@@ -405,8 +456,9 @@ describe('HistogramComponent', () => {
     const changes = {bins: binsChange, bars: barsChange};
     component.ngOnChanges(changes as SimpleChanges);
 
-    component.rangeEndWithoutNull = '4';
-    expect(component.rangeEndWithoutNull).toBe('4');
+    component.setRangeEndFromInput('4');
+    expect(component.rangeEnd).toBe(4);
+    expect(component.rangeEndDisplay).toBe('4');
     expect(component.afterRangeText).toBe('~25 (45.45%)');
   });
 
@@ -426,8 +478,9 @@ describe('HistogramComponent', () => {
     component.rangeEnd = null;
     component.ngOnInit();
 
-    component.rangeEndWithoutNull = 'random text';
-    expect(component.rangeEndWithoutNull).toBe('5');
+    component.setRangeEndFromInput('random text');
+    expect(component.rangeEnd).toBe(5);
+    expect(component.rangeEndDisplay).toBe('');
     expect(component.afterRangeText).toBe('~13 (23.64%)');
     expect(rangeEndEmitSpy).toHaveBeenCalledWith(5);
   });
@@ -634,6 +687,7 @@ describe('HistogramComponent', () => {
     component.rangeStart = null;
     component.ngOnInit();
 
+    component.setRangeStartFromInput(null);
     expect(component.minValue).toBe(10);
     expect(rangeStartEmitSpy).toHaveBeenLastCalledWith(10);
   });
@@ -654,6 +708,7 @@ describe('HistogramComponent', () => {
     component.rangeEnd = null;
     component.ngOnInit();
 
+    component.setRangeEndFromInput(null);
     expect(component.maxValue).toBe(19);
     expect(rangeEndEmitSpy).toHaveBeenLastCalledWith(19);
   });
