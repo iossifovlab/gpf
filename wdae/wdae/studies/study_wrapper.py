@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import logging
 import time
 from abc import abstractmethod
@@ -417,7 +418,7 @@ class WDAEStudy(WDAEAbstractStudy):
         genotype_data: GenotypeData,
     ) -> dict[str, Any]:
         """Prepare response for all genotype datasets."""
-        config = genotype_data.config
+        config = copy.deepcopy(genotype_data.config)
         keys = [
             "id",
             "name",
@@ -458,7 +459,7 @@ class WDAEStudy(WDAEAbstractStudy):
         person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
-        config = genotype_data.config
+        config = copy.deepcopy(genotype_data.config)
         keys = [
             "id",
             "name",
@@ -472,7 +473,7 @@ class WDAEStudy(WDAEAbstractStudy):
             "description_editable",
         ]
         result = {
-            key: genotype_data.config.get(key, None) for key in keys
+            key: config.get(key, None) for key in keys
         }
         result["has_denovo"] = genotype_data.has_denovo
         result["has_transmitted"] = genotype_data.has_transmitted
