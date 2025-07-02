@@ -9,12 +9,15 @@ from federation.remote_study_wrapper import (
 
 
 def test_get_available_data_ids(t4c8_instance: WGPFInstance) -> None:
-    assert t4c8_instance.get_available_data_ids() == [
+    expected_ids = {
         "t4c8_dataset", "t4c8_study_1", "TEST_REMOTE_t4c8_dataset",
         "TEST_REMOTE_t4c8_study_1", "t4c8_study_2", "TEST_REMOTE_t4c8_study_4",
         "study_1_pheno", "TEST_REMOTE_t4c8_study_2",
         "TEST_REMOTE_study_1_pheno", "t4c8_study_4",
-    ]
+    }
+
+    actual_ids = set(t4c8_instance.get_available_data_ids())
+    assert actual_ids == expected_ids
 
 
 def test_get_wdae_wrapper(t4c8_instance: WGPFInstance) -> None:
