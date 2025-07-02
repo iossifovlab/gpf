@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import logging
 import time
 from abc import abstractmethod
@@ -418,7 +417,7 @@ class WDAEStudy(WDAEAbstractStudy):
         genotype_data: GenotypeData,
     ) -> dict[str, Any]:
         """Prepare response for all genotype datasets."""
-        config = copy.deepcopy(genotype_data.config)
+        config = genotype_data.config.to_dict()
         keys = [
             "id",
             "name",
@@ -459,7 +458,7 @@ class WDAEStudy(WDAEAbstractStudy):
         person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
-        config = copy.deepcopy(genotype_data.config)
+        config = genotype_data.config.to_dict()
         keys = [
             "id",
             "name",
