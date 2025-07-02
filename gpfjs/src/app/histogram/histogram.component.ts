@@ -99,7 +99,6 @@ export class HistogramComponent implements OnInit, OnChanges {
       this.bars = bars;
       d3.select(this.histogramContainer.nativeElement).selectAll('g').remove();
       d3.select(this.histogramContainer.nativeElement).selectAll('rect').remove();
-      this.redrawHistogram();
       if (this.resetRange) {
         this.rangeStart = null;
         this.rangeEnd = null;
@@ -107,6 +106,7 @@ export class HistogramComponent implements OnInit, OnChanges {
       this.resetRange = true;
       this.rangeStartDisplay = this.minValue.toString();
       this.rangeEndDisplay = this.maxValue.toString();
+      this.redrawHistogram();
     }
 
     if ('rangesCounts' in changes) {
@@ -119,6 +119,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     if ('rangeStart' in changes) {
       if (this.rangeStart === null) {
         this.rangeStart = this.bins[0];
+        this.onRangeChange();
       }
 
       if (this.rangeStartDisplay !== '') {
@@ -129,6 +130,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     if ('rangeEnd' in changes) {
       if (this.rangeEnd === null) {
         this.rangeEnd = this.bins[this.bins.length - 1];
+        this.onRangeChange();
       }
 
       if (this.rangeEndDisplay !== '') {
@@ -314,12 +316,8 @@ export class HistogramComponent implements OnInit, OnChanges {
   private setRangeStart(newRangeStart: number): void {
     if (newRangeStart === null) {
       this.rangeStart = this.bins[0];
-      this.rangeStartDisplay = '';
-      this.rangeStartChange.emit(this.minValue);
     } else {
       this.rangeStart = newRangeStart;
-      this.rangeStartDisplay = this.transform(this.rangeStart).toString();
-      this.rangeStartChange.emit(this.rangeStart);
     }
     this.onRangeChange();
   }
@@ -327,12 +325,8 @@ export class HistogramComponent implements OnInit, OnChanges {
   private setRangeEnd(newRangeEnd: number): void {
     if (newRangeEnd === null) {
       this.rangeEnd = this.bins[this.bins.length - 1];
-      this.rangeEndDisplay = '';
-      this.rangeEndChange.emit(this.maxValue);
     } else {
       this.rangeEnd = newRangeEnd;
-      this.rangeEndDisplay = this.transform(this.rangeEnd).toString();
-      this.rangeEndChange.emit(this.rangeEnd);
     }
     this.onRangeChange();
   }
@@ -341,8 +335,12 @@ export class HistogramComponent implements OnInit, OnChanges {
     const rangeStartFloat = parseFloat(rangeStart);
     if (!isNaN(rangeStartFloat)) {
       this.setRangeStart(rangeStartFloat);
+      this.rangeStartDisplay = this.rangeStart.toString();
+      this.rangeStartChange.emit(this.rangeStart);
     } else {
       this.setRangeStart(null);
+      this.rangeStartDisplay = '';
+      this.rangeStartChange.emit(this.minValue);
     }
   }
 
@@ -350,8 +348,12 @@ export class HistogramComponent implements OnInit, OnChanges {
     const rangeEndFloat = parseFloat(rangeEnd);
     if (!isNaN(rangeEndFloat)) {
       this.setRangeEnd(rangeEndFloat);
+      this.rangeEndDisplay = this.rangeEnd.toString();
+      this.rangeEndChange.emit(this.rangeEnd);
     } else {
       this.setRangeEnd(null);
+      this.rangeEndDisplay = '';
+      this.rangeEndChange.emit(this.maxValue);
     }
   }
 
@@ -384,6 +386,8 @@ export class HistogramComponent implements OnInit, OnChanges {
       return;
     }
     this.setRangeStart(this.bins[index]);
+    this.rangeStartDisplay = this.transform(this.rangeStart).toString();
+    this.rangeStartChange.emit(this.rangeStart);
   }
 
   public get selectedStartIndex(): number {
@@ -400,6 +404,8 @@ export class HistogramComponent implements OnInit, OnChanges {
       return;
     }
     this.setRangeEnd(this.bins[index + 1]);
+    this.rangeEndDisplay = this.transform(this.rangeEnd).toString();
+    this.rangeEndChange.emit(this.rangeEnd);
   }
 
   public get selectedEndIndex(): number {
