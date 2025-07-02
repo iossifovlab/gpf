@@ -1,7 +1,6 @@
 import logging
 import os
 import pathlib
-from collections.abc import Generator
 
 import yaml
 from pyarrow import parquet as pq
@@ -26,7 +25,10 @@ from dae.parquet.parquet_writer import (
     save_ped_df_to_parquet,
     serialize_summary_schema,
 )
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.partition_descriptor import (
+    Partition,
+    PartitionDescriptor,
+)
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.merge_parquet import merge_parquet_directory
 from dae.parquet.schema2.processing_pipeline import (
@@ -255,38 +257,17 @@ class Schema2ImportStorage(ImportStorage):
             pipeline.process(regions)
 
     @classmethod
-    def _variant_partitions(
-        cls, project: ImportProject,
-    ) -> Generator[tuple[str, list[tuple[str, str]]], None, None]:
-        part_desc = cls._get_partition_description(project)
-
-        reference_genome = project.get_gpf_instance().reference_genome
-        chromosome_lengths = reference_genome.get_all_chrom_lengths()
-
-        sum_parts, fam_parts = \
-            part_desc.get_variant_partitions(chromosome_lengths)
-        if len(sum_parts) == 0:
-            yield part_desc.partition_directory("summary", []), \
-                [("summary", "single_bucket")]
-        else:
-            for part in sum_parts:
-                yield part_desc.partition_directory("summary", part), part
-        if len(fam_parts) == 0:
-            yield part_desc.partition_directory("family", []), \
-                [("family", "single_bucket")]
-        else:
-            for part in fam_parts:
-                yield part_desc.partition_directory("family", part), part
-
-    @classmethod
     def _merge_parquets(
         cls,
-        project: ImportProject, out_dir: str,
-        partition: list[tuple[str, str]],
+        project: ImportProject, variants_type: str,
+        partition: Partition,
     ) -> None:
-        layout = schema2_project_dataset_layout(project)
-        variants_dir = fs_utils.join(layout.study, out_dir)
         partition_descriptor = cls._get_partition_description(project)
+        layout = schema2_project_dataset_layout(project)
+        out_dir = partition_descriptor.partition_directory(
+                variants_type, partition)
+
+        variants_dir = fs_utils.join(layout.study, out_dir)
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
 
@@ -327,20 +308,35 @@ class Schema2ImportStorage(ImportStorage):
             "sync_parquet_write", lambda: None,
             args=[], deps=bucket_tasks,
         )
-        output_dir_tasks = []
 
-        for output_dir, partition in self._variant_partitions(project):
-            output_dir_tasks.append(graph.create_task(
-                f"merge_parquet_files_{output_dir}", self._merge_parquets,
-                args=[project, output_dir, partition],
+        reference_genome = project.get_gpf_instance().reference_genome
+        chromosome_lengths = reference_genome.get_all_chrom_lengths()
+        part_desc = project.get_partition_descriptor()
+        summary_merge_tasks = [
+            graph.create_task(
+                f"merge_parquet_files_summary_{summary_partition}",
+                self._merge_parquets,
+                args=[project, "summary", summary_partition],
                 deps=[bucket_sync],
-            ))
+            )
+            for summary_partition in part_desc.build_summary_partitions(
+                chromosome_lengths)
+        ]
+        family_merge_tasks = [
+            graph.create_task(
+                f"merge_parquet_files_family_{family_partition}",
+                self._merge_parquets,
+                args=[project, "family", family_partition],
+                deps=[bucket_sync],
+            )
+            for family_partition in part_desc.build_family_partitions(
+                chromosome_lengths)
+        ]
 
-        # dummy task used for running the parquet generation
         all_parquet_task = graph.create_task(
             "all_parquet_tasks", lambda: None,
             args=[],
-            deps=[*output_dir_tasks, bucket_sync],
+            deps=[*summary_merge_tasks, *family_merge_tasks, bucket_sync],
         )
         return [pedigree_task, meta_task, all_parquet_task]
 

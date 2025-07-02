@@ -281,6 +281,16 @@ def test_partition_directory() -> None:
     assert PartitionDescriptor.partition_directory(
         "s3://work", []) == "s3://work"
 
+    assert PartitionDescriptor.partition_directory(
+        "work", Partition(region_bin="1")) == "work/region_bin=1"
+    assert PartitionDescriptor.partition_directory(
+        "s3://work", Partition(region_bin="1")) == "s3://work/region_bin=1"
+
+    assert PartitionDescriptor.partition_directory(
+        "work", Partition()) == "work"
+    assert PartitionDescriptor.partition_directory(
+        "s3://work", Partition()) == "s3://work"
+
 
 @pytest.mark.parametrize("prefix,partition,bucket_index,expected", [
     ("summary", [("region_bin", "1")], 1,
@@ -996,3 +1006,51 @@ def test_partition_equality() -> None:
 
     assert p4 == p5
     assert p4 != p6
+
+
+def test_empty_partition_descritor() -> None:
+    pd = PartitionDescriptor()
+    assert not pd.has_region_bins()
+    assert not pd.has_frequency_bins()
+    assert not pd.has_coding_bins()
+    assert not pd.has_family_bins()
+
+    assert pd.chromosomes == []
+    assert pd.region_length == 0
+    assert pd.integer_region_bins is False
+    assert pd.family_bin_size == 0
+    assert pd.rare_boundary == 0
+    assert pd.coding_effect_types == set()
+
+    content = pd.serialize("yaml")
+    assert content == ""
+
+
+def test_empty_partition_descritor_summary_partitions() -> None:
+    pd = PartitionDescriptor()
+
+    summary_partitions = pd.build_summary_partitions({"chr1": 100, "chr2": 50})
+    assert summary_partitions == [Partition()]
+
+
+def test_empty_partition_descritor_family_partitions() -> None:
+    pd = PartitionDescriptor()
+
+    family_partitions = pd.build_family_partitions({"chr1": 100, "chr2": 50})
+    assert family_partitions == [Partition()]
+
+
+def test_empty_partition_filename() -> None:
+    pd = PartitionDescriptor()
+
+    filename = pd.partition_filename("summary", [], 1)
+    assert filename == "summary_bucket_index_000001.parquet"
+
+    filename = pd.partition_filename("summary", Partition(), 1)
+    assert filename == "summary_bucket_index_000001.parquet"
+
+    filename = pd.partition_filename("merged", [], None)
+    assert filename == "merged.parquet"
+
+    filename = pd.partition_filename("merged", Partition(), None)
+    assert filename == "merged.parquet"

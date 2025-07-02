@@ -11,7 +11,7 @@ def test_get_summary_pq_filepaths_nonpartitioned(
     loader = ParquetLoader.load_from_dir(t4c8_study_nonpartitioned)
     filepaths = next(loader.get_summary_pq_filepaths())
     assert list(map(os.path.basename, filepaths)) == [
-        "merged_summary_single_bucket.parquet",
+        "merged.parquet",
     ]
 
 
