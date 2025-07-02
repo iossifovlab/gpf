@@ -10,6 +10,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
+from dae.query_variants.attribute_queries import AttributeQueryNotSupported
 from dae.query_variants.base_query_variants import QueryVariants
 from dae.query_variants.query_runners import QueryResult
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
@@ -205,7 +206,10 @@ class ImpalaVariants(QueryVariants):
             return None
         assert self.schema is not None
 
-        affected_statuses = None
+        if affected_statuses is not None:
+            raise AttributeQueryNotSupported(
+                "Schema1 does not support affected status queries",
+            )
 
         roles = self.transform_roles_to_single_role_string(
             roles_in_parent, roles_in_child, roles)

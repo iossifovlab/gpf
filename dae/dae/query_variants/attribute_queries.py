@@ -96,6 +96,10 @@ any: "any" "(" list ")"
 QUERY_PARSER = Lark(QUERY_GRAMMAR)
 
 
+class AttributeQueryNotSupported(Exception):
+    pass
+
+
 class SyntaxSugarTransformer(Transformer):
     """Transformer for adapting syntax sugar to regular queries."""
     def all(self, values: list[Tree]) -> Tree | None:
@@ -150,7 +154,7 @@ class QueryCompoundAdditionTransformer(Transformer):
         return f"{str_value}~{self._compound_value}"
 
     def compound(self) -> str:
-        raise ValueError(
+        raise AttributeQueryNotSupported(
             "Attribute queries already containing compounds are "
             "not eligible for compound addition transformation!",
         )
@@ -228,7 +232,7 @@ class AttributeQueryTransformerFunction(AttributeQueryTransformer):
         """Transform compounds into a function that compares two values."""
         assert len(values) == 2
         if self._bitmask_transformer is None:
-            raise ValueError(
+            raise AttributeQueryNotSupported(
                 "This transformer cannot handle compounds since it's"
                 f"initialized to handle only 1 enum type {self._enum_type}!",
             )
@@ -348,7 +352,7 @@ class AttributeQueryTransformerSQL(AttributeQueryTransformer):
         """Convert compounds into a query statement for two enums."""
         assert len(values) == 2
         if self._bitmask_transformer is None:
-            raise ValueError(
+            raise AttributeQueryNotSupported(
                 "This transformer cannot handle compounds since it's"
                 f"initialized to handle only 1 enum type {self._enum_type}!",
             )
