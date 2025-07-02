@@ -3,15 +3,20 @@
     <div class="col-sm-9">
       <div id="select-help-wrapper">
         <div class="select-wrapper">
-          <select class="form-control" [(ngModel)]="selectedGeneScore" [title]="selectedGeneScore.desc" required>
+          <select
+            class="form-control"
+            [ngModel]="selectedGeneScore"
+            (ngModelChange)="setSelectedGeneScore($event)"
+            [title]="selectedGeneScore.desc"
+            required>
             <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
           </select>
           <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
         </div>
         <gpf-helper-modal
           style="height: 32px; margin-left: 4px"
-          [style.visibility]="this.score.help ? 'visible' : 'hidden'"
-          [modalContent]="this.score.help"
+          [style.visibility]="this.selectedGeneScore.help ? 'visible' : 'hidden'"
+          [modalContent]="this.selectedGeneScore.help"
           [isMarkdown]="true"></gpf-helper-modal>
         <div *ngIf="isCategoricalHistogram(selectedGeneScore.histogram)">
           <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
@@ -71,8 +76,8 @@
         [rangesCounts]="rangesCounts | async"
         (rangeStartChange)="setRangeStart($event)"
         (rangeEndChange)="setRangeEnd($event)"
-        [rangeStart]="rangeStart"
-        [rangeEnd]="rangeEnd">
+        [rangeStart]="initialRangeStart"
+        [rangeEnd]="initialRangeEnd">
       </gpf-histogram>
       <gpf-categorical-histogram
         *ngIf="

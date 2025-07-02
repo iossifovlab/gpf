@@ -127,7 +127,7 @@ describe('GeneScoresComponent', () => {
 
   it('should toggle categorical histogram values and save to state', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.score = new GenomicScore('desc', 'help', 'score1', null);
+    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', null);
 
     const values = ['name5', 'name2'];
     component.categoricalValues = ['name1', 'name2', 'name3'];
@@ -141,7 +141,7 @@ describe('GeneScoresComponent', () => {
 
   it('should switch categorical histogram view', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.score = new GenomicScore('desc', 'help', 'score1', null);
+    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', null);
     component.selectedCategoricalHistogramView = 'range selector';
     component.categoricalValues = ['name1', 'name2', 'name3'];
 
@@ -183,10 +183,12 @@ describe('GeneScoresComponent', () => {
       true,
       0
     ));
-    component.selectedCategoricalHistogramView = 'range selector';
-    component.selectedGeneScore = scoreWithValuesOrder;
-    expect(component.selectedCategoricalHistogramView).toBe('range selector');
 
+    component.setSelectedGeneScore(scoreWithValuesOrder);
+    expect(component.selectedCategoricalHistogramView).toBe('range selector');
+  });
+
+  it('should set click selector as default categorical histogram view', () => {
     const scoreWithoutValuesOrder = new GenomicScore('desc', 'help', 'score1', new CategoricalHistogram(
       [
         {name: 'name1', value: 10},
@@ -199,7 +201,7 @@ describe('GeneScoresComponent', () => {
       true,
       0
     ));
-    component.selectedGeneScore = scoreWithoutValuesOrder;
+    component.setSelectedGeneScore(scoreWithoutValuesOrder);
     expect(component.selectedCategoricalHistogramView).toBe('click selector');
   });
 
@@ -211,7 +213,7 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', null, null, true, true),
     );
 
-    component.selectedGeneScore = score;
+    component.setSelectedGeneScore(score);
     expect(component.domainMin).toBe(4);
     expect(component.domainMax).toBe(5);
   });
@@ -224,7 +226,7 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 2, 500, true, true),
     );
 
-    component.selectedGeneScore = score;
+    component.setSelectedGeneScore(score);
     expect(component.domainMin).toBe(2);
     expect(component.domainMax).toBe(500);
   });
@@ -238,7 +240,7 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 2, 500, true, true),
     );
 
-    component.score = score;
+    component.selectedGeneScore = score;
     component.setRangeStart(0);
     component.setRangeEnd(10);
     component.setRangeStart(3);
@@ -262,7 +264,7 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 2, 500, true, true),
     );
 
-    component.score = score;
+    component.selectedGeneScore = score;
     component.setRangeStart(0);
     component.setRangeEnd(10);
     component.setRangeEnd(3);
@@ -280,12 +282,14 @@ describe('GeneScoresComponent', () => {
   it('should show error message when score is missing', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
 
-    component.selectedGeneScore = new GenomicScore(
+    const score = new GenomicScore(
       'empty',
       'no help',
       null,
       new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
     );
+
+    component.setSelectedGeneScore(score);
 
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
       componentId: 'geneScores', errors: ['Empty gene scores are invalid.']
@@ -446,7 +450,8 @@ describe('GeneScoresComponent', () => {
       0
     );
 
-    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score', histogram);
+    const score = new GenomicScore('desc', 'help', 'score', histogram);
+    component.setSelectedGeneScore(score);
 
     const vals: string[] = ['val1', 'val2'];
 
