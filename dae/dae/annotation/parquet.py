@@ -4,14 +4,13 @@ from datetime import datetime
 
 import yaml
 
-from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
-from dae.annotation.format_handlers import ParquetFormat
+from dae.annotation.format_handlers import process_parquet
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.parquet.parquet_writer import (
@@ -113,32 +112,14 @@ def produce_schema2_annotation_tasks(
         contig_lens[contig] = genome.get_chrom_length(contig)
 
     regions = produce_regions(target_region, region_size, contig_lens)
-    variants_blob_serializer = loader.meta.get(
-        "variants_blob_serializer",
-        "json",
-    )
-
     tasks = []
     for idx, region in enumerate(regions):
-        handler = ParquetFormat(
-            raw_pipeline,
-            loader.meta["annotation_pipeline"]
-                if loader.has_annotation else None,
-            {"allow_repeated_attributes": allow_repeated_attributes,
-             "full_reannotation": full_reannotation,
-             "work_dir": work_dir},
-            grr.definition,
-            Region.from_str(region),
-            loader.layout,
-            output_dir,
-            idx,
-            variants_blob_serializer,
-        )
-
         tasks.append(task_graph.create_task(
             f"part_{region}",
-            AnnotationTool.annotate,
-            args=[handler, False],
+            process_parquet,
+            args=[loader.layout, raw_pipeline, grr.definition,
+                  output_dir, idx, work_dir, Region.from_str(region),
+                  allow_repeated_attributes, full_reannotation],
             deps=[],
         ))
     return tasks
