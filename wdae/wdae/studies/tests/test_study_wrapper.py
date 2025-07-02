@@ -51,7 +51,7 @@ def test_genotype_data_config_immutability(
         t4c8_dataset,
         person_set_collection_configs=None,
     )
-    assert description["common_report"]["file_path"] is None
+    assert description["common_report"].get("file_path") is None
     assert (
         "datasets/t4c8_dataset/common_report.json"
     ) in t4c8_dataset.config["common_report"]["file_path"]
