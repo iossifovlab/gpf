@@ -1,6 +1,9 @@
 import logging
 from typing import Any, cast
 
+from dae.enrichment_tool.enrichment_builder import (
+    EnrichmentBuilder,
+)
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
@@ -147,8 +150,10 @@ class EnrichmentTestView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         assert dataset is not None
 
-        builder = self.gpf_instance \
-            .get_enrichment_builder(dataset.genotype_data)
+        builder = EnrichmentBuilder(
+            EnrichmentHelper(self.gpf_instance.grr),
+            dataset.genotype_data,
+        )
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
