@@ -1,5 +1,4 @@
 """Default Django settings for wdae project."""
-# flake8: noqa: F501
 
 import logging
 import os
@@ -102,9 +101,7 @@ else:
     }
 
 
-ALLOWED_HOSTS = [
-    os.environ.get("WDAE_ALLOWED_HOST", "*"),
-]
+ALLOWED_HOSTS = os.environ.get("WDAE_ALLOWED_HOST", "*").split(",")
 
 TIME_ZONE = "America/New_York"
 
