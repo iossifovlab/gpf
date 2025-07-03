@@ -1,7 +1,7 @@
 import argparse
 import logging
 import textwrap
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from box import Box
@@ -31,7 +31,6 @@ class TaskGraphCli:
         default_task_status_dir: str | None = "./.task-progress",
         *,
         use_commands: bool = True,
-        never_cache: bool = False,
     ) -> None:
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")
@@ -80,12 +79,6 @@ class TaskGraphCli:
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error",
         )
-        if not never_cache:
-            executor_group.add_argument(
-                "--no-cache",
-                action="store_true",
-                help="Do not create cache files for tasks",
-            )
         if force_mode == "optional":
             execution_mode_group.add_argument(
                 "--force", "-f", default=False, action="store_true",
@@ -135,9 +128,10 @@ class TaskGraphCli:
 
     @staticmethod
     def process_graph(
-            task_graph: TaskGraph,
-            force_mode: str = "optional",
-            **kwargs: Any) -> bool:
+        task_graph: TaskGraph,
+        force_mode: Literal["optional", "always"] = "optional",
+        **kwargs: Any,
+    ) -> bool:
         """Process task_graph in according with the arguments in args.
 
         Return true if the graph get's successfully processed.
@@ -147,11 +141,11 @@ class TaskGraphCli:
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
-        force = None if force_mode == "always" else args.get("force")
+        force = args.get("force", False)
         task_cache = TaskCache.create(
+            force_mode=force_mode,
             force=force,
             cache_dir=args.get("task_status_dir"),
-            no_cache=args.get("no_cache"),
         )
 
         if args.command is None or args.command == "run":

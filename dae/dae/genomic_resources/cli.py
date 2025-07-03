@@ -225,7 +225,7 @@ def _configure_repo_stats_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always", never_cache=True,
+        parser, use_commands=False, force_mode="always",
     )
 
 
@@ -242,7 +242,7 @@ def _configure_resource_stats_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always", never_cache=True,
+        parser, use_commands=False, force_mode="always",
     )
 
 
@@ -258,7 +258,7 @@ def _configure_repo_repair_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always", never_cache=True,
+        parser, use_commands=False, force_mode="always",
     )
 
 
@@ -274,7 +274,7 @@ def _configure_resource_repair_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always", never_cache=True,
+        parser, use_commands=False, force_mode="always",
     )
 
 
@@ -289,7 +289,7 @@ def _configure_repo_info_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always", never_cache=True,
+        parser, use_commands=False, force_mode="always",
     )
 
 
@@ -304,7 +304,7 @@ def _configure_resource_info_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always", never_cache=True,
+        parser, use_commands=False, force_mode="always",
     )
 
 
@@ -817,7 +817,6 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
-    args.no_cache = True
 
     if args.version:
         print(f"GPF version: {__version__}")

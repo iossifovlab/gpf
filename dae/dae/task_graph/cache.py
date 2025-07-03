@@ -9,7 +9,7 @@ from collections.abc import Generator, Iterator
 from copy import copy
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import fsspec
 
@@ -60,17 +60,14 @@ class TaskCache:
     @staticmethod
     def create(
         *,
-        force: bool | None = None,
+        force: bool = False,
+        force_mode: Literal["optional", "always"] = "optional",
         cache_dir: str | None = None,
-        no_cache: bool = False,
     ) -> TaskCache:
         """Create the appropriate task cache."""
-        if no_cache:
+        if force_mode == "always":
             # the force_mode is set to 'always'
             return NoTaskCache()
-
-        if force is None:
-            force = False
         if cache_dir is None:
             cache_dir = os.getcwd()
         return FileTaskCache(force=force, cache_dir=cache_dir)

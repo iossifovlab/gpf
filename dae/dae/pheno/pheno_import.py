@@ -377,7 +377,6 @@ def import_pheno_data(  # pylint: disable=R0912
         task_graph_args = argparse.Namespace(
             jobs=1,
             force=True,
-            no_cache=True,
             task_status_dir=None,
             dask_cluster_name=None,
             dask_cluster_config_file=None,
@@ -452,7 +451,7 @@ def import_pheno_data(  # pylint: disable=R0912
     task_cache = TaskCache.create(
         force=task_graph_args.force,
         cache_dir=task_graph_args.task_status_dir,
-        no_cache=task_graph_args.no_cache,
+        force_mode="always",
     )
 
     measure_descriptions = load_measure_descriptions(
