@@ -1,4 +1,5 @@
 import logging
+import os
 from collections import OrderedDict
 from collections.abc import Generator, Iterable
 from typing import Any, cast
@@ -27,13 +28,14 @@ class RemotePhenotypeData(PhenotypeData):
     ):  # pylint: disable=super-init-not-called
         self._remote_pheno_id = config["id"]
         self.rest_client = rest_client
-        self._pheno_id = self.rest_client.prefix_remote_identifier(config["id"])
+        self._pheno_id = self.rest_client.prefix_remote_identifier(
+            config["id"])
 
         config["name"] = self.rest_client.prefix_remote_name(
             config.get("name", self._pheno_id))
 
         self._common_report: CommonReport | None = None
-        self._remote_common_report = None
+        self._remote_common_report: dict[str, Any] | None = None
         self._is_group = False
         if config.get("studies"):
             self._is_group = True
@@ -76,7 +78,7 @@ class RemotePhenotypeData(PhenotypeData):
         person_ids: Iterable[str] | None = None,
         family_ids: Iterable[str] | None = None,
         roles: Iterable[Role] | None = None,
-        _default_filter: str = "apply",  # pylint: disable=unused-argument
+        _default_filter: str = "apply",
     ) -> pd.DataFrame:
         """Get values for a list of measures for a list of persons."""
         roles_los: Iterable[str] | None = None
@@ -189,7 +191,8 @@ class RemotePhenotypeData(PhenotypeData):
         """Property to lazily provide the common report."""
         if self._remote_common_report is None:
             self._remote_common_report = self.rest_client.get_common_report(
-                self.remote_study_id, full=True)
+                self._remote_pheno_id, full=True)
+            assert self._remote_common_report is not None
             if "id" in self._remote_common_report:
                 self._common_report = CommonReport(self._remote_common_report)
         return self._common_report
@@ -208,7 +211,13 @@ class RemotePhenotypeData(PhenotypeData):
             self._remote_pheno_id,
         )
         pheno_folder = self._extract_pheno_dir(output["base_image_url"])
+        gpf_prefix = os.environ.get("GPF_PREFIX")
+        if gpf_prefix:
+            gpf_prefix = gpf_prefix.strip("/")
+            gpf_prefix = f"/{gpf_prefix}"
+
         output["base_image_url"] = (
+            f"{gpf_prefix}"
             f"/api/v3/pheno_browser/images/{self.pheno_id}/"
             f"{pheno_folder}/"
         )
