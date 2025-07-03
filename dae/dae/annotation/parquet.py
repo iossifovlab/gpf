@@ -1,18 +1,27 @@
+import logging
 import os
 import pathlib
+from collections.abc import Generator
 from datetime import datetime
+from itertools import starmap
+from typing import Any
 
 import yaml
 
+from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
+    ReannotationPipeline,
 )
-from dae.annotation.format_handlers import process_parquet
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     merge_variants_parquets,
@@ -20,9 +29,13 @@ from dae.parquet.parquet_writer import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
+from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
+from dae.variants.variant import SummaryVariant
+
+logger = logging.getLogger("format_handlers")
 
 
 def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
@@ -221,3 +234,171 @@ def merge_partitioned(
 
 def merge_non_partitioned(output_dir: str) -> None:
     merge_variants_parquets(PartitionDescriptor(), output_dir, [])
+
+
+class ParquetVariantProducer:
+    """Producer for variants from a Parquet dataset."""
+    def __init__(
+        self,
+        input_layout: Schema2DatasetLayout,
+        region: Region | None = None,
+    ):
+        self.input_layout = input_layout
+        self.input_loader = ParquetLoader(self.input_layout)
+        self.region = region
+
+    def __enter__(self) -> "ParquetVariantProducer":
+        return self
+
+    def __exit__(
+        self, exc_type: Any | None, exc_value: Any | None, exc_tb: Any | None,
+    ) -> None:
+        pass
+
+    def filter(
+        self, data: Any | None = None,  # noqa: ARG002
+    ) -> Generator[SummaryVariant, None, None]:
+        assert self.input_loader is not None
+        yield from self.input_loader.fetch_summary_variants(region=self.region)
+
+
+class ParquetVariantConsumer:
+    """Consumer for variants to be written to a Parquet dataset."""
+    def __init__(
+        self,
+        output_dir: str,
+        pipeline: AnnotationPipeline,
+        partition_descriptor: PartitionDescriptor,
+        bucket_idx: int,
+        variants_blob_serializer: str,
+    ):
+        self.writer = VariantsParquetWriter(
+            output_dir,
+            pipeline,
+            partition_descriptor,
+            bucket_index=bucket_idx,
+            variants_blob_serializer=variants_blob_serializer,
+        )
+
+    def __enter__(self) -> "ParquetVariantConsumer":
+        return self
+
+    def __exit__(
+        self, exc_type: Any | None, exc_value: Any | None, exc_tb: Any | None,
+    ) -> None:
+        self.writer.close()
+
+    def filter(self, data: SummaryVariant) -> None:
+        self.writer.write_summary_variant(data)
+
+
+class ParquetVariantToAnnotatable:
+    def filter(
+        self, data: SummaryVariant,
+    ) -> tuple[SummaryVariant, list[tuple[Annotatable, dict]]]:
+        return data, [(allele.get_annotatable(), allele.attributes)
+                      for allele in data.alt_alleles]
+
+
+class ParquetVariantApplyAnnotation:
+    """Filter to apply annotations to Parquet variants."""
+    def __init__(self, pipeline: AnnotationPipeline):
+        self.pipeline = pipeline
+        if isinstance(self.pipeline, ReannotationPipeline):
+            self.internal_attributes = [
+                attribute.name
+                for annotator in (self.pipeline.annotators_new
+                                  | self.pipeline.annotators_rerun)
+                for attribute in annotator.attributes
+                if attribute.internal
+            ]
+        else:
+            self.internal_attributes = [
+                attribute.name
+                for attribute in self.pipeline.get_attributes()
+                if attribute.internal
+            ]
+
+    def filter(self, data: tuple[SummaryVariant, list[dict]]) -> SummaryVariant:
+        """Apply annotations to a Parquet variant."""
+        variant, annotations = data
+        for allele, annotation in zip(variant.alt_alleles, annotations,
+                                      strict=True):
+            if isinstance(self.pipeline, ReannotationPipeline):
+                for attr in self.pipeline.attributes_deleted:
+                    del allele.attributes[attr]
+            for attr in self.internal_attributes:  # type: ignore
+                del annotation[attr]
+            allele.update_attributes(annotation)
+        return variant
+
+
+class AnnotateFilter:
+    """Filter to annotate summary variants using an annotation pipeline."""
+    def __init__(self, pipeline: AnnotationPipeline):
+        self.pipeline = pipeline
+
+    def filter(
+        self,
+        data: tuple[SummaryVariant, list[tuple[Annotatable, dict]]],
+    ) -> tuple[SummaryVariant, list[dict]]:
+        """Annnotate a summary variant."""
+        variant, annotatables_with_context = data
+        annotations = list(starmap(self.pipeline.annotate,
+                                    annotatables_with_context))
+        return variant, annotations
+
+
+def process_parquet(
+    input_layout: Schema2DatasetLayout,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict | None,
+    output_dir: str,
+    bucket_idx: int,
+    work_dir: str,
+    region: Region,
+    allow_repeated_attributes: bool,  # noqa: FBT001
+    full_reannotation: bool,  # noqa: FBT001
+) -> None:
+    """Process a Parquet dataset for annotation."""
+    loader = ParquetLoader(input_layout)
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline_config_old = loader.meta["annotation_pipeline"] \
+                          if loader.has_annotation else None
+    variants_blob_serializer = loader.meta.get(
+        "variants_blob_serializer",
+        "json",
+    )
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+        allow_repeated_attributes=allow_repeated_attributes,
+        work_dir=pathlib.Path(work_dir),
+        config_old_raw=pipeline_config_old,
+        full_reannotation=full_reannotation,
+    )
+    pipeline.open()
+
+    producer = ParquetVariantProducer(loader.layout, region)
+    filters = [
+        ParquetVariantToAnnotatable(),
+        AnnotateFilter(pipeline),
+        ParquetVariantApplyAnnotation(pipeline),
+    ]
+    consumer = ParquetVariantConsumer(
+        output_dir=output_dir,
+        pipeline=pipeline,
+        partition_descriptor=loader.partition_descriptor,
+        bucket_idx=bucket_idx,
+        variants_blob_serializer=variants_blob_serializer,
+    )
+    for data in producer.filter():
+        for p_filter in filters:
+            try:
+                data = p_filter.filter(data)  # type: ignore
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Error during iterative annotation")
+        consumer.filter(data)
+
+    pipeline.close()
+    consumer.writer.close()
