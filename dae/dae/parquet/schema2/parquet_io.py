@@ -8,6 +8,7 @@ from typing import Any, cast
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+from deprecation import deprecated
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
@@ -152,7 +153,10 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter:
+@deprecated(
+    "Use dae.parquet.schema2.variants_parquet_writer.VariantsParquetWriter "
+    "instead")
+class VariantsParquetWriterDeprecated:
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(

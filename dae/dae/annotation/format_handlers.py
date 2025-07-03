@@ -34,7 +34,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.utils.regions import (
     Region,
@@ -566,7 +566,7 @@ class ParquetFormat(AbstractFormat):
         self.bucket_idx = bucket_idx
 
         self.input_loader: ParquetLoader | None = None
-        self.writer: VariantsParquetWriter | None = None
+        self.writer: VariantsParquetWriterDeprecated | None = None
         self.internal_attributes: list[str] | None = None
         self.variants_blob_serializer = variants_blob_serializer
 
@@ -574,7 +574,7 @@ class ParquetFormat(AbstractFormat):
         super().open()
         assert self.pipeline is not None
         self.input_loader = ParquetLoader(self.input_layout)
-        self.writer = VariantsParquetWriter(
+        self.writer = VariantsParquetWriterDeprecated(
             self.output_dir, self.pipeline,
             self.input_loader.partition_descriptor,
             bucket_index=self.bucket_idx,

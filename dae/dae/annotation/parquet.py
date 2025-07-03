@@ -22,7 +22,7 @@ from dae.parquet.parquet_writer import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
@@ -86,7 +86,7 @@ def annotate_parquet(
         full_reannotation=full_reannotation,
     )
 
-    writer = VariantsParquetWriter(
+    writer = VariantsParquetWriterDeprecated(
         output_dir, pipeline,
         loader.partition_descriptor,
         bucket_index=bucket_idx,

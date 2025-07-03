@@ -539,7 +539,8 @@ class ImportProject:
         return res
 
     def _loader_region_bins(
-            self, loader_type: str) -> Generator[Bucket, None, None]:
+        self, loader_type: str,
+    ) -> Generator[Bucket, None, None]:
         # pylint: disable=too-many-locals
         reference_genome = self.get_gpf_instance().reference_genome
 

@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import itertools
+import operator
 import pathlib
 import sys
 import textwrap
@@ -280,6 +282,16 @@ def test_partition_directory() -> None:
         "work", []) == "work"
     assert PartitionDescriptor.partition_directory(
         "s3://work", []) == "s3://work"
+
+    assert PartitionDescriptor.partition_directory(
+        "work", Partition(region_bin="1")) == "work/region_bin=1"
+    assert PartitionDescriptor.partition_directory(
+        "s3://work", Partition(region_bin="1")) == "s3://work/region_bin=1"
+
+    assert PartitionDescriptor.partition_directory(
+        "work", Partition()) == "work"
+    assert PartitionDescriptor.partition_directory(
+        "s3://work", Partition()) == "s3://work"
 
 
 @pytest.mark.parametrize("prefix,partition,bucket_index,expected", [
@@ -825,6 +837,45 @@ def test_build_summary_partitions_region_bins(
     assert result == expected
 
 
+@pytest.mark.parametrize("region_length, count, region_bins", [
+    (200, 2, ["chr1_0", "chr2_0"]),
+    (100, 3, ["chr1_0", "chr1_1", "chr2_0"]),
+    (70, 4, ["chr1_0", "chr1_1", "chr1_2", "chr2_0"]),
+    (50, 5, ["chr1_0", "chr1_1", "chr1_2", "chr1_3", "chr2_0"]),
+])
+def test_build_summary_partitions_group_by_region_bin(
+    region_length: int,
+    count: int,
+    region_bins: list[str],
+) -> None:
+    chrom_lens = {"chr1": 200, "chr2": 50}
+    pd = PartitionDescriptor.parse_string(f"""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = {region_length}
+    """)
+    result = list(itertools.groupby(
+        pd.build_summary_partitions(chrom_lens),
+        key=operator.attrgetter("region_bin"),
+    ))
+    assert len(result) == count
+    assert [rb for rb, _ in result] == region_bins
+
+
+def test_build_summary_partitions_group_by_region_bin_without_region_bins(
+) -> None:
+    chrom_lens = {"chr1": 200, "chr2": 50}
+    pd = PartitionDescriptor.parse_string("""
+        [frequency_bin]
+        rare_boundary = 50
+    """)
+    result = list(itertools.groupby(
+        pd.build_summary_partitions(chrom_lens),
+        key=operator.attrgetter("region_bin"),
+    ))
+    assert len(result) == 1
+
+
 @pytest.mark.parametrize("chrom_lens, expected", [
     ({"chr1": 100},
      [Partition("chr1_0", "0"), Partition("chr1_0", "1"),
@@ -996,3 +1047,51 @@ def test_partition_equality() -> None:
 
     assert p4 == p5
     assert p4 != p6
+
+
+def test_empty_partition_descritor() -> None:
+    pd = PartitionDescriptor()
+    assert not pd.has_region_bins()
+    assert not pd.has_frequency_bins()
+    assert not pd.has_coding_bins()
+    assert not pd.has_family_bins()
+
+    assert pd.chromosomes == []
+    assert pd.region_length == 0
+    assert pd.integer_region_bins is False
+    assert pd.family_bin_size == 0
+    assert pd.rare_boundary == 0
+    assert pd.coding_effect_types == set()
+
+    content = pd.serialize("yaml")
+    assert content == ""
+
+
+def test_empty_partition_descritor_summary_partitions() -> None:
+    pd = PartitionDescriptor()
+
+    summary_partitions = pd.build_summary_partitions({"chr1": 100, "chr2": 50})
+    assert summary_partitions == [Partition()]
+
+
+def test_empty_partition_descritor_family_partitions() -> None:
+    pd = PartitionDescriptor()
+
+    family_partitions = pd.build_family_partitions({"chr1": 100, "chr2": 50})
+    assert family_partitions == [Partition()]
+
+
+def test_empty_partition_filename() -> None:
+    pd = PartitionDescriptor()
+
+    filename = pd.partition_filename("summary", [], 1)
+    assert filename == "summary_bucket_index_000001.parquet"
+
+    filename = pd.partition_filename("summary", Partition(), 1)
+    assert filename == "summary_bucket_index_000001.parquet"
+
+    filename = pd.partition_filename("merged", [], None)
+    assert filename == "merged.parquet"
+
+    filename = pd.partition_filename("merged", Partition(), None)
+    assert filename == "merged.parquet"

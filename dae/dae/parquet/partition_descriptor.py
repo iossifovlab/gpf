@@ -74,6 +74,22 @@ class Partition:
             family_bin=family_bin,
         )
 
+    def is_empty(self) -> bool:
+        """Check if the partition is empty."""
+        return (self.region_bin is None and
+                self.frequency_bin is None and
+                self.coding_bin is None and
+                self.family_bin is None)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the partition."""
+        partition_parts = [
+            f"{bin_name}_{bin_value}"
+            for (bin_name, bin_value) in self.to_pylist()]
+        if not partition_parts:
+            return "partition_empty"
+        return f"partition_{'_'.join(partition_parts)}"
+
 
 class PartitionDescriptor:
     """Class to represent partition of a genotype dataset."""
@@ -562,9 +578,12 @@ class PartitionDescriptor:
         self, chromosome_lengths: dict[str, int],
     ) -> list[Partition]:
         """Build summary partitions for all variants in the dataset."""
+        summary_paritions = self._build_summary_partitions(chromosome_lengths)
+        if not summary_paritions:
+            return [Partition()]
         return [
             Partition.from_pylist(partition)
-            for partition in self._build_summary_partitions(chromosome_lengths)
+            for partition in summary_paritions
         ]
 
     def _build_family_partitions(
@@ -583,9 +602,12 @@ class PartitionDescriptor:
         self, chromosome_lengths: dict[str, int],
     ) -> list[Partition]:
         """Build summary partitions for all variants in the dataset."""
+        family_partitions = self._build_family_partitions(chromosome_lengths)
+        if not family_partitions:
+            return [Partition()]
         return [
             Partition.from_pylist(partition)
-            for partition in self._build_family_partitions(chromosome_lengths)
+            for partition in family_partitions
         ]
 
     @staticmethod
@@ -603,15 +625,19 @@ class PartitionDescriptor:
 
     @staticmethod
     def partition_directory(
-            output_dir: str, partition: list[tuple[str, str]]) -> str:
+        dataset_dir: str,
+        partition: Partition | list[tuple[str, str]],
+    ) -> str:
         """Construct a partition dataset directory.
 
         Given a partition in the format returned by `summary_parition` or
         `family_partition` methods, this function constructs the directory name
         corresponding to the partition.
         """
+        if isinstance(partition, Partition):
+            partition = partition.to_pylist()
         return fs_utils.join(
-            output_dir, *[
+            dataset_dir, *[
                 f"{bname}={bvalue}" for (bname, bvalue) in partition])
 
     @staticmethod
