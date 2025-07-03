@@ -160,11 +160,8 @@ def test_reannotate_instance_tool(
 
     # Run the reannotate instance tool
     cli(
-        [
-        "-j", "1",  # Single job to avoid using multiprocessing
-        "--no-cache",  # Do not use cache
-        "--force",
-        ],
+        ["-j", "1",  # Single job to avoid using multiprocessing
+        "--force"],
         new_instance,
     )
     new_instance.reload()
