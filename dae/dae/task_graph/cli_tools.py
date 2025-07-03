@@ -1,7 +1,7 @@
 import argparse
 import logging
 import textwrap
-from typing import Any, Literal
+from typing import Any
 
 import yaml
 from box import Box
@@ -26,10 +26,9 @@ class TaskGraphCli:
 
     @staticmethod
     def add_arguments(
-        parser: argparse.ArgumentParser,
-        force_mode: str = "optional",
+        parser: argparse.ArgumentParser, *,
+        task_progress_mode: bool = True,
         default_task_status_dir: str | None = "./.task-progress",
-        *,
         use_commands: bool = True,
     ) -> None:
         """Add arguments needed to execute a task graph."""
@@ -79,7 +78,7 @@ class TaskGraphCli:
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error",
         )
-        if force_mode == "optional":
+        if task_progress_mode:
             execution_mode_group.add_argument(
                 "--force", "-f", default=False, action="store_true",
                 help="Ignore precomputed state and always rerun all tasks.",
@@ -90,7 +89,8 @@ class TaskGraphCli:
                 type=str, help="Directory to store the task progress.",
             )
         else:
-            assert force_mode == "always"
+            assert not task_progress_mode, \
+                "task_progress_mode must be False if no cache is used"
 
     @staticmethod
     def create_executor(
@@ -128,8 +128,8 @@ class TaskGraphCli:
 
     @staticmethod
     def process_graph(
-        task_graph: TaskGraph,
-        force_mode: Literal["optional", "always"] = "optional",
+        task_graph: TaskGraph, *,
+        task_progress_mode: bool = True,
         **kwargs: Any,
     ) -> bool:
         """Process task_graph in according with the arguments in args.
@@ -143,7 +143,7 @@ class TaskGraphCli:
 
         force = args.get("force", False)
         task_cache = TaskCache.create(
-            force_mode=force_mode,
+            task_progress_mode=task_progress_mode,
             force=force,
             cache_dir=args.get("task_status_dir"),
         )

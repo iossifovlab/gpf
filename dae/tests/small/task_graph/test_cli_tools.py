@@ -22,19 +22,20 @@ def test_basic_sequential_executor() -> None:
     TaskGraphCli.process_graph(empty_graph, **vars(args))
 
 
-def test_force_always() -> None:
+def test_task_progress_mode_disabled() -> None:
     parser = argparse.ArgumentParser(description="test_basic")
-    TaskGraphCli.add_arguments(parser, force_mode="always")
+    TaskGraphCli.add_arguments(parser, task_progress_mode=False)
     args = parser.parse_args([])
 
     assert "force" not in vars(args)
     assert "task_status_dir" not in vars(args)
 
 
-def test_force_optional() -> None:
+def test_task_progress_mode_enabled() -> None:
     parser = argparse.ArgumentParser(description="test_basic")
-    TaskGraphCli.add_arguments(parser, force_mode="optional",
-                               default_task_status_dir="gosho")
+    TaskGraphCli.add_arguments(
+        parser, task_progress_mode=True,
+        default_task_status_dir="gosho")
 
     args = parser.parse_args([])
     assert not args.force

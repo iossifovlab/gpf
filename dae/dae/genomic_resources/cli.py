@@ -225,7 +225,7 @@ def _configure_repo_stats_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always",
+        parser, use_commands=False, task_progress_mode=False,
     )
 
 
@@ -242,7 +242,7 @@ def _configure_resource_stats_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always",
+        parser, use_commands=False, task_progress_mode=False,
     )
 
 
@@ -258,7 +258,7 @@ def _configure_repo_repair_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always",
+        parser, use_commands=False, task_progress_mode=False,
     )
 
 
@@ -274,7 +274,7 @@ def _configure_resource_repair_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always",
+        parser, use_commands=False, task_progress_mode=False,
     )
 
 
@@ -289,7 +289,7 @@ def _configure_repo_info_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always",
+        parser, use_commands=False, task_progress_mode=False,
     )
 
 
@@ -304,7 +304,7 @@ def _configure_resource_info_subparser(
     VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(
-        parser, use_commands=False, force_mode="always",
+        parser, use_commands=False, task_progress_mode=False,
     )
 
 
@@ -633,7 +633,7 @@ def _run_repo_stats_command(
                 fs_utils.join(repo_url, ".task-log")
 
         TaskGraphCli.process_graph(
-            graph, force_mode="always", **modified_kwargs)
+            graph, task_progress_mode=False, **modified_kwargs)
 
     proto.build_content_file()
     return 0
@@ -696,7 +696,7 @@ def _run_resource_stats_command(
                 fs_utils.join(repo_url, ".task-log")
 
         TaskGraphCli.process_graph(
-            graph, force_mode="always", **modified_kwargs,
+            graph, task_progress_mode=False, **modified_kwargs,
         )
     return 0
 

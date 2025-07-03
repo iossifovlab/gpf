@@ -9,7 +9,7 @@ from collections.abc import Generator, Iterator
 from copy import copy
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import fsspec
 
@@ -61,12 +61,11 @@ class TaskCache:
     def create(
         *,
         force: bool = False,
-        force_mode: Literal["optional", "always"] = "optional",
+        task_progress_mode: bool = True,
         cache_dir: str | None = None,
     ) -> TaskCache:
         """Create the appropriate task cache."""
-        if force_mode == "always":
-            # the force_mode is set to 'always'
+        if not task_progress_mode:
             return NoTaskCache()
         if cache_dir is None:
             cache_dir = os.getcwd()
