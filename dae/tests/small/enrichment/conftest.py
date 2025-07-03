@@ -10,7 +10,6 @@ import pytest_mock
 from dae.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
@@ -242,11 +241,6 @@ def create_test_study(
     shutil.rmtree(
         str(pathlib.Path(t4c8_fixture.dae_dir, "studies", "f1_trio")),
     )
-
-
-@pytest.fixture
-def enrichment_helper(grr: GenomicResourceRepo) -> EnrichmentHelper:
-    return EnrichmentHelper(grr)
 
 
 @pytest.fixture

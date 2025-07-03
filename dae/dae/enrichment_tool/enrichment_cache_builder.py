@@ -5,7 +5,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 from dae.effect_annotation.effect import expand_effect_types
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_utils import (
     EnrichmentEventCounts,
     get_enrichment_cache_path,

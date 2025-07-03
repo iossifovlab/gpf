@@ -10,7 +10,6 @@ import pytest_mock
 from dae.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
 )
@@ -49,6 +48,7 @@ from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory
 
 from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_helper import EnrichmentHelper
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 

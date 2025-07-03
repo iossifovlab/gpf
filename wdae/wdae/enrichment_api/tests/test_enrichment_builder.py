@@ -1,10 +1,10 @@
 
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
 
 from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_helper import EnrichmentHelper
 
 
 @pytest.fixture

@@ -1,7 +1,6 @@
 import logging
 from typing import Any, cast
 
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
 )
@@ -18,6 +17,7 @@ from utils.expand_gene_set import expand_gene_set
 from enrichment_api.enrichment_builder import (
     EnrichmentBuilder,
 )
+from enrichment_api.enrichment_helper import EnrichmentHelper
 
 logger = logging.getLogger(__name__)
 

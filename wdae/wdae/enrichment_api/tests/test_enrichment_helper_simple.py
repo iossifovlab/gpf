@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from collections.abc import Callable
 
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
 )
@@ -11,6 +10,8 @@ from dae.enrichment_tool.gene_weights_background import (
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
+
+from enrichment_api.enrichment_helper import EnrichmentHelper
 
 
 def test_gpf_fixture(t4c8_fixture: GPFInstance) -> None:
@@ -45,15 +46,6 @@ def test_get_study_enrichment_config(
     f1_trio: GenotypeData,
 ) -> None:
     assert get_enrichment_config(f1_trio) is not None
-
-
-def test_has_enrichment_config(
-    f1_trio: GenotypeData,
-    t4c8_fixture: GPFInstance,
-) -> None:
-
-    helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert helper.has_enrichment_config(f1_trio) is True
 
 
 def test_get_selected_counting_models(

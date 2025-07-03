@@ -6,13 +6,14 @@ from dae.enrichment_tool.enrichment_cache_builder import (
     build_enrichment_event_counts_cache,
     cli,
 )
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree
+
+from enrichment_api.enrichment_helper import EnrichmentHelper
 
 
 @pytest.fixture
