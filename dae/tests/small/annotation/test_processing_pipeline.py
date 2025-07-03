@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable, Sequence
 from types import TracebackType
+from unittest.mock import MagicMock
 
 import pytest
 from dae.annotation.annotatable import (
@@ -11,8 +12,8 @@ from dae.annotation.annotatable import (
 )
 from dae.annotation.processing_pipeline import (
     AnnotatablesBatchFilter,
-    AnnotatablesWithContext,
-    Annotation,
+    AnnotatablesWithVariant,
+    AnnotatableWithContext,
 )
 
 
@@ -20,11 +21,11 @@ class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
 
     def filter_batch(
         self, batch: Iterable[Annotatable | None],
-    ) -> Sequence[Annotation]:
+    ) -> Sequence[AnnotatableWithContext]:
 
         """Mock filter that returns all annotatables as annotations."""
         return [
-            Annotation(
+            AnnotatableWithContext(
                 annotatable,
                 {"index": index},
             )
@@ -43,34 +44,34 @@ class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
     "awcs",
     [
         [
-            AnnotatablesWithContext(
+            AnnotatablesWithVariant(
+                MagicMock(),
                 [
                     Position("chr1", 100),
                     Region("chr1", 200, 201),
                 ],
-                {"source": "1"},
             ),
         ],
         [
-            AnnotatablesWithContext(
+            AnnotatablesWithVariant(
+                MagicMock(),
                 [
                     Position("chr1", 100),
                     Region("chr1", 200, 201),
                 ],
-                {"source": "1"},
             ),
-            AnnotatablesWithContext(
+            AnnotatablesWithVariant(
+                MagicMock(),
                 [
                     Position("chr1", 100),
                     Region("chr1", 200, 201),
                 ],
-                {"source": "2"},
             ),
         ],
     ],
 )
 def test_filter_batches_with_context(
-    awcs: Sequence[AnnotatablesWithContext],
+    awcs: Sequence[AnnotatablesWithVariant],
 ) -> None:
     """Test filtering batches with context."""
 
@@ -78,16 +79,16 @@ def test_filter_batches_with_context(
     batch_result = next(iter(dummy.filter_batches_with_context([awcs])))
     assert len(batch_result) == len(awcs)
     test_index = 0
-    for annotations, annotatables in zip(
-                batch_result, awcs, strict=True,
-            ):
-
-        assert len(annotations.annotations) == len(annotatables.annotatables)
-        assert annotations.context == annotatables.context
+    for annotated_variant, annotatables_with_variant in zip(
+        batch_result, awcs, strict=True,
+    ):
+        assert len(annotated_variant.awcs) == \
+               len(annotatables_with_variant.annotatables)
+        assert annotated_variant.variant == annotatables_with_variant.variant
         for annotation, annotatable in zip(
-                    annotations.annotations, annotatables.annotatables,
-                    strict=True,
-                ):
+            annotated_variant.awcs, annotatables_with_variant.annotatables,
+            strict=True,
+        ):
             assert annotation.annotatable == annotatable
-            assert annotation.annotations["index"] == test_index
+            assert annotation.annotation["index"] == test_index
             test_index += 1

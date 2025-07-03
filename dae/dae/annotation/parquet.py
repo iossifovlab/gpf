@@ -29,7 +29,7 @@ from dae.parquet.parquet_writer import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
@@ -272,7 +272,7 @@ class ParquetVariantConsumer:
         bucket_idx: int,
         variants_blob_serializer: str,
     ):
-        self.writer = VariantsParquetWriter(
+        self.writer = VariantsParquetWriterDeprecated(
             output_dir,
             pipeline,
             partition_descriptor,
