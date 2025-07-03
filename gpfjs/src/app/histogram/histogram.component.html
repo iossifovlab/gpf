@@ -56,11 +56,13 @@
       <label for="from-input-field">From (Min: {{ minValue }})</label>
       <div class="stepper">
         <input
+          #rangeStartInput
           id="from-input-field"
           class="steps form-control no-arrows"
           required
           type="number"
-          [(ngModel)]="rangeStartWithoutNull"
+          (keyup)="setRangeStartFromInput(rangeStartInput.value)"
+          [ngModel]="rangeStartDisplay"
           placeholder="start" />
         <button type="button" class="step up" (click)="startStepUp()"
           ><span class="material-symbols-outlined md">arrow_drop_up</span></button
@@ -74,11 +76,13 @@
       <label for="to-input-field">To (Max: {{ maxValue }})</label>
       <div class="stepper">
         <input
+          #rangeEndInput
           id="to-input-field"
           class="steps form-control no-arrows"
           required
           type="number"
-          [(ngModel)]="rangeEndWithoutNull"
+          (keyup)="setRangeEndFromInput(rangeEndInput.value)"
+          [ngModel]="rangeEndDisplay"
           placeholder="end" />
         <button type="button" class="step up" (click)="endStepUp()"
           ><span class="material-symbols-outlined md">arrow_drop_up</span></button

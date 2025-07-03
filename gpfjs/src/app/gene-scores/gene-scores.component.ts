@@ -30,9 +30,11 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
   public rangesCounts: Observable<Array<number>>;
   public downloadUrl: string;
 
-  public score: GenomicScore = null;
+  public selectedGeneScore: GenomicScore = null;
   public rangeStart: number = 0;
   public rangeEnd: number = 0;
+  public initialRangeStart: number = null;
+  public initialRangeEnd: number = null;
 
   public domainMin = 0;
   public domainMax = 0;
@@ -80,24 +82,36 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
         for (const score of this.geneScoresArray) {
           if (score.score === state.score) {
             this.selectedGeneScore = score;
+            this.downloadUrl = this.getDownloadUrl();
+
             // Load either categorical or continuous histogram selection data
             if (state.histogramType === 'categorical') {
               this.categoricalValues = cloneDeep(state.values);
               this.selectedCategoricalHistogramView = state.categoricalView;
+              this.rangeStart = null;
+              this.rangeEnd = null;
+              if (!(this.selectedGeneScore.histogram as CategoricalHistogram).valueOrder) {
+                this.selectedCategoricalHistogramView = 'click selector';
+              }
             } else if (state.histogramType === 'continuous') {
               this.rangeStart = state.rangeStart;
               this.rangeEnd = state.rangeEnd;
+              this.initialRangeStart = state.rangeStart;
+              this.initialRangeEnd = state.rangeEnd;
+
+              this.categoricalValues = [];
+              this.updateLabels();
             }
             this.validateState();
             break;
           }
         }
       } else {
-        this.selectedGeneScore = this.geneScoresArray[0];
+        this.setSelectedGeneScore(this.geneScoresArray[0]);
       }
     });
 
-    if (this.score !== null) {
+    if (this.selectedGeneScore !== null) {
       if (this.rangeStart !== 0 && this.rangeEnd !== 0) {
         this.updateContinuousHistogramState();
       }
@@ -113,7 +127,7 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
 
   private updateLabels(): void {
     this.rangeChanges.next([
-      this.score?.score,
+      this.selectedGeneScore?.score,
       this.rangeStart,
       this.rangeEnd
     ]);
@@ -147,26 +161,23 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
     this.updateCategoricalHistogramState();
   }
 
-  public get selectedGeneScore(): GenomicScore {
-    return this.score;
-  }
-
-  public set selectedGeneScore(selectedGeneScore: GenomicScore) {
+  public setSelectedGeneScore(newScore: GenomicScore): void {
     this.categoricalValues = [];
-    this.score = selectedGeneScore;
+    this.selectedGeneScore = newScore;
     this.downloadUrl = this.getDownloadUrl();
-    if (selectedGeneScore !== undefined && this.isNumberHistogram(selectedGeneScore.histogram)) {
-      this.changeDomain(selectedGeneScore.histogram);
+    if (newScore !== undefined && this.isNumberHistogram(newScore.histogram)) {
+      this.changeDomain(newScore.histogram);
       this.rangeStart = this.domainMin;
       this.rangeEnd = this.domainMax;
       this.updateLabels();
       this.validateState();
+
       this.store.dispatch(setGeneScoreContinuous({
-        score: this.score.score,
+        score: this.selectedGeneScore.score,
         rangeStart: this.rangeStart,
         rangeEnd: this.rangeEnd,
       }));
-    } else if (this.isCategoricalHistogram(selectedGeneScore.histogram)) {
+    } else if (this.isCategoricalHistogram(newScore.histogram)) {
       this.rangeStart = null;
       this.rangeEnd = null;
       if (!(this.selectedGeneScore.histogram as CategoricalHistogram).valueOrder) {
@@ -177,14 +188,14 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
   }
 
   public setRangeStart(range: number): void {
-    if (this.isNumberHistogram(this.score.histogram)) {
+    if (range !== this.rangeStart && this.isNumberHistogram(this.selectedGeneScore.histogram)) {
       this.rangeStart = range;
       this.updateContinuousHistogramState();
     }
   }
 
   public setRangeEnd(range: number): void {
-    if (this.isNumberHistogram(this.score.histogram)) {
+    if (range !== this.rangeEnd && this.isNumberHistogram(this.selectedGeneScore.histogram)) {
       this.rangeEnd = range;
       this.updateContinuousHistogramState();
     }
@@ -234,10 +245,10 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
   private validateState(): void {
     this.errors = [];
 
-    if (!this.score.score) {
+    if (!this.selectedGeneScore.score) {
       this.errors.push('Empty gene scores are invalid.');
     }
-    if (this.isNumberHistogram(this.score.histogram)) {
+    if (this.isNumberHistogram(this.selectedGeneScore.histogram)) {
       if (this.rangeStart !== null) {
         if (typeof this.rangeStart !== 'number') {
           this.errors.push('Range start should be a number.');
@@ -245,7 +256,7 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
         if (this.rangeStart > this.rangeEnd) {
           this.errors.push('Range start should be less than or equal to range end.');
         }
-        if (this.rangeStart < this.score.histogram.rangeMin) {
+        if (this.rangeStart < this.selectedGeneScore.histogram.rangeMin) {
           this.errors.push('Range start should be more than or equal to domain min.');
         }
       }
@@ -256,12 +267,12 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
         if (this.rangeEnd < this.rangeStart) {
           this.errors.push('Range end should be more than or equal to range start.');
         }
-        if (this.rangeEnd > this.score.histogram.rangeMax) {
+        if (this.rangeEnd > this.selectedGeneScore.histogram.rangeMax) {
           this.errors.push('Range end should be less than or equal to domain max.');
         }
       }
     }
-    if (this.isCategoricalHistogram(this.score.histogram)) {
+    if (this.isCategoricalHistogram(this.selectedGeneScore.histogram)) {
       if (!this.categoricalValues.length) {
         this.errors.push('Please select at least one value.');
       }
