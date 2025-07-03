@@ -271,7 +271,10 @@ export class HistogramComponent implements OnInit, OnChanges {
       .attr('y', (d: BinBar) => d.bar === 0 ? height : this.scaleYAxis(d.bar))
       .attr('height', (d: BinBar) => d.bar === 0 || d.bar === undefined ? 0 : height - this.scaleYAxis(d.bar));
     this.svg = svg;
-    this.colorBars();
+
+    if (this.isInteractive) {
+      this.colorBars();
+    }
   }
 
   private redrawXAxis(
