@@ -8,7 +8,7 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 
@@ -66,7 +66,7 @@ def test_vcf_denovo_reference(
     partition_descriptor = PartitionDescriptor(
         rare_boundary=5.0,
     )
-    parquet_writer = VariantsParquetWriter(
+    parquet_writer = VariantsParquetWriterDeprecated(
         str(tmp_path / "out"),
         annotation_pipeline,
         partition_descriptor,
@@ -92,7 +92,7 @@ def test_batch_annotation(
     vcf_loader = VcfLoader(families, [vcf_path], acgt_genome_38)
     annotation_pipeline = AnnotationPipeline(t4c8_grr)
     partition_descriptor = PartitionDescriptor()
-    parquet_writer = VariantsParquetWriter(
+    parquet_writer = VariantsParquetWriterDeprecated(
         str(tmp_path / "out"),
         annotation_pipeline,
         partition_descriptor,
