@@ -273,7 +273,7 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
       }
     }
     if (this.isCategoricalHistogram(this.selectedGeneScore.histogram)) {
-      if (!this.categoricalValues.length) {
+      if (this.selectedCategoricalHistogramView !== 'range selector' && !this.categoricalValues.length) {
         this.errors.push('Please select at least one value.');
       }
       if (this.categoricalValues.length > this.categoricalValueMax) {

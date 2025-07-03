@@ -401,7 +401,7 @@ describe('GeneScoresComponent', () => {
       true,
       0
     ));
-
+    component.selectedCategoricalHistogramView = 'click selector';
     component.toggleCategoricalValues([]);
 
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
