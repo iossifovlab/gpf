@@ -125,6 +125,7 @@ def t4c8_study(t4c8_instance: GPFInstance):
 
 def test_reannotate_instance_tool(
     t4c8_instance: GPFInstance,
+    tmp_path: pathlib.Path,
 ) -> None:
     """
     Basic reannotate instance tool case.
@@ -161,7 +162,7 @@ def test_reannotate_instance_tool(
     # Run the reannotate instance tool
     cli(
         ["-j", "1",  # Single job to avoid using multiprocessing
-        "--force"],
+         "--work-dir", str(tmp_path)],
         new_instance,
     )
     new_instance.reload()
