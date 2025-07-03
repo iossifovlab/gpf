@@ -325,7 +325,7 @@ class PreparePhenoBrowserBase:
 
     def collect_child_configs(self, study: PhenotypeGroup) -> dict[str, dict]:
         """Collect child configurations"""
-        configs = {}
+        configs: dict[str, Any] = {}
         for child in study.children:
             if child.config["type"] == "study":
                 configs[child.config["id"]] = child.config
@@ -367,9 +367,8 @@ class PreparePhenoBrowserBase:
                 )
 
         task_cache = TaskCache.create(
-            force=kwargs.get("force"),
+            force=kwargs.get("force", False),
             cache_dir=kwargs.get("task_status_dir"),
-            no_cache=kwargs.get("no_cache", False),
         )
 
         with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:

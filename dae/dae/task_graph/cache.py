@@ -60,17 +60,13 @@ class TaskCache:
     @staticmethod
     def create(
         *,
-        force: bool | None = None,
+        force: bool = False,
+        task_progress_mode: bool = True,
         cache_dir: str | None = None,
-        no_cache: bool = False,
     ) -> TaskCache:
         """Create the appropriate task cache."""
-        if no_cache:
-            # the force_mode is set to 'always'
+        if not task_progress_mode:
             return NoTaskCache()
-
-        if force is None:
-            force = False
         if cache_dir is None:
             cache_dir = os.getcwd()
         return FileTaskCache(force=force, cache_dir=cache_dir)

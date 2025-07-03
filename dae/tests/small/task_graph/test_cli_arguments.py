@@ -86,7 +86,10 @@ def test_cli_args_task_ids(
     ([], False),
     (["--keep-going"], True),
 ])
-def test_cli_args_keep_going(argv: list[str], keep_going: bool) -> None:
+def test_cli_args_keep_going(
+    argv: list[str],
+    keep_going: bool,  # noqa: FBT001
+) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -94,15 +97,18 @@ def test_cli_args_keep_going(argv: list[str], keep_going: bool) -> None:
     assert args.keep_going == keep_going
 
 
-@pytest.mark.parametrize("force_mode,argv,force", [
-    ("optional", [], False),
-    ("optional", ["--force"], True),
-    ("always", [], None),
+@pytest.mark.parametrize("task_progress_mode,argv,force", [
+    (True, [], False),
+    (True, ["--force"], True),
+    (False, [], None),
 ])
 def test_cli_args_force(
-        force_mode: str, argv: list[str], force: bool | None) -> None:
+    task_progress_mode: bool,  # noqa: FBT001
+    argv: list[str],
+    force: bool | None,  # noqa: FBT001
+) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
-    TaskGraphCli.add_arguments(parser, force_mode=force_mode)
+    TaskGraphCli.add_arguments(parser, task_progress_mode=task_progress_mode)
     args = vars(parser.parse_args(argv))
 
     assert args.get("force") == force

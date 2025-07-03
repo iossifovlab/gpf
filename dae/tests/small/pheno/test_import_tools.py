@@ -86,7 +86,6 @@ def test_pheno_import_tool(
         keep_going=False,
         force=False,
         task_status_dir=f"{test_dir}/test_out/.task-progress/first",
-        no_cache=False,
     )
 
 
@@ -130,8 +129,8 @@ def test_pheno_import_tool_work_dir_relative(
     test_dir: Path,
 ) -> None:
     # The scenario is the same as in the general test "test_pheno_import_tool",
-    # but for the sake of granularity, this test checks only the relative output
-    # dir has been correctly resolved.
+    # but for the sake of granularity, this test checks only the relative
+    # output dir has been correctly resolved.
     mocked_import_func = \
         mocker.patch("dae.pheno.import_tools.import_pheno_data")
     main([str(test_dir / "conf_1.yaml")])
