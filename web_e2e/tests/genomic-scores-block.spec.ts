@@ -29,11 +29,11 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${exomeGnomadScore}")`).click();
 
     await page.locator('input#from-input-field').nth(0).clear();
-    await page.locator('input#from-input-field').nth(0).fill('0.063');
+    await page.locator('input#from-input-field').nth(0).pressSequentially('0.063');
     await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~74244341 (97.47%)');
 
     await page.locator('input#to-input-field').nth(0).clear();
-    await page.locator('input#to-input-field').nth(0).fill('1.096');
+    await page.locator('input#to-input-field').nth(0).pressSequentially('1.096');
     await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~840182 (1.10%)');
     await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~1090009 (1.43%)');
 
@@ -44,11 +44,11 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${mpcScore}")`).click();
 
     await page.locator('input#from-input-field').nth(0).clear();
-    await page.locator('input#from-input-field').nth(0).fill('0.3');
+    await page.locator('input#from-input-field').nth(0).pressSequentially('0.3');
     await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~21727789 (32.46%)');
 
     await page.locator('input#to-input-field').nth(0).clear();
-    await page.locator('input#to-input-field').nth(0).fill('1.45');
+    await page.locator('input#to-input-field').nth(0).pressSequentially('1.45');
     await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~9402408 (14.05%)');
     await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~35798106 (53.49%)');
 
@@ -500,10 +500,10 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${mpcScore}")`).click();
 
     await page.locator('input#from-input-field').clear();
-    await page.locator('input#from-input-field').fill('1.25');
+    await page.locator('input#from-input-field').pressSequentially('1.25');
 
     await page.locator('input#to-input-field').clear();
-    await page.locator('input#to-input-field').fill('1.8');
+    await page.locator('input#to-input-field').pressSequentially('1.8');
 
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Download' }).click();

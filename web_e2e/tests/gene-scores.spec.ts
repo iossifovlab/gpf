@@ -150,14 +150,14 @@ test.describe('Gene scores tests', () => {
     .selectOption('RVIS score - Intolerance of a gene to genetic variants');
 
     await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').fill('-100');
+    await page.locator('#from-input-field').pressSequentially('-100');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
 
     await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').fill('0');
+    await page.locator('#from-input-field').pressSequentially('0');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
     await expect(page.locator('gpf-gene-scores').locator('gpf-errors-alert')).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
@@ -171,7 +171,7 @@ test.describe('Gene scores tests', () => {
     .selectOption('RVIS score - Intolerance of a gene to genetic variants');
 
     await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').fill('-500');
+    await page.locator('#from-input-field').pressSequentially('-500');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
@@ -191,7 +191,7 @@ test.describe('Gene scores tests', () => {
       .selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
     await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').fill('-1');
+    await page.locator('#from-input-field').pressSequentially('-1');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
@@ -213,7 +213,7 @@ test.describe('Gene scores tests', () => {
       .selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
     await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').fill('-1');
+    await page.locator('#from-input-field').pressSequentially('-1');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
@@ -227,7 +227,7 @@ test.describe('Gene scores tests', () => {
       .selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
     await page.locator('#to-input-field').clear();
-    await page.locator('#to-input-field').fill('10');
+    await page.locator('#to-input-field').pressSequentially('10');
     await expect(page.getByText('Range end should be less than or equal to domain max.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
@@ -241,7 +241,7 @@ test.describe('Gene scores tests', () => {
       .selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
     await page.locator('#to-input-field').clear();
-    await page.locator('#to-input-field').fill('-1');
+    await page.locator('#to-input-field').pressSequentially('-1');
     await expect(page.getByText('Range start should be less than or equal to range end.')).toBeVisible();
     await expect(page.getByText('Range end should be more than or equal to range start.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
@@ -256,7 +256,7 @@ test.describe('Gene scores tests', () => {
       .selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
     await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').fill('2');
+    await page.locator('#from-input-field').pressSequentially('2');
     await expect(page.getByText('Range start should be less than or equal to range end.')).toBeVisible();
     await expect(page.getByText('Range end should be more than or equal to range start.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
