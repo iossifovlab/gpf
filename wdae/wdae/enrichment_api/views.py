@@ -1,9 +1,6 @@
 import logging
 from typing import Any, cast
 
-from dae.enrichment_tool.enrichment_builder import (
-    EnrichmentBuilder,
-)
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
@@ -17,6 +14,10 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.expand_gene_set import expand_gene_set
+
+from enrichment_api.enrichment_builder import (
+    EnrichmentBuilder,
+)
 
 logger = logging.getLogger(__name__)
 

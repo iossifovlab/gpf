@@ -1,6 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
+import pytest
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.enrichment_tool.event_counters import EnrichmentSingleResult
+from dae.studies.study import GenotypeData
+
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:

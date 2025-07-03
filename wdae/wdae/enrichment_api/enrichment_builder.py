@@ -3,12 +3,13 @@ from collections.abc import Iterable
 from typing import Any, cast
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
 from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
 )
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
+
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 class BaseEnrichmentBuilder:
