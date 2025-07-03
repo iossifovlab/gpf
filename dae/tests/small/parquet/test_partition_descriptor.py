@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import itertools
+import operator
 import pathlib
 import sys
 import textwrap
@@ -833,6 +835,45 @@ def test_build_summary_partitions_region_bins(
 
     result = pd.build_summary_partitions(chrom_lens)
     assert result == expected
+
+
+@pytest.mark.parametrize("region_length, count, region_bins", [
+    (200, 2, ["chr1_0", "chr2_0"]),
+    (100, 3, ["chr1_0", "chr1_1", "chr2_0"]),
+    (70, 4, ["chr1_0", "chr1_1", "chr1_2", "chr2_0"]),
+    (50, 5, ["chr1_0", "chr1_1", "chr1_2", "chr1_3", "chr2_0"]),
+])
+def test_build_summary_partitions_group_by_region_bin(
+    region_length: int,
+    count: int,
+    region_bins: list[str],
+) -> None:
+    chrom_lens = {"chr1": 200, "chr2": 50}
+    pd = PartitionDescriptor.parse_string(f"""
+        [region_bin]
+        chromosomes = chr1,chr2
+        region_length = {region_length}
+    """)
+    result = list(itertools.groupby(
+        pd.build_summary_partitions(chrom_lens),
+        key=operator.attrgetter("region_bin"),
+    ))
+    assert len(result) == count
+    assert [rb for rb, _ in result] == region_bins
+
+
+def test_build_summary_partitions_group_by_region_bin_without_region_bins(
+) -> None:
+    chrom_lens = {"chr1": 200, "chr2": 50}
+    pd = PartitionDescriptor.parse_string("""
+        [frequency_bin]
+        rare_boundary = 50
+    """)
+    result = list(itertools.groupby(
+        pd.build_summary_partitions(chrom_lens),
+        key=operator.attrgetter("region_bin"),
+    ))
+    assert len(result) == 1
 
 
 @pytest.mark.parametrize("chrom_lens, expected", [

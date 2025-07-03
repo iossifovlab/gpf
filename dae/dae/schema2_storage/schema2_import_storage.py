@@ -1,4 +1,6 @@
+import itertools
 import logging
+import operator
 import os
 import pathlib
 
@@ -260,28 +262,31 @@ class Schema2ImportStorage(ImportStorage):
     def _merge_parquets(
         cls,
         project: ImportProject, variants_type: str,
-        partition: Partition,
+        partitions: list[Partition],
     ) -> None:
         partition_descriptor = cls._get_partition_description(project)
-        layout = schema2_project_dataset_layout(project)
-        out_dir = partition_descriptor.partition_directory(
-                variants_type, partition)
-
-        variants_dir = fs_utils.join(layout.study, out_dir)
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
 
-        output_parquet_file = fs_utils.join(
-            variants_dir,
-            partition_descriptor.partition_filename(
-                "merged", partition, bucket_index=None,
-            ),
-        )
+        layout = schema2_project_dataset_layout(project)
 
-        merge_parquet_directory(
-            variants_dir, output_parquet_file,
-            row_group_size=row_group_size,
-        )
+        for partition in partitions:
+            out_dir = partition_descriptor.partition_directory(
+                    variants_type, partition)
+
+            variants_dir = fs_utils.join(layout.study, out_dir)
+
+            output_parquet_file = fs_utils.join(
+                variants_dir,
+                partition_descriptor.partition_filename(
+                    "merged", partition, bucket_index=None,
+                ),
+            )
+
+            merge_parquet_directory(
+                variants_dir, output_parquet_file,
+                row_group_size=row_group_size,
+            )
 
     def _build_all_parquet_tasks(
             self, project: ImportProject, graph: TaskGraph) -> list[Task]:
@@ -312,26 +317,36 @@ class Schema2ImportStorage(ImportStorage):
         reference_genome = project.get_gpf_instance().reference_genome
         chromosome_lengths = reference_genome.get_all_chrom_lengths()
         part_desc = project.get_partition_descriptor()
-        summary_merge_tasks = [
-            graph.create_task(
-                f"merge_parquet_files_summary_{summary_partition}",
+        summary_merge_tasks = []
+        for region_bin, group in itertools.groupby(
+                part_desc.build_summary_partitions(chromosome_lengths),
+                operator.attrgetter("region_bin")):
+            partitions = list(group)
+            if len(partitions) == 0:
+                continue
+            task = graph.create_task(
+                f"merge_parquet_files_summary_region_bin_{region_bin}",
                 self._merge_parquets,
-                args=[project, "summary", summary_partition],
+                args=[project, "summary", partitions],
                 deps=[bucket_sync],
             )
-            for summary_partition in part_desc.build_summary_partitions(
-                chromosome_lengths)
-        ]
-        family_merge_tasks = [
-            graph.create_task(
-                f"merge_parquet_files_family_{family_partition}",
+            summary_merge_tasks.append(task)
+
+        family_merge_tasks = []
+        for region_bin, group in itertools.groupby(
+                part_desc.build_family_partitions(chromosome_lengths),
+                operator.attrgetter("region_bin")):
+            partitions = list(group)
+            if len(partitions) == 0:
+                continue
+
+            task = graph.create_task(
+                f"merge_parquet_files_family_{region_bin}",
                 self._merge_parquets,
-                args=[project, "family", family_partition],
+                args=[project, "family", partitions],
                 deps=[bucket_sync],
             )
-            for family_partition in part_desc.build_family_partitions(
-                chromosome_lengths)
-        ]
+            family_merge_tasks.append(task)
 
         all_parquet_task = graph.create_task(
             "all_parquet_tasks", lambda: None,
