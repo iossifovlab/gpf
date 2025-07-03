@@ -42,8 +42,7 @@ rm -rf .task-progress .task-log work
 import_phenotypes import_project.yaml -f -vv -j 1
 
 build_pheno_browser -j 1 --force pheno_helloworld \
-    --gpf-instance ${WD}/gpf_e2e_instance/gpf_instance.yaml \
-    --no-cache
+    --gpf-instance ${WD}/gpf_e2e_instance/gpf_instance.yaml
 
 cd -
 
