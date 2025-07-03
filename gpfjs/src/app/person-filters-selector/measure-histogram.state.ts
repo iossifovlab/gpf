@@ -52,7 +52,7 @@ export const familyMeasureHistogramsReducer = createReducer(
       rangeEnd: rangeEnd,
       values: null,
       categoricalView: null,
-      roles: null
+      roles: roles
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
