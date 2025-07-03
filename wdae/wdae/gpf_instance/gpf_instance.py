@@ -387,7 +387,7 @@ def get_wgpf_instance(
 
                     _GPF_INSTANCE = gpf_instance
                 except ValueError:
-                    logger.warning("unable to create GPF instance")
+                    logger.exception("unable to create GPF instance")
 
     from django.conf import settings  # pylint: disable=import-outside-toplevel
     gpf_testing = False
