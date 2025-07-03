@@ -2,6 +2,9 @@ import logging
 from typing import Any, cast
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
@@ -26,7 +29,7 @@ class EnrichmentModelsView(QueryBaseView):
         self, study: GenotypeData,
     ) -> list[dict[str, str]]:
         """Collect counting models."""
-        enrichment_config = self.enrichment_helper.get_enrichment_config(study)
+        enrichment_config = get_enrichment_config(study)
         if enrichment_config is None:
             return []
 

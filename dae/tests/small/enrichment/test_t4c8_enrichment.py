@@ -2,7 +2,10 @@
 import pathlib
 
 import pytest
-from dae.enrichment_tool.enrichment_cache_builder import cli
+from dae.enrichment_tool.enrichment_cache_builder import (
+    build_enrichment_event_counts_cache,
+    cli,
+)
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
@@ -174,7 +177,7 @@ def test_study_1_enrichment_with_caching(
     enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
     assert enrichment_helper is not None
 
-    enrichment_helper.build_enrichment_event_counts_cache(
+    build_enrichment_event_counts_cache(
         study_1, "status",
     )
 

@@ -2,6 +2,9 @@
 from collections.abc import Callable
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
@@ -40,10 +43,8 @@ def test_get_study_background(
 
 def test_get_study_enrichment_config(
     f1_trio: GenotypeData,
-    t4c8_fixture: GPFInstance,
 ) -> None:
-    helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert helper.get_enrichment_config(f1_trio) is not None
+    assert get_enrichment_config(f1_trio) is not None
 
 
 def test_has_enrichment_config(

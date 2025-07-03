@@ -4,6 +4,9 @@ from typing import Any, cast
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
 
@@ -15,7 +18,7 @@ class BaseEnrichmentBuilder:
     ):
         self.enrichment_helper = enrichment_helper
         self.dataset = dataset
-        enrichment_config = EnrichmentHelper.get_enrichment_config(
+        enrichment_config = get_enrichment_config(
             dataset,
         )
         assert enrichment_config is not None

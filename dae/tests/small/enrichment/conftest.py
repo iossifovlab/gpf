@@ -13,6 +13,9 @@ from dae.enrichment_tool.build_coding_length_enrichment_background import (
 from dae.enrichment_tool.enrichment_builder import EnrichmentBuilder
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
@@ -262,10 +265,9 @@ def enrichment_builder(
 @pytest.fixture
 def enrichment_serializer(
     f1_trio: GenotypeData,
-    enrichment_helper: EnrichmentHelper,
     enrichment_builder: EnrichmentBuilder,
 ) -> EnrichmentSerializer:
-    enrichment_config = enrichment_helper.get_enrichment_config(f1_trio)
+    enrichment_config = get_enrichment_config(f1_trio)
     assert enrichment_config is not None
 
     build = enrichment_builder.build_results(
