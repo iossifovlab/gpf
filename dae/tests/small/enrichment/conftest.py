@@ -3,6 +3,7 @@ import json
 import pathlib
 import shutil
 import textwrap
+from collections.abc import Callable, Generator
 
 import numpy as np
 import pytest
@@ -228,7 +229,7 @@ def create_test_study(
     tmp_path_factory: pytest.TempPathFactory,
     study_data: tuple[pathlib.Path, pathlib.Path],
     t4c8_fixture: GPFInstance,
-):
+) ->  Generator[Callable[[dict], GenotypeData], None, None]:
     study_path = tmp_path_factory.mktemp("f1_trio")
     ped_path, vcf_path = study_data
 

@@ -3,6 +3,7 @@ import json
 import pathlib
 import shutil
 import textwrap
+from collections.abc import Callable, Generator
 
 import numpy as np
 import pytest
@@ -46,6 +47,7 @@ from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory
+from studies.study_wrapper import WDAEStudy
 
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_api.enrichment_helper import EnrichmentHelper
@@ -235,7 +237,7 @@ def create_test_study(
     tmp_path_factory: pytest.TempPathFactory,
     study_data: tuple[pathlib.Path, pathlib.Path],
     t4c8_fixture: GPFInstance,
-):
+) ->  Generator[Callable[[dict], GenotypeData], None, None]:
     study_path = tmp_path_factory.mktemp("f1_trio")
     ped_path, vcf_path = study_data
 
@@ -251,8 +253,11 @@ def create_test_study(
 
 
 @pytest.fixture
-def enrichment_helper(grr: GenomicResourceRepo) -> EnrichmentHelper:
-    return EnrichmentHelper(grr)
+def enrichment_helper(
+    grr: GenomicResourceRepo,
+    f1_trio: GenotypeData,
+) -> EnrichmentHelper:
+    return EnrichmentHelper(grr, WDAEStudy(f1_trio, None))
 
 
 @pytest.fixture
@@ -260,7 +265,7 @@ def enrichment_builder(
     f1_trio: GenotypeData,
     enrichment_helper: EnrichmentHelper,
 ) -> EnrichmentBuilder:
-    return EnrichmentBuilder(enrichment_helper, f1_trio)
+    return EnrichmentBuilder(enrichment_helper, WDAEStudy(f1_trio, None))
 
 
 @pytest.fixture

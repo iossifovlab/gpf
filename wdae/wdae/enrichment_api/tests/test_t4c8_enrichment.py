@@ -12,6 +12,7 @@ from dae.enrichment_tool.gene_weights_background import (
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree
+from studies.study_wrapper import WDAEStudy
 
 from enrichment_api.enrichment_helper import EnrichmentHelper
 
@@ -139,7 +140,10 @@ def test_study_1_enrichment(
     study_1: GenotypeData,
     t4c8_fixture: GPFInstance,
 ) -> None:
-    enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    enrichment_helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(study_1, None),
+    )
     assert enrichment_helper is not None
 
     results = enrichment_helper.calc_enrichment_test(
@@ -175,7 +179,10 @@ def test_study_1_enrichment_with_caching(
     t4c8_fixture: GPFInstance,
 ) -> None:
 
-    enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    enrichment_helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(study_1, None),
+    )
     assert enrichment_helper is not None
 
     build_enrichment_event_counts_cache(
@@ -222,7 +229,10 @@ def test_build_study_1_enrichment_cache(
     assert (
         pathlib.Path(study_1.config_dir) / "enrichment_cache.json").exists()
 
-    enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    enrichment_helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(study_1, None),
+    )
     assert enrichment_helper is not None
     cache = enrichment_helper._load_enrichment_event_counts_cache(study_1)
 

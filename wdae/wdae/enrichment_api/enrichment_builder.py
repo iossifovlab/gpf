@@ -6,7 +6,7 @@ from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
 )
 from dae.person_sets import PersonSetCollection
-from dae.studies.study import GenotypeData
+from studies.study_wrapper import WDAEStudy
 
 from enrichment_api.enrichment_helper import EnrichmentHelper
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
@@ -15,12 +15,14 @@ from enrichment_api.enrichment_serializer import EnrichmentSerializer
 class BaseEnrichmentBuilder:
     """Base class for enrichment builders."""
     def __init__(
-        self, enrichment_helper: EnrichmentHelper, dataset: GenotypeData,
+        self, enrichment_helper: EnrichmentHelper,
+        study: WDAEStudy,
     ):
+        assert enrichment_helper.study.study_id == study.study_id
         self.enrichment_helper = enrichment_helper
-        self.dataset = dataset
+        self.study = study
         enrichment_config = get_enrichment_config(
-            dataset,
+            study.genotype_data,
         )
         assert enrichment_config is not None
         self.enrichment_config = enrichment_config
@@ -37,10 +39,11 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
     """Build enrichment tool test."""
 
     def __init__(
-        self, enrichment_helper: EnrichmentHelper,
-        dataset: GenotypeData,
+        self,
+        enrichment_helper: EnrichmentHelper,
+        study: WDAEStudy,
     ):
-        super().__init__(enrichment_helper, dataset)
+        super().__init__(enrichment_helper, study)
 
         self.results: list[dict[str, Any]]
 
@@ -57,15 +60,14 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
         person_set_collection = cast(
             PersonSetCollection,
-            self.dataset.get_person_set_collection(
-                self.enrichment_helper.get_selected_person_set_collections(
-                    self.dataset),
+            self.study.genotype_data.get_person_set_collection(
+                self.enrichment_helper.get_selected_person_set_collections(),
             ),
         )
 
         effect_types = self.enrichment_config["effect_types"]
         enrichment_result = self.enrichment_helper.calc_enrichment_test(
-            self.dataset,
+            self.study.genotype_data,
             person_set_collection.id,
             gene_syms,
             effect_types,
@@ -85,7 +87,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             res["geneSymbols"] = list(gene_syms)
             res["peopleGroupId"] = person_set_collection.id
             res["peopleGroupValue"] = ps_id
-            res["datasetId"] = self.dataset.study_id
+            res["datasetId"] = self.study.study_id
             for effect_type, enrichment_res in effect_res.items():
                 res[effect_type] = {}
                 res[effect_type]["all"] = enrichment_res.all

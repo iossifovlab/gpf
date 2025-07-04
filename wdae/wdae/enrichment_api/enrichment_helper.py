@@ -29,6 +29,7 @@ from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.studies.study import GenotypeData
+from studies.study_wrapper import WDAEStudy
 
 logger = logging.getLogger(__name__)
 
@@ -38,37 +39,37 @@ class EnrichmentHelper:
 
     _BACKGROUNDS_CACHE: ClassVar[dict[str, BaseEnrichmentBackground]] = {}
 
-    def __init__(self, grr: GenomicResourceRepo):
+    def __init__(
+        self,
+        grr: GenomicResourceRepo,
+        study: WDAEStudy,
+        ):
         self.grr = grr
+        self.study = study
 
-    @staticmethod
-    def get_default_background_model(genotype_data: GenotypeData) -> str:
+    def get_default_background_model(self) -> str:
         """
         Return default background model field from the enrichment config.
         If it is missing, default to the first selected background model.
         """
-        enrichment_config = get_enrichment_config(genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         if enrichment_config["default_background_model"]:
             return str(enrichment_config["default_background_model"])
         return str(enrichment_config["selected_background_models"][0])
 
-    @staticmethod
-    def get_default_counting_model(genotype_data: GenotypeData) -> str:
-        enrichment_config = get_enrichment_config(genotype_data)
+    def get_default_counting_model(self) -> str:
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
         return str(enrichment_config["default_counting_model"])
 
-    @staticmethod
-    def get_selected_counting_models(
-        genotype_data: GenotypeData,
-    ) -> list[str]:
+    def get_selected_counting_models(self) -> list[str]:
         """
         Return selected counting models field from the enrichment config.
         If it is missing, default to the counting field.
         """
-        enrichment_config = get_enrichment_config(genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         if enrichment_config["selected_counting_models"]:
@@ -78,29 +79,28 @@ class EnrichmentHelper:
             )
         return list(enrichment_config["counting"].keys())
 
-    @staticmethod
-    def get_selected_person_set_collections(
-        genotype_data: GenotypeData,
-    ) -> str:
+    def get_selected_person_set_collections(self) -> str:
         """
         Return selected person set collections field from the enrichment config.
         If it is missing, default to the first available person set collection
         in the provided study.
         """
-        enrichment_config = get_enrichment_config(genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         if enrichment_config["selected_person_set_collections"]:
             return str(enrichment_config["selected_person_set_collections"][0])
-        return next(iter(genotype_data.person_set_collections.keys()))
+        return next(iter(
+            self.study.genotype_data.person_set_collections.keys(),
+        ))
 
     def collect_genotype_data_backgrounds(
-        self, genotype_data: GenotypeData,
+        self,
     ) -> list[BaseEnrichmentBackground]:
         """Collect enrichment backgrounds configured for a genotype data."""
-        if get_enrichment_config(genotype_data) is None:
+        if get_enrichment_config(self.study.genotype_data) is None:
             return []
-        enrichment_config = get_enrichment_config(genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         return [
