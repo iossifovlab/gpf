@@ -69,7 +69,7 @@ class GPFClientSession(Protocol):
         ...
 
 
-class GPFAnonymousClient:
+class GPFAnonymousSession(GPFClientSession):
     """GPF anonymous REST client."""
 
     DEFAULT_TIMEOUT = 10
@@ -137,7 +137,7 @@ class GPFAnonymousClient:
         )
 
 
-class GPFConfidentialClient:
+class GPFOAuthSession(GPFClientSession):
     """GPF Rest Client."""
 
     DEFAULT_TIMEOUT = 10
@@ -272,7 +272,7 @@ class GPFConfidentialClient:
         )
 
 
-class GPFBasicAuth:
+class GPFPasswordSession(GPFClientSession):
     """Basic auth session"""
 
     DEFAULT_TIMEOUT = 10

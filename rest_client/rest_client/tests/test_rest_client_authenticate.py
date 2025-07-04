@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from rest_client.rest_client import GPFConfidentialClient
+from rest_client.rest_client import GPFOAuthSession
 
 
 def test_authenticate() -> None:
     """Test authenticate simple."""
-    client = GPFConfidentialClient(
+    client = GPFOAuthSession(
         base_url="http://resttest:21011",
         client_id="resttest1",
         client_secret="secret",  # noqa: S106
@@ -16,7 +16,7 @@ def test_authenticate() -> None:
 
 def test_authenticate_and_revoke() -> None:
     """Test authenticate simple."""
-    client = GPFConfidentialClient(
+    client = GPFOAuthSession(
         base_url="http://resttest:21011",
         client_id="resttest1",
         client_secret="secret",  # noqa: S106

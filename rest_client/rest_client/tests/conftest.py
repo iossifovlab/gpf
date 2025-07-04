@@ -5,8 +5,8 @@ import pytest
 
 from rest_client.mailhog_client import MailhogClient
 from rest_client.rest_client import (
-    GPFBasicAuth,
-    GPFConfidentialClient,
+    GPFOAuthSession,
+    GPFPasswordSession,
     RESTClient,
 )
 
@@ -57,7 +57,7 @@ def mailhog_url(request: pytest.FixtureRequest) -> str:
 
 @pytest.fixture
 def oauth_admin() -> RESTClient:
-    confidential_session = GPFConfidentialClient(
+    confidential_session = GPFOAuthSession(
         base_url="http://resttest:21011",
         client_id="resttest1",
         client_secret="secret",  # noqa: S106
@@ -76,7 +76,7 @@ def admin_client(
     request: pytest.FixtureRequest,
 ) -> RESTClient:
     if request.param == "basic":
-        basic_session = GPFBasicAuth(
+        basic_session = GPFPasswordSession(
             base_url="http://resttest:21011",
             username="admin@iossifovlab.com",
             password="secret",  # noqa: S106
@@ -86,7 +86,7 @@ def admin_client(
         return client
 
     if request.param == "oauth2_confidential_client":
-        confidential_session = GPFConfidentialClient(
+        confidential_session = GPFOAuthSession(
             base_url="http://resttest:21011",
             client_id="resttest1",
             client_secret="secret",  # noqa: S106
@@ -106,7 +106,7 @@ def user_client(
     request: pytest.FixtureRequest,
 ) -> RESTClient:
     if request.param == "basic":
-        basic_session = GPFBasicAuth(
+        basic_session = GPFPasswordSession(
             base_url="http://resttest:21011",
             username="research@iossifovlab.com",
             password="secret",  # noqa: S106
@@ -116,7 +116,7 @@ def user_client(
         return client
 
     if request.param == "oauth2_confidential_client":
-        confidential_session = GPFConfidentialClient(
+        confidential_session = GPFOAuthSession(
             base_url="http://resttest:21011",
             client_id="resttest2",
             client_secret="secret",  # noqa: S106
@@ -139,7 +139,7 @@ def mail_client(mailhog_url: str) -> MailhogClient:
 @pytest.fixture
 def annon_client() -> RESTClient:
     """REST client fixture."""
-    session = GPFBasicAuth(
+    session = GPFPasswordSession(
         "http://resttest:21011",
         "annonymous@iossifovlab.com",
         "secret",

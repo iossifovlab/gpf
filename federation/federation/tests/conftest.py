@@ -11,7 +11,7 @@ from utils.testing import setup_t4c8_instance
 
 from federation.remote_extension import GPFRemoteExtension
 from federation.rest_api_client import RESTClient
-from rest_client.rest_client import GPFConfidentialClient
+from rest_client.rest_client import GPFOAuthSession
 
 
 def build_remote_config() -> dict[str, str]:
@@ -39,7 +39,7 @@ def rest_client() -> RESTClient:
     )
 
     assert isinstance(client.gpf_rest_client.session,
-                      GPFConfidentialClient)
+                      GPFOAuthSession)
     assert client.gpf_rest_client.session.token is not None, \
         "Failed to get auth token for REST client"
 
