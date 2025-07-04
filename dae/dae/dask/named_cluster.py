@@ -74,6 +74,18 @@ _CLUSTER_TYPES["slurm"] = set_up_slurm_cluster
 _CLUSTER_TYPES["kubernetes"] = set_up_kubernetes_cluster
 
 
+def set_up_scheduler_client(cluster_conf: dict[str, Any]) -> Client:
+    """Create a dask client using the passed cluster configuration."""
+    # pylint: disable=import-outside-toplevel
+    scheduler_address = cluster_conf.get("params", {}).get("scheduler_address")
+
+    if scheduler_address is None:
+        raise ValueError(
+            "Cluster configuration must contain 'scheduler_address' key.")
+
+    return Client(scheduler_address)
+
+
 def setup_client_from_config(
     cluster_config: dict[str, Any],
     number_of_threads_param: int | None = None,
@@ -81,6 +93,8 @@ def setup_client_from_config(
     """Create a dask client from the provided config."""
     logger.info("CLUSTER CONFIG: %s", cluster_config)
     cluster_type = cluster_config["type"]
+    if cluster_type == "scheduler":
+        return set_up_scheduler_client(cluster_config), cluster_config
 
     cluster_params = cluster_config.get("params", {})
     cluster_params["number_of_workers"] = number_of_threads_param
@@ -111,6 +125,5 @@ def setup_client(cluster_name: str | None = None,
         conf["name"]: conf
         for conf in dask.config.get(  # pyright: ignore
             "dae_named_cluster.clusters")}
-
     cluster_config = clusters[cluster_name]
     return setup_client_from_config(cluster_config, number_of_threads)
