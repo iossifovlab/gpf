@@ -2,8 +2,11 @@
 import os
 
 import pytest
+import pytest_mock
 import yaml
-from gpf_instance.gpf_instance import WGPFInstance
+from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
+from studies.query_transformer import QueryTransformer
+from studies.response_transformer import ResponseTransformer
 from utils.testing import setup_t4c8_instance
 
 from federation.rest_api_client import RESTClient
@@ -53,3 +56,49 @@ def t4c8_instance(
         f.write(yaml.dump({"remotes": [build_remote_config()]}))
 
     return WGPFInstance.build(instance.dae_config_path, grr=instance.grr)
+
+
+@pytest.fixture
+def t4c8_wgpf_instance(
+    t4c8_instance: WGPFInstance,
+    db: None,  # noqa: ARG001
+    mocker: pytest_mock.MockFixture,
+) -> WGPFInstance:
+
+    query_transformer = QueryTransformer(
+        t4c8_instance.gene_scores_db,
+        t4c8_instance.reference_genome.chromosomes,
+        t4c8_instance.reference_genome.chrom_prefix,
+    )
+
+    response_transformer = ResponseTransformer(
+        t4c8_instance.gene_scores_db,
+    )
+
+    reload_datasets(t4c8_instance)
+    mocker.patch(
+        "gpf_instance.gpf_instance.get_wgpf_instance",
+        return_value=t4c8_instance,
+    )
+    mocker.patch(
+        "datasets_api.permissions.get_wgpf_instance",
+        return_value=t4c8_instance,
+    )
+    mocker.patch(
+        "query_base.query_base.get_wgpf_instance",
+        return_value=t4c8_instance,
+    )
+    mocker.patch(
+        "query_base.query_base.get_or_create_query_transformer",
+        return_value=query_transformer,
+    )
+    mocker.patch(
+        "query_base.query_base.get_or_create_response_transformer",
+        return_value=response_transformer,
+    )
+    mocker.patch(
+        "utils.expand_gene_set.get_wgpf_instance",
+        return_value=t4c8_instance,
+    )
+
+    return t4c8_instance
