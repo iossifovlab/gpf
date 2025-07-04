@@ -15,6 +15,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
+    ReannotationPipeline,
 )
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -30,6 +31,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsFilter,
+    DeleteAttributesFromVariantFilter,
     VariantsFilter,
     VariantsPipelineProcessor,
     VariantsSource,
@@ -308,6 +310,13 @@ def process_parquet(
     filters: list[VariantsFilter] = [
         AnnotationPipelineVariantsFilter(pipeline),
     ]
+    if isinstance(pipeline, ReannotationPipeline):
+        # FIXME This prevents using deleted attributes in the pipeline
+        # as it will delete them before the pipeline is ran
+        filters.insert(
+            0,
+            DeleteAttributesFromVariantFilter(pipeline.attributes_deleted),
+            )
     consumer = ParquetSummaryVariantConsumer(
         output_dir,
         pipeline.get_attributes(),
