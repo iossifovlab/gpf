@@ -136,6 +136,38 @@ class AnnotationPipelineVariantsFilterMixin:
         summary_allele.update_attributes(public_attributes)
 
 
+class DeleteAttributesFromVariantFilter(VariantsFilter):
+    """Filter to remove items from AWC contexts. Works in-place."""
+
+    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
+        self.to_remove = set(attributes_to_remove)
+
+    def __enter__(self) -> DeleteAttributesFromVariantFilter:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def filter_one(
+        self, full_variant: FullVariant,
+    ) -> FullVariant:
+        """Remove specified attributes from the context of an AWC."""
+        for allele in full_variant.summary_variant.alt_alleles:
+            for attr in self.to_remove:
+                if attr in allele.attributes:
+                    del allele.attributes[attr]
+        return full_variant
+
+
 class AnnotationPipelineVariantsFilter(
         VariantsFilter, AnnotationPipelineVariantsFilterMixin):
     """Annotation pipeline batched variants filter."""
