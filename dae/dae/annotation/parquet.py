@@ -292,7 +292,7 @@ def process_parquet(
     loader = ParquetLoader(input_layout)
     grr = build_genomic_resource_repository(definition=grr_definition)
     pipeline_config_old = loader.meta["annotation_pipeline"] \
-                          if loader.has_annotation else None
+        if loader.has_annotation else None
     variants_blob_serializer = loader.meta.get(
         "variants_blob_serializer",
         "json",
