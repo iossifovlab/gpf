@@ -1,9 +1,9 @@
 from collections.abc import Iterable
 from typing import Any, cast
 
-from dae.enrichment_tool.enrichment_builder import BaseEnrichmentBuilder
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
+from enrichment_api.enrichment_builder import BaseEnrichmentBuilder
+from enrichment_api.enrichment_helper import EnrichmentHelper
 
 from federation.rest_api_client import RESTClient
 

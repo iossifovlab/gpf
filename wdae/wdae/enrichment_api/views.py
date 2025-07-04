@@ -1,8 +1,10 @@
 import logging
 from typing import Any, cast
 
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-from dae.studies.study import GenotypeData
+from box import Box
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -12,26 +14,28 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.expand_gene_set import expand_gene_set
 
+from enrichment_api.enrichment_builder import (
+    EnrichmentBuilder,
+)
+from enrichment_api.enrichment_helper import EnrichmentHelper
+
 logger = logging.getLogger(__name__)
 
 
 class EnrichmentModelsView(QueryBaseView):
     """Select enrichment models view."""
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
-
     def _collect_counting_models(
-        self, study: GenotypeData,
+        self,
+        enrichment_helper: EnrichmentHelper,
+        enrichment_config: Box | None = None,
     ) -> list[dict[str, str]]:
         """Collect counting models."""
-        enrichment_config = self.enrichment_helper.get_enrichment_config(study)
         if enrichment_config is None:
             return []
 
         selected_counting_models = (
-            self.enrichment_helper.get_selected_counting_models(study)
+            enrichment_helper.get_selected_counting_models()
         )
 
         return [
@@ -45,18 +49,22 @@ class EnrichmentModelsView(QueryBaseView):
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request, dataset_id: str) -> Response:
         """Return enrichment configuration prepared for choosing."""
-        study = self.gpf_instance.get_genotype_data(dataset_id)
-
+        study = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if study is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        enrichment_helper = EnrichmentHelper(
+            self.gpf_instance.grr,
+            study,
+        )
+
         background_descriptions = []
-        study_backgrounds = self.enrichment_helper \
-            .collect_genotype_data_backgrounds(study)
-        default_background_model = self.enrichment_helper \
-            .get_default_background_model(study)
-        default_counting_model = self.enrichment_helper \
-            .get_default_counting_model(study)
+        study_backgrounds = enrichment_helper \
+            .collect_genotype_data_backgrounds()
+        default_background_model = enrichment_helper \
+            .get_default_background_model()
+        default_counting_model = enrichment_helper \
+            .get_default_counting_model()
 
         background_descriptions = [
             {"id": background.background_id,
@@ -69,7 +77,10 @@ class EnrichmentModelsView(QueryBaseView):
 
         return Response({
             "background": background_descriptions,
-            "counting": self._collect_counting_models(study),
+            "counting": self._collect_counting_models(
+                enrichment_helper,
+                get_enrichment_config(study.genotype_data),
+            ),
             "defaultBackground": default_background_model,
             "defaultCounting": default_counting_model,
         })
@@ -81,7 +92,6 @@ class EnrichmentTestView(QueryBaseView):
     def __init__(self) -> None:
         super().__init__()
         self.gene_scores_db = self.gpf_instance.gene_scores_db
-        self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
 
     @staticmethod
     def _parse_gene_syms(query: dict[str, Any]) -> list[str]:
@@ -144,8 +154,10 @@ class EnrichmentTestView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         assert dataset is not None
 
-        builder = self.gpf_instance \
-            .get_enrichment_builder(dataset.genotype_data)
+        builder = EnrichmentBuilder(
+            EnrichmentHelper(self.gpf_instance.grr, dataset),
+            dataset,
+        )
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

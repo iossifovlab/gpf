@@ -11,6 +11,9 @@ import pytest_mock
 from dae.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
@@ -44,6 +47,11 @@ from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory
+from studies.study_wrapper import WDAEStudy
+
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_helper import EnrichmentHelper
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 @pytest.fixture(scope="session")
@@ -242,6 +250,38 @@ def create_test_study(
     shutil.rmtree(
         str(pathlib.Path(t4c8_fixture.dae_dir, "studies", "f1_trio")),
     )
+
+
+@pytest.fixture
+def enrichment_helper(
+    grr: GenomicResourceRepo,
+    f1_trio: GenotypeData,
+) -> EnrichmentHelper:
+    return EnrichmentHelper(grr, WDAEStudy(f1_trio, None))
+
+
+@pytest.fixture
+def enrichment_builder(
+    f1_trio: GenotypeData,
+    enrichment_helper: EnrichmentHelper,
+) -> EnrichmentBuilder:
+    return EnrichmentBuilder(enrichment_helper, WDAEStudy(f1_trio, None))
+
+
+@pytest.fixture
+def enrichment_serializer(
+    f1_trio: GenotypeData,
+    enrichment_builder: EnrichmentBuilder,
+) -> EnrichmentSerializer:
+    enrichment_config = get_enrichment_config(f1_trio)
+    assert enrichment_config is not None
+
+    build = enrichment_builder.build_results(
+        gene_syms=["SAMD11", "PLEKHN1", "POGZ"],
+        background_id="enrichment/coding_len_testing",
+        counting_id="enrichment_events_counting",
+    )
+    return EnrichmentSerializer(enrichment_config, build)
 
 
 @pytest.fixture

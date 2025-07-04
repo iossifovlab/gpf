@@ -2,16 +2,18 @@ import json
 import logging
 import os
 from collections.abc import Iterable
-from dataclasses import asdict
 from pathlib import Path
 from typing import ClassVar, cast
-
-from box import Box
 
 from dae.effect_annotation.effect import expand_effect_types
 from dae.enrichment_tool.base_enrichment_background import (
     BaseEnrichmentBackground,
     EnrichmentResult,
+)
+from dae.enrichment_tool.enrichment_utils import (
+    EnrichmentEventCounts,
+    get_enrichment_cache_path,
+    get_enrichment_config,
 )
 from dae.enrichment_tool.event_counters import (
     EVENT_COUNTERS,
@@ -27,11 +29,9 @@ from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.studies.study import GenotypeData
+from studies.study_wrapper import WDAEStudy
 
 logger = logging.getLogger(__name__)
-
-
-EventCounts = dict[str, dict[str, dict[str, dict[str, int]]]]
 
 
 class EnrichmentHelper:
@@ -39,82 +39,68 @@ class EnrichmentHelper:
 
     _BACKGROUNDS_CACHE: ClassVar[dict[str, BaseEnrichmentBackground]] = {}
 
-    def __init__(self, grr: GenomicResourceRepo):
+    def __init__(
+        self,
+        grr: GenomicResourceRepo,
+        study: WDAEStudy,
+        ):
         self.grr = grr
+        self.study = study
 
-    @staticmethod
-    def get_enrichment_config(
-        genotype_data: GenotypeData,
-    ) -> Box | None:
-        return cast(
-            Box | None,
-            genotype_data.config.get("enrichment"),
-        )
-
-    @staticmethod
-    def has_enrichment_config(genotype_data: GenotypeData) -> bool:
-        return EnrichmentHelper\
-            .get_enrichment_config(genotype_data) is not None
-
-    @staticmethod
-    def get_default_background_model(genotype_data: GenotypeData) -> str:
+    def get_default_background_model(self) -> str:
         """
         Return default background model field from the enrichment config.
         If it is missing, default to the first selected background model.
         """
-        enrichment_config = EnrichmentHelper.get_enrichment_config(
-            genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         if enrichment_config["default_background_model"]:
-            return enrichment_config["default_background_model"]
-        return enrichment_config["selected_background_models"][0]
+            return str(enrichment_config["default_background_model"])
+        return str(enrichment_config["selected_background_models"][0])
 
-    @staticmethod
-    def get_default_counting_model(genotype_data: GenotypeData) -> str:
-        enrichment_config = EnrichmentHelper.get_enrichment_config(
-            genotype_data)
+    def get_default_counting_model(self) -> str:
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
-        return enrichment_config["default_counting_model"]
+        return str(enrichment_config["default_counting_model"])
 
-    @staticmethod
-    def get_selected_counting_models(
-        genotype_data: GenotypeData,
-    ) -> list[str]:
+    def get_selected_counting_models(self) -> list[str]:
         """
         Return selected counting models field from the enrichment config.
         If it is missing, default to the counting field.
         """
-        enrichment_config = EnrichmentHelper.get_enrichment_config(
-            genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         if enrichment_config["selected_counting_models"]:
-            return enrichment_config["selected_counting_models"]
+            return cast(
+                list[str],
+                enrichment_config["selected_counting_models"],
+            )
         return list(enrichment_config["counting"].keys())
 
-    @staticmethod
-    def get_selected_person_set_collections(genotype_data: GenotypeData):
+    def get_selected_person_set_collections(self) -> str:
         """
         Return selected person set collections field from the enrichment config.
         If it is missing, default to the first available person set collection
         in the provided study.
         """
-        enrichment_config = EnrichmentHelper.get_enrichment_config(
-            genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         if enrichment_config["selected_person_set_collections"]:
-            return enrichment_config["selected_person_set_collections"][0]
-        return next(iter(genotype_data.person_set_collections.keys()))
+            return str(enrichment_config["selected_person_set_collections"][0])
+        return next(iter(
+            self.study.genotype_data.person_set_collections.keys(),
+        ))
 
     def collect_genotype_data_backgrounds(
-        self, genotype_data: GenotypeData,
+        self,
     ) -> list[BaseEnrichmentBackground]:
         """Collect enrichment backgrounds configured for a genotype data."""
-        if not self.has_enrichment_config(genotype_data):
+        if get_enrichment_config(self.study.genotype_data) is None:
             return []
-        enrichment_config = self.get_enrichment_config(genotype_data)
+        enrichment_config = get_enrichment_config(self.study.genotype_data)
         assert enrichment_config is not None
 
         return [
@@ -168,11 +154,11 @@ class EnrichmentHelper:
         counter_id: str | None = None,
     ) -> dict[str, dict[str, EnrichmentResult]]:
         """Perform enrichment test for a genotype data."""
-        if not self.has_enrichment_config(study):
+        if get_enrichment_config(study) is None:
             raise ValueError(
                 f"no enrichment config for study "
                 f"{study.study_id}")
-        enrichment_config = self.get_enrichment_config(study)
+        enrichment_config = get_enrichment_config(study)
         assert enrichment_config is not None
         if background_id is None or not background_id:
             background_id = enrichment_config["default_background_model"]
@@ -185,7 +171,7 @@ class EnrichmentHelper:
         background = self.create_background(background_id)
         counter = self.create_counter(counter_id)
 
-        event_counters_cache: EventCounts | None = None
+        event_counters_cache: EnrichmentEventCounts | None = None
         if self._has_enrichment_cache(study):
             event_counters_cache = \
                 self._load_enrichment_event_counts_cache(study)
@@ -237,50 +223,15 @@ class EnrichmentHelper:
 
         return results
 
-    def _enrichment_cache_path(self, study: GenotypeData) -> str:
-        return os.path.join(study.config_dir, "enrichment_cache.json")
-
     def _has_enrichment_cache(self, study: GenotypeData) -> bool:
-        cache_path = self._enrichment_cache_path(study)
+        cache_path = get_enrichment_cache_path(study)
         return os.path.exists(cache_path)
 
     def _load_enrichment_event_counts_cache(
         self, study: GenotypeData,
-    ) -> EventCounts:
-        cache_path = self._enrichment_cache_path(study)
-        return cast(EventCounts, json.loads(Path(cache_path).read_text()))
-
-    def build_enrichment_event_counts_cache(
-        self, study: GenotypeData,
-        psc_id: str,
-    ) -> None:
-        """Build enrichment event counts cache for a genotype data."""
-        psc = study.get_person_set_collection(psc_id)
-        assert psc is not None
-
-        enrichment_config = self.get_enrichment_config(study)
-        if enrichment_config is None:
-            return
-
-        assert enrichment_config is not None
-
-        effect_groups = enrichment_config["effect_types"]
-        query_effect_types = expand_effect_types(effect_groups)
-        genotype_helper = GenotypeHelper(
-            study, psc, effect_types=query_effect_types)
-        result: EventCounts = {}
-        for counter_id, counter in EVENT_COUNTERS.items():
-            result[counter_id] = {}
-            for ps_id, person_set in psc.person_sets.items():
-                result[counter_id][ps_id] = {}
-                for effect_group in effect_groups:
-                    effect_group_expanded = expand_effect_types(effect_group)
-                    events = counter.events(
-                        genotype_helper.get_denovo_events(),
-                        person_set.get_children_by_sex(),
-                        effect_group_expanded)
-                    counts = EventCountersResult.from_events_result(events)
-                    result[counter_id][ps_id][effect_group] = asdict(counts)
-
-        cache_path = self._enrichment_cache_path(study)
-        Path(cache_path).write_text(json.dumps(result, indent=4))
+    ) -> EnrichmentEventCounts:
+        cache_path = get_enrichment_cache_path(study)
+        return cast(
+            EnrichmentEventCounts,
+            json.loads(Path(cache_path).read_text()),
+        )

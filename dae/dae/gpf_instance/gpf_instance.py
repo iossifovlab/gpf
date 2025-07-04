@@ -21,11 +21,6 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.enrichment_tool.enrichment_builder import (
-    BaseEnrichmentBuilder,
-    EnrichmentBuilder,
-)
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_scores.gene_scores import GeneScore
@@ -127,10 +122,7 @@ class GPFInstance:
             GeneModels,
             kwargs.get("gene_models"),
         )
-        self._enrichment_builders: dict[str, BaseEnrichmentBuilder] = {}
         self._annotation_pipeline: AnnotationPipeline | None = None
-
-        self.enrichment_helper = EnrichmentHelper(self.grr)
 
         cache_dir = self.dae_config.get("cache_path")
         if cache_dir:
@@ -630,33 +622,3 @@ class GPFInstance:
             self._annotation_pipeline = pipeline
 
         return self._annotation_pipeline
-
-    def register_enrichment_builder(
-        self, dataset_id: str, builder: BaseEnrichmentBuilder,
-    ) -> None:
-        """Register a new enrichment builder to a given dataset ID."""
-        if dataset_id in self._enrichment_builders:
-            raise ValueError(
-                f"Enrichment builder for {dataset_id} already registered!",
-            )
-        self._enrichment_builders[dataset_id] = builder
-
-    def make_enrichment_builder(
-        self, dataset: GenotypeData,
-    ) -> EnrichmentBuilder:
-        return EnrichmentBuilder(self.enrichment_helper, dataset)
-
-    def get_enrichment_builder(
-        self, dataset: GenotypeData,
-    ) -> BaseEnrichmentBuilder:
-        """
-        Get enrichment builder for specific dataset.
-
-        Will create and register new one if one isn't found.
-        """
-        if dataset.study_id not in self._enrichment_builders:
-            self.register_enrichment_builder(
-                dataset.study_id, self.make_enrichment_builder(dataset),
-            )
-
-        return self._enrichment_builders[dataset.study_id]

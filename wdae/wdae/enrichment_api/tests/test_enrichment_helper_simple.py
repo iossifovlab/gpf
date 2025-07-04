@@ -1,13 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from collections.abc import Callable
 
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
+from studies.study_wrapper import WDAEStudy
+
+from enrichment_api.enrichment_helper import EnrichmentHelper
 
 
 def test_gpf_fixture(t4c8_fixture: GPFInstance) -> None:
@@ -17,11 +22,12 @@ def test_gpf_fixture(t4c8_fixture: GPFInstance) -> None:
 
 
 def test_get_study_background(
+    f1_trio: GenotypeData,
     t4c8_fixture: GPFInstance,
 ) -> None:
     assert t4c8_fixture.grr.repo_id == "enrichment_testing_repo"
 
-    helper = EnrichmentHelper(t4c8_fixture.grr)
+    helper = EnrichmentHelper(t4c8_fixture.grr, WDAEStudy(f1_trio, None))
 
     assert isinstance(
         helper.create_background(
@@ -40,23 +46,13 @@ def test_get_study_background(
 
 def test_get_study_enrichment_config(
     f1_trio: GenotypeData,
-    t4c8_fixture: GPFInstance,
 ) -> None:
-    helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert helper.get_enrichment_config(f1_trio) is not None
-
-
-def test_has_enrichment_config(
-    f1_trio: GenotypeData,
-    t4c8_fixture: GPFInstance,
-) -> None:
-
-    helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert helper.has_enrichment_config(f1_trio) is True
+    assert get_enrichment_config(f1_trio) is not None
 
 
 def test_get_selected_counting_models(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -78,13 +74,17 @@ def test_get_selected_counting_models(
         },
     }
 
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_selected_counting_models(study) == [
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_selected_counting_models() == [
         "enrichment_gene_counting"]
 
 
 def test_get_selected_counting_models_default(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -92,13 +92,17 @@ def test_get_selected_counting_models_default(
             "selected_background_models": ["enrichment/samocha_testing"],
         },
     }
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_selected_counting_models(study) == [
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_selected_counting_models() == [
         "enrichment_events_counting", "enrichment_gene_counting"]
 
 
 def test_get_selected_counting_models_default_with_counting(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -113,8 +117,11 @@ def test_get_selected_counting_models_default_with_counting(
             },
         },
     }
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_selected_counting_models(study) == [
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_selected_counting_models() == [
         "enrichment_events_counting",
         "enrichment_gene_counting",
     ]
@@ -122,6 +129,7 @@ def test_get_selected_counting_models_default_with_counting(
 
 def test_get_default_background_model(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -134,13 +142,17 @@ def test_get_default_background_model(
         },
     }
 
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_default_background_model(study) == \
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_default_background_model() == \
         "enrichment/samocha_background"
 
 
 def test_get_default_background_model_default(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -153,13 +165,17 @@ def test_get_default_background_model_default(
         },
     }
 
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_default_background_model(study) == \
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_default_background_model() == \
         "hg38/enrichment/coding_length_ref_gene_v20170601"
 
 
 def test_get_selected_person_set_collections(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -174,12 +190,16 @@ def test_get_selected_person_set_collections(
         },
     }
 
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_selected_person_set_collections(study) == "role"
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_selected_person_set_collections() == "role"
 
 
 def test_get_selected_person_set_collections_default(
     create_test_study: Callable[[dict], GenotypeData],
+    t4c8_fixture: GPFInstance,
 ) -> None:
     study_config = {
         "enrichment": {
@@ -231,6 +251,8 @@ def test_get_selected_person_set_collections_default(
             "selected_person_set_collections": ["role", "status", "phenotype"],
     }}
 
-    study = create_test_study(study_config)
-    assert EnrichmentHelper.get_selected_person_set_collections(study) == \
-        "role"
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(create_test_study(study_config), None),
+    )
+    assert helper.get_selected_person_set_collections() == "role"
