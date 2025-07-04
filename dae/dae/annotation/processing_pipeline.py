@@ -3,9 +3,9 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from contextlib import AbstractContextManager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Any
 
@@ -13,114 +13,73 @@ from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
+from dae.variants_loaders.raw.loader import FullVariant
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(repr=True)
-class Annotation:
-    """An annotatable with annotations."""
-
-    annotatable: Annotatable | None
-    annotations: dict[str, Any]
-
-
-@dataclass(repr=True)
-class AnnotatablesWithContext:
-
-    annotatables: list[Annotatable | None]
-    context: Any
+class AnnotatableWithContext:
+    annotatable: Annotatable | None = field()
+    context: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
-class AnnotationsWithContext:
-
-    annotations: list[Annotation]
-    context: Any
+class VariantWithAWCs:
+    variant: FullVariant
+    awcs: list[AnnotatableWithContext]
 
 
 class AnnotatablesFilter(AbstractContextManager):
     """A filter that can filter annotatables."""
 
     @abc.abstractmethod
-    def filter_one(
-        self, annotatable: Annotatable | None,
-    ) -> Annotation:
+    def filter_awc(
+        self, awc: AnnotatableWithContext,
+    ) -> AnnotatableWithContext:
         """Filter a single annotatable."""
 
-    def filter(
-        self, annotatables: Iterable[Annotatable | None],
-    ) -> Iterable[Annotation]:
-        """Filter annotatables."""
-        for annotatable in annotatables:
-            yield self.filter_one(annotatable)
-
-    def filter_one_with_context(
-        self, annotatables: AnnotatablesWithContext,
-    ) -> AnnotationsWithContext:
-        annotations = list(self.filter(annotatables.annotatables))
-        return AnnotationsWithContext(
-            annotations=annotations,
-            context=annotatables.context,
+    def filter(self, variant: VariantWithAWCs) -> VariantWithAWCs:
+        filtered_awcs = [
+            self.filter_awc(awc)
+            for awc in variant.awcs
+        ]
+        return VariantWithAWCs(
+            variant=variant.variant,
+            awcs=filtered_awcs,
         )
-
-    def filter_with_context(
-        self, annotatables_with_context: Iterable[AnnotatablesWithContext],
-    ) -> Iterable[AnnotationsWithContext]:
-        """Filter annotatables with context."""
-        for annotatables in annotatables_with_context:
-            yield self.filter_one_with_context(annotatables)
 
 
 class AnnotatablesBatchFilter(AbstractContextManager):
     """A filter that can filter annotatables in batches."""
 
     @abc.abstractmethod
-    def filter_batch(
-        self, batch: Sequence[Annotatable | None],
-    ) -> Sequence[Annotation]:
+    def filter_awc_batch(
+        self, batch: Sequence[AnnotatableWithContext],
+    ) -> Sequence[AnnotatableWithContext]:
         """Filter annotatables in a single batch."""
 
-    def filter_batches(
-        self, batches: Iterable[Sequence[Annotatable | None]],
-    ) -> Iterable[Sequence[Annotation]]:
-        """Filter annotatables in batches."""
-        for batch in batches:
-            annotations = list(self.filter_batch(batch))
-            yield annotations
-
-    def filter_batch_with_context(
-        self,
-        batch_with_context: Sequence[AnnotatablesWithContext],
-    ) -> Sequence[AnnotationsWithContext]:
+    def filter_batch(
+        self, batch: Sequence[VariantWithAWCs],
+    ) -> Sequence[VariantWithAWCs]:
         """Filter a single batch of annotatables with context."""
         annotatables_batch = list(itertools.chain.from_iterable(
-            awc.annotatables for awc in batch_with_context
+            variant.awcs for variant in batch
         ))
-        annotations = self.filter_batch(annotatables_batch)
+        annotations = self.filter_awc_batch(annotatables_batch)
         assert len(annotations) == len(annotatables_batch)
 
         annotations_iter = iter(annotations)
-        result: list[AnnotationsWithContext] = []
-        for awc in batch_with_context:
+        result: list[VariantWithAWCs] = []
+        for variant in batch:
             # pylint: disable=stop-iteration-return
-            annos: list[Annotation] = [
+            annos: list[AnnotatableWithContext] = [
                 next(annotations_iter)
-                for _ in awc.annotatables
+                for _ in variant.awcs
             ]
-            result.append(
-                AnnotationsWithContext(
-                    annotations=annos, context=awc.context))
+            result.append(VariantWithAWCs(variant=variant.variant, awcs=annos))
 
         return result
-
-    def filter_batches_with_context(
-        self,
-        batches_with_context: Iterable[Sequence[AnnotatablesWithContext]],
-    ) -> Iterable[Sequence[AnnotationsWithContext]]:
-        """Filter annotatables with context in batches."""
-        for batch_with_context in batches_with_context:
-            yield self.filter_batch_with_context(batch_with_context)
 
 
 class AnnotationPipelineContextManager(AbstractContextManager):
@@ -151,24 +110,33 @@ class AnnotationPipelineAnnotatablesFilter(
         AnnotatablesFilter, AnnotationPipelineContextManager):
     """A filter that can filter annotatables in batches."""
 
-    def filter_one(
-        self, annotatable: Annotatable | None,
-    ) -> Annotation:
+    def filter_awc(
+        self, awc: AnnotatableWithContext,
+    ) -> AnnotatableWithContext:
         """Filter annotatables."""
-        annotations = self.annotation_pipeline.annotate(annotatable)
-        return Annotation(annotatable=annotatable, annotations=annotations)
+        annotations = self.annotation_pipeline.annotate(
+            awc.annotatable, context=awc.context)
+        return AnnotatableWithContext(annotatable=awc.annotatable,
+                                      context=annotations)
 
 
 class AnnotationPipelineAnnotatablesBatchFilter(
         AnnotatablesBatchFilter, AnnotationPipelineContextManager):
     """A filter that can filter annotatables in batches."""
 
-    def filter_batch(
-        self, batch: Sequence[Annotatable | None],
-    ) -> Sequence[Annotation]:
+    def filter_awc_batch(
+        self, batch: Sequence[AnnotatableWithContext],
+    ) -> Sequence[AnnotatableWithContext]:
         """Filter annotatables in a single batch."""
-        annotations = self.annotation_pipeline.batch_annotate(batch)
+        annotatable_batch, context_batch = [], []
+        for awc in batch:
+            annotatable_batch.append(awc.annotatable)
+            context_batch.append(awc.context)
+
+        annotations = self.annotation_pipeline.batch_annotate(
+            annotatable_batch, contexts=context_batch)
         return [
-            Annotation(annotatable=annotatable, annotations=annotation)
-            for annotatable, annotation in zip(batch, annotations, strict=True)
+            AnnotatableWithContext(annotatable=annotatable, context=annotation)
+            for annotatable, annotation in zip(annotatable_batch, annotations,
+                                               strict=True)
         ]

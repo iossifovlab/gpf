@@ -2,33 +2,33 @@
 
 from collections.abc import Iterable, Sequence
 from types import TracebackType
+from unittest.mock import MagicMock
 
 import pytest
 from dae.annotation.annotatable import (
-    Annotatable,
     Position,
     Region,
 )
 from dae.annotation.processing_pipeline import (
     AnnotatablesBatchFilter,
-    AnnotatablesWithContext,
-    Annotation,
+    AnnotatableWithContext,
+    VariantWithAWCs,
 )
 
 
 class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
 
-    def filter_batch(
-        self, batch: Iterable[Annotatable | None],
-    ) -> Sequence[Annotation]:
+    def filter_awc_batch(
+        self, batch: Iterable[AnnotatableWithContext],
+    ) -> Sequence[AnnotatableWithContext]:
 
         """Mock filter that returns all annotatables as annotations."""
         return [
-            Annotation(
-                annotatable,
+            AnnotatableWithContext(
+                awc.annotatable,
                 {"index": index},
             )
-            for index, annotatable in enumerate(batch)
+            for index, awc in enumerate(batch)
         ]
 
     def __exit__(
@@ -40,54 +40,52 @@ class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
 
 
 @pytest.mark.parametrize(
-    "awcs",
+    "variants",
     [
         [
-            AnnotatablesWithContext(
+            VariantWithAWCs(
+                MagicMock(),
                 [
-                    Position("chr1", 100),
-                    Region("chr1", 200, 201),
+                    AnnotatableWithContext(annotatable=Position("chr1", 100)),
+                    AnnotatableWithContext(annotatable=Region("chr1", 200, 201)),  # noqa: E501
                 ],
-                {"source": "1"},
             ),
         ],
         [
-            AnnotatablesWithContext(
+            VariantWithAWCs(
+                MagicMock(),
                 [
-                    Position("chr1", 100),
-                    Region("chr1", 200, 201),
+                    AnnotatableWithContext(annotatable=Position("chr1", 100)),
+                    AnnotatableWithContext(annotatable=Region("chr1", 200, 201)),  # noqa: E501
                 ],
-                {"source": "1"},
             ),
-            AnnotatablesWithContext(
+            VariantWithAWCs(
+                MagicMock(),
                 [
-                    Position("chr1", 100),
-                    Region("chr1", 200, 201),
+                    AnnotatableWithContext(annotatable=Position("chr1", 100)),
+                    AnnotatableWithContext(annotatable=Region("chr1", 200, 201)),  # noqa: E501
                 ],
-                {"source": "2"},
             ),
         ],
     ],
 )
 def test_filter_batches_with_context(
-    awcs: Sequence[AnnotatablesWithContext],
+    variants: Sequence[VariantWithAWCs],
 ) -> None:
     """Test filtering batches with context."""
 
     dummy = DummyAnnotatablesBatchFilter()
-    batch_result = next(iter(dummy.filter_batches_with_context([awcs])))
-    assert len(batch_result) == len(awcs)
+    batch_result = dummy.filter_batch(variants)
+    assert len(batch_result) == len(variants)
     test_index = 0
-    for annotations, annotatables in zip(
-                batch_result, awcs, strict=True,
-            ):
-
-        assert len(annotations.annotations) == len(annotatables.annotatables)
-        assert annotations.context == annotatables.context
-        for annotation, annotatable in zip(
-                    annotations.annotations, annotatables.annotatables,
-                    strict=True,
-                ):
-            assert annotation.annotatable == annotatable
-            assert annotation.annotations["index"] == test_index
+    for annotations, variant in zip(
+        batch_result, variants, strict=True,
+    ):
+        assert len(annotations.awcs) == len(variant.awcs)
+        assert annotations.variant == variant.variant
+        for new_awc, old_awc in zip(
+            annotations.awcs, variant.awcs, strict=True,
+        ):
+            assert new_awc.annotatable == old_awc.annotatable
+            assert new_awc.context["index"] == test_index
             test_index += 1
