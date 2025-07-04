@@ -275,63 +275,6 @@ class ParquetSummaryVariantConsumer(VariantsParquetWriter):
         self.summary_index += 1
 
 
-# class ParquetVariantToAnnotatable:
-#     def filter(
-#         self, data: SummaryVariant,
-#     ) -> tuple[SummaryVariant, list[tuple[Annotatable, dict]]]:
-#         return data, [(allele.get_annotatable(), allele.attributes)
-#                       for allele in data.alt_alleles]
-
-
-# class ParquetVariantApplyAnnotation:
-#     """Filter to apply annotations to Parquet variants."""
-#     def __init__(self, pipeline: AnnotationPipeline):
-#         self.pipeline = pipeline
-#         if isinstance(self.pipeline, ReannotationPipeline):
-#             self.internal_attributes = [
-#                 attribute.name
-#                 for annotator in (self.pipeline.annotators_new
-#                                   | self.pipeline.annotators_rerun)
-#                 for attribute in annotator.attributes
-#                 if attribute.internal
-#             ]
-#         else:
-#             self.internal_attributes = [
-#                 attribute.name
-#                 for attribute in self.pipeline.get_attributes()
-#                 if attribute.internal
-#             ]
-
-#     def filter(self, data: tuple[SummaryVariant, list[dict]]) -> SummaryVariant:
-#         """Apply annotations to a Parquet variant."""
-#         variant, annotations = data
-#         for allele, annotation in zip(variant.alt_alleles, annotations,
-#                                       strict=True):
-#             if isinstance(self.pipeline, ReannotationPipeline):
-#                 for attr in self.pipeline.attributes_deleted:
-#                     del allele.attributes[attr]
-#             for attr in self.internal_attributes:  # type: ignore
-#                 del annotation[attr]
-#             allele.update_attributes(annotation)
-#         return variant
-
-
-# class AnnotateFilter:
-#     """Filter to annotate summary variants using an annotation pipeline."""
-#     def __init__(self, pipeline: AnnotationPipeline):
-#         self.pipeline = pipeline
-
-#     def filter(
-#         self,
-#         data: tuple[SummaryVariant, list[tuple[Annotatable, dict]]],
-#     ) -> tuple[SummaryVariant, list[dict]]:
-#         """Annnotate a summary variant."""
-#         variant, annotatables_with_context = data
-#         annotations = list(starmap(self.pipeline.annotate,
-#                                     annotatables_with_context))
-#         return variant, annotations
-
-
 def process_parquet(
     input_layout: Schema2DatasetLayout,
     pipeline_config: RawPipelineConfig,
@@ -360,7 +303,6 @@ def process_parquet(
         config_old_raw=pipeline_config_old,
         full_reannotation=full_reannotation,
     )
-    pipeline.open()
 
     source = ParquetVariantsSource(loader.layout)
     filters: list[VariantsFilter] = [
@@ -374,5 +316,5 @@ def process_parquet(
         variants_blob_serializer=variants_blob_serializer,
     )
 
-    processor = VariantsPipelineProcessor(source, filters, consumer)
-    processor.process_region(region)
+    with VariantsPipelineProcessor(source, filters, consumer) as processor:
+        processor.process_region(region)

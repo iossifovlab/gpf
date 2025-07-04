@@ -6,16 +6,15 @@ import logging
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
-from typing import cast
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from dae.annotation.processing_pipeline import (
-    AnnotatablesWithContext,
-    Annotation,
+    AnnotatableWithContext,
     AnnotationPipelineAnnotatablesBatchFilter,
     AnnotationPipelineAnnotatablesFilter,
+    VariantWithAWCs,
 )
 from dae.effect_annotation.effect import AlleleEffects
 from dae.utils.regions import Region
@@ -121,17 +120,17 @@ class AnnotationPipelineVariantsFilterMixin:
 
     def _apply_annotation_to_allele(
         self, summary_allele: SummaryAllele,
-        annotation: Annotation,
+        annotation: AnnotatableWithContext,
     ) -> None:
 
-        if "allele_effects" in annotation.annotations:
-            allele_effects = annotation.annotations["allele_effects"]
+        if "allele_effects" in annotation.context:
+            allele_effects = annotation.context["allele_effects"]
             assert isinstance(allele_effects, AlleleEffects)
             # pylint: disable=protected-access
             summary_allele._effects = allele_effects  # noqa: SLF001
-            del annotation.annotations["allele_effects"]
+            del annotation.context["allele_effects"]
         public_attributes = {
-            key: value for key, value in annotation.annotations.items()
+            key: value for key, value in annotation.context.items()
             if key not in self._annotation_internal_attributes
         }
         summary_allele.update_attributes(public_attributes)
@@ -149,25 +148,26 @@ class AnnotationPipelineVariantsFilter(
     def filter_one(
         self, full_variant: FullVariant,
     ) -> FullVariant:
-        annotatables = AnnotatablesWithContext(
-            annotatables=[
-                sa.get_annotatable()
-                for sa in full_variant.summary_variant.alt_alleles],
-            context=full_variant,
+        variant = VariantWithAWCs(
+            variant=full_variant,
+            awcs=[
+                AnnotatableWithContext(sa.get_annotatable(),
+                                       dict(sa.attributes))
+                for sa in full_variant.summary_variant.alt_alleles
+            ],
         )
-        awc = self.annotatables_filter.filter_one_with_context(
-                annotatables)
+        annotated_variant = self.annotatables_filter.filter(variant)
 
-        full_variant = cast(FullVariant, awc.context)
-        assert isinstance(full_variant.summary_variant, SummaryVariant)
-        assert len(awc.annotations) == \
-            len(full_variant.summary_variant.alt_alleles)
+        assert isinstance(annotated_variant.variant.summary_variant,
+                          SummaryVariant)
+        assert len(annotated_variant.awcs) == \
+            len(annotated_variant.variant.summary_variant.alt_alleles)
         for summary_allele, annotation in zip(
-                full_variant.summary_variant.alt_alleles,
-                awc.annotations, strict=True):
+                annotated_variant.variant.summary_variant.alt_alleles,
+                annotated_variant.awcs, strict=True):
             assert isinstance(summary_allele, SummaryAllele)
             self._apply_annotation_to_allele(summary_allele, annotation)
-        return full_variant
+        return annotated_variant.variant
 
     def __exit__(
             self,
@@ -195,32 +195,32 @@ class AnnotationPipelineVariantsBatchFilter(
         self, batch: Sequence[FullVariant],
     ) -> Sequence[FullVariant]:
         """Filter variants in batches."""
-        annotatables_with_context = [
-            AnnotatablesWithContext(
-                annotatables=[
-                    sa.get_annotatable()
-                    for sa in v.summary_variant.alt_alleles],
-                context=v,
+        variants = [
+            VariantWithAWCs(
+                variant=v,
+                awcs=[
+                    AnnotatableWithContext(sa.get_annotatable(),
+                                           dict(sa.attributes))
+                    for sa in v.summary_variant.alt_alleles
+                ],
             )
             for v in batch
         ]
-        annotations_with_context = \
-            self.annotatables_filter.filter_batch_with_context(
-                annotatables_with_context)
+        annotated_variants = self.annotatables_filter.filter_batch(variants)
 
         result: list[FullVariant] = []
-        for awc in annotations_with_context:
-            full_variant = cast(FullVariant, awc.context)
-            assert isinstance(full_variant.summary_variant, SummaryVariant)
-            assert len(awc.annotations) == \
-                len(full_variant.summary_variant.alt_alleles)
+        for annotated_variant in annotated_variants:
+            assert isinstance(annotated_variant.variant.summary_variant,
+                              SummaryVariant)
+            assert len(annotated_variant.awcs) == \
+                len(annotated_variant.variant.summary_variant.alt_alleles)
             for summary_allele, annotation in zip(
-                    full_variant.summary_variant.alt_alleles,
-                    awc.annotations, strict=True):
+                    annotated_variant.variant.summary_variant.alt_alleles,
+                    annotated_variant.awcs, strict=True):
                 assert isinstance(summary_allele, SummaryAllele)
                 self._apply_annotation_to_allele(summary_allele, annotation)
 
-            result.append(full_variant)
+            result.append(annotated_variant.variant)
         return result
 
     def __exit__(
