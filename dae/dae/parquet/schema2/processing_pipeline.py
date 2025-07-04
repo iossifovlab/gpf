@@ -6,15 +6,16 @@ import logging
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
+from typing import cast
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from dae.annotation.processing_pipeline import (
-    AnnotatableWithContext,
+    Annotation,
     AnnotationPipelineAnnotatablesBatchFilter,
     AnnotationPipelineAnnotatablesFilter,
-    VariantWithAWCs,
+    AnnotationsWithSource,
 )
 from dae.effect_annotation.effect import AlleleEffects
 from dae.utils.regions import Region
@@ -120,7 +121,7 @@ class AnnotationPipelineVariantsFilterMixin:
 
     def _apply_annotation_to_allele(
         self, summary_allele: SummaryAllele,
-        annotation: AnnotatableWithContext,
+        annotation: Annotation,
     ) -> None:
 
         if "allele_effects" in annotation.context:
@@ -180,26 +181,25 @@ class AnnotationPipelineVariantsFilter(
     def filter_one(
         self, full_variant: FullVariant,
     ) -> FullVariant:
-        variant = VariantWithAWCs(
-            variant=full_variant,
-            awcs=[
-                AnnotatableWithContext(sa.get_annotatable(),
-                                       dict(sa.attributes))
+        variant = AnnotationsWithSource(
+            source=full_variant,
+            annotations=[
+                Annotation(sa.get_annotatable(), dict(sa.attributes))
                 for sa in full_variant.summary_variant.alt_alleles
             ],
         )
-        annotated_variant = self.annotatables_filter.filter(variant)
+        aws = self.annotatables_filter.filter_one_with_source(variant)
 
-        assert isinstance(annotated_variant.variant.summary_variant,
-                          SummaryVariant)
-        assert len(annotated_variant.awcs) == \
-            len(annotated_variant.variant.summary_variant.alt_alleles)
+        full_variant = cast(FullVariant, aws.source)
+        assert isinstance(full_variant.summary_variant, SummaryVariant)
+        assert len(aws.annotations) == \
+            len(full_variant.summary_variant.alt_alleles)
         for summary_allele, annotation in zip(
-                annotated_variant.variant.summary_variant.alt_alleles,
-                annotated_variant.awcs, strict=True):
+                full_variant.summary_variant.alt_alleles,
+                aws.annotations, strict=True):
             assert isinstance(summary_allele, SummaryAllele)
             self._apply_annotation_to_allele(summary_allele, annotation)
-        return annotated_variant.variant
+        return full_variant
 
     def __exit__(
             self,
@@ -228,31 +228,31 @@ class AnnotationPipelineVariantsBatchFilter(
     ) -> Sequence[FullVariant]:
         """Filter variants in batches."""
         variants = [
-            VariantWithAWCs(
-                variant=v,
-                awcs=[
-                    AnnotatableWithContext(sa.get_annotatable(),
-                                           dict(sa.attributes))
+            AnnotationsWithSource(
+                source=v,
+                annotations=[
+                    Annotation(sa.get_annotatable(), dict(sa.attributes))
                     for sa in v.summary_variant.alt_alleles
                 ],
             )
             for v in batch
         ]
-        annotated_variants = self.annotatables_filter.filter_batch(variants)
+        aws_batch = \
+            self.annotatables_filter.filter_batch_with_source(variants)
 
         result: list[FullVariant] = []
-        for annotated_variant in annotated_variants:
-            assert isinstance(annotated_variant.variant.summary_variant,
-                              SummaryVariant)
-            assert len(annotated_variant.awcs) == \
-                len(annotated_variant.variant.summary_variant.alt_alleles)
+        for aws in aws_batch:
+            full_variant = cast(FullVariant, aws.source)
+            assert isinstance(full_variant.summary_variant, SummaryVariant)
+            assert len(aws.annotations) == \
+                len(full_variant.summary_variant.alt_alleles)
             for summary_allele, annotation in zip(
-                    annotated_variant.variant.summary_variant.alt_alleles,
-                    annotated_variant.awcs, strict=True):
+                    full_variant.summary_variant.alt_alleles,
+                    aws.annotations, strict=True):
                 assert isinstance(summary_allele, SummaryAllele)
                 self._apply_annotation_to_allele(summary_allele, annotation)
 
-            result.append(annotated_variant.variant)
+            result.append(full_variant)
         return result
 
     def __exit__(
