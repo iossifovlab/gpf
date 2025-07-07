@@ -752,7 +752,6 @@ class WDAEStudy(WDAEAbstractStudy):
             with closing(variants_result) as variants:
                 for variant in variants:
                     if variant is None:
-                        yield None
                         continue
                     yield variant
 
@@ -763,7 +762,6 @@ class WDAEStudy(WDAEAbstractStudy):
                             matched = False
                             break
                     if not matched:
-                        yield None
                         continue
 
                     fvuid = variant.fvuid
@@ -871,7 +869,6 @@ class WDAEStudy(WDAEAbstractStudy):
             with closing(variants_result) as variants:
                 for variant in variants:
                     if variant is None:
-                        yield None
                         continue
                     v = transform(variant)
 
@@ -882,7 +879,6 @@ class WDAEStudy(WDAEAbstractStudy):
                             matched = False
                             break
                     if not matched:
-                        yield None
                         continue
 
                     fvuid = variant.fvuid
