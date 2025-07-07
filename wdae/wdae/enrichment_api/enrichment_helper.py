@@ -12,8 +12,6 @@ from dae.enrichment_tool.base_enrichment_background import (
 )
 from dae.enrichment_tool.enrichment_utils import (
     EnrichmentEventCounts,
-    get_enrichment_cache_path,
-    get_enrichment_config,
 )
 from dae.enrichment_tool.event_counters import (
     EVENT_COUNTERS,
@@ -28,7 +26,6 @@ from dae.enrichment_tool.gene_weights_background import (
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.studies.study import GenotypeData
 from studies.study_wrapper import WDAEStudy
 
 logger = logging.getLogger(__name__)
@@ -52,7 +49,7 @@ class EnrichmentHelper:
         Return default background model field from the enrichment config.
         If it is missing, default to the first selected background model.
         """
-        enrichment_config = get_enrichment_config(self.study.genotype_data)
+        enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
 
         if enrichment_config["default_background_model"]:
@@ -60,7 +57,7 @@ class EnrichmentHelper:
         return str(enrichment_config["selected_background_models"][0])
 
     def get_default_counting_model(self) -> str:
-        enrichment_config = get_enrichment_config(self.study.genotype_data)
+        enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
         return str(enrichment_config["default_counting_model"])
 
@@ -69,7 +66,7 @@ class EnrichmentHelper:
         Return selected counting models field from the enrichment config.
         If it is missing, default to the counting field.
         """
-        enrichment_config = get_enrichment_config(self.study.genotype_data)
+        enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
 
         if enrichment_config["selected_counting_models"]:
@@ -85,7 +82,7 @@ class EnrichmentHelper:
         If it is missing, default to the first available person set collection
         in the provided study.
         """
-        enrichment_config = get_enrichment_config(self.study.genotype_data)
+        enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
 
         if enrichment_config["selected_person_set_collections"]:
@@ -98,9 +95,9 @@ class EnrichmentHelper:
         self,
     ) -> list[BaseEnrichmentBackground]:
         """Collect enrichment backgrounds configured for a genotype data."""
-        if get_enrichment_config(self.study.genotype_data) is None:
+        if self.study.enrichment_config is None:
             return []
-        enrichment_config = get_enrichment_config(self.study.genotype_data)
+        enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
 
         return [
@@ -146,7 +143,6 @@ class EnrichmentHelper:
 
     def calc_enrichment_test(
         self,
-        study: GenotypeData,
         psc_id: str,
         gene_syms: Iterable[str],
         effect_groups: Iterable[str] | Iterable[Iterable[str]],
@@ -154,11 +150,11 @@ class EnrichmentHelper:
         counter_id: str | None = None,
     ) -> dict[str, dict[str, EnrichmentResult]]:
         """Perform enrichment test for a genotype data."""
-        if get_enrichment_config(study) is None:
+        if self.study.enrichment_config is None:
             raise ValueError(
                 f"no enrichment config for study "
-                f"{study.study_id}")
-        enrichment_config = get_enrichment_config(study)
+                f"{self.study.study_id}")
+        enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
         if background_id is None or not background_id:
             background_id = enrichment_config["default_background_model"]
@@ -172,11 +168,11 @@ class EnrichmentHelper:
         counter = self.create_counter(counter_id)
 
         event_counters_cache: EnrichmentEventCounts | None = None
-        if self._has_enrichment_cache(study):
+        if self._has_enrichment_cache():
             event_counters_cache = \
-                self._load_enrichment_event_counts_cache(study)
+                self._load_enrichment_event_counts_cache()
 
-        psc = study.get_person_set_collection(psc_id)
+        psc = self.study.get_person_set_collection(psc_id)
         assert psc is not None
 
         query_effect_types = expand_effect_types(effect_groups)
@@ -184,7 +180,7 @@ class EnrichmentHelper:
         if event_counters_cache is not None:
             gene_syms_query = list(gene_syms)
         genotype_helper = GenotypeHelper(
-            study, psc,
+            self.study.genotype_data, psc,
             effect_types=query_effect_types,
             genes=gene_syms_query)
 
@@ -223,14 +219,18 @@ class EnrichmentHelper:
 
         return results
 
-    def _has_enrichment_cache(self, study: GenotypeData) -> bool:
-        cache_path = get_enrichment_cache_path(study)
+    def _has_enrichment_cache(self) -> bool:
+        cache_path = self.study.enrichment_cache_path
+        if cache_path is None:
+            return False
         return os.path.exists(cache_path)
 
     def _load_enrichment_event_counts_cache(
-        self, study: GenotypeData,
-    ) -> EnrichmentEventCounts:
-        cache_path = get_enrichment_cache_path(study)
+        self,
+    ) -> EnrichmentEventCounts | None:
+        cache_path = self.study.enrichment_cache_path
+        if cache_path is None:
+            return None
         return cast(
             EnrichmentEventCounts,
             json.loads(Path(cache_path).read_text()),

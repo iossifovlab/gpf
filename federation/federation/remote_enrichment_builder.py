@@ -1,10 +1,10 @@
 from collections.abc import Iterable
 from typing import Any, cast
 
-from dae.studies.study import GenotypeData
 from enrichment_api.enrichment_builder import BaseEnrichmentBuilder
 from enrichment_api.enrichment_helper import EnrichmentHelper
 
+from federation.remote_study_wrapper import RemoteWDAEStudy
 from federation.rest_api_client import RESTClient
 
 
@@ -13,7 +13,7 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
 
     def __init__(
         self, enrichment_helper: EnrichmentHelper,
-        dataset: GenotypeData,
+        dataset: RemoteWDAEStudy,
         client: RESTClient,
     ):
         super().__init__(enrichment_helper, dataset)
@@ -25,7 +25,7 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
     ) -> list[dict[str, Any]]:
 
         query: dict[str, Any] = {}
-        query["datasetId"] = self.dataset.study_id
+        query["datasetId"] = self.dataset.genotype_data.study_id
         query["geneSymbols"] = list(gene_syms)
         query["enrichmentBackgroundModel"] = background_id
         query["enrichmentCountingModel"] = counting_id

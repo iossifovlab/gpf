@@ -2,9 +2,6 @@ import abc
 from collections.abc import Iterable
 from typing import Any, cast
 
-from dae.enrichment_tool.enrichment_utils import (
-    get_enrichment_config,
-)
 from dae.person_sets import PersonSetCollection
 from studies.study_wrapper import WDAEStudy
 
@@ -21,9 +18,7 @@ class BaseEnrichmentBuilder:
         assert enrichment_helper.study.study_id == study.study_id
         self.enrichment_helper = enrichment_helper
         self.study = study
-        enrichment_config = get_enrichment_config(
-            study.genotype_data,
-        )
+        enrichment_config = study.enrichment_config
         assert enrichment_config is not None
         self.enrichment_config = enrichment_config
 
@@ -67,7 +62,6 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
         effect_types = self.enrichment_config["effect_types"]
         enrichment_result = self.enrichment_helper.calc_enrichment_test(
-            self.study.genotype_data,
             person_set_collection.id,
             gene_syms,
             effect_types,

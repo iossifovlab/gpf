@@ -325,7 +325,7 @@ class QueryTransformer(QueryTransformerProtocol):
                 "Cannot handle person set collection "
                 "query argument on non genotype studies.",
             )
-        psc = study_wrapper.genotype_data.get_person_set_collection(
+        psc = study_wrapper.get_person_set_collection(
             psc_query.psc_id,
         )
         assert psc is not None

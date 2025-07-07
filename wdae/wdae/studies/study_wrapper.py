@@ -12,6 +12,10 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.wdae_study_config import (
     wdae_study_config_schema,
 )
+from dae.enrichment_tool.enrichment_utils import (
+    get_enrichment_cache_path,
+    get_enrichment_config,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
@@ -246,6 +250,23 @@ class WDAEAbstractStudy:
             wdae_study_config_schema,
         )
 
+    @property
+    def enrichment_config(self) -> Box | None:
+        """Return the enrichment configuration for the study."""
+        if self.is_phenotype:
+            return None
+        config = get_enrichment_config(self.genotype_data)
+        if config is None:
+            return None
+        return config
+
+    @property
+    def enrichment_cache_path(self) -> str | None:
+        """Return the enrichment configuration for the study."""
+        if self.is_phenotype:
+            return None
+        return get_enrichment_cache_path(self.genotype_data)
+
     def _init_genotype_browser(self) -> None:
         if not self.is_genotype or \
                 not self.genotype_data.config["genotype_browser"]:
@@ -291,6 +312,13 @@ class WDAEAbstractStudy:
             genotype_browser_config["summary_preview_columns"]
         self.summary_download_columns = \
             genotype_browser_config["summary_download_columns"]
+
+    def get_person_set_collection(
+        self, collection_id: str | None,
+    ) -> PersonSetCollection | None:
+        if self.is_phenotype:
+            return None
+        return self.genotype_data.get_person_set_collection(collection_id)
 
     def _validate_column_groups(self) -> bool:
         genotype_cols = self.columns.get("genotype") or []
