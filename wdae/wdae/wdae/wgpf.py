@@ -192,7 +192,6 @@ def cli(argv: list[str] | None = None) -> None:
     build_pheno_browser([
         "--gpf-instance",
         args.gpf_instance,
-        "--no-cache",
     ])
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.wgpf_settings")
