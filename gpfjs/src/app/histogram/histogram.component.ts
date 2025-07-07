@@ -42,8 +42,8 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   @Input() public bins: Array<number>;
   @Input() public bars: Array<number>;
-  @Input() public domainMin: number;
-  @Input() public domainMax: number;
+  public domainMin: number;
+  public domainMax: number;
 
   @Input() public rangeStart: number;
   @Input() public rangeEnd: number;
@@ -91,6 +91,10 @@ export class HistogramComponent implements OnInit, OnChanges {
     if ('bins' in changes || 'bars' in changes) {
       const bins: Array<number> = [];
       const bars: Array<number> = [];
+
+      this.domainMin = this.bins[0];
+      this.domainMax = this.bins[this.bins.length - 1];
+
       for (let i = 0; i < this.bins.length; i++) {
         if (this.bins[i] < this.domainMin || this.bins[i] > this.domainMax) {
           continue;
