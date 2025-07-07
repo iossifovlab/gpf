@@ -107,8 +107,8 @@ export class HistogramComponent implements OnInit, OnChanges {
       d3.select(this.histogramContainer.nativeElement).selectAll('g').remove();
       d3.select(this.histogramContainer.nativeElement).selectAll('rect').remove();
       if (this.resetRange) {
-        this.rangeStart = null;
-        this.rangeEnd = null;
+        this.rangeStart = this.bins[0];
+        this.rangeEnd = this.bins[this.bins.length - 1];
       }
       this.resetRange = true;
       this.rangeStartDisplay = this.minValue.toString();
