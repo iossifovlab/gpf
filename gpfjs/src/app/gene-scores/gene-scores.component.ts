@@ -43,6 +43,7 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
   public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
   private categoricalValueMax = 1000;
   public errors: string[] = [];
+  public histogramErrors: string[] = [];
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -242,36 +243,21 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
     return arg instanceof CategoricalHistogram;
   }
 
+  public setHistogramValidationErrors(errors: string[]): void {
+    this.histogramErrors = errors;
+    this.validateState();
+  }
+
   private validateState(): void {
     this.errors = [];
+    if (this.histogramErrors.length) {
+      this.errors.push(...this.histogramErrors);
+    }
 
     if (!this.selectedGeneScore.score) {
       this.errors.push('Empty gene scores are invalid.');
     }
-    if (this.isNumberHistogram(this.selectedGeneScore.histogram)) {
-      if (this.rangeStart !== null) {
-        if (typeof this.rangeStart !== 'number') {
-          this.errors.push('Range start should be a number.');
-        }
-        if (this.rangeStart > this.rangeEnd) {
-          this.errors.push('Range start should be less than or equal to range end.');
-        }
-        if (this.rangeStart < this.selectedGeneScore.histogram.rangeMin) {
-          this.errors.push('Range start should be more than or equal to domain min.');
-        }
-      }
-      if (this.rangeEnd !== null) {
-        if (typeof this.rangeEnd !== 'number') {
-          this.errors.push('Range end should be a number.');
-        }
-        if (this.rangeEnd < this.rangeStart) {
-          this.errors.push('Range end should be more than or equal to range start.');
-        }
-        if (this.rangeEnd > this.selectedGeneScore.histogram.rangeMax) {
-          this.errors.push('Range end should be less than or equal to domain max.');
-        }
-      }
-    }
+
     if (this.isCategoricalHistogram(this.selectedGeneScore.histogram)) {
       if (this.selectedCategoricalHistogramView !== 'range selector' && !this.categoricalValues.length) {
         this.errors.push('Please select at least one value.');

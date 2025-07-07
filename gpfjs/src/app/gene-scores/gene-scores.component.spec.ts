@@ -296,7 +296,7 @@ describe('GeneScoresComponent', () => {
     }}));
   });
 
-  it('should show error message when range start is less than domain min', () => {
+  it('should show the error message emitted by histogram component', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
 
     component.selectedGeneScore = new GenomicScore(
@@ -306,83 +306,31 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
     );
 
-    component.setRangeStart(-12);
+    component.setHistogramValidationErrors(['Range start should be more than or equal to domain min.']);
 
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
       componentId: 'geneScores', errors: ['Range start should be more than or equal to domain min.']
     }}));
   });
 
-  it('should show error message when range end is more than domain max', () => {
+  it('should show error messages for invalid range and score', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
 
-    component.selectedGeneScore = new GenomicScore(
+    const score = new GenomicScore(
       'empty',
       'no help',
-      'score',
+      null,
       new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
     );
 
-    component.setRangeEnd(200);
+    component.setSelectedGeneScore(score);
+    component.setHistogramValidationErrors(['Range start should be more than or equal to domain min.']);
 
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
-      componentId: 'geneScores', errors: ['Range end should be less than or equal to domain max.']
-    }}));
-  });
-
-  it('should show error message when range start is more than range end', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component.selectedGeneScore = new GenomicScore(
-      'empty',
-      'no help',
-      'score',
-      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
-    );
-
-    component.setRangeEnd(50);
-    component.setRangeStart(53);
-
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
+    expect(dispatchSpy).toHaveBeenLastCalledWith(setErrors({errors: {
       componentId: 'geneScores', errors: [
-        'Range start should be less than or equal to range end.',
-        'Range end should be more than or equal to range start.'
+        'Range start should be more than or equal to domain min.',
+        'Empty gene scores are invalid.'
       ]
-    }}));
-  });
-
-  it('should show error message when range start input is not a number', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component.selectedGeneScore = new GenomicScore(
-      'empty',
-      'no help',
-      'score',
-      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
-    );
-
-    component.setRangeStart(undefined);
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
-      componentId: 'geneScores', errors: ['Range start should be a number.']
-    }}));
-  });
-
-  it('should show error message when range end input is not a number', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component.selectedGeneScore = new GenomicScore(
-      'empty',
-      'no help',
-      'score',
-      new NumberHistogram([11, 12], [14, 15], 'larger', 'smaller', 0, 100, true, true)
-    );
-
-    component.setRangeEnd(undefined);
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
-      componentId: 'geneScores', errors: ['Range end should be a number.']
     }}));
   });
 
