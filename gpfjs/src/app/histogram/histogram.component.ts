@@ -28,8 +28,11 @@ export class HistogramComponent implements OnInit, OnChanges {
   public rangeStartDisplay: string;
   public rangeEndDisplay: string;
 
-  @Output() public rangeStartChange = new EventEmitter();
-  @Output() public rangeEndChange = new EventEmitter();
+  @Output() public rangeStartChange = new EventEmitter<number>();
+  @Output() public rangeEndChange = new EventEmitter<number>();
+
+  public errors: string[] = [];
+  @Output() public emitValidationErrors = new EventEmitter<string[]>();
 
   @Input() public width: number;
   @Input() public height: number;
@@ -339,10 +342,14 @@ export class HistogramComponent implements OnInit, OnChanges {
     if (!isNaN(rangeStartFloat)) {
       this.setRangeStart(rangeStartFloat);
       this.rangeStartDisplay = this.rangeStart.toString();
+
+      this.validateState();
       this.rangeStartChange.emit(this.rangeStart);
     } else {
       this.setRangeStart(null);
       this.rangeStartDisplay = '';
+
+      this.validateState();
       this.rangeStartChange.emit(this.minValue);
     }
   }
@@ -352,10 +359,14 @@ export class HistogramComponent implements OnInit, OnChanges {
     if (!isNaN(rangeEndFloat)) {
       this.setRangeEnd(rangeEndFloat);
       this.rangeEndDisplay = this.rangeEnd.toString();
+
+      this.validateState();
       this.rangeEndChange.emit(this.rangeEnd);
     } else {
       this.setRangeEnd(null);
       this.rangeEndDisplay = '';
+
+      this.validateState();
       this.rangeEndChange.emit(this.maxValue);
     }
   }
@@ -390,6 +401,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
     this.setRangeStart(this.bins[index]);
     this.rangeStartDisplay = this.transform(this.rangeStart).toString();
+
+    this.validateState();
     this.rangeStartChange.emit(this.rangeStart);
   }
 
@@ -408,6 +421,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
     this.setRangeEnd(this.bins[index + 1]);
     this.rangeEndDisplay = this.transform(this.rangeEnd).toString();
+
+    this.validateState();
     this.rangeEndChange.emit(this.rangeEnd);
   }
 
@@ -492,5 +507,34 @@ export class HistogramComponent implements OnInit, OnChanges {
       value = Number(String(value).replace(rx, '$1'));
       return `${value}e-6`;
     };
+  }
+
+  private validateState(): void {
+    this.errors = [];
+
+    if (this.rangeStart !== null) {
+      if (typeof this.rangeStart !== 'number') {
+        this.errors.push('Range start should be a number.');
+      }
+      if (this.rangeStart > this.rangeEnd) {
+        this.errors.push('Range start should be less than or equal to range end.');
+      }
+      if (this.rangeStart < this.domainMin) {
+        this.errors.push('Range start should be more than or equal to domain min.');
+      }
+    }
+    if (this.rangeEnd !== null) {
+      if (typeof this.rangeEnd !== 'number') {
+        this.errors.push('Range end should be a number.');
+      }
+      if (this.rangeEnd < this.rangeStart) {
+        this.errors.push('Range end should be more than or equal to range start.');
+      }
+      if (this.rangeEnd > this.domainMax) {
+        this.errors.push('Range end should be less than or equal to domain max.');
+      }
+    }
+
+    this.emitValidationErrors.emit(this.errors);
   }
 }
