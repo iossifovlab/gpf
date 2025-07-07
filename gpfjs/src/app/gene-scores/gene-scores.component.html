@@ -77,7 +77,8 @@
         (rangeStartChange)="setRangeStart($event)"
         (rangeEndChange)="setRangeEnd($event)"
         [rangeStart]="initialRangeStart"
-        [rangeEnd]="initialRangeEnd">
+        [rangeEnd]="initialRangeEnd"
+        (emitValidationErrors)="setHistogramValidationErrors($event)">
       </gpf-histogram>
       <gpf-categorical-histogram
         *ngIf="

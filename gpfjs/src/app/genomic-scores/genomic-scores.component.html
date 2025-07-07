@@ -61,8 +61,6 @@
       [marginLeft]="180"
       [bins]="selectedGenomicScore.histogram.bins"
       [bars]="selectedGenomicScore.histogram.bars"
-      [domainMin]="domainMin"
-      [domainMax]="domainMax"
       [logScaleX]="selectedGenomicScore.histogram.logScaleX"
       [logScaleY]="selectedGenomicScore.histogram.logScaleY"
       [smallValuesDesc]="selectedGenomicScore.histogram.smallValuesDesc"
@@ -71,6 +69,7 @@
       (rangeStartChange)="updateRangeStart($event)"
       [rangeEnd]="localState.rangeEnd"
       (rangeEndChange)="updateRangeEnd($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)"
       style="display: block; margin-top: 17px">
     </gpf-histogram>
     <gpf-categorical-histogram

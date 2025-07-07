@@ -712,4 +712,103 @@ describe('HistogramComponent', () => {
     expect(component.maxValue).toBe(19);
     expect(rangeEndEmitSpy).toHaveBeenLastCalledWith(19);
   });
+
+  it('should show error message when range start is less than domain min', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.setRangeStartFromInput('-40');
+
+    expect(errorsEmitterSpy).toHaveBeenCalledWith(['Range start should be more than or equal to domain min.']);
+  });
+
+  it('should show error message when range end is more than domain max', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.setRangeEndFromInput('80');
+
+    expect(errorsEmitterSpy).toHaveBeenCalledWith(['Range end should be less than or equal to domain max.']);
+  });
+
+  it('should show error message when range start is more than range end', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.domainMax = 20;
+    component.rangeEnd = 10;
+    component.setRangeStartFromInput('12');
+
+    expect(errorsEmitterSpy).toHaveBeenCalledWith([
+      'Range start should be less than or equal to range end.',
+      'Range end should be more than or equal to range start.'
+    ]);
+  });
+
+  it('should show error message when range start input is not a number', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeStart = undefined;
+    // trigger validation without changing range start value
+    component.setRangeEndFromInput(undefined);
+
+    expect(errorsEmitterSpy).toHaveBeenCalledWith(['Range start should be a number.']);
+  });
+
+  it('should show error message when range end input is not a number', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+
+    // trigger redrawHistogram()
+    const bars = [207, 211, 506, 608];
+    const bins = [1, 2, 3, 4];
+    component.bins = bins;
+    component.bars = bars;
+    const binsChange = new SimpleChange(component.bins, bins, true);
+    const barsChange = new SimpleChange(component.bars, bars, true);
+    const changes = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes as SimpleChanges);
+
+    component.rangeEnd = undefined;
+    // trigger validation without changing range end value
+    component.setRangeStartFromInput(undefined);
+
+    expect(errorsEmitterSpy).toHaveBeenCalledWith(['Range end should be a number.']);
+  });
 });
