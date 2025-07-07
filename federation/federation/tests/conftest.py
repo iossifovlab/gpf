@@ -9,6 +9,7 @@ from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 from utils.testing import setup_t4c8_instance
 
+from federation.remote_extension import GPFRemoteExtension
 from federation.rest_api_client import RESTClient
 from rest_client.rest_client import GPFConfidentialClient
 
@@ -56,6 +57,12 @@ def t4c8_instance(
         f.write(yaml.dump({"remotes": [build_remote_config()]}))
 
     return WGPFInstance.build(instance.dae_config_path, grr=instance.grr)
+
+
+@pytest.fixture(scope="session")
+def test_remote_extension(
+    t4c8_instance: WGPFInstance) -> GPFRemoteExtension:
+    return t4c8_instance.extensions.get("remote_extension")
 
 
 @pytest.fixture

@@ -2,13 +2,13 @@ import logging
 from collections.abc import Generator
 from typing import Any, cast
 
-from dae.pedigrees.families_data import FamiliesData
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     ResponseTransformerProtocol,
     WDAEAbstractStudy,
 )
 
+from dae.pedigrees.families_data import FamiliesData
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
 from federation.remote_utils import build_remote_families
