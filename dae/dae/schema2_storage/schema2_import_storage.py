@@ -392,6 +392,7 @@ class Schema2ImportStorage(ImportStorage):
             gpf_instance.grr,
             region_size,
             str(work_dir),
+            0,
             allow_repeated_attributes=allow_repeated_attributes,
             full_reannotation=full_reannotation,
         )

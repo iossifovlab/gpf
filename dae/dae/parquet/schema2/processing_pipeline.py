@@ -19,7 +19,6 @@ from dae.annotation.processing_pipeline import (
 )
 from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.utils.regions import Region
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import (
@@ -169,6 +168,39 @@ class DeleteAttributesFromVariantFilter(VariantsFilter):
                 if attr in allele.attributes:
                     del allele.attributes[attr]
         return full_variant
+
+
+class DeleteAttributesFromVariantsBatchFilter(VariantsBatchFilter):
+    """Filter to remove items from AWC contexts. Works in-place."""
+
+    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
+        self.to_remove = set(attributes_to_remove)
+
+    def __enter__(self) -> DeleteAttributesFromVariantsBatchFilter:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def filter_batch(
+        self, batch: Sequence[FullVariant],
+    ) -> Sequence[FullVariant]:
+        """Remove specified attributes from batches of variants."""
+        for variant in batch:
+            for allele in variant.summary_variant.alt_alleles:
+                for attr in self.to_remove:
+                    if attr in allele.attributes:
+                        del allele.attributes[attr]
+        return batch
 
 
 class AnnotationPipelineVariantsFilter(
@@ -429,9 +461,8 @@ class VariantsBatchPipelineProcessor:
 
 class Schema2SummaryVariantsSource(VariantsSource):
     """Producer for summary variants from a Parquet dataset."""
-    def __init__(self, input_layout: Schema2DatasetLayout):
-        self.input_layout = input_layout
-        self.input_loader = ParquetLoader(self.input_layout)
+    def __init__(self, loader: ParquetLoader):
+        self.loader = loader
 
     def __enter__(self) -> Schema2SummaryVariantsSource:
         return self
@@ -441,12 +472,51 @@ class Schema2SummaryVariantsSource(VariantsSource):
         exc_type: Any | None,
         exc_value: Any | None,
         exc_tb: Any | None,
-    ) -> None:
-        pass
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
 
     def fetch(
         self, region: Region | None = None,
     ) -> Iterable[FullVariant]:
-        assert self.input_loader is not None
-        for sv in self.input_loader.fetch_summary_variants(region=region):
+        assert self.loader is not None
+        for sv in self.loader.fetch_summary_variants(region=region):
             yield FullVariant(sv, ())
+
+
+class Schema2SummaryVariantsBatchSource(VariantsBatchSource):
+    """Producer for summary variants from a Parquet dataset."""
+
+    def __init__(
+        self,
+        loader: ParquetLoader,
+        batch_size: int = 500,
+    ) -> None:
+        self.loader = loader
+        self.batch_size = batch_size
+
+    def __enter__(self) -> Schema2SummaryVariantsBatchSource:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Any | None,
+        exc_value: Any | None,
+        exc_tb: Any | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def fetch_batches(
+        self, region: Region | None = None,
+    ) -> Iterable[Sequence[FullVariant]]:
+        """Fetch full variants from a variant loader in batches."""
+        variants = self.loader.fetch_summary_variants(region=region)
+        while batch := tuple(itertools.islice(variants, self.batch_size)):
+            yield [FullVariant(sv, ()) for sv in batch]

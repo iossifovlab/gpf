@@ -28,10 +28,13 @@ from dae.parquet.parquet_writer import (
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.processing_pipeline import (
+    AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
     DeleteAttributesFromVariantFilter,
+    DeleteAttributesFromVariantsBatchFilter,
+    Schema2SummaryVariantsBatchSource,
     Schema2SummaryVariantsSource,
-    VariantsFilter,
+    VariantsBatchPipelineProcessor,
     VariantsPipelineProcessor,
 )
 from dae.parquet.schema2.variants_parquet_writer import (
@@ -113,6 +116,7 @@ def produce_schema2_annotation_tasks(
     grr: GenomicResourceRepo,
     region_size: int,
     work_dir: str,
+    batch_size: int,
     *,
     target_region: str | None = None,
     allow_repeated_attributes: bool = False,
@@ -137,7 +141,8 @@ def produce_schema2_annotation_tasks(
             f"part_{region}",
             process_parquet,
             args=[loader.layout, raw_pipeline, grr.definition,
-                  output_dir, idx, work_dir, Region.from_str(region),
+                  output_dir, idx, work_dir,
+                  batch_size, Region.from_str(region),
                   allow_repeated_attributes, full_reannotation],
             deps=[],
         ))
@@ -249,6 +254,7 @@ def process_parquet(
     output_dir: str,
     bucket_idx: int,
     work_dir: str,
+    batch_size: int,
     region: Region,
     allow_repeated_attributes: bool,  # noqa: FBT001
     full_reannotation: bool,  # noqa: FBT001
@@ -271,17 +277,7 @@ def process_parquet(
         full_reannotation=full_reannotation,
     )
 
-    source = Schema2SummaryVariantsSource(loader.layout)
-    filters: list[VariantsFilter] = [
-        AnnotationPipelineVariantsFilter(pipeline),
-    ]
-    if isinstance(pipeline, ReannotationPipeline):
-        # FIXME This prevents using deleted attributes in the pipeline
-        # as it will delete them before the pipeline is ran
-        filters.insert(
-            0,
-            DeleteAttributesFromVariantFilter(pipeline.attributes_deleted),
-            )
+    source: Schema2SummaryVariantsSource | Schema2SummaryVariantsBatchSource
     consumer = Schema2SummaryVariantConsumer(
         output_dir,
         pipeline.get_attributes(),
@@ -289,6 +285,23 @@ def process_parquet(
         bucket_index=bucket_idx,
         variants_blob_serializer=variants_blob_serializer,
     )
+    filters: list = []
+    processor: VariantsPipelineProcessor | VariantsBatchPipelineProcessor
 
-    with VariantsPipelineProcessor(source, filters, consumer) as processor:
+    if batch_size <= 0:
+        source = Schema2SummaryVariantsSource(loader)
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantFilter(
+                pipeline.attributes_deleted))
+        filters.append(AnnotationPipelineVariantsFilter(pipeline))
+        processor = VariantsPipelineProcessor(source, filters, consumer)
+    else:
+        source = Schema2SummaryVariantsBatchSource(loader)
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantsBatchFilter(
+                pipeline.attributes_deleted))
+        filters.append(AnnotationPipelineVariantsBatchFilter(pipeline))
+        processor = VariantsBatchPipelineProcessor(source, filters, consumer)
+
+    with processor:
         processor.process_region(region)

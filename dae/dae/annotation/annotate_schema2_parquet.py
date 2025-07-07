@@ -197,6 +197,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.grr,
             self.args.region_size,
             self.args.work_dir,
+            self.args.batch_size,
             target_region=self.args.region,
             allow_repeated_attributes=self.args.allow_repeated_attributes,
             full_reannotation=self.args.full_reannotation,
