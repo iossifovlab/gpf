@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: I001
 from collections.abc import Generator
 from typing import Any, cast
 
