@@ -103,7 +103,8 @@ describe('GenomicScoresComponent', () => {
     expect(updateStateSpy).toHaveBeenCalledWith(component.localState);
   });
 
-  it('should validate range start of number histogram', () => {
+  it('should dispatch histogram validation errors to state', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.selectedGenomicScore = new GenomicScore(
       'desc',
       'help',
@@ -111,99 +112,17 @@ describe('GenomicScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 7, 8, true, true)
     );
 
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    component.setHistogramValidationErrors(['Range start should be more than or equal to domain min.']);
 
-    const state: GenomicScoreState = {
-      histogramType: 'continuous',
-      score: 'score',
-      rangeStart: 10,
-      rangeEnd: 8,
-      values: [],
-      categoricalView: null
-    };
-
-    component['validateState'](state);
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
       errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Range start should be less than or equal to range end.',
-          'Range end should be more than or equal to range start.'
-        ]
-      }
-    }));
-
-    state.rangeStart = -13;
-    component['validateState'](state);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(2, setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Range start should be more than or equal to domain min.'
-        ]
-      }
-    }));
-
-    state.rangeStart = undefined;
-    component['validateState'](state);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(3, setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Range start should be a number.'
-        ]
+        componentId: 'genomicScores: score', errors: ['Range start should be more than or equal to domain min.']
       }
     }));
   });
 
-  it('should validate range end of number histogram', () => {
-    component.selectedGenomicScore = new GenomicScore(
-      'desc',
-      'help',
-      'score',
-      new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 7, 18, true, true)
-    );
 
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    const state: GenomicScoreState = {
-      histogramType: 'continuous',
-      score: 'score',
-      rangeStart: 10,
-      rangeEnd: 8,
-      values: [],
-      categoricalView: null
-    };
-
-    component['validateState'](state);
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Range start should be less than or equal to range end.',
-          'Range end should be more than or equal to range start.'
-        ]
-      }
-    }));
-
-    state.rangeEnd = 20;
-    component['validateState'](state);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(2, setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Range end should be less than or equal to domain max.'
-        ]
-      }
-    }));
-
-    state.rangeEnd = undefined;
-    component['validateState'](state);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(3, setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Range end should be a number.'
-        ]
-      }
-    }));
-  });
-
-  it('should validate score with categorical histogram', () => {
+  it('should dispatch error message if no values are selected', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
 
     const state: GenomicScoreState = {
@@ -215,7 +134,9 @@ describe('GenomicScoresComponent', () => {
       categoricalView: 'click selector'
     };
 
-    component['validateState'](state);
+    component.initialState = state;
+    component.ngOnInit();
+
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
       errors: {
         componentId: 'genomicScores: score', errors: [
@@ -223,11 +144,17 @@ describe('GenomicScoresComponent', () => {
         ]
       }
     }));
+  });
+
+  it('should dispatch error message if more than max values are selected', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
 
     component['categoricalValueMax'] = 3;
-    state.values = ['val1', 'val2', 'val3', 'val4'];
-    component['validateState'](state);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(2, setErrors({
+    const newValues = ['val1', 'val2', 'val3', 'val4'];
+
+    component.replaceCategoricalValues(newValues);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
       errors: {
         componentId: 'genomicScores: score', errors: [
           'Please select less than 3 values.'
@@ -236,7 +163,7 @@ describe('GenomicScoresComponent', () => {
     }));
   });
 
-  it('should validate score name', () => {
+  it('should dispatch error message when score is invalid', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
 
     const state: GenomicScoreState = {
@@ -248,7 +175,8 @@ describe('GenomicScoresComponent', () => {
       categoricalView: 'click selector'
     };
 
-    component['validateState'](state);
+    component.initialState = state;
+    component.ngOnInit();
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
       errors: {
         componentId: 'genomicScores: score', errors: [

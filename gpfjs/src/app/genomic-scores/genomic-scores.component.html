@@ -71,6 +71,7 @@
       (rangeStartChange)="updateRangeStart($event)"
       [rangeEnd]="localState.rangeEnd"
       (rangeEndChange)="updateRangeEnd($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)"
       style="display: block; margin-top: 17px">
     </gpf-histogram>
     <gpf-categorical-histogram

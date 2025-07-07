@@ -22,6 +22,7 @@ export class GenomicScoresComponent implements OnInit {
   public localState: GenomicScoreState;
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
+  public histogramErrors: string[] = [];
   private categoricalValueMax = 1000;
   private readonly maxBarCount = 25;
 
@@ -36,7 +37,7 @@ export class GenomicScoresComponent implements OnInit {
 
   public ngOnInit(): void {
     this.localState = cloneDeep(this.initialState);
-    this.validateState(this.localState);
+    this.validateState();
 
     const histogram = this.selectedGenomicScore.histogram;
     if (this.isCategoricalHistogram(histogram)) {
@@ -77,7 +78,7 @@ export class GenomicScoresComponent implements OnInit {
   }
 
   private updateHistogramState(): void {
-    this.validateState(this.localState);
+    this.validateState();
     this.updateState.emit(this.localState);
   }
 
@@ -110,40 +111,26 @@ export class GenomicScoresComponent implements OnInit {
     return arg instanceof CategoricalHistogram;
   }
 
-  private validateState(state: GenomicScoreState): void {
+  public setHistogramValidationErrors(errors: string[]): void {
+    this.histogramErrors = errors;
+    this.validateState();
+  }
+
+  private validateState(): void {
     this.errors = [];
-    if (!state.score) {
+    if (this.histogramErrors.length) {
+      this.errors.push(...this.histogramErrors);
+    }
+
+    if (!this.localState.score) {
       this.errors.push('Empty score names are invalid.');
     }
-    if (this.isNumberHistogram(this.selectedGenomicScore.histogram)) {
-      if (state.rangeStart !== null) {
-        if (typeof state.rangeStart !== 'number') {
-          this.errors.push('Range start should be a number.');
-        }
-        if (state.rangeStart > state.rangeEnd) {
-          this.errors.push('Range start should be less than or equal to range end.');
-        }
-        if (state.rangeStart < this.selectedGenomicScore.histogram.rangeMin) {
-          this.errors.push('Range start should be more than or equal to domain min.');
-        }
-      }
-      if (state.rangeEnd !== null) {
-        if (typeof state.rangeEnd !== 'number') {
-          this.errors.push('Range end should be a number.');
-        }
-        if (state.rangeEnd < state.rangeStart) {
-          this.errors.push('Range end should be more than or equal to range start.');
-        }
-        if (state.rangeEnd > this.selectedGenomicScore.histogram.rangeMax) {
-          this.errors.push('Range end should be less than or equal to domain max.');
-        }
-      }
-    }
+
     if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
-      if (!state.values.length) {
+      if (!this.localState.values.length) {
         this.errors.push('Please select at least one value.');
       }
-      if (state.values.length > this.categoricalValueMax) {
+      if (this.localState.values.length > this.categoricalValueMax) {
         this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
       }
     }
