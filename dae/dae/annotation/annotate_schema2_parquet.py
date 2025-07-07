@@ -7,14 +7,14 @@ from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
 )
-from dae.annotation.parquet import (
+from dae.genomic_resources.cli import VerbosityConfiguration
+from dae.parquet.schema2.annotation_utils import (
     backup_schema2_study,
     produce_schema2_annotation_tasks,
     produce_schema2_merging_tasks,
     symlink_pedigree_and_family_variants,
     write_new_meta,
 )
-from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,

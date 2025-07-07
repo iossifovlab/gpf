@@ -6,7 +6,7 @@ import logging
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
-from typing import cast
+from typing import Any, cast
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
@@ -18,6 +18,8 @@ from dae.annotation.processing_pipeline import (
     AnnotationsWithSource,
 )
 from dae.effect_annotation.effect import AlleleEffects
+from dae.parquet.schema2.loader import ParquetLoader
+from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.utils.regions import Region
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import (
@@ -423,3 +425,28 @@ class VariantsBatchPipelineProcessor:
         self.consumer.__exit__(exc_type, exc_value, exc_tb)
 
         return exc_type is not None
+
+
+class Schema2SummaryVariantsSource(VariantsSource):
+    """Producer for summary variants from a Parquet dataset."""
+    def __init__(self, input_layout: Schema2DatasetLayout):
+        self.input_layout = input_layout
+        self.input_loader = ParquetLoader(self.input_layout)
+
+    def __enter__(self) -> Schema2SummaryVariantsSource:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Any | None,
+        exc_value: Any | None,
+        exc_tb: Any | None,
+    ) -> None:
+        pass
+
+    def fetch(
+        self, region: Region | None = None,
+    ) -> Iterable[FullVariant]:
+        assert self.input_loader is not None
+        for sv in self.input_loader.fetch_summary_variants(region=region):
+            yield FullVariant(sv, ())

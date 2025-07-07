@@ -7,12 +7,6 @@ import pathlib
 import yaml
 from pyarrow import parquet as pq
 
-from dae.annotation.parquet import (
-    backup_schema2_study,
-    produce_schema2_annotation_tasks,
-    produce_schema2_merging_tasks,
-    write_new_meta,
-)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import (
     Bucket,
@@ -30,6 +24,12 @@ from dae.parquet.parquet_writer import (
 from dae.parquet.partition_descriptor import (
     Partition,
     PartitionDescriptor,
+)
+from dae.parquet.schema2.annotation_utils import (
+    backup_schema2_study,
+    produce_schema2_annotation_tasks,
+    produce_schema2_merging_tasks,
+    write_new_meta,
 )
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.merge_parquet import merge_parquet_directory

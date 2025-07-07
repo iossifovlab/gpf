@@ -420,3 +420,15 @@ class VariantsParquetWriter(
                 summary_allele, seen_as_denovo=seen_as_denovo)
             summary_writer.append_allele(
                 summary_allele, summary_blobs_json)
+
+
+class Schema2SummaryVariantConsumer(VariantsParquetWriter):
+    """Consumer for Parquet summary variants."""
+    def consume_one(self, full_variant: FullVariant) -> None:
+        summary_index = self.summary_index
+        sj_base_index = self._calc_sj_base_index(summary_index)
+        self.write_summary_variant(
+            full_variant.summary_variant,
+            sj_base_index=sj_base_index,
+        )
+        self.summary_index += 1

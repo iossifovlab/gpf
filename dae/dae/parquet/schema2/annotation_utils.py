@@ -3,9 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import pathlib
-from collections.abc import Iterable
 from datetime import datetime
-from typing import Any
 
 import yaml
 
@@ -32,15 +30,16 @@ from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsFilter,
     DeleteAttributesFromVariantFilter,
+    Schema2SummaryVariantsSource,
     VariantsFilter,
     VariantsPipelineProcessor,
-    VariantsSource,
 )
-from dae.parquet.schema2.variants_parquet_writer import VariantsParquetWriter
+from dae.parquet.schema2.variants_parquet_writer import (
+    Schema2SummaryVariantConsumer,
+)
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
-from dae.variants_loaders.raw.loader import FullVariant
 
 logger = logging.getLogger("format_handlers")
 
@@ -243,40 +242,6 @@ def merge_non_partitioned(output_dir: str) -> None:
     merge_variants_parquets(PartitionDescriptor(), output_dir, [])
 
 
-class ParquetVariantsSource(VariantsSource):
-    """Producer for variants from a Parquet dataset."""
-    def __init__(self, input_layout: Schema2DatasetLayout):
-        self.input_layout = input_layout
-        self.input_loader = ParquetLoader(self.input_layout)
-
-    def __enter__(self) -> ParquetVariantsSource:
-        return self
-
-    def __exit__(
-        self, exc_type: Any | None, exc_value: Any | None, exc_tb: Any | None,
-    ) -> None:
-        pass
-
-    def fetch(
-        self, region: Region | None = None,
-    ) -> Iterable[FullVariant]:
-        assert self.input_loader is not None
-        for sv in self.input_loader.fetch_summary_variants(region=region):
-            yield FullVariant(sv, ())
-
-
-class ParquetSummaryVariantConsumer(VariantsParquetWriter):
-    """Consumer for Parquet summary variants."""
-    def consume_one(self, full_variant: FullVariant) -> None:
-        summary_index = self.summary_index
-        sj_base_index = self._calc_sj_base_index(summary_index)
-        self.write_summary_variant(
-            full_variant.summary_variant,
-            sj_base_index=sj_base_index,
-        )
-        self.summary_index += 1
-
-
 def process_parquet(
     input_layout: Schema2DatasetLayout,
     pipeline_config: RawPipelineConfig,
@@ -306,7 +271,7 @@ def process_parquet(
         full_reannotation=full_reannotation,
     )
 
-    source = ParquetVariantsSource(loader.layout)
+    source = Schema2SummaryVariantsSource(loader.layout)
     filters: list[VariantsFilter] = [
         AnnotationPipelineVariantsFilter(pipeline),
     ]
@@ -317,7 +282,7 @@ def process_parquet(
             0,
             DeleteAttributesFromVariantFilter(pipeline.attributes_deleted),
             )
-    consumer = ParquetSummaryVariantConsumer(
+    consumer = Schema2SummaryVariantConsumer(
         output_dir,
         pipeline.get_attributes(),
         loader.partition_descriptor,
