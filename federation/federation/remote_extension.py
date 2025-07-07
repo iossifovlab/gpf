@@ -1,13 +1,12 @@
 import copy
 import logging
-from typing import Any
+from typing import Any, cast
 
 from dae.genomic_scores.scores import ScoreDesc
 from gpf_instance.extension import GPFExtensionBase
-from studies.study_wrapper import WDAEAbstractStudy
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
 from federation.gene_sets_db import RemoteGeneSetCollection
-from federation.remote_enrichment_builder import RemoteEnrichmentBuilder
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import (
     RemoteGenotypeData,
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 class GPFRemoteExtension(GPFExtensionBase):
     """Class for adding federation functionality to GPF."""
 
-    def setup(self):
+    def setup(self) -> None:
         clients = self.load_clients()
 
         self.studies = {}
@@ -48,7 +47,8 @@ class GPFRemoteExtension(GPFExtensionBase):
             for study in studies:
                 self.studies[study.study_id] = study
                 logger.info("register remote study %s", study.study_id)
-                self.instance._study_wrappers[study.study_id] = study  # noqa: SLF001
+                self.instance._study_wrappers[study.study_id] = cast(  # noqa: SLF001
+                    WDAEStudy, study)
                 pheno_registry = self.instance._pheno_registry  # noqa: SLF001
 
                 if study.has_pheno_data:
@@ -61,13 +61,6 @@ class GPFRemoteExtension(GPFExtensionBase):
                 if study.is_genotype:
                     self.instance._variants_db. \
                         register_genotype_data(study.genotype_data)  # noqa: SLF001
-
-                    builder = RemoteEnrichmentBuilder(
-                        self.instance.enrichment_helper,
-                        study.genotype_data, client,
-                    )
-                    self.instance.register_enrichment_builder(
-                        study.study_id, builder)
 
             gs_db = self.instance.gene_sets_db
             for collection in client.get_gene_set_collections():

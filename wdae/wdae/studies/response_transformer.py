@@ -248,7 +248,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         psc_id: str | None,
     ) -> list:
         result = []
-        psc = study.genotype_data.get_person_set_collection(psc_id)
+        psc = study.get_person_set_collection(psc_id)
         genotype = variant.family_genotype
 
         missing_members = set()

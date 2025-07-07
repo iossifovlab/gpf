@@ -76,7 +76,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,  # noqa: ARG002
-        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        response_transformer: ResponseTransformerProtocol,
         *,
         max_variants_count: int | None = 10000,
         max_variants_message: bool = False,  # noqa: ARG002
@@ -127,7 +127,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
             fv = RemoteFamilyVariant(
                 variant, family, list(map(get_source, sources)))
             # pylint: disable=protected-access
-            row_variant = self.response_transformer.build_variant_row(
+            row_variant = response_transformer.build_variant_row(
                 fv, sources, person_set_collection=person_set_collection_id)
 
             yield row_variant

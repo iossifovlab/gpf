@@ -147,7 +147,6 @@ def test_study_1_enrichment(
     assert enrichment_helper is not None
 
     results = enrichment_helper.calc_enrichment_test(
-        study_1,
         "status",
         ["t4"],
         effect_groups=["LGDs", "missense", "synonymous"],
@@ -190,7 +189,6 @@ def test_study_1_enrichment_with_caching(
     )
 
     results = enrichment_helper.calc_enrichment_test(
-        study_1,
         "status",
         ["t4"],
         effect_groups=["LGDs", "missense", "synonymous"],
@@ -234,7 +232,7 @@ def test_build_study_1_enrichment_cache(
         WDAEStudy(study_1, None),
     )
     assert enrichment_helper is not None
-    cache = enrichment_helper._load_enrichment_event_counts_cache(study_1)
+    cache = enrichment_helper._load_enrichment_event_counts_cache()
 
     assert cache is not None
     assert len(cache) == 2

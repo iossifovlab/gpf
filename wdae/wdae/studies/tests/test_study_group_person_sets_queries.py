@@ -301,7 +301,7 @@ def test_dataset_simple(dataset: WDAEStudyGroup) -> None:
     assert dataset is not None
     assert dataset.person_set_collections
     assert "phenotype" in dataset.person_set_collections
-    psc = dataset.genotype_data.get_person_set_collection("phenotype")
+    psc = dataset.get_person_set_collection("phenotype")
     assert psc is not None
 
     assert "autism" in psc.person_sets
