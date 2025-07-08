@@ -488,7 +488,7 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_2.measure_6' })
       .getByPlaceholder('start').clear();
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_2.measure_6' })
-      .getByPlaceholder('start').fill('-100');
+      .getByPlaceholder('start').pressSequentially('-100');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
@@ -676,12 +676,12 @@ test.describe('Pheno Measures tests', () => {
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
-    await page.locator('gpf-role-selector #search-box').focus();
-    await page.keyboard.type('mo');
+    await page.locator('gpf-role-selector #search-box').pressSequentially('mo');
     await expect(page.getByRole('option', {name: 'mom'})).toBeVisible();
     await expect(page.getByRole('option', {name: 'dad'})).toBeHidden();
     await expect(page.getByRole('option', {name: 'prb'})).toBeHidden();
     await expect(page.getByRole('option', {name: 'sib'})).toBeHidden();
+
 
     await page.keyboard.press('Enter');
     await expect(page.locator('gpf-role-selector #search-box')).toBeEmpty();
