@@ -1,50 +1,30 @@
 import logging
 from typing import Any, cast
 
-from box import Box
-from dae.enrichment_tool.enrichment_utils import (
-    get_enrichment_config,
-)
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
+from gpf_instance.gpf_instance import WGPFInstance
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+from studies.study_wrapper import WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 
 from enrichment_api.enrichment_builder import (
     EnrichmentBuilder,
 )
-from enrichment_api.enrichment_helper import EnrichmentHelper
+from enrichment_api.enrichment_helper import (
+    BaseEnrichmentHelper,
+    EnrichmentHelper,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class EnrichmentModelsView(QueryBaseView):
     """Select enrichment models view."""
-
-    def _collect_counting_models(
-        self,
-        enrichment_helper: EnrichmentHelper,
-        enrichment_config: Box | None = None,
-    ) -> list[dict[str, str]]:
-        """Collect counting models."""
-        if enrichment_config is None:
-            return []
-
-        selected_counting_models = (
-            enrichment_helper.get_selected_counting_models()
-        )
-
-        return [
-            {"id": counting_model.id,
-             "name": counting_model.name,
-             "desc": counting_model.desc}
-            for counting_model in dict(enrichment_config["counting"]).values()
-            if counting_model.id in selected_counting_models
-        ]
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request, dataset_id: str) -> Response:
@@ -53,37 +33,12 @@ class EnrichmentModelsView(QueryBaseView):
         if study is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        enrichment_helper = EnrichmentHelper(
-            self.gpf_instance.grr,
-            study,
+        enrichment_helper = create_enrichment_helper(
+            self.gpf_instance,
+            study.study_id,
         )
 
-        background_descriptions = []
-        study_backgrounds = enrichment_helper \
-            .collect_genotype_data_backgrounds()
-        default_background_model = enrichment_helper \
-            .get_default_background_model()
-        default_counting_model = enrichment_helper \
-            .get_default_counting_model()
-
-        background_descriptions = [
-            {"id": background.background_id,
-             "name": background.name,
-             "type": background.background_type,
-             "summary": background.resource.get_summary(),
-             "desc": background.resource.get_description()}
-            for background in study_backgrounds
-        ]
-
-        return Response({
-            "background": background_descriptions,
-            "counting": self._collect_counting_models(
-                enrichment_helper,
-                get_enrichment_config(study.genotype_data),
-            ),
-            "defaultBackground": default_background_model,
-            "defaultCounting": default_counting_model,
-        })
+        return Response(enrichment_helper.get_enrichment_models())
 
 
 class EnrichmentTestView(QueryBaseView):
@@ -204,3 +159,28 @@ class EnrichmentTestView(QueryBaseView):
 
         results = builder.build(gene_syms, background_name, counting_name)
         return Response({"desc": desc, "result": results})
+
+
+def create_enrichment_helper(
+    gpf_instance: WGPFInstance, study_id: str,
+) -> BaseEnrichmentHelper:
+    """Create an enrichment builder for the given dataset."""
+    study = gpf_instance.get_wdae_wrapper(study_id)
+    if study is None:
+        raise ValueError(
+            f"Dataset {study_id} not found! Cannot create enrichment helper.",
+        )
+    print(gpf_instance.extensions.items())
+    for ext_name, extension in gpf_instance.extensions.items():
+        enrichment_helper = extension.get_tool(study, "enrichment_helper")
+        if enrichment_helper is not None:
+            if not isinstance(enrichment_helper, BaseEnrichmentHelper):
+                raise ValueError(
+                    f"{ext_name} returned an invalid enrichment helper!")
+            return enrichment_helper
+
+    if not isinstance(study, WDAEStudy):
+        raise ValueError(  # noqa: TRY004
+            f"Enrichment helper for {study.study_id} is missing!")
+
+    return EnrichmentHelper(gpf_instance.grr, study)
