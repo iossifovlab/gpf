@@ -1,74 +1,44 @@
 #!/usr/bin/bash
 
-
 for d in /wd/dae /wd/wdae; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
 
-while :
-do
-    if [[ -f "$DAE_DB_DIR/gpf_instance.yaml" ]]; then
-        break
-    fi
-    sleep 1
-done
-
-cd /wd
-
-rm -rf $DAE_DB_DIR/wdae/wdae.sql
-rm -rf $DAE_DB_DIR/wdae/wdae_django_pre.cache
-rm -rf $DAE_DB_DIR/wdae/wdae_django_default.cache
-
-cd /wd/rest_client/integration/fixtures/micro_iossifov2014
+rm -rf /wd/rest_client/tmp
+mkdir -p /wd/rest_client/tmp
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    simple_study_import --id iossifov_2014 \
-    -o /wd/data/temp-resttest \
-    --denovo-file iossifov2014.txt \
-    iossifov2014_families.ped
+    python /wd/rest_client/setup_testing_remote.py
 
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    generate_denovo_gene_sets
+export GRR_DEFINITION_FILE="/wd/rest_client/tmp/grr_definition.yaml"
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     wdaemanage migrate
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage user_create admin@iossifovlab.com \
-    -p secret -g any_dataset:any_user:admin || true
+    wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:any_user:admin
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage user_create research@iossifovlab.com \
-    -p secret -g any_user || true
+    wdaemanage user_create research@iossifovlab.com -p secret -g any_user
 
 /opt/conda/bin/conda run -n gpf \
     wdaemanage createapplication \
         confidential client-credentials \
         --user 1 \
-        --redirect-uris "http://resttest:21011/login" \
-        --name "testing rest client app1" \
-        --client-id resttest1 \
-        --client-secret secret \
-        --skip-authorization
+        --name "remote federation testing app" \
+        --client-id federation \
+        --client-secret secret
 
 /opt/conda/bin/conda run -n gpf \
     wdaemanage createapplication \
         confidential client-credentials \
         --user 2 \
-        --redirect-uris "http://resttest:21011/login" \
-        --name "testing rest client app1" \
-        --client-id resttest2 \
+        --name "remote federation testing app 2" \
+        --client-id federation2 \
         --client-secret secret \
         --skip-authorization
 
-
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    grr_cache_repo --grr /wd/rest_client/integration/grr_definition.yaml\
-        --instance $DAE_DB_DIR/gpf_instance.yaml
-
 while true; do
-
     /opt/conda/bin/conda run --no-capture-output -n gpf \
-        wdaemanage runserver 0.0.0.0:21011
+        wdaemanage runserver 0.0.0.0:21010
     sleep 10
-
 done

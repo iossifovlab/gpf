@@ -4,7 +4,7 @@ services:
   setup:
     build:
       context: ../
-      dockerfile: ../Dockerfile
+      dockerfile: Dockerfile
     platform: linux/amd64
     restart: "no"
     volumes:
@@ -21,20 +21,20 @@ services:
   resttest:
     build:
       context: ../
-      dockerfile: ../Dockerfile
+      dockerfile: Dockerfile
     platform: linux/amd64
     depends_on:
       - setup
     ports:
-      - "21011:21011"
+      - "21010:21010"
     environment:
-      DAE_DB_DIR: /wd/data/data-hg19-resttest
-      GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
+      DAE_DB_DIR: /wd/rest_client/tmp/gpf_instance
+      GRR_DEFINITION_FILE: /wd/rest_client/tmp/grr_definition.yaml
       WDAE_ALLOWED_HOST: "*"
       WDAE_DEBUG: true
       WDAE_PUBLIC_HOSTNAME: resttest
       WDAE_EMAIL_HOST: "mail"
-      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://resttest:21011"
+      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://localhost:21010"
     volumes:
       - ../:/wd
     entrypoint: /wd/rest_client/integration/entrypoint.sh
