@@ -279,25 +279,6 @@ describe('PersonFilterComponent', () => {
     expect(updateStateEmitSpy).not.toHaveBeenCalledWith(localStateMock);
   });
 
-  it('should toggle categorical values', () => {
-    const updateStateEmitSpy = jest.spyOn(component.updateState, 'emit').mockImplementation();
-
-    const localStateMock: MeasureHistogramState = {
-      histogramType: 'categorical',
-      measure: 'm1',
-      rangeStart: null,
-      rangeEnd: null,
-      values: ['val1', 'val2'],
-      categoricalView: 'range selector',
-      roles: null
-    };
-    component.localState = localStateMock;
-
-    component.toggleCategoricalValues(['val2', 'val3']);
-    expect(component.localState.values).toStrictEqual(['val1', 'val3']);
-    expect(updateStateEmitSpy).toHaveBeenCalledWith(localStateMock);
-  });
-
   it('should validate state by checking measure in family fitlers', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
 
@@ -318,174 +299,6 @@ describe('PersonFilterComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
       errors: {
         componentId: 'familyFilters: m1', errors: ['Empty pheno measures are invalid.']
-      }
-    }));
-  });
-
-  it('should validate state by checking type of ranges in family fitlers', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
-
-    component.isFamilyFilters = true;
-
-    const localStateMock: MeasureHistogramState = {
-      histogramType: 'continuous',
-      measure: 'm1',
-      rangeStart: undefined,
-      rangeEnd: undefined,
-      values: [],
-      categoricalView: null,
-      roles: null
-    };
-    component.initialState = localStateMock;
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'familyFilters: m1', errors: ['Range start should be a number.', 'Range end should be a number.']
-      }
-    }));
-  });
-
-  it('should validate state by comparing ranges to domain ranges in family fitlers', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
-
-    component.isFamilyFilters = true;
-
-    const localStateMock: MeasureHistogramState = {
-      histogramType: 'continuous',
-      measure: 'm1',
-      rangeStart: 3,
-      rangeEnd: 13,
-      values: [],
-      categoricalView: null,
-      roles: null
-    };
-    component.initialState = localStateMock;
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'familyFilters: m1', errors: [
-          'Range start should be more than or equal to domain min.',
-          'Range end should be less than or equal to domain max.'
-        ]
-      }
-    }));
-  });
-
-  it('should validate state by comapring ranges in family fitlers', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
-
-    component.isFamilyFilters = true;
-
-    const localStateMock: MeasureHistogramState = {
-      histogramType: 'continuous',
-      measure: 'm1',
-      rangeStart: 8,
-      rangeEnd: 7,
-      values: [],
-      categoricalView: null,
-      roles: null
-    };
-    component.initialState = localStateMock;
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'familyFilters: m1', errors: [
-          'Range start should be less than or equal to range end.',
-          'Range end should be more than or equal to range start.',
-        ]
-      }
-    }));
-  });
-
-  it('should validate by checking for empty categorical values selected in person fitlers', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
-
-    component.isFamilyFilters = false;
-
-    component.selectedMeasure = new MeasureHistogram(
-      'm1',
-      new CategoricalHistogram(
-        [
-          {name: 'name1', value: 10},
-          {name: 'name2', value: 20},
-          {name: 'name3', value: 30},
-          {name: 'name4', value: 40},
-          {name: 'name5', value: 50},
-        ],
-        ['name1', 'name2', 'name3', 'name4', 'name5'],
-        'large value descriptions',
-        'small value descriptions',
-        true,
-        0,
-        30
-      ),
-      ''
-    );
-
-    const localStateMock: MeasureHistogramState = {
-      histogramType: 'categorical',
-      measure: 'm1',
-      rangeStart: null,
-      rangeEnd: null,
-      values: [],
-      categoricalView: 'range selector',
-      roles: null
-    };
-    component.initialState = localStateMock;
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'personFilters: m1', errors: ['Please select at least one value.']
-      }
-    }));
-  });
-
-  it('should validate by checking categorical values are over the limit in person fitlers', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
-
-    component.isFamilyFilters = false;
-
-    component.selectedMeasure = new MeasureHistogram(
-      'm1',
-      new CategoricalHistogram(
-        [
-          {name: 'name1', value: 10},
-          {name: 'name2', value: 20},
-          {name: 'name3', value: 30},
-          {name: 'name4', value: 40},
-          {name: 'name5', value: 50},
-        ],
-        ['name1', 'name2', 'name3', 'name4', 'name5'],
-        'large value descriptions',
-        'small value descriptions',
-        true,
-        0,
-        30
-      ),
-      ''
-    );
-
-    const selectedValuesMock = [...Array(1020).keys()].map(n => n.toString());
-
-    const localStateMock: MeasureHistogramState = {
-      histogramType: 'categorical',
-      measure: 'm1',
-      rangeStart: null,
-      rangeEnd: null,
-      values: selectedValuesMock,
-      categoricalView: 'range selector',
-      roles: null
-    };
-    component.initialState = localStateMock;
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'personFilters: m1', errors: ['Please select less than 1000 values.']
       }
     }));
   });
@@ -548,5 +361,59 @@ describe('PersonFilterComponent', () => {
     component.replaceSelectedRoles(roles);
     expect(component.localState.roles).toStrictEqual([]);
     expect(updateHistogramSpy).toHaveBeenCalledWith({ measureId: 'm1', roles: null });
+  });
+
+  it('should dispatch histogram errors to state in family fitlers', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
+
+    component.isFamilyFilters = true;
+
+    const localStateMock: MeasureHistogramState = {
+      histogramType: 'continuous',
+      measure: 'm1',
+      rangeStart: 7,
+      rangeEnd: 10,
+      values: [],
+      categoricalView: null,
+      roles: ['mom', 'dad']
+    };
+    component.localState = localStateMock;
+
+    component.setHistogramValidationErrors(['Please select at least one value.']);
+    expect(component.histogramErrors).toStrictEqual(['Please select at least one value.']);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
+      errors: {
+        componentId: 'familyFilters: m1', errors: ['Please select at least one value.']
+      }
+    }));
+  });
+
+  it('should dispatch histogram errors and person filter errors to state in family fitlers', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
+
+    component.isFamilyFilters = true;
+
+    const localStateMock: MeasureHistogramState = {
+      histogramType: 'continuous',
+      measure: null,
+      rangeStart: 7,
+      rangeEnd: 10,
+      values: [],
+      categoricalView: null,
+      roles: ['mom', 'dad']
+    };
+    component.localState = localStateMock;
+
+    component.setHistogramValidationErrors(['Please select at least one value.']);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
+      errors: {
+        componentId: 'familyFilters: m1', errors: [
+          'Please select at least one value.',
+          'Empty pheno measures are invalid.'
+        ]
+      }
+    }));
   });
 });

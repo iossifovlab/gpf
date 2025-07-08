@@ -55,7 +55,8 @@
       <gpf-categorical-values-dropdown
         [initialState]="localState.values"
         [histogram]="selectedMeasure.histogram"
-        (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
+        (updateSelectedValues)="replaceCategoricalValues($event)"
+        (emitValidationErrors)="setHistogramValidationErrors($event)"></gpf-categorical-values-dropdown>
     </div>
 
     <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
@@ -74,7 +75,8 @@
         (rangeStartChange)="updateRangeStart($event)"
         [rangeEnd]="localState.rangeEnd"
         (rangeEndChange)="updateRangeEnd($event)"
-        style="display: block; margin-top: 17px">
+        style="display: block; margin-top: 17px"
+        (emitValidationErrors)="setHistogramValidationErrors($event)">
       </gpf-histogram>
       <gpf-categorical-histogram
         *ngIf="
@@ -87,7 +89,8 @@
         [histogram]="selectedMeasure.histogram"
         [initialSelectedValueNames]="localState.values"
         [interactType]="localState.categoricalView"
-        (selectCategoricalValues)="toggleCategoricalValues($event)">
+        (selectCategoricalValues)="replaceCategoricalValues($event)"
+        (emitValidationErrors)="setHistogramValidationErrors($event)">
       </gpf-categorical-histogram>
       <gpf-categorical-histogram
         *ngIf="
@@ -100,7 +103,8 @@
         [histogram]="selectedMeasure.histogram"
         [initialSelectedValueNames]="localState.values"
         [interactType]="localState.categoricalView"
-        (selectCategoricalValues)="toggleCategoricalValues($event)">
+        (selectCategoricalValues)="replaceCategoricalValues($event)"
+        (emitValidationErrors)="setHistogramValidationErrors($event)">
       </gpf-categorical-histogram>
     </div>
 

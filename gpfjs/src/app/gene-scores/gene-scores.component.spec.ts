@@ -13,7 +13,6 @@ import { Store, StoreModule } from '@ngrx/store';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
 import { resetErrors, setErrors } from 'app/common/errors.state';
-import { range } from 'lodash';
 
 
 class MockGeneScoresService {
@@ -123,20 +122,6 @@ describe('GeneScoresComponent', () => {
     expect(component.selectedGeneScore.score).toBe('score1');
     expect(component.categoricalValues).toStrictEqual(['name2', 'name5']);
     expect(component.selectedCategoricalHistogramView).toBe('click selector');
-  });
-
-  it('should toggle categorical histogram values and save to state', () => {
-    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', null);
-
-    const values = ['name5', 'name2'];
-    component.categoricalValues = ['name1', 'name2', 'name3'];
-    component.toggleCategoricalValues(values);
-    expect(dispatchSpy).toHaveBeenCalledWith(setGeneScoreCategorical({
-      score: 'score1',
-      values: ['name1', 'name3', 'name5'],
-      categoricalView: 'range selector',
-    }));
   });
 
   it('should switch categorical histogram view', () => {
@@ -331,54 +316,6 @@ describe('GeneScoresComponent', () => {
         'Range start should be more than or equal to domain min.',
         'Empty gene scores are invalid.'
       ]
-    }}));
-  });
-
-  it('should show error message when no values are selected in categorical histogram', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', new CategoricalHistogram(
-      [
-        {name: 'name1', value: 10},
-        {name: 'name2', value: 20},
-        {name: 'name3', value: 30},
-      ],
-      null,
-      'large value descriptions',
-      'small value descriptions',
-      true,
-      0
-    ));
-    component.selectedCategoricalHistogramView = 'click selector';
-    component.toggleCategoricalValues([]);
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
-      componentId: 'geneScores', errors: ['Please select at least one value.']
-    }}));
-  });
-
-  it('should show error message when more than max values are selected in categorical histogram', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component.selectedGeneScore = new GenomicScore('desc', 'help', 'score1', new CategoricalHistogram(
-      [
-        {name: 'name1', value: 10},
-        {name: 'name2', value: 20},
-        {name: 'name3', value: 30},
-      ],
-      null,
-      'large value descriptions',
-      'small value descriptions',
-      true,
-      0
-    ));
-
-    const vals: string[] = range(1003).map(v => String(v));
-
-    component.toggleCategoricalValues(vals);
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({errors: {
-      componentId: 'geneScores', errors: ['Please select less than 1000 values.']
     }}));
   });
 

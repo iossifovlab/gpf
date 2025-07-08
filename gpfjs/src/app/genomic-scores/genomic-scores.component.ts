@@ -23,7 +23,6 @@ export class GenomicScoresComponent implements OnInit {
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
   public histogramErrors: string[] = [];
-  private categoricalValueMax = 1000;
   private readonly maxBarCount = 25;
 
   // Refactor needed, not removal.
@@ -95,14 +94,6 @@ export class GenomicScoresComponent implements OnInit {
     this.updateHistogramState();
   }
 
-  public toggleCategoricalValues(values: string[]): void {
-    const oldValues: Set<string> = new Set(this.localState.values);
-    const newValues: Set<string> = new Set(values);
-
-    this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
-    this.updateHistogramState();
-  }
-
   public isNumberHistogram(arg: object): arg is NumberHistogram {
     return arg instanceof NumberHistogram;
   }
@@ -124,15 +115,6 @@ export class GenomicScoresComponent implements OnInit {
 
     if (!this.localState.score) {
       this.errors.push('Empty score names are invalid.');
-    }
-
-    if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
-      if (!this.localState.values.length) {
-        this.errors.push('Please select at least one value.');
-      }
-      if (this.localState.values.length > this.categoricalValueMax) {
-        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
-      }
     }
 
     if (this.errors.length) {

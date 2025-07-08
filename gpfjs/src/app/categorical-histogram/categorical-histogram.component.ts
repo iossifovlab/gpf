@@ -40,6 +40,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   public otherValueNames: string[] = [];
   // Currently selected names of values
   public selectedValueNames: string[] = [];
+  public selectedValueNamesFull: string[] = [];
 
   private barCount: number;
   private readonly defaultBarCount = 20;
@@ -56,6 +57,10 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
   @Output() public selectCategoricalValues = new EventEmitter<string[]>();
 
+  public errors: string[] = [];
+  @Output() public emitValidationErrors = new EventEmitter<string[]>();
+  private categoricalValueMax = 1000;
+
   public xScale: d3.ScaleBand<string>;
   public scaleXAxis: d3.ScaleOrdinal<string, number, never>;
   public scaleYAxis: d3.ScaleLinear<number, number, never>
@@ -71,11 +76,14 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     // Select all values if no initial are provided and range selector mode is used
     if (this.initialSelectedValueNames.length) {
       this.selectedValueNames = cloneDeep(this.initialSelectedValueNames);
+      this.selectedValueNamesFull = cloneDeep(this.initialSelectedValueNames);
       this.formatSelectedValueNames();
     } else if (this.interactType === 'range selector') {
       this.selectedValueNames = this.values.map(v => v.name);
-      this.selectCategoricalValues.emit(this.histogram.values.map(v => v.name));
+      this.updateSelectedValueNames(this.histogram.values.map(v => v.name));
     }
+
+    this.validateState();
 
     // Redraw histogram
     this.sliderStartIndex = 0;
@@ -143,6 +151,8 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.selectedValueNames.sort((a, b) => {
       return this.values.findIndex(v1 => v1.name === a) - this.values.findIndex(v2 => v2.name === b);
     });
+
+    this.validateState();
   }
 
   public singleScoreValueIsValid(): boolean {
@@ -302,10 +312,23 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     }
 
     if (event.srcElement.id !== 'Other values') {
-      this.selectCategoricalValues.emit([event.srcElement.id]);
+      this.updateSelectedValueNames([event.srcElement.id]);
     } else {
-      this.selectCategoricalValues.emit(this.otherValueNames);
+      this.updateSelectedValueNames(this.otherValueNames);
     }
+  }
+
+  private updateSelectedValueNames(values: string[]): void {
+    values.forEach(value => {
+      const valueIndex = this.selectedValueNamesFull.findIndex(v => v === value);
+      if (valueIndex === -1) {
+        this.selectedValueNamesFull.push(value);
+      } else {
+        this.selectedValueNamesFull.splice(valueIndex, 1);
+      }
+    });
+    this.selectCategoricalValues.emit(this.selectedValueNamesFull);
+    this.validateState();
   }
 
   private colorBars(): void {
@@ -402,7 +425,22 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       toggled.splice(otherIndex, 1);
       toggled = [...toggled, ...this.otherValueNames];
     }
-    this.selectCategoricalValues.emit(toggled);
+
+    this.updateSelectedValueNames(toggled);
     this.colorBars();
+  }
+
+  private validateState(): void {
+    this.errors = [];
+
+    if (this.interactType !== 'range selector' && !this.selectedValueNamesFull.length) {
+      this.errors.push('Please select at least one value.');
+    }
+
+    if (this.selectedValueNamesFull.length > this.categoricalValueMax) {
+      this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
+    }
+
+    this.emitValidationErrors.emit(this.errors);
   }
 }

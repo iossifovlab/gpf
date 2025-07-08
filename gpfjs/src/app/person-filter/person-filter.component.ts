@@ -21,7 +21,7 @@ export class PersonFilterComponent implements OnInit, OnDestroy {
   @Output() public updateState = new EventEmitter<MeasureHistogramState>();
   @Output() public updateHistogram = new EventEmitter<{ measureId: string, roles: string[] }>();
   public errors: string[] = [];
-  private categoricalValueMax = 1000;
+  public histogramErrors: string[] = [];
   private readonly maxBarCount = 25;
 
   // Refactor needed, not removal.
@@ -34,7 +34,7 @@ export class PersonFilterComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.localState = cloneDeep(this.initialState);
-    this.validateState(this.localState);
+    this.validateState();
 
     const histogram = this.selectedMeasure.histogram;
     if (this.isCategoricalHistogram(histogram)) {
@@ -91,7 +91,7 @@ export class PersonFilterComponent implements OnInit, OnDestroy {
   }
 
   private updateHistogramState(): void {
-    this.validateState(this.localState);
+    this.validateState();
     this.updateState.emit(this.localState);
   }
 
@@ -108,14 +108,6 @@ export class PersonFilterComponent implements OnInit, OnDestroy {
     this.updateHistogramState();
   }
 
-  public toggleCategoricalValues(values: string[]): void {
-    const oldValues: Set<string> = new Set(this.localState.values);
-    const newValues: Set<string> = new Set(values);
-
-    this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
-    this.updateHistogramState();
-  }
-
   public isNumberHistogram(arg: object): arg is NumberHistogram {
     return arg instanceof NumberHistogram;
   }
@@ -124,46 +116,23 @@ export class PersonFilterComponent implements OnInit, OnDestroy {
     return arg instanceof CategoricalHistogram;
   }
 
+  public setHistogramValidationErrors(errors: string[]): void {
+    this.histogramErrors = errors;
+    this.validateState();
+  }
 
-  private validateState(state: MeasureHistogramState): void {
+
+  private validateState(): void {
     this.errors = [];
-    if (!state) {
+    if (this.histogramErrors.length) {
+      this.errors.push(...this.histogramErrors);
+    }
+
+    if (!this.localState) {
       return;
     }
-    if (!state.measure) {
+    if (!this.localState.measure) {
       this.errors.push('Empty pheno measures are invalid.');
-    }
-    if (this.isNumberHistogram(this.selectedMeasure.histogram)) {
-      if (state.rangeStart !== null) {
-        if (typeof state.rangeStart !== 'number') {
-          this.errors.push('Range start should be a number.');
-        }
-        if (state.rangeStart > state.rangeEnd) {
-          this.errors.push('Range start should be less than or equal to range end.');
-        }
-        if (state.rangeStart < this.selectedMeasure.histogram.rangeMin) {
-          this.errors.push('Range start should be more than or equal to domain min.');
-        }
-      }
-      if (state.rangeEnd !== null) {
-        if (typeof state.rangeEnd !== 'number') {
-          this.errors.push('Range end should be a number.');
-        }
-        if (state.rangeEnd < state.rangeStart) {
-          this.errors.push('Range end should be more than or equal to range start.');
-        }
-        if (state.rangeEnd > this.selectedMeasure.histogram.rangeMax) {
-          this.errors.push('Range end should be less than or equal to domain max.');
-        }
-      }
-    }
-    if (this.isCategoricalHistogram(this.selectedMeasure.histogram)) {
-      if (!state.values.length) {
-        this.errors.push('Please select at least one value.');
-      }
-      if (state.values.length > this.categoricalValueMax) {
-        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
-      }
     }
 
     let component = 'personFilters';

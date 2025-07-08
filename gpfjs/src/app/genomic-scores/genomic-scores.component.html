@@ -50,7 +50,8 @@
     <gpf-categorical-values-dropdown
       [initialState]="localState.values"
       [histogram]="selectedGenomicScore.histogram"
-      (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
+      (updateSelectedValues)="replaceCategoricalValues($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)"></gpf-categorical-values-dropdown>
   </div>
 
   <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
@@ -83,7 +84,8 @@
       [histogram]="selectedGenomicScore.histogram"
       [initialSelectedValueNames]="localState.values"
       [interactType]="localState.categoricalView"
-      (selectCategoricalValues)="toggleCategoricalValues($event)">
+      (selectCategoricalValues)="replaceCategoricalValues($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)">
     </gpf-categorical-histogram>
     <gpf-categorical-histogram
       *ngIf="
@@ -96,7 +98,8 @@
       [histogram]="selectedGenomicScore.histogram"
       [initialSelectedValueNames]="localState.values"
       [interactType]="localState.categoricalView"
-      (selectCategoricalValues)="toggleCategoricalValues($event)">
+      (selectCategoricalValues)="replaceCategoricalValues($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)">
     </gpf-categorical-histogram>
   </div>
 
