@@ -140,3 +140,22 @@ def test_setup_slurm_cluster(mocker: pytest_mock.MockerFixture) -> None:
 
     assert mocked_slurm.call_count == 1
     assert "number_of_workers" not in mocked_slurm.call_args.kwargs
+
+
+def test_setup_manual_client(mocker: pytest_mock.MockerFixture) -> None:
+    mocked_client = mocker.patch(
+        "dae.dask.named_cluster.Client",
+        autospec=True)
+
+    setup_client_from_config({
+        "type": "manual",
+        "params": {
+            "scheduler_address": "tcp://localhost:8786",
+        },
+    }, number_of_threads_param=2)
+
+    assert mocked_client.call_count == 1
+
+    assert mocked_client.call_args.args == (
+        "tcp://localhost:8786",
+    )
