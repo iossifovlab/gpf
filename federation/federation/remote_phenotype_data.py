@@ -15,7 +15,8 @@ from dae.pheno.common import ImportManifest, MeasureType
 from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
 from dae.variants.attributes import Role
 
-from federation.rest_api_client import RESTClient
+from federation.utils import prefix_remote_identifier, prefix_remote_name
+from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
@@ -28,26 +29,26 @@ class RemotePhenotypeData(PhenotypeData):
     ):  # pylint: disable=super-init-not-called
         self._remote_pheno_id = config["id"]
         self.rest_client = rest_client
-        self._pheno_id = self.rest_client.prefix_remote_identifier(
-            config["id"])
+        self._pheno_id = prefix_remote_identifier(
+            config["id"], self.rest_client,
+        )
 
-        config["name"] = self.rest_client.prefix_remote_name(
-            config.get("name", self._pheno_id))
+        config["name"] = prefix_remote_name(
+            config.get("name", self._pheno_id), self.rest_client,
+        )
 
         self._common_report: CommonReport | None = None
         self._remote_common_report: dict[str, Any] | None = None
         self._is_group = False
         if config.get("studies"):
             self._is_group = True
-            config["studies"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["studies"],
-                ),
-            )
+            config["studies"] = [
+                prefix_remote_identifier(study_id, self.rest_client)
+                for study_id in config["studies"]
+            ]
 
         super().__init__(self._pheno_id, config)
-        config["id"] = self.rest_client.prefix_remote_identifier(config["id"])
+        config["id"] = prefix_remote_identifier(config["id"], self.rest_client)
 
     def _build_person_set_collection(
         self,

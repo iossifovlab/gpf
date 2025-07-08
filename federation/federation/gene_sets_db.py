@@ -10,7 +10,8 @@ from dae.gene_sets.gene_sets_db import (
     GeneSetsDb,
 )
 
-from federation.rest_api_client import RESTClient
+from federation.utils import prefix_remote_identifier, prefix_remote_name
+from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,12 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
         self.remote_gene_sets_names: list[str] = []
         self.remote_gene_sets_desc: list[dict[str, Any]] = []
 
-        collection_id = self.rest_client.prefix_remote_identifier(
-            collection_id,
+        collection_id = prefix_remote_identifier(
+            collection_id, self.rest_client,
         )
         self.collection_id = collection_id
         self.web_label = \
-            self.rest_client.prefix_remote_name(desc)
+            prefix_remote_name(desc, self.rest_client)
         self.web_format_str = fmt
         self.gene_sets: dict[str, GeneSet] = {}
 

@@ -15,7 +15,8 @@ from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 
-from federation.rest_api_client import RESTClient
+from federation.utils import prefix_remote_identifier, prefix_remote_name
+from rest_client.rest_client import RESTClient
 
 
 class RemoteGenotypeData(GenotypeDataStudy):
@@ -25,37 +26,34 @@ class RemoteGenotypeData(GenotypeDataStudy):
         self.remote_study_id = config["id"]
         self.rest_client = rest_client
 
-        config["id"] = self.rest_client.prefix_remote_identifier(config["id"])
-        config["name"] = self.rest_client.prefix_remote_name(
+        config["id"] = prefix_remote_identifier(config["id"], self.rest_client)
+        config["name"] = prefix_remote_name(
             config.get("name", self.remote_study_id),
+            self.rest_client,
         )
         config["phenotype_tool"] = False
         if config.get("phenotype_data"):
-            config["phenotype_data"] = \
-                self.rest_client.prefix_remote_identifier(
-                    config["phenotype_data"])
+            config["phenotype_data"] = prefix_remote_identifier(
+                config["phenotype_data"], self.rest_client,
+            )
 
         config["description_editable"] = False
         if config.get("gene_browser"):
             config["gene_browser"]["enabled"] = False
 
         if config["parents"]:
-            config["parents"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["parents"],
-                ),
-            )
+            config["parents"] = [
+                prefix_remote_identifier(parent, self.rest_client)
+                for parent in config["parents"]
+            ]
 
         self._is_group = False
         if config.get("studies"):
             self._is_group = True
-            config["studies"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["studies"],
-                ),
-            )
+            config["studies"] = [
+                prefix_remote_identifier(parent, self.rest_client)
+                for parent in config["studies"]
+            ]
 
         self.config = FrozenBox(config)
 
