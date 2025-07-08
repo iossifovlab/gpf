@@ -18,6 +18,9 @@ export class CategoricalValuesDropdownComponent implements OnInit {
   public selectedValues: { name: string; value: number; }[] = [];
   private suggestionsToShow = 50;
 
+  public errors: string[] = [];
+  @Output() public emitValidationErrors = new EventEmitter<string[]>();
+
   public ngOnInit(): void {
     this.categoricalValues = this.histogram.values;
     this.valueSuggestions = this.categoricalValues.slice(0, this.suggestionsToShow);
@@ -25,6 +28,7 @@ export class CategoricalValuesDropdownComponent implements OnInit {
     if (this.initialState.length) {
       this.selectedValues = this.histogram.values.filter(v => this.initialState.includes(v.name));
     }
+    this.validateState();
 
     this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
       if (!this.searchValue) {
@@ -50,6 +54,8 @@ export class CategoricalValuesDropdownComponent implements OnInit {
     }
     this.searchValue = '';
     this.searchBoxInput$.next(this.searchValue);
+
+    this.validateState();
   }
 
   public removeFromSelected(value: string): void {
@@ -58,9 +64,21 @@ export class CategoricalValuesDropdownComponent implements OnInit {
       this.selectedValues.splice(index, 1);
       this.updateSelectedValues.emit(this.selectedValues.map(v => v.name));
     }
+
+    this.validateState();
   }
 
   public isSelected(suggestion: { name: string; value: number; }): boolean {
     return Boolean(this.selectedValues.find(v => v.name === suggestion.name));
+  }
+
+  private validateState(): void {
+    this.errors = [];
+
+    if (!this.selectedValues.length) {
+      this.errors.push('Please select at least one value.');
+    }
+
+    this.emitValidationErrors.emit(this.errors);
   }
 }

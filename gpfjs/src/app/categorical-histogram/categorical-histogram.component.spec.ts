@@ -225,4 +225,21 @@ describe('CategoricalHistogramComponent', () => {
     component.ngOnChanges();
     expect(redrawHistogramSpy).toHaveBeenCalledWith();
   });
+
+  it('should validate by checking categorical values are over the limit', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+    const selectedValuesMock = [...Array(1020).keys()].map(n => n.toString());
+    component.initialSelectedValueNames = selectedValuesMock;
+    component.ngOnInit();
+
+    expect(errorsEmitterSpy).toHaveBeenCalledWith(['Please select less than 1000 values.']);
+  });
+
+  it('should validate by checking for empty categorical values selected', () => {
+    const errorsEmitterSpy = jest.spyOn(component.emitValidationErrors, 'emit');
+    component.interactType = 'click selector';
+    component.selectedValueNamesFull = [];
+    component.ngOnInit();
+    expect(errorsEmitterSpy).toHaveBeenCalledWith(['Please select at least one value.']);
+  });
 });
