@@ -41,7 +41,6 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
 
   public categoricalValues: string[] = [];
   public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
-  private categoricalValueMax = 1000;
   public errors: string[] = [];
   public histogramErrors: string[] = [];
 
@@ -223,18 +222,6 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
     this.updateCategoricalHistogramState();
   }
 
-  public toggleCategoricalValues(values: string[]): void {
-    values.forEach(value => {
-      const valueIndex = this.categoricalValues.findIndex(v => v === value);
-      if (valueIndex === -1) {
-        this.categoricalValues.push(value);
-      } else {
-        this.categoricalValues.splice(valueIndex, 1);
-      }
-    });
-    this.updateCategoricalHistogramState();
-  }
-
   public isNumberHistogram(arg: object): arg is NumberHistogram {
     return arg instanceof NumberHistogram;
   }
@@ -256,15 +243,6 @@ export class GeneScoresComponent implements OnInit, OnDestroy {
 
     if (!this.selectedGeneScore.score) {
       this.errors.push('Empty gene scores are invalid.');
-    }
-
-    if (this.isCategoricalHistogram(this.selectedGeneScore.histogram)) {
-      if (this.selectedCategoricalHistogramView !== 'range selector' && !this.categoricalValues.length) {
-        this.errors.push('Please select at least one value.');
-      }
-      if (this.categoricalValues.length > this.categoricalValueMax) {
-        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
-      }
     }
 
     if (this.errors.length) {
