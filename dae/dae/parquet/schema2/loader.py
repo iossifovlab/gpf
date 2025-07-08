@@ -35,7 +35,7 @@ class Reader:
     This class assumes variants are ordered by their bucket and summary index!
     """
 
-    BATCH_SIZE = 5000
+    BATCH_SIZE = 1000
 
     def __init__(self, path: str, columns: Iterable[str]):
         if "summary_index" not in columns or "bucket_index" not in columns:
@@ -355,18 +355,28 @@ class ParquetLoader:
         for summary_paths in self.get_summary_pq_filepaths(region):
             if not summary_paths:
                 continue
+
             seen = set()
-            for s_path in summary_paths:
-                table = pq.read_table(
-                    s_path, columns=self.SUMMARY_COLUMNS,
-                    filters=region_filter)
-                for rec in table.to_pylist():
-                    v_id = (rec["bucket_index"], rec["summary_index"])
-                    if v_id not in seen:
-                        seen.add(v_id)
-                        yield self._deserialize_summary_variant(
-                            rec["summary_variant_data"],
-                        )
+            summary_reader = MultiReader(summary_paths, self.SUMMARY_COLUMNS)
+
+            for alleles in summary_reader:
+                rec = alleles[0]
+                sv_idx = (rec["bucket_index"], rec["summary_index"])
+                if sv_idx in seen:
+                    continue
+
+                if region is not None \
+                    and not region.intersects(Region(rec["chromosome"],
+                                                     rec["position"],
+                                                     rec["end_position"])):
+                    continue
+
+                seen.add(sv_idx)
+
+                yield self._deserialize_summary_variant(
+                    rec["summary_variant_data"])
+
+            summary_reader.close()
 
     def fetch_variants(
         self, region: Region | None = None,
