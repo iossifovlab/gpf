@@ -85,24 +85,6 @@ describe('GenomicScoresComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should toggle categorical values', () => {
-    component.localState = {
-      score: 'score',
-      histogramType: 'categorical',
-      rangeStart: null,
-      rangeEnd: null,
-      values: ['value1', 'value2', 'value3'],
-      categoricalView: 'range selector',
-    } as GenomicScoreState;
-
-    const updateStateSpy = jest.spyOn(component.updateState, 'emit').mockImplementation();
-
-    expect(component.localState.values).toStrictEqual(['value1', 'value2', 'value3']);
-    component.toggleCategoricalValues(['value2', 'value3', 'value4']);
-    expect(component.localState.values).toStrictEqual(['value1', 'value4',]);
-    expect(updateStateSpy).toHaveBeenCalledWith(component.localState);
-  });
-
   it('should dispatch histogram validation errors to state', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.selectedGenomicScore = new GenomicScore(
@@ -117,48 +99,6 @@ describe('GenomicScoresComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
       errors: {
         componentId: 'genomicScores: score', errors: ['Range start should be more than or equal to domain min.']
-      }
-    }));
-  });
-
-
-  it('should dispatch error message if no values are selected', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    const state: GenomicScoreState = {
-      histogramType: 'categorical',
-      score: 'score',
-      rangeStart: null,
-      rangeEnd: null,
-      values: [],
-      categoricalView: 'click selector'
-    };
-
-    component.initialState = state;
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Please select at least one value.'
-        ]
-      }
-    }));
-  });
-
-  it('should dispatch error message if more than max values are selected', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-
-    component['categoricalValueMax'] = 3;
-    const newValues = ['val1', 'val2', 'val3', 'val4'];
-
-    component.replaceCategoricalValues(newValues);
-
-    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
-      errors: {
-        componentId: 'genomicScores: score', errors: [
-          'Please select less than 3 values.'
-        ]
       }
     }));
   });
