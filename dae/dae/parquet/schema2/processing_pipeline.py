@@ -6,18 +6,19 @@ import logging
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
-from typing import cast
+from typing import Any, cast
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from dae.annotation.processing_pipeline import (
-    AnnotatablesWithContext,
     Annotation,
     AnnotationPipelineAnnotatablesBatchFilter,
     AnnotationPipelineAnnotatablesFilter,
+    AnnotationsWithSource,
 )
 from dae.effect_annotation.effect import AlleleEffects
+from dae.parquet.schema2.loader import ParquetLoader
 from dae.utils.regions import Region
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import (
@@ -124,17 +125,82 @@ class AnnotationPipelineVariantsFilterMixin:
         annotation: Annotation,
     ) -> None:
 
-        if "allele_effects" in annotation.annotations:
-            allele_effects = annotation.annotations["allele_effects"]
+        if "allele_effects" in annotation.context:
+            allele_effects = annotation.context["allele_effects"]
             assert isinstance(allele_effects, AlleleEffects)
             # pylint: disable=protected-access
             summary_allele._effects = allele_effects  # noqa: SLF001
-            del annotation.annotations["allele_effects"]
+            del annotation.context["allele_effects"]
         public_attributes = {
-            key: value for key, value in annotation.annotations.items()
+            key: value for key, value in annotation.context.items()
             if key not in self._annotation_internal_attributes
         }
         summary_allele.update_attributes(public_attributes)
+
+
+class DeleteAttributesFromVariantFilter(VariantsFilter):
+    """Filter to remove items from AWC contexts. Works in-place."""
+
+    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
+        self.to_remove = set(attributes_to_remove)
+
+    def __enter__(self) -> DeleteAttributesFromVariantFilter:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def filter_one(
+        self, full_variant: FullVariant,
+    ) -> FullVariant:
+        """Remove specified attributes from the context of an AWC."""
+        for allele in full_variant.summary_variant.alt_alleles:
+            for attr in self.to_remove:
+                if attr in allele.attributes:
+                    del allele.attributes[attr]
+        return full_variant
+
+
+class DeleteAttributesFromVariantsBatchFilter(VariantsBatchFilter):
+    """Filter to remove items from AWC contexts. Works in-place."""
+
+    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
+        self.to_remove = set(attributes_to_remove)
+
+    def __enter__(self) -> DeleteAttributesFromVariantsBatchFilter:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            exc_tb: TracebackType | None) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def filter_batch(
+        self, batch: Sequence[FullVariant],
+    ) -> Sequence[FullVariant]:
+        """Remove specified attributes from batches of variants."""
+        for variant in batch:
+            for allele in variant.summary_variant.alt_alleles:
+                for attr in self.to_remove:
+                    if attr in allele.attributes:
+                        del allele.attributes[attr]
+        return batch
 
 
 class AnnotationPipelineVariantsFilter(
@@ -149,22 +215,22 @@ class AnnotationPipelineVariantsFilter(
     def filter_one(
         self, full_variant: FullVariant,
     ) -> FullVariant:
-        annotatables = AnnotatablesWithContext(
-            annotatables=[
-                sa.get_annotatable()
-                for sa in full_variant.summary_variant.alt_alleles],
-            context=full_variant,
+        variant = AnnotationsWithSource(
+            source=full_variant,
+            annotations=[
+                Annotation(sa.get_annotatable(), dict(sa.attributes))
+                for sa in full_variant.summary_variant.alt_alleles
+            ],
         )
-        awc = self.annotatables_filter.filter_one_with_context(
-                annotatables)
+        aws = self.annotatables_filter.filter_one_with_source(variant)
 
-        full_variant = cast(FullVariant, awc.context)
+        full_variant = cast(FullVariant, aws.source)
         assert isinstance(full_variant.summary_variant, SummaryVariant)
-        assert len(awc.annotations) == \
+        assert len(aws.annotations) == \
             len(full_variant.summary_variant.alt_alleles)
         for summary_allele, annotation in zip(
                 full_variant.summary_variant.alt_alleles,
-                awc.annotations, strict=True):
+                aws.annotations, strict=True):
             assert isinstance(summary_allele, SummaryAllele)
             self._apply_annotation_to_allele(summary_allele, annotation)
         return full_variant
@@ -195,28 +261,28 @@ class AnnotationPipelineVariantsBatchFilter(
         self, batch: Sequence[FullVariant],
     ) -> Sequence[FullVariant]:
         """Filter variants in batches."""
-        annotatables_with_context = [
-            AnnotatablesWithContext(
-                annotatables=[
-                    sa.get_annotatable()
-                    for sa in v.summary_variant.alt_alleles],
-                context=v,
+        variants = [
+            AnnotationsWithSource(
+                source=v,
+                annotations=[
+                    Annotation(sa.get_annotatable(), dict(sa.attributes))
+                    for sa in v.summary_variant.alt_alleles
+                ],
             )
             for v in batch
         ]
-        annotations_with_context = \
-            self.annotatables_filter.filter_batch_with_context(
-                annotatables_with_context)
+        aws_batch = \
+            self.annotatables_filter.filter_batch_with_source(variants)
 
         result: list[FullVariant] = []
-        for awc in annotations_with_context:
-            full_variant = cast(FullVariant, awc.context)
+        for aws in aws_batch:
+            full_variant = cast(FullVariant, aws.source)
             assert isinstance(full_variant.summary_variant, SummaryVariant)
-            assert len(awc.annotations) == \
+            assert len(aws.annotations) == \
                 len(full_variant.summary_variant.alt_alleles)
             for summary_allele, annotation in zip(
                     full_variant.summary_variant.alt_alleles,
-                    awc.annotations, strict=True):
+                    aws.annotations, strict=True):
                 assert isinstance(summary_allele, SummaryAllele)
                 self._apply_annotation_to_allele(summary_allele, annotation)
 
@@ -391,3 +457,66 @@ class VariantsBatchPipelineProcessor:
         self.consumer.__exit__(exc_type, exc_value, exc_tb)
 
         return exc_type is not None
+
+
+class Schema2SummaryVariantsSource(VariantsSource):
+    """Producer for summary variants from a Parquet dataset."""
+    def __init__(self, loader: ParquetLoader):
+        self.loader = loader
+
+    def __enter__(self) -> Schema2SummaryVariantsSource:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Any | None,
+        exc_value: Any | None,
+        exc_tb: Any | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def fetch(
+        self, region: Region | None = None,
+    ) -> Iterable[FullVariant]:
+        assert self.loader is not None
+        for sv in self.loader.fetch_summary_variants(region=region):
+            yield FullVariant(sv, ())
+
+
+class Schema2SummaryVariantsBatchSource(VariantsBatchSource):
+    """Producer for summary variants from a Parquet dataset."""
+
+    def __init__(
+        self,
+        loader: ParquetLoader,
+        batch_size: int = 500,
+    ) -> None:
+        self.loader = loader
+        self.batch_size = batch_size
+
+    def __enter__(self) -> Schema2SummaryVariantsBatchSource:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Any | None,
+        exc_value: Any | None,
+        exc_tb: Any | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+        return exc_type is not None
+
+    def fetch_batches(
+        self, region: Region | None = None,
+    ) -> Iterable[Sequence[FullVariant]]:
+        """Fetch full variants from a variant loader in batches."""
+        variants = self.loader.fetch_summary_variants(region=region)
+        while batch := tuple(itertools.islice(variants, self.batch_size)):
+            yield [FullVariant(sv, ()) for sv in batch]

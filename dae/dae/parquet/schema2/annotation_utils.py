@@ -1,20 +1,25 @@
+from __future__ import annotations
+
+import logging
 import os
 import pathlib
 from datetime import datetime
 
 import yaml
 
-from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_config import (
-    RawAnnotatorsConfig,
     RawPipelineConfig,
 )
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     merge_variants_parquets,
@@ -22,10 +27,24 @@ from dae.parquet.parquet_writer import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
+from dae.parquet.schema2.processing_pipeline import (
+    AnnotationPipelineVariantsBatchFilter,
+    AnnotationPipelineVariantsFilter,
+    DeleteAttributesFromVariantFilter,
+    DeleteAttributesFromVariantsBatchFilter,
+    Schema2SummaryVariantsBatchSource,
+    Schema2SummaryVariantsSource,
+    VariantsBatchPipelineProcessor,
+    VariantsPipelineProcessor,
+)
+from dae.parquet.schema2.variants_parquet_writer import (
+    Schema2SummaryVariantConsumer,
+)
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
+
+logger = logging.getLogger("format_handlers")
 
 
 def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
@@ -66,65 +85,6 @@ def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
     )
 
 
-def annotate_parquet(
-    input_layout: Schema2DatasetLayout,
-    output_dir: str,
-    pipeline_config: RawAnnotatorsConfig,
-    region: str,
-    grr_definition: dict,
-    bucket_idx: int,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    full_reannotation: bool,  # noqa: FBT001
-) -> None:
-    """Run annotation over a given directory of Parquet files."""
-    loader = ParquetLoader(input_layout)
-    pipeline = AnnotationTool.produce_annotation_pipeline(
-        pipeline_config,
-        loader.meta["annotation_pipeline"] if loader.has_annotation else None,
-        grr_definition,
-        allow_repeated_attributes=allow_repeated_attributes,
-        full_reannotation=full_reannotation,
-    )
-
-    writer = VariantsParquetWriterDeprecated(
-        output_dir, pipeline,
-        loader.partition_descriptor,
-        bucket_index=bucket_idx,
-    )
-
-    if isinstance(pipeline, ReannotationPipeline):
-        internal_attributes = [
-            attribute.name
-            for annotator in (pipeline.annotators_new
-                              | pipeline.annotators_rerun)
-            for attribute in annotator.attributes
-            if attribute.internal
-        ]
-    else:
-        internal_attributes = [
-            attribute.name
-            for attribute in pipeline.get_attributes()
-            if attribute.internal
-        ]
-
-    region_obj = Region.from_str(region)
-    for variant in loader.fetch_summary_variants(region=region_obj):
-        for allele in variant.alt_alleles:
-            if isinstance(pipeline, ReannotationPipeline):
-                for attr in pipeline.attributes_deleted:
-                    del allele.attributes[attr]
-                result = pipeline.annotate(allele.get_annotatable(),
-                                           allele.attributes)
-            else:
-                result = pipeline.annotate(allele.get_annotatable())
-            for attr in internal_attributes:
-                del result[attr]
-            allele.update_attributes(result)
-        writer.write_summary_variant(variant)
-
-    writer.close()
-
-
 def produce_regions(
     target_region: str | None,
     region_size: int,
@@ -155,9 +115,11 @@ def produce_schema2_annotation_tasks(
     raw_pipeline: RawPipelineConfig,
     grr: GenomicResourceRepo,
     region_size: int,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    target_region: str | None = None,
+    work_dir: str,
+    batch_size: int,
     *,
+    target_region: str | None = None,
+    allow_repeated_attributes: bool = False,
     full_reannotation: bool = False,
 ) -> list[Task]:
     """Produce TaskGraph tasks for Parquet file annotation."""
@@ -173,16 +135,15 @@ def produce_schema2_annotation_tasks(
         contig_lens[contig] = genome.get_chrom_length(contig)
 
     regions = produce_regions(target_region, region_size, contig_lens)
-
     tasks = []
     for idx, region in enumerate(regions):
         tasks.append(task_graph.create_task(
             f"part_{region}",
-            annotate_parquet,
-            args=[
-                loader.layout, output_dir,
-                raw_pipeline, region, grr.definition,
-                idx, allow_repeated_attributes, full_reannotation],
+            process_parquet,
+            args=[loader.layout, raw_pipeline, grr.definition,
+                  output_dir, idx, work_dir,
+                  batch_size, Region.from_str(region),
+                  allow_repeated_attributes, full_reannotation],
             deps=[],
         ))
     return tasks
@@ -284,3 +245,63 @@ def merge_partitioned(
 
 def merge_non_partitioned(output_dir: str) -> None:
     merge_variants_parquets(PartitionDescriptor(), output_dir, [])
+
+
+def process_parquet(
+    input_layout: Schema2DatasetLayout,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict | None,
+    output_dir: str,
+    bucket_idx: int,
+    work_dir: str,
+    batch_size: int,
+    region: Region,
+    allow_repeated_attributes: bool,  # noqa: FBT001
+    full_reannotation: bool,  # noqa: FBT001
+) -> None:
+    """Process a Parquet dataset for annotation."""
+    loader = ParquetLoader(input_layout)
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline_config_old = loader.meta["annotation_pipeline"] \
+        if loader.has_annotation else None
+    variants_blob_serializer = loader.meta.get(
+        "variants_blob_serializer",
+        "json",
+    )
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+        allow_repeated_attributes=allow_repeated_attributes,
+        work_dir=pathlib.Path(work_dir),
+        config_old_raw=pipeline_config_old,
+        full_reannotation=full_reannotation,
+    )
+
+    source: Schema2SummaryVariantsSource | Schema2SummaryVariantsBatchSource
+    consumer = Schema2SummaryVariantConsumer(
+        output_dir,
+        pipeline.get_attributes(),
+        loader.partition_descriptor,
+        bucket_index=bucket_idx,
+        variants_blob_serializer=variants_blob_serializer,
+    )
+    filters: list = []
+    processor: VariantsPipelineProcessor | VariantsBatchPipelineProcessor
+
+    if batch_size <= 0:
+        source = Schema2SummaryVariantsSource(loader)
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantFilter(
+                pipeline.attributes_deleted))
+        filters.append(AnnotationPipelineVariantsFilter(pipeline))
+        processor = VariantsPipelineProcessor(source, filters, consumer)
+    else:
+        source = Schema2SummaryVariantsBatchSource(loader)
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantsBatchFilter(
+                pipeline.attributes_deleted))
+        filters.append(AnnotationPipelineVariantsBatchFilter(pipeline))
+        processor = VariantsBatchPipelineProcessor(source, filters, consumer)
+
+    with processor:
+        processor.process_region(region)

@@ -9,12 +9,12 @@ from glob import glob
 
 import pytest
 import pytest_mock
-from dae.annotation.annotate_schema2_parquet import cli
 from dae.annotation.annotation_pipeline import ReannotationPipeline
-from dae.annotation.parquet import produce_regions
 from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
+from dae.parquet.schema2.annotation import cli
+from dae.parquet.schema2.annotation_utils import produce_regions
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.testing import (
     denovo_study,

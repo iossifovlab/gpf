@@ -4,26 +4,23 @@ import pathlib
 import shutil
 
 from dae.annotation.annotate_utils import AnnotationTool
-from dae.annotation.format_handlers import ParquetFormat
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
 )
-from dae.annotation.parquet import (
+from dae.genomic_resources.cli import VerbosityConfiguration
+from dae.parquet.schema2.annotation_utils import (
     backup_schema2_study,
-    produce_regions,
+    produce_schema2_annotation_tasks,
     produce_schema2_merging_tasks,
     symlink_pedigree_and_family_variants,
     write_new_meta,
 )
-from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,
 )
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.cli_tools import TaskGraphCli
-from dae.utils.regions import Region
 
 
 class AnnotateSchema2ParquetTool(AnnotationTool):
@@ -192,47 +189,23 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         assert self.output_layout is not None
         assert self.pipeline is not None
 
-        if "reference_genome" not in self.loader.meta:
-            raise ValueError("No reference genome found in study metadata!")
-        genome = ReferenceGenome(
-            self.grr.get_resource(self.loader.meta["reference_genome"]))
-
-        contig_lens = {}
-        contigs = self.loader.contigs or genome.chromosomes
-        for contig in contigs:
-            contig_lens[contig] = genome.get_chrom_length(contig)
-
-        regions = produce_regions(self.args.region,
-                                  self.args.region_size,
-                                  contig_lens)
-        variants_blob_serializer = self.loader.meta.get(
-            "variants_blob_serializer",
-            "json",
+        annotation_tasks = produce_schema2_annotation_tasks(
+            self.task_graph,
+            self.loader,
+            self.output_layout.study,
+            self.pipeline.raw,
+            self.grr,
+            self.args.region_size,
+            self.args.work_dir,
+            self.args.batch_size,
+            target_region=self.args.region,
+            allow_repeated_attributes=self.args.allow_repeated_attributes,
+            full_reannotation=self.args.full_reannotation,
         )
-        tasks = []
-        for idx, region in enumerate(regions):
-            handler = ParquetFormat(
-                self.pipeline.raw,
-                self.loader.meta["annotation_pipeline"]
-                if self.loader.has_annotation else None,
-                vars(self.args),
-                self.grr.definition,
-                Region.from_str(region),
-                self.loader.layout,
-                self.output_layout.study,
-                idx,
-                variants_blob_serializer,
-            )
-            tasks.append(self.task_graph.create_task(
-                f"part_{region}",
-                AnnotateSchema2ParquetTool.annotate,
-                args=[handler, self.args.batch_size > 0],
-                deps=[],
-            ))
 
         produce_schema2_merging_tasks(
             self.task_graph,
-            tasks,
+            annotation_tasks,
             self.loader,
             self.output_layout,
         )

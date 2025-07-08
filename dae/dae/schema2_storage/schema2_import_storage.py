@@ -7,12 +7,6 @@ import pathlib
 import yaml
 from pyarrow import parquet as pq
 
-from dae.annotation.parquet import (
-    backup_schema2_study,
-    produce_schema2_annotation_tasks,
-    produce_schema2_merging_tasks,
-    write_new_meta,
-)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import (
     Bucket,
@@ -30,6 +24,12 @@ from dae.parquet.parquet_writer import (
 from dae.parquet.partition_descriptor import (
     Partition,
     PartitionDescriptor,
+)
+from dae.parquet.schema2.annotation_utils import (
+    backup_schema2_study,
+    produce_schema2_annotation_tasks,
+    produce_schema2_merging_tasks,
+    write_new_meta,
 )
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.parquet.schema2.merge_parquet import merge_parquet_directory
@@ -368,9 +368,9 @@ class Schema2ImportStorage(ImportStorage):
         gpf_instance: GPFInstance,
         study_dir: str,
         region_size: int,
-        allow_repeated_attributes: bool,  # noqa: FBT001
-        work_dir: pathlib.Path | None = None,
+        work_dir: pathlib.Path,
         *,
+        allow_repeated_attributes: bool = False,
         full_reannotation: bool = False,
     ) -> TaskGraph:
         """Generate TaskGraph for reannotation of a given study."""
@@ -391,7 +391,9 @@ class Schema2ImportStorage(ImportStorage):
             pipeline.raw,
             gpf_instance.grr,
             region_size,
-            allow_repeated_attributes,
+            str(work_dir),
+            0,
+            allow_repeated_attributes=allow_repeated_attributes,
             full_reannotation=full_reannotation,
         )
         produce_schema2_merging_tasks(

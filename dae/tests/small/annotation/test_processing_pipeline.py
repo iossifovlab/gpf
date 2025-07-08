@@ -5,30 +5,29 @@ from types import TracebackType
 
 import pytest
 from dae.annotation.annotatable import (
-    Annotatable,
     Position,
     Region,
 )
 from dae.annotation.processing_pipeline import (
     AnnotatablesBatchFilter,
-    AnnotatablesWithContext,
     Annotation,
+    AnnotationsWithSource,
 )
 
 
 class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
 
     def filter_batch(
-        self, batch: Iterable[Annotatable | None],
+        self, batch: Iterable[Annotation],
     ) -> Sequence[Annotation]:
 
         """Mock filter that returns all annotatables as annotations."""
         return [
             Annotation(
-                annotatable,
+                awc.annotatable,
                 {"index": index},
             )
-            for index, annotatable in enumerate(batch)
+            for index, awc in enumerate(batch)
         ]
 
     def __exit__(
@@ -40,54 +39,52 @@ class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
 
 
 @pytest.mark.parametrize(
-    "awcs",
+    "aws_batch",
     [
         [
-            AnnotatablesWithContext(
-                [
-                    Position("chr1", 100),
-                    Region("chr1", 200, 201),
-                ],
+            AnnotationsWithSource(
                 {"source": "1"},
+                [
+                    Annotation(annotatable=Position("chr1", 100)),
+                    Annotation(annotatable=Region("chr1", 200, 201)),
+                ],
             ),
         ],
         [
-            AnnotatablesWithContext(
-                [
-                    Position("chr1", 100),
-                    Region("chr1", 200, 201),
-                ],
+            AnnotationsWithSource(
                 {"source": "1"},
-            ),
-            AnnotatablesWithContext(
                 [
-                    Position("chr1", 100),
-                    Region("chr1", 200, 201),
+                    Annotation(annotatable=Position("chr1", 100)),
+                    Annotation(annotatable=Region("chr1", 200, 201)),
                 ],
+            ),
+            AnnotationsWithSource(
                 {"source": "2"},
+                [
+                    Annotation(annotatable=Position("chr1", 100)),
+                    Annotation(annotatable=Region("chr1", 200, 201)),
+                ],
             ),
         ],
     ],
 )
-def test_filter_batches_with_context(
-    awcs: Sequence[AnnotatablesWithContext],
+def test_filter_batches_with_source(
+    aws_batch: Sequence[AnnotationsWithSource],
 ) -> None:
-    """Test filtering batches with context."""
+    """Test filtering batches with source."""
 
     dummy = DummyAnnotatablesBatchFilter()
-    batch_result = next(iter(dummy.filter_batches_with_context([awcs])))
-    assert len(batch_result) == len(awcs)
+    batch_result = dummy.filter_batch_with_source(aws_batch)
+    assert len(batch_result) == len(aws_batch)
     test_index = 0
-    for annotations, annotatables in zip(
-                batch_result, awcs, strict=True,
-            ):
-
-        assert len(annotations.annotations) == len(annotatables.annotatables)
-        assert annotations.context == annotatables.context
-        for annotation, annotatable in zip(
-                    annotations.annotations, annotatables.annotatables,
-                    strict=True,
-                ):
-            assert annotation.annotatable == annotatable
-            assert annotation.annotations["index"] == test_index
+    for result, aws in zip(
+        batch_result, aws_batch, strict=True,
+    ):
+        assert len(result.annotations) == len(aws.annotations)
+        assert result.source == aws.source
+        for new_annotation, old_annotation in zip(
+            result.annotations, aws.annotations, strict=True,
+        ):
+            assert new_annotation.annotatable == old_annotation.annotatable
+            assert new_annotation.context["index"] == test_index
             test_index += 1
