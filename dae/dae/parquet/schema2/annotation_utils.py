@@ -49,13 +49,7 @@ logger = logging.getLogger("format_handlers")
 class Schema2SummaryVariantConsumer(VariantsParquetWriter):
     """Consumer for Parquet summary variants."""
     def consume_one(self, full_variant: FullVariant) -> None:
-        summary_index = self.summary_index
-        sj_base_index = self._calc_sj_base_index(summary_index)
-        self.write_summary_variant(
-            full_variant.summary_variant,
-            sj_base_index=sj_base_index,
-        )
-        self.summary_index += 1
+        self.write_summary_variant(full_variant.summary_variant)
 
 
 def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
