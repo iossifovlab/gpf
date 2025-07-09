@@ -114,16 +114,20 @@ class TaskGraphCli:
             assert dask_cluster_config_file is not None
             with open(dask_cluster_config_file) as conf_file:
                 dask_cluster_config = yaml.safe_load(conf_file)
-            print("THE CLUSTER CONFIG IS:", dask_cluster_config,
-                  "loaded from", args.dask_cluster_config_file)
+            logger.info(
+                "THE CLUSTER CONFIG IS: %s; loaded from: %s",
+                dask_cluster_config,
+                args.dask_cluster_config_file)
             client, _ = setup_client_from_config(
                 dask_cluster_config,
-                number_of_threads_param=args.jobs,
+                number_of_workers=args.jobs,
             )
         else:
-            client, _ = setup_client(args.dask_cluster_name,
-                                     number_of_threads=args.jobs)
-        print("Working with client:", client)
+            client, _ = setup_client(
+                args.dask_cluster_name,
+                number_of_workers=args.jobs)
+
+        logger.info("Working with client: %s", client)
         return DaskExecutor(client, task_cache=task_cache, **kwargs)
 
     @staticmethod

@@ -16,11 +16,14 @@ def set_up_local_cluster(cluster_conf: dict[str, Any]) -> Cluster:
     """Create a local cluster using the passed cluster configuration."""
     # pylint: disable=import-outside-toplevel
     from dask.distributed import LocalCluster
+
     kwargs = copy.copy(cluster_conf)
     number_of_workers = kwargs.pop("number_of_workers", None)
-    if number_of_workers is not None and \
-            "n_workers" not in kwargs and "cores" not in kwargs:
-        kwargs["n_workers"] = 1
+    threads_per_worker = kwargs.pop("threads_per_worker", None)
+    if number_of_workers is not None:
+        kwargs["n_workers"] = number_of_workers
+    if threads_per_worker is not None:
+        kwargs["threads_per_worker"] = threads_per_worker
     return LocalCluster(**kwargs)
 
 
@@ -87,8 +90,8 @@ def set_up_manual_client(cluster_conf: dict[str, Any]) -> Client:
 
 
 def setup_client_from_config(
-    cluster_config: dict[str, Any],
-    number_of_threads_param: int | None = None,
+    cluster_config: dict[str, Any], *,
+    number_of_workers: int | None = None,
 ) -> tuple[Client, dict[str, Any]]:
     """Create a dask client from the provided config."""
     logger.info("CLUSTER CONFIG: %s", cluster_config)
@@ -97,15 +100,29 @@ def setup_client_from_config(
         return set_up_manual_client(cluster_config), cluster_config
 
     cluster_params = cluster_config.get("params", {})
-    cluster_params["number_of_workers"] = number_of_threads_param
+    cluster_params["number_of_workers"] = number_of_workers
 
     cluster = _CLUSTER_TYPES[cluster_type](cluster_params)
 
-    number_of_threads = cluster_config.get("number_of_threads")
-    if number_of_threads_param is not None:
-        number_of_threads = number_of_threads_param
-    if number_of_threads is not None:
-        cluster.scale(n=number_of_threads)
+    number_of_threads_config = cluster_config.get("number_of_threads")
+    if number_of_threads_config is not None:
+        logger.warning(
+            "The 'number_of_threads' key in the cluster config is deprecated. "
+            "Use 'number_of_workers' instead.")
+
+    number_of_workers_config = cluster_config.get(
+        "number_of_workers", number_of_threads_config)
+
+    if number_of_workers is not None:
+        logger.info(
+            "Overriding the configurated number of workers from "
+            "CLI parameter to %d workers.",
+            number_of_workers,
+        )
+        number_of_workers_config = number_of_workers
+
+    if number_of_workers_config is not None:
+        cluster.scale(n=number_of_workers_config)
     elif "adapt_params" in cluster_config:
         cluster.adapt(**cluster_config["adapt_params"])
 
@@ -113,9 +130,10 @@ def setup_client_from_config(
     return client, cluster_config
 
 
-def setup_client(cluster_name: str | None = None,
-                 number_of_threads: int | None = None) \
-        -> tuple[Client, dict[str, Any]]:
+def setup_client(
+    cluster_name: str | None = None,
+    number_of_workers: int | None = None,
+) -> tuple[Client, dict[str, Any]]:
     """Create a dask client from the provided cluster name."""
     if cluster_name is None:
         cluster_name = dask.config.get(  # pyright: ignore
@@ -126,4 +144,7 @@ def setup_client(cluster_name: str | None = None,
         for conf in dask.config.get(  # pyright: ignore
             "dae_named_cluster.clusters")}
     cluster_config = clusters[cluster_name]
-    return setup_client_from_config(cluster_config, number_of_threads)
+    return setup_client_from_config(
+        cluster_config,
+        number_of_workers=number_of_workers,
+    )

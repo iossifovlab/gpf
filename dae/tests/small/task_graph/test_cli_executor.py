@@ -25,7 +25,6 @@ def test_cli_cluster_with_config_file(
         type: local
         number_of_threads: 20
         params:
-            cores: 1
             memory: 2GB
             scheduler_options:
                 dashboard_address: :8898
@@ -49,7 +48,7 @@ def test_cli_cluster_with_config_file(
     dask.distributed\
         .LocalCluster.assert_called_once_with(  # type: ignore
             scheduler_options={"dashboard_address": ":8898"},
-            cores=1, memory="2GB")
+            memory="2GB")
     cluster_mock = dae.dask.named_cluster\
         .Client.call_args.args[0]  # type: ignore
     cluster_mock.scale.assert_called_once_with(n=20)

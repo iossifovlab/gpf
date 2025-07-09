@@ -31,7 +31,7 @@ dae_named_cluster:
         threads_per_worker: 1
     - name: sge_small
       type: sge
-      number_of_threads: 10
+      number_of_workers: 10
       params:
         walltime: "24:00:00"
         scheduler_options:
@@ -43,7 +43,7 @@ dae_named_cluster:
         - "-V"
     - name: sge
       type: sge
-      number_of_threads: 150
+      number_of_workers: 150
       params:
         scheduler_options:
           dashboard_address: :8898
