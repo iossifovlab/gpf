@@ -55,10 +55,10 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   public sliderEndIndex: number = 450;
   public valuesBetweenSliders: string[] = [];
 
-  @Output() public selectCategoricalValues = new EventEmitter<string[]>();
+  @Output() public selectCategoricalValues = new EventEmitter<string[]>(true);
 
   public errors: string[] = [];
-  @Output() public emitValidationErrors = new EventEmitter<string[]>();
+  @Output() public emitValidationErrors = new EventEmitter<string[]>(true);
   private categoricalValueMax = 1000;
 
   public xScale: d3.ScaleBand<string>;
@@ -327,6 +327,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         this.selectedValueNamesFull.splice(valueIndex, 1);
       }
     });
+
     this.selectCategoricalValues.emit(this.selectedValueNamesFull);
     this.validateState();
   }

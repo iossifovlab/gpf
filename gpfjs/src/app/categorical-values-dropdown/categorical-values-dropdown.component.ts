@@ -10,7 +10,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 export class CategoricalValuesDropdownComponent implements OnInit {
   @Input() public initialState: string[] = [];
   @Input() public histogram: CategoricalHistogram;
-  @Output() public updateSelectedValues = new EventEmitter<string[]>();
+  @Output() public updateSelectedValues = new EventEmitter<string[]>(true);
   public valueSuggestions = [];
   public searchValue = '';
   public searchBoxInput$: Subject<string> = new Subject();
@@ -19,7 +19,7 @@ export class CategoricalValuesDropdownComponent implements OnInit {
   private suggestionsToShow = 50;
 
   public errors: string[] = [];
-  @Output() public emitValidationErrors = new EventEmitter<string[]>();
+  @Output() public emitValidationErrors = new EventEmitter<string[]>(true);
 
   public ngOnInit(): void {
     this.categoricalValues = this.histogram.values;
