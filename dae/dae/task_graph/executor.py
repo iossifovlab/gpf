@@ -375,10 +375,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task2result[task] = result
 
     def close(self) -> None:
-        cluster = self._client.cluster
-        self._client.shutdown()
-        if cluster is not None:
-            cluster.close()
+        self._client.close()
 
 
 def task_graph_status(

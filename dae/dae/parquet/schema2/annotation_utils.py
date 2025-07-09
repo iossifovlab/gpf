@@ -166,6 +166,7 @@ def produce_schema2_merging_tasks(
             for dirpath, subdirs, _ in os.walk(loader.layout.summary)
             if not subdirs
         ]
+
         tasks = [
             task_graph.create_task(
                 f"merge_{path}",
@@ -235,12 +236,13 @@ def merge_partitioned(
     partition_descriptor: PartitionDescriptor,
 ) -> None:
     """Helper method to merge Parquet files in partitioned studies."""
-    partitions = []
-    for partition in partition_dir.split("/"):
-        key, value = partition.split("=", maxsplit=1)
-        partitions.append((key, value))
+    partition = []
+    for pbin in partition_dir.split("/"):
+        key, value = pbin.split("=", maxsplit=1)
+        partition.append((key, value))
     output_dir = os.path.join(summary_dir, partition_dir)
-    merge_variants_parquets(partition_descriptor, output_dir, partitions)
+
+    merge_variants_parquets(partition_descriptor, output_dir, partition)
 
 
 def merge_non_partitioned(output_dir: str) -> None:

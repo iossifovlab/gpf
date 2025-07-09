@@ -119,7 +119,7 @@ def save_ped_df_to_parquet(
 def merge_variants_parquets(
     partition_descriptor: PartitionDescriptor,
     variants_dir: str,
-    partitions: list[tuple[str, str]],
+    partition: list[tuple[str, str]],
     row_group_size: int = 50_000,
     parquet_version: str | None = None,
 ) -> None:
@@ -127,7 +127,7 @@ def merge_variants_parquets(
     output_parquet_file = fs_utils.join(
         variants_dir,
         partition_descriptor.partition_filename(
-            "merged", partitions, bucket_index=None,
+            "merged", partition, bucket_index=None,
         ),
     )
     parquet_files = sorted(fs_utils.glob(

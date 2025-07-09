@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Any
+from unittest.mock import DEFAULT
 
 import dae.dask.named_cluster
 import pytest
@@ -47,7 +48,7 @@ def test_default(
     }
 
 
-def test_default_with_number_of_threads(
+def test_default_with_number_of_workers(
     mocker: pytest_mock.MockerFixture,
     named_cluster_config: dict[str, Any],
 ) -> None:
@@ -58,11 +59,45 @@ def test_default_with_number_of_threads(
         autospec=True)
 
     with config.set({"dae_named_cluster": named_cluster_config}):
-        client, _ = setup_client(number_of_threads=4)
+        client, _ = setup_client(number_of_workers=4)
         assert client
 
     assert mocked_local.call_count == 1
-    assert mocked_local.call_args.kwargs["n_workers"] == 1
+    assert mocked_local.call_args.kwargs["n_workers"] == 4
+
+
+@pytest.mark.parametrize(
+    "config_update, expected_n",
+    [
+        ({"number_of_threads": 6}, 6),
+        ({"number_of_workers": 6}, 6),
+    ],
+)
+def test_default_with_number_of_workers_config(
+    mocker: pytest_mock.MockerFixture,
+    named_cluster_config: dict[str, Any],
+    config_update: dict[str, Any],
+    expected_n: int,
+) -> None:
+    mocked_local = mocker.patch(
+        "dask.distributed.LocalCluster", new=DEFAULT)
+
+    mocker.patch(
+        "dae.dask.named_cluster.Client",
+        autospec=True)
+
+    named_cluster_config["clusters"][0].update(config_update)
+
+    with config.set({"dae_named_cluster": named_cluster_config}):
+        client, _ = setup_client()
+        assert client
+
+    assert mocked_local.call_count == 1
+    assert mocked_local.call_args.kwargs == {
+        "memory_limit": "4GB", "threads_per_worker": 2}
+
+    assert mocked_local.return_value.scale.call_count == 1
+    assert mocked_local.return_value.scale.call_args.kwargs["n"] == expected_n
 
 
 def test_config_access(
@@ -101,7 +136,7 @@ def test_setup_cluster_from_config_simple(
 
     setup_client_from_config({
         "type": "local",
-    }, number_of_threads_param=2)
+    }, number_of_workers=2)
 
     # pylint: disable=no-member
     dae.dask.named_cluster\
@@ -120,7 +155,7 @@ def test_setup_sge_cluster(mocker: pytest_mock.MockerFixture) -> None:
 
     setup_client_from_config({
         "type": "sge",
-    }, number_of_threads_param=2)
+    }, number_of_workers=2)
 
     assert mocked_sge.call_count == 1
     assert "number_of_workers" not in mocked_sge.call_args.kwargs
@@ -136,7 +171,26 @@ def test_setup_slurm_cluster(mocker: pytest_mock.MockerFixture) -> None:
 
     setup_client_from_config({
         "type": "slurm",
-    }, number_of_threads_param=2)
+    }, number_of_workers=2)
 
     assert mocked_slurm.call_count == 1
     assert "number_of_workers" not in mocked_slurm.call_args.kwargs
+
+
+def test_setup_manual_client(mocker: pytest_mock.MockerFixture) -> None:
+    mocked_client = mocker.patch(
+        "dae.dask.named_cluster.Client",
+        autospec=True)
+
+    setup_client_from_config({
+        "type": "manual",
+        "params": {
+            "scheduler_address": "tcp://localhost:8786",
+        },
+    }, number_of_workers=2)
+
+    assert mocked_client.call_count == 1
+
+    assert mocked_client.call_args.args == (
+        "tcp://localhost:8786",
+    )
