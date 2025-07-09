@@ -156,8 +156,10 @@ class ReannotateInstanceTool:
         if match is None:
             raise ValueError(f"Invalid path to summary data {summary_path}!")
 
-        return str(
-            pathlib.Path(match.groupdict()["parquet_path"]).parent.parent)
+        path = pathlib.Path(match.groupdict()["parquet_path"])
+        while path.name != "summary":
+            path = path.parent
+        return str(path.parent)
 
     def run(self) -> None:
         """Run the tool."""
