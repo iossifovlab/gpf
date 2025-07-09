@@ -72,7 +72,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     return t4c8_gpf(root_path)
 
 
-def t4c8_study(instance: GPFInstance):
+def t4c8_study(instance: GPFInstance) -> str:
     pedigree = textwrap.dedent("""
         familyId personId dadId momId sex status role
         f1.1     mom1     0     0     2   1      mom
@@ -144,3 +144,4 @@ def t4c8_study(instance: GPFInstance):
         project_config_update=project_config,
     )
     instance.reload()
+    return f"{root_path}/work_dir/study"
