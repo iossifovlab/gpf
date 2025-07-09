@@ -203,9 +203,14 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             full_reannotation=self.args.full_reannotation,
         )
 
+        annotation_sync = self.task_graph.create_task(
+            "sync_parquet_write", lambda: None,
+            args=[], deps=annotation_tasks,
+        )
+
         produce_schema2_merging_tasks(
             self.task_graph,
-            annotation_tasks,
+            [annotation_sync],
             self.loader,
             self.output_layout,
         )
