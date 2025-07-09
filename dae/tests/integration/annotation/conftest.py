@@ -3,7 +3,6 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.annotation.reannotate_instance import cli
 from dae.gpf_instance import GPFInstance
 from dae.testing import (
     setup_denovo,
@@ -73,8 +72,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     return t4c8_gpf(root_path)
 
 
-@pytest.fixture(autouse=True)
-def t4c8_study(t4c8_instance: GPFInstance):
+def t4c8_study(instance: GPFInstance):
     pedigree = textwrap.dedent("""
         familyId personId dadId momId sex status role
         f1.1     mom1     0     0     2   1      mom
@@ -98,6 +96,7 @@ def t4c8_study(t4c8_instance: GPFInstance):
         chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
         chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     """)  # noqa: E501
+
     project_config = {
         "destination": {"storage_type": "schema2"},
         "annotation": [
@@ -105,7 +104,30 @@ def t4c8_study(t4c8_instance: GPFInstance):
         ],
     }
 
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    project_config_update = {
+        "partition_description": {
+            "region_bin": {
+                "chromosomes": ["chr1"],
+                "region_length": 100,
+            },
+            "frequency_bin": {
+                "rare_boundary": 25.0,
+            },
+            "coding_bin": {
+                "coding_effect_types": [
+                    "frame-shift",
+                    "noStart",
+                    "missense",
+                    "synonymous",
+                ],
+            },
+            "family_bin": {
+                "family_bin_size": 2,
+            },
+        },
+    }
+
+    root_path = pathlib.Path(instance.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study" / "pedigree" / "in.ped",
         pedigree,
@@ -117,59 +139,8 @@ def t4c8_study(t4c8_instance: GPFInstance):
     vcf_study(
         root_path, "study",
         ped_path, [vcf_path],
-        t4c8_instance,
+        instance,
+        project_config_overwrite=project_config_update,
         project_config_update=project_config,
     )
-    t4c8_instance.reload()
-
-
-def test_reannotate_instance_tool(
-    t4c8_instance: GPFInstance,
-    tmp_path: pathlib.Path,
-) -> None:
-    """
-    Basic reannotate instance tool case.
-    """
-    # Expect default annotation in study variants
-    study = t4c8_instance.get_genotype_data("study")
-    vs = list(study.query_variants())
-    assert all(v.has_attribute("score_one") for v in vs)
-    assert not any(v.has_attribute("score_two") for v in vs)
-
-    # Add default annotation config with different score resource
-    pathlib.Path(t4c8_instance.dae_dir, "annotation.yaml").write_text(
-        textwrap.dedent(
-        """- position_score:
-                resource_id: two
-        """),
-    )
-
-    with open(f"{t4c8_instance.dae_dir}/gpf_instance.yaml", "a") as f:
-        f.write(
-            textwrap.dedent(
-                """\
-                annotation:
-                    conf_file: annotation.yaml
-                """,
-            ),
-        )
-
-    new_instance = GPFInstance.build(
-        f"{t4c8_instance.dae_dir}/gpf_instance.yaml",
-        grr=t4c8_instance.grr,
-    )
-
-    # Run the reannotate instance tool
-    cli(
-        ["-j", "1",  # Single job to avoid using multiprocessing
-         "--work-dir", str(tmp_path)],
-        new_instance,
-    )
-    new_instance.reload()
-
-    # Annotations should be updated
-    study = new_instance.get_genotype_data("study")
-    vs = list(study.query_variants())
-
-    assert all(v.has_attribute("score_two") for v in vs)
-    assert not any(v.has_attribute("score_one") for v in vs)
+    instance.reload()
