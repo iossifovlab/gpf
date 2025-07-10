@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 from urllib.parse import urlparse
 
 import pytest
@@ -16,8 +15,8 @@ from rest_client.rest_client import (
 )
 
 
-def build_remote_config() -> dict[str, str]:
-    host = os.environ.get("TEST_REMOTE_HOST", "http://localhost:21010/")
+def build_remote_config(base_url: str) -> dict[str, str]:
+    host = base_url
     return {
         "id": "TEST_REMOTE",
         "url": host,
@@ -26,8 +25,8 @@ def build_remote_config() -> dict[str, str]:
     }
 
 
-def build_remote_config_user() -> dict[str, str]:
-    host = os.environ.get("TEST_REMOTE_HOST", "http://localhost:21010/")
+def build_remote_config_user(base_url: str) -> dict[str, str]:
+    host = base_url
     return {
         "id": "TEST_REMOTE",
         "url": host,
@@ -41,7 +40,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--url",
         dest="url",
         action="store",
-        default="http://localhost:8000",
+        default="http://localhost:21010",
         help="REST API URL",
     )
 
@@ -81,8 +80,8 @@ def mailhog_url(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture
-def oauth_admin() -> RESTClient:
-    conf = build_remote_config()
+def oauth_admin(base_url: str) -> RESTClient:
+    conf = build_remote_config(base_url)
     confidential_session = GPFOAuthSession(
             base_url=conf["url"],
             client_id=conf["client_id"],
@@ -100,8 +99,9 @@ def oauth_admin() -> RESTClient:
 )
 def admin_client(
     request: pytest.FixtureRequest,
+    base_url: str,
 ) -> RESTClient:
-    conf = build_remote_config()
+    conf = build_remote_config(base_url)
     if request.param == "basic":
         basic_session = GPFPasswordSession(
             base_url=conf["url"],
@@ -131,8 +131,9 @@ def admin_client(
 )
 def user_client(
     request: pytest.FixtureRequest,
+    base_url: str,
 ) -> RESTClient:
-    conf = build_remote_config_user()
+    conf = build_remote_config_user(base_url)
     if request.param == "basic":
         basic_session = GPFPasswordSession(
             base_url=conf["url"],
@@ -165,16 +166,16 @@ def mail_client(mailhog_url: str) -> MailhogClient:
 
 
 @pytest.fixture
-def anon_client() -> RESTClient:
+def anon_client(base_url: str) -> RESTClient:
     """REST client fixture."""
-    conf = build_remote_config()
+    conf = build_remote_config(base_url)
     session = GPFAnonymousSession(conf["url"])
     return RESTClient(session)
 
 
 @pytest.fixture
-def rest_client() -> RESTClient:
-    remote_config = build_remote_config()
+def rest_client(base_url: str) -> RESTClient:
+    remote_config = build_remote_config(base_url)
     session = GPFOAuthSession(
         base_url=remote_config["url"],
         client_id=remote_config["client_id"],
@@ -193,11 +194,12 @@ def rest_client() -> RESTClient:
 @pytest.fixture(scope="session")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
+    base_url: str,
 ) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
     instance = setup_t4c8_instance(root_path)
 
     with open(instance.dae_config_path, "a") as f:
-        f.write(yaml.dump({"remotes": [build_remote_config()]}))
+        f.write(yaml.dump({"remotes": [build_remote_config(base_url)]}))
 
     return WGPFInstance.build(instance.dae_config_path, grr=instance.grr)

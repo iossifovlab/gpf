@@ -8,8 +8,10 @@ from oauthlib.oauth2 import (
 from requests_oauthlib import OAuth2Session
 
 
-def test_oauth2_basic(monkeypatch: pytest.MonkeyPatch) -> None:
-    auth_url = "http://localhost:21010/o/authorize/"
+def test_oauth2_basic(
+    base_url: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    auth_url = f"{base_url}/o/authorize/"
 
     with monkeypatch.context() as m:
         m.setenv("OAUTHLIB_INSECURE_TRANSPORT", "yes")
@@ -32,8 +34,9 @@ def test_oauth2_basic(monkeypatch: pytest.MonkeyPatch) -> None:
             assert response.status_code == 200
 
 
-def test_oauth2_confidential_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    token_url = "http://localhost:21010/o/token/"  # noqa: S105
+def test_oauth2_confidential_client(
+    base_url: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    token_url = f"{base_url}/o/token/"
 
     with monkeypatch.context() as m:
         m.setenv("OAUTHLIB_INSECURE_TRANSPORT", "yes")

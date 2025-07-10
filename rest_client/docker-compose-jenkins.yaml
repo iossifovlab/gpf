@@ -1,0 +1,57 @@
+name: gpf_rest_client_build
+
+services:
+
+  setup:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    restart: "no"
+    volumes:
+      - ../:/wd
+    entrypoint: /wd/rest_client/integration/setup.sh
+
+  mail:
+    image: mailhog/mailhog
+    hostname: mail
+
+  backend:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    depends_on:
+      - setup
+    environment:
+      DAE_DB_DIR: /wd/rest_client/tmp/gpf_instance
+      GRR_DEFINITION_FILE: /wd/rest_client/tmp/grr_definition.yaml
+      WDAE_ALLOWED_HOST: "*"
+      WDAE_DEBUG: true
+      WDAE_PUBLIC_HOSTNAME: resttest
+      WDAE_EMAIL_HOST: "mail"
+      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://backend:21010"
+    volumes:
+      - ../:/wd
+    entrypoint: /wd/rest_client/jenkins-backend-entrypoint.sh
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -X GET http://backend:21010/api/v3/datasets/hierarchy"]
+      interval: 10s
+      retries: 6
+      start_period: 15s
+      timeout: 10s
+
+  tests:
+    build:
+      context: ../
+      dockerfile: Dockerfile.rest_client
+    volumes:
+      - ../:/wd
+    entrypoint: /wd/rest_client/run_resttests.sh
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  main:
