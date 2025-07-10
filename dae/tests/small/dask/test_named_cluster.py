@@ -185,12 +185,12 @@ def test_setup_manual_client(mocker: pytest_mock.MockerFixture) -> None:
     setup_client_from_config({
         "type": "manual",
         "params": {
-            "scheduler_address": "tcp://localhost:8786",
+            "address": "tcp://localhost:8786",
         },
     }, number_of_workers=2)
 
     assert mocked_client.call_count == 1
 
-    assert mocked_client.call_args.args == (
-        "tcp://localhost:8786",
-    )
+    assert mocked_client.call_args.kwargs == {
+        "address": "tcp://localhost:8786",
+    }
