@@ -9,15 +9,15 @@ from dae.annotation.annotatable import (
     Region,
 )
 from dae.annotation.processing_pipeline import (
-    AnnotatablesBatchFilter,
     Annotation,
     AnnotationsWithSource,
+    AnnotationsWithSourceBatchFilter,
 )
 
 
-class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
+class DummyAnnotatablesBatchFilter(AnnotationsWithSourceBatchFilter):
 
-    def _filter_batch(
+    def _filter_annotation_batch(
         self, batch: Iterable[Annotation],
     ) -> Sequence[Annotation]:
 

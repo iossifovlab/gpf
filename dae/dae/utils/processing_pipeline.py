@@ -6,6 +6,7 @@ from typing import Any
 
 
 class Filter(AbstractContextManager):
+    """Base class for all processing pipeline filters."""
 
     def __exit__(
         self,
@@ -21,6 +22,8 @@ class Filter(AbstractContextManager):
 
 
 class Source(AbstractContextManager):
+    """Base class for all processing pipeline sources."""
+
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
