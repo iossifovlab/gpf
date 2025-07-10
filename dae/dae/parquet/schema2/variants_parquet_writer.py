@@ -18,10 +18,6 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.processing_pipeline import (
-    VariantsBatchConsumer,
-    VariantsConsumer,
-)
 from dae.parquet.schema2.serializers import (
     AlleleParquetSerializer,
     FamilyAlleleParquetSerializer,
@@ -30,6 +26,7 @@ from dae.parquet.schema2.serializers import (
     build_summary_blob_schema,
 )
 from dae.utils import fs_utils
+from dae.utils.processing_pipeline import Filter
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
     is_unknown_genotype,
@@ -139,9 +136,7 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter(
-        VariantsConsumer, VariantsBatchConsumer,
-        AbstractContextManager):
+class VariantsParquetWriter(AbstractContextManager):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -262,8 +257,8 @@ class VariantsParquetWriter(
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
 
-    def consume_one(
-        self, full_variant: FullVariant,
+    def write(
+        self, data: FullVariant,
     ) -> None:
         """Consume a single full variant."""
         summary_index = self.summary_index
@@ -271,24 +266,17 @@ class VariantsParquetWriter(
         family_index, num_fam_alleles_written = \
             self._write_family_variants(
                 self.family_index, summary_index, sj_base_index,
-                full_variant.summary_variant,
-                full_variant.family_variants,
+                data.summary_variant,
+                data.family_variants,
             )
         if num_fam_alleles_written > 0:
             self.write_summary_variant(
-                full_variant.summary_variant,
+                data.summary_variant,
                 sj_base_index=sj_base_index,
             )
 
         self.summary_index += 1
         self.family_index = family_index
-
-    def consume_batch(
-        self, batch: Sequence[FullVariant],
-    ) -> None:
-        """Consume a batch of full variants."""
-        for full_variant in batch:
-            self.consume_one(full_variant)
 
     def _write_family_variants(
             self, family_index: int,
@@ -420,3 +408,101 @@ class VariantsParquetWriter(
                 summary_allele, seen_as_denovo=seen_as_denovo)
             summary_writer.append_allele(
                 summary_allele, summary_blobs_json)
+
+
+class Schema2VariantConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: FullVariant) -> None:
+        self.writer.write(data)
+
+
+class Schema2VariantBatchConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: Sequence[FullVariant]) -> None:
+        for variant in data:
+            self.writer.write(variant)
+
+
+class Schema2SummaryVariantConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: FullVariant) -> None:
+        self.writer.write_summary_variant(data.summary_variant)
+
+
+class Schema2SummaryVariantBatchConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: Sequence[FullVariant]) -> None:
+        for variant in data:
+            self.writer.write_summary_variant(variant.summary_variant)

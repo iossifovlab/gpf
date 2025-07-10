@@ -12,6 +12,8 @@ from dae.parquet.schema2.processing_pipeline import (
     VariantsLoaderSource,
 )
 from dae.parquet.schema2.variants_parquet_writer import (
+    Schema2VariantBatchConsumer,
+    Schema2VariantConsumer,
     VariantsParquetWriter,
 )
 from dae.variants_loaders.raw.loader import (
@@ -32,47 +34,8 @@ def test_variants_parquet_writer_simple(
         annotation_schema=[],
         partition_descriptor=partition_descriptor,
     )
-    variants_writer.consume(variants_source.fetch())
-    variants_writer.close()
-
-    assert variants_writer.summary_index == 6
-    assert variants_writer.family_index == 12
-
-    assert output_path.exists()
-    assert output_path.is_dir()
-    assert (output_path / "family").exists()
-    assert (output_path / "summary").exists()
-
-
-@pytest.mark.parametrize(
-    "batch_size",
-    [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        500,
-    ],
-)
-def test_variants_parquet_writer_batches_simple(
-    study_1_loader: VariantsGenotypesLoader,
-    tmp_path: pathlib.Path,
-    batch_size: int,
-) -> None:
-    """Test the variants parquet writer."""
-    variants_source = VariantsLoaderBatchSource(
-        study_1_loader, batch_size=batch_size)
-    partition_descriptor = PartitionDescriptor()
-    output_path = tmp_path / "output"
-    variants_writer = VariantsParquetWriter(
-        output_path,
-        annotation_schema=[],
-        partition_descriptor=partition_descriptor,
-    )
-    variants_writer.consume_batches(variants_source.fetch_batches())
+    for variant in variants_source.fetch():
+        variants_writer.write(variant)
     variants_writer.close()
 
     assert variants_writer.summary_index == 6
@@ -114,7 +77,8 @@ def test_variants_parquet_writer_row_group_size(
         partition_descriptor=partition_descriptor,
         row_group_size=row_group_size,
     )
-    variants_writer.consume(variants_source.fetch())
+    for variant in variants_source.fetch():
+        variants_writer.write(variant)
     variants_writer.close()
 
     assert variants_writer.summary_index == 6
@@ -161,7 +125,8 @@ def test_variants_parquet_writer_no_blob(
         annotation_schema=[],
         partition_descriptor=partition_descriptor,
     ) as variants_writer:
-        variants_writer.consume(variants_source.fetch())
+        for variant in variants_source.fetch():
+            variants_writer.write(variant)
 
     assert variants_writer.summary_index == 6
     assert variants_writer.family_index == 12
@@ -187,11 +152,12 @@ def test_variants_parquet_writer_default_blob(
     output_path = tmp_path / "output"
 
     with VariantsParquetWriter(
-                output_path,
-                annotation_schema=[],
-                partition_descriptor=partition_descriptor,
-            ) as variants_writer:
-        variants_writer.consume(variants_source.fetch())
+        output_path,
+        annotation_schema=[],
+        partition_descriptor=partition_descriptor,
+    ) as variants_writer:
+        for variant in variants_source.fetch():
+            variants_writer.write(variant)
 
     assert variants_writer.summary_index == 6
     assert variants_writer.family_index == 12
@@ -205,3 +171,74 @@ def test_variants_parquet_writer_default_blob(
     assert pq_metadata.num_row_groups == 1
     blob_column = pq_metadata.row_group(0).column(20)
     assert blob_column.compression == "ZSTD"
+
+
+def test_schema2_summary_consumer(
+    study_1_loader: VariantsGenotypesLoader,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test the variants parquet writer."""
+    variants_source = VariantsLoaderSource(study_1_loader)
+    partition_descriptor = PartitionDescriptor()
+    output_path = tmp_path / "output"
+    consumer = Schema2VariantConsumer(
+        VariantsParquetWriter(
+            output_path,
+            annotation_schema=[],
+            partition_descriptor=partition_descriptor,
+        ),
+    )
+    with consumer:
+        for variant in variants_source.fetch():
+            consumer.filter(variant)
+
+    assert consumer.writer.summary_index == 6
+    assert consumer.writer.family_index == 12
+
+    assert output_path.exists()
+    assert output_path.is_dir()
+    assert (output_path / "family").exists()
+    assert (output_path / "summary").exists()
+
+
+@pytest.mark.parametrize(
+    "batch_size",
+    [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        500,
+    ],
+)
+def test_schema2_summary_batch_consumer(
+    study_1_loader: VariantsGenotypesLoader,
+    tmp_path: pathlib.Path,
+    batch_size: int,
+) -> None:
+    """Test the variants parquet writer."""
+    variants_source = VariantsLoaderBatchSource(
+        study_1_loader, batch_size=batch_size)
+    partition_descriptor = PartitionDescriptor()
+    output_path = tmp_path / "output"
+    consumer = Schema2VariantBatchConsumer(
+        VariantsParquetWriter(
+            output_path,
+            annotation_schema=[],
+            partition_descriptor=partition_descriptor,
+        ),
+    )
+    with consumer:
+        for batch in variants_source.fetch():
+            consumer.filter(batch)
+
+    assert consumer.writer.summary_index == 6
+    assert consumer.writer.family_index == 12
+
+    assert output_path.exists()
+    assert output_path.is_dir()
+    assert (output_path / "family").exists()
+    assert (output_path / "summary").exists()

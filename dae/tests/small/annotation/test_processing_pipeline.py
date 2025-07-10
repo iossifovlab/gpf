@@ -9,15 +9,15 @@ from dae.annotation.annotatable import (
     Region,
 )
 from dae.annotation.processing_pipeline import (
-    AnnotatablesBatchFilter,
     Annotation,
     AnnotationsWithSource,
+    AnnotationsWithSourceBatchFilter,
 )
 
 
-class DummyAnnotatablesBatchFilter(AnnotatablesBatchFilter):
+class DummyAnnotatablesBatchFilter(AnnotationsWithSourceBatchFilter):
 
-    def filter_batch(
+    def _filter_annotation_batch(
         self, batch: Iterable[Annotation],
     ) -> Sequence[Annotation]:
 
@@ -74,7 +74,7 @@ def test_filter_batches_with_source(
     """Test filtering batches with source."""
 
     dummy = DummyAnnotatablesBatchFilter()
-    batch_result = dummy.filter_batch_with_source(aws_batch)
+    batch_result = dummy.filter(aws_batch)
     assert len(batch_result) == len(aws_batch)
     test_index = 0
     for result, aws in zip(
