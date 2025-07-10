@@ -222,7 +222,7 @@ class AnnotationPipelineVariantsFilter(
                 for sa in full_variant.summary_variant.alt_alleles
             ],
         )
-        aws = self.annotatables_filter.filter_one_with_source(variant)
+        aws = self.annotatables_filter.filter(variant)
 
         full_variant = cast(FullVariant, aws.source)
         assert isinstance(full_variant.summary_variant, SummaryVariant)
@@ -272,7 +272,7 @@ class AnnotationPipelineVariantsBatchFilter(
             for v in batch
         ]
         aws_batch = \
-            self.annotatables_filter.filter_batch_with_source(variants)
+            self.annotatables_filter.filter(variants)
 
         result: list[FullVariant] = []
         for aws in aws_batch:

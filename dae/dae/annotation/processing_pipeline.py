@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from types import TracebackType
@@ -13,6 +13,7 @@ from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
+from dae.utils.processing_pipeline import Filter
 
 logger = logging.getLogger(__name__)
 
@@ -29,88 +30,57 @@ class AnnotationsWithSource:
     annotations: list[Annotation]
 
 
-class AnnotatablesFilter(AbstractContextManager):
+class AnnotatablesFilter(Filter):
     """A filter that can filter annotatables."""
 
     @abc.abstractmethod
-    def filter_one(
+    def _filter_one(
         self, annotation: Annotation,
     ) -> Annotation:
         """Filter a single annotatable."""
 
     def filter(
-        self, data: Iterable[Annotation],
-    ) -> Iterable[Annotation]:
-        """Filter a single batch of annotatables."""
-        for annotation in data:
-            yield self.filter_one(annotation)
-
-    def filter_one_with_source(
         self, data: AnnotationsWithSource,
     ) -> AnnotationsWithSource:
-        new_annotations = list(self.filter(data.annotations))
+        new_annotations = [self._filter_one(annotation)
+                           for annotation in data.annotations]
         return AnnotationsWithSource(
             annotations=new_annotations,
             source=data.source,
         )
 
-    def filter_with_source(
-        self, data: Iterable[AnnotationsWithSource],
-    ) -> Iterable[AnnotationsWithSource]:
-        """Filter annotatables with source."""
-        for annotations_with_source in data:
-            yield self.filter_one_with_source(annotations_with_source)
 
-
-class AnnotatablesBatchFilter(AbstractContextManager):
+class AnnotatablesBatchFilter(Filter):
     """A filter that can filter annotatables in batches."""
 
     @abc.abstractmethod
-    def filter_batch(
+    def _filter_batch(
         self, batch: Sequence[Annotation],
     ) -> Sequence[Annotation]:
         """Filter annotatables in a single batch."""
 
-    def filter_batches(
-        self, batches: Iterable[Sequence[Annotation]],
-    ) -> Iterable[Sequence[Annotation]]:
-        """Filter annotatables in batches."""
-        for batch in batches:
-            annotations = list(self.filter_batch(batch))
-            yield annotations
-
-    def filter_batch_with_source(
-        self,
-        batch_with_source: Sequence[AnnotationsWithSource],
+    def filter(
+        self, data: Sequence[AnnotationsWithSource],
     ) -> Sequence[AnnotationsWithSource]:
         """Filter a single batch of annotatables with source."""
         annotations_batch = list(itertools.chain.from_iterable(
-            aws.annotations for aws in batch_with_source
+            aws.annotations for aws in data
         ))
-        new_annotations = self.filter_batch(annotations_batch)
+        new_annotations = self._filter_batch(annotations_batch)
         assert len(new_annotations) == len(annotations_batch)
 
         annotations_iter = iter(new_annotations)
         result: list[AnnotationsWithSource] = []
-        for aws in batch_with_source:
+        for aws in data:
             # pylint: disable=stop-iteration-return
             annos: list[Annotation] = [
                 next(annotations_iter)
                 for _ in aws.annotations
             ]
             result.append(
-                AnnotationsWithSource(
-                    annotations=annos, source=aws.source))
+                AnnotationsWithSource(annotations=annos, source=aws.source))
 
         return result
-
-    def filter_batches_with_source(
-        self,
-        batches_with_source: Iterable[Sequence[AnnotationsWithSource]],
-    ) -> Iterable[Sequence[AnnotationsWithSource]]:
-        """Filter annotatables with source in batches."""
-        for batch_with_source in batches_with_source:
-            yield self.filter_batch_with_source(batch_with_source)
 
 
 class AnnotationPipelineContextManager(AbstractContextManager):
@@ -141,7 +111,7 @@ class AnnotationPipelineAnnotatablesFilter(
         AnnotatablesFilter, AnnotationPipelineContextManager):
     """A filter that can filter annotatables in batches."""
 
-    def filter_one(
+    def _filter_one(
         self, annotation: Annotation,
     ) -> Annotation:
         """Filter annotatables."""
@@ -154,7 +124,7 @@ class AnnotationPipelineAnnotatablesBatchFilter(
         AnnotatablesBatchFilter, AnnotationPipelineContextManager):
     """A filter that can filter annotatables in batches."""
 
-    def filter_batch(
+    def _filter_batch(
         self, batch: Sequence[Annotation],
     ) -> Sequence[Annotation]:
         """Filter annotatables in a single batch."""
