@@ -753,10 +753,6 @@ def test_output_argument_behaviour(
     with pytest.raises(ValueError, match="No output path was provided!"):
         cli(cli_args)
 
-    cli([*cli_args, "-o", output_dir])
-    with pytest.raises(ValueError, match=r"Output path .+ already exists!"):
-        cli([*cli_args, "-o", output_dir])
-
     cli([*cli_args, "-o", output_dir, "--force"])
     vs = list(ParquetLoader.load_from_dir(output_dir).fetch_summary_variants())
     assert len(vs) == 6

@@ -3,6 +3,7 @@ import logging
 import operator
 import os
 import pathlib
+from typing import Literal
 
 import yaml
 from pyarrow import parquet as pq
@@ -253,7 +254,8 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _merge_parquets(
         cls,
-        project: ImportProject, variants_type: str,
+        project: ImportProject,
+        variants_type: Literal["summary", "family"],
         partitions: list[Partition],
     ) -> None:
         partition_descriptor = cls._get_partition_description(project)
@@ -278,6 +280,7 @@ class Schema2ImportStorage(ImportStorage):
             merge_parquet_directory(
                 variants_dir, output_parquet_file,
                 row_group_size=row_group_size,
+                variants_type=variants_type,
             )
 
     def _build_all_parquet_tasks(
