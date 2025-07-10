@@ -3,6 +3,7 @@ import pathlib
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pytest
 from dae.parquet.schema2.loader import MultiReader, Reader
 
 
@@ -20,6 +21,8 @@ def test_reader(tmp_path: pathlib.Path) -> None:
         [{"bucket_index": 1, "summary_index": 2},
          {"bucket_index": 1, "summary_index": 2}],
     ]
+    with pytest.raises(StopIteration):
+        next(reader)
 
 
 def test_multi_reader(tmp_path: pathlib.Path) -> None:
