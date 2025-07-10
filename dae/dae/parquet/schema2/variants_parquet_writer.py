@@ -6,6 +6,7 @@ import os
 import pathlib
 import time
 from collections.abc import Sequence
+from contextlib import AbstractContextManager
 from types import TracebackType
 from typing import cast
 
@@ -135,7 +136,7 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter(Filter):
+class VariantsParquetWriter(AbstractContextManager):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -256,7 +257,7 @@ class VariantsParquetWriter(Filter):
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
 
-    def filter(
+    def write(
         self, data: FullVariant,
     ) -> None:
         """Consume a single full variant."""
@@ -409,13 +410,99 @@ class VariantsParquetWriter(Filter):
                 summary_allele, summary_blobs_json)
 
 
-class Schema2SummaryVariantConsumer(VariantsParquetWriter):
+class Schema2VariantConsumer(Filter):
     """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
     def filter(self, data: FullVariant) -> None:
-        summary_index = self.summary_index
-        sj_base_index = self._calc_sj_base_index(summary_index)
-        self.write_summary_variant(
-            data.summary_variant,
-            sj_base_index=sj_base_index,
-        )
-        self.summary_index += 1
+        self.writer.write(data)
+
+
+class Schema2VariantBatchConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: Sequence[FullVariant]) -> None:
+        for variant in data:
+            self.writer.write(variant)
+
+
+class Schema2SummaryVariantConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: FullVariant) -> None:
+        self.writer.write_summary_variant(data.summary_variant)
+
+
+class Schema2SummaryVariantBatchConsumer(Filter):
+    """Consumer for Parquet summary variants."""
+    def __init__(self, writer: VariantsParquetWriter):
+        self.writer = writer
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: Sequence[FullVariant]) -> None:
+        for variant in data:
+            self.writer.write_summary_variant(variant.summary_variant)

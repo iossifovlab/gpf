@@ -46,6 +46,8 @@ from dae.parquet.schema2.serializers import (
     build_summary_blob_schema,
 )
 from dae.parquet.schema2.variants_parquet_writer import (
+    Schema2VariantBatchConsumer,
+    Schema2VariantConsumer,
     VariantsParquetWriter,
 )
 from dae.schema2_storage.schema2_layout import (
@@ -54,7 +56,7 @@ from dae.schema2_storage.schema2_layout import (
 )
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
-from dae.utils.processing_pipeline import Unpacker
+from dae.utils.processing_pipeline import Filter, Source
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
@@ -202,21 +204,7 @@ class Schema2ImportStorage(ImportStorage):
 
         batch_size = project.get_processing_annotation_batch_size()
 
-        filters = []
-        if batch_size == 0:
-            filters.extend([
-                VariantsLoaderSource(variants_loader),
-                AnnotationPipelineVariantsFilter(annotation_pipeline),
-            ])
-        else:
-            filters.extend([
-                VariantsLoaderBatchSource(variants_loader,
-                                          batch_size=batch_size),
-                AnnotationPipelineVariantsBatchFilter(annotation_pipeline),
-                Unpacker(),
-            ])
-
-        filters.append(VariantsParquetWriter(
+        writer = VariantsParquetWriter(
             out_dir=layout.study,
             annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
@@ -224,9 +212,25 @@ class Schema2ImportStorage(ImportStorage):
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,
-        ))
+        )
 
-        return VariantsPipelineProcessor(filters)
+        source: Source
+        filters: list[Filter] = []
+        if batch_size == 0:
+            source = VariantsLoaderSource(variants_loader)
+            filters.extend([
+                AnnotationPipelineVariantsFilter(annotation_pipeline),
+                Schema2VariantConsumer(writer),
+            ])
+        else:
+            source = VariantsLoaderBatchSource(
+                variants_loader, batch_size=batch_size)
+            filters.extend([
+                AnnotationPipelineVariantsBatchFilter(annotation_pipeline),
+                Schema2VariantBatchConsumer(writer),
+            ])
+
+        return VariantsPipelineProcessor(source, filters)
 
     @classmethod
     def _do_write_variant(

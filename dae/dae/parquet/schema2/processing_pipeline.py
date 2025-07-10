@@ -18,7 +18,7 @@ from dae.annotation.processing_pipeline import (
 )
 from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.utils.processing_pipeline import Filter
+from dae.utils.processing_pipeline import Filter, Source
 from dae.utils.regions import Region
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import (
@@ -195,18 +195,18 @@ class AnnotationPipelineVariantsBatchFilter(
         return result
 
 
-class VariantsLoaderSource(Filter):
+class VariantsLoaderSource(Source):
     """A source that can fetch variants from a loader."""
 
     def __init__(self, loader: VariantsGenotypesLoader) -> None:
         self.loader = loader
 
-    def filter(self, data: Region | None = None) -> Iterable[FullVariant]:
+    def fetch(self, data: Region | None = None) -> Iterable[FullVariant]:
         """Fetch full variants from a variant loader."""
         yield from self.loader.fetch(data)
 
 
-class VariantsLoaderBatchSource(Filter):
+class VariantsLoaderBatchSource(Source):
     """A source that can fetch variants in batches from a loader."""
 
     def __init__(
@@ -217,7 +217,7 @@ class VariantsLoaderBatchSource(Filter):
         self.loader = loader
         self.batch_size = batch_size
 
-    def filter(
+    def fetch(
         self, data: Region | None = None,
     ) -> Iterable[Sequence[FullVariant]]:
         """Fetch full variants from a variant loader in batches."""
@@ -229,12 +229,12 @@ class VariantsLoaderBatchSource(Filter):
 class VariantsPipelineProcessor(AbstractContextManager):
     """A processor that can be used to process variants in a pipeline."""
 
-    def __init__(self, filters: Sequence[Filter]) -> None:
+    def __init__(self, source: Source, filters: Sequence[Filter]) -> None:
+        self.source = source
         self.filters = filters
-        self.source = filters[0]
-        self.consumer = filters[-1]
 
     def __enter__(self) -> VariantsPipelineProcessor:
+        self.source.__enter__()
         for variant_filter in self.filters:
             variant_filter.__enter__()
         return self
@@ -250,17 +250,16 @@ class VariantsPipelineProcessor(AbstractContextManager):
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
 
+        self.source.__exit__(exc_type, exc_value, exc_tb)
         for variant_filter in self.filters:
             variant_filter.__exit__(exc_type, exc_value, exc_tb)
 
         return exc_type is not None
 
     def process_region(self, region: Region | None = None) -> None:
-        middle_filters = self.filters[1:-1]
-        for full_variant in self.source.filter(region):
-            for variant_filter in middle_filters:
-                full_variant = variant_filter.filter(full_variant)
-            self.consumer.filter(full_variant)
+        for data in self.source.fetch(region):
+            for _filter in self.filters:
+                data = _filter.filter(data)
 
     def process(self, regions: Iterable[Region] | None = None) -> None:
         """Process variants in batches for the given regions."""
@@ -271,12 +270,12 @@ class VariantsPipelineProcessor(AbstractContextManager):
             self.process_region(region)
 
 
-class Schema2SummaryVariantsSource(Filter):
+class Schema2SummaryVariantsSource(Source):
     """Producer for summary variants from a Parquet dataset."""
     def __init__(self, loader: ParquetLoader):
         self.loader = loader
 
-    def filter(
+    def fetch(
         self, data: Region | None = None,
     ) -> Iterable[FullVariant]:
         assert self.loader is not None
@@ -284,7 +283,7 @@ class Schema2SummaryVariantsSource(Filter):
             yield FullVariant(sv, ())
 
 
-class Schema2SummaryVariantsBatchSource(Filter):
+class Schema2SummaryVariantsBatchSource(Source):
     """Producer for summary variants from a Parquet dataset."""
 
     def __init__(
@@ -295,7 +294,7 @@ class Schema2SummaryVariantsBatchSource(Filter):
         self.loader = loader
         self.batch_size = batch_size
 
-    def filter(
+    def fetch(
         self, data: Region | None = None,
     ) -> Iterable[Sequence[FullVariant]]:
         """Fetch full variants from a variant loader in batches."""

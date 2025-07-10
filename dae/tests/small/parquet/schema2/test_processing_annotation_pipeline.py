@@ -104,7 +104,7 @@ def test_variants_loader_batch_source(
 ) -> None:
     batch_source = VariantsLoaderBatchSource(
         study_1_loader, batch_size=batch_size)
-    batches = list(batch_source.filter())
+    batches = list(batch_source.fetch())
     assert len(batches) == expected_batches
 
 
@@ -145,7 +145,7 @@ def test_variants_batch_pipeline_processor(
     )
 
     batch_processor = VariantsPipelineProcessor(
-        [batch_source, batch_filter, batch_consumer])
+        batch_source, [batch_filter, batch_consumer])
     batch_processor.process()
 
     assert len(batch_consumer.batches) == expected_batches
@@ -175,7 +175,7 @@ def test_variants_pipeline_processor(
     )
 
     processor = VariantsPipelineProcessor(
-        [source, annotation_filter, consumer])
+        source, [annotation_filter, consumer])
     processor.process()
 
     assert len(consumer.variants) == 6
@@ -188,7 +188,7 @@ def test_variants_consumer_consume(
         study_1_loader,
     )
     consumer = DummyConsumer()
-    for data in source.filter():
+    for data in source.fetch():
         consumer.filter(data)
 
     assert len(consumer.variants) == 6
@@ -217,7 +217,7 @@ def test_variants_batch_consumer_consume(
         batch_size=batch_size,
     )
     consumer = DummyBatchConsumer()
-    for data in source.filter():
+    for data in source.fetch():
         consumer.filter(data)
 
     assert len(consumer.batches) == expected_batches
