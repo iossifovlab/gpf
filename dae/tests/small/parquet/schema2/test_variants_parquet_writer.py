@@ -14,6 +14,7 @@ from dae.parquet.schema2.processing_pipeline import (
 from dae.parquet.schema2.variants_parquet_writer import (
     VariantsParquetWriter,
 )
+from dae.utils.processing_pipeline import Unpacker
 from dae.variants_loaders.raw.loader import (
     VariantsGenotypesLoader,
 )
@@ -32,7 +33,8 @@ def test_variants_parquet_writer_simple(
         annotation_schema=[],
         partition_descriptor=partition_descriptor,
     )
-    variants_writer.consume(variants_source.fetch())
+    for variant in variants_source.filter():
+        variants_writer.filter(variant)
     variants_writer.close()
 
     assert variants_writer.summary_index == 6
@@ -72,7 +74,10 @@ def test_variants_parquet_writer_batches_simple(
         annotation_schema=[],
         partition_descriptor=partition_descriptor,
     )
-    variants_writer.consume_batches(variants_source.fetch_batches())
+    unpacker = Unpacker()
+    for batch in variants_source.filter():
+        for variant in unpacker.filter(batch):
+            variants_writer.filter(variant)
     variants_writer.close()
 
     assert variants_writer.summary_index == 6
@@ -114,7 +119,8 @@ def test_variants_parquet_writer_row_group_size(
         partition_descriptor=partition_descriptor,
         row_group_size=row_group_size,
     )
-    variants_writer.consume(variants_source.fetch())
+    for variant in variants_source.filter():
+        variants_writer.filter(variant)
     variants_writer.close()
 
     assert variants_writer.summary_index == 6
@@ -161,7 +167,8 @@ def test_variants_parquet_writer_no_blob(
         annotation_schema=[],
         partition_descriptor=partition_descriptor,
     ) as variants_writer:
-        variants_writer.consume(variants_source.fetch())
+        for variant in variants_source.filter():
+            variants_writer.filter(variant)
 
     assert variants_writer.summary_index == 6
     assert variants_writer.family_index == 12
@@ -187,11 +194,12 @@ def test_variants_parquet_writer_default_blob(
     output_path = tmp_path / "output"
 
     with VariantsParquetWriter(
-                output_path,
-                annotation_schema=[],
-                partition_descriptor=partition_descriptor,
-            ) as variants_writer:
-        variants_writer.consume(variants_source.fetch())
+        output_path,
+        annotation_schema=[],
+        partition_descriptor=partition_descriptor,
+    ) as variants_writer:
+        for variant in variants_source.filter():
+            variants_writer.filter(variant)
 
     assert variants_writer.summary_index == 6
     assert variants_writer.family_index == 12

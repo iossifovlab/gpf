@@ -6,7 +6,6 @@ import os
 import pathlib
 import time
 from collections.abc import Sequence
-from contextlib import AbstractContextManager
 from types import TracebackType
 from typing import cast
 
@@ -18,10 +17,6 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.processing_pipeline import (
-    VariantsBatchConsumer,
-    VariantsConsumer,
-)
 from dae.parquet.schema2.serializers import (
     AlleleParquetSerializer,
     FamilyAlleleParquetSerializer,
@@ -30,6 +25,7 @@ from dae.parquet.schema2.serializers import (
     build_summary_blob_schema,
 )
 from dae.utils import fs_utils
+from dae.utils.processing_pipeline import Filter
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
     is_unknown_genotype,
@@ -139,9 +135,7 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter(
-        VariantsConsumer, VariantsBatchConsumer,
-        AbstractContextManager):
+class VariantsParquetWriter(Filter):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -262,8 +256,8 @@ class VariantsParquetWriter(
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
 
-    def consume_one(
-        self, full_variant: FullVariant,
+    def filter(
+        self, data: FullVariant,
     ) -> None:
         """Consume a single full variant."""
         summary_index = self.summary_index
@@ -271,24 +265,17 @@ class VariantsParquetWriter(
         family_index, num_fam_alleles_written = \
             self._write_family_variants(
                 self.family_index, summary_index, sj_base_index,
-                full_variant.summary_variant,
-                full_variant.family_variants,
+                data.summary_variant,
+                data.family_variants,
             )
         if num_fam_alleles_written > 0:
             self.write_summary_variant(
-                full_variant.summary_variant,
+                data.summary_variant,
                 sj_base_index=sj_base_index,
             )
 
         self.summary_index += 1
         self.family_index = family_index
-
-    def consume_batch(
-        self, batch: Sequence[FullVariant],
-    ) -> None:
-        """Consume a batch of full variants."""
-        for full_variant in batch:
-            self.consume_one(full_variant)
 
     def _write_family_variants(
             self, family_index: int,
@@ -420,3 +407,15 @@ class VariantsParquetWriter(
                 summary_allele, seen_as_denovo=seen_as_denovo)
             summary_writer.append_allele(
                 summary_allele, summary_blobs_json)
+
+
+class Schema2SummaryVariantConsumer(VariantsParquetWriter):
+    """Consumer for Parquet summary variants."""
+    def filter(self, data: FullVariant) -> None:
+        summary_index = self.summary_index
+        sj_base_index = self._calc_sj_base_index(summary_index)
+        self.write_summary_variant(
+            data.summary_variant,
+            sj_base_index=sj_base_index,
+        )
+        self.summary_index += 1

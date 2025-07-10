@@ -34,12 +34,12 @@ from dae.parquet.schema2.processing_pipeline import (
     DeleteAttributesFromVariantsBatchFilter,
     Schema2SummaryVariantsBatchSource,
     Schema2SummaryVariantsSource,
-    VariantsBatchPipelineProcessor,
     VariantsPipelineProcessor,
 )
 from dae.parquet.schema2.variants_parquet_writer import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
+from dae.utils.processing_pipeline import Unpacker
 from dae.utils.regions import Region, split_into_regions
 from dae.variants_loaders.raw.loader import FullVariant
 
@@ -284,31 +284,31 @@ def process_parquet(
         full_reannotation=full_reannotation,
     )
 
-    source: Schema2SummaryVariantsSource | Schema2SummaryVariantsBatchSource
-    consumer = Schema2SummaryVariantConsumer(
+    filters: list = []
+
+    if batch_size <= 0:
+        filters.append(Schema2SummaryVariantsSource(loader))
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantFilter(
+                pipeline.attributes_deleted))
+        filters.append(AnnotationPipelineVariantsFilter(pipeline))
+    else:
+        filters.append(Schema2SummaryVariantsBatchSource(loader))
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantsBatchFilter(
+                pipeline.attributes_deleted))
+        filters.extend([
+            AnnotationPipelineVariantsBatchFilter(pipeline),
+            Unpacker(),
+        ])
+
+    filters.append(Schema2SummaryVariantConsumer(
         output_dir,
         pipeline.get_attributes(),
         loader.partition_descriptor,
         bucket_index=bucket_idx,
         variants_blob_serializer=variants_blob_serializer,
-    )
-    filters: list = []
-    processor: VariantsPipelineProcessor | VariantsBatchPipelineProcessor
+    ))
 
-    if batch_size <= 0:
-        source = Schema2SummaryVariantsSource(loader)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromVariantFilter(
-                pipeline.attributes_deleted))
-        filters.append(AnnotationPipelineVariantsFilter(pipeline))
-        processor = VariantsPipelineProcessor(source, filters, consumer)
-    else:
-        source = Schema2SummaryVariantsBatchSource(loader)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromVariantsBatchFilter(
-                pipeline.attributes_deleted))
-        filters.append(AnnotationPipelineVariantsBatchFilter(pipeline))
-        processor = VariantsBatchPipelineProcessor(source, filters, consumer)
-
-    with processor:
+    with VariantsPipelineProcessor(filters) as processor:
         processor.process_region(region)

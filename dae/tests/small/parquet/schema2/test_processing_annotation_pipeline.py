@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 
 from collections.abc import Sequence
-from types import TracebackType
 
 import pytest
 from dae.annotation.annotation_pipeline import (
@@ -10,13 +9,11 @@ from dae.annotation.annotation_pipeline import (
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
-    VariantsBatchConsumer,
-    VariantsBatchPipelineProcessor,
-    VariantsConsumer,
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
     VariantsPipelineProcessor,
 )
+from dae.utils.processing_pipeline import Filter
 from dae.variants_loaders.raw.loader import (
     FullVariant,
     VariantsGenotypesLoader,
@@ -39,8 +36,8 @@ def test_effect_annotation_pipeline_variants_batch_filter(
         effect_annotation_pipeline)
     variants = list(study_1_loader.fetch())
     with batch_filter as batch_filter:
-        result = list(batch_filter.filter_batch(variants))
-    result = list(batch_filter.filter_batch(variants))
+        result = list(batch_filter.filter(variants))
+    result = list(batch_filter.filter(variants))
     assert len(result) == 6
 
 
@@ -54,7 +51,7 @@ def test_dummy_annotation_pipeline_variants_batch_filter(
 
     result = []
     with batch_filter as batch_filter:
-        result = list(batch_filter.filter_batch(variants))
+        result = list(batch_filter.filter(variants))
     assert len(result) == 6
     index = 0
     for full_variant in result:
@@ -75,7 +72,7 @@ def test_dummy_annotation_pipeline_variants_filter(
     variants = list(study_1_loader.fetch())
     result = []
     with annotation_filter as annotation_filter:
-        result = list(annotation_filter.filter(variants))
+        result = [annotation_filter.filter(variant) for variant in variants]
     assert len(result) == 6
     index = 0
     for full_variant in result:
@@ -107,25 +104,17 @@ def test_variants_loader_batch_source(
 ) -> None:
     batch_source = VariantsLoaderBatchSource(
         study_1_loader, batch_size=batch_size)
-    batches = list(batch_source.fetch_batches())
+    batches = list(batch_source.filter())
     assert len(batches) == expected_batches
 
 
-class DummyBatchConsumer(VariantsBatchConsumer):
-
+class DummyBatchConsumer(Filter):
     def __init__(self) -> None:
         super().__init__()
         self.batches: list[list[FullVariant]] = []
 
-    def consume_batch(self, batch: Sequence[FullVariant]) -> None:
-        self.batches.append(list(batch))
-
-    def __exit__(
-            self,
-            exc_type: type[BaseException] | None,
-            exc_value: BaseException | None,
-            exc_tb: TracebackType | None) -> bool:
-        return exc_type is not None
+    def filter(self, data: Sequence[FullVariant]) -> None:
+        self.batches.append(list(data))
 
 
 @pytest.mark.parametrize(
@@ -155,30 +144,22 @@ def test_variants_batch_pipeline_processor(
         dummy_annotation_pipeline,
     )
 
-    batch_processor = VariantsBatchPipelineProcessor(
-        batch_source, [batch_filter], batch_consumer,
-    )
+    batch_processor = VariantsPipelineProcessor(
+        [batch_source, batch_filter, batch_consumer])
     batch_processor.process()
 
     assert len(batch_consumer.batches) == expected_batches
 
 
-class DummyConsumer(VariantsConsumer):
+class DummyConsumer(Filter):
     """A dummy variants batch consumer."""
 
     def __init__(self) -> None:
         super().__init__()
         self.variants: list[FullVariant] = []
 
-    def consume_one(self, full_variant: FullVariant) -> None:
-        self.variants.append(full_variant)
-
-    def __exit__(
-            self,
-            exc_type: type[BaseException] | None,
-            exc_value: BaseException | None,
-            exc_tb: TracebackType | None) -> bool:
-        return exc_type is not None
+    def filter(self, data: FullVariant) -> None:
+        self.variants.append(data)
 
 
 def test_variants_pipeline_processor(
@@ -194,8 +175,7 @@ def test_variants_pipeline_processor(
     )
 
     processor = VariantsPipelineProcessor(
-        source, [annotation_filter], consumer,
-    )
+        [source, annotation_filter, consumer])
     processor.process()
 
     assert len(consumer.variants) == 6
@@ -208,7 +188,8 @@ def test_variants_consumer_consume(
         study_1_loader,
     )
     consumer = DummyConsumer()
-    consumer.consume(source.fetch())
+    for data in source.filter():
+        consumer.filter(data)
 
     assert len(consumer.variants) == 6
 
@@ -236,6 +217,7 @@ def test_variants_batch_consumer_consume(
         batch_size=batch_size,
     )
     consumer = DummyBatchConsumer()
-    consumer.consume_batches(source.fetch_batches())
+    for data in source.filter():
+        consumer.filter(data)
 
     assert len(consumer.batches) == expected_batches

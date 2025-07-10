@@ -36,7 +36,6 @@ from dae.parquet.schema2.merge_parquet import merge_parquet_directory
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
-    VariantsBatchPipelineProcessor,
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
     VariantsPipelineProcessor,
@@ -55,6 +54,7 @@ from dae.schema2_storage.schema2_layout import (
 )
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
+from dae.utils.processing_pipeline import Unpacker
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class Schema2ImportStorage(ImportStorage):
         cls, project: ImportProject,
         bucket: Bucket,
         row_group_size: int | None = None,
-    ) -> VariantsPipelineProcessor | VariantsBatchPipelineProcessor:
+    ) -> VariantsPipelineProcessor:
         """Create the import processing pipeline."""
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
@@ -199,7 +199,24 @@ class Schema2ImportStorage(ImportStorage):
             ),
             project.get_variants_blob_serializer(),
         )
-        variants_writer = VariantsParquetWriter(
+
+        batch_size = project.get_processing_annotation_batch_size()
+
+        filters = []
+        if batch_size == 0:
+            filters.extend([
+                VariantsLoaderSource(variants_loader),
+                AnnotationPipelineVariantsFilter(annotation_pipeline),
+            ])
+        else:
+            filters.extend([
+                VariantsLoaderBatchSource(variants_loader,
+                                          batch_size=batch_size),
+                AnnotationPipelineVariantsBatchFilter(annotation_pipeline),
+                Unpacker(),
+            ])
+
+        filters.append(VariantsParquetWriter(
             out_dir=layout.study,
             annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
@@ -207,38 +224,9 @@ class Schema2ImportStorage(ImportStorage):
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,
-        )
+        ))
 
-        source: VariantsLoaderSource | VariantsLoaderBatchSource
-        annotation_filter: AnnotationPipelineVariantsFilter \
-            | AnnotationPipelineVariantsBatchFilter
-
-        batch_size = project.get_processing_annotation_batch_size()
-        if batch_size == 0:
-            source = VariantsLoaderSource(
-                variants_loader,
-            )
-            annotation_filter = AnnotationPipelineVariantsFilter(
-                annotation_pipeline,
-            )
-            return VariantsPipelineProcessor(
-                source,
-                [annotation_filter],
-                variants_writer,
-            )
-
-        source = VariantsLoaderBatchSource(
-            variants_loader,
-            batch_size=batch_size,
-        )
-        annotation_filter = AnnotationPipelineVariantsBatchFilter(
-            annotation_pipeline,
-        )
-        return VariantsBatchPipelineProcessor(
-            source,
-            [annotation_filter],
-            variants_writer,
-        )
+        return VariantsPipelineProcessor(filters)
 
     @classmethod
     def _do_write_variant(
