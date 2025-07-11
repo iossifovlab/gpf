@@ -25,7 +25,7 @@ from dae.parquet.partition_descriptor import (
     Partition,
     PartitionDescriptor,
 )
-from dae.parquet.schema2.annotation import (
+from dae.parquet.schema2.annotate_schema2_parquet import (
     backup_schema2_study,
     produce_schema2_annotation_tasks,
     produce_schema2_merging_tasks,

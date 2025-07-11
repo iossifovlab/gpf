@@ -99,7 +99,7 @@ setuptools.setup(
     annotate_columns=dae.annotation.annotate_columns:cli
     annotate_vcf=dae.annotation.annotate_vcf:cli
     annotate_doc=dae.annotation.annotate_doc:cli
-    annotate_schema2_parquet=dae.parquet.schema2.annotation:cli
+    annotate_schema2_parquet=dae.parquet.schema2.annotate_schema2_parquet:cli
     reannotate_instance=dae.annotation.reannotate_instance:cli
     pheno_import=dae.pheno.pheno_import:main
     import_tools_pheno=dae.pheno.import_tools:main
