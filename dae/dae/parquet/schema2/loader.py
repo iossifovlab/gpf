@@ -238,15 +238,6 @@ class ParquetLoader:
         return result
 
     @staticmethod
-    def _extract_region_bin(path: str) -> tuple[str, int]:
-        # (...)/region_bin=chr1_0/(...)
-        #                  ^~~~~^
-        start = path.find("region_bin=") + 11
-        end = path.find("/", start)
-        rbin = path[start:end].split("_")
-        return rbin[0], int(rbin[1])
-
-    @staticmethod
     def _load_families(path: str) -> FamiliesData:
         parquet_file = pq.ParquetFile(path)
         ped_df = parquet_file.read().to_pandas()
@@ -259,24 +250,6 @@ class ParquetLoader:
             Status.from_value)  # type: ignore
         ped_df.loc[ped_df.layout.isna(), "layout"] = None
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
-
-    def _pq_file_in_region(self, path: str, region: Region) -> bool:
-        if not self.partition_descriptor.has_region_bins():
-            raise ParquetLoaderException(
-                f"No region bins exist in {self.layout.study}!")
-
-        normalized_region = Region(
-            (region.chrom
-             if region.chrom in self.partition_descriptor.chromosomes
-             else "other"), region.start, region.stop,
-        )
-        rbin = ParquetLoader._extract_region_bin(path)
-        bin_region = Region(
-            rbin[0],
-            (rbin[1] * self.partition_descriptor.region_length) + 1,
-            (rbin[1] + 1) * self.partition_descriptor.region_length,
-        )
-        return bin_region.intersects(normalized_region)
 
     def get_summary_pq_filepaths(
         self, region: Region | None = None,

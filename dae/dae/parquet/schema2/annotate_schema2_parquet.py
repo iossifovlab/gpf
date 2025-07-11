@@ -31,11 +31,11 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
-    merge_variants_parquets,
     serialize_summary_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.loader import ParquetLoader
+from dae.parquet.schema2.merge_parquet import merge_variants_parquets
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
@@ -173,7 +173,9 @@ def merge_partitions(
     for partition in partitions:
         output_dir = partition_descriptor.partition_directory(
             summary_dir, partition)
-        merge_variants_parquets(partition_descriptor, output_dir, partition)
+        merge_variants_parquets(
+            partition_descriptor, output_dir, partition,
+            variants_type="summary")
 
 
 def produce_schema2_merging_tasks(
@@ -446,8 +448,11 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         if not self.args.in_place:
             if os.path.exists(output_dir) and not self.args.force:
-                raise ValueError(f"Output path '{output_dir}' already exists!")
-            if os.path.exists(output_dir) and self.args.force:
+                logger.warning(
+                    "Output path '%s' already exists! "
+                    "Some files may be overwritten.", output_dir,
+                )
+            elif os.path.exists(output_dir) and self.args.force:
                 self._remove_data(output_dir)
 
         input_layout = backup_schema2_study(input_dir) if self.args.in_place \

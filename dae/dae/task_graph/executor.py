@@ -232,7 +232,8 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
             is_error = False
 
             params = copy(self._params)
-            params["task_id"] = safe_task_id(task_node.task_id)
+            task_id = safe_task_id(task_node.task_id)
+            params["task_id"] = task_id
 
             try:
                 result = self._exec(task_node.func, args, [], params)
@@ -295,10 +296,14 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 value = arg
             args.append(value)
         params = copy(self._params)
-        params["task_id"] = safe_task_id(task_node.task_id)
+        task_id = safe_task_id(task_node.task_id)
+        params["task_id"] = task_id
 
         future = self._client.submit(
-            self._exec, task_node.func, args, deps, params, pure=False)
+            self._exec, task_node.func, args, deps, params,
+            key=task_id,
+            pure=False,
+        )
         if future is None:
             raise ValueError(
                 f"unexpected dask executor return None: {task_node}, {args}, "

@@ -80,13 +80,14 @@ _CLUSTER_TYPES["kubernetes"] = set_up_kubernetes_cluster
 def set_up_manual_client(cluster_conf: dict[str, Any]) -> Client:
     """Create a dask client using the passed cluster configuration."""
     # pylint: disable=import-outside-toplevel
-    scheduler_address = cluster_conf.get("params", {}).get("scheduler_address")
+    params = cluster_conf.get("params", {})
+    scheduler_address = params.pop("address", None)
 
     if scheduler_address is None:
         raise ValueError(
-            "Cluster configuration must contain 'scheduler_address' key.")
+            "Cluster configuration must contain scheduler 'address' key.")
 
-    return Client(scheduler_address)
+    return Client(address=scheduler_address, **params)
 
 
 def setup_client_from_config(
