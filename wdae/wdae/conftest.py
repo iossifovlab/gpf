@@ -354,6 +354,10 @@ def t4c8_wgpf_instance(
         return_value=session_t4c8_wgpf_instance,
     )
     mocker.patch(
+        "enrichment_api.enrichment_builder.get_wgpf_instance",
+        return_value=session_t4c8_wgpf_instance,
+    )
+    mocker.patch(
         "query_base.query_base.get_or_create_query_transformer",
         return_value=query_transformer,
     )
