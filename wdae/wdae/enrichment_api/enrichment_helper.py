@@ -1,9 +1,10 @@
 import json
 import logging
 import os
+from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 
 from dae.effect_annotation.effect import expand_effect_types
 from dae.enrichment_tool.base_enrichment_background import (
@@ -26,13 +27,25 @@ from dae.enrichment_tool.gene_weights_background import (
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from dae.genomic_resources.repository import GenomicResourceRepo
-from studies.study_wrapper import WDAEStudy
+from gpf_instance.extension import GPFTool
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
 logger = logging.getLogger(__name__)
 
 
-class EnrichmentHelper:
-    """Helper class to create enrichment tool for a genotype data."""
+class BaseEnrichmentHelper(GPFTool):
+    """Base helper class to create enrichment helper WDAE study."""
+
+    def __init__(self) -> None:
+        super().__init__("enrichment_helper")
+
+    @abstractmethod
+    def get_enrichment_models(self) -> dict[str, Any]:
+        """Return enrichment models available for the study."""
+
+
+class EnrichmentHelper(BaseEnrichmentHelper):
+    """Helper Base helper class to create enrichment helper WDAE study."""
 
     _BACKGROUNDS_CACHE: ClassVar[dict[str, BaseEnrichmentBackground]] = {}
 
@@ -40,9 +53,49 @@ class EnrichmentHelper:
         self,
         grr: GenomicResourceRepo,
         study: WDAEStudy,
-        ):
+    ):
+        super().__init__()
         self.grr = grr
         self.study = study
+
+    @staticmethod
+    def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
+        raise NotImplementedError
+
+    def get_enrichment_models(self) -> dict[str, Any]:
+        """Return enrichment models available for the study."""
+
+        background_descriptions = [
+            {
+                "id": background.background_id,
+                "name": background.name,
+                "type": background.background_type,
+                "summary": background.resource.get_summary(),
+                "desc": background.resource.get_description(),
+            }
+            for background in self.collect_genotype_data_backgrounds()
+        ]
+
+        counting_models = []
+        if self.study.enrichment_config is not None:
+            counting_models = [
+                {
+                    "id": counting_model.id,
+                    "name": counting_model.name,
+                    "desc": counting_model.desc,
+                }
+                for counting_model in dict(
+                    self.study.enrichment_config["counting"],
+                ).values()
+                if counting_model.id in self.get_selected_counting_models()
+            ]
+
+        return {
+            "background": background_descriptions,
+            "counting": counting_models,
+            "defaultBackground": self.get_default_background_model(),
+            "defaultCounting": self.get_default_counting_model(),
+        }
 
     def get_default_background_model(self) -> str:
         """

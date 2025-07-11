@@ -407,13 +407,6 @@ class RESTClient:
         )
         return response.iter_content()
 
-    def post_enrichment_test(self, query: dict) -> Any:
-        response = self._post(
-            "enrichment/test",
-            data=query,
-        )
-        return response.json()
-
     def get_instruments_details(self, dataset_id: str) -> Any:
         response = self._get(
             "pheno_tool/instruments",
@@ -649,3 +642,20 @@ class RESTClient:
 
     def get_visible_datasets(self) -> list:
         return self.gpf_rest_client.get_visible_datasets()
+
+    def get_enrichment_models(self, dataset_id: str) -> dict[str, Any]:
+        """Return enrichment models available for the study."""
+        response = self._get("enrichment/models/" + dataset_id)
+        if response.status_code != 200:
+            return {}
+        return cast(dict[str, Any], response.json())
+
+    def post_enrichment_test(self, query: dict) -> dict[str, Any] | None:
+        """Return enrichment test result."""
+        response = self._post(
+            "enrichment/test",
+            data=query,
+        )
+        if response.status_code != 200:
+            return None
+        return response.json()

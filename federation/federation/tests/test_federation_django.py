@@ -136,3 +136,50 @@ def test_pheno_tool(
         pytest.approx(110.71112823486328, abs=1e-3)
     assert synonymous["maleResults"]["positive"]["count"] == 0
     assert synonymous["maleResults"]["negative"]["count"] == 0
+
+
+def test_enrichment_models(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response = admin_client.get(
+        "/api/v3/enrichment/models/TEST_REMOTE_t4c8_dataset")
+    assert response
+    assert response.status_code == 200
+    result = response.json()
+
+    assert result["background"][0]["id"] == "coding_len_background"
+    assert result["counting"][0]["id"] == "enrichment_gene_counting"
+    assert result["counting"][1]["id"] == "enrichment_events_counting"
+    assert result["defaultBackground"] == "coding_len_background"
+    assert result["defaultCounting"] == "enrichment_gene_counting"
+
+
+def test_enrichment_test(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response = admin_client.get(
+        "/api/v3/enrichment/test/TEST_REMOTE_t4c8_dataset")
+    query = {
+        "datasetId": "t4c8_study_1",
+        "enrichmentBackgroundModel": "coding_len_background",
+        "enrichmentCountingModel": "enrichment_gene_counting",
+        "geneSet": {
+            "geneSetsCollection": "main",
+            "geneSet": "t4_candidates",
+        },
+    }
+    response = admin_client.post(
+        "/api/v3/enrichment/test",
+        data=json.dumps(query),
+        content_type="application/json",
+    )
+
+    assert response
+    assert response.status_code == 200
+
+    result = response.data  # type: ignore
+
+    assert set(result.keys()) == {"desc", "result"}
+    assert result["desc"] == "Gene Set: T4 Candidates (1)"

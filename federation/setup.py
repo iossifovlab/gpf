@@ -24,6 +24,8 @@ setuptools.setup(
     remote_extension=federation.remote_extension:GPFRemoteExtension
     [federation.tools]
     pheno_tool=federation.remote_pheno_tool_adapter:RemotePhenoToolAdapter
+    enrichment_helper=federation.remote_enrichment_tool:RemoteEnrichmentHelper
+    enrichment_builder=federation.remote_enrichment_tool:RemoteEnrichmentBuilder
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
