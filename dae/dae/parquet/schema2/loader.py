@@ -35,13 +35,11 @@ class Reader:
     This class assumes variants are ordered by their bucket and summary index!
     """
 
-    BATCH_SIZE = 1000
-
     def __init__(
         self,
         path: str,
         columns: Iterable[str],
-        batch_size: int = 1000,
+        batch_size: int = 500,
     ):
         if "summary_index" not in columns or "bucket_index" not in columns:
             raise ValueError
