@@ -33,13 +33,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.parquet.schema2.loader import ParquetLoader
-from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
-from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
-from dae.utils.regions import (
-    Region,
-)
-from dae.variants.variant import SummaryVariant
+from dae.utils.regions import Region
 
 logger = logging.getLogger("format_handlers")
 
@@ -540,87 +534,3 @@ class VCFFormat(AbstractFormat):
 
                 continue
             vcf_var.info[attribute.name] = buff
-
-
-class ParquetFormat(AbstractFormat):
-    """
-    Handler for Schema2 Parquet datasets.
-    """
-
-    def __init__(
-        self,
-        pipeline_config: RawPipelineConfig,
-        pipeline_config_old: str | None,
-        cli_args: dict,
-        grr_definition: dict | None,
-        region: Region | None,
-        input_layout: Schema2DatasetLayout,
-        output_dir: str,
-        bucket_idx: int,
-        variants_blob_serializer: str = "json",
-    ):
-        super().__init__(pipeline_config, pipeline_config_old,
-                         cli_args, grr_definition, region)
-        self.input_layout = input_layout
-        self.output_dir = output_dir
-        self.bucket_idx = bucket_idx
-
-        self.input_loader: ParquetLoader | None = None
-        self.writer: VariantsParquetWriterDeprecated | None = None
-        self.internal_attributes: list[str] | None = None
-        self.variants_blob_serializer = variants_blob_serializer
-
-    def open(self) -> None:
-        super().open()
-        assert self.pipeline is not None
-        self.input_loader = ParquetLoader(self.input_layout)
-        self.writer = VariantsParquetWriterDeprecated(
-            self.output_dir, self.pipeline,
-            self.input_loader.partition_descriptor,
-            bucket_index=self.bucket_idx,
-            variants_blob_serializer=self.variants_blob_serializer,
-        )
-        if isinstance(self.pipeline, ReannotationPipeline):
-            self.internal_attributes = [
-                attribute.name
-                for annotator in (self.pipeline.annotators_new
-                                  | self.pipeline.annotators_rerun)
-                for attribute in annotator.attributes
-                if attribute.internal
-            ]
-        else:
-            self.internal_attributes = [
-                attribute.name
-                for attribute in self.pipeline.get_attributes()
-                if attribute.internal
-            ]
-
-    def close(self) -> None:
-        super().close()
-        assert self.writer is not None
-        self.writer.close()
-
-    def _read(self) -> Generator[SummaryVariant, None, None]:
-        assert self.input_loader is not None
-        yield from self.input_loader.fetch_summary_variants(region=self.region)
-
-    def _convert(
-        self, variant: SummaryVariant,
-    ) -> list[tuple[Annotatable, dict]]:
-        return [(allele.get_annotatable(), allele.attributes)
-                for allele in variant.alt_alleles]
-
-    def _apply(self, variant: SummaryVariant, annotations: list[dict]) -> None:
-        for allele, annotation in zip(variant.alt_alleles, annotations,
-                                      strict=True):
-            if isinstance(self.pipeline, ReannotationPipeline):
-                for attr in self.pipeline.attributes_deleted:
-                    del allele.attributes[attr]
-            for attr in self.internal_attributes:  # type: ignore
-                del annotation[attr]
-            allele.update_attributes(annotation)
-
-    def _write(self, variant: SummaryVariant) -> None:
-        assert self.internal_attributes is not None
-        assert self.writer is not None
-        self.writer.write_summary_variant(variant)
