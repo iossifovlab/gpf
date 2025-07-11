@@ -165,8 +165,6 @@ class ParquetLoader:
         self.has_annotation = bool(
             yaml.safe_load(self.meta.get("annotation_pipeline", "").strip()))
 
-        self.partitioned: bool = \
-            self.meta.get("partition_description", "").strip()
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
@@ -207,8 +205,7 @@ class ParquetLoader:
         if not self.layout.summary:
             return {}
 
-        if not self.partitioned \
-           or not self.partition_descriptor.has_region_bins():
+        if not self.partition_descriptor.has_region_bins():
             return {}
 
         result: dict[tuple[str, str], list[str]] = {}
@@ -276,8 +273,7 @@ class ParquetLoader:
         if not self.layout.summary:
             return
 
-        if not self.partitioned \
-           or not self.partition_descriptor.has_region_bins():
+        if not self.partition_descriptor.has_region_bins():
             yield list(ds.dataset(f"{self.layout.summary}").files)
             return
 
