@@ -391,9 +391,10 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         loader = ParquetLoader.load_from_dir(input_dir)
 
         assert self.pipeline is not None
-        raw_pipeline = self.pipeline.raw \
-            if isinstance(self.pipeline.raw, list) \
-            else self.pipeline.raw["annotators"]
+        if isinstance(self.pipeline.raw, dict):
+            raw_pipeline = self.pipeline.raw["annotators"]
+        else:
+            raw_pipeline = self.pipeline.raw
 
         pipeline = AnnotationTool.produce_annotation_pipeline(
             raw_pipeline,
