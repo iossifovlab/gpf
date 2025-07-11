@@ -264,8 +264,13 @@ def enrichment_helper(
 def enrichment_builder(
     f1_trio: GenotypeData,
     enrichment_helper: EnrichmentHelper,
+    t4c8_fixture: GPFInstance,
 ) -> EnrichmentBuilder:
-    return EnrichmentBuilder(enrichment_helper, WDAEStudy(f1_trio, None))
+    return EnrichmentBuilder(
+        enrichment_helper,
+        t4c8_fixture.gene_scores_db,
+        WDAEStudy(f1_trio, None),
+    )
 
 
 @pytest.fixture

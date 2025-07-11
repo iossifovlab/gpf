@@ -3,9 +3,9 @@ from abc import abstractmethod
 from collections.abc import Iterable
 from typing import Any, cast
 
+from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.person_sets import PersonSetCollection
 from gpf_instance.extension import GPFTool
-from gpf_instance.gpf_instance import get_wgpf_instance
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
 from enrichment_api.enrichment_helper import EnrichmentHelper
@@ -46,16 +46,17 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
     def __init__(
         self,
         enrichment_helper: EnrichmentHelper,
+        gene_scores_db: GeneScoresDb,
         study: WDAEStudy,
     ) -> None:
         assert enrichment_helper.study.study_id == study.study_id
         super().__init__()
         self.enrichment_helper = enrichment_helper
         self.study = study
+        self.gene_scores_db = gene_scores_db
         enrichment_config = study.enrichment_config
         assert enrichment_config is not None
         self.enrichment_config = enrichment_config
-        self.gpf_instance = get_wgpf_instance()
         self.results: list[dict[str, Any]]
 
     @staticmethod
@@ -150,8 +151,8 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         desc = ""
         if gene_set_id:
             desc = f"Gene Set: {gene_set_id}"
-        elif gene_score and gene_score.get("score") \
-            in self.gpf_instance.gene_scores_db:
+        elif gene_score and gene_score.get("score", "") \
+            in self.gene_scores_db:
             gene_scores_id = gene_score.get("score")
 
             if gene_scores_id is not None:
@@ -193,16 +194,26 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         range_end = gene_score.get("rangeEnd")
 
         gene_syms: list[str] = []
-        if gene_score_id in self.gpf_instance.gene_scores_db:
-            score_desc = self.gpf_instance.get_gene_score_desc(
+        if gene_score_id in self.gene_scores_db:
+            score_desc = self.gene_scores_db.get_score_desc(
                 gene_score_id,
             )
-            score = self.gpf_instance.gene_scores_db.get_gene_score(
+            if score_desc is None:
+                raise ValueError(
+                    f"Missing gene score description for {gene_score_id}",
+                )
+            score = self.gene_scores_db.get_gene_score(
                 score_desc.resource_id,
             )
-            gene_syms = score.get_genes(
-                gene_score_id,
-                score_min=range_start,
-                score_max=range_end,
+            if score is None:
+                raise ValueError(
+                    f"Score not found: {gene_score_id}",
+                )
+            gene_syms = list(
+                score.get_genes(
+                    gene_score_id,
+                    score_min=range_start,
+                    score_max=range_end,
+                ),
             )
         return gene_syms

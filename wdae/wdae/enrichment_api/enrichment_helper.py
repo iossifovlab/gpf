@@ -71,7 +71,7 @@ class EnrichmentHelper(BaseEnrichmentHelper):
                 "name": background.name,
                 "type": background.background_type,
                 "summary": background.resource.get_summary(),
-                "desc": background.resource.get_description()
+                "desc": background.resource.get_description(),
             }
             for background in self.collect_genotype_data_backgrounds()
         ]
@@ -82,7 +82,7 @@ class EnrichmentHelper(BaseEnrichmentHelper):
                 {
                     "id": counting_model.id,
                     "name": counting_model.name,
-                    "desc": counting_model.desc
+                    "desc": counting_model.desc,
                 }
                 for counting_model in dict(
                     self.study.enrichment_config["counting"],

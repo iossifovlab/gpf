@@ -1,4 +1,3 @@
-import logging
 from typing import Any, cast
 
 from datasets_api.permissions import get_instance_timestamp_etag
@@ -9,7 +8,7 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import WDAEStudy
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 
 from enrichment_api.enrichment_builder import (
@@ -34,7 +33,7 @@ class EnrichmentModelsView(QueryBaseView):
 
         enrichment_helper = create_enrichment_helper(
             self.gpf_instance,
-            study.study_id,
+            study,
         )
 
         return Response(enrichment_helper.get_enrichment_models())
@@ -70,7 +69,7 @@ class EnrichmentTestView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         assert dataset is not None
 
-        builder = create_enrichment_builder(self.gpf_instance, dataset.study_id)
+        builder = create_enrichment_builder(self.gpf_instance, dataset)
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -113,14 +112,9 @@ class EnrichmentTestView(QueryBaseView):
 
 
 def create_enrichment_helper(
-    gpf_instance: WGPFInstance, study_id: str,
+    gpf_instance: WGPFInstance, study: WDAEAbstractStudy,
 ) -> BaseEnrichmentHelper:
     """Create an enrichment builder for the given dataset."""
-    study = gpf_instance.get_wdae_wrapper(study_id)
-    if study is None:
-        raise ValueError(
-            f"Dataset {study_id} not found! Cannot create enrichment helper.",
-        )
     for ext_name, extension in gpf_instance.extensions.items():
         enrichment_helper = extension.get_tool(study, "enrichment_helper")
         if enrichment_helper is not None:
@@ -137,14 +131,9 @@ def create_enrichment_helper(
 
 
 def create_enrichment_builder(
-    gpf_instance: WGPFInstance, study_id: str,
+    gpf_instance: WGPFInstance, study: WDAEAbstractStudy,
 ) -> BaseEnrichmentBuilder:
     """Create an enrichment builder for the given dataset."""
-    study = gpf_instance.get_wdae_wrapper(study_id)
-    if study is None:
-        raise ValueError(
-            f"Dataset {study_id} not found! Cannot create enrichment builder.",
-        )
     for ext_name, extension in gpf_instance.extensions.items():
         enrichment_builder = extension.get_tool(study, "enrichment_builder")
         if enrichment_builder is not None:
@@ -158,5 +147,6 @@ def create_enrichment_builder(
             f"Enrichment helper for {study.study_id} is missing!")
     return EnrichmentBuilder(
         EnrichmentHelper(gpf_instance.grr, study),
+        gpf_instance.gene_scores_db,
         study,
     )
