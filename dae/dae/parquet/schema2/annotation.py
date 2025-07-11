@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import logging
+import operator
 import os
 import pathlib
 import shutil
@@ -162,9 +164,22 @@ def produce_schema2_annotation_tasks(
     return tasks
 
 
+def merge_partitions(
+    summary_dir: str,
+    partitions: list[list[tuple[str, str]]],
+    partition_descriptor: PartitionDescriptor,
+) -> None:
+    """Helper method to merge Parquet files in partitioned studies."""
+    for partition in partitions:
+        output_dir = partition_descriptor.partition_directory(
+            summary_dir, partition)
+        merge_variants_parquets(partition_descriptor, output_dir, partition)
+
+
 def produce_schema2_merging_tasks(
     task_graph: TaskGraph,
-    annotation_tasks: list[Task],
+    sync_task: Task,
+    reference_genome: ReferenceGenome,
     loader: ParquetLoader,
     output_layout: Schema2DatasetLayout,
 ) -> list[Task]:
@@ -173,33 +188,22 @@ def produce_schema2_merging_tasks(
     if loader.layout.summary is None:
         raise ValueError("No summary variants to merge!")
 
-    if loader.partitioned:
-        to_join = [
-            os.path.relpath(dirpath, loader.layout.summary)
-            for dirpath, subdirs, _ in os.walk(loader.layout.summary)
-            if not subdirs
-        ]
-
-        tasks = [
-            task_graph.create_task(
-                f"merge_{path}",
-                merge_partitioned,
-                args=[
-                    output_layout.summary,
-                    path,
-                    loader.partition_descriptor],
-                deps=annotation_tasks,
-            ) for path in to_join
-        ]
-    else:
-        tasks = [
-            task_graph.create_task(
-                "merge",
-                merge_non_partitioned,
-                args=[output_layout.summary],
-                deps=annotation_tasks,
-            ),
-        ]
+    partition_descriptor = loader.partition_descriptor
+    chromosome_lengths = reference_genome.get_all_chrom_lengths()
+    tasks = []
+    for region_bin, group in itertools.groupby(
+        partition_descriptor.build_summary_partitions(chromosome_lengths),
+        operator.attrgetter("region_bin"),
+    ):
+        partitions = list(group)
+        if len(partitions) == 0:
+            continue
+        tasks.append(task_graph.create_task(
+            f"merge_parquet_files_summary_region_bin_{region_bin}",
+            merge_partitions,
+            args=[output_layout.summary, partitions, partition_descriptor],
+            deps=[sync_task],
+        ))
     return tasks
 
 
@@ -241,25 +245,6 @@ def write_new_meta(
         meta_keys.append(k)
         meta_values.append(str(v))
     append_meta_to_parquet(output_layout.meta, meta_keys, meta_values)
-
-
-def merge_partitioned(
-    summary_dir: str,
-    partition_dir: str,
-    partition_descriptor: PartitionDescriptor,
-) -> None:
-    """Helper method to merge Parquet files in partitioned studies."""
-    partition = []
-    for pbin in partition_dir.split("/"):
-        key, value = pbin.split("=", maxsplit=1)
-        partition.append((key, value))
-    output_dir = os.path.join(summary_dir, partition_dir)
-
-    merge_variants_parquets(partition_descriptor, output_dir, partition)
-
-
-def merge_non_partitioned(output_dir: str) -> None:
-    merge_variants_parquets(PartitionDescriptor(), output_dir, [])
 
 
 def process_parquet(
@@ -513,7 +498,9 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         produce_schema2_merging_tasks(
             self.task_graph,
-            [annotation_sync],
+            annotation_sync,
+            ReferenceGenome(
+                self.grr.get_resource(self.loader.meta["reference_genome"])),
             self.loader,
             self.output_layout,
         )
