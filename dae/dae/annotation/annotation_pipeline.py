@@ -488,7 +488,7 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
                 try:
                     # pylint: disable=eval-used
                     transform = eval(  # noqa: S307
-                        f"lambda value: { transform_str }",
+                        f"lambda value: {transform_str}",
                     )
                 except Exception as error:
                     raise ValueError(

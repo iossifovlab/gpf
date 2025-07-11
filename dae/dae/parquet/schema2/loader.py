@@ -35,15 +35,18 @@ class Reader:
     This class assumes variants are ordered by their bucket and summary index!
     """
 
-    BATCH_SIZE = 1000
-
-    def __init__(self, path: str, columns: Iterable[str]):
+    def __init__(
+        self,
+        path: str,
+        columns: Iterable[str],
+        batch_size: int = 500,
+    ):
         if "summary_index" not in columns or "bucket_index" not in columns:
             raise ValueError
         self.pq_file = pq.ParquetFile(path)
         self.iterator = self.pq_file.iter_batches(
             columns=list(columns),
-            batch_size=Reader.BATCH_SIZE,
+            batch_size=batch_size,
         )
         self.batch: list[dict] = []
         self.exhausted = False
@@ -101,8 +104,16 @@ class MultiReader:
 
     This class assumes variants are ordered by their bucket and summary index!
     """
-    def __init__(self, dirs: Iterable[str], columns: Iterable[str]):
-        self.readers = tuple(Reader(path, columns) for path in dirs)
+    def __init__(
+        self,
+        dirs: Iterable[str],
+        columns: Iterable[str],
+        batch_size: int = 1000,
+    ):
+        self.readers = tuple(
+            Reader(path, columns, batch_size=batch_size)
+            for path in dirs
+        )
 
     def __del__(self) -> None:
         self.close()
@@ -149,8 +160,13 @@ class ParquetLoader:
         "bucket_index", "summary_index", "family_id", "family_variant_data",
     ]
 
-    def __init__(self, layout: Schema2DatasetLayout):
+    def __init__(
+        self,
+        layout: Schema2DatasetLayout,
+        batch_size: int = 1000,
+    ):
         self.layout = layout
+        self.batch_size = batch_size
 
         if not os.path.exists(self.layout.pedigree):
             raise ParquetLoaderException(
@@ -165,8 +181,6 @@ class ParquetLoader:
         self.has_annotation = bool(
             yaml.safe_load(self.meta.get("annotation_pipeline", "").strip()))
 
-        self.partitioned: bool = \
-            self.meta.get("partition_description", "").strip()
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
@@ -207,8 +221,7 @@ class ParquetLoader:
         if not self.layout.summary:
             return {}
 
-        if not self.partitioned \
-           or not self.partition_descriptor.has_region_bins():
+        if not self.partition_descriptor.has_region_bins():
             return {}
 
         result: dict[tuple[str, str], list[str]] = {}
@@ -276,8 +289,7 @@ class ParquetLoader:
         if not self.layout.summary:
             return
 
-        if not self.partitioned \
-           or not self.partition_descriptor.has_region_bins():
+        if not self.partition_descriptor.has_region_bins():
             yield list(ds.dataset(f"{self.layout.summary}").files)
             return
 
@@ -357,7 +369,11 @@ class ParquetLoader:
                 continue
 
             seen = set()
-            summary_reader = MultiReader(summary_paths, self.SUMMARY_COLUMNS)
+            summary_reader = MultiReader(
+                summary_paths,
+                self.SUMMARY_COLUMNS,
+                batch_size=self.batch_size,
+            )
 
             for alleles in summary_reader:
                 rec = alleles[0]
@@ -389,8 +405,12 @@ class ParquetLoader:
             for path in summary_paths:
                 family_paths.extend(self.get_family_pq_filepaths(path))
 
-            summary_reader = MultiReader(summary_paths, self.SUMMARY_COLUMNS)
-            family_reader = MultiReader(family_paths, self.FAMILY_COLUMNS)
+            summary_reader = MultiReader(summary_paths,
+                                         self.SUMMARY_COLUMNS,
+                                         batch_size=self.batch_size)
+            family_reader = MultiReader(family_paths,
+                                        self.FAMILY_COLUMNS,
+                                        batch_size=self.batch_size)
 
             for alleles in summary_reader:
                 rec = alleles[0]

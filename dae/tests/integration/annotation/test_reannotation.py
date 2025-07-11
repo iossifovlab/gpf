@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
-from dae.parquet.schema2.annotation import cli
+from dae.parquet.schema2.annotate_schema2_parquet import cli
 from dae.parquet.schema2.loader import ParquetLoader
 
 from tests.integration.annotation.conftest import t4c8_study
