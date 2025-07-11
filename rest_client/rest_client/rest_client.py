@@ -226,16 +226,25 @@ class GPFOAuthSession(GPFClientSession):
         **kwargs: Any,
     ) -> requests.Response:
         """Get request."""
-        headers = headers or {}
-        headers["Authorization"] = f"Bearer {self.token}"
+        request_headers = headers or {}
+        request_headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        return requests.get(
-            url,
-            headers=headers,
-            timeout=timeout,
-            **kwargs,
-        )
+        def make_request() -> requests.Response:
+            headers = request_headers
+
+            return requests.get(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs,
+            )
+        response = make_request()
+        if response.status_code == 401:
+            self.refresh_token()
+            request_headers["Authorization"] = f"Bearer {self.token}"
+            response = make_request()
+        return response
 
     def post(
         self, url: str,
@@ -243,16 +252,25 @@ class GPFOAuthSession(GPFClientSession):
         **kwargs: Any,
     ) -> requests.Response:
         """Post request."""
-        headers = headers or {}
-        headers["Authorization"] = f"Bearer {self.token}"
+        request_headers = headers or {}
+        request_headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        return requests.post(
-            url,
-            headers=headers,
-            timeout=timeout,
-            **kwargs,
-        )
+        def make_request() -> requests.Response:
+            headers = request_headers
+
+            return requests.post(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs,
+            )
+        response = make_request()
+        if response.status_code == 401:
+            self.refresh_token()
+            request_headers["Authorization"] = f"Bearer {self.token}"
+            response = make_request()
+        return response
 
     def put(
         self, url: str,
@@ -262,16 +280,25 @@ class GPFOAuthSession(GPFClientSession):
         """Put request."""
         if self.token is None:
             self.authenticate()
-        headers = headers or {}
-        headers["Authorization"] = f"Bearer {self.token}"
+        request_headers = headers or {}
+        request_headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        return requests.put(
-            url,
-            headers=headers,
-            timeout=timeout,
-            **kwargs,
-        )
+        def make_request() -> requests.Response:
+            headers = request_headers
+
+            return requests.put(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs,
+            )
+        response = make_request()
+        if response.status_code == 401:
+            self.refresh_token()
+            request_headers["Authorization"] = f"Bearer {self.token}"
+            response = make_request()
+        return response
 
 
 class GPFPasswordSession(GPFClientSession):
