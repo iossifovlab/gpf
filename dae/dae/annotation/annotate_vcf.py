@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import sys
+from collections.abc import Iterable
 from contextlib import closing
 from pathlib import Path
 
@@ -25,9 +26,49 @@ from dae.annotation.format_handlers import VCFFormat
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.processing_pipeline import Source
+from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.variants.attributes import TransmissionType
+from dae.variants.variant import SummaryVariantFactory
+from dae.variants_loaders.raw.loader import FullVariant
 
 logger = logging.getLogger("annotate_vcf")
+
+
+class VCFSource(Source):
+    """A source that reads variants from a VCF file."""
+
+    def __init__(self, filepath: Path):
+        self.variants_file = VariantFile(str(filepath), "r")
+
+    def fetch(self, data: Region | None = None) -> Iterable[FullVariant]:
+        if data is None:
+            iterator = self.variants_file.fetch()
+        else:
+            iterator = self.variants_file.fetch(
+                data.chrom,
+                data.start,
+                data.stop,
+            )
+
+        for summary_idx, raw_variant in enumerate(iterator):
+            if raw_variant.ref is None:
+                logger.warning(
+                    "vcf variant without reference: %s %s",
+                    raw_variant.chrom, raw_variant.pos,
+                )
+                continue
+            if raw_variant.alts is None:
+                logger.info(
+                    "vcf variant without alternatives: %s %s",
+                    raw_variant.chrom, raw_variant.pos,
+                )
+                continue
+
+            summary_variant = SummaryVariantFactory.summary_variant_from_vcf(
+                raw_variant, summary_idx, TransmissionType.unknown)
+            yield FullVariant(summary_variant, ())
 
 
 def combine(
