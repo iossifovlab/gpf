@@ -151,7 +151,8 @@
         "valid-typeof": "warn",
         "yoda": "warn",
         "object-shorthand": ["warn", "never"],
-        "@typescript-eslint/unbound-method": "off"
+        "@typescript-eslint/unbound-method": "off",
+        "@angular-eslint/prefer-standalone": "off"
       }
     },
     {
