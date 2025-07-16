@@ -8,9 +8,10 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { UsersService } from 'app/users/users.service';
 
 @Component({
-  selector: 'gpf-dataset-description',
-  templateUrl: './dataset-description.component.html',
-  styleUrls: ['./dataset-description.component.css']
+    selector: 'gpf-dataset-description',
+    templateUrl: './dataset-description.component.html',
+    styleUrls: ['./dataset-description.component.css'],
+    standalone: false
 })
 export class DatasetDescriptionComponent implements OnInit {
   public descriptionHierarchy: DatasetHierarchy;

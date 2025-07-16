@@ -14,9 +14,10 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from 'app/datasets/datasets';
 
 @Component({
-  selector: 'gpf-enrichment-tool',
-  templateUrl: './enrichment-tool.component.html',
-  styleUrls: ['./enrichment-tool.component.css'],
+    selector: 'gpf-enrichment-tool',
+    templateUrl: './enrichment-tool.component.html',
+    styleUrls: ['./enrichment-tool.component.css'],
+    standalone: false
 })
 export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public enrichmentResults: EnrichmentResults;

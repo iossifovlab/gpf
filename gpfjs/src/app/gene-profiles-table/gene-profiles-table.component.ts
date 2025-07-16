@@ -28,9 +28,10 @@ import { UsersService } from 'app/users/users.service';
 import { sprintf } from 'sprintf-js';
 
 @Component({
-  selector: 'gpf-gene-profiles-table',
-  templateUrl: './gene-profiles-table.component.html',
-  styleUrls: ['./gene-profiles-table.component.css']
+    selector: 'gpf-gene-profiles-table',
+    templateUrl: './gene-profiles-table.component.html',
+    styleUrls: ['./gene-profiles-table.component.css'],
+    standalone: false
 })
 export class GeneProfilesTableComponent extends ComponentValidator implements OnInit, OnChanges, OnDestroy {
   private subscription: Subscription = new Subscription();

@@ -15,7 +15,10 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from 'app/datasets/datasets';
 
-@Pipe({ name: 'getPeopleCounterRow' })
+@Pipe({
+    name: 'getPeopleCounterRow',
+    standalone: false
+})
 export class PeopleCounterRowPipe implements PipeTransform {
   public transform(currentPeopleCounterRow: string): string {
     const result = currentPeopleCounterRow.replace('people_', '');
@@ -24,9 +27,10 @@ export class PeopleCounterRowPipe implements PipeTransform {
 }
 
 @Component({
-  selector: 'gpf-variant-reports',
-  templateUrl: './variant-reports.component.html',
-  styleUrls: ['./variant-reports.component.css']
+    selector: 'gpf-variant-reports',
+    templateUrl: './variant-reports.component.html',
+    styleUrls: ['./variant-reports.component.css'],
+    standalone: false
 })
 export class VariantReportsComponent implements OnInit {
   public accessRights: boolean;

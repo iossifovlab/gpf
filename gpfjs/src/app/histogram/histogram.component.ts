@@ -19,10 +19,11 @@ interface BinBar {
 }
 
 @Component({
-  selector: 'gpf-histogram',
-  templateUrl: './histogram.component.html',
-  styleUrls: ['./histogram.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'gpf-histogram',
+    templateUrl: './histogram.component.html',
+    styleUrls: ['./histogram.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class HistogramComponent implements OnInit, OnChanges {
   public rangeStartDisplay: string;

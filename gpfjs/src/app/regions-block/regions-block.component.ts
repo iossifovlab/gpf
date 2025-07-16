@@ -6,9 +6,10 @@ import { resetRegionsFilters, selectRegionsFilters } from 'app/regions-filter/re
 import { take } from 'rxjs';
 
 @Component({
-  selector: 'gpf-regions-block',
-  templateUrl: './regions-block.component.html',
-  styleUrls: ['./regions-block.component.css'],
+    selector: 'gpf-regions-block',
+    templateUrl: './regions-block.component.html',
+    styleUrls: ['./regions-block.component.css'],
+    standalone: false
 })
 export class RegionsBlockComponent implements OnInit, AfterViewInit {
   @ViewChild('nav') public ngbNav: NgbNav;

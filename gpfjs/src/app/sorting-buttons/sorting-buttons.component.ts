@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'gpf-sorting-buttons',
-  templateUrl: './sorting-buttons.component.html',
-  styleUrls: ['./sorting-buttons.component.css']
+    selector: 'gpf-sorting-buttons',
+    templateUrl: './sorting-buttons.component.html',
+    styleUrls: ['./sorting-buttons.component.css'],
+    standalone: false
 })
 export class SortingButtonsComponent {
   @Input() public id: string;

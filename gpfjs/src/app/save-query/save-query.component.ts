@@ -8,9 +8,10 @@ import { environment } from 'environments/environment';
 import { UserInfo } from 'app/users/users';
 
 @Component({
-  selector: 'gpf-save-query',
-  templateUrl: './save-query.component.html',
-  styleUrls: ['./save-query.component.css'],
+    selector: 'gpf-save-query',
+    templateUrl: './save-query.component.html',
+    styleUrls: ['./save-query.component.css'],
+    standalone: false
 })
 export class SaveQueryComponent implements OnInit {
   @Input() public queryType: string;

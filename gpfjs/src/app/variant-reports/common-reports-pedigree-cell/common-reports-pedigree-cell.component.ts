@@ -3,9 +3,10 @@ import { PedigreeComponent } from 'app/pedigree/pedigree.component';
 import { PedigreeCounter } from '../variant-reports';
 
 @Component({
-  selector: 'gpf-common-reports-pedigree-cell',
-  templateUrl: './common-reports-pedigree-cell.component.html',
-  styleUrls: ['./common-reports-pedigree-cell.component.css']
+    selector: 'gpf-common-reports-pedigree-cell',
+    templateUrl: './common-reports-pedigree-cell.component.html',
+    styleUrls: ['./common-reports-pedigree-cell.component.css'],
+    standalone: false
 })
 export class CommonReportsPedigreeCellComponent {
   @Input() public pedigree: PedigreeCounter;

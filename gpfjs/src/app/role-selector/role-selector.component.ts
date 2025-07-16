@@ -5,9 +5,10 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { distinctUntilChanged, Subject, switchMap, take } from 'rxjs';
 
 @Component({
-  selector: 'gpf-role-selector',
-  templateUrl: './role-selector.component.html',
-  styleUrl: './role-selector.component.css'
+    selector: 'gpf-role-selector',
+    templateUrl: './role-selector.component.html',
+    styleUrl: './role-selector.component.css',
+    standalone: false
 })
 export class RoleSelectorComponent implements OnInit {
   @Input() public initialState: string[] = [];

@@ -6,8 +6,9 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-  selector: 'gpf-family-ids',
-  templateUrl: './family-ids.component.html'
+    selector: 'gpf-family-ids',
+    templateUrl: './family-ids.component.html',
+    standalone: false
 })
 export class FamilyIdsComponent implements OnInit, OnDestroy {
   public familyIds = '';

@@ -1,7 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
-@Pipe({name: 'compare'})
+@Pipe({
+    name: 'compare',
+    standalone: false
+})
 export class ComparePipe implements PipeTransform {
   public transform(field: string): any {
     if (field === 'variant.location') {

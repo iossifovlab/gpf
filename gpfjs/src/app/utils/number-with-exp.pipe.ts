@@ -1,7 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 
-@Pipe({name: 'numberWithExp'})
+@Pipe({
+    name: 'numberWithExp',
+    standalone: false
+})
 export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
   public transform(value: string | number, digits?: string, component?: string): null;
   public transform(value: string | number, digits?: string, component?: string): string | number {

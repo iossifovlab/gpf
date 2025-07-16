@@ -15,10 +15,11 @@ import * as d3 from 'd3';
 import { cloneDeep } from 'lodash';
 
 @Component({
-  selector: 'gpf-categorical-histogram',
-  templateUrl: './categorical-histogram.component.html',
-  styleUrl: './categorical-histogram.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'gpf-categorical-histogram',
+    templateUrl: './categorical-histogram.component.html',
+    styleUrl: './categorical-histogram.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public width: number;

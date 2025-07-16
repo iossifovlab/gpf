@@ -13,9 +13,10 @@ import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 
 @Component({
-  selector: 'gpf-study-filters-block',
-  templateUrl: './study-filters.component.html',
-  styleUrls: ['./study-filters.component.css']
+    selector: 'gpf-study-filters-block',
+    templateUrl: './study-filters.component.html',
+    styleUrls: ['./study-filters.component.css'],
+    standalone: false
 })
 export class StudyFiltersComponent extends ComponentValidator implements OnInit, OnDestroy {
   @Input() public dataset: Dataset;

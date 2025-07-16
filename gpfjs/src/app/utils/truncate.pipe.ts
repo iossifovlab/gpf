@@ -4,7 +4,8 @@ import { Pipe, PipeTransform } from '@angular/core';
  * Truncate pipe with ellipsis
  */
 @Pipe({
-  name: 'truncate'
+    name: 'truncate',
+    standalone: false
 })
 export class TruncatePipe implements PipeTransform {
   public transform(value: string, limit: number, ellipsis = '...'): string {

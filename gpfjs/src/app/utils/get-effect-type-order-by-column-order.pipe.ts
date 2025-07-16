@@ -2,7 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { DeNovoData, EffectTypeTable } from 'app/variant-reports/variant-reports';
 
 @Pipe({
-  name: 'getEffectTypeOrderByColumOrder'
+    name: 'getEffectTypeOrderByColumOrder',
+    standalone: false
 })
 export class GetEffectTypeOrderByColumOrderPipe implements PipeTransform {
   public transform(

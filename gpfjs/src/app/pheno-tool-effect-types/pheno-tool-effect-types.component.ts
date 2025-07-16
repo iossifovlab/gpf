@@ -16,9 +16,10 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-  selector: 'gpf-pheno-tool-effect-types',
-  templateUrl: './pheno-tool-effect-types.component.html',
-  providers: [{ provide: Store, useClass: Store }]
+    selector: 'gpf-pheno-tool-effect-types',
+    templateUrl: './pheno-tool-effect-types.component.html',
+    providers: [{ provide: Store, useClass: Store }],
+    standalone: false
 })
 export class PhenoToolEffectTypesComponent implements OnInit {
   public phenoToolOthers: Set<string> = PHENO_TOOL_OTHERS;

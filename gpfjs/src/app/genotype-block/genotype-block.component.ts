@@ -2,9 +2,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 
 @Component({
-  selector: 'gpf-genotype-block',
-  templateUrl: './genotype-block.component.html',
-  styleUrls: ['./genotype-block.component.css'],
+    selector: 'gpf-genotype-block',
+    templateUrl: './genotype-block.component.html',
+    styleUrls: ['./genotype-block.component.css'],
+    standalone: false
 })
 export class GenotypeBlockComponent implements OnInit {
   @Input() public dataset: Dataset;

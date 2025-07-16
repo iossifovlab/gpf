@@ -8,9 +8,10 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-  selector: 'gpf-variant-types',
-  templateUrl: './variant-types.component.html',
-  styleUrls: ['./variant-types.css']
+    selector: 'gpf-variant-types',
+    templateUrl: './variant-types.component.html',
+    styleUrls: ['./variant-types.css'],
+    standalone: false
 })
 export class VariantTypesComponent implements OnInit {
   @Input() public variantTypes: Set<string> = new Set<string>([]);

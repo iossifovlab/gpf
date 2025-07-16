@@ -7,8 +7,9 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-  selector: 'gpf-gene-symbols',
-  templateUrl: './gene-symbols.component.html',
+    selector: 'gpf-gene-symbols',
+    templateUrl: './gene-symbols.component.html',
+    standalone: false
 })
 export class GeneSymbolsComponent implements OnInit, OnDestroy {
   public geneSymbols: string = '';

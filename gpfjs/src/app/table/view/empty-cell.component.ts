@@ -3,8 +3,9 @@ import { GpfTableColumnComponent } from '../component/column.component';
 import { ResizeService } from '../resize.service';
 
 @Component({
-  selector: 'gpf-table-view-empty-cell',
-  template: ''
+    selector: 'gpf-table-view-empty-cell',
+    template: '',
+    standalone: false
 })
 export class GpfTableEmptyCellComponent implements AfterViewInit {
   @Input() public columnInfo: GpfTableColumnComponent;

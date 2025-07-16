@@ -16,9 +16,10 @@ import {
 } from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
-  selector: 'gpf-family-filters-block',
-  templateUrl: './family-filters-block.component.html',
-  styleUrls: ['./family-filters-block.component.css'],
+    selector: 'gpf-family-filters-block',
+    templateUrl: './family-filters-block.component.html',
+    styleUrls: ['./family-filters-block.component.css'],
+    standalone: false
 })
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;

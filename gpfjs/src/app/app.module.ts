@@ -1,6 +1,6 @@
 /* eslint-disable @stylistic/max-len */
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, ErrorHandler, APP_INITIALIZER } from '@angular/core';
+import { NgModule, ErrorHandler, inject, provideAppInitializer } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -508,12 +508,10 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     provide: Sentry.TraceService,
     deps: [Router],
   },
-  {
-    provide: APP_INITIALIZER,
-    useFactory: () => (): void => { },
-    deps: [Sentry.TraceService],
-    multi: true,
-  },
+  provideAppInitializer(() => {
+        const initializerFn = (() => (): void => { })(inject(Sentry.TraceService));
+        return initializerFn();
+      }),
   provideHttpClient(withInterceptorsFromDi()),
 ] })
 export class AppModule { }

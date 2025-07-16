@@ -38,9 +38,10 @@ const PAGE_TYPE_TO_NAVIGATE = {
 };
 
 @Component({
-  selector: 'gpf-load-query',
-  templateUrl: './load-query.component.html',
-  styleUrls: ['./load-query.component.css']
+    selector: 'gpf-load-query',
+    templateUrl: './load-query.component.html',
+    styleUrls: ['./load-query.component.css'],
+    standalone: false
 })
 export class LoadQueryComponent implements OnInit {
   public constructor(

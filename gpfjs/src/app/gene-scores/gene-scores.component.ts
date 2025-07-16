@@ -17,10 +17,11 @@ import { CategoricalHistogramView, CategoricalHistogram, NumberHistogram } from 
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
-  encapsulation: ViewEncapsulation.None, // TODO: What is this?
-  selector: 'gpf-gene-scores',
-  templateUrl: './gene-scores.component.html',
-  styleUrls: ['./gene-scores.component.css'],
+    encapsulation: ViewEncapsulation.None, // TODO: What is this?
+    selector: 'gpf-gene-scores',
+    templateUrl: './gene-scores.component.html',
+    styleUrls: ['./gene-scores.component.css'],
+    standalone: false
 })
 export class GeneScoresComponent implements OnInit, OnDestroy {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);

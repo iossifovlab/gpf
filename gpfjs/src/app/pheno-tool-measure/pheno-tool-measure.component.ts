@@ -20,9 +20,10 @@ interface Regression {
 }
 
 @Component({
-  selector: 'gpf-pheno-tool-measure',
-  templateUrl: './pheno-tool-measure.component.html',
-  styleUrls: ['./pheno-tool-measure.component.css'],
+    selector: 'gpf-pheno-tool-measure',
+    templateUrl: './pheno-tool-measure.component.html',
+    styleUrls: ['./pheno-tool-measure.component.css'],
+    standalone: false
 })
 export class PhenoToolMeasureComponent extends ComponentValidator implements OnInit {
   @ViewChildren('checkboxes') public inputs: QueryList<ElementRef>;

@@ -6,9 +6,10 @@ import { setErrors, resetErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-  selector: 'gpf-gender',
-  templateUrl: './gender.component.html',
-  styleUrls: ['./gender.component.css'],
+    selector: 'gpf-gender',
+    templateUrl: './gender.component.html',
+    styleUrls: ['./gender.component.css'],
+    standalone: false
 })
 export class GenderComponent implements OnInit {
   public selectedGenders: string[] = [];

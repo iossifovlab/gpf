@@ -13,9 +13,10 @@ import { cloneDeep } from 'lodash';
 import { take } from 'rxjs';
 
 @Component({
-  selector: 'gpf-person-filters',
-  templateUrl: './person-filters.component.html',
-  styleUrls: ['./person-filters.component.css'],
+    selector: 'gpf-person-filters',
+    templateUrl: './person-filters.component.html',
+    styleUrls: ['./person-filters.component.css'],
+    standalone: false
 })
 export class PersonFiltersComponent extends ComponentValidator implements OnInit {
   @Input() public dataset: Dataset;

@@ -20,9 +20,10 @@ import { CategoricalHistogram, CategoricalHistogramView } from 'app/utils/histog
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
-  selector: 'gpf-person-filters-selector',
-  templateUrl: './person-filters-selector.component.html',
-  styleUrls: ['./person-filters-selector.component.css'],
+    selector: 'gpf-person-filters-selector',
+    templateUrl: './person-filters-selector.component.html',
+    styleUrls: ['./person-filters-selector.component.css'],
+    standalone: false
 })
 export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   @Input() public dataset: Dataset;

@@ -1,7 +1,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'getRows'
+    name: 'getRows',
+    standalone: false
 })
 export class GetVariantReportRowsPipe implements PipeTransform {
   public transform(effectGroups: string[], effectTypes: string[]): string[] {

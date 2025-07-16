@@ -7,9 +7,10 @@ import { resetGeneScoresValues, selectGeneScores } from 'app/gene-scores/gene-sc
 import { combineLatest, take } from 'rxjs';
 
 @Component({
-  selector: 'gpf-genes-block',
-  templateUrl: './genes-block.component.html',
-  styleUrls: ['./genes-block.component.css'],
+    selector: 'gpf-genes-block',
+    templateUrl: './genes-block.component.html',
+    styleUrls: ['./genes-block.component.css'],
+    standalone: false
 })
 export class GenesBlockComponent implements AfterViewInit {
   @Input() public showAllTab = true;
