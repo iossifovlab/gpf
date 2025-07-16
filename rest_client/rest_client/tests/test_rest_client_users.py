@@ -370,18 +370,18 @@ def test_initiate_reset_password_old_for_non_existing_user(
 
 def test_initiate_forgotten_password_by_anonymous_user(
     admin_client: RESTClient,
-    annon_client: RESTClient,
+    anon_client: RESTClient,
 ) -> None:
     """Test initiating password reset."""
     username = f"test_{uuid.uuid4()}@iossifovlab.com"
     admin_client.create_user(username, "Test User")
 
-    annon_client.initiate_forgotten_password(username)
+    anon_client.initiate_forgotten_password(username)
 
 
 def test_initiate_reset_password_old_by_anonymous_user(
     admin_client: RESTClient,
-    annon_client: RESTClient,
+    anon_client: RESTClient,
     mail_client: MailhogClient,
 ) -> None:
     """Test initiating password reset."""
@@ -391,7 +391,7 @@ def test_initiate_reset_password_old_by_anonymous_user(
     time.sleep(0.5)
 
     with pytest.raises(RESTError, match="Initiate old password reset failed"):
-        annon_client.initiate_password_reset_old(user["id"])
+        anon_client.initiate_password_reset_old(user["id"])
 
     time.sleep(0.5)
     all_messages = mail_client.get_all_messages()

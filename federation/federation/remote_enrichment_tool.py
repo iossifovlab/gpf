@@ -7,7 +7,7 @@ from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy
 
 from federation.remote_study_wrapper import RemoteWDAEStudy
-from federation.rest_api_client import RESTClient
+from rest_client.rest_client import RESTClient
 
 
 class RemoteEnrichmentHelper(BaseEnrichmentHelper):

@@ -13,7 +13,8 @@ from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
 from federation.remote_utils import build_remote_families
 from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
-from federation.rest_api_client import RESTClient
+from federation.utils import prefix_remote_identifier
+from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
         self.remote_study_id = remote_study_id
         self.rest_client = rest_client
-        self._study_id = self.rest_client.prefix_remote_identifier(
+        self._study_id = prefix_remote_identifier(
             self.remote_study_id,
+            self.rest_client,
         )
 
         self.query_transformer = None

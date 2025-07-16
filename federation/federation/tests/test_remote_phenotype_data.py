@@ -11,7 +11,7 @@ def t4c8_pheno(rest_client: RESTClient) -> RemotePhenotypeData:
 
 
 def test_get_measures_info(
-    t4c8_pheno, monkeypatch: pytest.MonkeyPatch,
+    t4c8_pheno: RemotePhenotypeData, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("GPF_PREFIX", "test_prefix")
     measures_info = t4c8_pheno.get_measures_info()

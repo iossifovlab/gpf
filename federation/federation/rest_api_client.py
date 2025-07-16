@@ -6,7 +6,7 @@ import ijson
 import requests
 from dae.pheno.common import MeasureType
 
-from rest_client.rest_client import GPFAnonymousClient, GPFConfidentialClient
+from rest_client.rest_client import GPFAnonymousSession, GPFOAuthSession
 from rest_client.rest_client import RESTClient as GPFRESTClient
 
 logger = logging.getLogger(__name__)
@@ -56,13 +56,13 @@ class RESTClient:
         prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
 
         if client_id is None and client_secret is None:
-            self.session = GPFAnonymousClient(
+            self.session = GPFAnonymousSession(
                 f"{self.build_host_url()}{prefix}",
             )
         else:
             assert client_id is not None
             assert client_secret is not None
-            self.session = GPFConfidentialClient(
+            self.session = GPFOAuthSession(
                 f"{self.build_host_url()}{prefix}",
                 client_id,
                 client_secret,
@@ -118,7 +118,7 @@ class RESTClient:
 
         response = make_request()
         if response.status_code == 401 \
-           and isinstance(self.session, GPFConfidentialClient):
+           and isinstance(self.session, GPFOAuthSession):
             # Try refreshing token
             self.session.refresh_token()
             response = make_request()
@@ -138,7 +138,7 @@ class RESTClient:
 
         response = make_request()
         if response.status_code == 401 \
-           and isinstance(self.session, GPFConfidentialClient):
+           and isinstance(self.session, GPFOAuthSession):
             self.session.refresh_token()
             response = make_request()
         return response

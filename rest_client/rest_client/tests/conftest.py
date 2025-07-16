@@ -2,13 +2,37 @@
 from urllib.parse import urlparse
 
 import pytest
+import yaml
+from gpf_instance.gpf_instance import WGPFInstance
+from utils.testing import setup_t4c8_instance
 
 from rest_client.mailhog_client import MailhogClient
 from rest_client.rest_client import (
-    GPFBasicAuth,
-    GPFConfidentialClient,
+    GPFAnonymousSession,
+    GPFOAuthSession,
+    GPFPasswordSession,
     RESTClient,
 )
+
+
+def build_remote_config(base_url: str) -> dict[str, str]:
+    host = base_url
+    return {
+        "id": "TEST_REMOTE",
+        "url": host,
+        "client_id": "federation",
+        "client_secret": "secret",
+    }
+
+
+def build_remote_config_user(base_url: str) -> dict[str, str]:
+    host = base_url
+    return {
+        "id": "TEST_REMOTE",
+        "url": host,
+        "client_id": "federation2",
+        "client_secret": "secret",
+    }
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -16,7 +40,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--url",
         dest="url",
         action="store",
-        default="http://localhost:8000",
+        default="http://localhost:21010",
         help="REST API URL",
     )
 
@@ -56,12 +80,13 @@ def mailhog_url(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture
-def oauth_admin() -> RESTClient:
-    confidential_session = GPFConfidentialClient(
-        base_url="http://resttest:21011",
-        client_id="resttest1",
-        client_secret="secret",  # noqa: S106
-        redirect_uri="http://resttest:21011/login",
+def oauth_admin(base_url: str) -> RESTClient:
+    conf = build_remote_config(base_url)
+    confidential_session = GPFOAuthSession(
+            base_url=conf["url"],
+            client_id=conf["client_id"],
+            client_secret=conf["client_secret"],
+            redirect_uri=f"{conf['url']}/login",
     )
 
     client = RESTClient(confidential_session)
@@ -74,10 +99,12 @@ def oauth_admin() -> RESTClient:
 )
 def admin_client(
     request: pytest.FixtureRequest,
+    base_url: str,
 ) -> RESTClient:
+    conf = build_remote_config(base_url)
     if request.param == "basic":
-        basic_session = GPFBasicAuth(
-            base_url="http://resttest:21011",
+        basic_session = GPFPasswordSession(
+            base_url=conf["url"],
             username="admin@iossifovlab.com",
             password="secret",  # noqa: S106
         )
@@ -86,11 +113,11 @@ def admin_client(
         return client
 
     if request.param == "oauth2_confidential_client":
-        confidential_session = GPFConfidentialClient(
-            base_url="http://resttest:21011",
-            client_id="resttest1",
-            client_secret="secret",  # noqa: S106
-            redirect_uri="http://resttest:21011/login",
+        confidential_session = GPFOAuthSession(
+            base_url=conf["url"],
+            client_id=conf["client_id"],
+            client_secret=conf["client_secret"],
+            redirect_uri=f"{conf['url']}/login",
         )
 
         client = RESTClient(confidential_session)
@@ -104,10 +131,12 @@ def admin_client(
 )
 def user_client(
     request: pytest.FixtureRequest,
+    base_url: str,
 ) -> RESTClient:
+    conf = build_remote_config_user(base_url)
     if request.param == "basic":
-        basic_session = GPFBasicAuth(
-            base_url="http://resttest:21011",
+        basic_session = GPFPasswordSession(
+            base_url=conf["url"],
             username="research@iossifovlab.com",
             password="secret",  # noqa: S106
         )
@@ -116,11 +145,11 @@ def user_client(
         return client
 
     if request.param == "oauth2_confidential_client":
-        confidential_session = GPFConfidentialClient(
-            base_url="http://resttest:21011",
-            client_id="resttest2",
-            client_secret="secret",  # noqa: S106
-            redirect_uri="http://resttest:21011/login",
+        confidential_session = GPFOAuthSession(
+            base_url=conf["url"],
+            client_id=conf["client_id"],
+            client_secret=conf["client_secret"],
+            redirect_uri=f"{conf['url']}/login",
         )
 
         client = RESTClient(confidential_session)
@@ -137,11 +166,40 @@ def mail_client(mailhog_url: str) -> MailhogClient:
 
 
 @pytest.fixture
-def annon_client() -> RESTClient:
+def anon_client(base_url: str) -> RESTClient:
     """REST client fixture."""
-    session = GPFBasicAuth(
-        "http://resttest:21011",
-        "annonymous@iossifovlab.com",
-        "secret",
-        )
+    conf = build_remote_config(base_url)
+    session = GPFAnonymousSession(conf["url"])
     return RESTClient(session)
+
+
+@pytest.fixture
+def rest_client(base_url: str) -> RESTClient:
+    remote_config = build_remote_config(base_url)
+    session = GPFOAuthSession(
+        base_url=remote_config["url"],
+        client_id=remote_config["client_id"],
+        client_secret=remote_config["client_secret"],
+        redirect_uri=f"{remote_config['url']}/login",
+    )
+    client = RESTClient(
+        session, remote_config["id"],
+    )
+    client.login()
+    assert session.token is not None, \
+        "Failed to get auth token for REST client"
+    return client
+
+
+@pytest.fixture(scope="session")
+def t4c8_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+    base_url: str,
+) -> WGPFInstance:
+    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    instance = setup_t4c8_instance(root_path)
+
+    with open(instance.dae_config_path, "a") as f:
+        f.write(yaml.dump({"remotes": [build_remote_config(base_url)]}))
+
+    return WGPFInstance.build(instance.dae_config_path, grr=instance.grr)

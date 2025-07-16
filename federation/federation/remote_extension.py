@@ -15,9 +15,11 @@ from federation.remote_study_wrapper import (
     RemoteWDAEStudy,
     RemoteWDAEStudyGroup,
 )
-from federation.rest_api_client import (
+from federation.utils import prefix_remote_identifier, prefix_remote_name
+from rest_client.rest_client import (
+    GPFOAuthSession,
     RESTClient,
-    RESTClientRequestError,
+    RESTError,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,7 +39,7 @@ class GPFRemoteExtension(GPFExtensionBase):
             available_studies_ids = [study.study_id for study in studies]
 
             visible_studies = [
-                client.prefix_remote_identifier(data_id)
+                prefix_remote_identifier(data_id, client)
                 for data_id in client.get_visible_datasets()
             ]
             if self.instance.visible_datasets is None:
@@ -85,8 +87,8 @@ class GPFRemoteExtension(GPFExtensionBase):
 
             remote_dgsdb_cache = {}
             for study_id, cache in \
-                    client.gpf_rest_client.get_denovo_gene_sets_db().items():
-                remote_id = client.prefix_remote_identifier(study_id)
+                    client.get_denovo_gene_sets_db().items():
+                remote_id = prefix_remote_identifier(study_id, client)
                 if remote_id in available_studies_ids:
                     remote_dgsdb_cache[remote_id] = cache
             d_gs_db.update_cache(remote_dgsdb_cache)
@@ -95,13 +97,13 @@ class GPFRemoteExtension(GPFExtensionBase):
             if scores is not None:
                 for score in scores:
                     desc = score.get("description")
-                    score["name"] = client.prefix_remote_identifier(
-                        score["name"])
+                    score["name"] = prefix_remote_identifier(
+                        score["name"], client)
                     if desc is None:
                         desc = score["name"]
                     else:
-                        score["description"] = client.prefix_remote_name(
-                            desc,
+                        score["description"] = prefix_remote_name(
+                            desc, client,
                         )
 
                     self.instance.genomic_scores.scores[score["name"]] = \
@@ -121,18 +123,26 @@ class GPFRemoteExtension(GPFExtensionBase):
         for remote in self.dae_config["remotes"]:
             logger.info("Creating remote %s", remote)
             try:
-                client = RESTClient(
-                    remote["id"],
-                    remote["host"],
-                    remote["client_id"],
-                    remote["client_secret"],
-                    base_url=remote["base_url"],
-                    port=remote.get("port", None),
-                    protocol=remote.get("protocol", None),
-                    gpf_prefix=remote.get("gpf_prefix", None),
+                if "host" in remote:
+                    protocol = remote.get("protocol", "http://")
+                    url = (
+                        f"{protocol}{remote['host']}:{remote['port']}"
+                       f"/{remote['gpf_prefix']}{remote['base_url']}"
+                    )
+                else:
+                    url = remote.get("url")
+
+                session = GPFOAuthSession(
+                    url, remote["client_id"], remote["client_secret"],
+                    remote.get("redirect_uri", ""),
                 )
-                clients[client.remote_id] = client
-            except ConnectionError:
+
+                client = RESTClient(
+                    session,
+                    remote["id"],
+                )
+                clients[client.client_id] = client
+            except RESTError:
                 logger.exception("Failed to create remote %s", remote["id"])
         return clients
 
@@ -143,8 +153,8 @@ class GPFRemoteExtension(GPFExtensionBase):
         """Get all remote studies from a REST client."""
         all_data = rest_client.get_datasets()
         if all_data is None:
-            raise RESTClientRequestError(
-                f"Failed to get studies from {rest_client.remote_id}",
+            raise RESTError(
+                f"Failed to get studies from {rest_client.client_id}",
             )
 
         genotype_data: dict[str, RemoteGenotypeData] = {}
@@ -202,7 +212,7 @@ class GPFRemoteExtension(GPFExtensionBase):
             study_id = pheno_id
             if "name" in config:
                 phenotype_data.name = \
-                    rest_client.prefix_remote_name(config["name"])
+                    prefix_remote_name(config["name"], rest_client)
             else:
                 phenotype_data.name = None
 

@@ -3,10 +3,10 @@ import json
 
 import pytest
 
-from rest_client.rest_client import RESTClient
+from rest_client.rest_client import RESTClient, RESTError
 
 QUERY = {
-    "datasetId": "iossifov_2014",
+    "datasetId": "t4c8_study_1",
     "maxVariantsCount": 1001,
 }
 
@@ -32,7 +32,7 @@ def test_query_collect_variants(
     content = "".join(result)
     assert content
     result = json.loads(content)
-    assert len(result) == 16
+    assert len(result) == 12
 
 
 def test_query_cancelation(
@@ -50,50 +50,19 @@ def test_query_variants_no_rights(
     """Perform a variants query to the GPF API."""
 
     with pytest.raises(
-        OSError,
+        RESTError,
         match="Query failed:",
     ):
         user_client.query_genotype_browser(QUERY, 10)
 
 
 GENES = [
-    "NUDT4",
-    "NUDT4B",
-    "NUDT4P2",
-    "MED13L",
-    "OTUD7A",
-    "TUBGCP4",
-    "MTHFS",
-    "ST20-MTHFS",
-    "SLC25A39",
-    "C2orf42",
-    "DYRK1A",
-    "CCDC66",
-    "CRYBG3",
-    "IGSF10",
-    "MUC4",
-    "PCYT1A",
-    "HNRNPD",
-    "PCDHAC1",
-    "PCDHAC2",
-    "PCDHA1",
-    "PCDHA10",
-    "PCDHA11",
-    "PCDHA12",
-    "PCDHA13",
-    "PCDHA2",
-    "PCDHA3",
-    "PCDHA4",
-    "PCDHA5",
-    "PCDHA6",
-    "PCDHA7",
-    "PCDHA8",
-    "PCDHA6",
-    "PCDHA9",
+    "t4",
+    "c8",
 ]
 
 SUMMARY_QUERY = {
-    "datasetId": "iossifov_2014",
+    "datasetId": "t4c8_study_1",
     "geneSymbols": GENES,
 }
 
@@ -103,4 +72,4 @@ def test_query_summary_variants(
 ) -> None:
     """Perform a variants query to the GPF API."""
     result = oauth_admin.query_summary_variants(SUMMARY_QUERY)
-    assert len(result) == 16
+    assert len(result) == 4
