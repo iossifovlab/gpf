@@ -51,14 +51,14 @@
         <span class="d-none d-xl-inline">Summary alleles:</span>
         <span class="d-none d-md-inline d-xl-none d-xxl-none">SA:</span>
         <span id="summary-alleles-count">
-          <span>{{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.summaryVariantsCount }}</span>
+          <span>{{ variantsArray?.totalSummaryAllelesCount }} / {{ summaryVariantsCount }}</span>
         </span>
       </span>
 
       <div *ngIf="selectedGene">
         <button
           class="btn btn-md btn-primary btn-right"
-          [disabled]="!this.variantsArray?.totalSummaryAllelesCount"
+          [disabled]="!variantsArray?.totalSummaryAllelesCount"
           id="download-summary-variants-button"
           (click)="onDownload()"
           title="Download summary variants">
@@ -69,8 +69,8 @@
   </div>
   <div
     class="card-header card-title too-many-variants-warning"
-    *ngIf="this.variantsArray.summaryAlleles.length > this.constants.maxDrawnVariants"
-    >Too many variants to render. Only {{ this.constants.maxDrawnVariants }} will be rendered.</div
+    *ngIf="variantsArray.summaryAlleles.length > constants.maxDrawnVariants"
+    >Too many variants to render. Only {{ constants.maxDrawnVariants }} will be rendered.</div
   >
   <div id="svg-container"></div>
 </div>

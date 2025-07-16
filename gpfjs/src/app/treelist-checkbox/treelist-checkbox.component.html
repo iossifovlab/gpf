@@ -14,7 +14,7 @@
         (click)="hide.value === 'true' ? (hide.value = 'false') : (hide.value = 'true')"></button>
     </div>
     <input
-      [ngModel]="this.selectedStudies.has(node.dataset.id)"
+      [ngModel]="selectedStudies.has(node.dataset.id)"
       class="form-check-input"
       id="{{ node.dataset.id }}"
       (click)="updateFilters($event)"
