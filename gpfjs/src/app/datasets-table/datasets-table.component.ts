@@ -8,11 +8,11 @@ import { map, mergeMap } from 'rxjs/operators';
 import { Item } from 'app/item-add-menu/item-add-menu';
 
 @Component({
-    selector: 'gpf-datasets-table',
-    templateUrl: './datasets-table.component.html',
-    // Order of css files is important (second file overwrites the first where needed)
-    styleUrls: ['../users-table/users-table.component.css', './datasets-table.component.css'],
-    standalone: false
+  selector: 'gpf-datasets-table',
+  templateUrl: './datasets-table.component.html',
+  // Order of css files is important (second file overwrites the first where needed)
+  styleUrls: ['../users-table/users-table.component.css', './datasets-table.component.css'],
+  standalone: false
 })
 export class DatasetsTableComponent {
   @Input() public datasets: DatasetPermissions[];

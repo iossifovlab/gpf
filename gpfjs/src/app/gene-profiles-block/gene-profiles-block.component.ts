@@ -15,9 +15,9 @@ import {
 import { cloneDeep } from 'lodash';
 
 @Component({
-    selector: 'gpf-gene-profiles-block',
-    templateUrl: './gene-profiles-block.component.html',
-    standalone: false
+  selector: 'gpf-gene-profiles-block',
+  templateUrl: './gene-profiles-block.component.html',
+  standalone: false
 })
 export class GeneProfilesBlockComponent implements OnInit {
   public geneProfilesTableConfig: GeneProfilesTableConfig;

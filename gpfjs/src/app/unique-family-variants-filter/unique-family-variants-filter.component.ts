@@ -8,10 +8,10 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { take } from 'rxjs';
 
 @Component({
-    selector: 'gpf-unique-family-variants-filter',
-    templateUrl: './unique-family-variants-filter.component.html',
-    styleUrls: ['./unique-family-variants-filter.component.css'],
-    standalone: false
+  selector: 'gpf-unique-family-variants-filter',
+  templateUrl: './unique-family-variants-filter.component.html',
+  styleUrls: ['./unique-family-variants-filter.component.css'],
+  standalone: false
 })
 export class UniqueFamilyVariantsFilterComponent implements OnChanges, OnInit {
   @Validate(IsDefined, {message: 'Must have a boolean value.'})

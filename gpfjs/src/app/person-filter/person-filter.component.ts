@@ -9,10 +9,10 @@ import { cloneDeep } from 'lodash';
 import { ReplaySubject } from 'rxjs';
 
 @Component({
-    selector: 'gpf-person-filter',
-    templateUrl: './person-filter.component.html',
-    styleUrl: './person-filter.component.css',
-    standalone: false
+  selector: 'gpf-person-filter',
+  templateUrl: './person-filter.component.html',
+  styleUrl: './person-filter.component.css',
+  standalone: false
 })
 export class PersonFilterComponent implements OnInit, OnDestroy {
   @Input() public selectedMeasure: MeasureHistogram;

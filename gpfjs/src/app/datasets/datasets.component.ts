@@ -12,10 +12,10 @@ import { selectExpandedDatasets, setExpandedDatasets } from 'app/dataset-node/da
 import { reset } from 'app/users/state-actions';
 
 @Component({
-    selector: 'gpf-datasets',
-    templateUrl: './datasets.component.html',
-    styleUrls: ['./datasets.component.css'],
-    standalone: false
+  selector: 'gpf-datasets',
+  templateUrl: './datasets.component.html',
+  styleUrls: ['./datasets.component.css'],
+  standalone: false
 })
 export class DatasetsComponent extends ComponentValidator implements OnInit, OnDestroy {
   private static previousUrl = '';

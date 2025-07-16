@@ -14,10 +14,10 @@ import { environment } from 'environments/environment';
 import { Subject, Subscription, combineLatest, debounceTime, distinctUntilChanged, of, switchMap, take } from 'rxjs';
 
 @Component({
-    selector: 'gpf-home',
-    templateUrl: './home.component.html',
-    styleUrls: ['./home.component.css'],
-    standalone: false
+  selector: 'gpf-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css'],
+  standalone: false
 })
 export class HomeComponent implements OnInit, OnDestroy {
   private subscription: Subscription = new Subscription();

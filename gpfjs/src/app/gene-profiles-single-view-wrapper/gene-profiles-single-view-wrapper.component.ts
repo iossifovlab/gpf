@@ -6,10 +6,10 @@ import { Observable } from 'rxjs';
 import { Location } from '@angular/common';
 
 @Component({
-    selector: 'gpf-gene-profiles-single-view-wrapper',
-    templateUrl: './gene-profiles-single-view-wrapper.component.html',
-    styleUrls: ['./gene-profiles-single-view-wrapper.component.css'],
-    standalone: false
+  selector: 'gpf-gene-profiles-single-view-wrapper',
+  templateUrl: './gene-profiles-single-view-wrapper.component.html',
+  styleUrls: ['./gene-profiles-single-view-wrapper.component.css'],
+  standalone: false
 })
 export class GeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
   public $geneProfilesConfig: Observable<GeneProfilesSingleViewConfig>;

@@ -12,10 +12,10 @@ import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
 
 @Component({
-    selector: '[gpf-enrichment-table-row]',
-    templateUrl: './enrichment-table-row.component.html',
-    styleUrls: ['./enrichment-table-row.component.css'],
-    standalone: false
+  selector: '[gpf-enrichment-table-row]',
+  templateUrl: './enrichment-table-row.component.html',
+  styleUrls: ['./enrichment-table-row.component.css'],
+  standalone: false
 })
 export class EnrichmentTableRowComponent {
   @Input() public label: string;

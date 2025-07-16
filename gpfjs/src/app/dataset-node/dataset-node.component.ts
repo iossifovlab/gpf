@@ -9,10 +9,10 @@ import { ComponentValidator } from 'app/common/component-validator';
 import { cloneDeep } from 'lodash';
 
 @Component({
-    selector: 'gpf-dataset-node',
-    templateUrl: './dataset-node.component.html',
-    styleUrls: ['./dataset-node.component.css'],
-    standalone: false
+  selector: 'gpf-dataset-node',
+  templateUrl: './dataset-node.component.html',
+  styleUrls: ['./dataset-node.component.css'],
+  standalone: false
 })
 export class DatasetNodeComponent extends ComponentValidator implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;

@@ -14,10 +14,10 @@ export class SortInfo {
 }
 
 @Component({
-    selector: 'gpf-table',
-    templateUrl: './table.component.html',
-    styleUrls: ['./table.component.css'],
-    standalone: false
+  selector: 'gpf-table',
+  templateUrl: './table.component.html',
+  styleUrls: ['./table.component.css'],
+  standalone: false
 })
 export class GpfTableComponent implements OnChanges, AfterViewChecked {
   @ViewChild('table') public tableViewChild: any;

@@ -15,10 +15,10 @@ import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
 
 @Component({
-    selector: 'gpf-multi-continuous-filter',
-    templateUrl: './multi-continuous-filter.component.html',
-    styleUrls: ['./multi-continuous-filter.component.css'],
-    standalone: false
+  selector: 'gpf-multi-continuous-filter',
+  templateUrl: './multi-continuous-filter.component.html',
+  styleUrls: ['./multi-continuous-filter.component.css'],
+  standalone: false
 })
 export class MultiContinuousFilterComponent extends ComponentValidator implements OnInit {
   @Input() public datasetId: string;

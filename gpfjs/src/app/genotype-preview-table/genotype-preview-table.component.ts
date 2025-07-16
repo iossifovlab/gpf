@@ -4,10 +4,10 @@ import { PersonSet } from '../datasets/datasets';
 import { LegendItem } from 'app/variant-reports/variant-reports';
 
 @Component({
-    selector: 'gpf-genotype-preview-table',
-    templateUrl: './genotype-preview-table.component.html',
-    styleUrls: ['./genotype-preview-table.component.css'],
-    standalone: false
+  selector: 'gpf-genotype-preview-table',
+  templateUrl: './genotype-preview-table.component.html',
+  styleUrls: ['./genotype-preview-table.component.css'],
+  standalone: false
 })
 export class GenotypePreviewTableComponent implements OnInit {
   @Input() public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;

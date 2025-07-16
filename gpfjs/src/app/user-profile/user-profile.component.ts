@@ -15,10 +15,10 @@ export class UserSavedQuery {
 }
 
 @Component({
-    selector: 'gpf-user-profile',
-    templateUrl: './user-profile.component.html',
-    styleUrls: ['./user-profile.component.css'],
-    standalone: false
+  selector: 'gpf-user-profile',
+  templateUrl: './user-profile.component.html',
+  styleUrls: ['./user-profile.component.css'],
+  standalone: false
 })
 export class UserProfileComponent implements OnInit {
   public genotypeQueries: Array<UserSavedQuery>;

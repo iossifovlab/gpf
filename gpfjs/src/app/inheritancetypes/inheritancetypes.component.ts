@@ -6,9 +6,9 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-    selector: 'gpf-inheritancetypes',
-    templateUrl: './inheritancetypes.component.html',
-    standalone: false
+  selector: 'gpf-inheritancetypes',
+  templateUrl: './inheritancetypes.component.html',
+  standalone: false
 })
 export class InheritancetypesComponent implements OnInit {
   @Input() public inheritanceTypes: Set<string>;

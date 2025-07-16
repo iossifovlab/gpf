@@ -5,9 +5,9 @@ import {
 } from '../common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 
 @Component({
-    selector: '[gpf-common-reports-row]',
-    templateUrl: './common-reports-row.component.html',
-    standalone: false
+  selector: '[gpf-common-reports-row]',
+  templateUrl: './common-reports-row.component.html',
+  standalone: false
 })
 export class CommonReportsRowComponent implements AfterViewInit {
   @Input() public pedigreeGroup: PedigreeCounter[];

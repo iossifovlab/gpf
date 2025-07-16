@@ -8,10 +8,10 @@ import { VariantReportsService } from 'app/variant-reports/variant-reports.servi
 import { switchMap, take } from 'rxjs';
 
 @Component({
-    selector: 'gpf-pedigree',
-    templateUrl: './pedigree.component.html',
-    styleUrls: ['./pedigree.component.css'],
-    standalone: false
+  selector: 'gpf-pedigree',
+  templateUrl: './pedigree.component.html',
+  styleUrls: ['./pedigree.component.css'],
+  standalone: false
 })
 export class PedigreeComponent {
   @Input() public family: PedigreeData[];

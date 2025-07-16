@@ -8,10 +8,10 @@ import { UserGroup } from 'app/users-groups/users-groups';
 import { Observable } from 'rxjs';
 
 @Component({
-    selector: 'gpf-users-table',
-    templateUrl: './users-table.component.html',
-    styleUrls: ['./users-table.component.css'],
-    standalone: false
+  selector: 'gpf-users-table',
+  templateUrl: './users-table.component.html',
+  styleUrls: ['./users-table.component.css'],
+  standalone: false
 })
 export class UsersTableComponent {
   @Input() public users: User[];

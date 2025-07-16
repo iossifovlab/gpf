@@ -4,10 +4,10 @@ import { GeneProfilesColumn } from 'app/gene-profiles-table/gene-profiles-table'
 import { environment } from 'environments/environment';
 
 @Component({
-    selector: 'gpf-multiple-select-menu',
-    templateUrl: './multiple-select-menu.component.html',
-    styleUrls: ['./multiple-select-menu.component.css'],
-    standalone: false
+  selector: 'gpf-multiple-select-menu',
+  templateUrl: './multiple-select-menu.component.html',
+  styleUrls: ['./multiple-select-menu.component.css'],
+  standalone: false
 })
 export class MultipleSelectMenuComponent implements OnChanges {
   @Input() public columns: GeneProfilesColumn[];

@@ -15,11 +15,11 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 import { isNumber, isString } from 'lodash';
 
 @Component({
-    selector: 'gpf-pheno-browser-table',
-    templateUrl: './pheno-browser-table.component.html',
-    styleUrls: ['./pheno-browser-table.component.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'gpf-pheno-browser-table',
+  templateUrl: './pheno-browser-table.component.html',
+  styleUrls: ['./pheno-browser-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;

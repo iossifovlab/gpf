@@ -1,8 +1,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'contrastAdjust',
-    standalone: false
+  name: 'contrastAdjust',
+  standalone: false
 })
 export class ContrastAdjustPipe implements PipeTransform {
   public transform(rgba: string): string {

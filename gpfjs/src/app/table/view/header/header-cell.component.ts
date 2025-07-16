@@ -5,10 +5,10 @@ import { SortInfo } from '../../table.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
-    selector: 'gpf-table-view-header-cell',
-    templateUrl: './header-cell.component.html',
-    styleUrls: ['./header-cell.component.css'],
-    standalone: false
+  selector: 'gpf-table-view-header-cell',
+  templateUrl: './header-cell.component.html',
+  styleUrls: ['./header-cell.component.css'],
+  standalone: false
 })
 export class GpfTableHeaderCellComponent {
   @Input() public columnInfo: GpfTableContentHeaderComponent;

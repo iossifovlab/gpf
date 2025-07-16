@@ -2,8 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { PValueIntensityPipe } from './p-value-intensity.pipe';
 
 @Pipe({
-    name: 'getBackgroundColor',
-    standalone: false
+  name: 'getBackgroundColor',
+  standalone: false
 })
 export class BackgroundColorPipe implements PipeTransform {
   public constructor(private pValueIntensityPipe: PValueIntensityPipe) {}

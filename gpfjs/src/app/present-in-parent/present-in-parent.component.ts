@@ -6,11 +6,11 @@ import { cloneDeep } from 'lodash';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
-    selector: 'gpf-present-in-parent',
-    templateUrl: './present-in-parent.component.html',
-    styleUrls: ['./present-in-parent.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'gpf-present-in-parent',
+  templateUrl: './present-in-parent.component.html',
+  styleUrls: ['./present-in-parent.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PresentInParentComponent implements OnInit {
   public rarityIntervalStart = 0;

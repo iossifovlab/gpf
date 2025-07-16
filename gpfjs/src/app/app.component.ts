@@ -26,10 +26,10 @@ function extractAuthParamsFromURL(): [string, string] {
 }
 
 @Component({
-    selector: 'gpf-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
-    standalone: false
+  selector: 'gpf-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+  standalone: false
 })
 export class AppComponent implements OnInit {
   public title = 'GPF: Genotypes and Phenotypes in Families';

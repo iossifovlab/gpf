@@ -509,7 +509,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     deps: [Router],
   },
   provideAppInitializer(() => {
-    inject(Sentry.TraceService)
+    inject(Sentry.TraceService);
   }),
   provideHttpClient(withInterceptorsFromDi()),
 ] })

@@ -6,10 +6,10 @@ import { setErrors, resetErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
-    selector: 'gpf-present-in-child',
-    templateUrl: './present-in-child.component.html',
-    styleUrls: ['./present-in-child.css'],
-    standalone: false
+  selector: 'gpf-present-in-child',
+  templateUrl: './present-in-child.component.html',
+  styleUrls: ['./present-in-child.css'],
+  standalone: false
 })
 export class PresentInChildComponent implements OnInit {
   @Input() public hasZygosity: boolean;

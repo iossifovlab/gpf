@@ -10,10 +10,10 @@ import { Store } from '@ngrx/store';
 import { setErrors, resetErrors } from 'app/common/errors.state';
 
 @Component({
-    selector: 'gpf-effect-types',
-    templateUrl: './effect-types.component.html',
-    styleUrls: ['./effect-types.css'],
-    standalone: false
+  selector: 'gpf-effect-types',
+  templateUrl: './effect-types.component.html',
+  styleUrls: ['./effect-types.css'],
+  standalone: false
 })
 export class EffectTypesComponent implements OnInit {
   @Input() public variantTypes: Set<string> = new Set();

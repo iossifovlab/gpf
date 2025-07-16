@@ -2,10 +2,10 @@ import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { ConfirmCancelEvent } from 'angular-confirmation-popover/lib/confirmation-popover.directive';
 
 @Component({
-    selector: 'gpf-confirm-button',
-    templateUrl: './confirm-button.component.html',
-    styleUrls: ['./confirm-button.component.css'],
-    standalone: false
+  selector: 'gpf-confirm-button',
+  templateUrl: './confirm-button.component.html',
+  styleUrls: ['./confirm-button.component.css'],
+  standalone: false
 })
 export class ConfirmButtonComponent {
   @Input() public hide = false;

@@ -12,10 +12,10 @@ import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
 
 @Component({
-    selector: 'gpf-genomic-scores',
-    templateUrl: './genomic-scores.component.html',
-    styleUrls: ['./genomic-scores.component.css'],
-    standalone: false
+  selector: 'gpf-genomic-scores',
+  templateUrl: './genomic-scores.component.html',
+  styleUrls: ['./genomic-scores.component.css'],
+  standalone: false
 })
 export class GenomicScoresComponent implements OnInit {
   @Input() public selectedGenomicScore: GenomicScore;

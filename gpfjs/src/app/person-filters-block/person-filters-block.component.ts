@@ -11,10 +11,10 @@ import {
 } from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
-    selector: 'gpf-person-filters-block',
-    templateUrl: './person-filters-block.component.html',
-    styleUrls: ['./person-filters-block.component.css'],
-    standalone: false
+  selector: 'gpf-person-filters-block',
+  templateUrl: './person-filters-block.component.html',
+  styleUrls: ['./person-filters-block.component.css'],
+  standalone: false
 })
 export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;

@@ -16,10 +16,10 @@ import {
 import { cloneDeep } from 'lodash';
 
 @Component({
-    selector: 'gpf-categorical-filter',
-    templateUrl: './categorical-filter.component.html',
-    styleUrls: ['./categorical-filter.component.css'],
-    standalone: false
+  selector: 'gpf-categorical-filter',
+  templateUrl: './categorical-filter.component.html',
+  styleUrls: ['./categorical-filter.component.css'],
+  standalone: false
 })
 export class CategoricalFilterComponent implements OnInit {
   @Input() public categoricalFilter: PersonFilterState;

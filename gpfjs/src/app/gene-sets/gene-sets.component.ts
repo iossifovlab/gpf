@@ -22,10 +22,10 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
-    selector: 'gpf-gene-sets',
-    templateUrl: './gene-sets.component.html',
-    styleUrls: ['./gene-sets.component.css'],
-    standalone: false
+  selector: 'gpf-gene-sets',
+  templateUrl: './gene-sets.component.html',
+  styleUrls: ['./gene-sets.component.css'],
+  standalone: false
 })
 export class GeneSetsComponent implements OnInit, OnDestroy {
   public geneSetsCollections: Array<GeneSetsCollection>;

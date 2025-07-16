@@ -10,11 +10,11 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 type OrderedIndividuals = Array<Individual>;
 
 @Component({
-    selector: 'gpf-pedigree-chart',
-    templateUrl: './pedigree-chart.component.html',
-    styleUrls: ['./pedigree-chart.component.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'gpf-pedigree-chart',
+  templateUrl: './pedigree-chart.component.html',
+  styleUrls: ['./pedigree-chart.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PedigreeChartComponent implements OnInit {
   public pedigreeDataWithLayout: IndividualWithPosition[];

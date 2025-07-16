@@ -1,8 +1,8 @@
 import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 
 @Directive({
-    selector: '[gpfTableCellContent]',
-    standalone: false
+  selector: '[gpfTableCellContent]',
+  standalone: false
 })
 export class GpfTableCellContentDirective {
   public constructor(

@@ -2,10 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angu
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 @Component({
-    selector: 'gpf-treelist-checkbox',
-    templateUrl: './treelist-checkbox.component.html',
-    styleUrls: ['./treelist-checkbox.component.css'],
-    standalone: false
+  selector: 'gpf-treelist-checkbox',
+  templateUrl: './treelist-checkbox.component.html',
+  styleUrls: ['./treelist-checkbox.component.css'],
+  standalone: false
 })
 export class StudyFiltersTreeComponent implements OnInit, OnChanges {
   @Output() public checkboxChangeEvent = new EventEmitter<string>();

@@ -42,10 +42,10 @@ import { GENOTYPE_BROWSER_INITIAL_VALUES } from 'app/effect-types/effect-types';
 
 
 @Component({
-    selector: 'gpf-genotype-browser',
-    templateUrl: './genotype-browser.component.html',
-    styleUrls: ['./genotype-browser.component.css'],
-    standalone: false
+  selector: 'gpf-genotype-browser',
+  templateUrl: './genotype-browser.component.html',
+  styleUrls: ['./genotype-browser.component.css'],
+  standalone: false
 })
 export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   public genotypePreviewVariantsArray: GenotypePreviewVariantsArray = null;

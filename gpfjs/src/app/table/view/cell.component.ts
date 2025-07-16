@@ -3,10 +3,10 @@ import { GpfTableColumnComponent } from '../component/column.component';
 import { GpfTableContentComponent } from '../component/content.component';
 
 @Component({
-    selector: 'gpf-table-view-cell',
-    templateUrl: './cell.component.html',
-    styleUrls: ['./cell.component.css'],
-    standalone: false
+  selector: 'gpf-table-view-cell',
+  templateUrl: './cell.component.html',
+  styleUrls: ['./cell.component.css'],
+  standalone: false
 })
 export class GpfTableCellComponent {
   @Input() public columnInfo: GpfTableColumnComponent;

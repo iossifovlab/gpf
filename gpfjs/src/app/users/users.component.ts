@@ -7,10 +7,10 @@ import { APP_BASE_HREF } from '@angular/common';
 import { UserInfo } from './users';
 
 @Component({
-    selector: 'gpf-users',
-    templateUrl: './users.component.html',
-    styleUrls: ['./users.component.css'],
-    standalone: false
+  selector: 'gpf-users',
+  templateUrl: './users.component.html',
+  styleUrls: ['./users.component.css'],
+  standalone: false
 })
 export class UsersComponent implements OnInit {
   public userInfo: UserInfo = null;

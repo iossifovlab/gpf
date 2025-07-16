@@ -5,11 +5,11 @@ import {
 import { SortInfo } from '../../table.component';
 
 @Component({
-    selector: 'gpf-table-view-header',
-    templateUrl: './header.component.html',
-    styleUrls: ['./header.component.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'gpf-table-view-header',
+  templateUrl: './header.component.html',
+  styleUrls: ['./header.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class GpfTableHeaderComponent {
   @Input() public columns: any;

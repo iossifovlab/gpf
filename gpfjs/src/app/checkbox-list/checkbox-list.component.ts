@@ -1,8 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter, Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'displayName',
-    standalone: false
+  name: 'displayName',
+  standalone: false
 })
 export class DisplayNamePipe implements PipeTransform {
   public transform(item: string, displayNames: Map<string, string>): string {
@@ -11,9 +11,9 @@ export class DisplayNamePipe implements PipeTransform {
 }
 
 @Component({
-    selector: 'gpf-checkbox-list',
-    templateUrl: './checkbox-list.component.html',
-    standalone: false
+  selector: 'gpf-checkbox-list',
+  templateUrl: './checkbox-list.component.html',
+  standalone: false
 })
 export class CheckboxListComponent implements OnInit {
   @Input() public title: string;

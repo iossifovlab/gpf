@@ -5,10 +5,10 @@ import { NgbModal, NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
 
 @Component({
-    selector: 'gpf-federation-credentials',
-    templateUrl: './federation-credentials.component.html',
-    styleUrls: ['../saved-queries-table/saved-queries-table.component.css', './federation-credentials.component.css'],
-    standalone: false
+  selector: 'gpf-federation-credentials',
+  templateUrl: './federation-credentials.component.html',
+  styleUrls: ['../saved-queries-table/saved-queries-table.component.css', './federation-credentials.component.css'],
+  standalone: false
 })
 export class FederationCredentialsComponent implements OnInit {
   public credentials: FederationCredential[];
