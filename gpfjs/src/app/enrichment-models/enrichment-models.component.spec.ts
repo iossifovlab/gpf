@@ -76,7 +76,7 @@ describe('EnrichmentModelsComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2', 'value3']));
-    jest.spyOn(store, 'dispatch').mockReturnValue();
+    jest.spyOn(store, 'dispatch').mockImplementation();
   });
 
   it('should create', () => {
