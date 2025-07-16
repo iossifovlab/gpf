@@ -7,6 +7,7 @@ import sys
 from collections.abc import Iterable
 from contextlib import closing
 from pathlib import Path
+from types import TracebackType
 
 from pysam import (
     TabixFile,
@@ -26,11 +27,12 @@ from dae.annotation.format_handlers import VCFFormat
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
-from dae.utils.processing_pipeline import Source
+from dae.utils.processing_pipeline import Filter, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.raw.loader import FullVariant
 from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 logger = logging.getLogger("annotate_vcf")
 
@@ -43,6 +45,35 @@ class VCFSource(Source):
 
     def fetch(self, data: Region | None = None) -> Iterable[FullVariant]:
         yield from self.loader.fetch(data)
+
+
+class VCFWriter(Filter):
+    """A filter that writes variants to a VCF file."""
+
+    def __init__(self, serializer: VcfSerializer):
+        self.serializer = serializer
+
+    def __enter__(self) -> VCFWriter:
+        self.serializer.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during writing vcf: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.serializer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: FullVariant) -> None:
+        self.serializer.serialize_full_variant(data)
 
 
 def combine(
