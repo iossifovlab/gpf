@@ -2,13 +2,18 @@
 import pathlib
 import textwrap
 
+import numpy as np
 import pytest
-from dae.annotation.annotate_vcf import VCFSource
+from dae.annotation.annotate_vcf import VCFSource, VCFWriter
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariantFactory
+from dae.variants_loaders.raw.loader import FullVariant
 from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 
 @pytest.fixture
@@ -65,3 +70,46 @@ def test_vcf_source(
         ("chr2:20.C.T.1", 1),
         ("chr3:30.C.T.1", 1),
     ]
+
+
+def test_vcf_writer(
+    tmp_path: pathlib.Path,
+    test_gpf_instance: GPFInstance,
+    sample_ped: pathlib.Path,
+):
+    out_path = tmp_path / "out.vcf"
+
+    families = FamiliesLoader(str(sample_ped)).load()
+    summary_variant = SummaryVariantFactory.summary_variant_from_records(
+        [{"chrom": "chr1",
+          "position": 10,
+          "reference": "C",
+          "alternative": "T",
+          "summary_index": -1,
+          "allele_index": 1}],
+    )
+    family_variant = FamilyVariant(
+        summary_variant, families["f1"],
+        np.array([[0, 0, 0], [0, 0, 1]]),
+        np.array([[2, 2, 1], [0, 0, 1]]),
+    )
+
+    serializer = VcfSerializer(
+        families,
+        test_gpf_instance.reference_genome,
+        out_path,
+    )
+    with VCFWriter(serializer) as writer:
+        writer.filter(FullVariant(summary_variant, [family_variant]))
+
+    assert out_path.read_text() == (
+       '##fileformat=VCFv4.2\n'
+       '##FILTER=<ID=PASS,Description="All filters passed">\n'
+       '##contig=<ID=chr1>\n'
+       '##contig=<ID=chr2>\n'
+       '##contig=<ID=chr3>\n'
+       '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+       '##INFO=<ID=END,Number=1,Type=Integer,Description="Stop position of the interval">\n'  # noqa: E501
+       '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tmom\tdad\tprb\n'
+       'chr1\t10\tchr1_10_C_T\tC\tT\t.\t.\t.\tGT\t0/0\t0/0\t0/1\n'
+    )
