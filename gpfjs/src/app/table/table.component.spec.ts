@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { ViewContainerRef, ChangeDetectorRef, NO_ERRORS_SCHEMA, Component } from '@angular/core';
+import { ViewContainerRef, ChangeDetectorRef, NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { GpfTableComponent, SortInfo } from './table.component';
 import { GpfTableHeaderComponent } from './view/header/header.component';
@@ -7,32 +7,20 @@ import { GpfTableCellComponent } from './view/cell.component';
 import { GpfTableEmptyCellComponent } from './view/empty-cell.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
 
-@Component({
-  selector: 'gpf-twc',
-  template: `
-    <gpf-table-subheader caption="caption" field="field">
-      <span *gpfTableCellContent="let data">
-      </span>
-    </gpf-table-subheader>
-  `,
-})
-class TestGpfTableSubheaderComponent { }
-
 describe('GpfTableComponent', () => {
   let component: GpfTableComponent;
   let fixture: ComponentFixture<GpfTableComponent>;
   let testComponent: GpfTableSubheaderComponent;
-  let testFixture: ComponentFixture<TestGpfTableSubheaderComponent>;
+  let testFixture: ComponentFixture<GpfTableSubheaderComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         GpfTableComponent,
         GpfTableHeaderComponent,
         GpfTableCellComponent,
         GpfTableEmptyCellComponent,
-        TestGpfTableSubheaderComponent,
         GpfTableSubheaderComponent
       ],
       providers: [
@@ -41,8 +29,8 @@ describe('GpfTableComponent', () => {
       ]
     }).compileComponents();
 
-    testFixture = TestBed.createComponent(TestGpfTableSubheaderComponent);
-    testComponent = testFixture.debugElement.children[0].componentInstance;
+    testFixture = TestBed.createComponent(GpfTableSubheaderComponent);
+    testComponent = testFixture.componentInstance;
     testFixture.detectChanges();
 
     fixture = TestBed.createComponent(GpfTableComponent);
@@ -69,16 +57,16 @@ describe('GpfTableComponent', () => {
     expect(component.tableTop()).toBe(false);
   });
 
-  it('should sort data sources', () => {
+  it('should sort data sources by array position', () => {
     const sortingInfo = new SortInfo(testComponent, true);
     component.sortingInfo = sortingInfo;
     expect(component.sortingInfo).toBe(sortingInfo);
 
     expect(component.dataSource).toStrictEqual([
-      {field: -1, arrayPosition: 3},
-      {field: 2, arrayPosition: 1},
       {field: 3, arrayPosition: 0},
+      {field: 2, arrayPosition: 1},
       {field: 4, arrayPosition: 2},
+      {field: -1, arrayPosition: 3},
       {field: 5, arrayPosition: 4},
     ]);
   });
