@@ -65,13 +65,53 @@ class VCFWriter(Filter):
         self.serializer = serializer
         self.pipeline = pipeline
 
+    def _update_header(
+        self,
+        vcf_file: VariantFile,
+    ) -> None:
+        """Update a variant file's header with annotation pipeline scores."""
+        assert self.pipeline is not None
+
+        header = vcf_file.header
+        header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
+        if isinstance(self.pipeline, ReannotationPipeline):
+            header_info_keys = vcf_file.header.info.keys()
+            old_annotation_columns = {
+                attr.name
+                for attr in self.pipeline.pipeline_old.get_attributes()
+                if not attr.internal
+            }
+            new_annotation_columns = {
+                attr.name for attr in self.pipeline.get_attributes()
+                if not attr.internal
+            }
+
+            for info_key in header_info_keys:
+                if info_key in old_annotation_columns \
+                        and info_key not in new_annotation_columns:
+                    vcf_file.header.info.remove_header(info_key)
+
+            attributes = []
+            for attr in self.pipeline.get_attributes():
+                if attr.internal:
+                    continue
+
+                if attr.name not in vcf_file.header.info:
+                    attributes.append(attr)
+        else:
+            attributes = self.pipeline.get_attributes()
+
+        for attribute in attributes:
+            description = attribute.description
+            description = description.replace("\n", " ")
+            description = description.replace('"', '\\"')
+            header.info.add(attribute.name, "A", "String", description)
+
     def __enter__(self) -> VCFWriter:
         self.serializer.__enter__()
         if self.pipeline is not None:
             assert self.serializer.vcf_file is not None
-            VCFFormat._update_header(self.serializer.vcf_file,
-                                     self.pipeline,
-                                     {})
+            self._update_header(self.serializer.vcf_file)
         return self
 
     def __exit__(
