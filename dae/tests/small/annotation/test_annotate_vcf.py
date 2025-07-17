@@ -5,7 +5,7 @@ import textwrap
 import numpy as np
 import pysam
 import pytest
-from dae.annotation.annotate_vcf import VCFSource, VCFWriter, process_vcf
+from dae.annotation.annotate_vcf import VCFWriter, process_vcf
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
@@ -17,7 +17,6 @@ from dae.testing.acgt_import import acgt_gpf
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants_loaders.raw.loader import FullVariant
-from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 
@@ -72,28 +71,6 @@ def sample_vcf(tmp_path: pathlib.Path) -> pathlib.Path:
         chr3   30  .  C   T   .    .      .    GT     0/1 0/1 0/1
     """))
     return filepath
-
-
-def test_vcf_source(
-    test_gpf_instance: GPFInstance,
-    sample_ped: pathlib.Path,
-    sample_vcf: pathlib.Path,
-):
-    vcf_loader = VcfLoader(
-        FamiliesLoader(str(sample_ped)).load(),
-        [str(sample_vcf)],
-        test_gpf_instance.reference_genome,
-    )
-    source = VCFSource(vcf_loader)
-    result = [
-        (full_variant.summary_variant.svuid, len(full_variant.family_variants))
-        for full_variant in source.fetch()
-    ]
-    assert result == [
-        ("chr1:10.C.T.1", 1),
-        ("chr2:20.C.T.1", 1),
-        ("chr3:30.C.T.1", 1),
-    ]
 
 
 def test_vcf_writer(
