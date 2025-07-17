@@ -60,8 +60,8 @@ class VCFSource(Source):
     def __init__(self, loader: VcfLoader):
         self.loader = loader
 
-    def fetch(self, data: Region | None = None) -> Iterable[FullVariant]:
-        yield from self.loader.fetch(data)
+    def fetch(self, region: Region | None = None) -> Iterable[FullVariant]:
+        yield from self.loader.fetch(region)
 
 
 class VCFWriter(Filter):

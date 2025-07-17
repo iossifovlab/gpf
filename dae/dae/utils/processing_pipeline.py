@@ -4,6 +4,8 @@ from contextlib import AbstractContextManager
 from types import TracebackType
 from typing import Any
 
+from dae.utils.regions import Region
+
 
 class Filter(AbstractContextManager):
     """Base class for all processing pipeline filters."""
@@ -33,5 +35,5 @@ class Source(AbstractContextManager):
         return exc_type is not None
 
     @abc.abstractmethod
-    def fetch(self, data: Any) -> Iterable[Any]:
+    def fetch(self, region: Region | None = None) -> Iterable[Any]:
         ...
