@@ -4,7 +4,8 @@ import { switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-about',
-  templateUrl: './about.component.html'
+  templateUrl: './about.component.html',
+  standalone: false
 })
 export class AboutComponent implements OnInit {
   public aboutDescription: string;

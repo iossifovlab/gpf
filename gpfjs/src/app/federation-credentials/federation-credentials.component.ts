@@ -8,6 +8,7 @@ import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
   selector: 'gpf-federation-credentials',
   templateUrl: './federation-credentials.component.html',
   styleUrls: ['../saved-queries-table/saved-queries-table.component.css', './federation-credentials.component.css'],
+  standalone: false
 })
 export class FederationCredentialsComponent implements OnInit {
   public credentials: FederationCredential[];

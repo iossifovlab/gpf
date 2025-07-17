@@ -16,6 +16,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   selector: 'gpf-pheno-browser',
   templateUrl: './pheno-browser.component.html',
   styleUrls: ['./pheno-browser.component.css'],
+  standalone: false
 })
 export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);

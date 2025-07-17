@@ -6,7 +6,8 @@ import { MarkdownService } from 'ngx-markdown';
 @Component({
   selector: 'gpf-markdown-editor',
   templateUrl: './markdown-editor.component.html',
-  styleUrls: ['./markdown-editor.component.css']
+  styleUrls: ['./markdown-editor.component.css'],
+  standalone: false
 })
 export class MarkdownEditorComponent implements OnInit, OnChanges {
   @Input() public initialMarkdown: string;

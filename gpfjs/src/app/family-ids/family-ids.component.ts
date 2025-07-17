@@ -7,7 +7,8 @@ import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-family-ids',
-  templateUrl: './family-ids.component.html'
+  templateUrl: './family-ids.component.html',
+  standalone: false
 })
 export class FamilyIdsComponent implements OnInit, OnDestroy {
   public familyIds = '';

@@ -13,7 +13,8 @@ import { UserGroup } from '../users-groups/users-groups';
   selector: 'gpf-groups-table',
   templateUrl: './groups-table.component.html',
   // Order of css files is important (second file overwrites the first where needed)
-  styleUrls: ['../users-table/users-table.component.css', './groups-table.component.css']
+  styleUrls: ['../users-table/users-table.component.css', './groups-table.component.css'],
+  standalone: false
 })
 export class GroupsTableComponent {
   @Input() public groups: UserGroup[];

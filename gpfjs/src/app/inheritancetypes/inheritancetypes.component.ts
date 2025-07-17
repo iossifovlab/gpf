@@ -7,7 +7,8 @@ import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-inheritancetypes',
-  templateUrl: './inheritancetypes.component.html'
+  templateUrl: './inheritancetypes.component.html',
+  standalone: false
 })
 export class InheritancetypesComponent implements OnInit {
   @Input() public inheritanceTypes: Set<string>;

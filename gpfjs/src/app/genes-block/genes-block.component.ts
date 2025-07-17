@@ -10,6 +10,7 @@ import { combineLatest, take } from 'rxjs';
   selector: 'gpf-genes-block',
   templateUrl: './genes-block.component.html',
   styleUrls: ['./genes-block.component.css'],
+  standalone: false
 })
 export class GenesBlockComponent implements AfterViewInit {
   @Input() public showAllTab = true;

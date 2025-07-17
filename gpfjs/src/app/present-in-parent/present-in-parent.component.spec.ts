@@ -31,7 +31,7 @@ describe('PresentInParentComponent', () => {
       }
     }));
 
-    jest.spyOn(store, 'dispatch').mockReturnValue();
+    jest.spyOn(store, 'dispatch').mockImplementation();
     fixture.detectChanges();
   }));
 

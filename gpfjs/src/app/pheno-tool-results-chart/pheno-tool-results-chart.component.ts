@@ -5,7 +5,8 @@ import * as d3 from 'd3';
 @Component({
   selector: 'gpf-pheno-tool-results-chart',
   templateUrl: './pheno-tool-results-chart.component.html',
-  styleUrls: ['./pheno-tool-results-chart.component.css']
+  styleUrls: ['./pheno-tool-results-chart.component.css'],
+  standalone: false
 })
 export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterViewInit {
   @ViewChild('innerGroup', {static: true}) public innerGroup: any;

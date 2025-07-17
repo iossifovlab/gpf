@@ -17,6 +17,7 @@ import { Dataset } from 'app/datasets/datasets';
   selector: 'gpf-enrichment-tool',
   templateUrl: './enrichment-tool.component.html',
   styleUrls: ['./enrichment-tool.component.css'],
+  standalone: false
 })
 export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public enrichmentResults: EnrichmentResults;

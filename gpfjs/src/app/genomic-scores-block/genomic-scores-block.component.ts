@@ -19,6 +19,7 @@ import { GenomicScore } from './genomic-scores-block';
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
+  standalone: false
 })
 export class GenomicScoresBlockComponent implements OnInit {
   public selectedGenomicScores: {score: GenomicScore, state: GenomicScoreState}[] = [];

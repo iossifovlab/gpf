@@ -31,7 +31,7 @@ describe('GenesBlockComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of([]));
-    jest.spyOn(store, 'dispatch').mockReturnValue();
+    jest.spyOn(store, 'dispatch').mockImplementation();
 
     jest.useFakeTimers();
     const timer: ReturnType<typeof setTimeout> = setTimeout(() => '');
@@ -116,7 +116,7 @@ describe('GenesBlockComponent', () => {
   });
 
   it('should reset all values when switching tabs', () => {
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockReturnValue();
+    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
     component.onNavChange();
     expect(dispatchSpy).toHaveBeenCalledWith(resetGeneSymbols());
     expect(dispatchSpy).toHaveBeenCalledWith(resetGeneSetsValues());

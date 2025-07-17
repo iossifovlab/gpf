@@ -50,7 +50,7 @@ describe('GeneSymbolsComponent', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
-    jest.spyOn(store, 'dispatch').mockReturnValue();
+    jest.spyOn(store, 'dispatch').mockImplementation();
   });
 
   it('should create', () => {

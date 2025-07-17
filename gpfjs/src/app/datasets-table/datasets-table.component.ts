@@ -11,7 +11,8 @@ import { Item } from 'app/item-add-menu/item-add-menu';
   selector: 'gpf-datasets-table',
   templateUrl: './datasets-table.component.html',
   // Order of css files is important (second file overwrites the first where needed)
-  styleUrls: ['../users-table/users-table.component.css', './datasets-table.component.css']
+  styleUrls: ['../users-table/users-table.component.css', './datasets-table.component.css'],
+  standalone: false
 })
 export class DatasetsTableComponent {
   @Input() public datasets: DatasetPermissions[];

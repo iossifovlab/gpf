@@ -1,6 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({name: 'boldMatching'})
+@Pipe({
+  name: 'boldMatching',
+  standalone: false
+})
 export class BoldMatchingPipe implements PipeTransform {
   public transform(input: string, match: string): string {
     if (!match || match.length === 0) {

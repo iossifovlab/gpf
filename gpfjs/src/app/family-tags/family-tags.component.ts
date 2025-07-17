@@ -8,7 +8,8 @@ import { FamilyTags } from './family-tags';
 @Component({
   selector: 'gpf-family-tags',
   templateUrl: './family-tags.component.html',
-  styleUrls: ['./family-tags.component.css']
+  styleUrls: ['./family-tags.component.css'],
+  standalone: false
 })
 export class FamilyTagsComponent implements OnInit {
   @Input() public numOfCols: number;

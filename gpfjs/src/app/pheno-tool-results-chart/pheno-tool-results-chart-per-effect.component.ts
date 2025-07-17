@@ -4,6 +4,7 @@ import { PhenoToolResultsPerEffect } from '../pheno-tool/pheno-tool-results';
 @Component({
   selector: '[gpf-pheno-tool-results-chart-per-effect]',
   templateUrl: './pheno-tool-results-chart-per-effect.component.html',
+  standalone: false
 })
 export class PhenoToolResultsChartPerEffectComponent {
   @Input() public effectResults: PhenoToolResultsPerEffect;

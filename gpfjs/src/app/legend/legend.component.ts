@@ -5,7 +5,8 @@ import { environment } from 'environments/environment';
 @Component({
   selector: 'gpf-legend',
   templateUrl: './legend.component.html',
-  styleUrls: ['./legend.component.css']
+  styleUrls: ['./legend.component.css'],
+  standalone: false
 })
 export class LegendComponent {
   @Input() public legendItems: Array<LegendItem> = [];

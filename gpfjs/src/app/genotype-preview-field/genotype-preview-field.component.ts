@@ -5,7 +5,8 @@ import { FullEffectDetails } from './genotype-preview-field';
 @Component({
   selector: 'gpf-genotype-preview-field',
   templateUrl: './genotype-preview-field.component.html',
-  styleUrls: ['./genotype-preview-field.component.css']
+  styleUrls: ['./genotype-preview-field.component.css'],
+  standalone: false
 })
 export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public value;

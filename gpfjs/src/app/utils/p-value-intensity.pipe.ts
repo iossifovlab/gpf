@@ -2,7 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'pValueIntensity',
-  pure: true
+  pure: true,
+  standalone: false
 })
 export class PValueIntensityPipe implements PipeTransform {
   public transform(value: any, ...args: any[]): any {

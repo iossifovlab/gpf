@@ -6,7 +6,8 @@ import { PerfectlyDrawablePedigreeService } from '../perfectly-drawable-pedigree
   selector: 'gpf-non-pdp-pedigrees',
   templateUrl: './non-pdp-pedigrees.component.html',
   styleUrls: ['./non-pdp-pedigrees.component.css'],
-  providers: [PerfectlyDrawablePedigreeService]
+  providers: [PerfectlyDrawablePedigreeService],
+  standalone: false
 })
 export class NonPdpPedigreesComponent implements OnInit {
   public families: object;

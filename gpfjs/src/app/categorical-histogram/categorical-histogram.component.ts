@@ -18,7 +18,8 @@ import { cloneDeep } from 'lodash';
   selector: 'gpf-categorical-histogram',
   templateUrl: './categorical-histogram.component.html',
   styleUrl: './categorical-histogram.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public width: number;

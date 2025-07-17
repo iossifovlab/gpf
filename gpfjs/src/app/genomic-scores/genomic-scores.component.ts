@@ -14,7 +14,8 @@ import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
-  styleUrls: ['./genomic-scores.component.css']
+  styleUrls: ['./genomic-scores.component.css'],
+  standalone: false
 })
 export class GenomicScoresComponent implements OnInit {
   @Input() public selectedGenomicScore: GenomicScore;

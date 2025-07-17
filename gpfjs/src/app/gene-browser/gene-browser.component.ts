@@ -24,6 +24,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   selector: 'gpf-gene-browser',
   templateUrl: './gene-browser.component.html',
   styleUrls: ['./gene-browser.component.css'],
+  standalone: false
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild('searchBox') private searchBox: ElementRef;

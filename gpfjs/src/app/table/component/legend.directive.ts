@@ -1,7 +1,8 @@
 import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 
 @Directive({
-  selector: '[gpfTableLegend]'
+  selector: '[gpfTableLegend]',
+  standalone: false
 })
 export class GpfTableLegendDirective {
   public constructor(

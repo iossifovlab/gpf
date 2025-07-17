@@ -19,6 +19,7 @@ import {
   selector: 'gpf-family-filters-block',
   templateUrl: './family-filters-block.component.html',
   styleUrls: ['./family-filters-block.component.css'],
+  standalone: false
 })
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;

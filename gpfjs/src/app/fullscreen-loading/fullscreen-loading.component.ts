@@ -6,7 +6,8 @@ import { FullscreenLoadingService } from './fullscreen-loading.service';
 @Component({
   selector: 'gpf-fullscreen-loading',
   templateUrl: './fullscreen-loading.component.html',
-  styleUrls: ['./fullscreen-loading.component.css']
+  styleUrls: ['./fullscreen-loading.component.css'],
+  standalone: false
 })
 export class FullscreenLoadingComponent {
   public showLoading = false;

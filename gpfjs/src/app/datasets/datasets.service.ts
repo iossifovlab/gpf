@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, ReplaySubject, zip, of } from 'rxjs';
+import { Observable, ReplaySubject, of } from 'rxjs';
 
 import { Dataset, DatasetHierarchy } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';

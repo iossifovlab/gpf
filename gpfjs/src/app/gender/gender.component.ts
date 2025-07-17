@@ -9,6 +9,7 @@ import { cloneDeep } from 'lodash';
   selector: 'gpf-gender',
   templateUrl: './gender.component.html',
   styleUrls: ['./gender.component.css'],
+  standalone: false
 })
 export class GenderComponent implements OnInit {
   public selectedGenders: string[] = [];

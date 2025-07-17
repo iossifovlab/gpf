@@ -4,6 +4,7 @@ import { GpfTableCellContentDirective } from './content.directive';
 @Component({
   selector: 'gpf-table-subcontent',
   template: '',
+  standalone: false
 })
 export class GpfTableSubcontentComponent implements AfterContentInit {
   @ContentChildren(GpfTableCellContentDirective) public contentChildren: QueryList<GpfTableCellContentDirective>;

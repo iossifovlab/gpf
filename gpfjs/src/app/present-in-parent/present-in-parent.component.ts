@@ -9,7 +9,8 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
   styleUrls: ['./present-in-parent.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PresentInParentComponent implements OnInit {
   public rarityIntervalStart = 0;

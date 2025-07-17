@@ -8,7 +8,8 @@ import * as d3 from 'd3';
   encapsulation: ViewEncapsulation.None,
   selector: '[gpf-histogram-range-selector-line]',
   templateUrl: './histogram-range-selector-line.component.html',
-  styleUrls: ['./histogram-range-selector-line.component.css']
+  styleUrls: ['./histogram-range-selector-line.component.css'],
+  standalone: false
 })
 export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewInit {
   @Input() public y = 10;

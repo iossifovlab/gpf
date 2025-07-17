@@ -11,7 +11,8 @@ import { take } from 'rxjs';
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
   styleUrls: ['./pedigree-selector.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PedigreeSelectorComponent extends ComponentValidator implements OnInit {
   @Input() public collections: PersonSetCollection[];

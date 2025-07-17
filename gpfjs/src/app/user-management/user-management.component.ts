@@ -14,7 +14,8 @@ type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
 @Component({
   selector: 'gpf-user-management',
   templateUrl: './user-management.component.html',
-  styleUrls: ['./user-management.component.css']
+  styleUrls: ['./user-management.component.css'],
+  standalone: false
 })
 export class UserManagementComponent implements OnInit {
   public users: User[] = [];

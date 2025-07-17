@@ -1,6 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({name: 'contrastAdjust'})
+@Pipe({
+  name: 'contrastAdjust',
+  standalone: false
+})
 export class ContrastAdjustPipe implements PipeTransform {
   public transform(rgba: string): string {
     const res = rgba.match(/\d{1,3}, \d{1,3}, \d{1,3}, \d*/).toString().split(',');

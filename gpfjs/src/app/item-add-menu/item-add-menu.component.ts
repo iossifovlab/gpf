@@ -6,7 +6,8 @@ import { Item } from './item-add-menu';
 @Component({
   selector: 'gpf-item-add-menu',
   templateUrl: './item-add-menu.component.html',
-  styleUrls: ['./item-add-menu.component.css']
+  styleUrls: ['./item-add-menu.component.css'],
+  standalone: false
 })
 export class ItemAddMenuComponent {
   @Input() public getItems: (page: number, searchText: string) => Observable<Item[]>;

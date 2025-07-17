@@ -10,6 +10,7 @@ import { cloneDeep } from 'lodash';
   selector: 'gpf-person-ids',
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
+  standalone: false
 })
 export class PersonIdsComponent implements OnInit {
   public personIds = '';

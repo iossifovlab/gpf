@@ -14,6 +14,7 @@ import {
   selector: 'gpf-person-filters-block',
   templateUrl: './person-filters-block.component.html',
   styleUrls: ['./person-filters-block.component.css'],
+  standalone: false
 })
 export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;

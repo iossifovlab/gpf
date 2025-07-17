@@ -11,7 +11,8 @@ import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 @Component({
   selector: 'gpf-pheno-measure-selector',
   templateUrl: './pheno-measure-selector.component.html',
-  styleUrls: ['./pheno-measure-selector.component.css']
+  styleUrls: ['./pheno-measure-selector.component.css'],
+  standalone: false
 })
 export class PhenoMeasureSelectorComponent implements OnChanges {
   @Input() public datasetId: string;

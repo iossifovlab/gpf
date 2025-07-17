@@ -5,7 +5,8 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 @Component({
   selector: 'gpf-categorical-values-dropdown',
   templateUrl: './categorical-values-dropdown.component.html',
-  styleUrl: './categorical-values-dropdown.component.css'
+  styleUrl: './categorical-values-dropdown.component.css',
+  standalone: false
 })
 export class CategoricalValuesDropdownComponent implements OnInit {
   @Input() public initialState: string[] = [];

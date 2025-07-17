@@ -10,6 +10,7 @@ import { UserInfo } from './users';
   selector: 'gpf-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css'],
+  standalone: false
 })
 export class UsersComponent implements OnInit {
   public userInfo: UserInfo = null;

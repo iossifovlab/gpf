@@ -7,7 +7,8 @@ import { UserInfo } from 'app/users/users';
 @Component({
   selector: 'gpf-management',
   templateUrl: './management.component.html',
-  styleUrls: ['./management.component.css']
+  styleUrls: ['./management.component.css'],
+  standalone: false
 })
 export class ManagementComponent implements OnInit {
   public showTemplate = false;

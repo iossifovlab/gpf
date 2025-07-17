@@ -9,7 +9,8 @@ import * as draw from 'app/utils/svg-drawing';
 @Component({
   selector: 'gpf-gene-plot',
   templateUrl: './gene-plot.component.html',
-  styleUrls: ['./gene-plot.component.css']
+  styleUrls: ['./gene-plot.component.css'],
+  standalone: false
 })
 export class GenePlotComponent implements OnChanges {
   @Input() public readonly gene: Gene;

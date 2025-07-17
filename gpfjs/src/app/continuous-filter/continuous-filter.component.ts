@@ -12,7 +12,8 @@ import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app
 
 @Component({
   selector: 'gpf-continuous-filter',
-  templateUrl: './continuous-filter.component.html'
+  templateUrl: './continuous-filter.component.html',
+  standalone: false
 })
 export class ContinuousFilterComponent extends ComponentValidator implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();

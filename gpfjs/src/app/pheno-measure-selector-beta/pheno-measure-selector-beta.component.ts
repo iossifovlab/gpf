@@ -19,7 +19,8 @@ import {
 @Component({
   selector: 'gpf-pheno-measure-selector-beta',
   templateUrl: './pheno-measure-selector-beta.component.html',
-  styleUrls: ['./pheno-measure-selector-beta.component.css']
+  styleUrls: ['./pheno-measure-selector-beta.component.css'],
+  standalone: false
 })
 export class PhenoMeasureSelectorBetaComponent implements OnChanges, OnInit {
   @Input() public datasetId: string;

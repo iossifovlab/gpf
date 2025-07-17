@@ -6,6 +6,7 @@ import { GpfTableContentComponent } from '../component/content.component';
   selector: 'gpf-table-view-cell',
   templateUrl: './cell.component.html',
   styleUrls: ['./cell.component.css'],
+  standalone: false
 })
 export class GpfTableCellComponent {
   @Input() public columnInfo: GpfTableColumnComponent;

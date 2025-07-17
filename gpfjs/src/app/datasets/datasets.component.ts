@@ -15,6 +15,7 @@ import { reset } from 'app/users/state-actions';
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
+  standalone: false
 })
 export class DatasetsComponent extends ComponentValidator implements OnInit, OnDestroy {
   private static previousUrl = '';

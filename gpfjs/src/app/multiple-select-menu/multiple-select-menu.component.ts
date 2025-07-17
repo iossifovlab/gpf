@@ -6,7 +6,8 @@ import { environment } from 'environments/environment';
 @Component({
   selector: 'gpf-multiple-select-menu',
   templateUrl: './multiple-select-menu.component.html',
-  styleUrls: ['./multiple-select-menu.component.css']
+  styleUrls: ['./multiple-select-menu.component.css'],
+  standalone: false
 })
 export class MultipleSelectMenuComponent implements OnChanges {
   @Input() public columns: GeneProfilesColumn[];

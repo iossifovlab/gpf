@@ -5,6 +5,7 @@ import { Dataset } from '../datasets/datasets';
   selector: 'gpf-genotype-block',
   templateUrl: './genotype-block.component.html',
   styleUrls: ['./genotype-block.component.css'],
+  standalone: false
 })
 export class GenotypeBlockComponent implements OnInit {
   @Input() public dataset: Dataset;

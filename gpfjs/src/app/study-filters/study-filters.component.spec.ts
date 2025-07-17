@@ -150,7 +150,7 @@ describe('StudyFiltersComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(['studyFilter1', 'studyFilter2']));
-    jest.spyOn(store, 'dispatch').mockReturnValue();
+    jest.spyOn(store, 'dispatch').mockImplementation();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     component.dataset = datasetConfigMock;

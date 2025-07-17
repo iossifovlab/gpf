@@ -2,7 +2,10 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { EnrichmentTestResult } from '../enrichment-query/enrichment-result';
 import { PValueIntensityPipe } from './p-value-intensity.pipe';
 
-@Pipe({name: 'getEnrichmentBackgroundColor'})
+@Pipe({
+  name: 'getEnrichmentBackgroundColor',
+  standalone: false
+})
 export class BackgroundColorEnrichmentPipe implements PipeTransform {
   public constructor(private pValueIntensityPipe: PValueIntensityPipe) { }
   public transform(enrichmentResult: EnrichmentTestResult): string {

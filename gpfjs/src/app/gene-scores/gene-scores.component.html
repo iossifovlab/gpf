@@ -15,8 +15,8 @@
         </div>
         <gpf-helper-modal
           style="height: 32px; margin-left: 4px"
-          [style.visibility]="this.selectedGeneScore.help ? 'visible' : 'hidden'"
-          [modalContent]="this.selectedGeneScore.help"
+          [style.visibility]="selectedGeneScore.help ? 'visible' : 'hidden'"
+          [modalContent]="selectedGeneScore.help"
           [isMarkdown]="true"></gpf-helper-modal>
         <div *ngIf="isCategoricalHistogram(selectedGeneScore.histogram)">
           <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">

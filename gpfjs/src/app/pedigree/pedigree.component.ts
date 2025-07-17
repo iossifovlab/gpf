@@ -10,7 +10,8 @@ import { switchMap, take } from 'rxjs';
 @Component({
   selector: 'gpf-pedigree',
   templateUrl: './pedigree.component.html',
-  styleUrls: ['./pedigree.component.css']
+  styleUrls: ['./pedigree.component.css'],
+  standalone: false
 })
 export class PedigreeComponent {
   @Input() public family: PedigreeData[];

@@ -6,7 +6,8 @@ import {
 
 @Component({
   selector: '[gpf-common-reports-row]',
-  templateUrl: './common-reports-row.component.html'
+  templateUrl: './common-reports-row.component.html',
+  standalone: false
 })
 export class CommonReportsRowComponent implements AfterViewInit {
   @Input() public pedigreeGroup: PedigreeCounter[];

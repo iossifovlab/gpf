@@ -9,6 +9,7 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 @Component({
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
+  standalone: false
 })
 export class RegionsFilterComponent implements OnInit, OnDestroy {
   @Input() public genome: string;

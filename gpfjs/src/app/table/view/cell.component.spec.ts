@@ -9,6 +9,7 @@ import { GenotypePreviewFieldComponent } from 'app/genotype-preview-field/genoty
 
 @Component({
   selector: 'gpf-tgtcc',
+  standalone: false,
   template: `
     <gpf-table-column columnWidth="50.0">
       <gpf-table-header>

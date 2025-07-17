@@ -13,7 +13,8 @@ type OrderedIndividuals = Array<Individual>;
   selector: 'gpf-pedigree-chart',
   templateUrl: './pedigree-chart.component.html',
   styleUrls: ['./pedigree-chart.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PedigreeChartComponent implements OnInit {
   public pedigreeDataWithLayout: IndividualWithPosition[];

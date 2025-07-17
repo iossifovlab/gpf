@@ -9,6 +9,7 @@ import { take } from 'rxjs';
   selector: 'gpf-regions-block',
   templateUrl: './regions-block.component.html',
   styleUrls: ['./regions-block.component.css'],
+  standalone: false
 })
 export class RegionsBlockComponent implements OnInit, AfterViewInit {
   @ViewChild('nav') public ngbNav: NgbNav;

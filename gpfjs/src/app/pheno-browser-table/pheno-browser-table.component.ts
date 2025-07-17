@@ -18,7 +18,8 @@ import { isNumber, isString } from 'lodash';
   selector: 'gpf-pheno-browser-table',
   templateUrl: './pheno-browser-table.component.html',
   styleUrls: ['./pheno-browser-table.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;

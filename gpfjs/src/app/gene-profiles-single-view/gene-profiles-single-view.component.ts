@@ -29,7 +29,8 @@ import { setUniqueFamilyVariantsFilter } from 'app/unique-family-variants-filter
 @Component({
   selector: 'gpf-gene-profiles-single-view',
   templateUrl: './gene-profiles-single-view.component.html',
-  styleUrls: ['./gene-profiles-single-view.component.css']
+  styleUrls: ['./gene-profiles-single-view.component.css'],
+  standalone: false
 })
 export class GeneProfileSingleViewComponent implements OnInit {
   @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;

@@ -5,6 +5,7 @@ import { GpfTableContentComponent } from './content.component';
 @Component({
   selector: 'gpf-table-column',
   template: '',
+  standalone: false
 })
 export class GpfTableColumnComponent implements OnInit {
   @ContentChildren(GpfTableContentHeaderComponent) public headerChildren: QueryList<GpfTableContentHeaderComponent>;

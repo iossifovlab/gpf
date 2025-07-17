@@ -31,6 +31,7 @@ import { selectGenomicScores } from 'app/genomic-scores-block/genomic-scores-blo
   selector: 'gpf-pheno-tool',
   templateUrl: './pheno-tool.component.html',
   styleUrls: ['./pheno-tool.component.css'],
+  standalone: false
 })
 export class PhenoToolComponent implements OnInit, OnDestroy {
   public selectedDataset: Dataset;

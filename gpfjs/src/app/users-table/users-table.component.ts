@@ -11,6 +11,7 @@ import { Observable } from 'rxjs';
   selector: 'gpf-users-table',
   templateUrl: './users-table.component.html',
   styleUrls: ['./users-table.component.css'],
+  standalone: false
 })
 export class UsersTableComponent {
   @Input() public users: User[];

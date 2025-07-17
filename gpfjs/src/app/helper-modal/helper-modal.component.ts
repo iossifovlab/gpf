@@ -5,7 +5,8 @@ import { PopupComponent } from 'app/popup/popup.component';
 @Component({
   selector: 'gpf-helper-modal',
   templateUrl: './helper-modal.component.html',
-  styleUrls: ['./helper-modal.component.css']
+  styleUrls: ['./helper-modal.component.css'],
+  standalone: false
 })
 export class HelperModalComponent {
   @Input() public modalContent: TemplateRef<unknown> | string;

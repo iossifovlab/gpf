@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
   selector: 'gpf-perfectly-drawable-pedigree',
   templateUrl: './perfectly-drawable-pedigree.component.html',
   styleUrls: ['./perfectly-drawable-pedigree.component.css'],
+  standalone: false
 })
 export class PerfectlyDrawablePedigreeComponent {
 }

@@ -21,6 +21,7 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   selector: 'gpf-gene-scores',
   templateUrl: './gene-scores.component.html',
   styleUrls: ['./gene-scores.component.css'],
+  standalone: false
 })
 export class GeneScoresComponent implements OnInit, OnDestroy {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);

@@ -7,7 +7,8 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 @Component({
   selector: 'gpf-zygosity-filter',
   templateUrl: './zygosity-filter.component.html',
-  styleUrl: './zygosity-filter.component.css'
+  styleUrl: './zygosity-filter.component.css',
+  standalone: false
 })
 export class ZygosityFilterComponent implements OnInit {
   @Input() public parentComponent: string;

@@ -4,7 +4,8 @@ import { environment } from '../../environments/environment';
 @Component({
   selector: 'gpf-remove-button',
   templateUrl: './remove-button.component.html',
-  styleUrls: ['./remove-button.component.css']
+  styleUrls: ['./remove-button.component.css'],
+  standalone: false
 })
 export class RemoveButtonComponent {
   @Input() public field: any;

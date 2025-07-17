@@ -4,7 +4,8 @@ import { ConfirmCancelEvent } from 'angular-confirmation-popover/lib/confirmatio
 @Component({
   selector: 'gpf-confirm-button',
   templateUrl: './confirm-button.component.html',
-  styleUrls: ['./confirm-button.component.css']
+  styleUrls: ['./confirm-button.component.css'],
+  standalone: false
 })
 export class ConfirmButtonComponent {
   @Input() public hide = false;

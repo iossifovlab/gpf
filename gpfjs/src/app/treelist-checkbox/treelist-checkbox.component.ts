@@ -4,7 +4,8 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 @Component({
   selector: 'gpf-treelist-checkbox',
   templateUrl: './treelist-checkbox.component.html',
-  styleUrls: ['./treelist-checkbox.component.css']
+  styleUrls: ['./treelist-checkbox.component.css'],
+  standalone: false
 })
 export class StudyFiltersTreeComponent implements OnInit, OnChanges {
   @Output() public checkboxChangeEvent = new EventEmitter<string>();

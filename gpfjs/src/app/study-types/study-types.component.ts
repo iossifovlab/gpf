@@ -9,6 +9,7 @@ import { take } from 'rxjs';
 @Component({
   selector: 'gpf-study-types',
   templateUrl: './study-types.component.html',
+  standalone: false
 })
 export class StudyTypesComponent extends ComponentValidator implements OnInit {
   public studyTypes: Set<string> = new Set(['we', 'wg', 'tg']);
