@@ -201,9 +201,9 @@ class VariantsLoaderSource(Source):
     def __init__(self, loader: VariantsGenotypesLoader) -> None:
         self.loader = loader
 
-    def fetch(self, data: Region | None = None) -> Iterable[FullVariant]:
+    def fetch(self, region: Region | None = None) -> Iterable[FullVariant]:
         """Fetch full variants from a variant loader."""
-        yield from self.loader.fetch(data)
+        yield from self.loader.fetch(region)
 
 
 class VariantsLoaderBatchSource(Source):
@@ -218,10 +218,10 @@ class VariantsLoaderBatchSource(Source):
         self.batch_size = batch_size
 
     def fetch(
-        self, data: Region | None = None,
+        self, region: Region | None = None,
     ) -> Iterable[Sequence[FullVariant]]:
         """Fetch full variants from a variant loader in batches."""
-        variants = self.loader.fetch(data)
+        variants = self.loader.fetch(region)
         while batch := tuple(itertools.islice(variants, self.batch_size)):
             yield batch
 
@@ -276,10 +276,10 @@ class Schema2SummaryVariantsSource(Source):
         self.loader = loader
 
     def fetch(
-        self, data: Region | None = None,
+        self, region: Region | None = None,
     ) -> Iterable[FullVariant]:
         assert self.loader is not None
-        for sv in self.loader.fetch_summary_variants(region=data):
+        for sv in self.loader.fetch_summary_variants(region=region):
             yield FullVariant(sv, ())
 
 
@@ -295,9 +295,9 @@ class Schema2SummaryVariantsBatchSource(Source):
         self.batch_size = batch_size
 
     def fetch(
-        self, data: Region | None = None,
+        self, region: Region | None = None,
     ) -> Iterable[Sequence[FullVariant]]:
         """Fetch full variants from a variant loader in batches."""
-        variants = self.loader.fetch_summary_variants(region=data)
+        variants = self.loader.fetch_summary_variants(region=region)
         while batch := tuple(itertools.islice(variants, self.batch_size)):
             yield [FullVariant(sv, ()) for sv in batch]
