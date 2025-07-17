@@ -3,9 +3,14 @@ import pathlib
 import textwrap
 
 import numpy as np
+import pysam
 import pytest
-from dae.annotation.annotate_vcf import VCFSource, VCFWriter
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from dae.annotation.annotate_vcf import VCFSource, VCFWriter, process_vcf
+from dae.genomic_resources.testing import (
+    setup_denovo,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
@@ -18,6 +23,25 @@ from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 @pytest.fixture
 def test_gpf_instance(tmp_path: pathlib.Path) -> GPFInstance:
+    score_dir = tmp_path / "acgt_gpf" / "sample_score"
+    setup_denovo(
+        score_dir / "data.txt",
+        textwrap.dedent("""
+            chrom  pos_begin  score
+            chr1   10         0.1
+            chr2   20         0.2
+            chr3   30         0.3
+        """))
+    (score_dir / "genomic_resource.yaml").write_text(textwrap.dedent(
+        """
+        type: position_score
+        table:
+            filename: data.txt
+        scores:
+            - id: score
+              type: float
+              name: score
+        """))
     return acgt_gpf(tmp_path)
 
 
@@ -113,3 +137,36 @@ def test_vcf_writer(
        '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tmom\tdad\tprb\n'
        'chr1\t10\tchr1_10_C_T\tC\tT\t.\t.\t.\tGT\t0/0\t0/0\t0/1\n'
     )
+
+
+def test_process_vcf_simple(
+    tmp_path: pathlib.Path,
+    test_gpf_instance: GPFInstance,
+    sample_ped: pathlib.Path,
+    sample_vcf: pathlib.Path,
+):
+    out_path = tmp_path / "out.vcf"
+    work_dir = tmp_path / "work_dir"
+    pipeline_config = [
+        {"position_score": "sample_score"},
+    ]
+
+    process_vcf(
+        sample_vcf,
+        sample_ped,
+        out_path,
+        pipeline_config,
+        None,
+        test_gpf_instance.grr.definition,  # type: ignore
+        test_gpf_instance.reference_genome.resource_id,
+        work_dir,
+        0,
+        None,
+        False,  # noqa: FBT003
+        False,  # noqa: FBT003
+    )
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_path)) as vcf_file:
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
+    assert result == ["0.1", "0.2", "0.3"]
