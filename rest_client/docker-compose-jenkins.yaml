@@ -45,7 +45,7 @@ services:
   tests:
     build:
       context: ../
-      dockerfile: Dockerfile.rest_client
+      dockerfile: rest_client/Dockerfile.rest_client
     volumes:
       - ../:/wd
     entrypoint: /wd/rest_client/run_resttests.sh
