@@ -23,8 +23,25 @@ from dae.annotation.annotate_utils import (
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
 )
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    ReannotationPipeline,
+)
 from dae.annotation.format_handlers import VCFFormat
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource_id,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.parquet.schema2.processing_pipeline import (
+    AnnotationPipelineVariantsFilter,
+    DeleteAttributesFromVariantFilter,
+    VariantsPipelineProcessor,
+)
+from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, Source
@@ -50,11 +67,21 @@ class VCFSource(Source):
 class VCFWriter(Filter):
     """A filter that writes variants to a VCF file."""
 
-    def __init__(self, serializer: VcfSerializer):
+    def __init__(
+        self,
+        serializer: VcfSerializer,
+        pipeline: AnnotationPipeline | None = None,
+    ):
         self.serializer = serializer
+        self.pipeline = pipeline
 
     def __enter__(self) -> VCFWriter:
         self.serializer.__enter__()
+        if self.pipeline is not None:
+            assert self.serializer.vcf_file is not None
+            VCFFormat._update_header(self.serializer.vcf_file,
+                                     self.pipeline,
+                                     {})
         return self
 
     def __exit__(
@@ -74,6 +101,60 @@ class VCFWriter(Filter):
 
     def filter(self, data: FullVariant) -> None:
         self.serializer.serialize_full_variant(data)
+
+
+def process_vcf(
+    input_vcf_path: Path,
+    input_ped_path: Path,
+    output_path: Path,
+    pipeline_config: RawAnnotatorsConfig,
+    pipeline_config_old: str | None,
+    grr_definition: dict,
+    reference_genome_resource_id: str,
+    work_dir: Path,
+    batch_size: int,
+    region: Region | None,
+    allow_repeated_attributes: bool,  # noqa: FBT001
+    full_reannotation: bool,  # noqa: FBT001
+) -> None:
+    """Annotate a VCF file using a processing pipeline."""
+    families = FamiliesLoader(str(input_ped_path)).load()
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    reference_genome = build_reference_genome_from_resource_id(
+        reference_genome_resource_id, grr)
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+        allow_repeated_attributes=allow_repeated_attributes,
+        work_dir=work_dir,
+        config_old_raw=pipeline_config_old,
+        full_reannotation=full_reannotation,
+    )
+
+    regions = []
+    if region is not None:
+        regions.append(region)
+    loader = VcfLoader(families, [str(input_vcf_path)],
+                       reference_genome, regions=regions)
+
+    anno_attrs = [attr for attr in pipeline.get_attributes()
+                  if not attr.internal]
+    serializer = VcfSerializer(families, reference_genome, output_path,
+                               annotations=anno_attrs)
+
+    filters: list[Filter] = []
+    source = VCFSource(loader)
+    if isinstance(pipeline, ReannotationPipeline):
+        filters.append(DeleteAttributesFromVariantFilter(
+            pipeline.attributes_deleted))
+    filters.extend([
+        AnnotationPipelineVariantsFilter(pipeline),
+        VCFWriter(serializer, pipeline),
+    ])
+
+    # FIXME Implement batch processing
+
+    with VariantsPipelineProcessor(source, filters) as processor:
+        processor.process_region(region)
 
 
 def combine(
