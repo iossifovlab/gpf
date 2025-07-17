@@ -4,7 +4,6 @@ import argparse
 import logging
 import os
 import sys
-from collections.abc import Iterable
 from contextlib import closing
 from pathlib import Path
 from types import TracebackType
@@ -39,12 +38,13 @@ from dae.genomic_resources.repository_factory import (
 from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsFilter,
     DeleteAttributesFromVariantFilter,
+    VariantsLoaderSource,
     VariantsPipelineProcessor,
 )
 from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
-from dae.utils.processing_pipeline import Filter, Source
+from dae.utils.processing_pipeline import Filter
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.raw.loader import FullVariant
@@ -52,16 +52,6 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 logger = logging.getLogger("annotate_vcf")
-
-
-class VCFSource(Source):
-    """A source that reads variants from a VCF file."""
-
-    def __init__(self, loader: VcfLoader):
-        self.loader = loader
-
-    def fetch(self, region: Region | None = None) -> Iterable[FullVariant]:
-        yield from self.loader.fetch(region)
 
 
 class VCFWriter(Filter):
@@ -142,7 +132,7 @@ def process_vcf(
                                annotations=anno_attrs)
 
     filters: list[Filter] = []
-    source = VCFSource(loader)
+    source = VariantsLoaderSource(loader)
     if isinstance(pipeline, ReannotationPipeline):
         filters.append(DeleteAttributesFromVariantFilter(
             pipeline.attributes_deleted))
