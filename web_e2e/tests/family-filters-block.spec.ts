@@ -780,7 +780,7 @@ test.describe('Pheno Measures tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
     const download = await downloadPromise;
 
-    const fixtureData = scanCSV('playwright/fixtures/pheno-tool/pheno_report17.csv');
+    const fixtureData = scanCSV('playwright/fixtures/pheno-tool/pheno_report18.csv');
     const downloadData = scanCSV(await download.path());
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
