@@ -147,3 +147,36 @@ def test_process_vcf_simple(
     with pysam.VariantFile(str(out_path)) as vcf_file:
         result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["0.1", "0.2", "0.3"]
+
+
+def test_process_vcf_simple_batch(
+    tmp_path: pathlib.Path,
+    test_gpf_instance: GPFInstance,
+    sample_ped: pathlib.Path,
+    sample_vcf: pathlib.Path,
+):
+    out_path = tmp_path / "out.vcf"
+    work_dir = tmp_path / "work_dir"
+    pipeline_config = [
+        {"position_score": "sample_score"},
+    ]
+
+    process_vcf(
+        sample_vcf,
+        sample_ped,
+        out_path,
+        pipeline_config,
+        None,
+        test_gpf_instance.grr.definition,  # type: ignore
+        test_gpf_instance.reference_genome.resource_id,
+        work_dir,
+        1,
+        None,
+        False,  # noqa: FBT003
+        False,  # noqa: FBT003
+    )
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_path)) as vcf_file:
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
+    assert result == ["0.1", "0.2", "0.3"]
