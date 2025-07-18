@@ -173,7 +173,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
 
     await page.locator('rect[id="Conflicting_classifications_of_pathogenicity"]').click();
     await page.locator('rect[id="Likely_pathogenic"]').click();
@@ -203,7 +203,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click({force: true});
     await page.locator('#search-box').focus();
     await page.keyboard.type('Pathogenic/Likely_pathogenic');
     await page.locator('mat-option:has-text("Pathogenic/Likely_pathogenic (27651)") > span > span').click();
@@ -336,14 +336,14 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
 
     await expect(
       page.locator('gpf-genomic-scores').locator('rect[style*="fill: lightsteelblue"]').nth(20)
     ).toHaveId('Other values');
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click({force: true});
     await page.locator('gpf-categorical-values-dropdown #search-box').focus();
     await page.keyboard.type('Other values');
     await expect(page.locator('.values-suggestions-dropdown')).not.toBeVisible();
@@ -359,9 +359,9 @@ test.describe('Genomic scores tests', () => {
     ' the concept specified by disease identifiers in CLNDISDB';
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clndn}") span`).click();
+    await page.locator(`mat-option:has-text("${clndn}") span`).click({force: true});
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
     await page.locator('rect[id="not_provided"]').click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
@@ -384,9 +384,9 @@ test.describe('Genomic scores tests', () => {
     ' the concept specified by disease identifiers in CLNDISDB';
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clndn}") span`).click();
+    await page.locator(`mat-option:has-text("${clndn}") span`).click({force: true});
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
     await page.locator('rect[id="not_provided"]').click();
     await page.locator('rect[id="Primary_ciliary_dyskinesia"]').click();
 

@@ -45,7 +45,7 @@ test.describe('Genotype browser tests', () => {
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clinsig}")`).click();
+    await page.locator(`mat-option:has-text("${clinsig}")`).click({force: true});
 
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
     await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();

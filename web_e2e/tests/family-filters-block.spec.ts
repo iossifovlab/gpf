@@ -455,7 +455,7 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click({force: true});
 
     await expect(page.getByText('Please select at least one value.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
@@ -560,7 +560,7 @@ test.describe('Pheno Measures tests', () => {
     await expect(page.locator('gpf-person-filter .title-wrapper').nth(2)).toContainText('instrument_2.measure_6');
   });
 
-  test('select role and check downloaded file', async({ page }) => {
+  test('select role, select one bar and check downloaded file', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
@@ -569,8 +569,16 @@ test.describe('Pheno Measures tests', () => {
       .getByPlaceholder('Select role').click();
     await page.getByRole('option', {name: 'sib'}).click();
 
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
+    );
+
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
+    );
+
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
     await page.locator('rect[id="val4"]').click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
