@@ -92,7 +92,11 @@ export async function openDatasetDropdown(page: Page): Promise<void> {
     await page.waitForSelector('gpf-datasets');
     await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   }
-  await page.locator('#datasets-dropdown-menu-button').click();
+
+  await expect(async() => {
+    await page.locator('#datasets-dropdown-menu-button').click();
+    await expect(page.locator('gpf-dataset-node').nth(0)).toBeVisible();
+  }).toPass({intervals: [1000]});
 }
 
 export async function expandDataset(page: Page, dataset: string): Promise<void> {
