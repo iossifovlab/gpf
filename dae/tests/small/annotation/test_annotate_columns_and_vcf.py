@@ -235,6 +235,8 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                      {25 * 'ACGT'}
                      >chr3
                      {25 * 'ACGT'}
+                     >chr4
+                     {25 * 'ACGT'}
                  """))
     return root_path
 
@@ -637,6 +639,7 @@ def test_annotate_columns_internal_attributes(
 
 def test_basic_vcf(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -657,7 +660,9 @@ def test_basic_vcf(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -673,6 +678,7 @@ def test_basic_vcf(
 
 def test_multiallelic_vcf(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -692,7 +698,9 @@ def test_multiallelic_vcf(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -709,6 +717,7 @@ def test_multiallelic_vcf(
 
 def test_vcf_multiple_chroms(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -736,7 +745,9 @@ def test_vcf_multiple_chroms(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -761,6 +772,7 @@ def test_vcf_multiple_chroms(
 
 def test_annotate_vcf_float_precision(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -780,7 +792,9 @@ def test_annotate_vcf_float_precision(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -796,6 +810,7 @@ def test_annotate_vcf_float_precision(
 
 def test_annotate_vcf_internal_attributes(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -816,7 +831,9 @@ def test_annotate_vcf_internal_attributes(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -833,6 +850,7 @@ def test_annotate_vcf_internal_attributes(
 
 def test_annotate_vcf_forbidden_symbol_replacement(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -854,7 +872,9 @@ def test_annotate_vcf_forbidden_symbol_replacement(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -870,6 +890,7 @@ def test_annotate_vcf_forbidden_symbol_replacement(
 
 def test_annotate_vcf_none_values(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -891,7 +912,9 @@ def test_annotate_vcf_none_values(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -910,6 +933,7 @@ def test_annotate_vcf_none_values(
 
 def test_vcf_description_with_quotes(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -931,7 +955,9 @@ def test_vcf_description_with_quotes(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
@@ -948,6 +974,7 @@ def test_vcf_description_with_quotes(
 
 def test_annotate_vcf_repeated_attributes(
     annotate_directory_fixture: pathlib.Path,
+    sample_ped: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -968,7 +995,9 @@ def test_annotate_vcf_repeated_attributes(
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file,
+            in_file,
+            sample_ped,
+            annotation_file,
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,

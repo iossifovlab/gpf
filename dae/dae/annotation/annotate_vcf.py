@@ -288,6 +288,9 @@ class AnnotateVCFTool(AnnotationTool):
             "input", default="-", nargs="?",
             help="the input vcf file")
         parser.add_argument(
+            "pedigree", default="-", nargs="?",
+            help="the input pedigree file")
+        parser.add_argument(
             "-r", "--region-size", default=300_000_000,
             type=int, help="region size to parallelize by")
         parser.add_argument(
@@ -333,20 +336,27 @@ class AnnotateVCFTool(AnnotationTool):
         if self.args.reannotate:
             pipeline_config_old = Path(self.args.reannotate).read_text()
 
+        ref_genome = self.context.get_reference_genome()
+        assert ref_genome is not None
+
         if not tabix_index_filename(self.args.input):
-            handler = VCFFormat(
-                self.pipeline.raw,
-                pipeline_config_old,
-                vars(self.args),
-                self.grr.definition,
-                None,
-                self.args.input,
-                self.output,
-            )
             self.task_graph.create_task(
                 "all_variants_annotate",
-                AnnotateVCFTool.annotate,
-                args=[handler, self.args.batch_size > 0],
+                process_vcf,
+                args=[
+                    Path(self.args.input),
+                    Path(self.args.pedigree),
+                    Path(self.output),
+                    self.pipeline.raw,
+                    pipeline_config_old,
+                    self.grr.definition,
+                    ref_genome.resource_id,
+                    Path(self.args.work_dir),
+                    self.args.batch_size,
+                    None,
+                    self.args.allow_repeated_attributes,
+                    self.args.full_reannotation,
+                ],
                 deps=[],
             )
         else:
@@ -354,26 +364,33 @@ class AnnotateVCFTool(AnnotationTool):
                 regions = produce_regions(pysam_file, self.args.region_size)
             file_paths = produce_partfile_paths(
                 self.args.input, regions, self.args.work_dir)
-            region_tasks = []
-            for index, (region, file_path) in enumerate(
-                zip(regions, file_paths, strict=True),
-            ):
-                handler = VCFFormat(
-                    self.pipeline.raw,
-                    pipeline_config_old,
-                    vars(self.args),
-                    self.grr.definition,
-                    region,
-                    self.args.input,
-                    file_path,
-                )
-                assert self.grr is not None
-                region_tasks.append(self.task_graph.create_task(
-                    f"part-{index}",
-                    AnnotateVCFTool.annotate,
-                    args=[handler, self.args.batch_size > 0],
+
+            annotation_tasks = []
+            for (region, file_path) in zip(regions, file_paths, strict=True):
+                annotation_tasks.append(self.task_graph.create_task(
+                    f"part-{str(region).replace(':', '-')}",
+                    process_vcf,
+                    args=[
+                        Path(self.args.input),
+                        Path(self.args.pedigree),
+                        Path(file_path),
+                        self.pipeline.raw,
+                        pipeline_config_old,
+                        self.grr.definition,
+                        ref_genome.resource_id,
+                        Path(self.args.work_dir),
+                        self.args.batch_size,
+                        region,
+                        self.args.allow_repeated_attributes,
+                        self.args.full_reannotation,
+                    ],
                     deps=[],
                 ))
+
+            annotation_sync = self.task_graph.create_task(
+                "sync_parquet_write", lambda: None,
+                args=[], deps=annotation_tasks,
+            )
 
             assert self.grr is not None
             combine_task = self.task_graph.create_task(
@@ -388,7 +405,7 @@ class AnnotateVCFTool(AnnotationTool):
                     file_paths,
                     self.output,
                 ],
-                deps=region_tasks,
+                deps=[annotation_sync],
             )
             self.task_graph.create_task(
                 "compress_and_tabix",
