@@ -1022,9 +1022,9 @@ def test_produce_partfile_paths() -> None:
                Region("chr1", 1000, 2000),
                Region("chr1", 2000, 3000)]
     expected_output = [
-        "work_dir/output/input.vcf_annotation_chr1_0_1000.gz",
-        "work_dir/output/input.vcf_annotation_chr1_1000_2000.gz",
-        "work_dir/output/input.vcf_annotation_chr1_2000_3000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_0_1000",
+        "work_dir/output/input.vcf_annotation_chr1_1000_2000",
+        "work_dir/output/input.vcf_annotation_chr1_2000_3000",
     ]
     # relative input file path
     assert produce_partfile_paths(

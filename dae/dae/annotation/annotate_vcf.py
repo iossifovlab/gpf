@@ -12,13 +12,13 @@ from types import TracebackType
 from pysam import (
     TabixFile,
     VariantFile,
+    tabix_index,
 )
 
 from dae.annotation.annotate_utils import (
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
-    produce_tabix_index,
 )
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
@@ -28,7 +28,6 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.format_handlers import VCFFormat
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource_id,
@@ -56,6 +55,10 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 logger = logging.getLogger("annotate_vcf")
+
+
+def make_vcf_tabix(filepath: str) -> None:
+    tabix_index(filepath, preset="vcf")
 
 
 class VCFWriter(Filter):
@@ -236,34 +239,19 @@ def process_vcf(
         processor.process_region(region)
 
 
-def combine(
-    args: argparse.Namespace,
-    input_file_path: str,
-    pipeline_config: RawAnnotatorsConfig,
-    pipeline_config_old: str | None,
-    grr_definition: dict | None,
-    partfile_paths: list[str],
-    output_file_path: str,
-) -> None:
-    """Combine annotated region parts into a single VCF file."""
-
-    output_handler = VCFFormat(
-        pipeline_config,
-        pipeline_config_old,
-        vars(args),
-        grr_definition,
-        None,
-        input_file_path,
-        output_file_path.rstrip(".gz"),
-    )
-
-    output_handler.open()
-    assert output_handler.output_file is not None
-    for partfile_path in partfile_paths:
-        with VariantFile(partfile_path) as partfile:
-            for rec in partfile.fetch():
-                output_handler.output_file.write(rec)
-    output_handler.close()
+def concat(partfile_paths: list[str], output_path: str) -> None:
+    """Concatenate multiple VCF files into a single VCF file *in order*."""
+    # Get any header from the partfiles, they should all be equal
+    # and usable as a final output header
+    header_donor = VariantFile(partfile_paths[0], "r")
+    output_file = VariantFile(output_path, "w", header=header_donor.header)
+    for path in partfile_paths:
+        partfile = VariantFile(path, "r")
+        for variant in partfile.fetch():
+            output_file.write(variant)  # type: ignore
+        partfile.close()
+    output_file.close()
+    header_donor.close()
 
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
@@ -393,25 +381,21 @@ class AnnotateVCFTool(AnnotationTool):
             )
 
             assert self.grr is not None
-            combine_task = self.task_graph.create_task(
-                "combine",
-                combine,
+            concat_task = self.task_graph.create_task(
+                "concat",
+                concat,
                 args=[
-                    self.args,
-                    self.args.input,
-                    self.pipeline.raw,
-                    pipeline_config_old,
-                    self.grr.definition,
-                    file_paths,
+                    file_paths,  # The order of this list is crucial!
                     self.output,
                 ],
                 deps=[annotation_sync],
             )
+
             self.task_graph.create_task(
                 "compress_and_tabix",
-                produce_tabix_index,
+                make_vcf_tabix,
                 args=[self.output],
-                deps=[combine_task])
+                deps=[concat_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:

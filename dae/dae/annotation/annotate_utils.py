@@ -52,7 +52,7 @@ from dae.utils.regions import (
 )
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
-PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
+PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}"
 
 logger = logging.getLogger("annotate_utils")
 
@@ -102,12 +102,7 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
 
 def produce_tabix_index(filepath: str, args: Any = None) -> None:
     """Produce a tabix index file for the given variants file."""
-
     filepath = filepath.rstrip(".gz")
-
-    if filepath.endswith(".vcf"):
-        tabix_index(filepath, preset="vcf")
-        return
 
     header = _read_header(filepath)
     line_skip = 0 if header[0].startswith("#") else 1
