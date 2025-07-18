@@ -77,7 +77,7 @@ def test_vcf_writer(
     tmp_path: pathlib.Path,
     test_gpf_instance: GPFInstance,
     sample_ped: pathlib.Path,
-):
+) -> None:
     out_path = tmp_path / "out.vcf"
 
     families = FamiliesLoader(str(sample_ped)).load()
@@ -121,7 +121,7 @@ def test_process_vcf_simple(
     test_gpf_instance: GPFInstance,
     sample_ped: pathlib.Path,
     sample_vcf: pathlib.Path,
-):
+) -> None:
     out_path = tmp_path / "out.vcf"
     work_dir = tmp_path / "work_dir"
     pipeline_config = [
@@ -154,7 +154,7 @@ def test_process_vcf_simple_batch(
     test_gpf_instance: GPFInstance,
     sample_ped: pathlib.Path,
     sample_vcf: pathlib.Path,
-):
+) -> None:
     out_path = tmp_path / "out.vcf"
     work_dir = tmp_path / "work_dir"
     pipeline_config = [
