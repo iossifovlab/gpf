@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 import { datasetIds } from './utils';
 import { scanCSV } from 'nodejs-polars';
@@ -565,17 +565,7 @@ test.describe('Pheno Measures tests', () => {
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_5' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'sib'}).click();
-
-    await page.waitForResponse(
-      resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
-    );
-
-    await page.waitForResponse(
-      resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
-    );
+    await selectRole(page, 'instrument_1.measure_5', 'sib');
 
     await page.getByRole('button', {name: 'Mode'}).click();
     await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
@@ -637,8 +627,8 @@ test.describe('Pheno Measures tests', () => {
     await expect(page.locator('.histogram-from label')).toHaveText('From (Min: -11.1093)');
     await expect(page.locator('.histogram-to label')).toHaveText('To (Max: 174.2897)');
 
-    await page.locator('gpf-role-selector #search-box').click();
-    await page.locator('mat-option').getByText('prb').click();
+    await selectRole(page, 'instrument_1.iq', 'prb');
+
     await expect(page.locator('#sumOfBarsLabel')).toHaveText('~39 (100.00%)');
     await expect(page.locator('.histogram-from label')).toHaveText('From (Min: 12.9578)');
     await expect(page.locator('.histogram-to label')).toHaveText('To (Max: 150.2109)');
@@ -649,34 +639,26 @@ test.describe('Pheno Measures tests', () => {
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
-    await page.locator('gpf-role-selector #search-box').click();
-    await page.getByRole('option', {name: 'prb'}).click();
+    await selectRole(page, 'instrument_1.iq', 'prb');
+    await checkIfRoleIsDisabled(page, 'prb');
 
-    await page.locator('gpf-role-selector #search-box').click();
-    await expect(page.getByRole('option', {name: 'prb'})).toBeDisabled();
-    await page.getByRole('option', {name: 'mom'}).click();
-
-    await page.locator('gpf-role-selector #search-box').click();
-    await expect(page.getByRole('option', {name: 'mom'})).toBeDisabled();
-    await page.locator('gpf-role-selector #search-box').blur();
+    await selectRole(page, 'instrument_1.iq', 'mom');
+    await checkIfRoleIsDisabled(page, 'mom');
 
     await expect(page.locator('.role-wrapper')).toHaveCount(2);
     await expect(page.locator('.role-wrapper').nth(0)).toContainText('prb');
     await expect(page.locator('.role-wrapper').nth(1)).toContainText('mom');
 
-    await page.locator('#remove-prb').click();
+    await removeRole(page, 'instrument_1.iq', 'prb');
+
     await expect(page.locator('.role-wrapper')).toHaveCount(1);
     await expect(page.locator('.role-wrapper').nth(0)).toContainText('mom');
 
-    await page.locator('gpf-role-selector #search-box').click();
-    await expect(page.getByRole('option', {name: 'prb'})).toBeEnabled();
-    await page.locator('gpf-role-selector #search-box').blur();
+    await checkIfRoleIsEnabled(page, 'prb');
 
-    await page.locator('#remove-mom').click();
+    await removeRole(page, 'instrument_1.iq', 'mom');
     await expect(page.locator('.role-wrapper')).toHaveCount(0);
-    await page.locator('gpf-role-selector #search-box').click();
-    await expect(page.locator('mat-option').getByText('mom')).toBeEnabled();
-    await page.locator('gpf-role-selector #search-box').blur();
+    await checkIfRoleIsEnabled(page, 'mom');
   });
 
   test('selecting role by typing and enter', async({ page }) => {
@@ -730,25 +712,20 @@ test.describe('Pheno Measures tests', () => {
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.iq' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'mom'}).click();
+    await selectRole(page, 'instrument_1.iq', 'mom');
 
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_3').click();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_3' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'dad'}).click();
+    await selectRole(page, 'instrument_1.measure_3', 'dad');
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(2);
     await expect(page.locator('gpf-person-filter .title-wrapper').nth(0)).toContainText('instrument_1.measure_3');
     await expect(page.locator('gpf-person-filter .title-wrapper').nth(1)).toContainText('instrument_1.iq');
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.iq' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'sib'}).click();
-    await page.locator('#remove-mom').click();
+    await selectRole(page, 'instrument_1.iq', 'sib');
+
+    await removeRole(page, 'instrument_1.iq', 'mom');
 
     await expect(page.locator('gpf-person-filter .title-wrapper').nth(0)).toContainText('instrument_1.measure_3');
     await expect(page.locator('gpf-person-filter .title-wrapper').nth(1)).toContainText('instrument_1.iq');
@@ -795,3 +772,40 @@ test.describe('Pheno Measures tests', () => {
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 });
+
+async function selectRole(page: Page, measure: string, role: string): Promise<void> {
+  await page.locator('gpf-person-filter').filter({ hasText: measure })
+    .getByPlaceholder('Select role').click();
+  await page.locator('mat-option').getByText(role).click();
+
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
+  );
+
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
+  );
+}
+
+async function checkIfRoleIsDisabled(page: Page, role: string): Promise<void> {
+  await page.locator('gpf-role-selector #search-box').click();
+  await expect(page.getByRole('option', {name: role})).toBeDisabled();
+}
+
+async function checkIfRoleIsEnabled(page: Page, role: string): Promise<void> {
+  await page.locator('gpf-role-selector #search-box').click();
+  await expect(page.getByRole('option', {name: role})).toBeEnabled();
+}
+
+async function removeRole(page: Page, measure: string, role: string): Promise<void> {
+  await page.locator('gpf-person-filter').filter({ hasText: measure })
+    .locator(`#remove-${role}`).click();
+
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
+  );
+
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
+  );
+}
