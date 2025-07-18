@@ -12,7 +12,7 @@ from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotate_vcf import produce_partfile_paths
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
-from dae.genomic_resources.testing import setup_genome
+from dae.genomic_resources.testing import setup_genome, setup_pedigree
 from dae.testing import setup_denovo, setup_directories, setup_vcf
 from dae.utils.regions import Region
 
@@ -239,6 +239,18 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     return root_path
 
 
+@pytest.fixture
+def sample_ped(tmp_path: pathlib.Path) -> pathlib.Path:
+    filepath = tmp_path / "sample.ped"
+    setup_pedigree(filepath, textwrap.dedent("""
+        familyId personId dadId momId sex status role
+        f1       m1       0     0     2   1      mom
+        f1       d1       0     0     1   1      dad
+        f1       c1       dad   mom   1   2      prb
+    """))
+    return filepath
+
+
 def test_annotate_columns_basic_setup(
         annotate_directory_fixture: pathlib.Path) -> None:
     in_content = textwrap.dedent("""
@@ -304,6 +316,323 @@ def test_annotate_columns_idempotence(
         ])
         out_file_content = get_file_content_as_string(str(out_file))
         assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_multiple_chrom(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+        chr2    33
+        chr2    34
+        chr3    43
+        chr3    44
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+        "chr2\t33\t0.3\n"
+        "chr2\t34\t0.4\n"
+        "chr3\t43\t0.5\n"
+        "chr3\t44\t0.6\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    in_file_gz = in_file.with_suffix(".txt.gz")
+    out_file = root_path / "out.txt.gz"
+    out_file_tbi = root_path / "out.txt.gz.tbi"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
+    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
+                      start_col=1, end_col=1)
+
+    cli_columns([
+        str(a) for a in [
+            in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file, "-j", 1, "-R", "test_genome",
+        ]
+    ])
+
+    with gzip.open(out_file, "rt") as out:
+        out_file_content = out.read()
+    assert out_file_content == out_expected_content
+    assert os.path.exists(out_file_tbi)
+    assert set(os.listdir(workdir)) == {
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
+        # part files must be cleaned up
+    }
+
+
+def test_annotate_columns_multiple_chrom_repeated_attr(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+        chr2    33
+        chr2    34
+        chr3    43
+        chr3    44
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore_A0\tscore_A1\n"
+        "chr1\t23\t0.1\t0.1\n"
+        "chr1\t24\t0.2\t0.2\n"
+        "chr2\t33\t0.3\t0.3\n"
+        "chr2\t34\t0.4\t0.4\n"
+        "chr3\t43\t0.5\t0.5\n"
+        "chr3\t44\t0.6\t0.6\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    in_file_gz = in_file.with_suffix(".txt.gz")
+    out_file = root_path / "out.txt.gz"
+    out_file_tbi = root_path / "out.txt.gz.tbi"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation_duplicate.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
+    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
+                      start_col=1, end_col=1)
+
+    cli_columns([
+        str(a) for a in [
+            in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file, "-j", 1, "-R", "test_genome",
+            "--allow-repeated-attributes",
+        ]
+    ])
+
+    with gzip.open(out_file, "rt") as out:
+        out_file_content = out.read()
+    assert out_file_content == out_expected_content
+    assert os.path.exists(out_file_tbi)
+    assert set(os.listdir(workdir)) == {
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
+        # part files must be cleaned up
+    }
+
+
+def test_annotate_columns_none_values(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom  pos        ref        alt
+        chr1   23         C          T
+        chr1   24         C          A
+        chr1   24         C          G
+        chr1   24         C          T
+        chr1   25         C          T
+        chr1   26         C          G
+    """)
+    expected = (
+        "chrom\tpos\tref\talt\tscore\n"
+        "chr1\t23\tC\tT\t0.1\n"
+        "chr1\t24\tC\tA\t0.3\n"
+        "chr1\t24\tC\tG\t0.4\n"
+        "chr1\t24\tC\tT\t\n"
+        "chr1\t25\tC\tT\t\n"
+        "chr1\t26\tC\tG\t\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.tsv"
+    out_file = root_path / "out.tsv"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation_multiallelic.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
+        ]
+    ])
+
+    result = pathlib.Path(out_file).read_text()
+    assert result == expected
+
+
+def test_annotate_columns_repeated_attributes(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore_A0\tscore_A1\n"
+        "chr1\t23\t0.1\t0.101\n"
+        "chr1\t24\t0.2\t0.201\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation_repeated_attributes.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--allow-repeated-attributes",
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_with_pipeline_from_grr(
+        annotate_directory_fixture: pathlib.Path) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    pipeline = "res_pipeline"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, pipeline, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_autodetect_columns_with_underscore(
+        annotate_directory_fixture: pathlib.Path) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos_beg   pos_end
+        chr1    23        23
+        chr1    24        24
+    """)
+    out_expected_content = (
+        "chrom\tpos_beg\tpos_end\tscore\n"
+        "chr1\t23\t23\t0.1\n"
+        "chr1\t24\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_float_precision(
+        annotate_directory_fixture: pathlib.Path) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr4    53
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr4\t53\t0.123\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_internal_attributes(
+        annotate_directory_fixture: pathlib.Path) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore_1\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation_internal_attributes.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+# ===============================
+# VCF ANNOTATION TOOL TESTS BELOW
+# ===============================
 
 
 def test_basic_vcf(
@@ -430,130 +759,76 @@ def test_vcf_multiple_chroms(
     }
 
 
-def test_produce_partfile_paths() -> None:
-    regions = [Region("chr1", 0, 1000),
-               Region("chr1", 1000, 2000),
-               Region("chr1", 2000, 3000)]
-    expected_output = [
-        "work_dir/output/input.vcf_annotation_chr1_0_1000.gz",
-        "work_dir/output/input.vcf_annotation_chr1_1000_2000.gz",
-        "work_dir/output/input.vcf_annotation_chr1_2000_3000.gz",
-    ]
-    # relative input file path
-    assert produce_partfile_paths(
-        "src/input.vcf", regions, "work_dir/output",
-    ) == expected_output
-    # absolute input file path
-    assert produce_partfile_paths(
-        "/home/user/src/input.vcf", regions, "work_dir/output",
-    ) == expected_output
-
-
-def test_annotate_columns_multiple_chrom(
+def test_annotate_vcf_float_precision(
     annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
-        chrom   pos
-        chr1    23
-        chr1    24
-        chr2    33
-        chr2    34
-        chr3    43
-        chr3    44
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr4>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr4   53  .  C   T   .    .      .    GT     0/1 0/0 0/0
     """)
-    out_expected_content = (
-        "chrom\tpos\tscore\n"
-        "chr1\t23\t0.1\n"
-        "chr1\t24\t0.2\n"
-        "chr2\t33\t0.3\n"
-        "chr2\t34\t0.4\n"
-        "chr3\t43\t0.5\n"
-        "chr3\t44\t0.6\n"
-    )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    in_file = root_path / "in.vcf"
+    out_file = root_path / "out.vcf"
     workdir = root_path / "output"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
 
-    setup_denovo(in_file, in_content)
-    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
-    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
-                      start_col=1, end_col=1)
+    setup_vcf(in_file, in_content)
 
-    cli_columns([
+    cli_vcf([
         str(a) for a in [
-            in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file, "-j", 1, "-R", "test_genome",
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
         ]
     ])
 
-    with gzip.open(out_file, "rt") as out:
-        out_file_content = out.read()
-    assert out_file_content == out_expected_content
-    assert os.path.exists(out_file_tbi)
-    assert set(os.listdir(workdir)) == {
-        ".task-log",     # default task logs dir
-        ".task-status",  # default task status dir
-        # part files must be cleaned up
-    }
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
+    assert result == ["0.123"]
 
 
-def test_annotate_columns_multiple_chrom_repeated_attr(
+def test_annotate_vcf_internal_attributes(
     annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
-        chrom   pos
-        chr1    23
-        chr1    24
-        chr2    33
-        chr2    34
-        chr3    43
-        chr3    44
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
     """)
-    out_expected_content = (
-        "chrom\tpos\tscore_A0\tscore_A1\n"
-        "chr1\t23\t0.1\t0.1\n"
-        "chr1\t24\t0.2\t0.2\n"
-        "chr2\t33\t0.3\t0.3\n"
-        "chr2\t34\t0.4\t0.4\n"
-        "chr3\t43\t0.5\t0.5\n"
-        "chr3\t44\t0.6\t0.6\n"
-    )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    in_file = root_path / "in.vcf"
+    out_file = root_path / "out.vcf"
     workdir = root_path / "output"
-    annotation_file = root_path / "annotation_duplicate.yaml"
+    annotation_file = root_path / "annotation_internal_attributes.yaml"
     grr_file = root_path / "grr.yaml"
 
-    setup_denovo(in_file, in_content)
-    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
-    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
-                      start_col=1, end_col=1)
+    setup_vcf(in_file, in_content)
 
-    cli_columns([
+    cli_vcf([
         str(a) for a in [
-            in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file, "-j", 1, "-R", "test_genome",
-            "--allow-repeated-attributes",
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
         ]
     ])
 
-    with gzip.open(out_file, "rt") as out:
-        out_file_content = out.read()
-    assert out_file_content == out_expected_content
-    assert os.path.exists(out_file_tbi)
-    assert set(os.listdir(workdir)) == {
-        ".task-log",     # default task logs dir
-        ".task-status",  # default task status dir
-        # part files must be cleaned up
-    }
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for rec in vcf_file.fetch():
+            assert "score_1" in rec.info
+            assert "score_4" not in rec.info
 
 
 def test_annotate_vcf_forbidden_symbol_replacement(
@@ -591,50 +866,6 @@ def test_annotate_vcf_forbidden_symbol_replacement(
     with pysam.VariantFile(str(out_file)) as vcf_file:
         result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["a|b", "c|d", "e_f"]
-
-
-def test_annotate_columns_none_values(
-    annotate_directory_fixture: pathlib.Path,
-) -> None:
-    in_content = textwrap.dedent("""
-        chrom  pos        ref        alt
-        chr1   23         C          T
-        chr1   24         C          A
-        chr1   24         C          G
-        chr1   24         C          T
-        chr1   25         C          T
-        chr1   26         C          G
-    """)
-    expected = (
-        "chrom\tpos\tref\talt\tscore\n"
-        "chr1\t23\tC\tT\t0.1\n"
-        "chr1\t24\tC\tA\t0.3\n"
-        "chr1\t24\tC\tG\t0.4\n"
-        "chr1\t24\tC\tT\t\n"
-        "chr1\t25\tC\tT\t\n"
-        "chr1\t26\tC\tG\t\n"
-    )
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.tsv"
-    out_file = root_path / "out.tsv"
-    workdir = root_path / "output"
-    annotation_file = root_path / "annotation_multiallelic.yaml"
-    grr_file = root_path / "grr.yaml"
-
-    setup_denovo(in_file, in_content)
-
-    cli_columns([
-        str(a) for a in [
-            in_file, annotation_file,
-            "--grr", grr_file,
-            "-o", out_file,
-            "-w", workdir,
-            "-j", 1,
-        ]
-    ])
-
-    result = pathlib.Path(out_file).read_text()
-    assert result == expected
 
 
 def test_annotate_vcf_none_values(
@@ -715,42 +946,6 @@ def test_vcf_description_with_quotes(
         'The \\"phastCons\\" computed over the tree of 100 verterbrate species'
 
 
-def test_annotate_columns_repeated_attributes(
-    annotate_directory_fixture: pathlib.Path,
-) -> None:
-    in_content = textwrap.dedent("""
-        chrom   pos
-        chr1    23
-        chr1    24
-    """)
-    out_expected_content = (
-        "chrom\tpos\tscore_A0\tscore_A1\n"
-        "chr1\t23\t0.1\t0.101\n"
-        "chr1\t24\t0.2\t0.201\n"
-    )
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file = root_path / "annotation_repeated_attributes.yaml"
-    grr_file = root_path / "grr.yaml"
-    work_dir = root_path / "work"
-
-    setup_denovo(in_file, in_content)
-
-    cli_columns([
-        str(a) for a in [
-            in_file, annotation_file,
-            "--grr", grr_file,
-            "-o", out_file,
-            "-w", work_dir,
-            "-j", 1,
-            "--allow-repeated-attributes",
-        ]
-    ])
-    out_file_content = get_file_content_as_string(str(out_file))
-    assert out_file_content == out_expected_content
-
-
 def test_annotate_vcf_repeated_attributes(
     annotate_directory_fixture: pathlib.Path,
 ) -> None:
@@ -793,199 +988,24 @@ def test_annotate_vcf_repeated_attributes(
     assert result == ["0.1", "0.101", "0.2", "0.201"]
 
 
-def test_annotate_with_pipeline_from_grr(
-        annotate_directory_fixture: pathlib.Path) -> None:
-    in_content = textwrap.dedent("""
-        chrom   pos
-        chr1    23
-        chr1    24
-    """)
-    out_expected_content = (
-        "chrom\tpos\tscore\n"
-        "chr1\t23\t0.1\n"
-        "chr1\t24\t0.2\n"
-    )
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    pipeline = "res_pipeline"
-    grr_file = root_path / "grr.yaml"
-    work_dir = root_path / "work"
+def test_produce_partfile_paths() -> None:
+    regions = [Region("chr1", 0, 1000),
+               Region("chr1", 1000, 2000),
+               Region("chr1", 2000, 3000)]
+    expected_output = [
+        "work_dir/output/input.vcf_annotation_chr1_0_1000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_1000_2000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_2000_3000.gz",
+    ]
+    # relative input file path
+    assert produce_partfile_paths(
+        "src/input.vcf", regions, "work_dir/output",
+    ) == expected_output
+    # absolute input file path
+    assert produce_partfile_paths(
+        "/home/user/src/input.vcf", regions, "work_dir/output",
+    ) == expected_output
 
-    setup_denovo(in_file, in_content)
-
-    cli_columns([
-        str(a) for a in [
-            in_file, pipeline, "--grr", grr_file, "-o", out_file,
-            "-w", work_dir,
-            "-j", 1,
-        ]
-    ])
-    out_file_content = get_file_content_as_string(str(out_file))
-    assert out_file_content == out_expected_content
-
-
-def test_annotate_columns_autodetect_columns_with_underscore(
-        annotate_directory_fixture: pathlib.Path) -> None:
-    in_content = textwrap.dedent("""
-        chrom   pos_beg   pos_end
-        chr1    23        23
-        chr1    24        24
-    """)
-    out_expected_content = (
-        "chrom\tpos_beg\tpos_end\tscore\n"
-        "chr1\t23\t23\t0.1\n"
-        "chr1\t24\t24\t0.2\n"
-    )
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file = root_path / "annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    work_dir = root_path / "work"
-
-    setup_denovo(in_file, in_content)
-
-    cli_columns([
-        str(a) for a in [
-            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
-            "-w", work_dir,
-            "-j", 1,
-        ]
-    ])
-    out_file_content = get_file_content_as_string(str(out_file))
-    assert out_file_content == out_expected_content
-
-
-def test_annotate_columns_float_precision(
-        annotate_directory_fixture: pathlib.Path) -> None:
-    in_content = textwrap.dedent("""
-        chrom   pos
-        chr4    53
-    """)
-    out_expected_content = (
-        "chrom\tpos\tscore\n"
-        "chr4\t53\t0.123\n"
-    )
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file = root_path / "annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    work_dir = root_path / "work"
-
-    setup_denovo(in_file, in_content)
-
-    cli_columns([
-        str(a) for a in [
-            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
-            "-w", work_dir,
-            "-j", 1,
-        ]
-    ])
-    out_file_content = get_file_content_as_string(str(out_file))
-    assert out_file_content == out_expected_content
-
-
-def test_annotate_vcf_float_precision(
-    annotate_directory_fixture: pathlib.Path,
-) -> None:
-    in_content = textwrap.dedent("""
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chr4>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
-        chr4   53  .  C   T   .    .      .    GT     0/1 0/0 0/0
-    """)
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.vcf"
-    out_file = root_path / "out.vcf"
-    workdir = root_path / "output"
-    annotation_file = root_path / "annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-
-    setup_vcf(in_file, in_content)
-
-    cli_vcf([
-        str(a) for a in [
-            in_file, annotation_file,
-            "--grr", grr_file,
-            "-o", out_file,
-            "-w", workdir,
-            "-j", 1,
-        ]
-    ])
-
-    # pylint: disable=no-member
-    with pysam.VariantFile(str(out_file)) as vcf_file:
-        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
-    assert result == ["0.123"]
-
-
-def test_annotate_columns_internal_attributes(
-        annotate_directory_fixture: pathlib.Path) -> None:
-    in_content = textwrap.dedent("""
-        chrom   pos
-        chr1    23
-        chr1    24
-    """)
-    out_expected_content = (
-        "chrom\tpos\tscore_1\n"
-        "chr1\t23\t0.1\n"
-        "chr1\t24\t0.2\n"
-    )
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file = root_path / "annotation_internal_attributes.yaml"
-    grr_file = root_path / "grr.yaml"
-    work_dir = root_path / "work"
-
-    setup_denovo(in_file, in_content)
-
-    cli_columns([
-        str(a) for a in [
-            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
-            "-w", work_dir,
-            "-j", 1,
-        ]
-    ])
-    out_file_content = get_file_content_as_string(str(out_file))
-    assert out_file_content == out_expected_content
-
-
-def test_annotate_vcf_internal_attributes(
-    annotate_directory_fixture: pathlib.Path,
-) -> None:
-    in_content = textwrap.dedent("""
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chr1>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
-        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
-        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
-    """)
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.vcf"
-    out_file = root_path / "out.vcf"
-    workdir = root_path / "output"
-    annotation_file = root_path / "annotation_internal_attributes.yaml"
-    grr_file = root_path / "grr.yaml"
-
-    setup_vcf(in_file, in_content)
-
-    cli_vcf([
-        str(a) for a in [
-            in_file, annotation_file,
-            "--grr", grr_file,
-            "-o", out_file,
-            "-w", workdir,
-            "-j", 1,
-        ]
-    ])
-
-    # pylint: disable=no-member
-    with pysam.VariantFile(str(out_file)) as vcf_file:
-        for rec in vcf_file.fetch():
-            assert "score_1" in rec.info
-            assert "score_4" not in rec.info
+# =============================
+# VCF ANNOTATION TOOL TESTS END
+# =============================
