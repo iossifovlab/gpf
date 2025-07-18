@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import sys
+from collections.abc import Sequence
 from contextlib import closing
 from pathlib import Path
 from types import TracebackType
@@ -36,15 +37,18 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.parquet.schema2.processing_pipeline import (
+    AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
     DeleteAttributesFromVariantFilter,
+    DeleteAttributesFromVariantsBatchFilter,
+    VariantsLoaderBatchSource,
     VariantsLoaderSource,
     VariantsPipelineProcessor,
 )
 from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
-from dae.utils.processing_pipeline import Filter
+from dae.utils.processing_pipeline import Filter, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.raw.loader import FullVariant
@@ -133,6 +137,40 @@ class VCFWriter(Filter):
         self.serializer.serialize_full_variant(data)
 
 
+class VCFBatchWriter(Filter):
+    """A filter that writes batches of variants to a VCF file."""
+
+    def __init__(
+        self,
+        serializer: VcfSerializer,
+        pipeline: AnnotationPipeline | None = None,
+    ):
+        self.writer = VCFWriter(serializer, pipeline)
+
+    def __enter__(self) -> VCFBatchWriter:
+        self.writer.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during writing vcf: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is not None
+
+    def filter(self, data: Sequence[FullVariant]) -> None:
+        for variant in data:
+            self.writer.filter(variant)
+
+
 def process_vcf(
     input_vcf_path: Path,
     input_ped_path: Path,
@@ -160,28 +198,39 @@ def process_vcf(
         full_reannotation=full_reannotation,
     )
 
-    regions = []
-    if region is not None:
-        regions.append(region)
-    loader = VcfLoader(families, [str(input_vcf_path)],
-                       reference_genome, regions=regions)
+    loader = VcfLoader(
+        families,
+        [str(input_vcf_path)],
+        reference_genome,
+        regions=[region] if region is not None else None,
+    )
 
     anno_attrs = [attr for attr in pipeline.get_attributes()
                   if not attr.internal]
     serializer = VcfSerializer(families, reference_genome, output_path,
                                annotations=anno_attrs)
 
+    source: Source
     filters: list[Filter] = []
-    source = VariantsLoaderSource(loader)
-    if isinstance(pipeline, ReannotationPipeline):
-        filters.append(DeleteAttributesFromVariantFilter(
-            pipeline.attributes_deleted))
-    filters.extend([
-        AnnotationPipelineVariantsFilter(pipeline),
-        VCFWriter(serializer, pipeline),
-    ])
 
-    # FIXME Implement batch processing
+    if batch_size <= 0:
+        source = VariantsLoaderSource(loader)
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantFilter(
+                pipeline.attributes_deleted))
+        filters.extend([
+            AnnotationPipelineVariantsFilter(pipeline),
+            VCFWriter(serializer, pipeline),
+        ])
+    else:
+        source = VariantsLoaderBatchSource(loader)
+        if isinstance(pipeline, ReannotationPipeline):
+            filters.append(DeleteAttributesFromVariantsBatchFilter(
+                pipeline.attributes_deleted))
+        filters.extend([
+            AnnotationPipelineVariantsBatchFilter(pipeline),
+            VCFBatchWriter(serializer, pipeline),
+        ])
 
     with VariantsPipelineProcessor(source, filters) as processor:
         processor.process_region(region)
