@@ -248,7 +248,7 @@ def concat(partfile_paths: list[str], output_path: str) -> None:
     for path in partfile_paths:
         partfile = VariantFile(path, "r")
         for variant in partfile.fetch():
-            output_file.write(variant)  # type: ignore
+            output_file.write(variant)
         partfile.close()
     output_file.close()
     header_donor.close()
