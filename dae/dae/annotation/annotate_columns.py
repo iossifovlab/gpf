@@ -31,37 +31,24 @@ from dae.utils.fs_utils import tabix_index_filename
 logger = logging.getLogger("annotate_columns")
 
 
-def combine(
-    args: Any,
-    pipeline_config: RawPipelineConfig,
-    pipeline_config_old: str | None,
-    grr_definition: dict | None,
-    partfile_paths: list[str],
-    out_file_path: str,
-    ref_genome_id: str,
-) -> None:
-    """Combine annotated region parts into a single VCF file."""
-    output_handler = ColumnsFormat(
-        pipeline_config,
-        pipeline_config_old,
-        vars(args),
-        grr_definition,
-        None,
-        args.input,
-        out_file_path.rstrip(".gz"),
-        ref_genome_id,
-    )
+def concat(partfile_paths: list[str], output_path: str) -> None:
+    """Concatenate multiple DSV files into a single DSV file *in order*."""
+    # Get any header from the partfiles, they should all be equal
+    # and usable as a final output header
+    header = Path(partfile_paths[0]).read_text().split("\n")[0]
 
-    output_handler.open()
-    assert output_handler.output_file is not None
-    for partfile_path in partfile_paths:
-        with open(partfile_path, "rt") as partfile:
-            partfile.readline()  # Skip header of partfile
-            content = partfile.read().strip()
-            if content == "":
-                continue
-            output_handler.output_file.write(content + "\n")
-    output_handler.close()
+    with open(output_path, "w") as outfile:
+        outfile.write(header)
+        for path in partfile_paths:
+            # newline to separate from previous content
+            outfile.write("\n")
+            # read partfile content
+            partfile_content = Path(path).read_text().strip("\r\n")
+            # remove header from content
+            partfile_content = "\n".join(partfile_content.split("\n")[1:])
+            # write to output
+            outfile.write(partfile_content)
+        outfile.write("\n")
 
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
@@ -128,7 +115,7 @@ class AnnotateColumnsTool(AnnotationTool):
 
     def prepare_for_annotation(self) -> None:
         if self.args.output:
-            self.output = self.args.output
+            self.output = self.args.output.rstrip(".gz")
         else:
             input_name = self.args.input.rstrip(".gz")
             if "." in input_name:
@@ -173,24 +160,20 @@ class AnnotateColumnsTool(AnnotationTool):
                     args=[handler, self.args.batch_size > 0],
                     deps=[]))
 
-            combine_task = self.task_graph.create_task(
-                "combine",
-                combine,
+            concat_task = self.task_graph.create_task(
+                "concat",
+                concat,
                 args=[
-                    self.args,
-                    self.pipeline.raw,
-                    pipeline_config_old,
-                    self.grr.definition,
                     file_paths,
                     self.output,
-                    self.ref_genome_id],
+                ],
                 deps=region_tasks)
 
             self.task_graph.create_task(
                 "compress_and_tabix",
                 produce_tabix_index,
                 args=[self.output, self.args],
-                deps=[combine_task])
+                deps=[concat_task])
         else:
             handler = ColumnsFormat(
                 self.pipeline.raw,

@@ -102,8 +102,6 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
 
 def produce_tabix_index(filepath: str, args: Any = None) -> None:
     """Produce a tabix index file for the given variants file."""
-    filepath = filepath.rstrip(".gz")
-
     header = _read_header(filepath)
     line_skip = 0 if header[0].startswith("#") else 1
     header = [c.strip("#") for c in header]
