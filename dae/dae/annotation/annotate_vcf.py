@@ -375,7 +375,7 @@ class AnnotateVCFTool(AnnotationTool):
                 ))
 
             annotation_sync = self.task_graph.create_task(
-                "sync_parquet_write", lambda: None,
+                "sync_vcf_annotate", lambda: None,
                 args=[], deps=annotation_tasks,
             )
 
