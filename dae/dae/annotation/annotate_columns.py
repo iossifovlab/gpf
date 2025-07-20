@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import itertools
 import logging
 import os
 import sys
@@ -139,10 +140,19 @@ class DSVSource(Source):
 
 
 class DSVBatchSource(Source):
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        path: str,
+        ref_genome: ReferenceGenome,
+        cli_args: Any,
+        input_separator: str,
+        batch_size: int = 500,
+    ):
+        self.source = DSVSource(path, ref_genome, cli_args, input_separator)
+        self.batch_size = batch_size
 
     def __enter__(self) -> DSVBatchSource:
+        self.source.__enter__()
         return self
 
     def __exit__(
@@ -156,12 +166,16 @@ class DSVBatchSource(Source):
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
 
+        self.source.__exit__(exc_type, exc_value, exc_tb)
+
         return exc_type is not None
 
     def fetch(
         self, region: Region | None = None,
     ) -> Iterable[Sequence[AnnotationsWithSource]]:
-        pass
+        records = self.source.fetch(region)
+        while batch := tuple(itertools.islice(records, self.batch_size)):
+            yield batch
 
 
 class DSVWriter(Filter):
@@ -219,8 +233,17 @@ class DSVWriter(Filter):
 
 
 class DSVBatchWriter(Filter):
-    def __init__(self) -> None:
-        pass
+    def __init__(
+        self,
+        path: str,
+        separator: str,
+        ignored_cols: set[str],
+    ) -> None:
+        self.writer = DSVWriter(path, separator, ignored_cols)
+
+    def __enter__(self) -> DSVBatchWriter:
+        self.writer.__enter__()
+        return self
 
     def __exit__(
         self,
@@ -233,10 +256,13 @@ class DSVBatchWriter(Filter):
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
 
+        self.writer.__exit__(exc_type, exc_value, exc_tb)
+
         return exc_type is not None
 
     def filter(self, data: Sequence[AnnotationsWithSource]) -> None:
-        pass
+        for record in data:
+            self.writer.filter(record)
 
 
 class DeleteAttributesFromAWSFilter(Filter):
@@ -313,13 +339,14 @@ def process_dsv(
             DSVWriter(output_path, output_separator, internal_cols),
         ])
     else:
-        source = DSVBatchSource()
+        source = DSVBatchSource(
+            input_path, reference_genome, cli_args, input_separator)
         if isinstance(pipeline, ReannotationPipeline):
             filters.append(DeleteAttributesFromAWSBatchFilter(
                 pipeline.attributes_deleted))
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            DSVBatchWriter(),
+            DSVBatchWriter(output_path, output_separator, internal_cols),
         ])
 
     with PipelineProcessor(source, filters) as processor:
