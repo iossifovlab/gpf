@@ -646,7 +646,7 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
 
     info_keys = set(out_vcf.header.info.keys())
 
-    assert "gene_score2" not in info_keys
-    assert info_keys >= {  # pylint: disable=no-member
+    assert info_keys == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",
+         "END",  # <--- Added from serializer, not an annotation
     }
