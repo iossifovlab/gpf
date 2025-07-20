@@ -173,7 +173,7 @@ class VCFBatchWriter(Filter):
             self.writer.filter(variant)
 
 
-def process_vcf(
+def process_vcf(  # pylint: disable=too-many-positional-arguments
     input_vcf_path: Path,
     input_ped_path: Path,
     output_path: Path,

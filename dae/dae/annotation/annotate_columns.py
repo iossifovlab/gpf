@@ -10,7 +10,7 @@ from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
 from types import TracebackType
-from typing import Any
+from typing import Any, TextIO
 
 from pysam import TabixFile
 
@@ -56,6 +56,8 @@ logger = logging.getLogger("annotate_columns")
 
 
 class DSVSource(Source):
+    """Source for delimiter-separated values files."""
+
     def __init__(
         self,
         path: str,
@@ -66,7 +68,7 @@ class DSVSource(Source):
         self.path = path
         self.ref_genome = ref_genome
         self.cli_args = cli_args
-        self.source_file: Any
+        self.source_file: TextIO | TabixFile
         self.input_separator = input_separator
         self.header: list[str] = self._extract_header()
 
@@ -106,11 +108,12 @@ class DSVSource(Source):
         ]
 
     def _get_line_iterator(self, region: Region | None) -> Iterable:
-        if not self.path.endswith(".gz"):
+        if not isinstance(self.source_file, TabixFile):
             return self.source_file
         if region is None:
-            return self.source_file.fetch()
-        return self.source_file.fetch(region.chrom, region.start, region.stop)
+            return self.source_file.fetch()  # type: ignore
+        return self.source_file.fetch(  # type: ignore
+            region.chrom, region.start, region.stop)
 
     def fetch(
         self, region: Region | None = None,
@@ -143,6 +146,8 @@ class DSVSource(Source):
 
 
 class DSVBatchSource(Source):
+    """Batched source for delimiter-separated values files."""
+
     def __init__(
         self,
         path: str,
@@ -183,6 +188,8 @@ class DSVBatchSource(Source):
 
 
 class DSVWriter(Filter):
+    """Writes delimiter-separated values to a file."""
+
     def __init__(
         self,
         path: str,
@@ -225,10 +232,12 @@ class DSVWriter(Filter):
         self.out_file.write(
             self.separator.join(stringify(val) for val in result.values())
             + "\n",
-        )  # type: ignore
+        )
 
 
 class DSVBatchWriter(Filter):
+    """Writes delimiter-separated values to a file in batches."""
+
     def __init__(
         self,
         path: str,
@@ -288,7 +297,7 @@ class DeleteAttributesFromAWSBatchFilter(Filter):
         return data
 
 
-def process_dsv(
+def process_dsv(  # pylint: disable=too-many-positional-arguments
     input_path: str,
     output_path: str,
     pipeline_config: RawAnnotatorsConfig,
