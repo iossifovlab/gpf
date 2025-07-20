@@ -67,24 +67,14 @@ class DSVSource(Source):
         self.ref_genome = ref_genome
         self.cli_args = cli_args
         self.source_file: Any
-        self.header: list[str] = []
         self.input_separator = input_separator
+        self.header: list[str] = self._extract_header()
 
     def __enter__(self) -> DSVSource:
         if self.path.endswith(".gz"):
             self.source_file = TabixFile(self.path)
-            with gzip.open(self.path, "rt") as in_file_raw:
-                raw_header = in_file_raw.readline()
         else:
             self.source_file = open(self.path, "rt")
-            raw_header = self.source_file.readline()
-
-        # Set header columns
-        self.header = [
-            c.strip("#")
-            for c in raw_header.strip("\r\n").split(self.input_separator)
-        ]
-
         return self
 
     def __exit__(
@@ -101,6 +91,19 @@ class DSVSource(Source):
         self.source_file.close()
 
         return exc_type is not None
+
+    def _extract_header(self) -> list[str]:
+        if self.path.endswith(".gz"):
+            with gzip.open(self.path, "rt") as in_file_raw:
+                raw_header = in_file_raw.readline()
+        else:
+            with open(self.path, "rt") as in_file_raw:
+                raw_header = in_file_raw.readline()
+
+        return [
+            c.strip("#")
+            for c in raw_header.strip("\r\n").split(self.input_separator)
+        ]
 
     def _get_line_iterator(self, region: Region | None) -> Iterable:
         if not self.path.endswith(".gz"):
@@ -149,6 +152,7 @@ class DSVBatchSource(Source):
         batch_size: int = 500,
     ):
         self.source = DSVSource(path, ref_genome, cli_args, input_separator)
+        self.header = self.source.header
         self.batch_size = batch_size
 
     def __enter__(self) -> DSVBatchSource:
@@ -183,16 +187,17 @@ class DSVWriter(Filter):
         self,
         path: str,
         separator: str,
-        ignored_cols: set[str],
+        header: list[str],
     ) -> None:
         self.path = path
         self.separator = separator
-        self.header_written = False
+        self.header = header
         self.out_file: Any
-        self.ignored_cols = ignored_cols
 
     def __enter__(self) -> DSVWriter:
         self.out_file = open(self.path, "w")
+        header_row = self.separator.join(self.header)
+        self.out_file.write(f"{header_row}\n")
         return self
 
     def __exit__(
@@ -210,22 +215,13 @@ class DSVWriter(Filter):
 
         return exc_type is not None
 
-    def _write_header(self, record: dict) -> None:
-        header = self.separator.join([col for col in record
-                                      if col not in self.ignored_cols])
-        self.out_file.write(f"{header}\n")
-        self.header_written = True
-
     def filter(self, data: AnnotationsWithSource) -> None:
-        result = dict(data.source)
-        for col, val in data.annotations[0].context.items():
-            if col in self.ignored_cols:
-                continue
-            result[col] = val
-
-        if not self.header_written:
-            self._write_header(result)
-
+        context = data.annotations[0].context
+        result = {
+            col: context[col] if col in context
+                 else data.source[col]
+            for col in self.header
+        }
         self.out_file.write(
             self.separator.join(stringify(val) for val in result.values())
             + "\n",
@@ -237,9 +233,9 @@ class DSVBatchWriter(Filter):
         self,
         path: str,
         separator: str,
-        ignored_cols: set[str],
+        header: list[str],
     ) -> None:
-        self.writer = DSVWriter(path, separator, ignored_cols)
+        self.writer = DSVWriter(path, separator, header)
 
     def __enter__(self) -> DSVBatchWriter:
         self.writer.__enter__()
@@ -323,30 +319,41 @@ def process_dsv(
     source: Source
     filters: list[Filter] = []
 
-    internal_cols = {
-        attr.name for attr in pipeline.get_attributes()
-        if attr.internal
-    }
-
     if batch_size <= 0:
         source = DSVSource(
             input_path, reference_genome, cli_args, input_separator)
+        new_header = list(source.header)
         if isinstance(pipeline, ReannotationPipeline):
             filters.append(DeleteAttributesFromAWSFilter(
                 pipeline.attributes_deleted))
+            for attr in pipeline.pipeline_old.get_attributes():
+                if not attr.internal:
+                    new_header.remove(attr.name)
+        new_header = new_header + [
+            attr.name for attr in pipeline.get_attributes()
+            if not attr.internal
+        ]
         filters.extend([
             AnnotationPipelineAnnotatablesFilter(pipeline),
-            DSVWriter(output_path, output_separator, internal_cols),
+            DSVWriter(output_path, output_separator, new_header),
         ])
     else:
         source = DSVBatchSource(
             input_path, reference_genome, cli_args, input_separator)
+        new_header = list(source.header)
         if isinstance(pipeline, ReannotationPipeline):
             filters.append(DeleteAttributesFromAWSBatchFilter(
                 pipeline.attributes_deleted))
+            for attr in pipeline.pipeline_old.get_attributes():
+                if not attr.internal:
+                    new_header.remove(attr.name)
+        new_header = new_header + [
+            attr.name for attr in pipeline.get_attributes()
+            if not attr.internal
+        ]
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            DSVBatchWriter(output_path, output_separator, internal_cols),
+            DSVBatchWriter(output_path, output_separator, new_header),
         ])
 
     with PipelineProcessor(source, filters) as processor:

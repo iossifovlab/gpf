@@ -12,7 +12,11 @@ from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotate_vcf import produce_partfile_paths
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
-from dae.genomic_resources.testing import setup_genome, setup_pedigree, setup_tabix
+from dae.genomic_resources.testing import (
+    setup_genome,
+    setup_pedigree,
+    setup_tabix,
+)
 from dae.testing import setup_denovo, setup_directories, setup_vcf
 from dae.utils.regions import Region
 
@@ -619,6 +623,7 @@ def test_annotate_columns_none_values(
             "-o", out_file,
             "-w", workdir,
             "-j", 1,
+            "-R", "test_genome",
         ]
     ])
 
