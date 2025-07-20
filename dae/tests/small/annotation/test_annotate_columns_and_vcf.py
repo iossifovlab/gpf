@@ -12,7 +12,7 @@ from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotate_vcf import produce_partfile_paths
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
-from dae.genomic_resources.testing import setup_genome, setup_pedigree
+from dae.genomic_resources.testing import setup_genome, setup_pedigree, setup_tabix
 from dae.testing import setup_denovo, setup_directories, setup_vcf
 from dae.utils.regions import Region
 
@@ -279,10 +279,165 @@ def test_annotate_columns_basic_setup(
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
             "-j", 1,
+            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_batch_mode(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--batch-size", 1,
+            "-j", 1,
+            "-R", "test_genome",
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_produce_tabix_correctly_position(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    """
+    Even if the input file has unorthodox columns, if it's tabixed and
+    the correct arguments are provided, a tabix file should always be produced.
+
+    This test covers the RecordToPosition annotatable case.
+    """
+
+    in_content = textwrap.dedent("""
+        #dummyCol1 chrom   dummyCol2 pos  dummyCol3
+        ?          chr1    ?         23   ?
+        ?          chr1    ?         24   ?
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt.gz"
+    out_file = root_path / "out.txt.gz"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_tabix(in_file, in_content,
+                seq_col=1, start_col=3, end_col=3)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1,
+            "-R", "test_genome",
+        ]
+    ])
+
+    assert len(list(pysam.TabixFile(str(out_file)).fetch())) == 2
+
+
+def test_annotate_columns_produce_tabix_correctly_vcf_allele(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    """
+    Even if the input file has unorthodox columns, if it's tabixed and
+    the correct arguments are provided, a tabix file should always be produced.
+
+    This test covers the RecordToVcfAllele annotatable case.
+    """
+
+    in_content = textwrap.dedent("""
+        #dummyCol1 chrom   dummyCol2 pos      dummyCol3  ref  dummyCol4  alt
+        ?          chr1    ?         23       ?          A    ?          G
+        ?          chr1    ?         24       ?          A    ?          G
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt.gz"
+    out_file = root_path / "out.txt.gz"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_tabix(in_file, in_content,
+                seq_col=1, start_col=3, end_col=3)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1,
+            "-R", "test_genome",
+        ]
+    ])
+
+    assert len(list(pysam.TabixFile(str(out_file)).fetch())) == 2
+
+
+def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    """
+    Even if the input file has unorthodox columns, if it's tabixed and
+    the correct arguments are provided, a tabix file should always be produced.
+
+    This test covers the RecordToRegion and RecordToCNVAllele annotatable cases.
+    """
+
+    in_content = textwrap.dedent("""
+        #dummyCol1 chrom   dummyCol2 pos_beg  dummyCol3  pos_end  dummyCol4
+        ?          chr1    ?         23       ?          24       ?
+        ?          chr1    ?         24       ?          24       ?
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt.gz"
+    out_file = root_path / "out.txt.gz"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_tabix(in_file, in_content,
+                seq_col=1, start_col=3, end_col=5)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1,
+            "-R", "test_genome",
+        ]
+    ])
+
+    assert len(list(pysam.TabixFile(str(out_file)).fetch())) == 2
 
 
 def test_annotate_columns_idempotence(
