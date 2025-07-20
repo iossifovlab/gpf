@@ -524,8 +524,8 @@ def test_annotate_columns_reannotation(
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\tgene_score2\n"
-        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_effects\tgene_score1\tgene_score2\n"
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
@@ -560,8 +560,8 @@ def test_annotate_columns_reannotation_internal(
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\n"
-        "chr1\t23\t0.1\tbla\tbla\tbla\n"
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_effects\tgene_score1\n"
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
