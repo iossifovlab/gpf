@@ -59,7 +59,7 @@ class AnnotationPipelineVariantsFilterMixin:
 
 
 class DeleteAttributesFromVariantFilter(Filter):
-    """Filter to remove items from AWC contexts. Works in-place."""
+    """Filter to remove items from variants. Works in-place."""
 
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self.to_remove = set(attributes_to_remove)
@@ -67,7 +67,7 @@ class DeleteAttributesFromVariantFilter(Filter):
     def filter(
         self, data: FullVariant,
     ) -> FullVariant:
-        """Remove specified attributes from the context of an AWC."""
+        """Remove specified attributes from a variant."""
         for allele in data.summary_variant.alt_alleles:
             for attr in self.to_remove:
                 if attr in allele.attributes:
@@ -76,7 +76,7 @@ class DeleteAttributesFromVariantFilter(Filter):
 
 
 class DeleteAttributesFromVariantsBatchFilter(Filter):
-    """Filter to remove items from AWC contexts. Works in-place."""
+    """Filter to remove items from variant batches. Works in-place."""
 
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self._delete_filter = DeleteAttributesFromVariantFilter(
