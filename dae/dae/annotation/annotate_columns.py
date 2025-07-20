@@ -245,9 +245,10 @@ class DeleteAttributesFromAWSFilter(Filter):
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self.to_remove = set(attributes_to_remove)
 
-    def filter(self, data: AnnotationsWithSource) -> None:
+    def filter(self, data: AnnotationsWithSource) -> AnnotationsWithSource:
         for attr in self.to_remove:
             del data.source[attr]
+        return data
 
 
 class DeleteAttributesFromAWSBatchFilter(Filter):
@@ -257,9 +258,12 @@ class DeleteAttributesFromAWSBatchFilter(Filter):
         self._delete_filter = DeleteAttributesFromAWSFilter(
             attributes_to_remove)
 
-    def filter(self, data: Sequence[AnnotationsWithSource]) -> None:
+    def filter(
+        self, data: Sequence[AnnotationsWithSource],
+    ) -> Sequence[AnnotationsWithSource]:
         for aws in data:
             self._delete_filter.filter(aws)
+        return data
 
 
 def process_dsv(
