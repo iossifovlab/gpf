@@ -11,9 +11,8 @@ from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsFilter,
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
-    VariantsPipelineProcessor,
 )
-from dae.utils.processing_pipeline import Filter
+from dae.utils.processing_pipeline import Filter, PipelineProcessor
 from dae.variants_loaders.raw.loader import (
     FullVariant,
     VariantsGenotypesLoader,
@@ -144,7 +143,7 @@ def test_variants_batch_pipeline_processor(
         dummy_annotation_pipeline,
     )
 
-    batch_processor = VariantsPipelineProcessor(
+    batch_processor = PipelineProcessor(
         batch_source, [batch_filter, batch_consumer])
     batch_processor.process()
 
@@ -174,7 +173,7 @@ def test_variants_pipeline_processor(
         dummy_annotation_pipeline,
     )
 
-    processor = VariantsPipelineProcessor(
+    processor = PipelineProcessor(
         source, [annotation_filter, consumer])
     processor.process()
 

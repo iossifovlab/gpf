@@ -39,7 +39,6 @@ from dae.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsFilter,
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
-    VariantsPipelineProcessor,
 )
 from dae.parquet.schema2.serializers import (
     VariantsDataSerializer,
@@ -57,7 +56,7 @@ from dae.schema2_storage.schema2_layout import (
 )
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
-from dae.utils.processing_pipeline import Filter, Source
+from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
@@ -183,7 +182,7 @@ class Schema2ImportStorage(ImportStorage):
         cls, project: ImportProject,
         bucket: Bucket,
         row_group_size: int | None = None,
-    ) -> VariantsPipelineProcessor:
+    ) -> PipelineProcessor:
         """Create the import processing pipeline."""
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
@@ -231,7 +230,7 @@ class Schema2ImportStorage(ImportStorage):
                 Schema2VariantBatchConsumer(writer),
             ])
 
-        return VariantsPipelineProcessor(source, filters)
+        return PipelineProcessor(source, filters)
 
     @classmethod
     def _do_write_variant(

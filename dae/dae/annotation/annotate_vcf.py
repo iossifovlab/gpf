@@ -42,12 +42,11 @@ from dae.parquet.schema2.processing_pipeline import (
     DeleteAttributesFromVariantsBatchFilter,
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
-    VariantsPipelineProcessor,
 )
 from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
-from dae.utils.processing_pipeline import Filter, Source
+from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.raw.loader import FullVariant
@@ -235,7 +234,7 @@ def process_vcf(
             VCFBatchWriter(serializer, pipeline),
         ])
 
-    with VariantsPipelineProcessor(source, filters) as processor:
+    with PipelineProcessor(source, filters) as processor:
         processor.process_region(region)
 
 
