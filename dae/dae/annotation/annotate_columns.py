@@ -19,6 +19,7 @@ from dae.annotation.annotate_utils import (
     produce_partfile_paths,
     produce_regions,
     produce_tabix_index,
+    stringify,
 )
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
@@ -27,7 +28,6 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
-from dae.annotation.format_handlers import stringify
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.processing_pipeline import (
     Annotation,

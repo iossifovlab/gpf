@@ -21,7 +21,6 @@ from dae.annotation.annotation_pipeline import (
     FullReannotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.format_handlers import AbstractFormat
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
     get_context_pipeline,
@@ -136,6 +135,17 @@ def produce_tabix_index(filepath: str, args: Any = None) -> None:
                 force=True)
 
 
+def stringify(value: Any, *, vcf: bool = False) -> str:
+    """Format the value to a string for human-readable output."""
+    if value is None:
+        return "." if vcf else ""
+    if isinstance(value, float):
+        return f"{value:.3g}"
+    if isinstance(value, bool):
+        return "yes" if value else ""
+    return str(value)
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -214,19 +224,6 @@ class AnnotationTool:
         pos_beg = region.start if region.start is not None else "_"
         pos_end = region.stop if region.stop is not None else "_"
         return f"{chrom}_{pos_beg}_{pos_end}"
-
-    @staticmethod
-    def annotate(
-        handler: AbstractFormat,
-        batch_mode: bool,  # noqa: FBT001
-    ) -> None:
-        """Run annotation."""
-        handler.open()
-        if batch_mode:
-            handler.process_batched()
-        else:
-            handler.process()
-        handler.close()
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:

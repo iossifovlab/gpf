@@ -7,8 +7,8 @@ from types import TracebackType
 
 import pysam
 
+from dae.annotation.annotate_utils import stringify
 from dae.annotation.annotation_config import AttributeInfo
-from dae.annotation.format_handlers import stringify
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.family_variant import FamilyVariant
