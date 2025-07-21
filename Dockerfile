@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 condaforge/mambaforge:latest
+FROM condaforge/mambaforge:latest
 
 
 ADD environment.yml /

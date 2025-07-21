@@ -1,11 +1,9 @@
-version: "3.9"
 services:
 
   setup:
     build:
       context: ../
       dockerfile: Dockerfile
-    platform: linux/amd64
     restart: "no"
     volumes:
       - ../:/wd
@@ -22,7 +20,6 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
-    platform: linux/amd64
     depends_on:
       - setup
     ports:
