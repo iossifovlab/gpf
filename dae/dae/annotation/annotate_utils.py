@@ -4,23 +4,10 @@ import logging
 import os
 import sys
 from abc import abstractmethod
-from pathlib import Path
 from typing import Any
 
 from pysam import TabixFile, tabix_index
 
-from dae.annotation.annotation_config import (
-    RawAnnotatorsConfig,
-)
-from dae.annotation.annotation_factory import (
-    build_annotation_pipeline,
-    load_pipeline_from_yaml,
-)
-from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
-    FullReannotationPipeline,
-    ReannotationPipeline,
-)
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
     get_context_pipeline,
@@ -38,9 +25,6 @@ from dae.genomic_resources.genomic_context import (
     context_providers_init,
     get_genomic_context,
     register_context_provider,
-)
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
 )
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
@@ -189,41 +173,6 @@ class AnnotationTool:
         self.args.task_status_dir = os.path.join(
             self.args.work_dir, ".task-status")
         self.args.task_log_dir = os.path.join(self.args.work_dir, ".task-log")
-
-    @staticmethod
-    def produce_annotation_pipeline(
-        pipeline_config: RawAnnotatorsConfig,
-        pipeline_config_old: str | None,
-        grr_definition: dict | None,
-        *,
-        allow_repeated_attributes: bool,
-        work_dir: Path | None = None,
-        full_reannotation: bool = False,
-    ) -> AnnotationPipeline:
-        """Produce an annotation or reannotation pipeline."""
-        grr = build_genomic_resource_repository(definition=grr_definition)
-        pipeline = build_annotation_pipeline(
-            pipeline_config, grr,
-            allow_repeated_attributes=allow_repeated_attributes,
-            work_dir=work_dir,
-        )
-        if pipeline_config_old is not None:
-            pipeline_old = load_pipeline_from_yaml(pipeline_config_old, grr)
-            pipeline = ReannotationPipeline(pipeline, pipeline_old) \
-                if not full_reannotation \
-                else FullReannotationPipeline(pipeline, pipeline_old)
-
-        return pipeline
-
-    @staticmethod
-    def get_task_dir(region: Region | None) -> str:
-        """Get dir for batch annotation."""
-        if region is None:
-            return "batch_work_dir"
-        chrom = region.chrom
-        pos_beg = region.start if region.start is not None else "_"
-        pos_end = region.stop if region.stop is not None else "_"
-        return f"{chrom}_{pos_beg}_{pos_end}"
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
