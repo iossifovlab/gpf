@@ -194,7 +194,7 @@ class VariantsParquetWriter(AbstractContextManager):
             logger.error(
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
-        return True
+        return exc_type is None
 
     def _build_family_filename(
         self, allele: FamilyAllele, *,
@@ -428,7 +428,7 @@ class Schema2VariantConsumer(Filter):
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: FullVariant) -> None:
         self.writer.write(data)
@@ -452,7 +452,7 @@ class Schema2VariantBatchConsumer(Filter):
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: Sequence[FullVariant]) -> None:
         for variant in data:
@@ -477,7 +477,7 @@ class Schema2SummaryVariantConsumer(Filter):
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: FullVariant) -> None:
         self.writer.write_summary_variant(data.summary_variant)
@@ -501,7 +501,7 @@ class Schema2SummaryVariantBatchConsumer(Filter):
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: Sequence[FullVariant]) -> None:
         for variant in data:

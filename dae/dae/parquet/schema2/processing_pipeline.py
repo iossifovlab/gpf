@@ -113,7 +113,7 @@ class AnnotationPipelineVariantsFilter(
             logger.error(
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: FullVariant) -> FullVariant:
         variant = AnnotationsWithSource(
@@ -159,7 +159,7 @@ class AnnotationPipelineVariantsBatchFilter(
             logger.error(
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
-        return True
+        return exc_type is None
 
     def filter(
         self, data: Sequence[FullVariant],

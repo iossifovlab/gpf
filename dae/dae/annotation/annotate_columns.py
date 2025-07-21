@@ -94,7 +94,7 @@ class DSVSource(Source):
 
         self.source_file.close()
 
-        return exc_type is not None
+        return exc_type is None
 
     def _extract_header(self) -> list[str]:
         if self.path.endswith(".gz"):
@@ -179,7 +179,7 @@ class DSVBatchSource(Source):
 
         self.source.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def fetch(
         self, region: Region | None = None,
@@ -222,7 +222,7 @@ class DSVWriter(Filter):
 
         self.out_file.close()
 
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: AnnotationsWithSource) -> None:
         context = data.annotations[0].context
@@ -264,7 +264,7 @@ class DSVBatchWriter(Filter):
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def filter(self, data: Sequence[AnnotationsWithSource]) -> None:
         for record in data:
