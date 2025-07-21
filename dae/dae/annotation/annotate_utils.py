@@ -8,6 +8,7 @@ from typing import Any
 
 from pysam import TabixFile, tabix_index
 
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
     get_context_pipeline,
@@ -22,10 +23,12 @@ from dae.annotation.record_to_annotatable import (
 )
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import (
+    GenomicContext,
     context_providers_init,
     get_genomic_context,
     register_context_provider,
 )
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.regions import (
@@ -136,6 +139,30 @@ def setup_work_dir_and_task_dirs(args: dict) -> None:
     args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
 
+def setup_context(args: dict) -> None:
+    register_context_provider(CLIAnnotationContextProvider())
+    context_providers_init(**args)
+
+
+def get_stuff_from_context() -> tuple[AnnotationPipeline,
+                                      GenomicContext,
+                                      GenomicResourceRepo]:
+    registered_context = get_genomic_context()
+    # Maybe add a method to build a pipeline from a genomic context
+    # the pipeline arguments are registered as a context above, where
+    # the pipeline is also written into the context, only to be accessed
+    # 3 lines down
+    pipeline = get_context_pipeline(registered_context)
+    if pipeline is None:
+        raise ValueError(
+            "no valid annotation pipeline configured")
+    context = pipeline.build_pipeline_genomic_context()
+    grr = context.get_genomic_resources_repository()
+    if grr is None:
+        raise ValueError("no valid GRR configured")
+    return pipeline, context, grr
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -145,30 +172,9 @@ class AnnotationTool:
     ) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
-
-        parser = self.get_argument_parser()
-
-        self.args = vars(parser.parse_args(raw_args))
-
-        register_context_provider(CLIAnnotationContextProvider())
-        context_providers_init(**self.args)
-
-        registered_context = get_genomic_context()
-
-        # Maybe add a method to build a pipeline from a genomic context
-        # the pipeline arguments are registered as a context above, where
-        # the pipeline is also written into the context, only to be accessed
-        # 3 lines down
-        pipeline = get_context_pipeline(registered_context)
-        if pipeline is None:
-            raise ValueError(
-                "no valid annotation pipeline configured")
-        self.pipeline = pipeline
-        self.context = self.pipeline.build_pipeline_genomic_context()
-        grr = self.context.get_genomic_resources_repository()
-        if grr is None:
-            raise ValueError("no valid GRR configured")
-        self.grr = grr
+        self.args = vars(self.get_argument_parser().parse_args(raw_args))
+        setup_context(self.args)
+        self.pipeline, self.context, self.grr = get_stuff_from_context()
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
