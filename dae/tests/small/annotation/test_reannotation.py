@@ -523,8 +523,8 @@ def test_annotate_columns_reannotation(
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\tgene_score2\n"
-        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_effects\tgene_score1\tgene_score2\n"
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
@@ -559,8 +559,8 @@ def test_annotate_columns_reannotation_internal(
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\n"
-        "chr1\t23\t0.1\tbla\tbla\tbla\n"
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_effects\tgene_score1\n"
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
@@ -624,7 +624,8 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file_new,
+            in_file,
+            annotation_file_new,
             "-o", out_file,
             "-w", work_dir,
             "--grr", grr_file,
@@ -634,6 +635,8 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     ])
     out_vcf = pysam.VariantFile(str(out_file))
 
-    assert set(out_vcf.header.info.keys()) == {  # pylint: disable=no-member
+    info_keys = set(out_vcf.header.info.keys())
+
+    assert info_keys == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",
     }

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import pathlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from types import TracebackType
 
 import pysam
@@ -11,6 +11,7 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
+from dae.variants_loaders.raw.loader import FullVariant
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +20,11 @@ class VcfSerializer:
     """Stores a sequence of alleles in a VCF file."""
 
     def __init__(
-            self,
-            families: FamiliesData,
-            genome: ReferenceGenome,
-            output_path: pathlib.Path | str | None,
-            header: list[str] | None = None,
+        self,
+        families: FamiliesData,
+        genome: ReferenceGenome,
+        output_path: pathlib.Path | str | None,
+        header: list[str] | None = None,
     ):
         self.families = families
         self.genome = genome
@@ -40,6 +41,13 @@ class VcfSerializer:
         for sv, fvs in full_variants:
             record = self._build_vcf_record(sv, fvs)
             self.vcf_file.write(record)
+
+    def serialize_full_variant(self, full_variant: FullVariant) -> None:
+        """Serialize a FullVariant to a VCF file."""
+        assert self.vcf_file is not None
+        record = self._build_vcf_record(full_variant.summary_variant,
+                                        full_variant.family_variants)
+        self.vcf_file.write(record)
 
     def _build_vcf_header(
         self, header: list[str] | None,
@@ -64,18 +72,17 @@ class VcfSerializer:
         )
 
     def _build_vcf_record(
-            self,
-            sv: SummaryVariant,
-            fvs: list[FamilyVariant],
+        self,
+        sv: SummaryVariant,
+        fvs: Sequence[FamilyVariant],
     ) -> pysam.VariantRecord:
         assert self.vcf_file is not None
-        record = self.vcf_file.new_record()
+        record: pysam.VariantRecord = self.vcf_file.new_record()
         record.contig = sv.chrom
         record.pos = sv.position
         record.ref = sv.reference
-
-        alts = [aa.alternative for aa in sv.alt_alleles]
-        record.alts = alts
+        record.alts = tuple(aa.alternative for aa in sv.alt_alleles
+                            if aa.alternative is not None)
 
         svid = [
             f"{aa.chrom}_{aa.position}_{aa.reference}_{aa.alternative}"
@@ -100,7 +107,7 @@ class VcfSerializer:
     ) -> None:
         if exc_type is not None:
             logger.error(
-                "exception while working with genomic score: %s, %s, %s",
+                "exception while serializing vcf: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
         self.close()
 

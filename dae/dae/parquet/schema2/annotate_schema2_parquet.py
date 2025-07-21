@@ -43,7 +43,6 @@ from dae.parquet.schema2.processing_pipeline import (
     DeleteAttributesFromVariantsBatchFilter,
     Schema2SummaryVariantsBatchSource,
     Schema2SummaryVariantsSource,
-    VariantsPipelineProcessor,
 )
 from dae.parquet.schema2.variants_parquet_writer import (
     Schema2SummaryVariantBatchConsumer,
@@ -56,7 +55,7 @@ from dae.schema2_storage.schema2_layout import (
 )
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import Task, TaskGraph
-from dae.utils.processing_pipeline import Filter, Source
+from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region, split_into_regions
 
 logger = logging.getLogger("parquet_schema2_annotation")
@@ -309,7 +308,7 @@ def process_parquet(
             Schema2SummaryVariantBatchConsumer(writer),
         ])
 
-    with VariantsPipelineProcessor(source, filters) as processor:
+    with PipelineProcessor(source, filters) as processor:
         processor.process_region(region)
 
 

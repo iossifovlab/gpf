@@ -21,7 +21,6 @@ from dae.annotation.annotation_pipeline import (
     FullReannotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.format_handlers import AbstractFormat
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
     get_context_pipeline,
@@ -52,7 +51,7 @@ from dae.utils.regions import (
 )
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
-PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
+PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}"
 
 logger = logging.getLogger("annotate_utils")
 
@@ -102,13 +101,6 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
 
 def produce_tabix_index(filepath: str, args: Any = None) -> None:
     """Produce a tabix index file for the given variants file."""
-
-    filepath = filepath.rstrip(".gz")
-
-    if filepath.endswith(".vcf"):
-        tabix_index(filepath, preset="vcf")
-        return
-
     header = _read_header(filepath)
     line_skip = 0 if header[0].startswith("#") else 1
     header = [c.strip("#") for c in header]
@@ -141,6 +133,17 @@ def produce_tabix_index(filepath: str, args: Any = None) -> None:
                 end_col=end_col,
                 line_skip=line_skip,
                 force=True)
+
+
+def stringify(value: Any, *, vcf: bool = False) -> str:
+    """Format the value to a string for human-readable output."""
+    if value is None:
+        return "." if vcf else ""
+    if isinstance(value, float):
+        return f"{value:.3g}"
+    if isinstance(value, bool):
+        return "yes" if value else ""
+    return str(value)
 
 
 class AnnotationTool:
@@ -221,19 +224,6 @@ class AnnotationTool:
         pos_beg = region.start if region.start is not None else "_"
         pos_end = region.stop if region.stop is not None else "_"
         return f"{chrom}_{pos_beg}_{pos_end}"
-
-    @staticmethod
-    def annotate(
-        handler: AbstractFormat,
-        batch_mode: bool,  # noqa: FBT001
-    ) -> None:
-        """Run annotation."""
-        handler.open()
-        if batch_mode:
-            handler.process_batched()
-        else:
-            handler.process()
-        handler.close()
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
