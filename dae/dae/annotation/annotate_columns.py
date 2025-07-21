@@ -5,7 +5,6 @@ import gzip
 import itertools
 import logging
 import os
-import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
@@ -281,7 +280,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
     work_dir: Path,
     batch_size: int,
     region: Region | None,
-    cli_args: Any,
+    cli_args: dict[str, Any],
     input_separator: str,
     output_separator: str,
     allow_repeated_attributes: bool,  # noqa: FBT001
@@ -521,7 +520,3 @@ class AnnotateColumnsTool(AnnotationTool):
 def cli(raw_args: list[str] | None = None) -> None:
     tool = AnnotateColumnsTool(raw_args)
     tool.run()
-
-
-if __name__ == "__main__":
-    cli(sys.argv[1:])

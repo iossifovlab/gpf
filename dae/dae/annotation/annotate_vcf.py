@@ -4,7 +4,6 @@ import argparse
 import itertools
 import logging
 import os
-import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
@@ -523,7 +522,3 @@ class AnnotateVCFTool(AnnotationTool):
 def cli(raw_args: list[str] | None = None) -> None:
     tool = AnnotateVCFTool(raw_args)
     tool.run()
-
-
-if __name__ == "__main__":
-    cli(sys.argv[1:])
