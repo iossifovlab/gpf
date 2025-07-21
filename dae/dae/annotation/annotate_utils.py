@@ -165,8 +165,6 @@ class AnnotationTool:
             raise ValueError("no valid GRR configured")
         self.grr = grr
 
-        self.task_graph = TaskGraph()
-
     def setup_work_dir(self) -> None:
         if not os.path.exists(self.args.work_dir):
             os.mkdir(self.args.work_dir)
@@ -182,7 +180,9 @@ class AnnotationTool:
         """Perform operations required for annotation."""
         return
 
-    def add_tasks_to_graph(self) -> None:
+    def add_tasks_to_graph(
+        self, task_graph: TaskGraph,  # noqa: ARG002
+    ) -> None:
         """Add tasks to annotation tool task graph."""
         return
 
@@ -202,14 +202,15 @@ class AnnotationTool:
 
         self.prepare_for_annotation()
 
-        self.add_tasks_to_graph()
+        task_graph = TaskGraph()
+        self.add_tasks_to_graph(task_graph)
 
-        if len(self.task_graph.tasks) > 0:
+        if len(task_graph.tasks) > 0:
             if hasattr(self.args, "input"):
-                self.task_graph.input_files.append(self.args.input)
+                task_graph.input_files.append(self.args.input)
             if hasattr(self.args, "pipeline"):
-                self.task_graph.input_files.append(self.args.pipeline)
+                task_graph.input_files.append(self.args.pipeline)
             if hasattr(self.args, "reannotate") and self.args.reannotate:
-                self.task_graph.input_files.append(self.args.reannotate)
+                task_graph.input_files.append(self.args.reannotate)
 
-            TaskGraphCli.process_graph(self.task_graph, **vars(self.args))
+            TaskGraphCli.process_graph(task_graph, **vars(self.args))

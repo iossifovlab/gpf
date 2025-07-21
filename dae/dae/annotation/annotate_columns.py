@@ -49,6 +49,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph import TaskGraphCli
+from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -438,7 +439,7 @@ class AnnotateColumnsTool(AnnotationTool):
         self.ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
-    def add_tasks_to_graph(self) -> None:
+    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
         assert self.output is not None
         pipeline_config_old = None
         if self.args.reannotate:
@@ -454,7 +455,7 @@ class AnnotateColumnsTool(AnnotationTool):
             for region, path in zip(regions, file_paths, strict=True):
                 task_id = f"part-{str(region).replace(':', '-')}"
 
-                annotation_tasks.append(self.task_graph.create_task(
+                annotation_tasks.append(task_graph.create_task(
                     task_id,
                     process_dsv,
                     args=[
@@ -475,12 +476,12 @@ class AnnotateColumnsTool(AnnotationTool):
                     ],
                     deps=[]))
 
-            annotation_sync = self.task_graph.create_task(
+            annotation_sync = task_graph.create_task(
                 "sync_dsv_write", lambda: None,
                 args=[], deps=annotation_tasks,
             )
 
-            concat_task = self.task_graph.create_task(
+            concat_task = task_graph.create_task(
                 "concat",
                 concat,
                 args=[
@@ -489,13 +490,13 @@ class AnnotateColumnsTool(AnnotationTool):
                 ],
                 deps=[annotation_sync])
 
-            self.task_graph.create_task(
+            task_graph.create_task(
                 "compress_and_tabix",
                 produce_tabix_index,
                 args=[self.output, self.args],
                 deps=[concat_task])
         else:
-            self.task_graph.create_task(
+            task_graph.create_task(
                 "annotate_all",
                 process_dsv,
                 args=[

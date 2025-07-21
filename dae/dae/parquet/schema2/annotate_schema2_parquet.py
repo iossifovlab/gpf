@@ -461,13 +461,13 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             symlink_pedigree_and_family_variants(self.loader.layout,
                                                  self.output_layout)
 
-    def add_tasks_to_graph(self) -> None:
+    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
         assert self.loader is not None
         assert self.output_layout is not None
         assert self.pipeline is not None
 
         annotation_tasks = produce_schema2_annotation_tasks(
-            self.task_graph,
+            task_graph,
             self.loader,
             self.output_layout.study,
             self.pipeline.raw,
@@ -480,13 +480,13 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             full_reannotation=self.args.full_reannotation,
         )
 
-        annotation_sync = self.task_graph.create_task(
+        annotation_sync = task_graph.create_task(
             "sync_parquet_write", lambda: None,
             args=[], deps=annotation_tasks,
         )
 
         produce_schema2_merging_tasks(
-            self.task_graph,
+            task_graph,
             annotation_sync,
             ReferenceGenome(
                 self.grr.get_resource(self.loader.meta["reference_genome"])),

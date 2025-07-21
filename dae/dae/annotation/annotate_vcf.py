@@ -44,6 +44,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph import TaskGraphCli
+from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -445,7 +446,7 @@ class AnnotateVCFTool(AnnotationTool):
             self.output = os.path.basename(
                 self.args.input).split(".")[0] + "_annotated.vcf"
 
-    def add_tasks_to_graph(self) -> None:
+    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
         assert self.grr is not None
         assert self.output is not None
         pipeline_config_old = None
@@ -453,7 +454,7 @@ class AnnotateVCFTool(AnnotationTool):
             pipeline_config_old = Path(self.args.reannotate).read_text()
 
         if not tabix_index_filename(self.args.input):
-            self.task_graph.create_task(
+            task_graph.create_task(
                 "all_variants_annotate",
                 process_vcf,
                 args=[
@@ -478,7 +479,7 @@ class AnnotateVCFTool(AnnotationTool):
 
             annotation_tasks = []
             for (region, file_path) in zip(regions, file_paths, strict=True):
-                annotation_tasks.append(self.task_graph.create_task(
+                annotation_tasks.append(task_graph.create_task(
                     f"part-{str(region).replace(':', '-')}",
                     process_vcf,
                     args=[
@@ -496,13 +497,13 @@ class AnnotateVCFTool(AnnotationTool):
                     deps=[],
                 ))
 
-            annotation_sync = self.task_graph.create_task(
+            annotation_sync = task_graph.create_task(
                 "sync_vcf_annotate", lambda: None,
                 args=[], deps=annotation_tasks,
             )
 
             assert self.grr is not None
-            concat_task = self.task_graph.create_task(
+            concat_task = task_graph.create_task(
                 "concat",
                 concat,
                 args=[
@@ -512,7 +513,7 @@ class AnnotateVCFTool(AnnotationTool):
                 deps=[annotation_sync],
             )
 
-            self.task_graph.create_task(
+            task_graph.create_task(
                 "compress_and_tabix",
                 make_vcf_tabix,
                 args=[self.output],
