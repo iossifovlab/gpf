@@ -455,7 +455,7 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click({force: true});
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
 
     await expect(page.getByText('Please select at least one value.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
@@ -568,7 +568,7 @@ test.describe('Pheno Measures tests', () => {
     await selectRole(page, 'instrument_1.measure_5', 'sib');
 
     await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click({force: true});
+    await page.getByRole('menuitem', {name: 'click selector'}).click();
     await page.locator('rect[id="val4"]').click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
