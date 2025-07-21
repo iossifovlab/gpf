@@ -138,17 +138,16 @@ export function getRandomString(): string {
 export async function createUser(page: Page, email: string, name: string): Promise<void> {
   await page.locator('#create-user-form-button').click();
 
-  await page.waitForSelector('.grid-container'); // In case of duplicates
+  await page.waitForSelector('.grid-cell'); // In case of duplicates
   if (await page.locator(`[id="${email}-user-cell"]`).isVisible() === true) {
     await page.locator(`[id="${email}-delete-user-button"]`).click();
     await page.locator('button:text("Delete")').click();
     await page.waitForSelector(`[id="${email}-user-cell"]`, {state: 'detached'});
   }
 
-  await page.locator('#name-box').fill(name);
-  await page.locator('#email-box').fill(email);
+  await page.locator('.create-container').locator('#name-box').fill(name);
+  await page.locator('.create-container').locator('#email-box').fill(email);
   await page.locator('#create-user-button').click();
-
 
   await expect(page.locator(`[id="${email}-user-cell"]`)).toBeVisible();
   await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();

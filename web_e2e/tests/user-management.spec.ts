@@ -76,8 +76,9 @@ test.describe('Users management', () => {
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
     await page.locator('#create-user-form-button').click();
-    await page.locator('#name-box').fill('used_name');
-    await page.locator('#email-box').fill('used_email@email.com');
+
+    await page.locator('.create-container').locator('#name-box').fill('used_name');
+    await page.locator('.create-container').locator('#email-box').fill('used_email@email.com');
     await page.locator('#create-user-button').click();
 
     await expect(page.getByText(' Error: wdae user with this email already exists. ')).toBeVisible();
@@ -88,12 +89,13 @@ test.describe('Users management', () => {
     await page.locator('a:text("Management")').click();
 
     await page.locator('#create-user-form-button').click();
-    await page.locator('#name-box').fill('no_username');
+
+    await page.locator('.create-container').locator('#name-box').fill('no_username');
     await page.locator('#create-user-button').click();
     await expect(page.locator('#email-box')).toBeFocused();
 
     await page.locator('#name-box').clear();
-    await page.locator('#email-box').fill('no_username_email@email.com');
+    await page.locator('.create-container').locator('#email-box').fill('no_username_email@email.com');
     await page.locator('#create-user-button').click();
     await expect(page.locator('#name-box')).toBeFocused();
 
@@ -105,24 +107,24 @@ test.describe('Users management', () => {
 
     await page.locator('#create-user-form-button').click();
 
-    await page.locator('#name-box').fill('valid_test_name');
-    await page.locator('#email-box').fill('invalid_email@email.c');
+    await page.locator('.create-container').locator('#name-box').fill('valid_test_name');
+    await page.locator('.create-container').locator('#email-box').fill('invalid_email@email.c');
     await page.locator('#create-user-button').click();
     await expect(page.locator('#email-box')).toBeFocused();
 
     await page.locator('#email-box').clear();
-    await page.locator('#email-box').fill('invalid_email@');
+    await page.locator('.create-container').locator('#email-box').fill('invalid_email@');
     await page.locator('#create-user-button').click();
     await expect(page.locator('#email-box')).toBeFocused();
 
     await page.locator('#email-box').clear();
-    await page.locator('#email-box').fill('invalid_email');
+    await page.locator('.create-container').locator('#email-box').fill('invalid_email');
     await page.locator('#create-user-button').click();
     await expect(page.locator('#email-box')).toBeFocused();
 
     await page.locator('#name-box').clear();
-    await page.locator('#email-box').fill('invalid_email@email.com');
-    await page.locator('#name-box').fill('va');
+    await page.locator('.create-container').locator('#email-box').fill('invalid_email@email.com');
+    await page.locator('.create-container').locator('#name-box').fill('va');
     await page.locator('#create-user-button').click();
     await expect(page.locator('#name-box')).toBeFocused();
   });
@@ -189,8 +191,8 @@ test.describe('Users management', () => {
     await page.locator('a:text("Management")').click();
     await page.locator('#create-user-form-button').click();
 
-    await page.locator('#name-box').fill(username);
-    await page.locator('#email-box').fill(email);
+    await page.locator('.create-container').locator('#name-box').fill(username);
+    await page.locator('.create-container').locator('#email-box').fill(email);
     await page.locator('#cancel-user-creation-button').click();
 
     await expect(page.locator(`[id="${email}-user-cell"]`)).not.toBeVisible();
