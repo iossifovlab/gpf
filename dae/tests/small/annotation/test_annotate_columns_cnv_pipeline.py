@@ -232,6 +232,7 @@ def test_bad_cnv_effect_annotation(
         "-o", str(root_path / "result.tsv"),
         "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
+        "-R", "genome/foobar_genome",
         "-j", "1",
     ])
 
@@ -270,9 +271,10 @@ def test_bad_cnv_gene_score_annotation(
         "-o", str(root_path / "result.tsv"),
         "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
+        "-R", "genome/foobar_genome",
         "-j", "1",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
-    assert all(np.isnan(v) for v in df.gene_score1.values)
+    assert all(np.isnan(v) for v in df.gene_score1.to_numpy())

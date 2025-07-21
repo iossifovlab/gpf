@@ -163,6 +163,15 @@ def get_stuff_from_context() -> tuple[AnnotationPipeline,
     return pipeline, context, grr
 
 
+def add_input_files_to_task_graph(args: dict, task_graph: TaskGraph) -> None:
+    if "input" in args:
+        task_graph.input_files.append(args["input"])
+    if "pipeline" in args:
+        task_graph.input_files.append(args["pipeline"])
+    if args.get("reannotate"):
+        task_graph.input_files.append(args["reannotate"])
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -210,11 +219,6 @@ class AnnotationTool:
         self.add_tasks_to_graph(task_graph)
 
         if len(task_graph.tasks) > 0:
-            if "input" in self.args:
-                task_graph.input_files.append(self.args["input"])
-            if "pipeline" in self.args:
-                task_graph.input_files.append(self.args["pipeline"])
-            if self.args.get("reannotate"):
-                task_graph.input_files.append(self.args["reannotate"])
+            add_input_files_to_task_graph(self.args, task_graph)
 
             TaskGraphCli.process_graph(task_graph, **self.args)

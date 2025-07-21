@@ -5,6 +5,7 @@ import gzip
 import itertools
 import logging
 import os
+import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
@@ -14,10 +15,13 @@ from typing import Any, TextIO
 from pysam import TabixFile
 
 from dae.annotation.annotate_utils import (
-    AnnotationTool,
+    add_input_files_to_task_graph,
+    get_stuff_from_context,
     produce_partfile_paths,
     produce_regions,
     produce_tabix_index,
+    setup_context,
+    setup_work_dir_and_task_dirs,
     stringify,
 )
 from dae.annotation.annotation_config import (
@@ -40,6 +44,7 @@ from dae.annotation.record_to_annotatable import (
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
+from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
@@ -366,16 +371,24 @@ def concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-class AnnotateColumnsTool(AnnotationTool):
+class AnnotateColumnsTool:
     """Annotation tool for TSV-style text files."""
 
-    def __init__(
-        self,
-        raw_args: list[str] | None = None,
-    ) -> None:
-        super().__init__(raw_args)
-        self.output: str | None = None
-        self.ref_genome_id: str | None = None
+    def __init__(self, raw_args: list[str]) -> None:
+        self.args = vars(self.get_argument_parser().parse_args(raw_args))
+        self.output: str = self._get_output_path()
+        setup_context(self.args)
+
+    def _get_output_path(self) -> str:
+        if self.args["output"]:
+            return self.args["output"].rstrip(".gz")
+
+        input_name = self.args["input"].rstrip(".gz")
+        if "." in input_name:
+            idx = input_name.find(".")
+            return f"{input_name[:idx]}_annotated{input_name[idx:]}"
+
+        return f"{input_name}_annotated"
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Configure argument parser."""
@@ -425,22 +438,22 @@ class AnnotateColumnsTool(AnnotationTool):
         VerbosityConfiguration.set_arguments(parser)
         return parser
 
-    def prepare_for_annotation(self) -> None:
-        if self.args["output"]:
-            self.output = self.args["output"].rstrip(".gz")
-        else:
-            input_name = self.args["input"].rstrip(".gz")
-            if "." in input_name:
-                idx = input_name.find(".")
-                self.output = f"{input_name[:idx]}_annotated{input_name[idx:]}"
-            else:
-                self.output = f"{input_name}_annotated"
-        ref_genome = self.context.get_reference_genome()
-        self.ref_genome_id = ref_genome.resource_id \
+    def add_tasks(self, task_graph: TaskGraph) -> None:
+        assert self.output is not None
+
+        pipeline, context, grr = get_stuff_from_context()
+
+        resource_ids: set[str] = {
+            res.resource_id
+            for annotator in pipeline.annotators
+            for res in annotator.resources
+        }
+        cache_resources(grr, resource_ids)
+
+        ref_genome = context.get_reference_genome()
+        ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
-    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
-        assert self.output is not None
         pipeline_config_old = None
         if self.args["reannotate"]:
             pipeline_config_old = Path(self.args["reannotate"]).read_text()
@@ -461,10 +474,10 @@ class AnnotateColumnsTool(AnnotationTool):
                     args=[
                         self.args["input"],
                         path,
-                        self.pipeline.raw,
+                        pipeline.raw,
                         pipeline_config_old,
-                        self.grr.definition,
-                        self.ref_genome_id,
+                        grr.definition,
+                        ref_genome_id,
                         Path(self.args["work_dir"]),
                         self.args["batch_size"],
                         region,
@@ -502,10 +515,10 @@ class AnnotateColumnsTool(AnnotationTool):
                 args=[
                     self.args["input"],
                     self.output,
-                    self.pipeline.raw,
+                    pipeline.raw,
                     pipeline_config_old,
-                    self.grr.definition,
-                    self.ref_genome_id,
+                    grr.definition,
+                    ref_genome_id,
                     Path(self.args["work_dir"]),
                     self.args["batch_size"],
                     None,
@@ -519,5 +532,16 @@ class AnnotateColumnsTool(AnnotationTool):
 
 
 def cli(raw_args: list[str] | None = None) -> None:
+    if not raw_args:
+        raw_args = sys.argv[1:]
     tool = AnnotateColumnsTool(raw_args)
-    tool.run()
+
+    task_graph = TaskGraph()
+
+    setup_work_dir_and_task_dirs(tool.args)
+
+    tool.add_tasks(task_graph)
+
+    if len(task_graph.tasks) > 0:
+        add_input_files_to_task_graph(tool.args, task_graph)
+        TaskGraphCli.process_graph(task_graph, **tool.args)
