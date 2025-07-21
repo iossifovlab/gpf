@@ -33,7 +33,6 @@ from dae.utils.regions import (
     get_chromosome_length_tabix,
     split_into_regions,
 )
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}"
 
@@ -83,13 +82,13 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
     return [c.strip() for c in header.split(separator)]
 
 
-def produce_tabix_index(filepath: str, args: Any = None) -> None:
+def produce_tabix_index(filepath: str, args: dict | None = None) -> None:
     """Produce a tabix index file for the given variants file."""
     header = _read_header(filepath)
     line_skip = 0 if header[0].startswith("#") else 1
     header = [c.strip("#") for c in header]
     record_to_annotatable = build_record_to_annotatable(
-        vars(args) if args is not None else {},
+        args if args is not None else {},
         set(header),
     )
     if isinstance(record_to_annotatable, (RecordToRegion,
@@ -130,6 +129,13 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     return str(value)
 
 
+def setup_work_dir_and_task_dirs(args: dict) -> None:
+    if not os.path.exists(args["work_dir"]):
+        os.mkdir(args["work_dir"])
+    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
+    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -142,11 +148,10 @@ class AnnotationTool:
 
         parser = self.get_argument_parser()
 
-        self.args = parser.parse_args(raw_args)
-        VerbosityConfiguration.set(self.args)
+        self.args = vars(parser.parse_args(raw_args))
 
         register_context_provider(CLIAnnotationContextProvider())
-        context_providers_init(**vars(self.args))
+        context_providers_init(**self.args)
 
         registered_context = get_genomic_context()
 
@@ -164,13 +169,6 @@ class AnnotationTool:
         if grr is None:
             raise ValueError("no valid GRR configured")
         self.grr = grr
-
-    def setup_work_dir(self) -> None:
-        if not os.path.exists(self.args.work_dir):
-            os.mkdir(self.args.work_dir)
-        self.args.task_status_dir = os.path.join(
-            self.args.work_dir, ".task-status")
-        self.args.task_log_dir = os.path.join(self.args.work_dir, ".task-log")
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
@@ -198,7 +196,7 @@ class AnnotationTool:
         }
         cache_resources(self.grr, resource_ids)
 
-        self.setup_work_dir()
+        setup_work_dir_and_task_dirs(self.args)
 
         self.prepare_for_annotation()
 
@@ -206,11 +204,11 @@ class AnnotationTool:
         self.add_tasks_to_graph(task_graph)
 
         if len(task_graph.tasks) > 0:
-            if hasattr(self.args, "input"):
-                task_graph.input_files.append(self.args.input)
-            if hasattr(self.args, "pipeline"):
-                task_graph.input_files.append(self.args.pipeline)
-            if hasattr(self.args, "reannotate") and self.args.reannotate:
-                task_graph.input_files.append(self.args.reannotate)
+            if "input" in self.args:
+                task_graph.input_files.append(self.args["input"])
+            if "pipeline" in self.args:
+                task_graph.input_files.append(self.args["pipeline"])
+            if self.args.get("reannotate"):
+                task_graph.input_files.append(self.args["reannotate"])
 
-            TaskGraphCli.process_graph(task_graph, **vars(self.args))
+            TaskGraphCli.process_graph(task_graph, **self.args)

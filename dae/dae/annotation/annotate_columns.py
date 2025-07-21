@@ -426,10 +426,10 @@ class AnnotateColumnsTool(AnnotationTool):
         return parser
 
     def prepare_for_annotation(self) -> None:
-        if self.args.output:
-            self.output = self.args.output.rstrip(".gz")
+        if self.args["output"]:
+            self.output = self.args["output"].rstrip(".gz")
         else:
-            input_name = self.args.input.rstrip(".gz")
+            input_name = self.args["input"].rstrip(".gz")
             if "." in input_name:
                 idx = input_name.find(".")
                 self.output = f"{input_name[:idx]}_annotated{input_name[idx:]}"
@@ -442,14 +442,14 @@ class AnnotateColumnsTool(AnnotationTool):
     def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
         assert self.output is not None
         pipeline_config_old = None
-        if self.args.reannotate:
-            pipeline_config_old = Path(self.args.reannotate).read_text()
+        if self.args["reannotate"]:
+            pipeline_config_old = Path(self.args["reannotate"]).read_text()
 
-        if tabix_index_filename(self.args.input):
-            with closing(TabixFile(self.args.input)) as pysam_file:
-                regions = produce_regions(pysam_file, self.args.region_size)
+        if tabix_index_filename(self.args["input"]):
+            with closing(TabixFile(self.args["input"])) as pysam_file:
+                regions = produce_regions(pysam_file, self.args["region_size"])
             file_paths = produce_partfile_paths(
-                self.args.input, regions, self.args.work_dir)
+                self.args["input"], regions, self.args["work_dir"])
 
             annotation_tasks = []
             for region, path in zip(regions, file_paths, strict=True):
@@ -459,20 +459,20 @@ class AnnotateColumnsTool(AnnotationTool):
                     task_id,
                     process_dsv,
                     args=[
-                        self.args.input,
+                        self.args["input"],
                         path,
                         self.pipeline.raw,
                         pipeline_config_old,
                         self.grr.definition,
                         self.ref_genome_id,
-                        Path(self.args.work_dir),
-                        self.args.batch_size,
+                        Path(self.args["work_dir"]),
+                        self.args["batch_size"],
                         region,
-                        vars(self.args),
-                        self.args.input_separator,
-                        self.args.output_separator,
-                        self.args.allow_repeated_attributes,
-                        self.args.full_reannotation,
+                        self.args,
+                        self.args["input_separator"],
+                        self.args["output_separator"],
+                        self.args["allow_repeated_attributes"],
+                        self.args["full_reannotation"],
                     ],
                     deps=[]))
 
@@ -500,20 +500,20 @@ class AnnotateColumnsTool(AnnotationTool):
                 "annotate_all",
                 process_dsv,
                 args=[
-                    self.args.input,
+                    self.args["input"],
                     self.output,
                     self.pipeline.raw,
                     pipeline_config_old,
                     self.grr.definition,
                     self.ref_genome_id,
-                    Path(self.args.work_dir),
-                    self.args.batch_size,
+                    Path(self.args["work_dir"]),
+                    self.args["batch_size"],
                     None,
-                    vars(self.args),
-                    self.args.input_separator,
-                    self.args.output_separator,
-                    self.args.allow_repeated_attributes,
-                    self.args.full_reannotation,
+                    self.args,
+                    self.args["input_separator"],
+                    self.args["output_separator"],
+                    self.args["allow_repeated_attributes"],
+                    self.args["full_reannotation"],
                 ],
                 deps=[])
 

@@ -440,42 +440,42 @@ class AnnotateVCFTool(AnnotationTool):
         return parser
 
     def prepare_for_annotation(self) -> None:
-        if self.args.output:
-            self.output = self.args.output
+        if self.args.get("output"):
+            self.output = self.args["output"]
         else:
             self.output = os.path.basename(
-                self.args.input).split(".")[0] + "_annotated.vcf"
+                self.args["input"]).split(".")[0] + "_annotated.vcf"
 
     def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
         assert self.grr is not None
         assert self.output is not None
         pipeline_config_old = None
-        if self.args.reannotate:
-            pipeline_config_old = Path(self.args.reannotate).read_text()
+        if self.args.get("reannotate"):
+            pipeline_config_old = Path(self.args["reannotate"]).read_text()
 
-        if not tabix_index_filename(self.args.input):
+        if not tabix_index_filename(self.args["input"]):
             task_graph.create_task(
                 "all_variants_annotate",
                 process_vcf,
                 args=[
-                    self.args.input,
+                    self.args["input"],
                     self.output,
                     self.pipeline.raw,
                     pipeline_config_old,
                     self.grr.definition,
-                    Path(self.args.work_dir),
-                    self.args.batch_size,
+                    Path(self.args["work_dir"]),
+                    self.args["batch_size"],
                     None,
-                    self.args.allow_repeated_attributes,
-                    self.args.full_reannotation,
+                    self.args["allow_repeated_attributes"],
+                    self.args["full_reannotation"],
                 ],
                 deps=[],
             )
         else:
-            with closing(TabixFile(self.args.input)) as pysam_file:
-                regions = produce_regions(pysam_file, self.args.region_size)
+            with closing(TabixFile(self.args["input"])) as pysam_file:
+                regions = produce_regions(pysam_file, self.args["region_size"])
             file_paths = produce_partfile_paths(
-                self.args.input, regions, self.args.work_dir)
+                self.args["input"], regions, self.args["work_dir"])
 
             annotation_tasks = []
             for (region, file_path) in zip(regions, file_paths, strict=True):
@@ -483,16 +483,16 @@ class AnnotateVCFTool(AnnotationTool):
                     f"part-{str(region).replace(':', '-')}",
                     process_vcf,
                     args=[
-                        self.args.input,
+                        self.args["input"],
                         file_path,
                         self.pipeline.raw,
                         pipeline_config_old,
                         self.grr.definition,
-                        Path(self.args.work_dir),
-                        self.args.batch_size,
+                        Path(self.args["work_dir"]),
+                        self.args["batch_size"],
                         region,
-                        self.args.allow_repeated_attributes,
-                        self.args.full_reannotation,
+                        self.args["allow_repeated_attributes"],
+                        self.args["full_reannotation"],
                     ],
                     deps=[],
                 ))

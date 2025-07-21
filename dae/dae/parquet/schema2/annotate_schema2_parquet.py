@@ -376,8 +376,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
     def print_meta(self) -> None:
         """Print the metadata of a Parquet study."""
-        input_dir = os.path.abspath(self.args.input)
-        if self.args.meta:
+        input_dir = os.path.abspath(self.args["input"])
+        if self.args["meta"]:
             loader = ParquetLoader.load_from_dir(input_dir)
             for k, v in loader.meta.items():
                 print("=" * 50)
@@ -422,23 +422,23 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         Additionally, carries out any transformations necessary to produce
         the layouts correctly, such as renaming, removing, etc.
         """
-        if not self.args.in_place and not self.args.output:
+        if not self.args["in_place"] and not self.args["output"]:
             raise ValueError("No output path was provided!")
 
-        input_dir = os.path.abspath(self.args.input)
-        output_dir = input_dir if self.args.in_place \
-            else os.path.abspath(self.args.output)
+        input_dir = os.path.abspath(self.args["input"])
+        output_dir = input_dir if self.args["in_place"]\
+            else os.path.abspath(self.args["output"])
 
-        if not self.args.in_place:
-            if os.path.exists(output_dir) and not self.args.force:
+        if not self.args["in_place"]:
+            if os.path.exists(output_dir) and not self.args["force"]:
                 logger.warning(
                     "Output path '%s' already exists! "
                     "Some files may be overwritten.", output_dir,
                 )
-            elif os.path.exists(output_dir) and self.args.force:
+            elif os.path.exists(output_dir) and self.args["force"]:
                 self._remove_data(output_dir)
 
-        input_layout = backup_schema2_study(input_dir) if self.args.in_place \
+        input_layout = backup_schema2_study(input_dir) if self.args["in_place"]\
             else create_schema2_dataset_layout(input_dir)
         output_layout = create_schema2_dataset_layout(output_dir)
 
@@ -457,7 +457,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         input_layout, self.output_layout = self._setup_io_layouts()
         self.loader = ParquetLoader(input_layout)
         write_new_meta(self.loader, self.pipeline, self.output_layout)
-        if not self.args.in_place:
+        if not self.args["in_place"]:
             symlink_pedigree_and_family_variants(self.loader.layout,
                                                  self.output_layout)
 
@@ -472,12 +472,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.output_layout.study,
             self.pipeline.raw,
             self.grr,
-            self.args.region_size,
-            self.args.work_dir,
-            self.args.batch_size,
-            target_region=self.args.region,
-            allow_repeated_attributes=self.args.allow_repeated_attributes,
-            full_reannotation=self.args.full_reannotation,
+            self.args["region_size"],
+            self.args["work_dir"],
+            self.args["batch_size"],
+            target_region=self.args["region"],
+            allow_repeated_attributes=self.args["allow_repeated_attributes"],
+            full_reannotation=self.args["full_reannotation"],
         )
 
         annotation_sync = task_graph.create_task(
@@ -500,10 +500,10 @@ def cli(
 ) -> None:
     """Entry method for AnnotateSchema2ParquetTool."""
     tool = AnnotateSchema2ParquetTool(raw_args)
-    if tool.args.meta:
+    if tool.args["meta"]:
         tool.print_meta()
         return
-    if tool.args.dry_run:
+    if tool.args["dry_run"]:
         tool.dry_run()
         return
     tool.run()
