@@ -9,6 +9,8 @@ test.describe('Genomic scores tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
+  test.use({viewport: { width: 1920, height: 2160 }});
+
   test('should display genomic scores panel after selecting score ' +
   'and remove it after "remove filter" button click', async({ page }) => {
     await expect(page.locator('gpf-genomic-scores')).toBeHidden();
