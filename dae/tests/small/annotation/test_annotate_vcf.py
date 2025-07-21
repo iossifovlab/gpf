@@ -149,7 +149,6 @@ def test_basic_vcf(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -187,7 +186,6 @@ def test_multiallelic_vcf(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -234,7 +232,6 @@ def test_vcf_multiple_chroms(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -281,7 +278,6 @@ def test_annotate_vcf_float_precision(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -320,7 +316,6 @@ def test_annotate_vcf_internal_attributes(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -361,7 +356,6 @@ def test_annotate_vcf_forbidden_symbol_replacement(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -401,7 +395,6 @@ def test_annotate_vcf_none_values(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -444,7 +437,6 @@ def test_vcf_description_with_quotes(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -485,7 +477,6 @@ def test_annotate_vcf_repeated_attributes(
             "-w", work_dir,
             "-j", 1,
             "--allow-repeated-attributes",
-            "-R", "test_genome",
         ]
     ])
 

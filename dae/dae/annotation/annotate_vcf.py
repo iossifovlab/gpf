@@ -453,9 +453,6 @@ class AnnotateVCFTool(AnnotationTool):
         if self.args.reannotate:
             pipeline_config_old = Path(self.args.reannotate).read_text()
 
-        ref_genome = self.context.get_reference_genome()
-        assert ref_genome is not None
-
         if not tabix_index_filename(self.args.input):
             self.task_graph.create_task(
                 "all_variants_annotate",
