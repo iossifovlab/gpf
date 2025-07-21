@@ -34,6 +34,8 @@ from dae.annotation.processing_pipeline import (
     AnnotationPipelineAnnotatablesBatchFilter,
     AnnotationPipelineAnnotatablesFilter,
     AnnotationsWithSource,
+    DeleteAttributesFromAWSBatchFilter,
+    DeleteAttributesFromAWSFilter,
 )
 from dae.annotation.record_to_annotatable import (
     add_record_to_annotable_arguments,
@@ -225,8 +227,7 @@ class DSVWriter(Filter):
     def filter(self, data: AnnotationsWithSource) -> None:
         context = data.annotations[0].context
         result = {
-            col: context[col] if col in context
-                 else data.source[col]
+            col: context[col] if col in context else data.source[col]
             for col in self.header
         }
         self.out_file.write(
@@ -268,33 +269,6 @@ class DSVBatchWriter(Filter):
     def filter(self, data: Sequence[AnnotationsWithSource]) -> None:
         for record in data:
             self.writer.filter(record)
-
-
-class DeleteAttributesFromAWSFilter(Filter):
-    """Filter to remove items from AWSs. Works in-place."""
-
-    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
-        self.to_remove = set(attributes_to_remove)
-
-    def filter(self, data: AnnotationsWithSource) -> AnnotationsWithSource:
-        for attr in self.to_remove:
-            del data.source[attr]
-        return data
-
-
-class DeleteAttributesFromAWSBatchFilter(Filter):
-    """Filter to remove items from AWS batches. Works in-place."""
-
-    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
-        self._delete_filter = DeleteAttributesFromAWSFilter(
-            attributes_to_remove)
-
-    def filter(
-        self, data: Sequence[AnnotationsWithSource],
-    ) -> Sequence[AnnotationsWithSource]:
-        for aws in data:
-            self._delete_filter.filter(aws)
-        return data
 
 
 def process_dsv(  # pylint: disable=too-many-positional-arguments

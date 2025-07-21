@@ -5,10 +5,7 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources.testing import (
-    setup_genome,
-    setup_pedigree,
-)
+from dae.genomic_resources.testing import setup_genome
 from dae.testing import setup_denovo, setup_directories
 
 
@@ -192,15 +189,4 @@ def annotate_directory_fixture(
                      >chr4
                      {25 * 'ACGT'}
                  """))
-    setup_pedigree(root_path / "sample.ped", textwrap.dedent("""
-        familyId personId dadId momId sex status role
-        f1       m1       0     0     2   1      mom
-        f1       d1       0     0     1   1      dad
-        f1       c1       dad   mom   1   2      prb
-    """))
     return root_path
-
-
-@pytest.fixture(scope="module")
-def sample_ped(annotate_directory_fixture: pathlib.Path) -> pathlib.Path:
-    return annotate_directory_fixture / "sample.ped"

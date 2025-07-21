@@ -10,7 +10,6 @@ from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import setup_pedigree
 from dae.testing import (
     convert_to_tab_separated,
     setup_denovo,
@@ -615,7 +614,6 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     """)
 
     in_file = tmp_path / "in.vcf"
-    pedigree = tmp_path / "sample.ped"
     out_file = tmp_path / "out.vcf"
     annotation_file_old = tmp_path / "reannotation_old.yaml"
     annotation_file_new = tmp_path / "reannotation_new.yaml"
@@ -623,17 +621,10 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     work_dir = tmp_path / "work"
 
     setup_vcf(in_file, in_content)
-    setup_pedigree(pedigree, textwrap.dedent("""
-        familyId personId dadId momId sex status role
-        f1       m1       0     0     2   1      mom
-        f1       d1       0     0     1   1      dad
-        f1       c1       dad   mom   1   2      prb
-    """))
 
     cli_vcf([
         str(a) for a in [
             in_file,
-            pedigree,
             annotation_file_new,
             "-o", out_file,
             "-w", work_dir,
@@ -648,5 +639,4 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
 
     assert info_keys == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",
-         "END",  # <--- Added from serializer, not an annotation
     }

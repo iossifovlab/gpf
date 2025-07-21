@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import logging
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
 from types import TracebackType
@@ -12,15 +13,20 @@ from types import TracebackType
 from pysam import (
     TabixFile,
     VariantFile,
+    VariantHeader,
+    VariantRecord,
     tabix_index,
 )
 
+from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_utils import (
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
+    stringify,
 )
 from dae.annotation.annotation_config import (
+    AttributeInfo,
     RawAnnotatorsConfig,
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -29,29 +35,20 @@ from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
-from dae.genomic_resources.reference_genome import (
-    build_reference_genome_from_resource_id,
+from dae.annotation.processing_pipeline import (
+    Annotation,
+    AnnotationPipelineAnnotatablesBatchFilter,
+    AnnotationPipelineAnnotatablesFilter,
+    AnnotationsWithSource,
 )
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.parquet.schema2.processing_pipeline import (
-    AnnotationPipelineVariantsBatchFilter,
-    AnnotationPipelineVariantsFilter,
-    DeleteAttributesFromVariantFilter,
-    DeleteAttributesFromVariantsBatchFilter,
-    VariantsLoaderBatchSource,
-    VariantsLoaderSource,
-)
-from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.variants_loaders.raw.loader import FullVariant
-from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 logger = logging.getLogger("annotate_vcf")
 
@@ -60,64 +57,215 @@ def make_vcf_tabix(filepath: str) -> None:
     tabix_index(filepath, preset="vcf")
 
 
+class VCFSource(Source):
+    """Source for reading from VCF files."""
+
+    def __init__(self, path: str):
+        self.path = path
+        self.vcf: VariantFile
+        with VariantFile(self.path, "r") as infile:
+            self.header = infile.header
+
+    def __enter__(self) -> VCFSource:
+        self.vcf = VariantFile(self.path, "r")
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.vcf.close()
+
+        return exc_type is None
+
+    @staticmethod
+    def _convert(variant: VariantRecord) -> AnnotationsWithSource:
+        annotations = [
+            Annotation(
+                VCFAllele(variant.chrom,
+                          variant.pos,
+                          variant.ref,  # type: ignore
+                          alt),
+                dict(variant.info),
+            )
+            for alt in variant.alts  # type: ignore
+        ]
+        return AnnotationsWithSource(variant, annotations)
+
+    def fetch(
+        self, region: Region | None = None,
+    ) -> Iterable[AnnotationsWithSource]:
+        if region is None:
+            in_file_iter = self.vcf.fetch()
+        else:
+            in_file_iter = self.vcf.fetch(region.chrom,
+                                          region.start,
+                                          region.stop)
+
+        for vcf_var in in_file_iter:
+            if vcf_var.ref is None:
+                logger.warning(
+                    "vcf variant without reference: %s %s",
+                    vcf_var.chrom, vcf_var.pos,
+                )
+                continue
+
+            if vcf_var.alts is None:
+                logger.info(
+                    "vcf variant without alternatives: %s %s",
+                    vcf_var.chrom, vcf_var.pos,
+                )
+                continue
+
+            yield VCFSource._convert(vcf_var)
+
+
+class VCFBatchSource(Source):
+    """Source for reading from VCF files in batches."""
+
+    def __init__(
+        self,
+        path: str,
+        batch_size: int = 500,
+    ):
+        self.source = VCFSource(path)
+        self.batch_size = batch_size
+
+    def __enter__(self) -> VCFBatchSource:
+        self.source.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb)
+
+        self.source.__exit__(exc_type, exc_value, exc_tb)
+
+        return exc_type is None
+
+    def fetch(
+        self, region: Region | None = None,
+    ) -> Iterable[Sequence[AnnotationsWithSource]]:
+        records = self.source.fetch(region)
+        while batch := tuple(itertools.islice(records, self.batch_size)):
+            yield batch
+
+
 class VCFWriter(Filter):
     """A filter that writes variants to a VCF file."""
 
     def __init__(
         self,
-        serializer: VcfSerializer,
-        pipeline: AnnotationPipeline | None = None,
+        path: str,
+        pipeline: AnnotationPipeline,
+        header: VariantHeader,
     ):
-        self.serializer = serializer
+        self.path = path
         self.pipeline = pipeline
+        self.header = self._update_header(header, pipeline)
+        self.output_file: VariantFile
+        self.annotation_attributes = self.pipeline.get_attributes()
 
+    @staticmethod
     def _update_header(
-        self,
-        vcf_file: VariantFile,
-    ) -> None:
+        header: VariantHeader,
+        pipeline: AnnotationPipeline,
+    ) -> VariantHeader:
         """Update a variant file's header with annotation pipeline scores."""
-        assert self.pipeline is not None
+        assert pipeline is not None
 
-        header = vcf_file.header
         header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
-        if isinstance(self.pipeline, ReannotationPipeline):
-            header_info_keys = vcf_file.header.info.keys()
+        if isinstance(pipeline, ReannotationPipeline):
+            header_info_keys = header.info.keys()
             old_annotation_columns = {
                 attr.name
-                for attr in self.pipeline.pipeline_old.get_attributes()
+                for attr in pipeline.pipeline_old.get_attributes()
                 if not attr.internal
             }
             new_annotation_columns = {
-                attr.name for attr in self.pipeline.get_attributes()
+                attr.name for attr in pipeline.get_attributes()
                 if not attr.internal
             }
 
             for info_key in header_info_keys:
-                if info_key in old_annotation_columns \
-                        and info_key not in new_annotation_columns:
-                    vcf_file.header.info.remove_header(info_key)
+                if (info_key in old_annotation_columns
+                   and info_key not in new_annotation_columns):
+                    header.info.remove_header(info_key)
 
             attributes = []
-            for attr in self.pipeline.get_attributes():
+            for attr in pipeline.get_attributes():
                 if attr.internal:
                     continue
 
-                if attr.name not in vcf_file.header.info:
+                if attr.name not in header.info:
                     attributes.append(attr)
         else:
-            attributes = self.pipeline.get_attributes()
+            attributes = pipeline.get_attributes()
 
         for attribute in attributes:
             description = attribute.description
             description = description.replace("\n", " ")
             description = description.replace('"', '\\"')
             header.info.add(attribute.name, "A", "String", description)
+        return header
+
+    @staticmethod
+    def _update_variant(
+        vcf_var: VariantRecord,
+        allele_annotations: list[dict],
+        attributes: list[AttributeInfo],
+        pipeline: AnnotationPipeline,
+    ) -> None:
+        buffers: list[list] = [[] for _ in attributes]
+        for annotation in allele_annotations:
+            if isinstance(pipeline, ReannotationPipeline):
+                for col in pipeline.attributes_deleted:
+                    del vcf_var.info[col]
+
+            for buff, attribute in zip(buffers, attributes, strict=True):
+                attr = annotation.get(attribute.name)
+                if isinstance(attr, list):
+                    attr = ";".join(stringify(a, vcf=True) for a in attr)
+                elif isinstance(attr, dict):
+                    attr = ";".join(
+                        f"{k}:{v}"
+                        for k, v in attr.items()
+                    )
+                else:
+                    attr = stringify(attr, vcf=True)
+                attr = stringify(attr, vcf=True) \
+                    .replace(";", "|")\
+                    .replace(",", "|")\
+                    .replace(" ", "_")
+                buff.append(attr)
+        # If the all values for a given attribute are
+        # empty (i.e. - "."), then that attribute has no
+        # values to be written and will be skipped in the output
+        has_value = {
+            attr.name: any(filter(lambda x: x != ".", buffers[idx]))
+            for idx, attr in enumerate(attributes)
+        }
+        for buff, attribute in zip(buffers, attributes, strict=True):
+            if attribute.internal or not has_value[attribute.name]:
+                continue
+            vcf_var.info[attribute.name] = buff
 
     def __enter__(self) -> VCFWriter:
-        self.serializer.__enter__()
-        if self.pipeline is not None:
-            assert self.serializer.vcf_file is not None
-            self._update_header(self.serializer.vcf_file)
+        self.output_file = VariantFile(self.path, "w", header=self.header)
         return self
 
     def __exit__(
@@ -131,12 +279,19 @@ class VCFWriter(Filter):
                 "exception during writing vcf: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
 
-        self.serializer.__exit__(exc_type, exc_value, exc_tb)
+        self.output_file.close()
 
-        return exc_type is not None
+        return exc_type is None
 
-    def filter(self, data: FullVariant) -> None:
-        self.serializer.serialize_full_variant(data)
+    def filter(self, data: AnnotationsWithSource) -> None:
+        data.source.translate(self.header)
+        VCFWriter._update_variant(
+            data.source,
+            [annotation.context for annotation in data.annotations],
+            self.annotation_attributes,
+            self.pipeline,
+        )
+        self.output_file.write(data.source)
 
 
 class VCFBatchWriter(Filter):
@@ -144,10 +299,11 @@ class VCFBatchWriter(Filter):
 
     def __init__(
         self,
-        serializer: VcfSerializer,
-        pipeline: AnnotationPipeline | None = None,
+        path: str,
+        pipeline: AnnotationPipeline,
+        header: VariantHeader,
     ):
-        self.writer = VCFWriter(serializer, pipeline)
+        self.writer = VCFWriter(path, pipeline, header)
 
     def __enter__(self) -> VCFBatchWriter:
         self.writer.__enter__()
@@ -166,21 +322,19 @@ class VCFBatchWriter(Filter):
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
-    def filter(self, data: Sequence[FullVariant]) -> None:
+    def filter(self, data: Sequence[AnnotationsWithSource]) -> None:
         for variant in data:
             self.writer.filter(variant)
 
 
 def process_vcf(  # pylint: disable=too-many-positional-arguments
-    input_vcf_path: Path,
-    input_ped_path: Path,
-    output_path: Path,
+    input_vcf_path: str,
+    output_path: str,
     pipeline_config: RawAnnotatorsConfig,
     pipeline_config_old: str | None,
     grr_definition: dict,
-    reference_genome_resource_id: str,
     work_dir: Path,
     batch_size: int,
     region: Region | None,
@@ -188,10 +342,7 @@ def process_vcf(  # pylint: disable=too-many-positional-arguments
     full_reannotation: bool,  # noqa: FBT001
 ) -> None:
     """Annotate a VCF file using a processing pipeline."""
-    families = FamiliesLoader(str(input_ped_path)).load()
     grr = build_genomic_resource_repository(definition=grr_definition)
-    reference_genome = build_reference_genome_from_resource_id(
-        reference_genome_resource_id, grr)
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
         allow_repeated_attributes=allow_repeated_attributes,
@@ -200,38 +351,20 @@ def process_vcf(  # pylint: disable=too-many-positional-arguments
         full_reannotation=full_reannotation,
     )
 
-    loader = VcfLoader(
-        families,
-        [str(input_vcf_path)],
-        reference_genome,
-        regions=[region] if region is not None else None,
-    )
-
-    anno_attrs = [attr for attr in pipeline.get_attributes()
-                  if not attr.internal]
-    serializer = VcfSerializer(families, reference_genome, output_path,
-                               annotations=anno_attrs)
-
     source: Source
     filters: list[Filter] = []
 
     if batch_size <= 0:
-        source = VariantsLoaderSource(loader)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromVariantFilter(
-                pipeline.attributes_deleted))
+        source = VCFSource(input_vcf_path)
         filters.extend([
-            AnnotationPipelineVariantsFilter(pipeline),
-            VCFWriter(serializer, pipeline),
+            AnnotationPipelineAnnotatablesFilter(pipeline),
+            VCFWriter(output_path, pipeline, source.header),
         ])
     else:
-        source = VariantsLoaderBatchSource(loader)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromVariantsBatchFilter(
-                pipeline.attributes_deleted))
+        source = VCFBatchSource(input_vcf_path)
         filters.extend([
-            AnnotationPipelineVariantsBatchFilter(pipeline),
-            VCFBatchWriter(serializer, pipeline),
+            AnnotationPipelineAnnotatablesBatchFilter(pipeline),
+            VCFBatchWriter(output_path, pipeline, source.source.header),
         ])
 
     with PipelineProcessor(source, filters) as processor:
@@ -274,9 +407,6 @@ class AnnotateVCFTool(AnnotationTool):
         parser.add_argument(
             "input", default="-", nargs="?",
             help="the input vcf file")
-        parser.add_argument(
-            "pedigree", default="-", nargs="?",
-            help="the input pedigree file")
         parser.add_argument(
             "-r", "--region-size", default=300_000_000,
             type=int, help="region size to parallelize by")
@@ -331,13 +461,11 @@ class AnnotateVCFTool(AnnotationTool):
                 "all_variants_annotate",
                 process_vcf,
                 args=[
-                    Path(self.args.input),
-                    Path(self.args.pedigree),
-                    Path(self.output),
+                    self.args.input,
+                    self.output,
                     self.pipeline.raw,
                     pipeline_config_old,
                     self.grr.definition,
-                    ref_genome.resource_id,
                     Path(self.args.work_dir),
                     self.args.batch_size,
                     None,
@@ -358,13 +486,11 @@ class AnnotateVCFTool(AnnotationTool):
                     f"part-{str(region).replace(':', '-')}",
                     process_vcf,
                     args=[
-                        Path(self.args.input),
-                        Path(self.args.pedigree),
-                        Path(file_path),
+                        self.args.input,
+                        file_path,
                         self.pipeline.raw,
                         pipeline_config_old,
                         self.grr.definition,
-                        ref_genome.resource_id,
                         Path(self.args.work_dir),
                         self.args.batch_size,
                         region,

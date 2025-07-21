@@ -3,28 +3,20 @@ import os
 import pathlib
 import textwrap
 
-import numpy as np
 import pysam
 import pytest
 from dae.annotation.annotate_vcf import (
-    VCFWriter,
     cli,
     process_vcf,
     produce_partfile_paths,
 )
 from dae.genomic_resources.testing import (
     setup_denovo,
-    setup_pedigree,
     setup_vcf,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
 from dae.utils.regions import Region
-from dae.variants.family_variant import FamilyVariant
-from dae.variants.variant import SummaryVariantFactory
-from dae.variants_loaders.raw.loader import FullVariant
-from dae.variants_loaders.vcf.serializer import VcfSerializer
 
 
 @pytest.fixture
@@ -52,18 +44,6 @@ def test_gpf_instance(tmp_path: pathlib.Path) -> GPFInstance:
 
 
 @pytest.fixture
-def sample_ped(tmp_path: pathlib.Path) -> pathlib.Path:
-    filepath = tmp_path / "sample.ped"
-    setup_pedigree(filepath, textwrap.dedent("""
-        familyId personId dadId momId sex status role
-        f1       mom      0     0     2   1      mom
-        f1       dad      0     0     1   1      dad
-        f1       prb      dad   mom   1   2      prb
-    """))
-    return filepath
-
-
-@pytest.fixture
 def sample_vcf(tmp_path: pathlib.Path) -> pathlib.Path:
     filepath = tmp_path / "sample.vcf"
     setup_vcf(filepath, textwrap.dedent("""
@@ -80,53 +60,9 @@ def sample_vcf(tmp_path: pathlib.Path) -> pathlib.Path:
     return filepath
 
 
-def test_vcf_writer(
-    tmp_path: pathlib.Path,
-    test_gpf_instance: GPFInstance,
-    sample_ped: pathlib.Path,
-) -> None:
-    out_path = tmp_path / "out.vcf"
-
-    families = FamiliesLoader(str(sample_ped)).load()
-    summary_variant = SummaryVariantFactory.summary_variant_from_records(
-        [{"chrom": "chr1",
-          "position": 10,
-          "reference": "C",
-          "alternative": "T",
-          "summary_index": -1,
-          "allele_index": 1}],
-    )
-    family_variant = FamilyVariant(
-        summary_variant, families["f1"],
-        np.array([[0, 0, 0], [0, 0, 1]]),
-        np.array([[2, 2, 1], [0, 0, 1]]),
-    )
-
-    serializer = VcfSerializer(
-        families,
-        test_gpf_instance.reference_genome,
-        out_path,
-    )
-    with VCFWriter(serializer) as writer:
-        writer.filter(FullVariant(summary_variant, [family_variant]))
-
-    assert out_path.read_text() == (
-       '##fileformat=VCFv4.2\n'
-       '##FILTER=<ID=PASS,Description="All filters passed">\n'
-       '##contig=<ID=chr1>\n'
-       '##contig=<ID=chr2>\n'
-       '##contig=<ID=chr3>\n'
-       '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
-       '##INFO=<ID=END,Number=1,Type=Integer,Description="Stop position of the interval">\n'  # noqa: E501
-       '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tmom\tdad\tprb\n'
-       'chr1\t10\tchr1_10_C_T\tC\tT\t.\t.\t.\tGT\t0/0\t0/0\t0/1\n'
-    )
-
-
 def test_process_vcf_simple(
     tmp_path: pathlib.Path,
     test_gpf_instance: GPFInstance,
-    sample_ped: pathlib.Path,
     sample_vcf: pathlib.Path,
 ) -> None:
     out_path = tmp_path / "out.vcf"
@@ -136,13 +72,11 @@ def test_process_vcf_simple(
     ]
 
     process_vcf(
-        sample_vcf,
-        sample_ped,
-        out_path,
+        str(sample_vcf),
+        str(out_path),
         pipeline_config,
         None,
         test_gpf_instance.grr.definition,  # type: ignore
-        test_gpf_instance.reference_genome.resource_id,
         work_dir,
         0,
         None,
@@ -159,7 +93,6 @@ def test_process_vcf_simple(
 def test_process_vcf_simple_batch(
     tmp_path: pathlib.Path,
     test_gpf_instance: GPFInstance,
-    sample_ped: pathlib.Path,
     sample_vcf: pathlib.Path,
 ) -> None:
     out_path = tmp_path / "out.vcf"
@@ -169,13 +102,11 @@ def test_process_vcf_simple_batch(
     ]
 
     process_vcf(
-        sample_vcf,
-        sample_ped,
-        out_path,
+        str(sample_vcf),
+        str(out_path),
         pipeline_config,
         None,
         test_gpf_instance.grr.definition,  # type: ignore
-        test_gpf_instance.reference_genome.resource_id,
         work_dir,
         1,
         None,
@@ -191,7 +122,6 @@ def test_process_vcf_simple_batch(
 
 def test_basic_vcf(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -214,7 +144,6 @@ def test_basic_vcf(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -232,7 +161,6 @@ def test_basic_vcf(
 
 def test_multiallelic_vcf(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -254,7 +182,6 @@ def test_multiallelic_vcf(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -273,7 +200,6 @@ def test_multiallelic_vcf(
 
 def test_vcf_multiple_chroms(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -303,7 +229,6 @@ def test_vcf_multiple_chroms(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -330,7 +255,6 @@ def test_vcf_multiple_chroms(
 
 def test_annotate_vcf_float_precision(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -352,7 +276,6 @@ def test_annotate_vcf_float_precision(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -370,7 +293,6 @@ def test_annotate_vcf_float_precision(
 
 def test_annotate_vcf_internal_attributes(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -393,7 +315,6 @@ def test_annotate_vcf_internal_attributes(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -412,7 +333,6 @@ def test_annotate_vcf_internal_attributes(
 
 def test_annotate_vcf_forbidden_symbol_replacement(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -436,7 +356,6 @@ def test_annotate_vcf_forbidden_symbol_replacement(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -454,7 +373,6 @@ def test_annotate_vcf_forbidden_symbol_replacement(
 
 def test_annotate_vcf_none_values(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -478,7 +396,6 @@ def test_annotate_vcf_none_values(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -499,7 +416,6 @@ def test_annotate_vcf_none_values(
 
 def test_vcf_description_with_quotes(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -523,7 +439,6 @@ def test_vcf_description_with_quotes(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,
@@ -542,7 +457,6 @@ def test_vcf_description_with_quotes(
 
 def test_annotate_vcf_repeated_attributes(
     annotate_directory_fixture: pathlib.Path,
-    sample_ped: pathlib.Path,
     tmp_path: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
@@ -565,7 +479,6 @@ def test_annotate_vcf_repeated_attributes(
     cli([
         str(a) for a in [
             in_file,
-            sample_ped,
             annotation_file,
             "--grr", grr_file,
             "-o", out_file,

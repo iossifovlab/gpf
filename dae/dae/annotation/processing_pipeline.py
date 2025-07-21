@@ -119,7 +119,7 @@ class AnnotationPipelineContextManager(AbstractContextManager):
             logger.error(
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
-        return exc_type is not None
+        return exc_type is None
 
 
 class AnnotationPipelineAnnotatablesFilter(
@@ -160,3 +160,30 @@ class AnnotationPipelineAnnotatablesBatchFilter(
             for annotatable, annotation in zip(annotatable_batch, annotations,
                                                strict=True)
         ]
+
+
+class DeleteAttributesFromAWSFilter(Filter):
+    """Filter to remove items from AWSs. Works in-place."""
+
+    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
+        self.to_remove = set(attributes_to_remove)
+
+    def filter(self, data: AnnotationsWithSource) -> AnnotationsWithSource:
+        for attr in self.to_remove:
+            del data.source[attr]
+        return data
+
+
+class DeleteAttributesFromAWSBatchFilter(Filter):
+    """Filter to remove items from AWS batches. Works in-place."""
+
+    def __init__(self, attributes_to_remove: Sequence[str]) -> None:
+        self._delete_filter = DeleteAttributesFromAWSFilter(
+            attributes_to_remove)
+
+    def filter(
+        self, data: Sequence[AnnotationsWithSource],
+    ) -> Sequence[AnnotationsWithSource]:
+        for aws in data:
+            self._delete_filter.filter(aws)
+        return data

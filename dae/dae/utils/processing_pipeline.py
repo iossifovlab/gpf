@@ -21,7 +21,7 @@ class Filter(AbstractContextManager):
         exc_value: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> bool:
-        return exc_type is not None
+        return exc_type is None
 
     @abc.abstractmethod
     def filter(self, data: Any) -> Any:
@@ -37,7 +37,7 @@ class Source(AbstractContextManager):
         exc_value: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> bool:
-        return exc_type is not None
+        return exc_type is None
 
     @abc.abstractmethod
     def fetch(self, region: Region | None = None) -> Iterable[Any]:
@@ -72,7 +72,7 @@ class PipelineProcessor(AbstractContextManager):
         for variant_filter in self.filters:
             variant_filter.__exit__(exc_type, exc_value, exc_tb)
 
-        return exc_type is not None
+        return exc_type is None
 
     def process_region(self, region: Region | None = None) -> None:
         for data in self.source.fetch(region):
