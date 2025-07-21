@@ -923,6 +923,14 @@ class RESTClient:
         )
         return response.iter_content()
 
+    def get_enrichment_models(self, dataset_id: str) -> dict[str, Any]:
+        """Return enrichment models available for the study."""
+        response = self.session.get(
+            f"{self.api_url}/enrichment/models/{dataset_id}")
+        if response.status_code != 200:
+            return {}
+        return cast(dict[str, Any], response.json())
+
     def post_enrichment_test(self, query: dict) -> Any:
         response = self.session.post(
             f"{self.api_url}/enrichment/test",
