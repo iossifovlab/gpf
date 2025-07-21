@@ -388,24 +388,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
     def dry_run(self) -> None:
         """Print a summary of the annotation without running it."""
-        input_dir = os.path.abspath(self.args.input)
-        loader = ParquetLoader.load_from_dir(input_dir)
-
         assert self.pipeline is not None
-        if isinstance(self.pipeline.raw, dict):
-            raw_pipeline = self.pipeline.raw["annotators"]
-        else:
-            raw_pipeline = self.pipeline.raw
-
-        pipeline = AnnotationTool.produce_annotation_pipeline(
-            raw_pipeline,
-            loader.meta["annotation_pipeline"]
-            if loader.has_annotation else None,
-            self.grr.definition,
-            allow_repeated_attributes=self.args.allow_repeated_attributes,
-            full_reannotation=self.args.full_reannotation,
-        )
-        pipeline.print()
+        self.pipeline.print()
 
     def _remove_data(self, path: str) -> None:
         data_layout = create_schema2_dataset_layout(path)
