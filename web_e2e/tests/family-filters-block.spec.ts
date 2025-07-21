@@ -587,19 +587,14 @@ test.describe('Pheno Measures tests', () => {
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_4').click();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_4' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'mom'}).click();
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_4' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'dad'}).click();
+
+    await selectRole(page, 'instrument_1.measure_4', 'mom');
+    await selectRole(page, 'instrument_1.measure_4', 'dad');
 
     await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_5' })
-      .getByPlaceholder('Select role').click();
-    await page.getByRole('option', {name: 'sib'}).click();
+    await selectRole(page, 'instrument_1.measure_5', 'sib');
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(2);
     await expect(page.locator('gpf-person-filter .title-wrapper').nth(0)).toContainText('instrument_1.measure_5');
