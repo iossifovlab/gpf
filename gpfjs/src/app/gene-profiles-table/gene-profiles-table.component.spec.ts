@@ -12,6 +12,7 @@ import { TruncatePipe } from 'app/utils/truncate.pipe';
 import { Location } from '@angular/common';
 import { UserInfo } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
+import { SimpleChanges } from '@angular/core';
 
 const column1 = {
   clickable: 'createTab',
@@ -324,7 +325,8 @@ describe('GeneProfilesTableComponent', () => {
   });
 
   it('should update when change happens', () => {
-    component.ngOnChanges();
+    const change = {} as SimpleChanges;
+    component.ngOnChanges(change);
     component.leaves.forEach((leaf, index) => {
       expect(leaf.id).toStrictEqual(gridData[index].id);
       expect(leaf.gridColumn).toStrictEqual(gridData[index].gridColumn);
@@ -340,7 +342,8 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should search', () => {
     component.config = cloneDeep(configMock);
-    component.ngOnChanges();
+    const change = {} as SimpleChanges;
+    component.ngOnChanges(change);
     component.search('mockSearch');
 
     expect(component.searchValue$.value).toBe('mockSearch');
@@ -386,7 +389,8 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should sort genes', () => {
     component.config = cloneDeep(configMock);
-    component.ngOnChanges();
+    const change = {} as SimpleChanges;
+    component.ngOnChanges(change);
     component.genes = undefined;
 
     component.sort('mockSortBy', 'mockOrderBy');
@@ -546,7 +550,8 @@ describe('GeneProfilesTableComponent', () => {
     component.config = cloneDeep(configMock);
     component.ngOnInit();
 
-    component.ngOnChanges();
+    const change = {} as SimpleChanges;
+    component.ngOnChanges(change);
     expect(component.leavesIds).toStrictEqual([
       'column1',
       'column21',

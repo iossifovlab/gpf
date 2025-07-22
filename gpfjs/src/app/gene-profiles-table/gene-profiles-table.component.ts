@@ -1,6 +1,6 @@
 import {
   Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
-  OnDestroy, OnInit, Output, ViewChild, ViewChildren
+  OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewChildren
 } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
@@ -135,10 +135,13 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     );
   }
 
-  public ngOnChanges(): void {
+  public ngOnChanges(changes: SimpleChanges): void {
     if (this.stateFinishedLoading) {
       this.resetLeavesIds();
       this.prepareTable();
+    }
+    if ('config' in changes) {
+      this.setDefaultSortableCategory();
     }
   }
 
@@ -531,7 +534,6 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.orderBy = 'desc';
     this.searchValue$.next('');
     (this.searchBox.nativeElement as HTMLInputElement).value = '';
-    this.setDefaultSortableCategory();
 
     this.resetConfig.emit();
 
