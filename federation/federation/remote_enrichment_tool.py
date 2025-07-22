@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Iterable
 from typing import Any, cast
 
@@ -9,6 +10,7 @@ from studies.study_wrapper import WDAEAbstractStudy
 from federation.remote_study_wrapper import RemoteWDAEStudy
 from rest_client.rest_client import RESTClient
 
+logger = logging.getLogger(__name__)
 
 class RemoteEnrichmentHelper(BaseEnrichmentHelper):
     """Adapter for remote PhenoTool class."""
@@ -42,7 +44,8 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
         if not isinstance(study, RemoteWDAEStudy):
             return None
 
-        return RemoteEnrichmentBuilder(study.rest_client, study.remote_study_id)
+        return RemoteEnrichmentBuilder(
+            study.rest_client, study.remote_study_id)
 
     def build(
         self,
@@ -52,6 +55,8 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
         counting_id: str | None,
     ) -> list[dict[str, Any]]:
         query: dict[str, Any] = {}
+        query["datasetId"] = self.dataset_id
+
         if gene_syms:
             query["geneSymbols"] = list(gene_syms)
         if gene_score:
@@ -62,6 +67,7 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
             query["enrichmentCountingModel"] = counting_id
 
         # import pdb; pdb.set_trace()
+        logger.info("Building enrichment with query: %s", query)
         result = self.rest_client.post_enrichment_test(query)
         if result is None:
             return []

@@ -147,8 +147,8 @@ def test_enrichment_test(
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = {
-        # "datasetId": "t4c8_study_1",
-        "datasetId": "TEST_REMOTE_t4c8_dataset",
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        # "datasetId": "TEST_REMOTE_t4c8_dataset",
         "enrichmentBackgroundModel": "coding_len_background",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSet": {
