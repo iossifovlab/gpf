@@ -177,7 +177,7 @@
         </div>
 
         <div>
-          <button id="reset-button" (click)="resetState()">Reset table</button>
+          <button *ngIf="stateFinishedLoading" id="reset-button" (click)="resetState()">Reset table</button>
         </div>
       </div>
     </div>
