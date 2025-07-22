@@ -62,7 +62,7 @@ from dae.utils.regions import Region
 logger = logging.getLogger("annotate_columns")
 
 
-class DSVSource(Source):
+class CSVSource(Source):
     """Source for delimiter-separated values files."""
 
     def __init__(
@@ -79,7 +79,7 @@ class DSVSource(Source):
         self.input_separator = input_separator
         self.header: list[str] = self._extract_header()
 
-    def __enter__(self) -> DSVSource:
+    def __enter__(self) -> CSVSource:
         if self.path.endswith(".gz"):
             self.source_file = TabixFile(self.path)
         else:
@@ -152,7 +152,7 @@ class DSVSource(Source):
                 logger.error("\t%s", error)
 
 
-class DSVBatchSource(Source):
+class CSVBatchSource(Source):
     """Batched source for delimiter-separated values files."""
 
     def __init__(
@@ -163,11 +163,11 @@ class DSVBatchSource(Source):
         input_separator: str,
         batch_size: int = 500,
     ):
-        self.source = DSVSource(path, ref_genome, cli_args, input_separator)
+        self.source = CSVSource(path, ref_genome, cli_args, input_separator)
         self.header = self.source.header
         self.batch_size = batch_size
 
-    def __enter__(self) -> DSVBatchSource:
+    def __enter__(self) -> CSVBatchSource:
         self.source.__enter__()
         return self
 
@@ -194,7 +194,7 @@ class DSVBatchSource(Source):
             yield batch
 
 
-class DSVWriter(Filter):
+class CSVWriter(Filter):
     """Writes delimiter-separated values to a file."""
 
     def __init__(
@@ -208,7 +208,7 @@ class DSVWriter(Filter):
         self.header = header
         self.out_file: Any
 
-    def __enter__(self) -> DSVWriter:
+    def __enter__(self) -> CSVWriter:
         self.out_file = open(self.path, "w")
         header_row = self.separator.join(self.header)
         self.out_file.write(f"{header_row}\n")
@@ -241,7 +241,7 @@ class DSVWriter(Filter):
         )
 
 
-class DSVBatchWriter(Filter):
+class CSVBatchWriter(Filter):
     """Writes delimiter-separated values to a file in batches."""
 
     def __init__(
@@ -250,9 +250,9 @@ class DSVBatchWriter(Filter):
         separator: str,
         header: list[str],
     ) -> None:
-        self.writer = DSVWriter(path, separator, header)
+        self.writer = CSVWriter(path, separator, header)
 
-    def __enter__(self) -> DSVBatchWriter:
+    def __enter__(self) -> CSVBatchWriter:
         self.writer.__enter__()
         return self
 
@@ -292,7 +292,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
     allow_repeated_attributes: bool,  # noqa: FBT001
     full_reannotation: bool,  # noqa: FBT001
 ) -> None:
-    """Annotate a DSV file using a processing pipeline."""
+    """Annotate a CSV file using a processing pipeline."""
     grr = build_genomic_resource_repository(definition=grr_definition)
     reference_genome = build_reference_genome_from_resource_id(
         reference_genome_resource_id, grr)
@@ -308,7 +308,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
     filters: list[Filter] = []
 
     if batch_size <= 0:
-        source = DSVSource(
+        source = CSVSource(
             input_path, reference_genome, cli_args, input_separator)
         new_header = list(source.header)
         if isinstance(pipeline, ReannotationPipeline):
@@ -323,10 +323,10 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
         ]
         filters.extend([
             AnnotationPipelineAnnotatablesFilter(pipeline),
-            DSVWriter(output_path, output_separator, new_header),
+            CSVWriter(output_path, output_separator, new_header),
         ])
     else:
-        source = DSVBatchSource(
+        source = CSVBatchSource(
             input_path, reference_genome, cli_args, input_separator)
         new_header = list(source.header)
         if isinstance(pipeline, ReannotationPipeline):
@@ -341,7 +341,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
         ]
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            DSVBatchWriter(output_path, output_separator, new_header),
+            CSVBatchWriter(output_path, output_separator, new_header),
         ])
 
     with PipelineProcessor(source, filters) as processor:
@@ -349,7 +349,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
 
 
 def concat(partfile_paths: list[str], output_path: str) -> None:
-    """Concatenate multiple DSV files into a single DSV file *in order*."""
+    """Concatenate multiple CSV files into a single CSV file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
     header = Path(partfile_paths[0]).read_text().split("\n")[0]
