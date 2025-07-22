@@ -4,10 +4,10 @@ import uuid
 from typing import cast
 
 import pytest
-
 from rest_client.mailhog_client import (
     MailhogClient,
 )
+
 from rest_client.rest_client import (
     RESTClient,
     RESTError,

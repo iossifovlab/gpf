@@ -35,7 +35,8 @@ def test_oauth2_basic(
 
 
 def test_oauth2_confidential_client(
-    base_url: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    base_url: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     token_url = f"{base_url}/o/token/"
 
     with monkeypatch.context() as m:
