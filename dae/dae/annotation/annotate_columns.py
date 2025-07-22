@@ -8,9 +8,10 @@ import os
 import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
+from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any, TextIO, TypedDict
+from typing import Any, TextIO
 
 from pysam import TabixFile
 
@@ -28,6 +29,7 @@ from dae.annotation.annotation_config import (
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.genomic_context import (
@@ -43,6 +45,7 @@ from dae.annotation.processing_pipeline import (
     DeleteAttributesFromAWSFilter,
 )
 from dae.annotation.record_to_annotatable import (
+    RECORD_TO_ANNOTATABLE_CONFIGURATION,
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
@@ -68,7 +71,8 @@ from dae.utils.regions import Region
 logger = logging.getLogger("annotate_columns")
 
 
-class ProcessingArgs(TypedDict):
+@dataclass
+class _ProcessingArgs:
     input: str
     output: str
     reannotate: str
@@ -79,26 +83,27 @@ class ProcessingArgs(TypedDict):
     output_separator: str
     allow_repeated_attributes: bool
     full_reannotation: bool
+    columns_args: dict[str, str]
 
 
-class CSVSource(Source):
+class _CSVSource(Source):
     """Source for delimiter-separated values files."""
 
     def __init__(
         self,
         path: str,
         ref_genome: ReferenceGenome,
-        cli_args: Any,
+        columns_args: dict[str, str],
         input_separator: str,
     ):
         self.path = path
         self.ref_genome = ref_genome
-        self.cli_args = cli_args
+        self.columns_args = columns_args
         self.source_file: TextIO | TabixFile
         self.input_separator = input_separator
         self.header: list[str] = self._extract_header()
 
-    def __enter__(self) -> CSVSource:
+    def __enter__(self) -> _CSVSource:
         if self.path.endswith(".gz"):
             self.source_file = TabixFile(self.path)
         else:
@@ -146,7 +151,7 @@ class CSVSource(Source):
     ) -> Iterable[AnnotationsWithSource]:
         line_iterator = self._get_line_iterator(region)
         record_to_annotatable = build_record_to_annotatable(
-            self.cli_args, set(self.header),
+            self.columns_args, set(self.header),
             ref_genome=self.ref_genome)
         errors = []
 
@@ -171,22 +176,23 @@ class CSVSource(Source):
                 logger.error("\t%s", error)
 
 
-class CSVBatchSource(Source):
+class _CSVBatchSource(Source):
     """Batched source for delimiter-separated values files."""
 
     def __init__(
         self,
         path: str,
         ref_genome: ReferenceGenome,
-        cli_args: Any,
+        columns_args: dict[str, str],
         input_separator: str,
         batch_size: int = 500,
     ):
-        self.source = CSVSource(path, ref_genome, cli_args, input_separator)
+        self.source = _CSVSource(
+            path, ref_genome, columns_args, input_separator)
         self.header = self.source.header
         self.batch_size = batch_size
 
-    def __enter__(self) -> CSVBatchSource:
+    def __enter__(self) -> _CSVBatchSource:
         self.source.__enter__()
         return self
 
@@ -213,7 +219,7 @@ class CSVBatchSource(Source):
             yield batch
 
 
-class CSVWriter(Filter):
+class _CSVWriter(Filter):
     """Writes delimiter-separated values to a file."""
 
     def __init__(
@@ -227,7 +233,7 @@ class CSVWriter(Filter):
         self.header = header
         self.out_file: Any
 
-    def __enter__(self) -> CSVWriter:
+    def __enter__(self) -> _CSVWriter:
         self.out_file = open(self.path, "w")
         header_row = self.separator.join(self.header)
         self.out_file.write(f"{header_row}\n")
@@ -260,7 +266,7 @@ class CSVWriter(Filter):
         )
 
 
-class CSVBatchWriter(Filter):
+class _CSVBatchWriter(Filter):
     """Writes delimiter-separated values to a file in batches."""
 
     def __init__(
@@ -269,9 +275,9 @@ class CSVBatchWriter(Filter):
         separator: str,
         header: list[str],
     ) -> None:
-        self.writer = CSVWriter(path, separator, header)
+        self.writer = _CSVWriter(path, separator, header)
 
-    def __enter__(self) -> CSVBatchWriter:
+    def __enter__(self) -> _CSVBatchWriter:
         self.writer.__enter__()
         return self
 
@@ -295,83 +301,103 @@ class CSVBatchWriter(Filter):
             self.writer.filter(record)
 
 
-def annotate_csv(
+def _build_new_header(
+    input_header: list[str],
+    pipeline: AnnotationPipeline,
+) -> list[str]:
+    result = list(input_header)
+    if isinstance(pipeline, ReannotationPipeline):
+        for attr in pipeline.pipeline_old.get_attributes():
+            if not attr.internal:
+                result.remove(attr.name)
+    return result + [
+        attr.name for attr in pipeline.get_attributes()
+        if not attr.internal
+    ]
+
+
+def _build_sequential(
+    args: _ProcessingArgs,
+    output_path: str,
+    pipeline: AnnotationPipeline,
+    reference_genome: ReferenceGenome,
+) -> PipelineProcessor:
+    source = _CSVSource(
+        args.input,
+        reference_genome,
+        args.columns_args,
+        args.input_separator,
+    )
+    filters: list[Filter] = []
+    new_header = _build_new_header(source.header, pipeline)
+    if isinstance(pipeline, ReannotationPipeline):
+        filters.append(DeleteAttributesFromAWSFilter(
+            pipeline.attributes_deleted))
+    filters.extend([
+        AnnotationPipelineAnnotatablesFilter(pipeline),
+        _CSVWriter(output_path, args.output_separator, new_header),
+    ])
+    return PipelineProcessor(source, filters)
+
+
+def _build_batched(
+    args: _ProcessingArgs,
+    output_path: str,
+    pipeline: AnnotationPipeline,
+    reference_genome: ReferenceGenome,
+) -> PipelineProcessor:
+    source = _CSVBatchSource(
+        args.input,
+        reference_genome,
+        args.columns_args,
+        args.input_separator,
+    )
+    filters: list[Filter] = []
+    new_header = _build_new_header(source.header, pipeline)
+    if isinstance(pipeline, ReannotationPipeline):
+        filters.append(DeleteAttributesFromAWSBatchFilter(
+            pipeline.attributes_deleted))
+    filters.extend([
+        AnnotationPipelineAnnotatablesBatchFilter(pipeline),
+        _CSVBatchWriter(output_path, args.output_separator, new_header),
+    ])
+    return PipelineProcessor(source, filters)
+
+
+def _annotate_csv(
     output_path: str,
     pipeline_config: RawAnnotatorsConfig,
     grr_definition: dict,
     reference_genome_resource_id: str,
     region: Region | None,
-    args: ProcessingArgs,
+    args: _ProcessingArgs,
 ) -> None:
     """Annotate a CSV file using a processing pipeline."""
 
-    input_path = args["input"]
     pipeline_config_old = None
-    if args["reannotate"]:
-        pipeline_config_old = Path(args["reannotate"]).read_text()
-    work_dir = Path(args["work_dir"])
-    batch_size = args["batch_size"]
-    input_separator = args["input_separator"]
-    output_separator = args["output_separator"]
-    allow_repeated_attributes = args["allow_repeated_attributes"]
-    full_reannotation = args["full_reannotation"]
+    if args.reannotate:
+        pipeline_config_old = Path(args.reannotate).read_text()
 
     grr = build_genomic_resource_repository(definition=grr_definition)
-    reference_genome = build_reference_genome_from_resource_id(
+    ref_genome = build_reference_genome_from_resource_id(
         reference_genome_resource_id, grr)
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
-        allow_repeated_attributes=allow_repeated_attributes,
-        work_dir=work_dir,
+        allow_repeated_attributes=args.allow_repeated_attributes,
+        work_dir=Path(args.work_dir),
         config_old_raw=pipeline_config_old,
-        full_reannotation=full_reannotation,
+        full_reannotation=args.full_reannotation,
     )
 
-    source: Source
-    filters: list[Filter] = []
+    processor = _build_sequential(args, output_path, pipeline, ref_genome) \
+        if args.batch_size <= 0 \
+        else _build_batched(args, output_path, pipeline, ref_genome)
 
-    if batch_size <= 0:
-        source = CSVSource(
-            input_path, reference_genome, args, input_separator)
-        new_header = list(source.header)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromAWSFilter(
-                pipeline.attributes_deleted))
-            for attr in pipeline.pipeline_old.get_attributes():
-                if not attr.internal:
-                    new_header.remove(attr.name)
-        new_header = new_header + [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal
-        ]
-        filters.extend([
-            AnnotationPipelineAnnotatablesFilter(pipeline),
-            CSVWriter(output_path, output_separator, new_header),
-        ])
-    else:
-        source = CSVBatchSource(
-            input_path, reference_genome, args, input_separator)
-        new_header = list(source.header)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromAWSBatchFilter(
-                pipeline.attributes_deleted))
-            for attr in pipeline.pipeline_old.get_attributes():
-                if not attr.internal:
-                    new_header.remove(attr.name)
-        new_header = new_header + [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal
-        ]
-        filters.extend([
-            AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            CSVBatchWriter(output_path, output_separator, new_header),
-        ])
-
-    with PipelineProcessor(source, filters) as processor:
+    with processor:
         processor.process_region(region)
 
 
-def concat(partfile_paths: list[str], output_path: str) -> None:
+def _concat(partfile_paths: list[str], output_path: str) -> None:
     """Concatenate multiple CSV files into a single CSV file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
@@ -394,7 +420,87 @@ def concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-def get_argument_parser() -> argparse.ArgumentParser:
+def get_output_path(args: _ProcessingArgs) -> str:
+    if args.output:
+        return args.output.rstrip(".gz")
+
+    input_name = args.input.rstrip(".gz")
+    if "." in input_name:
+        idx = input_name.find(".")
+        return f"{input_name[:idx]}_annotated{input_name[idx:]}"
+
+    return f"{input_name}_annotated"
+
+
+def _add_tasks_tabixed(
+    args: _ProcessingArgs,
+    task_graph: TaskGraph,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict[str, Any],
+    ref_genome_id: str,
+) -> None:
+    with closing(TabixFile(args.input)) as pysam_file:
+        regions = produce_regions(pysam_file, args.region_size)
+    file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
+    output_path = get_output_path(args)
+
+    annotation_tasks = []
+    for region, path in zip(regions, file_paths, strict=True):
+        annotation_tasks.append(task_graph.create_task(
+            f"part-{str(region).replace(':', '-')}",
+            _annotate_csv,
+            args=[
+                path,
+                pipeline_config,
+                grr_definition,
+                ref_genome_id,
+                region,
+                args,
+            ],
+            deps=[]))
+
+    annotation_sync = task_graph.create_task(
+        "sync_csv_write",
+        lambda: None,
+        args=[],
+        deps=annotation_tasks,
+    )
+
+    concat_task = task_graph.create_task(
+        "concat",
+        _concat,
+        args=[file_paths, output_path],
+        deps=[annotation_sync])
+
+    task_graph.create_task(
+        "compress_and_tabix",
+        produce_tabix_index,
+        args=[output_path, args.columns_args],
+        deps=[concat_task])
+
+
+def _add_tasks_plaintext(
+    args: _ProcessingArgs,
+    task_graph: TaskGraph,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict[str, Any],
+    ref_genome_id: str,
+) -> None:
+    task_graph.create_task(
+        "annotate_all",
+        _annotate_csv,
+        args=[
+            get_output_path(args),
+            pipeline_config,
+            grr_definition,
+            ref_genome_id,
+            None,
+            args,
+        ],
+        deps=[])
+
+
+def _build_argument_parser() -> argparse.ArgumentParser:
     """Configure argument parser."""
     parser = argparse.ArgumentParser(
         description="Annotate columns",
@@ -443,96 +549,14 @@ def get_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def get_output_path(args: ProcessingArgs) -> str:
-    if args["output"]:
-        return args["output"].rstrip(".gz")
-
-    input_name = args["input"].rstrip(".gz")
-    if "." in input_name:
-        idx = input_name.find(".")
-        return f"{input_name[:idx]}_annotated{input_name[idx:]}"
-
-    return f"{input_name}_annotated"
-
-
-def add_tasks_tabixed(
-    args: ProcessingArgs,
-    task_graph: TaskGraph,
-    pipeline_config: RawPipelineConfig,
-    grr_definition: dict[str, Any],
-    ref_genome_id: str,
-) -> None:
-    with closing(TabixFile(args["input"])) as pysam_file:
-        regions = produce_regions(pysam_file, args["region_size"])
-    file_paths = produce_partfile_paths(args["input"],
-                                        regions,
-                                        args["work_dir"])
-
-    annotation_tasks = []
-    for region, path in zip(regions, file_paths, strict=True):
-        annotation_tasks.append(task_graph.create_task(
-            f"part-{str(region).replace(':', '-')}",
-            annotate_csv,
-            args=[
-                path,
-                pipeline_config,
-                grr_definition,
-                ref_genome_id,
-                region,
-                args,
-            ],
-            deps=[]))
-
-    annotation_sync = task_graph.create_task(
-        "sync_csv_write", lambda: None,
-        args=[], deps=annotation_tasks,
-    )
-
-    output: str = get_output_path(args)
-
-    concat_task = task_graph.create_task(
-        "concat",
-        concat,
-        args=[
-            file_paths,
-            output,
-        ],
-        deps=[annotation_sync])
-
-    task_graph.create_task(
-        "compress_and_tabix",
-        produce_tabix_index,
-        args=[output, args],
-        deps=[concat_task])
-
-
-def add_tasks(
-    args: ProcessingArgs,
-    task_graph: TaskGraph,
-    pipeline_config: RawPipelineConfig,
-    grr_definition: dict[str, Any],
-    ref_genome_id: str,
-) -> None:
-    task_graph.create_task(
-        "annotate_all",
-        annotate_csv,
-        args=[
-            get_output_path(args),
-            pipeline_config,
-            grr_definition,
-            ref_genome_id,
-            None,
-            args,
-        ],
-        deps=[])
-
-
 def cli(raw_args: list[str] | None = None) -> None:
     if not raw_args:
         raw_args = sys.argv[1:]
 
-    arg_parser = get_argument_parser()
+    arg_parser = _build_argument_parser()
     args = vars(arg_parser.parse_args(raw_args))
+    if not os.path.exists(args["input"]):
+        raise ValueError(f"{args['input']} does not exist!")
     if not os.path.exists(args["work_dir"]):
         os.mkdir(args["work_dir"])
     args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
@@ -561,22 +585,25 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     cache_pipeline_resources(grr, pipeline)
 
-    processing_args: ProcessingArgs = {
-        "input": args["input"],
-        "output": args["output"],
-        "reannotate": args["reannotate"],
-        "work_dir": args["work_dir"],
-        "batch_size": args["batch_size"],
-        "region_size": args["region_size"],
-        "input_separator": args["input_separator"],
-        "output_separator": args["output_separator"],
-        "allow_repeated_attributes": args["allow_repeated_attributes"],
-        "full_reannotation": args["full_reannotation"],
-    }
+    processing_args = _ProcessingArgs(
+        args["input"],
+        args["output"],
+        args["reannotate"],
+        args["work_dir"],
+        args["batch_size"],
+        args["region_size"],
+        args["input_separator"],
+        args["output_separator"],
+        args["allow_repeated_attributes"],
+        args["full_reannotation"],
+        {col: args[f"col_{col}"]
+         for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
+         for col in cols},
+    )
 
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
-        add_tasks_tabixed(
+        _add_tasks_tabixed(
             processing_args,
             task_graph,
             pipeline.raw,
@@ -584,7 +611,7 @@ def cli(raw_args: list[str] | None = None) -> None:
             ref_genome_id,
         )
     else:
-        add_tasks(
+        _add_tasks_plaintext(
             processing_args,
             task_graph,
             pipeline.raw,
@@ -592,6 +619,9 @@ def cli(raw_args: list[str] | None = None) -> None:
             ref_genome_id,
         )
 
-    if len(task_graph.tasks) > 0:
-        add_input_files_to_task_graph(args, task_graph)
-        TaskGraphCli.process_graph(task_graph, **args)
+    if len(task_graph.tasks) == 0:
+        logger.info("Nothing to be done. Exiting.")
+        return
+
+    add_input_files_to_task_graph(args, task_graph)
+    TaskGraphCli.process_graph(task_graph, **args)
