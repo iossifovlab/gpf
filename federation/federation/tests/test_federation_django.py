@@ -142,38 +142,33 @@ def test_enrichment_models(
     assert result["defaultCounting"] == "enrichment_gene_counting"
 
 
-# def test_enrichment_test(
-#     admin_client: Client,
-#     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-# ) -> None:
-#     import pdb; pdb.set_trace()
-#     # t4c8_wgpf_instance.get_available_data_ids()
-#     # t4c8_wgpf_instance.get_genotype_data_config()
-#     # t4c8_wgpf_instance.gene_sets_db.get_gene_set_collection_ids
-#     # t4c8_wgpf_instance.gene_sets_db.get_all_gene_sets()
-#     query = {
-#         "datasetId": "t4c8_study_1",
-#         # "datasetId": "TEST_REMOTE_t4c8_dataset",
-#         "enrichmentBackgroundModel": "coding_len_background",
-#         "enrichmentCountingModel": "enrichment_gene_counting",
-#         "geneSet": {
-#             "geneSetsCollection": "main",
-#             "geneSet": "t4_candidates",
-#         },
-#     }
-#     response = admin_client.post(
-#         "/api/v3/enrichment/test",
-#         data=json.dumps(query),
-#         content_type="application/json",
-#     )
+def test_enrichment_test(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    query = {
+        # "datasetId": "t4c8_study_1",
+        "datasetId": "TEST_REMOTE_t4c8_dataset",
+        "enrichmentBackgroundModel": "coding_len_background",
+        "enrichmentCountingModel": "enrichment_gene_counting",
+        "geneSet": {
+            "geneSetsCollection": "main",
+            "geneSet": "t4_candidates",
+        },
+    }
+    response = admin_client.post(
+        "/api/v3/enrichment/test",
+        data=json.dumps(query),
+        content_type="application/json",
+    )
 
-#     assert response
-#     assert response.status_code == 200
+    assert response
+    assert response.status_code == 200
 
-#     result = response.data  # type: ignore
+    result = response.data  # type: ignore
 
-#     assert set(result.keys()) == {"desc", "result"}
-#     assert result["desc"] == "Gene Set: T4 Candidates (1)"
+    assert set(result.keys()) == {"desc", "result"}
+    assert result["desc"] == "Gene Set: T4 Candidates (1)"
 
 
 def test_gene_view(
