@@ -7,3 +7,6 @@ from .default_settings import *
 # This stops mypy from setting up running a GPF instance when typechecking
 # which is slow and unnecessary
 INSTALLED_APPS.remove("gpf_instance.apps.WDAEConfig")
+
+# This is here only to prevent false type errors
+DEFAULT_WDAE_DIR = None
