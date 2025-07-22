@@ -172,6 +172,18 @@ def add_input_files_to_task_graph(args: dict, task_graph: TaskGraph) -> None:
         task_graph.input_files.append(args["reannotate"])
 
 
+def cache_pipeline_resources(
+    grr: GenomicResourceRepo,
+    pipeline: AnnotationPipeline,
+) -> None:
+    resource_ids: set[str] = {
+        res.resource_id
+        for annotator in pipeline.annotators
+        for res in annotator.resources
+    }
+    cache_resources(grr, resource_ids)
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -204,12 +216,7 @@ class AnnotationTool:
         # Is this too eager? What if a reannotation pipeline is created
         # inside work() and the only caching that must be done is far smaller
         # than the entire new annotation config suggests?
-        resource_ids: set[str] = {
-            res.resource_id
-            for annotator in self.pipeline.annotators
-            for res in annotator.resources
-        }
-        cache_resources(self.grr, resource_ids)
+        cache_pipeline_resources(self.grr, self.pipeline)
 
         setup_work_dir_and_task_dirs(self.args)
 

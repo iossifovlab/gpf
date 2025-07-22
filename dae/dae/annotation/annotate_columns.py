@@ -10,18 +10,16 @@ from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
 from types import TracebackType
-from typing import Any, TextIO
+from typing import Any, TextIO, TypedDict
 
 from pysam import TabixFile
 
 from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
-    get_stuff_from_context,
+    cache_pipeline_resources,
     produce_partfile_paths,
     produce_regions,
     produce_tabix_index,
-    setup_context,
-    setup_work_dir_and_task_dirs,
     stringify,
 )
 from dae.annotation.annotation_config import (
@@ -32,7 +30,10 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
-from dae.annotation.genomic_context import CLIAnnotationContextProvider
+from dae.annotation.genomic_context import (
+    CLIAnnotationContextProvider,
+    get_context_pipeline,
+)
 from dae.annotation.processing_pipeline import (
     Annotation,
     AnnotationPipelineAnnotatablesBatchFilter,
@@ -45,8 +46,12 @@ from dae.annotation.record_to_annotatable import (
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
-from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.cli import VerbosityConfiguration
+from dae.genomic_resources.genomic_context import (
+    context_providers_init,
+    get_genomic_context,
+    register_context_provider,
+)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
@@ -61,6 +66,19 @@ from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 
 logger = logging.getLogger("annotate_columns")
+
+
+class ProcessingArgs(TypedDict):
+    input: str
+    output: str
+    reannotate: str
+    work_dir: str
+    batch_size: int
+    region_size: int
+    input_separator: str
+    output_separator: str
+    allow_repeated_attributes: bool
+    full_reannotation: bool
 
 
 class CSVSource(Source):
@@ -277,23 +295,27 @@ class CSVBatchWriter(Filter):
             self.writer.filter(record)
 
 
-def process_dsv(  # pylint: disable=too-many-positional-arguments
-    input_path: str,
+def annotate_csv(
     output_path: str,
     pipeline_config: RawAnnotatorsConfig,
-    pipeline_config_old: str | None,
     grr_definition: dict,
     reference_genome_resource_id: str,
-    work_dir: Path,
-    batch_size: int,
     region: Region | None,
-    cli_args: dict[str, Any],
-    input_separator: str,
-    output_separator: str,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    full_reannotation: bool,  # noqa: FBT001
+    args: ProcessingArgs,
 ) -> None:
     """Annotate a CSV file using a processing pipeline."""
+
+    input_path = args["input"]
+    pipeline_config_old = None
+    if args["reannotate"]:
+        pipeline_config_old = Path(args["reannotate"]).read_text()
+    work_dir = Path(args["work_dir"])
+    batch_size = args["batch_size"]
+    input_separator = args["input_separator"]
+    output_separator = args["output_separator"]
+    allow_repeated_attributes = args["allow_repeated_attributes"]
+    full_reannotation = args["full_reannotation"]
+
     grr = build_genomic_resource_repository(definition=grr_definition)
     reference_genome = build_reference_genome_from_resource_id(
         reference_genome_resource_id, grr)
@@ -310,7 +332,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
 
     if batch_size <= 0:
         source = CSVSource(
-            input_path, reference_genome, cli_args, input_separator)
+            input_path, reference_genome, args, input_separator)
         new_header = list(source.header)
         if isinstance(pipeline, ReannotationPipeline):
             filters.append(DeleteAttributesFromAWSFilter(
@@ -328,7 +350,7 @@ def process_dsv(  # pylint: disable=too-many-positional-arguments
         ])
     else:
         source = CSVBatchSource(
-            input_path, reference_genome, cli_args, input_separator)
+            input_path, reference_genome, args, input_separator)
         new_header = list(source.header)
         if isinstance(pipeline, ReannotationPipeline):
             filters.append(DeleteAttributesFromAWSBatchFilter(
@@ -372,196 +394,204 @@ def concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-class AnnotateColumnsTool:
-    """Annotation tool for TSV-style text files."""
+def get_argument_parser() -> argparse.ArgumentParser:
+    """Configure argument parser."""
+    parser = argparse.ArgumentParser(
+        description="Annotate columns",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "input", default="-", nargs="?",
+        help="the input column file")
+    parser.add_argument(
+        "-r", "--region-size", default=300_000_000,
+        type=int, help="region size to parallelize by")
+    parser.add_argument(
+        "-w", "--work-dir",
+        help="Directory to store intermediate output files in",
+        default="annotate_columns_output")
+    parser.add_argument(
+        "-o", "--output",
+        help="Filename of the output result",
+        default=None)
+    parser.add_argument(
+        "-in-sep", "--input-separator", default="\t",
+        help="The column separator in the input")
+    parser.add_argument(
+        "-out-sep", "--output-separator", default="\t",
+        help="The column separator in the output")
+    parser.add_argument(
+        "--reannotate", default=None,
+        help="Old pipeline config to reannotate over")
+    parser.add_argument(
+        "-i", "--full-reannotation",
+        help="Ignore any previous annotation and run "
+        " a full reannotation.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=0,  # 0 = annotate iteratively, no batches
+        help="Annotate in batches of",
+    )
 
-    def __init__(self, args: dict[str, Any]) -> None:
-        self.args = args
+    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    add_record_to_annotable_arguments(parser)
+    TaskGraphCli.add_arguments(parser)
+    VerbosityConfiguration.set_arguments(parser)
+    return parser
 
-    @staticmethod
-    def get_argument_parser() -> argparse.ArgumentParser:
-        """Configure argument parser."""
-        parser = argparse.ArgumentParser(
-            description="Annotate columns",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-        parser.add_argument(
-            "input", default="-", nargs="?",
-            help="the input column file")
-        parser.add_argument(
-            "-r", "--region-size", default=300_000_000,
-            type=int, help="region size to parallelize by")
-        parser.add_argument(
-            "-w", "--work-dir",
-            help="Directory to store intermediate output files in",
-            default="annotate_columns_output")
-        parser.add_argument(
-            "-o", "--output",
-            help="Filename of the output result",
-            default=None)
-        parser.add_argument(
-            "-in-sep", "--input-separator", default="\t",
-            help="The column separator in the input")
-        parser.add_argument(
-            "-out-sep", "--output-separator", default="\t",
-            help="The column separator in the output")
-        parser.add_argument(
-            "--reannotate", default=None,
-            help="Old pipeline config to reannotate over")
-        parser.add_argument(
-            "-i", "--full-reannotation",
-            help="Ignore any previous annotation and run "
-            " a full reannotation.",
-            action="store_true",
-        )
-        parser.add_argument(
-            "--batch-size",
-            type=int,
-            default=0,  # 0 = annotate iteratively, no batches
-            help="Annotate in batches of",
-        )
 
-        CLIAnnotationContextProvider.add_argparser_arguments(parser)
-        add_record_to_annotable_arguments(parser)
-        TaskGraphCli.add_arguments(parser)
-        VerbosityConfiguration.set_arguments(parser)
-        return parser
+def get_output_path(args: ProcessingArgs) -> str:
+    if args["output"]:
+        return args["output"].rstrip(".gz")
 
-    @staticmethod
-    def get_output_path(args: dict[str, Any]) -> str:
-        if args["output"]:
-            return args["output"].rstrip(".gz")
+    input_name = args["input"].rstrip(".gz")
+    if "." in input_name:
+        idx = input_name.find(".")
+        return f"{input_name[:idx]}_annotated{input_name[idx:]}"
 
-        input_name = args["input"].rstrip(".gz")
-        if "." in input_name:
-            idx = input_name.find(".")
-            return f"{input_name[:idx]}_annotated{input_name[idx:]}"
+    return f"{input_name}_annotated"
 
-        return f"{input_name}_annotated"
 
-    def add_tasks(
-        self,
-        task_graph: TaskGraph,
-        pipeline_config: RawPipelineConfig,
-        grr_definition: dict[str, Any],
-        ref_genome_id: str,
-    ) -> None:
-        self.output: str = AnnotateColumnsTool.get_output_path(self.args)
+def add_tasks_tabixed(
+    args: ProcessingArgs,
+    task_graph: TaskGraph,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict[str, Any],
+    ref_genome_id: str,
+) -> None:
+    with closing(TabixFile(args["input"])) as pysam_file:
+        regions = produce_regions(pysam_file, args["region_size"])
+    file_paths = produce_partfile_paths(args["input"],
+                                        regions,
+                                        args["work_dir"])
 
-        pipeline_config_old = None
-        if self.args["reannotate"]:
-            pipeline_config_old = Path(self.args["reannotate"]).read_text()
+    annotation_tasks = []
+    for region, path in zip(regions, file_paths, strict=True):
+        annotation_tasks.append(task_graph.create_task(
+            f"part-{str(region).replace(':', '-')}",
+            annotate_csv,
+            args=[
+                path,
+                pipeline_config,
+                grr_definition,
+                ref_genome_id,
+                region,
+                args,
+            ],
+            deps=[]))
 
-        if tabix_index_filename(self.args["input"]):
-            with closing(TabixFile(self.args["input"])) as pysam_file:
-                regions = produce_regions(pysam_file, self.args["region_size"])
-            file_paths = produce_partfile_paths(
-                self.args["input"], regions, self.args["work_dir"])
+    annotation_sync = task_graph.create_task(
+        "sync_csv_write", lambda: None,
+        args=[], deps=annotation_tasks,
+    )
 
-            annotation_tasks = []
-            for region, path in zip(regions, file_paths, strict=True):
-                task_id = f"part-{str(region).replace(':', '-')}"
+    output: str = get_output_path(args)
 
-                annotation_tasks.append(task_graph.create_task(
-                    task_id,
-                    process_dsv,
-                    args=[
-                        self.args["input"],
-                        path,
-                        pipeline_config,
-                        pipeline_config_old,
-                        grr_definition,
-                        ref_genome_id,
-                        Path(self.args["work_dir"]),
-                        self.args["batch_size"],
-                        region,
-                        self.args,
-                        self.args["input_separator"],
-                        self.args["output_separator"],
-                        self.args["allow_repeated_attributes"],
-                        self.args["full_reannotation"],
-                    ],
-                    deps=[]))
+    concat_task = task_graph.create_task(
+        "concat",
+        concat,
+        args=[
+            file_paths,
+            output,
+        ],
+        deps=[annotation_sync])
 
-            annotation_sync = task_graph.create_task(
-                "sync_dsv_write", lambda: None,
-                args=[], deps=annotation_tasks,
-            )
+    task_graph.create_task(
+        "compress_and_tabix",
+        produce_tabix_index,
+        args=[output, args],
+        deps=[concat_task])
 
-            concat_task = task_graph.create_task(
-                "concat",
-                concat,
-                args=[
-                    file_paths,
-                    self.output,
-                ],
-                deps=[annotation_sync])
 
-            task_graph.create_task(
-                "compress_and_tabix",
-                produce_tabix_index,
-                args=[self.output, self.args],
-                deps=[concat_task])
-        else:
-            task_graph.create_task(
-                "annotate_all",
-                process_dsv,
-                args=[
-                    self.args["input"],
-                    self.output,
-                    pipeline_config,
-                    pipeline_config_old,
-                    grr_definition,
-                    ref_genome_id,
-                    Path(self.args["work_dir"]),
-                    self.args["batch_size"],
-                    None,
-                    self.args,
-                    self.args["input_separator"],
-                    self.args["output_separator"],
-                    self.args["allow_repeated_attributes"],
-                    self.args["full_reannotation"],
-                ],
-                deps=[])
+def add_tasks(
+    args: ProcessingArgs,
+    task_graph: TaskGraph,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict[str, Any],
+    ref_genome_id: str,
+) -> None:
+    task_graph.create_task(
+        "annotate_all",
+        annotate_csv,
+        args=[
+            get_output_path(args),
+            pipeline_config,
+            grr_definition,
+            ref_genome_id,
+            None,
+            args,
+        ],
+        deps=[])
 
 
 def cli(raw_args: list[str] | None = None) -> None:
     if not raw_args:
         raw_args = sys.argv[1:]
 
-    arg_parser = AnnotateColumnsTool.get_argument_parser()
+    arg_parser = get_argument_parser()
     args = vars(arg_parser.parse_args(raw_args))
+    if not os.path.exists(args["work_dir"]):
+        os.mkdir(args["work_dir"])
+    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
+    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
-    setup_context(args)
+    register_context_provider(CLIAnnotationContextProvider())
+    context_providers_init(**args)
 
-    pipeline, context, grr = get_stuff_from_context()
+    registered_context = get_genomic_context()
+    # Maybe add a method to build a pipeline from a genomic context
+    # the pipeline arguments are registered as a context above, where
+    # the pipeline is also written into the context, only to be accessed
+    # 3 lines down
+    pipeline = get_context_pipeline(registered_context)
+    if pipeline is None:
+        raise ValueError("no valid annotation pipeline configured")
+    context = pipeline.build_pipeline_genomic_context()
+    grr = context.get_genomic_resources_repository()
+    if grr is None:
+        raise ValueError("no valid GRR configured")
     assert grr.definition is not None
-
-    resource_ids: set[str] = {
-        res.resource_id
-        for annotator in pipeline.annotators
-        for res in annotator.resources
-    }
-    cache_resources(grr, resource_ids)
 
     ref_genome = context.get_reference_genome()
     assert ref_genome is not None
-
     ref_genome_id = ref_genome.resource_id
 
-    tool = AnnotateColumnsTool(args)
+    cache_pipeline_resources(grr, pipeline)
+
+    processing_args: ProcessingArgs = {
+        "input": args["input"],
+        "output": args["output"],
+        "reannotate": args["reannotate"],
+        "work_dir": args["work_dir"],
+        "batch_size": args["batch_size"],
+        "region_size": args["region_size"],
+        "input_separator": args["input_separator"],
+        "output_separator": args["output_separator"],
+        "allow_repeated_attributes": args["allow_repeated_attributes"],
+        "full_reannotation": args["full_reannotation"],
+    }
 
     task_graph = TaskGraph()
-
-    setup_work_dir_and_task_dirs(tool.args)
-
-    tool.add_tasks(
-        task_graph,
-        pipeline.raw,
-        grr.definition,
-        ref_genome_id,
-    )
+    if tabix_index_filename(args["input"]):
+        add_tasks_tabixed(
+            processing_args,
+            task_graph,
+            pipeline.raw,
+            grr.definition,
+            ref_genome_id,
+        )
+    else:
+        add_tasks(
+            processing_args,
+            task_graph,
+            pipeline.raw,
+            grr.definition,
+            ref_genome_id,
+        )
 
     if len(task_graph.tasks) > 0:
-        add_input_files_to_task_graph(tool.args, task_graph)
-        TaskGraphCli.process_graph(task_graph, **tool.args)
+        add_input_files_to_task_graph(args, task_graph)
+        TaskGraphCli.process_graph(task_graph, **args)
