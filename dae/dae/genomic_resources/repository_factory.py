@@ -195,28 +195,28 @@ def build_genomic_resource_repository(
             f"The repository definition element {definition} "
             "has no type attiribute.")
 
-    orig_definition = copy.deepcopy(definition)
+    definition_copy = copy.deepcopy(definition)
 
-    repo_type = definition.pop("type")
-    repo_id = definition.pop("id", None)
+    repo_type = definition_copy.pop("type")
+    repo_id = definition_copy.pop("id", None)
 
     if repo_type == "group":
-        if "children" not in definition:
+        if "children" not in definition_copy:
             raise ValueError(
-                f"The definition for group repository {definition} "
+                f"The definition for group repository {definition_copy} "
                 "has no children attiribute.")
-        if not isinstance(definition["children"], list) and \
-                not isinstance(definition["children"], tuple):
+        if not isinstance(definition_copy["children"], list) and \
+                not isinstance(definition_copy["children"], tuple):
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
 
-        children = cast(list[dict], definition.pop("children"))
+        children = cast(list[dict], definition_copy.pop("children"))
         repo: GenomicResourceRepo = \
-            _build_group_repository(repo_id, children, **definition)
+            _build_group_repository(repo_id, children, **definition_copy)
     else:
-        repo = _build_real_repository(repo_type, repo_id, **definition)
-    repo.definition = orig_definition
+        repo = _build_real_repository(repo_type, repo_id, **definition_copy)
+    repo.definition = definition
 
     return repo
 
