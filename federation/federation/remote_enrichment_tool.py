@@ -61,6 +61,7 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
         if counting_id:
             query["enrichmentCountingModel"] = counting_id
 
+        # import pdb; pdb.set_trace()
         result = self.rest_client.post_enrichment_test(query)
         if result is None:
             return []

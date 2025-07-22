@@ -30,7 +30,6 @@ class EnrichmentModelsView(QueryBaseView):
         study = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if study is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
         enrichment_helper = create_enrichment_helper(
             self.gpf_instance,
             study,
@@ -59,7 +58,6 @@ class EnrichmentTestView(QueryBaseView):
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
         query = expand_gene_set(cast(dict, request.data))
-
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -70,6 +68,7 @@ class EnrichmentTestView(QueryBaseView):
         assert dataset is not None
 
         builder = create_enrichment_builder(self.gpf_instance, dataset)
+
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -82,6 +81,7 @@ class EnrichmentTestView(QueryBaseView):
             )
         ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
         gene_syms = None
         if "geneSymbols" in query:
@@ -99,6 +99,7 @@ class EnrichmentTestView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # import pdb; pdb.set_trace()
             results = builder.build(
                 gene_syms,
                 gene_scores,
@@ -108,6 +109,7 @@ class EnrichmentTestView(QueryBaseView):
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
         return Response({"desc": desc, "result": results})
 
 
@@ -116,6 +118,7 @@ def create_enrichment_helper(
 ) -> BaseEnrichmentHelper:
     """Create an enrichment builder for the given dataset."""
     for ext_name, extension in gpf_instance.extensions.items():
+        # import pdb; pdb.set_trace()
         enrichment_helper = extension.get_tool(study, "enrichment_helper")
         if enrichment_helper is not None:
             if not isinstance(enrichment_helper, BaseEnrichmentHelper):

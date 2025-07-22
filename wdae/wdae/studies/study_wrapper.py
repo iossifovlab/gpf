@@ -356,6 +356,24 @@ class WDAEAbstractStudy:
     ) -> dict[str, Measure]:
         return self.phenotype_data.get_measures(instrument_name, measure_type)
 
+    @abstractmethod
+    def get_gene_view_summary_variants(
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Return gene browser summary variants."""
+
+    @abstractmethod
+    def get_gene_view_summary_variants_download(
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
+    ) -> Iterable:
+        """Return gene browser summary variants for downloading."""
+
 
 class WDAEStudy(WDAEAbstractStudy):
     """A genotype and phenotype data wrapper for use in the wdae module."""

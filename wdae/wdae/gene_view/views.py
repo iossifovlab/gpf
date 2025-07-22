@@ -10,7 +10,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import WDAEStudy
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
@@ -25,11 +25,13 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Get gene browser config."""
+        # import pdb; pdb.set_trace()
         data = expand_gene_set(request.query_params)
         dataset_id = data["datasetId"]
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        ###
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         if dataset is None:
@@ -61,17 +63,11 @@ class QueryVariantsView(QueryBaseView):
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if dataset.genotype_data.is_remote:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         freq_col = \
             dataset.genotype_data.config["gene_browser"]["frequency_column"]
-
+        # import pdb; pdb.set_trace();
         return Response(list(
-            dataset.get_gene_view_summary_variants(
-                freq_col, self.query_transformer,
-                self.response_transformer, **data,
-            ),
+            dataset.get_gene_view_summary_variants(freq_col, self.query_transformer,self.response_transformer, **data,),
         ))
 
 
@@ -84,7 +80,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
         self,
         data: dict,
         user: User,
-        dataset: WDAEStudy,
+        dataset: WDAEAbstractStudy,
     ) -> Generator[str, None, None]:
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
@@ -120,9 +116,6 @@ class DownloadSummaryVariantsView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if dataset.genotype_data.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         response = FileResponse(

@@ -52,7 +52,7 @@ class EnrichmentHelper(BaseEnrichmentHelper):
     def __init__(
         self,
         grr: GenomicResourceRepo,
-        study: WDAEStudy,
+        study: WDAEAbstractStudy,
     ):
         super().__init__()
         self.grr = grr
