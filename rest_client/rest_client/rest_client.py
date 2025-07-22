@@ -396,6 +396,7 @@ class GPFPasswordSession(GPFClientSession):
 
 class RESTClient:
     """REST client for the GPF users and groups REST API."""
+    # pylint: disable=too-many-public-methods
 
     def __init__(
         self, session: GPFClientSession, client_id: str = "rest",
@@ -417,6 +418,7 @@ class RESTClient:
 
     @staticmethod
     def build_query_string(query_values: dict[str, Any]) -> str:
+        """Build a query string from a dictionary of query values."""
         query_values_str = ""
         first = True
         for key, val in query_values.items():
@@ -833,7 +835,7 @@ class RESTClient:
 
     def get_browser_measures(
         self,
-        dataset_id: str,
+        dataset_id: str, *,
         instrument: str | None,
         search_term: str | None,
         page: int | None = None,
@@ -939,6 +941,7 @@ class RESTClient:
         return response.json()
 
     def get_instruments_details(self, dataset_id: str) -> Any:
+        """Get instruments details for a dataset."""
         query_str = self.build_query_string({
             "datasetId": dataset_id,
         })

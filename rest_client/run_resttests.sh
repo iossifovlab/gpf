@@ -10,6 +10,6 @@ done
 /opt/conda/bin/conda run -n gpf \
     py.test -vv -s --log-level=DEBUG \
         --junitxml=/wd/test-results/resttests-junit.xml \
-        /wd/rest_client/rest_client/tests \
+        /wd/rest_client/tests \
         --url http://backend:21010 \
         --mailhog http://mail:8025

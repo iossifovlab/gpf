@@ -1,12 +1,13 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,C0412
+from typing import cast
 from urllib.parse import urlparse
 
 import pytest
 import yaml
 from gpf_instance.gpf_instance import WGPFInstance
+from rest_client.mailhog_client import MailhogClient
 from utils.testing import setup_t4c8_instance
 
-from rest_client.mailhog_client import MailhogClient
 from rest_client.rest_client import (
     GPFAnonymousSession,
     GPFOAuthSession,
@@ -55,7 +56,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.fixture
 def base_url(request: pytest.FixtureRequest) -> str:
-    res = request.config.getoption("--url")
+    res = cast(str, request.config.getoption("--url"))
     parsed = urlparse(res)
     if not parsed.scheme:
         res = f"http://{res}"
@@ -68,7 +69,7 @@ def base_url(request: pytest.FixtureRequest) -> str:
 
 @pytest.fixture
 def mailhog_url(request: pytest.FixtureRequest) -> str:
-    res = request.config.getoption("--mailhog")
+    res = cast(str, request.config.getoption("--mailhog"))
     parsed = urlparse(res)
     if not parsed.scheme:
         res = f"http://{res}"

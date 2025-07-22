@@ -245,10 +245,10 @@ class RemotePhenotypeData(PhenotypeData):
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.rest_client.get_browser_measures(
             self._remote_pheno_id,
-            instrument,
-            search_term,
-            page,
-            sort_by,
-            order_by,
+            instrument=instrument,
+            search_term=search_term,
+            page=page,
+            sort_by=sort_by,
+            order_by=order_by,
         )
         yield from measures

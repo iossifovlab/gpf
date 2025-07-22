@@ -72,21 +72,21 @@ def setup_t4c8_grr(
                 """,
             "main_gene_sets": {
                 "t4_candidates.txt": textwrap.dedent(
-                """t4_candidates
-                   T4 Candidates
-                   t4
-                """),
+                    """t4_candidates
+                    T4 Candidates
+                    t4
+                    """),
                 "c8_candidates.txt": textwrap.dedent(
-                """c8_candidates
-                   C8 Candidates
-                   c8
-                """),
+                    """c8_candidates
+                    C8 Candidates
+                    c8
+                    """),
                 "all_candidates.txt": textwrap.dedent(
-                """all_candidates
-                   All Candidates
-                   t4
-                   c8
-                """),
+                    """all_candidates
+                    All Candidates
+                    t4
+                    c8
+                    """),
             },
         },
     )
@@ -370,7 +370,7 @@ def _t4c8_dataset(
         "t4c8_dataset",
         ["t4c8_study_1", "t4c8_study_2"],
         dataset_config_update=textwrap.dedent(f"""
-            conf_dir: { root_path / "dataset "}
+            conf_dir: {root_path / "dataset "}
             person_set_collections:
                 phenotype:
                   id: phenotype
@@ -809,7 +809,7 @@ f1.4     s4       dad4  mom4  2   1      sib  unaffected
     )
     setup_directories(
         pheno_path / "instruments", {
-        "i1.csv": textwrap.dedent("""
+            "i1.csv": textwrap.dedent("""
 personId,age,iq,m1,m2,m3,m4,m5
 mom1,495.85101568044115,97.50432405604393,52.81283557677513,30.02770124013255,71.37577329050546,7,val3
 dad1,455.7415088310677,95.69209763066596,30.17069676417365,46.09107120958192,80.80918132613797,6,val5
@@ -828,11 +828,11 @@ dad4,519.696209236225,95.17277547237524,50.73287772082178,34.58584942696778,63.2
 p4,157.61834502034586,103.07449426952655,99.54884909890457,37.31662520714209,50.87487739184816,2,val1
 s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.558215318085175,1,val4
         """),
-    })
+        })
 
     setup_directories(
         pheno_path, {
-        "regressions.yaml": textwrap.dedent("""
+            "regressions.yaml": textwrap.dedent("""
         regression:
           age:
             instrument_name: "i1"
@@ -847,7 +847,7 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
             display_name: "Non verbal IQ"
             jitter: 0.1
         """),
-    })
+        })
 
     pheno_import([
         "--pheno-id", "study_1_pheno",
