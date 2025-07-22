@@ -26,6 +26,7 @@ from dae.annotation.annotate_utils import (
 )
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
+    RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
@@ -374,23 +375,11 @@ def concat(partfile_paths: list[str], output_path: str) -> None:
 class AnnotateColumnsTool:
     """Annotation tool for TSV-style text files."""
 
-    def __init__(self, raw_args: list[str]) -> None:
-        self.args = vars(self.get_argument_parser().parse_args(raw_args))
-        self.output: str = self._get_output_path()
-        setup_context(self.args)
+    def __init__(self, args: dict[str, Any]) -> None:
+        self.args = args
 
-    def _get_output_path(self) -> str:
-        if self.args["output"]:
-            return self.args["output"].rstrip(".gz")
-
-        input_name = self.args["input"].rstrip(".gz")
-        if "." in input_name:
-            idx = input_name.find(".")
-            return f"{input_name[:idx]}_annotated{input_name[idx:]}"
-
-        return f"{input_name}_annotated"
-
-    def get_argument_parser(self) -> argparse.ArgumentParser:
+    @staticmethod
+    def get_argument_parser() -> argparse.ArgumentParser:
         """Configure argument parser."""
         parser = argparse.ArgumentParser(
             description="Annotate columns",
@@ -438,21 +427,26 @@ class AnnotateColumnsTool:
         VerbosityConfiguration.set_arguments(parser)
         return parser
 
-    def add_tasks(self, task_graph: TaskGraph) -> None:
-        assert self.output is not None
+    @staticmethod
+    def get_output_path(args: dict[str, Any]) -> str:
+        if args["output"]:
+            return args["output"].rstrip(".gz")
 
-        pipeline, context, grr = get_stuff_from_context()
+        input_name = args["input"].rstrip(".gz")
+        if "." in input_name:
+            idx = input_name.find(".")
+            return f"{input_name[:idx]}_annotated{input_name[idx:]}"
 
-        resource_ids: set[str] = {
-            res.resource_id
-            for annotator in pipeline.annotators
-            for res in annotator.resources
-        }
-        cache_resources(grr, resource_ids)
+        return f"{input_name}_annotated"
 
-        ref_genome = context.get_reference_genome()
-        ref_genome_id = ref_genome.resource_id \
-            if ref_genome is not None else None
+    def add_tasks(
+        self,
+        task_graph: TaskGraph,
+        pipeline_config: RawPipelineConfig,
+        grr_definition: dict[str, Any],
+        ref_genome_id: str,
+    ) -> None:
+        self.output: str = AnnotateColumnsTool.get_output_path(self.args)
 
         pipeline_config_old = None
         if self.args["reannotate"]:
@@ -474,9 +468,9 @@ class AnnotateColumnsTool:
                     args=[
                         self.args["input"],
                         path,
-                        pipeline.raw,
+                        pipeline_config,
                         pipeline_config_old,
-                        grr.definition,
+                        grr_definition,
                         ref_genome_id,
                         Path(self.args["work_dir"]),
                         self.args["batch_size"],
@@ -515,9 +509,9 @@ class AnnotateColumnsTool:
                 args=[
                     self.args["input"],
                     self.output,
-                    pipeline.raw,
+                    pipeline_config,
                     pipeline_config_old,
-                    grr.definition,
+                    grr_definition,
                     ref_genome_id,
                     Path(self.args["work_dir"]),
                     self.args["batch_size"],
@@ -534,13 +528,39 @@ class AnnotateColumnsTool:
 def cli(raw_args: list[str] | None = None) -> None:
     if not raw_args:
         raw_args = sys.argv[1:]
-    tool = AnnotateColumnsTool(raw_args)
+
+    arg_parser = AnnotateColumnsTool.get_argument_parser()
+    args = vars(arg_parser.parse_args(raw_args))
+
+    setup_context(args)
+
+    pipeline, context, grr = get_stuff_from_context()
+    assert grr.definition is not None
+
+    resource_ids: set[str] = {
+        res.resource_id
+        for annotator in pipeline.annotators
+        for res in annotator.resources
+    }
+    cache_resources(grr, resource_ids)
+
+    ref_genome = context.get_reference_genome()
+    assert ref_genome is not None
+
+    ref_genome_id = ref_genome.resource_id
+
+    tool = AnnotateColumnsTool(args)
 
     task_graph = TaskGraph()
 
     setup_work_dir_and_task_dirs(tool.args)
 
-    tool.add_tasks(task_graph)
+    tool.add_tasks(
+        task_graph,
+        pipeline.raw,
+        grr.definition,
+        ref_genome_id,
+    )
 
     if len(task_graph.tasks) > 0:
         add_input_files_to_task_graph(tool.args, task_graph)
