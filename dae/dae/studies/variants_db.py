@@ -505,11 +505,13 @@ class VariantsDb:
             return None
 
         try:
-            variants = genotype_storage.build_backend(
+            genotype_storage.build_backend(
                 study_config, self.genome, self.gene_models,
             )
 
-            return GenotypeDataStudy(study_config, variants)  # type: ignore
+            backend = genotype_storage.loaded_variants[study_config.id]
+
+            return GenotypeDataStudy(study_config, backend)  # type: ignore
         except Exception:  # pylint: disable=broad-except
             logger.exception("unable to create study %s", study_config.id)
             return None
