@@ -244,7 +244,7 @@ class ParquetGenotypeStorage(GenotypeStorage):
         """No resources to close."""
         return self
 
-    def build_backend(
+    def _build_backend_internal(
         self,
         study_config: dict[str, Any],
         genome: ReferenceGenome,

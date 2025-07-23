@@ -73,7 +73,7 @@ class AbstractDuckDbStorage(GenotypeStorage, DuckDbConnectionFactory):
     ) -> Db2Layout:
         """Construct study layout from study and storage configuration."""
 
-    def build_backend(
+    def _build_backend_internal(
             self, study_config: dict,
             genome: ReferenceGenome,
             gene_models: GeneModels) -> DuckDb2Variants:
@@ -237,9 +237,7 @@ class DuckDbStorage(AbstractDuckDbStorage):
         )
 
 
-def duckdb_storage_factory(
-    storage_config: dict[str, Any],
-) -> DuckDbStorage:
+def duckdb_storage_factory(storage_config: dict[str, Any]) -> DuckDbStorage:
     """Create `duckdb` genotype storage."""
     dd_config = parse_duckdb_config(storage_config)
     if dd_config.storage_type != "duckdb":

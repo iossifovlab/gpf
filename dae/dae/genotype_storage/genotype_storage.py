@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import abc
 import logging
+from collections.abc import Iterable
 from typing import Any, cast
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.query_variants.base_query_variants import QueryVariants
+from dae.variants.family_variant import FamilyVariant
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +16,25 @@ logger = logging.getLogger(__name__)
 class GenotypeStorage(abc.ABC):
     """Base class for genotype storages."""
 
-    def __init__(self, storage_config: dict[str, Any]):
+    def __init__(
+        self, storage_config: dict[str, Any],
+    ):
         self.storage_config = \
             self.validate_and_normalize_config(storage_config)
         self.storage_id = self.storage_config["id"]
         self.storage_type = cast(str, self.storage_config["storage_type"])
         self._read_only = cast(
             bool, self.storage_config.get("read_only", False))
+        self._study_configs: dict[str, dict[str, Any]] = {}
+        self._loaded_variants: dict[str, QueryVariants] = {}
+
+    @property
+    def study_configs(self) -> dict[str, dict[str, Any]]:
+        return self._study_configs
+
+    @property
+    def loaded_variants(self) -> dict[str, QueryVariants]:
+        return self._loaded_variants
 
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
@@ -72,10 +86,35 @@ class GenotypeStorage(abc.ABC):
         """Frees all resources used by the genotype storage to work."""
 
     @abc.abstractmethod
-    def build_backend(
+    def _build_backend_internal(
         self,
         study_config: dict,
         genome: ReferenceGenome,
         gene_models: GeneModels,
     ) -> QueryVariants:
         """Construct a query backend for this genotype storage."""
+
+    def build_backend(
+        self,
+        study_config: dict,
+        genome: ReferenceGenome,
+        gene_models: GeneModels,
+    ) -> None:
+        study_id = study_config["id"]
+        if study_id not in self.loaded_variants:
+            self.loaded_variants[study_id] = self._build_backend_internal(
+                study_config, genome, gene_models)
+
+    def query_variants(
+        self,
+        study_id: str,
+        kwargs: dict[str, Any],
+    ) -> Iterable[FamilyVariant] | None:
+        """Return an iterable for variants."""
+        if study_id not in self.study_configs:
+            return None
+        if study_id not in self.loaded_variants:
+            raise ValueError(
+                f"{study_id} has no loaded QueryVariants backend!")
+
+        return self.loaded_variants[study_id].query_variants(**kwargs)

@@ -187,11 +187,13 @@ class WGPFInstance(GPFInstance):
         response_transformer = make_response_transformer(self)
         if children is None:
             return WDAEStudy(
+                self.genotype_storages,
                 genotype_data, phenotype_data,
                 query_transformer=query_transformer,
                 response_transformer=response_transformer,
             )
         return WDAEStudyGroup(
+            self.genotype_storages,
             genotype_data, phenotype_data,
             children=cast(list[WDAEStudy], children),
             query_transformer=query_transformer,

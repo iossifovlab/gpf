@@ -1,8 +1,9 @@
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.variants.family_variant import FamilyVariant
 
 logger = logging.getLogger(__name__)
 
@@ -171,3 +172,13 @@ class GenotypeStorageRegistry:
         for storage_id, storage in self._genotype_storages.items():
             logger.info("shutting down genotype storage %s", storage_id)
             storage.shutdown()
+
+    def query_variants(
+        self, study_id: str, kwargs: dict[str, Any],
+    ) -> Iterable[FamilyVariant]:
+        for storage in self._genotype_storages.values():
+            variants = storage.query_variants(study_id, kwargs)
+            if variants is not None:
+                return variants
+        raise KeyError(
+            f"Genotype data {study_id} not found in storage registry")

@@ -16,10 +16,14 @@ from dae.enrichment_tool.enrichment_utils import (
     get_enrichment_cache_path,
     get_enrichment_config,
 )
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
-from dae.pheno.pheno_data import Measure, MeasureType, PhenotypeData
+from dae.pheno.common import MeasureType
+from dae.pheno.pheno_data import Measure, PhenotypeData
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
@@ -380,6 +384,7 @@ class WDAEStudy(WDAEAbstractStudy):
 
     def __init__(
         self,
+        genotype_storage_registry: GenotypeStorageRegistry,
         genotype_data: GenotypeData | None,
         phenotype_data: PhenotypeData | None,
         query_transformer: QueryTransformerProtocol | None = None,
@@ -388,6 +393,7 @@ class WDAEStudy(WDAEAbstractStudy):
         self.children = [self]
         self.query_transformer = query_transformer
         self.response_transformer = response_transformer
+        self.registry = genotype_storage_registry
         super().__init__(genotype_data, phenotype_data)
         self._pheno_values_cache = self._get_all_pheno_values()
         self.is_remote = False
@@ -1101,6 +1107,7 @@ class WDAEStudyGroup(WDAEStudy):
 
     def __init__(
         self,
+        genotype_storage_registry: GenotypeStorageRegistry,
         genotype_data: GenotypeData | None,
         pheno_data: PhenotypeData | None,
         children: list[WDAEStudy],
@@ -1109,6 +1116,7 @@ class WDAEStudyGroup(WDAEStudy):
         response_transformer: ResponseTransformerProtocol | None = None,
     ) -> None:
         super().__init__(
+            genotype_storage_registry,
             genotype_data, pheno_data,
             query_transformer=query_transformer,
             response_transformer=response_transformer,

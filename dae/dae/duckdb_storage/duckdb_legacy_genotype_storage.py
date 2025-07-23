@@ -538,7 +538,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
     def _strip_db_name(self, db_name: str) -> str:
         return pathlib.Path(db_name).stem
 
-    def build_backend(
+    def _build_backend_internal(
             self, study_config: dict,
             genome: ReferenceGenome,  # noqa: ARG002
             gene_models: GeneModels) -> DuckDbVariants | DuckDb2Variants:
