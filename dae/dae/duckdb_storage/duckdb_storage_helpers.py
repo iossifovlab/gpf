@@ -267,22 +267,28 @@ def create_s3_secret_clause(
     endpoint = None
     if endpoint_url:
         parsed = urlparse(str(endpoint_url))
-        endpoint = parsed.netloc
+        endpoint = parsed.netloc or parsed.path
+
+    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    aws_region = os.getenv("AWS_REGION")
+    if aws_region is None:
+        aws_region = "us-east-1"
 
     return jinja2.Template(textwrap.dedent(
         """
-            drop secret if exists {{ storage_id }}_secret;
-
-            create secret {{ storage_id }}_secret (
+            create secret (
                 type s3,
                 key_id '{{ aws_access_key_id }}',
                 secret '{{ aws_secret_access_key }}',
                 {%- if endpoint %}
                 endpoint '{{ endpoint }}',
-                {%- endif %}
+                {%- if 'amazonaws.com' not in endpoint %}
                 url_style 'path',
-                {%- if region %}
-                region '{{ region }}',
+                {%- endif %}
+                {%- endif %}
+                {%- if aws_region %}
+                region '{{ aws_region }}'
                 {%- else %}
                 region 'None'
                 {%- endif %}
@@ -290,10 +296,10 @@ def create_s3_secret_clause(
         """,
     )).render(
         storage_id=storage_id,
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        aws_region=aws_region,
         endpoint=endpoint,
-        region=os.getenv("AWS_REGION"),
     )
 
 
