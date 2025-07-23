@@ -147,6 +147,7 @@ def setup_context(args: dict) -> None:
 def get_stuff_from_context() -> tuple[AnnotationPipeline,
                                       GenomicContext,
                                       GenomicResourceRepo]:
+    """Helper method to collect necessary objects from the genomic context."""
     registered_context = get_genomic_context()
     # Maybe add a method to build a pipeline from a genomic context
     # the pipeline arguments are registered as a context above, where
@@ -176,6 +177,7 @@ def cache_pipeline_resources(
     grr: GenomicResourceRepo,
     pipeline: AnnotationPipeline,
 ) -> None:
+    """Cache resources that the given pipeline will use."""
     resource_ids: set[str] = {
         res.resource_id
         for annotator in pipeline.annotators
