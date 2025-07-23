@@ -109,7 +109,7 @@ class GcpGenotypeStorage(GenotypeStorage):
         return Schema2DatasetLayout(
             study_id, pedigree_table, summary_table, family_table, meta_table)
 
-    def build_backend(
+    def _build_backend_internal(
         self, study_config: dict[str, Any],
         genome: ReferenceGenome,  # noqa: ARG002
         gene_models: GeneModels,

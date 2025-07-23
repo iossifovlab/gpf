@@ -53,7 +53,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
             self._hdfs_helpers.close()
         return self
 
-    def build_backend(
+    def _build_backend_internal(
         self, study_config: dict,
         genome: ReferenceGenome | None,  # noqa: ARG002
         gene_models: GeneModels | None,
