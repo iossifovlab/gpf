@@ -170,10 +170,10 @@ class _CSVSource(Source):
                 errors.append((lnum, line, str(ex)))
 
         if len(errors) > 0:
-            logger.error("there were errors during the import")
             for lnum, line, error in errors:
                 logger.error("line %s: %s", lnum, line)
                 logger.error("\t%s", error)
+            raise ValueError("there were errors during the import")
 
 
 class _CSVBatchSource(Source):
