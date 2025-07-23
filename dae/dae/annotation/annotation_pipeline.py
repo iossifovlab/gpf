@@ -230,12 +230,13 @@ class AnnotationPipeline:
             self,
             exc_type: type[BaseException] | None,
             exc_value: BaseException | None,
-            exc_tb: TracebackType | None) -> None:
+            exc_tb: TracebackType | None) -> bool:
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb)
         self.close()
+        return exc_type is None
 
 
 class ReannotationPipeline(AnnotationPipeline):

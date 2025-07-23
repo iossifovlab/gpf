@@ -4,23 +4,11 @@ import logging
 import os
 import sys
 from abc import abstractmethod
-from pathlib import Path
 from typing import Any
 
 from pysam import TabixFile, tabix_index
 
-from dae.annotation.annotation_config import (
-    RawAnnotatorsConfig,
-)
-from dae.annotation.annotation_factory import (
-    build_annotation_pipeline,
-    load_pipeline_from_yaml,
-)
-from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
-    FullReannotationPipeline,
-    ReannotationPipeline,
-)
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
     get_context_pipeline,
@@ -35,13 +23,12 @@ from dae.annotation.record_to_annotatable import (
 )
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import (
+    GenomicContext,
     context_providers_init,
     get_genomic_context,
     register_context_provider,
 )
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.regions import (
@@ -49,7 +36,6 @@ from dae.utils.regions import (
     get_chromosome_length_tabix,
     split_into_regions,
 )
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}"
 
@@ -99,13 +85,13 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
     return [c.strip() for c in header.split(separator)]
 
 
-def produce_tabix_index(filepath: str, args: Any = None) -> None:
+def produce_tabix_index(filepath: str, args: dict | None = None) -> None:
     """Produce a tabix index file for the given variants file."""
     header = _read_header(filepath)
     line_skip = 0 if header[0].startswith("#") else 1
     header = [c.strip("#") for c in header]
     record_to_annotatable = build_record_to_annotatable(
-        vars(args) if args is not None else {},
+        args if args is not None else {},
         set(header),
     )
     if isinstance(record_to_annotatable, (RecordToRegion,
@@ -146,6 +132,60 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     return str(value)
 
 
+def setup_work_dir_and_task_dirs(args: dict) -> None:
+    if not os.path.exists(args["work_dir"]):
+        os.mkdir(args["work_dir"])
+    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
+    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
+
+
+def setup_context(args: dict) -> None:
+    register_context_provider(CLIAnnotationContextProvider())
+    context_providers_init(**args)
+
+
+def get_stuff_from_context() -> tuple[AnnotationPipeline,
+                                      GenomicContext,
+                                      GenomicResourceRepo]:
+    """Helper method to collect necessary objects from the genomic context."""
+    registered_context = get_genomic_context()
+    # Maybe add a method to build a pipeline from a genomic context
+    # the pipeline arguments are registered as a context above, where
+    # the pipeline is also written into the context, only to be accessed
+    # 3 lines down
+    pipeline = get_context_pipeline(registered_context)
+    if pipeline is None:
+        raise ValueError(
+            "no valid annotation pipeline configured")
+    context = pipeline.build_pipeline_genomic_context()
+    grr = context.get_genomic_resources_repository()
+    if grr is None:
+        raise ValueError("no valid GRR configured")
+    return pipeline, context, grr
+
+
+def add_input_files_to_task_graph(args: dict, task_graph: TaskGraph) -> None:
+    if "input" in args:
+        task_graph.input_files.append(args["input"])
+    if "pipeline" in args:
+        task_graph.input_files.append(args["pipeline"])
+    if args.get("reannotate"):
+        task_graph.input_files.append(args["reannotate"])
+
+
+def cache_pipeline_resources(
+    grr: GenomicResourceRepo,
+    pipeline: AnnotationPipeline,
+) -> None:
+    """Cache resources that the given pipeline will use."""
+    resource_ids: set[str] = {
+        res.resource_id
+        for annotator in pipeline.annotators
+        for res in annotator.resources
+    }
+    cache_resources(grr, resource_ids)
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -155,75 +195,9 @@ class AnnotationTool:
     ) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
-
-        parser = self.get_argument_parser()
-
-        self.args = parser.parse_args(raw_args)
-        VerbosityConfiguration.set(self.args)
-
-        register_context_provider(CLIAnnotationContextProvider())
-        context_providers_init(**vars(self.args))
-
-        registered_context = get_genomic_context()
-
-        # Maybe add a method to build a pipeline from a genomic context
-        # the pipeline arguments are registered as a context above, where
-        # the pipeline is also written into the context, only to be accessed
-        # 3 lines down
-        pipeline = get_context_pipeline(registered_context)
-        if pipeline is None:
-            raise ValueError(
-                "no valid annotation pipeline configured")
-        self.pipeline = pipeline
-        self.context = self.pipeline.build_pipeline_genomic_context()
-        grr = self.context.get_genomic_resources_repository()
-        if grr is None:
-            raise ValueError("no valid GRR configured")
-        self.grr = grr
-
-        self.task_graph = TaskGraph()
-
-    def setup_work_dir(self) -> None:
-        if not os.path.exists(self.args.work_dir):
-            os.mkdir(self.args.work_dir)
-        self.args.task_status_dir = os.path.join(
-            self.args.work_dir, ".task-status")
-        self.args.task_log_dir = os.path.join(self.args.work_dir, ".task-log")
-
-    @staticmethod
-    def produce_annotation_pipeline(
-        pipeline_config: RawAnnotatorsConfig,
-        pipeline_config_old: str | None,
-        grr_definition: dict | None,
-        *,
-        allow_repeated_attributes: bool,
-        work_dir: Path | None = None,
-        full_reannotation: bool = False,
-    ) -> AnnotationPipeline:
-        """Produce an annotation or reannotation pipeline."""
-        grr = build_genomic_resource_repository(definition=grr_definition)
-        pipeline = build_annotation_pipeline(
-            pipeline_config, grr,
-            allow_repeated_attributes=allow_repeated_attributes,
-            work_dir=work_dir,
-        )
-        if pipeline_config_old is not None:
-            pipeline_old = load_pipeline_from_yaml(pipeline_config_old, grr)
-            pipeline = ReannotationPipeline(pipeline, pipeline_old) \
-                if not full_reannotation \
-                else FullReannotationPipeline(pipeline, pipeline_old)
-
-        return pipeline
-
-    @staticmethod
-    def get_task_dir(region: Region | None) -> str:
-        """Get dir for batch annotation."""
-        if region is None:
-            return "batch_work_dir"
-        chrom = region.chrom
-        pos_beg = region.start if region.start is not None else "_"
-        pos_end = region.stop if region.stop is not None else "_"
-        return f"{chrom}_{pos_beg}_{pos_end}"
+        self.args = vars(self.get_argument_parser().parse_args(raw_args))
+        setup_context(self.args)
+        self.pipeline, self.context, self.grr = get_stuff_from_context()
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
@@ -233,7 +207,9 @@ class AnnotationTool:
         """Perform operations required for annotation."""
         return
 
-    def add_tasks_to_graph(self) -> None:
+    def add_tasks_to_graph(
+        self, task_graph: TaskGraph,  # noqa: ARG002
+    ) -> None:
         """Add tasks to annotation tool task graph."""
         return
 
@@ -242,25 +218,16 @@ class AnnotationTool:
         # Is this too eager? What if a reannotation pipeline is created
         # inside work() and the only caching that must be done is far smaller
         # than the entire new annotation config suggests?
-        resource_ids: set[str] = {
-            res.resource_id
-            for annotator in self.pipeline.annotators
-            for res in annotator.resources
-        }
-        cache_resources(self.grr, resource_ids)
+        cache_pipeline_resources(self.grr, self.pipeline)
 
-        self.setup_work_dir()
+        setup_work_dir_and_task_dirs(self.args)
 
         self.prepare_for_annotation()
 
-        self.add_tasks_to_graph()
+        task_graph = TaskGraph()
+        self.add_tasks_to_graph(task_graph)
 
-        if len(self.task_graph.tasks) > 0:
-            if hasattr(self.args, "input"):
-                self.task_graph.input_files.append(self.args.input)
-            if hasattr(self.args, "pipeline"):
-                self.task_graph.input_files.append(self.args.pipeline)
-            if hasattr(self.args, "reannotate") and self.args.reannotate:
-                self.task_graph.input_files.append(self.args.reannotate)
+        if len(task_graph.tasks) > 0:
+            add_input_files_to_task_graph(self.args, task_graph)
 
-            TaskGraphCli.process_graph(self.task_graph, **vars(self.args))
+            TaskGraphCli.process_graph(task_graph, **self.args)

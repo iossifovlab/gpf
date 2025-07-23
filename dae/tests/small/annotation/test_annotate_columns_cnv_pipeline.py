@@ -12,6 +12,8 @@ from dae.genomic_resources.repository_factory import (
 from dae.testing import convert_to_tab_separated, setup_directories
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
+pytestmark = pytest.mark.usefixtures("clear_context")
+
 
 @pytest.fixture
 def annotate_cnv_fixture(tmp_path: Path) -> Path:
@@ -226,14 +228,20 @@ def test_bad_cnv_effect_annotation(
             - source: gene_effects
         """),
     })
-    cli_columns([
-        str(root_path / "input" / infile),
-        str(root_path / "effect_annotation.yaml"),
-        "-o", str(root_path / "result.tsv"),
-        "-w", str(root_path / "work"),
-        "--grr", str(root_path / "grr.yaml"),
-        "-j", "1",
-    ])
+
+    with pytest.raises(
+        ValueError,
+        match="errors occured during reading of CSV file",
+    ):
+        cli_columns([
+            str(root_path / "input" / infile),
+            str(root_path / "effect_annotation.yaml"),
+            "-o", str(root_path / "result.tsv"),
+            "-w", str(root_path / "work"),
+            "--grr", str(root_path / "grr.yaml"),
+            "-R", "genome/foobar_genome",
+            "-j", "1",
+        ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
@@ -264,15 +272,21 @@ def test_bad_cnv_gene_score_annotation(
               gene_aggregator: max
         """),
     })
-    cli_columns([
-        str(root_path / "input" / infile),
-        str(root_path / "gene_score_annotation.yaml"),
-        "-o", str(root_path / "result.tsv"),
-        "-w", str(root_path / "work"),
-        "--grr", str(root_path / "grr.yaml"),
-        "-j", "1",
-    ])
+
+    with pytest.raises(
+        ValueError,
+        match="errors occured during reading of CSV file",
+    ):
+        cli_columns([
+            str(root_path / "input" / infile),
+            str(root_path / "gene_score_annotation.yaml"),
+            "-o", str(root_path / "result.tsv"),
+            "-w", str(root_path / "work"),
+            "--grr", str(root_path / "grr.yaml"),
+            "-R", "genome/foobar_genome",
+            "-j", "1",
+        ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
-    assert all(np.isnan(v) for v in df.gene_score1.values)
+    assert all(np.isnan(v) for v in df.gene_score1.to_numpy())

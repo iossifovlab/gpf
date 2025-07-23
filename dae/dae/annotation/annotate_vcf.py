@@ -4,7 +4,6 @@ import argparse
 import itertools
 import logging
 import os
-import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from pathlib import Path
@@ -45,6 +44,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph import TaskGraphCli
+from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -440,73 +440,70 @@ class AnnotateVCFTool(AnnotationTool):
         return parser
 
     def prepare_for_annotation(self) -> None:
-        if self.args.output:
-            self.output = self.args.output
+        if self.args.get("output"):
+            self.output = self.args["output"]
         else:
             self.output = os.path.basename(
-                self.args.input).split(".")[0] + "_annotated.vcf"
+                self.args["input"]).split(".")[0] + "_annotated.vcf"
 
-    def add_tasks_to_graph(self) -> None:
+    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
         assert self.grr is not None
         assert self.output is not None
         pipeline_config_old = None
-        if self.args.reannotate:
-            pipeline_config_old = Path(self.args.reannotate).read_text()
+        if self.args.get("reannotate"):
+            pipeline_config_old = Path(self.args["reannotate"]).read_text()
 
-        ref_genome = self.context.get_reference_genome()
-        assert ref_genome is not None
-
-        if not tabix_index_filename(self.args.input):
-            self.task_graph.create_task(
+        if not tabix_index_filename(self.args["input"]):
+            task_graph.create_task(
                 "all_variants_annotate",
                 process_vcf,
                 args=[
-                    self.args.input,
+                    self.args["input"],
                     self.output,
                     self.pipeline.raw,
                     pipeline_config_old,
                     self.grr.definition,
-                    Path(self.args.work_dir),
-                    self.args.batch_size,
+                    Path(self.args["work_dir"]),
+                    self.args["batch_size"],
                     None,
-                    self.args.allow_repeated_attributes,
-                    self.args.full_reannotation,
+                    self.args["allow_repeated_attributes"],
+                    self.args["full_reannotation"],
                 ],
                 deps=[],
             )
         else:
-            with closing(TabixFile(self.args.input)) as pysam_file:
-                regions = produce_regions(pysam_file, self.args.region_size)
+            with closing(TabixFile(self.args["input"])) as pysam_file:
+                regions = produce_regions(pysam_file, self.args["region_size"])
             file_paths = produce_partfile_paths(
-                self.args.input, regions, self.args.work_dir)
+                self.args["input"], regions, self.args["work_dir"])
 
             annotation_tasks = []
             for (region, file_path) in zip(regions, file_paths, strict=True):
-                annotation_tasks.append(self.task_graph.create_task(
+                annotation_tasks.append(task_graph.create_task(
                     f"part-{str(region).replace(':', '-')}",
                     process_vcf,
                     args=[
-                        self.args.input,
+                        self.args["input"],
                         file_path,
                         self.pipeline.raw,
                         pipeline_config_old,
                         self.grr.definition,
-                        Path(self.args.work_dir),
-                        self.args.batch_size,
+                        Path(self.args["work_dir"]),
+                        self.args["batch_size"],
                         region,
-                        self.args.allow_repeated_attributes,
-                        self.args.full_reannotation,
+                        self.args["allow_repeated_attributes"],
+                        self.args["full_reannotation"],
                     ],
                     deps=[],
                 ))
 
-            annotation_sync = self.task_graph.create_task(
+            annotation_sync = task_graph.create_task(
                 "sync_vcf_annotate", lambda: None,
                 args=[], deps=annotation_tasks,
             )
 
             assert self.grr is not None
-            concat_task = self.task_graph.create_task(
+            concat_task = task_graph.create_task(
                 "concat",
                 concat,
                 args=[
@@ -516,7 +513,7 @@ class AnnotateVCFTool(AnnotationTool):
                 deps=[annotation_sync],
             )
 
-            self.task_graph.create_task(
+            task_graph.create_task(
                 "compress_and_tabix",
                 make_vcf_tabix,
                 args=[self.output],
@@ -526,7 +523,3 @@ class AnnotateVCFTool(AnnotationTool):
 def cli(raw_args: list[str] | None = None) -> None:
     tool = AnnotateVCFTool(raw_args)
     tool.run()
-
-
-if __name__ == "__main__":
-    cli(sys.argv[1:])

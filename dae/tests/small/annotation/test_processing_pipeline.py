@@ -35,7 +35,7 @@ class DummyAnnotatablesBatchFilter(AnnotationsWithSourceBatchFilter):
             exc_type: type[BaseException] | None,
             exc_value: BaseException | None,
             exc_tb: TracebackType | None) -> bool:
-        return exc_type is not None
+        return exc_type is None
 
 
 @pytest.mark.parametrize(

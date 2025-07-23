@@ -11,6 +11,8 @@ from dae.testing import (
     setup_genome,
 )
 
+pytestmark = pytest.mark.usefixtures("clear_context")
+
 
 def get_file_content_as_string(file: str) -> str:
     with open(file, "rt", encoding="utf8") as infile:
@@ -70,8 +72,8 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
 
 
 def test_annotate_columns_cshl_basic_setup(
-        annotate_directory_fixture: pathlib.Path,
-        capsys: pytest.CaptureFixture) -> None:
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
     # Given
     in_content = convert_to_tab_separated("""
         location  variant

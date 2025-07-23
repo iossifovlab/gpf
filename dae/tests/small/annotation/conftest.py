@@ -3,14 +3,27 @@
 import os
 import pathlib
 import textwrap
+from collections.abc import Generator
 
 import pytest
-from dae.genomic_resources.testing import setup_genome
+from dae.genomic_resources.genomic_context import (
+    _REGISTERED_CONTEXT_PROVIDERS,
+    _REGISTERED_CONTEXTS,
+)
 from dae.testing import setup_denovo, setup_directories
 
 
 def relative_to_this_test_folder(path: str) -> str:
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
+
+
+@pytest.fixture
+def clear_context() -> Generator[None, None, None]:
+    # No setup
+    yield
+    # Teardown - clear genomic contexts
+    _REGISTERED_CONTEXT_PROVIDERS.clear()
+    _REGISTERED_CONTEXTS.clear()
 
 
 @pytest.fixture(scope="session")
@@ -132,12 +145,6 @@ def annotate_directory_fixture(
                         filename: annotation.yaml
                     """,
                 },
-                "test_genome": {
-                    "genomic_resource.yaml": """
-                        type: genome
-                        filename: genome.fa
-                    """,
-                },
             },
         },
     )
@@ -178,15 +185,4 @@ def annotate_directory_fixture(
     setup_denovo(root_path / "grr" / "two" / "data.txt", two_content)
     setup_denovo(root_path / "grr" / "three" / "data.txt", three_content)
     setup_denovo(root_path / "grr" / "four" / "data.txt", four_content)
-    setup_genome(root_path / "grr" / "test_genome" / "genome.fa",
-                 textwrap.dedent(f"""
-                     >chr1
-                     {25 * 'ACGT'}
-                     >chr2
-                     {25 * 'ACGT'}
-                     >chr3
-                     {25 * 'ACGT'}
-                     >chr4
-                     {25 * 'ACGT'}
-                 """))
     return root_path
