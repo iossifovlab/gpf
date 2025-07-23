@@ -477,7 +477,7 @@ def test_create_regions_from_genes(
     assert str(reg) == expected
 
 
-def test_invalid_cds():
+def test_invalid_cds() -> None:
     transcript = TranscriptModel(
         gene="gene",
         tr_id="transcript",
@@ -499,7 +499,7 @@ def test_invalid_cds():
 
 
 @pytest.fixture(scope="module")
-def transcript_with_utrs():
+def transcript_with_utrs() -> TranscriptModel:
     return TranscriptModel(
         gene="gene",
         tr_id="transcript",
@@ -516,24 +516,24 @@ def transcript_with_utrs():
     )
 
 
-def test_total_len_with_utrs(transcript_with_utrs):
+def test_total_len_with_utrs(transcript_with_utrs: TranscriptModel) -> None:
     assert transcript_with_utrs.total_len() == 10
 
 
-def test_cds_len_with_utrs(transcript_with_utrs):
+def test_cds_len_with_utrs(transcript_with_utrs: TranscriptModel) -> None:
     assert transcript_with_utrs.cds_len() == 4
 
 
-def test_utr5_len_with_utrs(transcript_with_utrs):
+def test_utr5_len_with_utrs(transcript_with_utrs: TranscriptModel) -> None:
     assert transcript_with_utrs.utr5_len() == 2
 
 
-def test_utr3_len_with_utrs(transcript_with_utrs):
+def test_utr3_len_with_utrs(transcript_with_utrs: TranscriptModel) -> None:
     assert transcript_with_utrs.utr3_len() == 4
 
 
 @pytest.fixture
-def transcript_with_matching_frames():
+def transcript_with_matching_frames() -> TranscriptModel:
     return TranscriptModel(
         gene="gene",
         tr_id="transcript",
@@ -550,16 +550,20 @@ def transcript_with_matching_frames():
     )
 
 
-def test_test_frames_true(transcript_with_matching_frames):
+def test_test_frames_true(
+    transcript_with_matching_frames: TranscriptModel,
+) -> None:
     assert transcript_with_matching_frames.test_frames() is True
 
 
-def test_test_frames_false(transcript_with_matching_frames):
+def test_test_frames_false(
+    transcript_with_matching_frames: TranscriptModel,
+) -> None:
     transcript_with_matching_frames.exons[1].frame = 1
     assert transcript_with_matching_frames.test_frames() is False
 
 
-def test_get_exon_number_for_out_of_bounds():
+def test_get_exon_number_for_out_of_bounds() -> None:
     transcript = TranscriptModel(
         gene="gene",
         tr_id="transcript",
@@ -578,7 +582,7 @@ def test_get_exon_number_for_out_of_bounds():
     assert result == 0
 
 
-def test_join_gene_models_invalid_count(fixture_dirname):
+def test_join_gene_models_invalid_count(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_models = build_gene_models_from_file(filename, "gtf")
     gene_models.load()
@@ -588,7 +592,7 @@ def test_join_gene_models_invalid_count(fixture_dirname):
 
 
 def test_join_gene_models(
-    fixture_dirname,
+    fixture_dirname: Callable,
     t4c8_gene_models: GeneModels,
 ) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
@@ -606,7 +610,7 @@ def test_join_gene_models(
     assert len(combined.transcript_models) == 3
 
 
-def test_relabel_chromosomes(fixture_dirname) -> None:
+def test_relabel_chromosomes(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_model = build_gene_models_from_file(filename, "gtf")
     gene_model.load()
@@ -623,7 +627,7 @@ def test_relabel_chromosomes(fixture_dirname) -> None:
     assert "19" in gene_model.utr_models
 
 
-def test_relabel_chromosomes_from_mapfile(fixture_dirname) -> None:
+def test_relabel_chromosomes_from_mapfile(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_model = build_gene_models_from_file(filename, "gtf")
     gene_model.load()
@@ -643,7 +647,7 @@ def test_relabel_chromosomes_from_mapfile(fixture_dirname) -> None:
     assert "19" in gene_model.utr_models
 
 
-def test_is_loaded(fixture_dirname) -> None:
+def test_is_loaded(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_model = build_gene_models_from_file(filename, "gtf")
     assert gene_model.is_loaded() is False
@@ -652,7 +656,7 @@ def test_is_loaded(fixture_dirname) -> None:
     assert gene_model.is_loaded() is True
 
 
-def test_gene_models_by_location(fixture_dirname) -> None:
+def test_gene_models_by_location(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/test_ccds.txt")
     gene_model = build_gene_models_from_file(filename, "ccds")
     gene_model.load()
@@ -672,7 +676,7 @@ def test_gene_models_by_location(fixture_dirname) -> None:
     assert results[1].tr_id == "CCDS41220.1_1"
 
 
-def test_all_regions(fixture_dirname) -> None:
+def test_all_regions(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_model = build_gene_models_from_file(filename, "gtf")
     gene_model.load()

@@ -5,6 +5,7 @@ import pytest
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing import (
     setup_directories,
     setup_empty_gene_models,
@@ -14,7 +15,9 @@ from dae.testing import (
 
 
 @pytest.fixture
-def gpf_instance(tmp_path_factory):
+def gpf_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("default_storage_test")
 
     setup_genome(
@@ -45,16 +48,15 @@ def gpf_instance(tmp_path_factory):
         "directory": str(root_path / "alla_gpf"),
     })
 
-    gpf = setup_gpf_instance(
+    return setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=local_repo,
     )
-    return gpf
 
 
-def test_default_genotype_storage(gpf_instance):
+def test_default_genotype_storage(gpf_instance: GPFInstance) -> None:
     # Given
     gpf = gpf_instance
     # When
@@ -64,7 +66,7 @@ def test_default_genotype_storage(gpf_instance):
     assert storage == gpf.genotype_storages.get_genotype_storage("alabala")
 
 
-def test_get_genotype_storage_with_none(gpf_instance):
+def test_get_genotype_storage_with_none(gpf_instance: GPFInstance) -> None:
     # Given
     gpf = gpf_instance
 
@@ -75,7 +77,7 @@ def test_get_genotype_storage_with_none(gpf_instance):
     assert storage == gpf.genotype_storages.get_genotype_storage("alabala")
 
 
-def test_missing_default_genotype_storage(gpf_instance, mocker):
+def test_missing_default_genotype_storage(gpf_instance: GPFInstance) -> None:
     # Given
     gpf = gpf_instance
     genotype_storages = gpf.genotype_storages

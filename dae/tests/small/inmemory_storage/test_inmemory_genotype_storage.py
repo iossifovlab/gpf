@@ -1,29 +1,41 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import re
+from typing import cast
 
 import pytest
+from box import Box
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
 from dae.inmemory_storage.inmemory_genotype_storage import (
     InmemoryGenotypeStorage,
 )
 
 
 @pytest.fixture(scope="module")
-def filesystem_genotype_storage(simple_project):
+def filesystem_genotype_storage(
+    simple_project: ImportProject,
+) -> GenotypeStorage:
     return simple_project.get_genotype_storage()
 
 
 @pytest.fixture(scope="module")
-def study_config(simple_project):
+def study_config(simple_project: ImportProject) -> Box:
     run_with_project(simple_project)
     gpf_instance = simple_project.get_gpf_instance()
     gpf_instance.reload()
 
-    return gpf_instance.get_genotype_data_config("test_import")
+    config = gpf_instance.get_genotype_data_config("test_import")
+    assert config is not None
+    return config
 
 
 def test_build_backend(
-        filesystem_genotype_storage, simple_project, study_config) -> None:
+    filesystem_genotype_storage: GenotypeStorage,
+    simple_project: ImportProject,
+    study_config: Box,
+) -> None:
     gpf_instance = simple_project.get_gpf_instance()
 
     backend = filesystem_genotype_storage.build_backend(
@@ -37,7 +49,10 @@ def test_build_backend(
 
 
 def test_query_summary_variants(
-        filesystem_genotype_storage, simple_project, study_config) -> None:
+    filesystem_genotype_storage: GenotypeStorage,
+    simple_project: ImportProject,
+    study_config: Box,
+) -> None:
 
     gpf_instance = simple_project.get_gpf_instance()
     backend = filesystem_genotype_storage.build_backend(
@@ -48,7 +63,9 @@ def test_query_summary_variants(
     assert len(list(backend.query_summary_variants())) == 2
 
 
-def test_storage_type(filesystem_genotype_storage):
+def test_storage_type(
+    filesystem_genotype_storage: GenotypeStorage,
+) -> None:
     assert filesystem_genotype_storage.storage_type == "inmemory"
 
 
@@ -60,13 +77,15 @@ def test_storage_type(filesystem_genotype_storage):
     ],
 )
 def test_get_data_dir(
-    filesystem_genotype_storage, expected_path, build_path,
+    filesystem_genotype_storage: GenotypeStorage,
+    expected_path: str,
+    build_path: str,
 ) -> None:
-    assert filesystem_genotype_storage.get_data_dir(
-        *build_path).endswith(expected_path)
+    storage = cast(InmemoryGenotypeStorage, filesystem_genotype_storage)
+    assert storage.get_data_dir(*build_path).endswith(expected_path)
 
 
-def test_create_filesystem_storage(tmp_path) -> None:
+def test_create_filesystem_storage(tmp_path: pathlib.Path) -> None:
     config = {
         "storage_type": "inmemory",
         "id": "aaaa",
@@ -76,7 +95,7 @@ def test_create_filesystem_storage(tmp_path) -> None:
     assert storage is not None
 
 
-def test_create_filesystem_storage_missing_id(tmp_path) -> None:
+def test_create_filesystem_storage_missing_id(tmp_path: pathlib.Path) -> None:
     config = {
         "storage_type": "inmemory",
         "dir": str(tmp_path),

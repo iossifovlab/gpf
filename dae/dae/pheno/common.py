@@ -208,7 +208,10 @@ class ImportManifest(BaseModel):
         return [ImportManifest.from_row(row) for row in rows]
 
     @staticmethod
-    def create_table(connection: duckdb.DuckDBPyConnection, table: Table):
+    def create_table(
+        connection: duckdb.DuckDBPyConnection,
+        table: Table,
+    ) -> None:
         """Create table for recording import manifests."""
         drop = sqlglot.parse_one(
             f"DROP TABLE IF EXISTS {table.alias_or_name}").sql()
@@ -225,7 +228,7 @@ class ImportManifest(BaseModel):
         connection: duckdb.DuckDBPyConnection,
         table: Table,
         import_config: PhenoImportConfig,
-    ):
+    ) -> None:
         """Write manifest into DB on given table."""
         config_json = import_config.model_dump_json()
         timestamp = time.time()

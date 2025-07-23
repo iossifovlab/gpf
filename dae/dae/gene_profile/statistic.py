@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any
 
 
 class GPStatistic:
@@ -10,7 +10,7 @@ class GPStatistic:
 
     def __init__(
         self, gene_symbol: str,
-        gene_sets: List[str],
+        gene_sets: list[str],
         gene_scores: dict,
         variant_counts: dict,
     ):
@@ -19,7 +19,7 @@ class GPStatistic:
         self.gene_scores = gene_scores
         self.variant_counts = variant_counts
 
-    def _scores_to_json(self):
+    def _scores_to_json(self) -> list[dict[str, Any]]:
         result = []
         for category_id, scores in self.gene_scores.items():
             subresult = {"id": category_id, "scores": []}
@@ -28,7 +28,7 @@ class GPStatistic:
             result.append(subresult)
         return result
 
-    def _variant_counts_to_json(self):
+    def _variant_counts_to_json(self) -> list[dict[str, Any]]:
         result = []
         for study_id, counts in self.variant_counts.items():
             subresult = {"id": study_id, "personSets": []}
@@ -43,7 +43,7 @@ class GPStatistic:
             result.append(subresult)
         return result
 
-    def to_json(self):
+    def to_json(self) -> dict[str, Any]:
         return {
             "geneSymbol": self.gene_symbol,
             "geneSets": self.gene_sets,

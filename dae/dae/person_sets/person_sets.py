@@ -754,7 +754,7 @@ class PersonSetCollection:
             selected_person_sets = selected_person_sets & available_person_sets
         return selected_person_sets
 
-    def _pedigree_query_all_fields(self):
+    def _pedigree_query_all_fields(self) -> list[str]:
         return [
             source.source for source in self.config.sources
         ]
@@ -782,7 +782,7 @@ class PersonSetCollection:
         return result
 
     def _pedigree_query_check_multi_field_multi_value(
-        self, result,
+        self, result: dict[str, set[str]],
     ) -> bool:
         if len(result) > 1:
             multi_values_count = 0
