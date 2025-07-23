@@ -191,6 +191,37 @@ def test_annotate_columns_basic_setup(
     assert out_file_content == out_expected_content
 
 
+def test_annotate_columns_no_header(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chr1    23
+        chr1    24
+    """)
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    with pytest.raises(
+        ValueError,
+        match="no record to annotatable could be found",
+    ):
+        cli_columns([
+            str(a) for a in [
+                in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+                "-w", work_dir,
+                "-j", 1,
+                "-R", "test_genome",
+            ]
+        ])
+
+
 def test_annotate_columns_batch_mode(
     annotate_directory_fixture: pathlib.Path,
     tmp_path: pathlib.Path,
