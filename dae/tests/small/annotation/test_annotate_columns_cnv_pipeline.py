@@ -12,6 +12,8 @@ from dae.genomic_resources.repository_factory import (
 from dae.testing import convert_to_tab_separated, setup_directories
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
+pytestmark = pytest.mark.usefixtures("clear_context")
+
 
 @pytest.fixture
 def annotate_cnv_fixture(tmp_path: Path) -> Path:

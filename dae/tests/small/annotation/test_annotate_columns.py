@@ -184,7 +184,6 @@ def test_annotate_columns_basic_setup(
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -217,7 +216,6 @@ def test_annotate_columns_no_header(
                 in_file, annotation_file, "--grr", grr_file, "-o", out_file,
                 "-w", work_dir,
                 "-j", 1,
-                "-R", "test_genome",
             ]
         ])
 
@@ -253,7 +251,6 @@ def test_annotate_columns_batch_mode(
             "--grr", grr_file,
             "--batch-size", 1,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -293,7 +290,6 @@ def test_annotate_columns_produce_tabix_correctly_position(
             "-w", work_dir,
             "--grr", grr_file,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -333,7 +329,6 @@ def test_annotate_columns_produce_tabix_correctly_vcf_allele(
             "-w", work_dir,
             "--grr", grr_file,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -348,7 +343,7 @@ def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
     Even if the input file has unorthodox columns, if it's tabixed and
     the correct arguments are provided, a tabix file should always be produced.
 
-    This test covers the RecordToRegion and RecordToCNVAllele annotatable cases.
+    Covers the RecordToRegion and RecordToCNVAllele annotatable cases.
     """
 
     in_content = textwrap.dedent("""
@@ -373,7 +368,6 @@ def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
             "-w", work_dir,
             "--grr", grr_file,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -410,7 +404,6 @@ def test_annotate_columns_idempotence(
                 "-w", work_dir,
                 "-j", 1,
                 "--force",
-                "-R", "test_genome",
             ]
         ])
         out_file_content = get_file_content_as_string(str(out_file))
@@ -456,7 +449,7 @@ def test_annotate_columns_multiple_chrom(
     cli_columns([
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
-            "-o", out_file, "-j", 1, "-R", "test_genome",
+            "-o", out_file, "-j", 1,
         ]
     ])
 
@@ -510,7 +503,7 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
     cli_columns([
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
-            "-o", out_file, "-j", 1, "-R", "test_genome",
+            "-o", out_file, "-j", 1,
             "--allow-repeated-attributes",
         ]
     ])
@@ -564,7 +557,6 @@ def test_annotate_columns_none_values(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
 
@@ -603,7 +595,6 @@ def test_annotate_columns_repeated_attributes(
             "-w", work_dir,
             "-j", 1,
             "--allow-repeated-attributes",
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -638,7 +629,6 @@ def test_annotate_with_pipeline_from_grr(
             in_file, pipeline, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -673,7 +663,6 @@ def test_annotate_columns_autodetect_columns_with_underscore(
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -706,7 +695,6 @@ def test_annotate_columns_float_precision(
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -741,7 +729,6 @@ def test_annotate_columns_internal_attributes(
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "-R", "test_genome",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))

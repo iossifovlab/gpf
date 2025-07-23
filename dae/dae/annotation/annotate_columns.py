@@ -92,7 +92,7 @@ class _CSVSource(Source):
     def __init__(
         self,
         path: str,
-        ref_genome: ReferenceGenome,
+        ref_genome: ReferenceGenome | None,
         columns_args: dict[str, str],
         input_separator: str,
     ):
@@ -183,7 +183,7 @@ class _CSVBatchSource(Source):
     def __init__(
         self,
         path: str,
-        ref_genome: ReferenceGenome,
+        ref_genome: ReferenceGenome | None,
         columns_args: dict[str, str],
         input_separator: str,
         batch_size: int = 500,
@@ -321,7 +321,7 @@ def _build_sequential(
     args: _ProcessingArgs,
     output_path: str,
     pipeline: AnnotationPipeline,
-    reference_genome: ReferenceGenome,
+    reference_genome: ReferenceGenome | None,
 ) -> PipelineProcessor:
     source = _CSVSource(
         args.input,
@@ -345,7 +345,7 @@ def _build_batched(
     args: _ProcessingArgs,
     output_path: str,
     pipeline: AnnotationPipeline,
-    reference_genome: ReferenceGenome,
+    reference_genome: ReferenceGenome | None,
 ) -> PipelineProcessor:
     source = _CSVBatchSource(
         args.input,
@@ -369,7 +369,7 @@ def _annotate_csv(
     output_path: str,
     pipeline_config: RawAnnotatorsConfig,
     grr_definition: dict,
-    reference_genome_resource_id: str,
+    reference_genome_resource_id: str | None,
     region: Region | None,
     args: _ProcessingArgs,
 ) -> None:
@@ -380,8 +380,12 @@ def _annotate_csv(
         pipeline_config_old = Path(args.reannotate).read_text()
 
     grr = build_genomic_resource_repository(definition=grr_definition)
-    ref_genome = build_reference_genome_from_resource_id(
-        reference_genome_resource_id, grr)
+
+    ref_genome = None
+    if reference_genome_resource_id is not None:
+        ref_genome = build_reference_genome_from_resource_id(
+            reference_genome_resource_id, grr)
+
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
         allow_repeated_attributes=args.allow_repeated_attributes,
@@ -421,7 +425,7 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-def get_output_path(args: _ProcessingArgs) -> str:
+def _get_output_path(args: _ProcessingArgs) -> str:
     if args.output:
         return args.output.rstrip(".gz")
 
@@ -438,12 +442,12 @@ def _add_tasks_tabixed(
     task_graph: TaskGraph,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
-    ref_genome_id: str,
+    ref_genome_id: str | None,
 ) -> None:
     with closing(TabixFile(args.input)) as pysam_file:
         regions = produce_regions(pysam_file, args.region_size)
     file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
-    output_path = get_output_path(args)
+    output_path = _get_output_path(args)
 
     annotation_tasks = []
     for region, path in zip(regions, file_paths, strict=True):
@@ -485,13 +489,13 @@ def _add_tasks_plaintext(
     task_graph: TaskGraph,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
-    ref_genome_id: str,
+    ref_genome_id: str | None,
 ) -> None:
     task_graph.create_task(
         "annotate_all",
         _annotate_csv,
         args=[
-            get_output_path(args),
+            _get_output_path(args),
             pipeline_config,
             grr_definition,
             ref_genome_id,
@@ -551,6 +555,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
 
 
 def cli(raw_args: list[str] | None = None) -> None:
+    """Entry point for running the columns annotation tool."""
     if not raw_args:
         raw_args = sys.argv[1:]
 
@@ -581,8 +586,7 @@ def cli(raw_args: list[str] | None = None) -> None:
     assert grr.definition is not None
 
     ref_genome = context.get_reference_genome()
-    assert ref_genome is not None
-    ref_genome_id = ref_genome.resource_id
+    ref_genome_id = ref_genome.resource_id if ref_genome else None
 
     cache_pipeline_resources(grr, pipeline)
 
