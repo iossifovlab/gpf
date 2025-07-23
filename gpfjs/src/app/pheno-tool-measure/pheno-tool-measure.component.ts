@@ -1,9 +1,7 @@
 import { Component, OnInit, ElementRef, QueryList, ViewChildren, ViewChild } from '@angular/core';
-// eslint-disable-next-line no-restricted-imports
 import { combineLatest, of, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
-import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngrx/store';
 import { selectPhenoToolMeasure, PhenoToolMeasureState, setPhenoToolMeasure } from './pheno-tool-measure.state';
 import { switchMap, take } from 'rxjs/operators';
@@ -11,7 +9,8 @@ import { Dataset } from 'app/datasets/datasets';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { ComponentValidator } from 'app/common/component-validator';
+import { resetErrors, setErrors } from 'app/common/errors.state';
+import { cloneDeep } from 'lodash';
 
 interface Regression {
   display_name: string;
@@ -25,10 +24,9 @@ interface Regression {
   styleUrls: ['./pheno-tool-measure.component.css'],
   standalone: false
 })
-export class PhenoToolMeasureComponent extends ComponentValidator implements OnInit {
+export class PhenoToolMeasureComponent implements OnInit {
   @ViewChildren('checkboxes') public inputs: QueryList<ElementRef>;
 
-  @IsNotEmpty({message: 'Please select a measure.'})
   public selectedMeasure: ContinuousMeasure = null;
   public normalizeBy: Regression[] = new Array<Regression>();
 
@@ -39,18 +37,15 @@ export class PhenoToolMeasureComponent extends ComponentValidator implements OnI
   public regressionNames: string[] = [];
 
   public dataset: Dataset;
+  public errors: string[] = [];
 
   public constructor(
     protected store: Store,
     private measuresService: MeasuresService,
     private datasetsService: DatasetsService
-  ) {
-    super(store, 'phenoToolMeasure', selectPhenoToolMeasure);
-  }
+  ) { }
 
   public ngOnInit(): void {
-    super.ngOnInit();
-
     this.store.select(selectDatasetId).pipe(
       take(1),
       switchMap(selectedDatasetIdState => this.datasetsService.getDataset(selectedDatasetIdState)),
@@ -86,7 +81,8 @@ export class PhenoToolMeasureComponent extends ComponentValidator implements OnI
           this.measureSelectorComponent.selectMeasure(this.selectedMeasure, false);
         }
         this.normalizeBy = selectPhenoToolMeasureState.normalizeBy.length
-          ? selectPhenoToolMeasureState.normalizeBy as Regression[] : [];
+        ? selectPhenoToolMeasureState.normalizeBy as Regression[] : [];
+        this.validateState();
         this.updateState();
       });
   }
@@ -113,6 +109,7 @@ export class PhenoToolMeasureComponent extends ComponentValidator implements OnI
         (reg) => `${reg.instrument_name}.${reg.measure_name}` !== this.selectedMeasure?.name
       );
     }
+    this.validateState();
     this.updateState();
   }
 
@@ -151,5 +148,19 @@ export class PhenoToolMeasureComponent extends ComponentValidator implements OnI
       (checkbox.nativeElement as HTMLInputElement).checked = false;
       (checkbox.nativeElement as HTMLInputElement).dispatchEvent(new Event('change'));
     });
+  }
+
+  private validateState(): void {
+    this.errors = [];
+    if (!this.selectedMeasure) {
+      this.errors.push('Please select a measure.');
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'phenoToolMeasure', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'phenoToolMeasure'}));
+    }
   }
 }
