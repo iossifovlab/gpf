@@ -108,6 +108,7 @@ class _CSVSource(Source):
             self.source_file = TabixFile(self.path)
         else:
             self.source_file = open(self.path, "rt")
+            self.source_file.readline()  # Skip header line
         return self
 
     def __exit__(
