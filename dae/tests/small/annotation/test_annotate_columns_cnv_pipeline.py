@@ -226,15 +226,20 @@ def test_bad_cnv_effect_annotation(
             - source: gene_effects
         """),
     })
-    cli_columns([
-        str(root_path / "input" / infile),
-        str(root_path / "effect_annotation.yaml"),
-        "-o", str(root_path / "result.tsv"),
-        "-w", str(root_path / "work"),
-        "--grr", str(root_path / "grr.yaml"),
-        "-R", "genome/foobar_genome",
-        "-j", "1",
-    ])
+
+    with pytest.raises(
+        ValueError,
+        match="errors occured during reading of CSV file",
+    ):
+        cli_columns([
+            str(root_path / "input" / infile),
+            str(root_path / "effect_annotation.yaml"),
+            "-o", str(root_path / "result.tsv"),
+            "-w", str(root_path / "work"),
+            "--grr", str(root_path / "grr.yaml"),
+            "-R", "genome/foobar_genome",
+            "-j", "1",
+        ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
@@ -265,15 +270,20 @@ def test_bad_cnv_gene_score_annotation(
               gene_aggregator: max
         """),
     })
-    cli_columns([
-        str(root_path / "input" / infile),
-        str(root_path / "gene_score_annotation.yaml"),
-        "-o", str(root_path / "result.tsv"),
-        "-w", str(root_path / "work"),
-        "--grr", str(root_path / "grr.yaml"),
-        "-R", "genome/foobar_genome",
-        "-j", "1",
-    ])
+
+    with pytest.raises(
+        ValueError,
+        match="errors occured during reading of CSV file",
+    ):
+        cli_columns([
+            str(root_path / "input" / infile),
+            str(root_path / "gene_score_annotation.yaml"),
+            "-o", str(root_path / "result.tsv"),
+            "-w", str(root_path / "work"),
+            "--grr", str(root_path / "grr.yaml"),
+            "-R", "genome/foobar_genome",
+            "-j", "1",
+        ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]

@@ -174,7 +174,7 @@ class _CSVSource(Source):
             for lnum, line, error in errors:
                 logger.error("line %s: %s", lnum, line)
                 logger.error("\t%s", error)
-            raise ValueError("there were errors during the import")
+            raise ValueError("errors occured during reading of CSV file")
 
 
 class _CSVBatchSource(Source):
