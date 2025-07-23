@@ -125,7 +125,7 @@ describe('PhenoToolMeasureComponent', () => {
         measure_name: 'm2'
       }
     ];
-    component.measure = new ContinuousMeasure('i1.m1', 0, 10);
+    component.setMeasure(new ContinuousMeasure('i1.m1', 0, 10));
     const normalizedBy = [{
       display_name: 'd2',
       instrument_name: 'i2',
@@ -145,7 +145,7 @@ describe('PhenoToolMeasureComponent', () => {
 
   it('should check normalize by', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
-    const updateStateSpy = jest.spyOn(component, 'updateState');
+    component.setMeasure(new ContinuousMeasure('i1.m1', 0, 10));
     component.normalizeBy = [
       {
         display_name: 'd1',
@@ -228,7 +228,7 @@ describe('PhenoToolMeasureComponent', () => {
 
   it('should uncheck normalize by', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
-    const updateStateSpy = jest.spyOn(component, 'updateState');
+    component.setMeasure(new ContinuousMeasure('i1.m1', 0, 10));
     component.normalizeBy = [
       {
         display_name: 'd1',

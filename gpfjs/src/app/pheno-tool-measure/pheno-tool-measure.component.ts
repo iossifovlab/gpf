@@ -73,7 +73,10 @@ export class PhenoToolMeasureComponent implements OnInit {
     });
 
 
-    combineLatest([this.store.select(selectPhenoToolMeasure), this.measuresLoaded$]).pipe(take(1))
+    combineLatest([
+      this.store.select(selectPhenoToolMeasure),
+      this.measuresLoaded$
+    ]).pipe(take(1))
       .subscribe(async([selectPhenoToolMeasureState, measures]: [PhenoToolMeasureState, ContinuousMeasure[]]) => {
         if (selectPhenoToolMeasureState.measureId) {
           this.selectedMeasure = measures.find(m => m.name === selectPhenoToolMeasureState.measureId);
@@ -97,11 +100,7 @@ export class PhenoToolMeasureComponent implements OnInit {
     });
   }
 
-  public get measure(): ContinuousMeasure {
-    return this.selectedMeasure;
-  }
-
-  public set measure(value) {
+  public setMeasure(value: ContinuousMeasure): void {
     this.selectedMeasure = value;
     if (this.selectedMeasure) {
       this.normalizeBy = this.normalizeBy.filter(
