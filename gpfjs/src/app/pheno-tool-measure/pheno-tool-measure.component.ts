@@ -112,7 +112,7 @@ export class PhenoToolMeasureComponent implements OnInit {
     this.updateState();
   }
 
-  public updateState(): void {
+  private updateState(): void {
     this.store.dispatch(setPhenoToolMeasure({
       phenoToolMeasure: {
         measureId: this.selectedMeasure?.name,
