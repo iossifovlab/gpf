@@ -30,7 +30,7 @@ import {
   presentInParentReducer,
   setPresentInParent
 } from 'app/present-in-parent/present-in-parent.state';
-import { effectTypesReducer } from 'app/effect-types/effect-types.state';
+import { effectTypesReducer, setEffectTypes } from 'app/effect-types/effect-types.state';
 import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 import { familyIdsReducer } from 'app/family-ids/family-ids.state';
 import { familyTagsReducer } from 'app/family-tags/family-tags.state';
@@ -328,5 +328,25 @@ describe('PhenoToolComponent', () => {
         }
       })
     );
+  });
+
+  it('should set default effect types values', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const values = ['LGDs', 'Missense', 'Synonymous'];
+
+    component.setEffecTypesDefaultState([]);
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setEffectTypes({
+        effectTypes: values
+      })
+    );
+  });
+
+  it('should not set default state of effect types when there are stored values', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const soredValues = ['Synonymous', 'Frame-shift'];
+
+    component.setEffecTypesDefaultState(soredValues);
+    expect(dispatchSpy).not.toHaveBeenCalledWith();
   });
 });
