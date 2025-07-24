@@ -15,7 +15,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import {
+  PresentInParent,
+  selectPresentInParent,
+  setPresentInParent
+} from 'app/present-in-parent/present-in-parent.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectErrors } from 'app/common/errors.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
@@ -63,15 +67,69 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(
       take(1),
-      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
-    ).subscribe(dataset => {
+      switchMap(datasetId => combineLatest([
+        this.datasetsService.getDataset(datasetId),
+        this.store.select(selectPresentInParent),
+      ]))
+    ).subscribe(([
+      dataset,
+      presentInParentState,
+    ]) => {
       if (!dataset) {
         return;
       }
       this.selectedDataset = dataset;
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
+
+      this.setPresentInParentDefaultState(presentInParentState);
     });
 
+    this.createPhenoToolState();
+
+    this.loadingService.interruptEvent.subscribe(() => {
+      if (this.phenoToolSubscription !== null) {
+        this.phenoToolSubscription.unsubscribe();
+        this.phenoToolSubscription = null;
+      }
+      this.loadingService.setLoadingStop();
+      this.phenoToolResults = null;
+    });
+
+    this.store.select(selectErrors).subscribe(errorsState => {
+      setTimeout(() => {
+        this.disableQueryButtons = errorsState.length > 0;
+      });
+    });
+  }
+
+  public ngOnDestroy(): void {
+    this.loadingService.setLoadingStop();
+  }
+
+  public setPresentInParentDefaultState(presentInParentState: PresentInParent): void {
+    if (!presentInParentState.presentInParent.length) {
+      let selectedPresentInParentValues = ['mother only', 'father only', 'mother and father', 'neither'];
+      let selectedRarityType = 'ultraRare';
+      const rarityIntervalStart = 0;
+      const rarityIntervalEnd = 1;
+      if (this.selectedDataset.hasDenovo) {
+        selectedPresentInParentValues = ['neither'];
+        selectedRarityType = '';
+      }
+      this.store.dispatch(setPresentInParent({
+        presentInParent: {
+          presentInParent: selectedPresentInParentValues,
+          rarity: {
+            rarityType: selectedRarityType,
+            rarityIntervalStart: rarityIntervalStart,
+            rarityIntervalEnd: rarityIntervalEnd,
+          }
+        }
+      }));
+    }
+  }
+
+  public createPhenoToolState(): void {
     combineLatest([
       this.store.select(selectGeneSymbols),
       this.store.select(selectGeneSets),
@@ -158,25 +216,6 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
 
       this.phenoToolResults = null;
     });
-
-    this.loadingService.interruptEvent.subscribe(() => {
-      if (this.phenoToolSubscription !== null) {
-        this.phenoToolSubscription.unsubscribe();
-        this.phenoToolSubscription = null;
-      }
-      this.loadingService.setLoadingStop();
-      this.phenoToolResults = null;
-    });
-
-    this.store.select(selectErrors).subscribe(errorsState => {
-      setTimeout(() => {
-        this.disableQueryButtons = errorsState.length > 0;
-      });
-    });
-  }
-
-  public ngOnDestroy(): void {
-    this.loadingService.setLoadingStop();
   }
 
   public submitQuery(): void {
