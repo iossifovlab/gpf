@@ -35,22 +35,12 @@ export class PresentInParentComponent implements OnInit {
 
   public ngOnInit(): void {
     this.store.select(selectPresentInParent).pipe(take(1)).subscribe(state => {
-      // remove when refactor pheno tool
-      if (!state.presentInParent.length) {
-        if (this.hasDenovo) {
-          this.selectedValues = new Set(['neither']);
-        } else {
-          this.selectedValues = cloneDeep(this.presentInParentValues);
-        }
-        this.updatePresentInParent(this.selectedValues);
-      } else {
-        // restore state
-        this.selectedValues = new Set([...state.presentInParent]);
-        this.selectedRarityType = state.rarity.rarityType;
-        this.rarityIntervalStart = state.rarity.rarityIntervalStart;
-        this.rarityIntervalEnd = state.rarity.rarityIntervalEnd;
-        this.validateState();
-      }
+      // restore state
+      this.selectedValues = new Set([...state.presentInParent]);
+      this.selectedRarityType = state.rarity.rarityType;
+      this.rarityIntervalStart = state.rarity.rarityIntervalStart;
+      this.rarityIntervalEnd = state.rarity.rarityIntervalEnd;
+      this.validateState();
     });
   }
 
