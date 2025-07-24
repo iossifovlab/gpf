@@ -683,3 +683,60 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     assert info_keys == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",
     }
+
+
+def test_annotate_vcf_reannotation_batch(
+    tmp_path: pathlib.Path,
+    reannotation_grr: GenomicResourceRepo,
+) -> None:
+    assert reannotation_grr is not None
+
+    info = ("worst_effect=splice-site;effect_details=bla;gene_effects=bla"
+            ";gene_list=g1;gene_score1=10.1;gene_score2=20.2")
+
+    in_content = textwrap.dedent(f"""
+        ##fileformat=VCFv4.2
+        ##INFO=<ID=score,Number=A,Type=Float,Description="">
+        ##INFO=<ID=worst_effect,Number=A,Type=String,Description="">
+        ##INFO=<ID=effect_details,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_effects,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_list,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_score1,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_score2,Number=A,Type=String,Description="">
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=foo>
+        #CHROM POS ID REF ALT QUAL FILTER INFO             FORMAT m1  d1  c1
+        foo    12  .  C   T   .    .      score=0.1;{info} GT     0/1 0/0 0/0
+        foo    24  .  C   T   .    .      score=0.1;{info} GT     0/1 0/0 0/0
+        foo    48  .  C   T   .    .      score=0.1;{info} GT     0/1 0/0 0/0
+        foo    96  .  C   T   .    .      score=0.1;{info} GT     0/1 0/0 0/0
+    """)
+
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    annotation_file_old = tmp_path / "reannotation_old.yaml"
+    annotation_file_new = tmp_path / "reannotation_new.yaml"
+    grr_file = tmp_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file,
+            annotation_file_new,
+            "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--reannotate", annotation_file_old,
+            "-j", 1,
+            "--batch-size", 2,
+        ]
+    ])
+    out_vcf = pysam.VariantFile(str(out_file))
+
+    info_keys = set(out_vcf.header.info.keys())
+
+    assert info_keys == {  # pylint: disable=no-member
+        "score", "worst_effect", "gene_list", "gene_score1",
+    }
