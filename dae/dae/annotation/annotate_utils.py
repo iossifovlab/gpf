@@ -131,13 +131,6 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     return str(value)
 
 
-def setup_work_dir_and_task_dirs(args: dict) -> None:
-    if not os.path.exists(args["work_dir"]):
-        os.mkdir(args["work_dir"])
-    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
-    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
-
-
 def get_stuff_from_context(
     cli_args: dict[str, Any],
 ) -> tuple[AnnotationPipeline, GenomicContext, GenomicResourceRepo]:

@@ -9,6 +9,7 @@ import pathlib
 import shutil
 import sys
 from datetime import datetime
+from typing import Any
 
 import yaml
 
@@ -16,7 +17,6 @@ from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
     cache_pipeline_resources,
     get_stuff_from_context,
-    setup_work_dir_and_task_dirs,
 )
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
@@ -318,216 +318,218 @@ def process_parquet(
         processor.process_region(region)
 
 
-class AnnotateSchema2ParquetTool:
-    """Annotation tool for the Parquet file format."""
+def _build_argument_parser() -> argparse.ArgumentParser:
+    """Construct and configure argument parser."""
+    parser = argparse.ArgumentParser(
+        description="Annotate Schema2 Parquet",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "input", default="-", nargs="?",
+        help="the directory containing Parquet files")
+    parser.add_argument(
+        "-r", "--region",
+        type=str, help="annotate only a specific region",
+        default=None)
+    parser.add_argument(
+        "-s", "--region-size", default=300_000_000,
+        type=int, help="region size to parallelize by")
+    parser.add_argument(
+        "-w", "--work-dir",
+        help="Directory to store intermediate output files in",
+        default="annotate_schema2_output")
+    parser.add_argument(
+        "-i", "--full-reannotation",
+        help="Ignore any previous annotation and run "
+        " a full reannotation.",
+        action="store_true")
+    output_behaviour = parser.add_mutually_exclusive_group()
+    output_behaviour.add_argument(
+        "-o", "--output",
+        help="Path of the directory to hold the output")
+    output_behaviour.add_argument(
+        "-e", "--in-place",
+        help="Produce output directly in given input dir.",
+        action="store_true")
+    output_behaviour.add_argument(
+        "-m", "--meta",
+        help="Print the input Parquet's meta properties.",
+        action="store_true")
+    output_behaviour.add_argument(
+        "-n", "--dry-run",
+        help="Print the annotation that will be done without writing.",
+        action="store_true")
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=0,  # 0 = annotate iteratively, no batches
+        help="Annotate in batches of",
+    )
 
-    def __init__(self, raw_args: list[str] | None = None):
-        if not raw_args:
-            raw_args = sys.argv[1:]
-        self.args = vars(self.get_argument_parser().parse_args(raw_args))
-        self.pipeline, self.context, self.grr = \
-            get_stuff_from_context(self.args)
-        self.loader: ParquetLoader | None = None
-        self.output_layout: Schema2DatasetLayout | None = None
-
-    def get_argument_parser(self) -> argparse.ArgumentParser:
-        """Construct and configure argument parser."""
-        parser = argparse.ArgumentParser(
-            description="Annotate Schema2 Parquet",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-        parser.add_argument(
-            "input", default="-", nargs="?",
-            help="the directory containing Parquet files")
-        parser.add_argument(
-            "-r", "--region",
-            type=str, help="annotate only a specific region",
-            default=None)
-        parser.add_argument(
-            "-s", "--region-size", default=300_000_000,
-            type=int, help="region size to parallelize by")
-        parser.add_argument(
-            "-w", "--work-dir",
-            help="Directory to store intermediate output files in",
-            default="annotate_schema2_output")
-        parser.add_argument(
-            "-i", "--full-reannotation",
-            help="Ignore any previous annotation and run "
-            " a full reannotation.",
-            action="store_true")
-        output_behaviour = parser.add_mutually_exclusive_group()
-        output_behaviour.add_argument(
-            "-o", "--output",
-            help="Path of the directory to hold the output")
-        output_behaviour.add_argument(
-            "-e", "--in-place",
-            help="Produce output directly in given input dir.",
-            action="store_true")
-        output_behaviour.add_argument(
-            "-m", "--meta",
-            help="Print the input Parquet's meta properties.",
-            action="store_true")
-        output_behaviour.add_argument(
-            "-n", "--dry-run",
-            help="Print the annotation that will be done without writing.",
-            action="store_true")
-        parser.add_argument(
-            "--batch-size",
-            type=int,
-            default=0,  # 0 = annotate iteratively, no batches
-            help="Annotate in batches of",
-        )
-
-        CLIAnnotationContextProvider.add_argparser_arguments(parser)
-        TaskGraphCli.add_arguments(parser)
-        VerbosityConfiguration.set_arguments(parser)
-        return parser
-
-    def print_meta(self) -> None:
-        """Print the metadata of a Parquet study."""
-        input_dir = os.path.abspath(self.args["input"])
-        if self.args["meta"]:
-            loader = ParquetLoader.load_from_dir(input_dir)
-            for k, v in loader.meta.items():
-                print("=" * 50)
-                print(k)
-                print("=" * 50)
-                print(v)
-                print()
-
-    def dry_run(self) -> None:
-        """Print a summary of the annotation without running it."""
-        assert self.pipeline is not None
-        self.pipeline.print()
-
-    def _remove_data(self, path: str) -> None:
-        data_layout = create_schema2_dataset_layout(path)
-        assert data_layout.family is not None
-        assert data_layout.summary is not None
-
-        pedigree = pathlib.Path(data_layout.pedigree).parent
-        meta = pathlib.Path(data_layout.meta).parent
-        family = pathlib.Path(data_layout.family)
-        summary = pathlib.Path(data_layout.summary)
-
-        shutil.rmtree(summary)
-        shutil.rmtree(meta)
-
-        if pedigree.is_symlink():
-            pedigree.unlink()
-        else:
-            shutil.rmtree(pedigree)
-
-        if family.is_symlink():
-            family.unlink()
-        else:
-            shutil.rmtree(family)
-
-    def _setup_io_layouts(self) -> tuple[Schema2DatasetLayout,
-                                         Schema2DatasetLayout]:
-        """
-        Produces the input and output dataset layouts for the tool to run.
-
-        Additionally, carries out any transformations necessary to produce
-        the layouts correctly, such as renaming, removing, etc.
-        """
-        if not self.args["in_place"] and not self.args["output"]:
-            raise ValueError("No output path was provided!")
-
-        input_dir = os.path.abspath(self.args["input"])
-        output_dir = input_dir if self.args["in_place"]\
-            else os.path.abspath(self.args["output"])
-
-        if not self.args["in_place"]:
-            if os.path.exists(output_dir) and not self.args["force"]:
-                logger.warning(
-                    "Output path '%s' already exists! "
-                    "Some files may be overwritten.", output_dir,
-                )
-            elif os.path.exists(output_dir) and self.args["force"]:
-                self._remove_data(output_dir)
-
-        input_layout = backup_schema2_study(input_dir) if self.args["in_place"]\
-            else create_schema2_dataset_layout(input_dir)
-        output_layout = create_schema2_dataset_layout(output_dir)
-
-        if input_layout.summary is None:
-            raise ValueError("Invalid summary dir in input layout!")
-        if output_layout.summary is None:
-            raise ValueError("Invalid summary dir in output layout!")
-        if output_layout.family is None:
-            raise ValueError("Invalid family dir in output layout!")
-
-        return input_layout, output_layout
-
-    def prepare_for_annotation(self) -> None:
-        assert self.pipeline is not None
-
-        input_layout, self.output_layout = self._setup_io_layouts()
-        self.loader = ParquetLoader(input_layout)
-        write_new_meta(self.loader, self.pipeline, self.output_layout)
-        if not self.args["in_place"]:
-            symlink_pedigree_and_family_variants(self.loader.layout,
-                                                 self.output_layout)
-
-    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
-        assert self.loader is not None
-        assert self.output_layout is not None
-        assert self.pipeline is not None
-
-        annotation_tasks = produce_schema2_annotation_tasks(
-            task_graph,
-            self.loader,
-            self.output_layout.study,
-            self.pipeline.raw,
-            self.grr,
-            self.args["region_size"],
-            self.args["work_dir"],
-            self.args["batch_size"],
-            target_region=self.args["region"],
-            allow_repeated_attributes=self.args["allow_repeated_attributes"],
-            full_reannotation=self.args["full_reannotation"],
-        )
-
-        annotation_sync = task_graph.create_task(
-            "sync_parquet_write", lambda: None,
-            args=[], deps=annotation_tasks,
-        )
-
-        produce_schema2_merging_tasks(
-            task_graph,
-            annotation_sync,
-            ReferenceGenome(
-                self.grr.get_resource(self.loader.meta["reference_genome"])),
-            self.loader,
-            self.output_layout,
-        )
+    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    TaskGraphCli.add_arguments(parser)
+    VerbosityConfiguration.set_arguments(parser)
+    return parser
 
 
-def cli(
-    raw_args: list[str] | None = None,
+def _print_meta(loader: ParquetLoader) -> None:
+    """Print the metadata of a Parquet study."""
+    for k, v in loader.meta.items():
+        print("=" * 50)
+        print(k)
+        print("=" * 50)
+        print(v)
+        print()
+
+
+def _remove_data(path: str) -> None:
+    data_layout = create_schema2_dataset_layout(path)
+    assert data_layout.family is not None
+    assert data_layout.summary is not None
+
+    pedigree = pathlib.Path(data_layout.pedigree).parent
+    meta = pathlib.Path(data_layout.meta).parent
+    family = pathlib.Path(data_layout.family)
+    summary = pathlib.Path(data_layout.summary)
+
+    shutil.rmtree(summary)
+    shutil.rmtree(meta)
+
+    if pedigree.is_symlink():
+        pedigree.unlink()
+    else:
+        shutil.rmtree(pedigree)
+
+    if family.is_symlink():
+        family.unlink()
+    else:
+        shutil.rmtree(family)
+
+
+def _setup_io_layouts(
+    input_path: str,
+    output_path: str,
+    *,
+    in_place: bool = False,
+    force: bool = False,
+) -> tuple[Schema2DatasetLayout, Schema2DatasetLayout]:
+    """
+    Produces the input and output dataset layouts for the tool to run.
+
+    Additionally, carries out any transformations necessary to produce
+    the layouts correctly, such as renaming, removing, etc.
+    """
+    if not in_place and not output_path:
+        raise ValueError("No output path was provided!")
+
+    input_dir = os.path.abspath(input_path)
+    output_dir = input_dir if in_place\
+        else os.path.abspath(output_path)
+
+    if not in_place:
+        if os.path.exists(output_dir) and not force:
+            logger.warning(
+                "Output path '%s' already exists! "
+                "Some files may be overwritten.", output_dir,
+            )
+        elif os.path.exists(output_dir) and force:
+            _remove_data(output_dir)
+
+    input_layout = backup_schema2_study(input_dir) if in_place \
+        else create_schema2_dataset_layout(input_dir)
+    output_layout = create_schema2_dataset_layout(output_dir)
+
+    if input_layout.summary is None:
+        raise ValueError("Invalid summary dir in input layout!")
+    if output_layout.summary is None:
+        raise ValueError("Invalid summary dir in output layout!")
+    if output_layout.family is None:
+        raise ValueError("Invalid family dir in output layout!")
+
+    return input_layout, output_layout
+
+
+def _add_tasks_to_graph(
+    task_graph: TaskGraph,
+    loader: ParquetLoader,
+    output_layout: Schema2DatasetLayout,
+    pipeline: AnnotationPipeline,
+    grr: GenomicResourceRepo,
+    args: dict[str, Any],
 ) -> None:
-    """Entry method for AnnotateSchema2ParquetTool."""
-    tool = AnnotateSchema2ParquetTool(raw_args)
-    if tool.args["meta"]:
-        tool.print_meta()
+    annotation_tasks = produce_schema2_annotation_tasks(
+        task_graph,
+        loader,
+        output_layout.study,
+        pipeline.raw,
+        grr,
+        args["region_size"],
+        args["work_dir"],
+        args["batch_size"],
+        target_region=args["region"],
+        allow_repeated_attributes=args["allow_repeated_attributes"],
+        full_reannotation=args["full_reannotation"],
+    )
+
+    annotation_sync = task_graph.create_task(
+        "sync_parquet_write", lambda: None,
+        args=[], deps=annotation_tasks,
+    )
+
+    produce_schema2_merging_tasks(
+        task_graph,
+        annotation_sync,
+        ReferenceGenome(grr.get_resource(loader.meta["reference_genome"])),
+        loader,
+        output_layout,
+    )
+
+
+def cli(raw_args: list[str] | None = None) -> None:
+    """Entry method for running the Schema2 Parquet annotation tool."""
+    if not raw_args:
+        raw_args = sys.argv[1:]
+
+    arg_parser = _build_argument_parser()
+    args = vars(arg_parser.parse_args(raw_args))
+
+    input_dir = os.path.abspath(args["input"])
+
+    if args["meta"]:
+        _print_meta(ParquetLoader.load_from_dir(input_dir))
         return
-    if tool.args["dry_run"]:
-        tool.dry_run()
+
+    pipeline, _, grr = get_stuff_from_context(args)
+    assert grr.definition is not None
+
+    if args["dry_run"]:
+        pipeline.print()
         return
+
+    if not os.path.exists(args["work_dir"]):
+        os.mkdir(args["work_dir"])
+    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
+    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
     # Is this too eager? What if a reannotation pipeline is created
     # inside work() and the only caching that must be done is far smaller
     # than the entire new annotation config suggests?
-    cache_pipeline_resources(tool.grr, tool.pipeline)
+    cache_pipeline_resources(grr, pipeline)
 
-    setup_work_dir_and_task_dirs(tool.args)
-
-    tool.prepare_for_annotation()
+    input_layout, output_layout = _setup_io_layouts(
+        args["input"],
+        args["output"],
+        in_place=args["in_place"],
+        force=args["force"],
+    )
+    loader = ParquetLoader(input_layout)
+    write_new_meta(loader, pipeline, output_layout)
+    if not args["in_place"]:
+        symlink_pedigree_and_family_variants(loader.layout, output_layout)
 
     task_graph = TaskGraph()
-    tool.add_tasks_to_graph(task_graph)
+    _add_tasks_to_graph(task_graph, loader, output_layout, pipeline, grr, args)
 
     if len(task_graph.tasks) > 0:
-        add_input_files_to_task_graph(tool.args, task_graph)
-        TaskGraphCli.process_graph(task_graph, **tool.args)
+        add_input_files_to_task_graph(args, task_graph)
+        TaskGraphCli.process_graph(task_graph, **args)
