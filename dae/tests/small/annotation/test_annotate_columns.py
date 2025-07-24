@@ -19,7 +19,6 @@ from dae.annotation.annotate_columns import (
     _CSVSource,
     _CSVWriter,
     _get_output_path,
-    _ProcessingArgs,
     cli,
 )
 from dae.annotation.processing_pipeline import (
@@ -805,66 +804,52 @@ def test_csv_batch_writer_bad_input(tmp_path: pathlib.Path) -> None:
 
 
 def test_get_output_path_explicit() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/input_file.csv",
         "some/directory/explicit_output_file.csv",
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/explicit_output_file.csv"
+    ) == "some/directory/explicit_output_file.csv"
 
 
 def test_get_output_path_explicit_remove_gz() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/input_file.csv",
         "some/directory/explicit_output_file.csv.gz",
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/explicit_output_file.csv"
+    ) == "some/directory/explicit_output_file.csv"
 
 
 def test_get_output_path_none_given_explicitly() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/input_file.csv",
         None,
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/input_file_annotated.csv"
+    ) == "some/directory/input_file_annotated.csv"
 
 
 def test_get_output_path_none_given_explicitly_remove_gz() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/input_file.csv.gz",
         None,
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/input_file_annotated.csv"
+    ) == "some/directory/input_file_annotated.csv"
 
 
 def test_get_output_path_none_given_explicitly_no_extension() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/input_file",
         None,
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/input_file_annotated"
+    ) == "some/directory/input_file_annotated"
 
 
 def test_get_output_path_none_given_explicitly_multiple_extensions() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/input_file.txt.csv",
         None,
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/input_file_annotated.txt.csv"
+    ) == "some/directory/input_file_annotated.txt.csv"
 
 
 def test_get_output_path_none_given_explicitly_hidden_file() -> None:
-    assert _get_output_path(_ProcessingArgs(
+    assert _get_output_path(
         "some/directory/.input_file.csv",
         None,
-        # Below are irrelevant arguments for this testing scenario
-        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
-    )) == "some/directory/.input_file_annotated.csv"
+    ) == "some/directory/.input_file_annotated.csv"
 
 
 def test_cli_nonexistent_input_file(

@@ -69,7 +69,6 @@ logger = logging.getLogger("annotate_columns")
 @dataclass
 class _ProcessingArgs:
     input: str
-    output: str | None
     reannotate: str | None
     work_dir: str
     batch_size: int
@@ -420,11 +419,11 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-def _get_output_path(args: _ProcessingArgs) -> str:
-    if args.output:
-        return args.output.rstrip(".gz")
+def _get_output_path(raw_input_path: str, output_path: str | None) -> str:
+    if output_path:
+        return output_path.rstrip(".gz")
     # no output filename given, produce from input filename
-    input_path = Path(args.input.rstrip(".gz"))
+    input_path = Path(raw_input_path.rstrip(".gz"))
     # backup suffixes
     suffixes = input_path.suffixes
     # remove suffixes to get to base stem of filename
@@ -439,6 +438,7 @@ def _get_output_path(args: _ProcessingArgs) -> str:
 def _add_tasks_tabixed(
     args: _ProcessingArgs,
     task_graph: TaskGraph,
+    output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
@@ -446,7 +446,6 @@ def _add_tasks_tabixed(
     with closing(TabixFile(args.input)) as pysam_file:
         regions = produce_regions(pysam_file, args.region_size)
     file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
-    output_path = _get_output_path(args)
 
     annotation_tasks = []
     for region, path in zip(regions, file_paths, strict=True):
@@ -486,6 +485,7 @@ def _add_tasks_tabixed(
 def _add_tasks_plaintext(
     args: _ProcessingArgs,
     task_graph: TaskGraph,
+    output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
@@ -494,7 +494,7 @@ def _add_tasks_plaintext(
         "annotate_all",
         _annotate_csv,
         args=[
-            _get_output_path(args),
+            output_path,
             pipeline_config,
             grr_definition,
             ref_genome_id,
@@ -577,7 +577,6 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     processing_args = _ProcessingArgs(
         args["input"],
-        args["output"],
         args["reannotate"],
         args["work_dir"],
         args["batch_size"],
@@ -591,11 +590,14 @@ def cli(raw_args: list[str] | None = None) -> None:
          for col in cols},
     )
 
+    output_path = _get_output_path(args["input"], args["output"])
+
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
         _add_tasks_tabixed(
             processing_args,
             task_graph,
+            output_path,
             pipeline.raw,
             grr.definition,
             ref_genome_id,
@@ -604,6 +606,7 @@ def cli(raw_args: list[str] | None = None) -> None:
         _add_tasks_plaintext(
             processing_args,
             task_graph,
+            output_path,
             pipeline.raw,
             grr.definition,
             ref_genome_id,
