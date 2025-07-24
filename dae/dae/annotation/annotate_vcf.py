@@ -107,9 +107,9 @@ class _VCFSource(Source):
                           variant.pos,
                           variant.ref,  # type: ignore
                           alt),
-                dict(variant.info),
+                {k: v[idx] for k, v in variant.info.items()},
             )
-            for alt in variant.alts  # type: ignore
+            for idx, alt in enumerate(variant.alts)  # type: ignore
         ]
         return AnnotationsWithSource(variant, annotations)
 
@@ -238,6 +238,23 @@ class _VCFWriter(Filter):
         return header
 
     @staticmethod
+    def _convert_to_string(buff: list[Any]) -> list[str]:
+        result = []
+        for attr in buff:
+            if isinstance(attr, list):
+                attr = ";".join(stringify(a, vcf=True) for a in attr)
+            elif isinstance(attr, dict):
+                attr = ";".join(
+                    f"{k}:{v}"
+                    for k, v in attr.items()
+                )
+            result.append(stringify(attr, vcf=True)
+                .replace(";", "|")
+                .replace(",", "|")
+                .replace(" ", "_"))
+        return result
+
+    @staticmethod
     def _update_variant(
         vcf_var: VariantRecord,
         allele_annotations: list[dict],
@@ -251,21 +268,7 @@ class _VCFWriter(Filter):
                     del vcf_var.info[col]
 
             for buff, attribute in zip(buffers, attributes, strict=True):
-                attr = annotation.get(attribute.name)
-                if isinstance(attr, list):
-                    attr = ";".join(stringify(a, vcf=True) for a in attr)
-                elif isinstance(attr, dict):
-                    attr = ";".join(
-                        f"{k}:{v}"
-                        for k, v in attr.items()
-                    )
-                else:
-                    attr = stringify(attr, vcf=True)
-                attr = stringify(attr, vcf=True) \
-                    .replace(";", "|")\
-                    .replace(",", "|")\
-                    .replace(" ", "_")
-                buff.append(attr)
+                buff.append(annotation.get(attribute.name))
         # If the all values for a given attribute are
         # empty (i.e. - "."), then that attribute has no
         # values to be written and will be skipped in the output
@@ -276,6 +279,8 @@ class _VCFWriter(Filter):
         for buff, attribute in zip(buffers, attributes, strict=True):
             if attribute.internal or not has_value[attribute.name]:
                 continue
+            if vcf_var.header.info[attribute.name].type == "String":
+                buff = _VCFWriter._convert_to_string(buff)
             vcf_var.info[attribute.name] = buff
 
     def __enter__(self) -> _VCFWriter:
