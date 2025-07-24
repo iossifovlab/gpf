@@ -5,9 +5,12 @@ import textwrap
 
 import pysam
 import pytest
+from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_vcf import (
+    _annotate_vcf,
+    _ProcessingArgs,
+    _VCFSource,
     cli,
-    process_vcf,
     produce_partfile_paths,
 )
 from dae.genomic_resources.testing import (
@@ -60,7 +63,7 @@ def sample_vcf(tmp_path: pathlib.Path) -> pathlib.Path:
     return filepath
 
 
-def test_process_vcf_simple(
+def test_annotate_vcf_simple(
     tmp_path: pathlib.Path,
     test_gpf_instance: GPFInstance,
     sample_vcf: pathlib.Path,
@@ -71,17 +74,15 @@ def test_process_vcf_simple(
         {"position_score": "sample_score"},
     ]
 
-    process_vcf(
-        str(sample_vcf),
+    _annotate_vcf(
         str(out_path),
         pipeline_config,
-        None,
         test_gpf_instance.grr.definition,  # type: ignore
-        work_dir,
-        0,
         None,
-        False,  # noqa: FBT003
-        False,  # noqa: FBT003
+        _ProcessingArgs(
+            str(sample_vcf), "", str(work_dir), 0, 1,
+            False, False,  # noqa: FBT003
+        ),
     )
 
     # pylint: disable=no-member
@@ -90,7 +91,7 @@ def test_process_vcf_simple(
     assert result == ["0.1", "0.2", "0.3"]
 
 
-def test_process_vcf_simple_batch(
+def test_annotate_vcf_simple_batch(
     tmp_path: pathlib.Path,
     test_gpf_instance: GPFInstance,
     sample_vcf: pathlib.Path,
@@ -101,17 +102,15 @@ def test_process_vcf_simple_batch(
         {"position_score": "sample_score"},
     ]
 
-    process_vcf(
-        str(sample_vcf),
+    _annotate_vcf(
         str(out_path),
         pipeline_config,
-        None,
         test_gpf_instance.grr.definition,  # type: ignore
-        work_dir,
-        1,
         None,
-        False,  # noqa: FBT003
-        False,  # noqa: FBT003
+        _ProcessingArgs(
+            str(sample_vcf), "", str(work_dir), 0, 1,
+            False, False,  # noqa: FBT003
+        ),
     )
 
     # pylint: disable=no-member
@@ -156,6 +155,51 @@ def test_basic_vcf(
     with pysam.VariantFile(str(out_file)) as vcf_file:
         result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["0.1", "0.2"]
+
+
+def test_batch(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        ##contig=<ID=chr2>
+        ##contig=<ID=chr3>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr2   33  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr2   34  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr3   43  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr3   44  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf"
+    out_file = root_path / "out.vcf"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--batch-size", 1,
+        ]
+    ])
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
+    assert result == ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6"]
 
 
 def test_multiallelic_vcf(
@@ -508,3 +552,52 @@ def test_produce_partfile_paths() -> None:
     assert produce_partfile_paths(
         "/home/user/src/input.vcf", regions, "work_dir/output",
     ) == expected_output
+
+
+def test_vcf_source_missing_alts(
+    tmp_path: pathlib.Path,
+) -> None:
+    vcf_path = tmp_path / "data.vcf"
+    setup_vcf(vcf_path, """
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   .   .    .      .    GT     0/0 0/1 0/0
+        chr1   25  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    with _VCFSource(str(vcf_path)) as source:
+        result = list(source.fetch())
+        assert len(result) == 2
+        assert result[0].annotations[0].annotatable == \
+            VCFAllele("chr1", 23, "C", "T")
+        assert result[1].annotations[0].annotatable == \
+            VCFAllele("chr1", 25, "C", "A")
+
+
+def test_cli_nonexistent_input_file(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    root_path = annotate_directory_fixture
+    in_file = root_path / "blabla_does_not_exist_input.vcf"
+    out_file = root_path / "out.vcf"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    with pytest.raises(
+        ValueError,
+        match=r"blabla_does_not_exist_input.vcf does not exist!",
+    ):
+        cli([
+            str(a) for a in [
+                in_file,
+                annotation_file,
+                "--grr", grr_file,
+                "-o", out_file,
+                "-w", work_dir,
+                "-j", 1,
+            ]
+        ])

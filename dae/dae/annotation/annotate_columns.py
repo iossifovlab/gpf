@@ -17,7 +17,9 @@ from pysam import TabixFile
 
 from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
+    build_output_path,
     cache_pipeline_resources,
+    get_stuff_from_context,
     produce_partfile_paths,
     produce_regions,
     produce_tabix_index,
@@ -34,7 +36,6 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
-    get_context_pipeline,
 )
 from dae.annotation.processing_pipeline import (
     Annotation,
@@ -50,11 +51,6 @@ from dae.annotation.record_to_annotatable import (
     build_record_to_annotatable,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.genomic_resources.genomic_context import (
-    context_providers_init,
-    get_genomic_context,
-    register_context_provider,
-)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
@@ -74,8 +70,7 @@ logger = logging.getLogger("annotate_columns")
 @dataclass
 class _ProcessingArgs:
     input: str
-    output: str
-    reannotate: str
+    reannotate: str | None
     work_dir: str
     batch_size: int
     region_size: int
@@ -425,21 +420,10 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-def _get_output_path(args: _ProcessingArgs) -> str:
-    if args.output:
-        return args.output.rstrip(".gz")
-
-    input_name = args.input.rstrip(".gz")
-    if "." in input_name:
-        idx = input_name.find(".")
-        return f"{input_name[:idx]}_annotated{input_name[idx:]}"
-
-    return f"{input_name}_annotated"
-
-
 def _add_tasks_tabixed(
     args: _ProcessingArgs,
     task_graph: TaskGraph,
+    output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
@@ -447,7 +431,6 @@ def _add_tasks_tabixed(
     with closing(TabixFile(args.input)) as pysam_file:
         regions = produce_regions(pysam_file, args.region_size)
     file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
-    output_path = _get_output_path(args)
 
     annotation_tasks = []
     for region, path in zip(regions, file_paths, strict=True):
@@ -487,6 +470,7 @@ def _add_tasks_tabixed(
 def _add_tasks_plaintext(
     args: _ProcessingArgs,
     task_graph: TaskGraph,
+    output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
@@ -495,7 +479,7 @@ def _add_tasks_plaintext(
         "annotate_all",
         _annotate_csv,
         args=[
-            _get_output_path(args),
+            output_path,
             pipeline_config,
             grr_definition,
             ref_genome_id,
@@ -568,21 +552,7 @@ def cli(raw_args: list[str] | None = None) -> None:
     args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
     args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
-    register_context_provider(CLIAnnotationContextProvider())
-    context_providers_init(**args)
-
-    registered_context = get_genomic_context()
-    # Maybe add a method to build a pipeline from a genomic context
-    # the pipeline arguments are registered as a context above, where
-    # the pipeline is also written into the context, only to be accessed
-    # 3 lines down
-    pipeline = get_context_pipeline(registered_context)
-    if pipeline is None:
-        raise ValueError("no valid annotation pipeline configured")
-    context = pipeline.build_pipeline_genomic_context()
-    grr = context.get_genomic_resources_repository()
-    if grr is None:
-        raise ValueError("no valid GRR configured")
+    pipeline, context, grr = get_stuff_from_context(args)
     assert grr.definition is not None
 
     ref_genome = context.get_reference_genome()
@@ -592,7 +562,6 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     processing_args = _ProcessingArgs(
         args["input"],
-        args["output"],
         args["reannotate"],
         args["work_dir"],
         args["batch_size"],
@@ -601,16 +570,19 @@ def cli(raw_args: list[str] | None = None) -> None:
         args["output_separator"],
         args["allow_repeated_attributes"],
         args["full_reannotation"],
-        {col: args[f"col_{col}"]
+        {f"col_{col}": args[f"col_{col}"]
          for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
          for col in cols},
     )
+
+    output_path = build_output_path(args["input"], args["output"])
 
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
         _add_tasks_tabixed(
             processing_args,
             task_graph,
+            output_path,
             pipeline.raw,
             grr.definition,
             ref_genome_id,
@@ -619,14 +591,11 @@ def cli(raw_args: list[str] | None = None) -> None:
         _add_tasks_plaintext(
             processing_args,
             task_graph,
+            output_path,
             pipeline.raw,
             grr.definition,
             ref_genome_id,
         )
-
-    if len(task_graph.tasks) == 0:
-        logger.info("Nothing to be done. Exiting.")
-        return
 
     add_input_files_to_task_graph(args, task_graph)
     TaskGraphCli.process_graph(task_graph, **args)

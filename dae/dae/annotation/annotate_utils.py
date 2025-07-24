@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from abc import abstractmethod
+from pathlib import Path
 from typing import Any
 
 from pysam import TabixFile, tabix_index
@@ -139,15 +140,12 @@ def setup_work_dir_and_task_dirs(args: dict) -> None:
     args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
 
-def setup_context(args: dict) -> None:
-    register_context_provider(CLIAnnotationContextProvider())
-    context_providers_init(**args)
-
-
-def get_stuff_from_context() -> tuple[AnnotationPipeline,
-                                      GenomicContext,
-                                      GenomicResourceRepo]:
+def get_stuff_from_context(
+    cli_args: dict[str, Any],
+) -> tuple[AnnotationPipeline, GenomicContext, GenomicResourceRepo]:
     """Helper method to collect necessary objects from the genomic context."""
+    register_context_provider(CLIAnnotationContextProvider())
+    context_providers_init(**cli_args)
     registered_context = get_genomic_context()
     # Maybe add a method to build a pipeline from a genomic context
     # the pipeline arguments are registered as a context above, where
@@ -155,8 +153,7 @@ def get_stuff_from_context() -> tuple[AnnotationPipeline,
     # 3 lines down
     pipeline = get_context_pipeline(registered_context)
     if pipeline is None:
-        raise ValueError(
-            "no valid annotation pipeline configured")
+        raise ValueError("no valid annotation pipeline configured")
     context = pipeline.build_pipeline_genomic_context()
     grr = context.get_genomic_resources_repository()
     if grr is None:
@@ -186,6 +183,23 @@ def cache_pipeline_resources(
     cache_resources(grr, resource_ids)
 
 
+def build_output_path(raw_input_path: str, output_path: str | None) -> str:
+    """Build an output filepath for an annotation tool's output."""
+    if output_path:
+        return output_path.rstrip(".gz")
+    # no output filename given, produce from input filename
+    input_path = Path(raw_input_path.rstrip(".gz"))
+    # backup suffixes
+    suffixes = input_path.suffixes
+    # remove suffixes to get to base stem of filename
+    while input_path.suffix:
+        input_path = input_path.with_suffix("")
+    # append '_annotated' to filename stem
+    input_path = input_path.with_stem(f"{input_path.stem}_annotated")
+    # restore suffixes and return
+    return str(input_path.with_suffix("".join(suffixes)))
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -196,8 +210,8 @@ class AnnotationTool:
         if not raw_args:
             raw_args = sys.argv[1:]
         self.args = vars(self.get_argument_parser().parse_args(raw_args))
-        setup_context(self.args)
-        self.pipeline, self.context, self.grr = get_stuff_from_context()
+        self.pipeline, self.context, self.grr = \
+            get_stuff_from_context(self.args)
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
