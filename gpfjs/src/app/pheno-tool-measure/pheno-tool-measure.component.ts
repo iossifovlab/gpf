@@ -124,8 +124,8 @@ export class PhenoToolMeasureComponent implements OnInit {
     this.measuresLoaded$.next(measures);
   }
 
-  public onNormalizeByChange(value: Regression, event): void {
-    if (event.target.checked) {
+  public onNormalizeByChange(value: Regression, event: Event): void {
+    if ((event.target as HTMLInputElement).checked) {
       if (!this.normalizeBy.some((reg) => reg.measure_name === value.measure_name)) {
         this.normalizeBy = [...this.normalizeBy, value];
       }

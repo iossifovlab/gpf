@@ -162,7 +162,7 @@ describe('PhenoToolMeasureComponent', () => {
       target: {
         checked: true
       }
-    };
+    } as unknown as Event;
 
     component.onNormalizeByChange({
       display_name: 'd1',
@@ -245,7 +245,7 @@ describe('PhenoToolMeasureComponent', () => {
       target: {
         checked: false
       }
-    };
+    } as unknown as Event;
 
     component.onNormalizeByChange({
       display_name: 'd1',

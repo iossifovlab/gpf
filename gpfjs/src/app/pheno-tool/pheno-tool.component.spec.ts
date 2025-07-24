@@ -47,7 +47,7 @@ class PhenoToolServiceMock {
   }
 
   public downloadPhenoToolResults(): Observable<HttpResponse<Blob>> {
-    return of([] as any);
+    return of(null);
   }
 }
 
