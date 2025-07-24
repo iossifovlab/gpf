@@ -60,7 +60,7 @@ def annotation_configs(
     config_3: str,
     config_4: str,
     config_5: str,
-) -> dict[str]:
+) -> dict[str, str]:
     return {
         "config_1": config_1,
         "config_2": config_2,
@@ -80,7 +80,9 @@ def annotation_configs(
         ("config_5"),
     ],
 )
-def test_demo_annotator_initialization(annotation_configs, config_key):
+def test_demo_annotator_initialization(
+    annotation_configs: dict[str, str], config_key: str,
+) -> None:
     config = yaml.safe_load(annotation_configs[config_key])
     pipeline = AnnotationTool.produce_annotation_pipeline(
         config, None, None, allow_repeated_attributes=True,

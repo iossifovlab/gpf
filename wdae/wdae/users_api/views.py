@@ -3,16 +3,20 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Generator, Iterator
-from typing import Any, Tuple, Type, cast
+from typing import Any, ClassVar, cast
 
 import django.contrib.auth
 from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+)
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, models
 from django.db.models import Q
+from django.http import HttpRequest
 from django.http.response import (
     HttpResponse,
     HttpResponseRedirect,
@@ -59,13 +63,23 @@ from .serializers import UserSerializer, UserWithoutEmailSerializer
 logger = logging.getLogger(__name__)
 
 
-def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
+def iterator_to_json(
+    users: Iterator[AbstractBaseUser],
+) -> Generator[str, None, int]:
     """Wrap an iterator over WdaeUser models to produce json objects."""
     yield "["
     curr = next(users, None)
     post = next(users, None)
     while curr is not None:
-        if curr.email:
+        if not isinstance(curr, WdaeUser):
+            logger.error(
+                "iterator_to_json: Expected WdaeUser, got %s",
+                type(curr).__name__,
+            )
+            yield "]"
+            return 1
+
+        if curr.email is not None:
             serializer = UserSerializer
         else:
             serializer = UserWithoutEmailSerializer
@@ -84,7 +98,7 @@ def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
 class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     """API endpoint that allows users to be viewed or edited."""
 
-    authentication_classes = [
+    authentication_classes: ClassVar[list] = [
         SessionAuthenticationWithoutCSRF, GPFOAuth2Authentication]
     serializer_class = UserSerializer
     queryset = get_user_model().objects.order_by("email").all()
@@ -97,7 +111,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, **kwargs: Any,
     ) -> Response:
-        return super().list(request)
+        return super().list(request, *args, **kwargs)
 
     @request_logging(logger)
     @permission_update
@@ -105,8 +119,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, **kwargs: Any,
     ) -> Response:
-        response = super().create(request)
-        return response
+        return super().create(request, *args, **kwargs)
 
     @request_logging(logger)
     def retrieve(
@@ -115,7 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     ) -> Response:
         if pk is not None:
             pk = int(pk)
-        return super().retrieve(request, pk=pk)
+        return super().retrieve(request, *args, pk=pk, **kwargs)
 
     @request_logging(logger)
     @permission_update
@@ -123,15 +136,16 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
+        data = cast(dict[str, Any], request.data)
         if pk is not None:
             pk = int(pk)
         if (
             request.user.pk == pk
             and request.user.is_staff
-            and "admin" not in request.data["groups"]
+            and "admin" not in data["groups"]
         ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return super().update(request, pk=pk, *args, **kwargs)
+        return super().update(request, *args, pk=pk, **kwargs)
 
     @request_logging(logger)
     @permission_update
@@ -139,15 +153,16 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
+        data = cast(dict[str, Any], request.data)
         if pk is not None:
             pk = int(pk)
         if (
             request.user.pk == pk
             and request.user.is_staff
-            and "admin" not in request.data["groups"]
+            and "admin" not in data["groups"]
         ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return super().partial_update(request, pk=pk)
+        return super().partial_update(request, *args, pk=pk, **kwargs)
 
     @request_logging(logger)
     @permission_update
@@ -159,11 +174,11 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             pk = int(pk)
         if request.user.pk == pk:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return super().destroy(request, pk=pk)
+        return super().destroy(request, *args, pk=pk, **kwargs)
 
-    def get_serializer_class(
+    def get_serializer_class(  # pyright: ignore
         self,
-    ) -> Type[UserWithoutEmailSerializer] | Type[UserSerializer]:
+    ) -> type[UserWithoutEmailSerializer] | type[UserSerializer]:
         serializer_class = self.serializer_class
 
         if self.action in {"update", "partial_update"}:
@@ -197,6 +212,11 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         user_model = get_user_model()
         try:
             user = user_model.objects.get(pk=pk)
+            if not isinstance(user, WdaeUser):
+                return Response(
+                    {"error": "User is not a WdaeUser"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             user.reset_password()
             user.deauthenticate()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -211,7 +231,7 @@ class ForgotPassword(views.APIView):
     def get(self, request: Request) -> HttpResponse:
         form = WdaePasswordForgottenForm()
         return render(
-            request,
+            cast(HttpRequest, request),
             "users_api/registration/forgotten-password.html",
             {"form": form, "show_form": True},
         )
@@ -219,11 +239,12 @@ class ForgotPassword(views.APIView):
     @request_logging(logger)
     def post(self, request: Request) -> HttpResponse:
         """Send a reset password email to the user."""
-        form = WdaePasswordForgottenForm(request.data)
+        data = request.data
+        form = WdaePasswordForgottenForm(data)  # pyright: ignore
         is_valid = form.is_valid()
         if not is_valid:
             return render(
-                request,
+                cast(HttpRequest, request),
                 "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
@@ -241,11 +262,23 @@ class ForgotPassword(views.APIView):
         )
         try:
             user = user_model.objects.get(email=email)
+            if not isinstance(user, WdaeUser):
+                return render(
+                    request,  # pyright: ignore
+                    "users_api/registration/forgotten-password.html",
+                    {
+                        "form": form,
+                        "message": "User is not a WdaeUser",
+                        "message_type": "warn",
+                        "show_form": True,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             user.reset_password()
             user.deauthenticate()
 
             return render(
-                request,
+                request,  # pyright: ignore
                 "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
@@ -256,7 +289,7 @@ class ForgotPassword(views.APIView):
             )
         except user_model.DoesNotExist:
             return render(
-                request,
+                request,  # pyright: ignore
                 "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
@@ -277,7 +310,7 @@ class BasePasswordView(views.APIView):
 
     def _check_request_verification_path(
         self, request: Request,
-    ) -> Tuple[ResetPasswordCode | None | SetPasswordCode, str | None]:
+    ) -> tuple[ResetPasswordCode | SetPasswordCode | None, str | None]:
         """
         Check, validate and return a verification path from a request.
 
@@ -298,7 +331,10 @@ class BasePasswordView(views.APIView):
         except ObjectDoesNotExist:
             return None, f"Invalid {self.code_type} code"
 
-        is_valid = verif_code.validate()
+        if not isinstance(verif_code, (ResetPasswordCode, SetPasswordCode)):
+            return None, f"Invalid {self.code_type} code"
+
+        is_valid = verif_code.validate()  # pyright: ignore
 
         if not is_valid:
             return verif_code, f"Expired {self.code_type} code"
@@ -316,7 +352,7 @@ class BasePasswordView(views.APIView):
                 verif_code.delete()
             assert self.template is not None
             return render(
-                request,
+                request,  # pyright: ignore
                 self.template,
                 {"message": msg},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -328,10 +364,10 @@ class BasePasswordView(views.APIView):
         # pylint: disable=not-callable
         form = self.form(user)  # type: ignore
         request.session[f"{self.code_type}_code"] = verif_code.path
-        request.path = request.path[:request.path.find("?")]
+        request.path = request.path[:request.path.find("?")]  # pyright: ignore
         assert self.template is not None
         return render(
-            request,
+            request,  # pyright: ignore
             self.template,
             {"form": form},
         )
@@ -346,7 +382,7 @@ class BasePasswordView(views.APIView):
             if verif_code is not None:
                 verif_code.delete()
             return render(
-                request,
+                request,  # pyright: ignore
                 self.template,
                 {"message": msg},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -358,7 +394,7 @@ class BasePasswordView(views.APIView):
         is_valid = form.is_valid()
         if not is_valid:
             return render(
-                request,
+                request,  # pyright: ignore
                 self.template,
                 {
                     "form": form,
@@ -394,8 +430,14 @@ class RESTLoginView(views.APIView):
     @request_logging(logger)
     def post(self, request: Request) -> Response:
         """Supports a REST login endpoint."""
-        username = request.data.get("username")
-        password = request.data.get("password")
+        data = request.data
+        if not isinstance(data, dict):
+            return Response(
+                {"error": "Invalid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        username = data.get("username")
+        password = data.get("password")
 
         if not username or not password:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -414,7 +456,7 @@ class RESTLoginView(views.APIView):
                 )
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        login(request, user)
+        login(request, user)  # pyright: ignore
         logger.info(log_filter(request, "login success: " + str(username)))
         AuthenticationLog.log_authentication_attempt(username, failed=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -431,15 +473,14 @@ class WdaeLoginView(views.APIView):
             next_uri = get_default_application().redirect_uris.split(" ")[0]
 
         about_uri = next_uri[
-            next_uri.find("redirect_uri=") + 13
-            :next_uri.find("login")
+            next_uri.find("redirect_uri=") + 13:next_uri.find("login")
         ] + "about"
         print("about:", about_uri)
 
         form = WdaeLoginForm()
 
         return render(
-            request,
+            request,  # pyright: ignore
             "users_api/registration/login.html",
             {
                 "form": form,
@@ -452,6 +493,11 @@ class WdaeLoginView(views.APIView):
     def post(self, request: Request) -> Response | HttpResponse:
         """Handle the login form."""
         data = request.data
+        if not isinstance(data, dict):
+            return Response(
+                {"error": "Invalid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         next_uri = data.get("next")
         if next_uri is None:
             next_uri = get_default_application().redirect_uris.split(" ")[0]
@@ -464,7 +510,7 @@ class WdaeLoginView(views.APIView):
         response_status = form.status_code
 
         return render(
-            request,
+            request,  # pyright: ignore
             "users_api/registration/login.html",
             {
                 "form": form,
@@ -479,8 +525,14 @@ class WdaeLoginView(views.APIView):
 @api_view(["POST"])
 def change_password(request: Request) -> Response:
     """Change the password for a user."""
-    password = request.data["password"]
-    verif_code = request.data["verifPath"]
+    data = request.data
+    if not isinstance(data, dict):
+        return Response(
+            {"error": "Invalid data format"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    password = cast(str, data["password"])
+    verif_code = data["verifPath"]
 
     if not is_password_valid(password):
         logger.error(log_filter(
@@ -494,7 +546,8 @@ def change_password(request: Request) -> Response:
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    get_user_model().change_password(verif_code, password)
+    user_model = get_user_model()
+    user_model.change_password(verif_code, password)  # pyright: ignore
     return Response({}, status.HTTP_201_CREATED)
 
 
@@ -503,11 +556,28 @@ def change_password(request: Request) -> Response:
 def register(request: Request) -> Response:
     """Register a new user."""
     user_model = get_user_model()
-
+    email = None
     try:
-        email = BaseUserManager.normalize_email(request.data["email"])
+        data = request.data
+        if not isinstance(data, dict):
+            return Response(
+                {"error": "Invalid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        email = BaseUserManager.normalize_email(cast(str, data["email"]))
         if not is_email_valid(email):
-            raise ValueError
+            logger.error(
+                log_filter(
+                    request,
+                    "Registration failed: Invalid email; email: '%s'",
+                    str(email),
+                ),
+            )
+            return Response(
+                {"error_msg": ("Invalid email address entered."
+                               " Please use a valid email address.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if settings.OPEN_REGISTRATION:
             preexisting_user, _ = user_model.objects.get_or_create(email=email)
@@ -516,7 +586,8 @@ def register(request: Request) -> Response:
                 email__iexact=email,
             )
 
-        preexisting_user.register_preexisting_user(request.data.get("name"))
+        preexisting_user.register_preexisting_user(  # pyright: ignore
+            data.get("name"))
         logger.info(
             log_filter(
                 request,
@@ -526,7 +597,7 @@ def register(request: Request) -> Response:
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
-        logger.error(
+        logger.warning(
             log_filter(
                 request,
                 "Registration failed: IntegrityError; email: '%s'",
@@ -535,7 +606,7 @@ def register(request: Request) -> Response:
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except user_model.DoesNotExist:
-        logger.error(
+        logger.warning(
             log_filter(
                 request,
                 "Registration failed: Email or Researcher Id not found; "
@@ -549,7 +620,7 @@ def register(request: Request) -> Response:
             status=status.HTTP_403_FORBIDDEN,
         )
     except KeyError:
-        logger.error(
+        logger.warning(
             log_filter(
                 request,
                 "Registration failed: KeyError; %s",
@@ -557,19 +628,6 @@ def register(request: Request) -> Response:
             ),
         )
         return Response({}, status=status.HTTP_201_CREATED)
-    except ValueError:
-        logger.error(
-            log_filter(
-                request,
-                "Registration failed: Invalid email; email: '%s'",
-                str(email),
-            ),
-        )
-        return Response(
-            {"error_msg": ("Invalid email address entered."
-                           " Please use a valid email address.")},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
 
 @request_logging_function_view(logger)
@@ -579,7 +637,7 @@ def register(request: Request) -> Response:
     (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def logout(request: Request) -> Response:
     """Log out the currently logged-in user."""
-    django.contrib.auth.logout(request)
+    django.contrib.auth.logout(request)  # pyright: ignore
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -615,7 +673,13 @@ def get_user_info(request: Request) -> Response:
 @api_view(["POST"])
 def check_verif_code(request: Request) -> Response:
     """Check if a verification code is valid."""
-    verif_code = request.data["verifPath"]
+    data = request.data
+    if not isinstance(data, dict):
+        return Response(
+            {"error": "Invalid data format"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    verif_code = data["verifPath"]
     try:
         ResetPasswordCode.objects.get(path=verif_code)
         return Response({}, status=status.HTTP_200_OK)
@@ -642,11 +706,11 @@ class FederationCredentials(views.APIView):
             authorization_grant_type="client-credentials",
             client_type="confidential",
         )
-        res = []
-        for app in apps:
-            res.append({
+        res = [
+            {
                 "name": app.name,
-            })
+            } for app in apps
+        ]
         return Response(res, status=status.HTTP_200_OK)
 
     @request_logging(logger)
@@ -658,10 +722,19 @@ class FederationCredentials(views.APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         application = get_application_model()
-        if application.objects.filter(name=request.data["name"]).exists():
+        data = request.data
+        if not isinstance(data, dict):
+            return Response(
+                {"error": "Invalid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if application.objects.filter(name=data["name"]).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        new_application = application(name=request.data["name"], user_id=user.id, client_type="confidential", authorization_grant_type="client-credentials")
+        new_application = application(
+            name=data["name"], user_id=user.id,
+            client_type="confidential",
+            authorization_grant_type="client-credentials")
 
         new_application.full_clean()
         cleartext_secret = new_application.client_secret
@@ -679,13 +752,19 @@ class FederationCredentials(views.APIView):
         user = request.user
         if not user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        data = request.data
+        if not isinstance(data, dict):
+            return Response(
+                {"error": "Invalid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if not get_application_model() \
                 .objects \
-                .filter(name=request.data["name"]) \
+                .filter(name=data["name"]) \
                 .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
-            name=request.data["name"],
+            name=data["name"],
         )
         if user.id != app.user_id:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -698,27 +777,33 @@ class FederationCredentials(views.APIView):
         user = request.user
         if not user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        if "name" not in request.data or \
-                "new_name" not in request.data or \
-                request.data["name"] is None or \
-                request.data["new_name"] is None:
+        data = request.data
+        if not isinstance(data, dict):
+            return Response(
+                {"error": "Invalid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if "name" not in data or \
+                "new_name" not in data or \
+                data["name"] is None or \
+                data["new_name"] is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if not get_application_model() \
                 .objects \
-                .filter(name=request.data["name"]) \
+                .filter(name=data["name"]) \
                 .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if get_application_model() \
                 .objects \
-                .filter(name=request.data["new_name"]) \
+                .filter(name=data["new_name"]) \
                 .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
-            name=request.data["name"],
+            name=data["name"],
         )
         if user.id != app.user_id:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        app.name = request.data["new_name"]
+        app.name = data["new_name"]
         app.save()
         return Response(
             {"new_name": app.name},

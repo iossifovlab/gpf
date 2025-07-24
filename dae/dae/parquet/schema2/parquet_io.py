@@ -398,6 +398,9 @@ class VariantsParquetWriterDeprecated:
         annotation_batch_size: int = 0,
     ) -> list[str]:
         """Write variant to partitioned parquet dataset."""
+        summary_index = 0
+        family_index = 0
+
         with self.annotation_pipeline.open():
             if annotation_batch_size > 0:
                 summary_index, family_index = \

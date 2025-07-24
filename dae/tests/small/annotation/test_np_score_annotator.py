@@ -89,8 +89,10 @@ def test_np_score_annotator(
 
     # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]
     # pipeline.annotate_allele(sa) -> {("a1": v1), "a2": v2}}
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
+    assert result is not None
 
     print(annotatable, result)
     assert result.get("test") == pytest.approx(expected, rel=1e-2), annotatable
@@ -103,25 +105,25 @@ def np_score2_repo(
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path / "np_score2", {
-        "genomic_resource.yaml": """
-            type: np_score
-            table:
-                filename: data.txt.gz
-                format: tabix
-                reference:
-                  name: ref
-                alternative:
-                  name: alt
-            scores:
-                - id: s1
-                  type: float
-                  name: s1
+            "genomic_resource.yaml": """
+                type: np_score
+                table:
+                    filename: data.txt.gz
+                    format: tabix
+                    reference:
+                      name: ref
+                    alternative:
+                      name: alt
+                scores:
+                    - id: s1
+                      type: float
+                      name: s1
 
-                - id: s2
-                  type: float
-                  name: s2
-        """,
-    })
+                    - id: s2
+                      type: float
+                      name: s2
+            """,
+        })
     setup_tabix(
         root_path / "np_score2" / "data.txt.gz",
         textwrap.dedent("""
@@ -190,8 +192,10 @@ def test_np_score2_annotator(
     annotatable = VCFAllele(*variant)
     assert annotatable is not None
 
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
 
+    assert result is not None
     assert result.get("s1") == pytest.approx(s1, rel=1e-2), annotatable
     assert result.get("s2") == pytest.approx(s2, rel=1e-2), annotatable
