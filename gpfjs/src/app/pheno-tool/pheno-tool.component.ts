@@ -133,7 +133,6 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   }
 
   public setEffecTypesDefaultState(effectTypesState: string[]): void {
-    console.log('jkdhfjkhsddfhjk');
     if (!effectTypesState.length) {
       this.store.dispatch(
         setEffectTypes({effectTypes: [...PHENO_TOOL_INITIAL_VALUES.values()]})
@@ -187,8 +186,6 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
         presentInParent['rarity']['minFreq'] = presentInParentState.rarity.rarityIntervalStart;
         presentInParent['rarity']['maxFreq'] = presentInParentState.rarity.rarityIntervalEnd;
       }
-
-      console.log(effectTypesState);
 
       this.phenoToolState = {
         ...geneSymbolsState.length && {geneSymbols: geneSymbolsState},
