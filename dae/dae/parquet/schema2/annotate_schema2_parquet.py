@@ -7,11 +7,17 @@ import operator
 import os
 import pathlib
 import shutil
+import sys
 from datetime import datetime
 
 import yaml
 
-from dae.annotation.annotate_utils import AnnotationTool
+from dae.annotation.annotate_utils import (
+    add_input_files_to_task_graph,
+    cache_pipeline_resources,
+    get_stuff_from_context,
+    setup_work_dir_and_task_dirs,
+)
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
@@ -312,12 +318,15 @@ def process_parquet(
         processor.process_region(region)
 
 
-class AnnotateSchema2ParquetTool(AnnotationTool):
+class AnnotateSchema2ParquetTool:
     """Annotation tool for the Parquet file format."""
 
     def __init__(self, raw_args: list[str] | None = None):
-        super().__init__(raw_args)
-
+        if not raw_args:
+            raw_args = sys.argv[1:]
+        self.args = vars(self.get_argument_parser().parse_args(raw_args))
+        self.pipeline, self.context, self.grr = \
+            get_stuff_from_context(self.args)
         self.loader: ParquetLoader | None = None
         self.output_layout: Schema2DatasetLayout | None = None
 
@@ -506,4 +515,19 @@ def cli(
     if tool.args["dry_run"]:
         tool.dry_run()
         return
-    tool.run()
+
+    # Is this too eager? What if a reannotation pipeline is created
+    # inside work() and the only caching that must be done is far smaller
+    # than the entire new annotation config suggests?
+    cache_pipeline_resources(tool.grr, tool.pipeline)
+
+    setup_work_dir_and_task_dirs(tool.args)
+
+    tool.prepare_for_annotation()
+
+    task_graph = TaskGraph()
+    tool.add_tasks_to_graph(task_graph)
+
+    if len(task_graph.tasks) > 0:
+        add_input_files_to_task_graph(tool.args, task_graph)
+        TaskGraphCli.process_graph(task_graph, **tool.args)
