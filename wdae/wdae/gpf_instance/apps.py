@@ -15,7 +15,7 @@ class WDAEConfig(AppConfig):
     name = "gpf_instance"
 
     def ready(self) -> None:
-        logger.info("WGPConfig application starting...")
+        logger.info("WDAEConfig application starting...")
         AppConfig.ready(self)
 
         config_filepath = getattr(settings, "GPF_INSTANCE_CONFIG_PATH", None)
