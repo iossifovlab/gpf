@@ -456,7 +456,7 @@ def _add_tasks_plaintext(
     output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
-):
+) -> None:
     task_graph.create_task(
         "all_variants_annotate",
         _annotate_vcf,
@@ -477,7 +477,7 @@ def _add_tasks_tabixed(
     output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
-):
+) -> None:
     with closing(TabixFile(args.input)) as pysam_file:
         regions = produce_regions(pysam_file, args.region_size)
     file_paths = produce_partfile_paths(
