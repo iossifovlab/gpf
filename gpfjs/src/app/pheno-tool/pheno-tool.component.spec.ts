@@ -25,7 +25,11 @@ import { datasetIdReducer } from 'app/datasets/datasets.state';
 import { geneSetsReducer, GeneSetsState } from 'app/gene-sets/gene-sets.state';
 import { geneScoresReducer, GeneScoresState } from 'app/gene-scores/gene-scores.state';
 import { phenoToolMeasureReducer, PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
-import { PresentInParent, presentInParentReducer } from 'app/present-in-parent/present-in-parent.state';
+import {
+  PresentInParent,
+  presentInParentReducer,
+  setPresentInParent
+} from 'app/present-in-parent/present-in-parent.state';
 import { effectTypesReducer } from 'app/effect-types/effect-types.state';
 import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 import { familyIdsReducer } from 'app/family-ids/family-ids.state';
@@ -47,12 +51,14 @@ class PhenoToolServiceMock {
   }
 }
 
+// eslint-disable-next-line @stylistic/max-len
+const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0, false, false);
+// eslint-disable-next-line @stylistic/max-len
+const datasetMock = new Dataset('datasetId', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeBrowserConfigMock, null, [], null, true, null, null, null);
 class MockDatasetsService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public getDataset(datasetId: string): Observable<Dataset> {
-    // eslint-disable-next-line @stylistic/max-len
-    const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0, false, false);
-    // eslint-disable-next-line @stylistic/max-len
-    return of(new Dataset(datasetId, 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeBrowserConfigMock, null, [], null, null, null, null, null));
+    return of(datasetMock);
   }
 }
 
@@ -202,7 +208,7 @@ describe('PhenoToolComponent', () => {
         genomicScoresMock
       ]));
 
-    component.ngOnInit();
+    component.createPhenoToolState();
 
     const phenoToolStateResult = {
       effectTypes: ['missense', 'splice-site'],
@@ -237,15 +243,15 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should test submit query', () => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+
     component.ngOnInit();
     component.submitQuery();
     expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
   });
 
   it('should hide results on a state change', () => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-
     component.ngOnInit();
     expect(component.phenoToolResults).toBeNull();
     component.submitQuery();
@@ -274,5 +280,53 @@ describe('PhenoToolComponent', () => {
     }));
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
-});
 
+
+  it('should set default present in parent values when study has denovo', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const values = ['neither'];
+
+    component.ngOnInit();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setPresentInParent({
+        presentInParent: {
+          presentInParent: values,
+          rarity: {
+            rarityType: '',
+            rarityIntervalStart: 0,
+            rarityIntervalEnd: 1,
+          }
+        }
+      })
+    );
+  });
+
+  it('should set default present in parent values when study doesn\'t have denovo', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const values = [
+      'mother only', 'father only', 'mother and father', 'neither'
+    ];
+
+    jest.spyOn(mockDatasetsService, 'getDataset').mockReturnValueOnce(of(
+      new Dataset(
+        'datasetId',
+        'testDataset', [], true, [], [], [], '',
+        true, true, true, true, null,
+        genotypeBrowserConfigMock, null, [], null, false, null, null, null)
+    ));
+
+    component.ngOnInit();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setPresentInParent({
+        presentInParent: {
+          presentInParent: values,
+          rarity: {
+            rarityType: 'ultraRare',
+            rarityIntervalStart: 0,
+            rarityIntervalEnd: 1,
+          }
+        }
+      })
+    );
+  });
+});
