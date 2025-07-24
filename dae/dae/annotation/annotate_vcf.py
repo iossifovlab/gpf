@@ -4,10 +4,13 @@ import argparse
 import itertools
 import logging
 import os
+import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
+from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
+from typing import Any
 
 from pysam import (
     TabixFile,
@@ -19,7 +22,9 @@ from pysam import (
 
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_utils import (
-    AnnotationTool,
+    add_input_files_to_task_graph,
+    cache_pipeline_resources,
+    get_stuff_from_context,
     produce_partfile_paths,
     produce_regions,
     stringify,
@@ -27,6 +32,7 @@ from dae.annotation.annotate_utils import (
 from dae.annotation.annotation_config import (
     AttributeInfo,
     RawAnnotatorsConfig,
+    RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
@@ -53,11 +59,18 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 logger = logging.getLogger("annotate_vcf")
 
 
-def make_vcf_tabix(filepath: str) -> None:
-    tabix_index(filepath, preset="vcf")
+@dataclass
+class _ProcessingArgs:
+    input: str
+    reannotate: str | None
+    work_dir: str
+    batch_size: int
+    region_size: int
+    allow_repeated_attributes: bool
+    full_reannotation: bool
 
 
-class VCFSource(Source):
+class _VCFSource(Source):
     """Source for reading from VCF files."""
 
     def __init__(self, path: str):
@@ -66,7 +79,7 @@ class VCFSource(Source):
         with VariantFile(self.path, "r") as infile:
             self.header = infile.header
 
-    def __enter__(self) -> VCFSource:
+    def __enter__(self) -> _VCFSource:
         self.vcf = VariantFile(self.path, "r")
         return self
 
@@ -124,10 +137,10 @@ class VCFSource(Source):
                 )
                 continue
 
-            yield VCFSource._convert(vcf_var)
+            yield _VCFSource._convert(vcf_var)
 
 
-class VCFBatchSource(Source):
+class _VCFBatchSource(Source):
     """Source for reading from VCF files in batches."""
 
     def __init__(
@@ -135,10 +148,10 @@ class VCFBatchSource(Source):
         path: str,
         batch_size: int = 500,
     ):
-        self.source = VCFSource(path)
+        self.source = _VCFSource(path)
         self.batch_size = batch_size
 
-    def __enter__(self) -> VCFBatchSource:
+    def __enter__(self) -> _VCFBatchSource:
         self.source.__enter__()
         return self
 
@@ -165,7 +178,7 @@ class VCFBatchSource(Source):
             yield batch
 
 
-class VCFWriter(Filter):
+class _VCFWriter(Filter):
     """A filter that writes variants to a VCF file."""
 
     def __init__(
@@ -264,7 +277,7 @@ class VCFWriter(Filter):
                 continue
             vcf_var.info[attribute.name] = buff
 
-    def __enter__(self) -> VCFWriter:
+    def __enter__(self) -> _VCFWriter:
         self.output_file = VariantFile(self.path, "w", header=self.header)
         return self
 
@@ -285,7 +298,7 @@ class VCFWriter(Filter):
 
     def filter(self, data: AnnotationsWithSource) -> None:
         data.source.translate(self.header)
-        VCFWriter._update_variant(
+        _VCFWriter._update_variant(
             data.source,
             [annotation.context for annotation in data.annotations],
             self.annotation_attributes,
@@ -294,7 +307,7 @@ class VCFWriter(Filter):
         self.output_file.write(data.source)
 
 
-class VCFBatchWriter(Filter):
+class _VCFBatchWriter(Filter):
     """A filter that writes batches of variants to a VCF file."""
 
     def __init__(
@@ -303,9 +316,9 @@ class VCFBatchWriter(Filter):
         pipeline: AnnotationPipeline,
         header: VariantHeader,
     ):
-        self.writer = VCFWriter(path, pipeline, header)
+        self.writer = _VCFWriter(path, pipeline, header)
 
-    def __enter__(self) -> VCFBatchWriter:
+    def __enter__(self) -> _VCFBatchWriter:
         self.writer.__enter__()
         return self
 
@@ -329,49 +342,50 @@ class VCFBatchWriter(Filter):
             self.writer.filter(variant)
 
 
-def process_vcf(  # pylint: disable=too-many-positional-arguments
-    input_vcf_path: str,
+def _annotate_vcf(
     output_path: str,
     pipeline_config: RawAnnotatorsConfig,
-    pipeline_config_old: str | None,
     grr_definition: dict,
-    work_dir: Path,
-    batch_size: int,
     region: Region | None,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    full_reannotation: bool,  # noqa: FBT001
+    args: _ProcessingArgs,
 ) -> None:
     """Annotate a VCF file using a processing pipeline."""
+
+    pipeline_config_old = None
+    if args.reannotate:
+        pipeline_config_old = Path(args.reannotate).read_text()
+
     grr = build_genomic_resource_repository(definition=grr_definition)
+
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
-        allow_repeated_attributes=allow_repeated_attributes,
-        work_dir=work_dir,
+        allow_repeated_attributes=args.allow_repeated_attributes,
+        work_dir=Path(args.work_dir),
         config_old_raw=pipeline_config_old,
-        full_reannotation=full_reannotation,
+        full_reannotation=args.full_reannotation,
     )
 
     source: Source
     filters: list[Filter] = []
 
-    if batch_size <= 0:
-        source = VCFSource(input_vcf_path)
+    if args.batch_size <= 0:
+        source = _VCFSource(args.input)
         filters.extend([
             AnnotationPipelineAnnotatablesFilter(pipeline),
-            VCFWriter(output_path, pipeline, source.header),
+            _VCFWriter(output_path, pipeline, source.header),
         ])
     else:
-        source = VCFBatchSource(input_vcf_path)
+        source = _VCFBatchSource(args.input)
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            VCFBatchWriter(output_path, pipeline, source.source.header),
+            _VCFBatchWriter(output_path, pipeline, source.source.header),
         ])
 
     with PipelineProcessor(source, filters) as processor:
         processor.process_region(region)
 
 
-def concat(partfile_paths: list[str], output_path: str) -> None:
+def _concat(partfile_paths: list[str], output_path: str) -> None:
     """Concatenate multiple VCF files into a single VCF file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
@@ -389,137 +403,172 @@ def concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-class AnnotateVCFTool(AnnotationTool):
-    """Annotation tool for the VCF file format."""
+def _build_argument_parser() -> argparse.ArgumentParser:
+    """Construct and configure argument parser."""
+    parser = argparse.ArgumentParser(
+        description="Annotate VCF",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "input", default="-", nargs="?",
+        help="the input vcf file")
+    parser.add_argument(
+        "-r", "--region-size", default=300_000_000,
+        type=int, help="region size to parallelize by")
+    parser.add_argument(
+        "-w", "--work-dir",
+        help="Directory to store intermediate output files",
+        default="annotate_vcf_output")
+    parser.add_argument(
+        "-o", "--output",
+        help="Filename of the output VCF result",
+        default=None)
+    parser.add_argument(
+        "--reannotate", default=None,
+        help="Old pipeline config to reannotate over")
+    parser.add_argument(
+        "-i", "--full-reannotation",
+        help="Ignore any previous annotation and run "
+        " a full reannotation.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=0,  # 0 = annotate iteratively, no batches
+        help="Annotate in batches of",
+    )
 
-    def __init__(
-        self, raw_args: list[str] | None = None,
-    ):
-        super().__init__(raw_args)
-        self.output = None
+    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    TaskGraphCli.add_arguments(parser)
+    VerbosityConfiguration.set_arguments(parser)
+    return parser
 
-    def get_argument_parser(self) -> argparse.ArgumentParser:
-        """Construct and configure argument parser."""
-        parser = argparse.ArgumentParser(
-            description="Annotate VCF",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-        parser.add_argument(
-            "input", default="-", nargs="?",
-            help="the input vcf file")
-        parser.add_argument(
-            "-r", "--region-size", default=300_000_000,
-            type=int, help="region size to parallelize by")
-        parser.add_argument(
-            "-w", "--work-dir",
-            help="Directory to store intermediate output files",
-            default="annotate_vcf_output")
-        parser.add_argument(
-            "-o", "--output",
-            help="Filename of the output VCF result",
-            default=None)
-        parser.add_argument(
-            "--reannotate", default=None,
-            help="Old pipeline config to reannotate over")
-        parser.add_argument(
-            "-i", "--full-reannotation",
-            help="Ignore any previous annotation and run "
-            " a full reannotation.",
-            action="store_true",
-        )
-        parser.add_argument(
-            "--batch-size",
-            type=int,
-            default=0,  # 0 = annotate iteratively, no batches
-            help="Annotate in batches of",
-        )
 
-        CLIAnnotationContextProvider.add_argparser_arguments(parser)
-        TaskGraphCli.add_arguments(parser)
-        VerbosityConfiguration.set_arguments(parser)
-        return parser
+def _get_output_path(input_path: str, output_path: str | None) -> str:
+    # TODO replace with the better method in annotate_columns
+    if output_path:
+        return output_path
+    return os.path.basename(input_path).split(".")[0] + "_annotated.vcf"
 
-    def prepare_for_annotation(self) -> None:
-        if self.args.get("output"):
-            self.output = self.args["output"]
-        else:
-            self.output = os.path.basename(
-                self.args["input"]).split(".")[0] + "_annotated.vcf"
 
-    def add_tasks_to_graph(self, task_graph: TaskGraph) -> None:
-        assert self.grr is not None
-        assert self.output is not None
-        pipeline_config_old = None
-        if self.args.get("reannotate"):
-            pipeline_config_old = Path(self.args["reannotate"]).read_text()
+def _make_vcf_tabix(filepath: str) -> None:
+    tabix_index(filepath, preset="vcf")
 
-        if not tabix_index_filename(self.args["input"]):
-            task_graph.create_task(
-                "all_variants_annotate",
-                process_vcf,
-                args=[
-                    self.args["input"],
-                    self.output,
-                    self.pipeline.raw,
-                    pipeline_config_old,
-                    self.grr.definition,
-                    Path(self.args["work_dir"]),
-                    self.args["batch_size"],
-                    None,
-                    self.args["allow_repeated_attributes"],
-                    self.args["full_reannotation"],
-                ],
-                deps=[],
-            )
-        else:
-            with closing(TabixFile(self.args["input"])) as pysam_file:
-                regions = produce_regions(pysam_file, self.args["region_size"])
-            file_paths = produce_partfile_paths(
-                self.args["input"], regions, self.args["work_dir"])
 
-            annotation_tasks = []
-            for (region, file_path) in zip(regions, file_paths, strict=True):
-                annotation_tasks.append(task_graph.create_task(
-                    f"part-{str(region).replace(':', '-')}",
-                    process_vcf,
-                    args=[
-                        self.args["input"],
-                        file_path,
-                        self.pipeline.raw,
-                        pipeline_config_old,
-                        self.grr.definition,
-                        Path(self.args["work_dir"]),
-                        self.args["batch_size"],
-                        region,
-                        self.args["allow_repeated_attributes"],
-                        self.args["full_reannotation"],
-                    ],
-                    deps=[],
-                ))
+def _add_tasks_plaintext(
+    args: _ProcessingArgs,
+    task_graph: TaskGraph,
+    output_path: str,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict[str, Any],
+):
+    task_graph.create_task(
+        "all_variants_annotate",
+        _annotate_vcf,
+        args=[
+            output_path,
+            pipeline_config,
+            grr_definition,
+            None,
+            args,
+        ],
+        deps=[],
+    )
 
-            annotation_sync = task_graph.create_task(
-                "sync_vcf_annotate", lambda: None,
-                args=[], deps=annotation_tasks,
-            )
 
-            assert self.grr is not None
-            concat_task = task_graph.create_task(
-                "concat",
-                concat,
-                args=[
-                    file_paths,  # The order of this list is crucial!
-                    self.output,
-                ],
-                deps=[annotation_sync],
-            )
+def _add_tasks_tabixed(
+    args: _ProcessingArgs,
+    task_graph: TaskGraph,
+    output_path: str,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: dict[str, Any],
+):
+    with closing(TabixFile(args.input)) as pysam_file:
+        regions = produce_regions(pysam_file, args.region_size)
+    file_paths = produce_partfile_paths(
+        args.input, regions, args.work_dir)
 
-            task_graph.create_task(
-                "compress_and_tabix",
-                make_vcf_tabix,
-                args=[self.output],
-                deps=[concat_task])
+    annotation_tasks = []
+    for (region, file_path) in zip(regions, file_paths, strict=True):
+        annotation_tasks.append(task_graph.create_task(
+            f"part-{str(region).replace(':', '-')}",
+            _annotate_vcf,
+            args=[
+                file_path,
+                pipeline_config,
+                grr_definition,
+                region,
+                args,
+            ],
+            deps=[],
+        ))
+
+    annotation_sync = task_graph.create_task(
+        "sync_vcf_annotate", lambda: None,
+        args=[], deps=annotation_tasks,
+    )
+
+    concat_task = task_graph.create_task(
+        "concat",
+        _concat,
+        args=[file_paths, output_path],
+        deps=[annotation_sync],
+    )
+    task_graph.create_task(
+        "compress_and_tabix",
+        _make_vcf_tabix,
+        args=[output_path],
+        deps=[concat_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:
-    tool = AnnotateVCFTool(raw_args)
-    tool.run()
+    """Entry point for running the VCF annotation tool."""
+    if not raw_args:
+        raw_args = sys.argv[1:]
+
+    arg_parser = _build_argument_parser()
+    args = vars(arg_parser.parse_args(raw_args))
+    if not os.path.exists(args["input"]):
+        raise ValueError(f"{args['input']} does not exist!")
+    if not os.path.exists(args["work_dir"]):
+        os.mkdir(args["work_dir"])
+    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
+    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
+
+    pipeline, _, grr = get_stuff_from_context(args)
+    assert grr.definition is not None
+
+    cache_pipeline_resources(grr, pipeline)
+
+    processing_args = _ProcessingArgs(
+        args["input"],
+        args["reannotate"],
+        args["work_dir"],
+        args["batch_size"],
+        args["region_size"],
+        args["allow_repeated_attributes"],
+        args["full_reannotation"],
+    )
+
+    output_path = _get_output_path(args["input"], args["output"])
+    task_graph = TaskGraph()
+    if tabix_index_filename(args["input"]):
+        _add_tasks_tabixed(
+            processing_args,
+            task_graph,
+            output_path,
+            pipeline.raw,
+            grr.definition,
+        )
+    else:
+        _add_tasks_plaintext(
+            processing_args,
+            task_graph,
+            output_path,
+            pipeline.raw,
+            grr.definition,
+        )
+
+    add_input_files_to_task_graph(args, task_graph)
+    TaskGraphCli.process_graph(task_graph, **args)

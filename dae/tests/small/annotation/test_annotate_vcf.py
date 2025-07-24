@@ -6,8 +6,9 @@ import textwrap
 import pysam
 import pytest
 from dae.annotation.annotate_vcf import (
+    _annotate_vcf,
+    _ProcessingArgs,
     cli,
-    process_vcf,
     produce_partfile_paths,
 )
 from dae.genomic_resources.testing import (
@@ -71,17 +72,15 @@ def test_process_vcf_simple(
         {"position_score": "sample_score"},
     ]
 
-    process_vcf(
-        str(sample_vcf),
+    _annotate_vcf(
         str(out_path),
         pipeline_config,
-        None,
         test_gpf_instance.grr.definition,  # type: ignore
-        work_dir,
-        0,
         None,
-        False,  # noqa: FBT003
-        False,  # noqa: FBT003
+        _ProcessingArgs(
+            str(sample_vcf), "", str(work_dir), 0, 1,
+            False, False,  # noqa: FBT003
+        ),
     )
 
     # pylint: disable=no-member
@@ -101,17 +100,15 @@ def test_process_vcf_simple_batch(
         {"position_score": "sample_score"},
     ]
 
-    process_vcf(
-        str(sample_vcf),
+    _annotate_vcf(
         str(out_path),
         pipeline_config,
-        None,
         test_gpf_instance.grr.definition,  # type: ignore
-        work_dir,
-        1,
         None,
-        False,  # noqa: FBT003
-        False,  # noqa: FBT003
+        _ProcessingArgs(
+            str(sample_vcf), "", str(work_dir), 0, 1,
+            False, False,  # noqa: FBT003
+        ),
     )
 
     # pylint: disable=no-member
