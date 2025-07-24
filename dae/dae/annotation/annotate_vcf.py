@@ -23,6 +23,7 @@ from pysam import (
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
+    build_output_path,
     cache_pipeline_resources,
     get_stuff_from_context,
     produce_partfile_paths,
@@ -445,13 +446,6 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _get_output_path(input_path: str, output_path: str | None) -> str:
-    # TODO replace with the better method in annotate_columns
-    if output_path:
-        return output_path
-    return os.path.basename(input_path).split(".")[0] + "_annotated.vcf"
-
-
 def _make_vcf_tabix(filepath: str) -> None:
     tabix_index(filepath, preset="vcf")
 
@@ -551,7 +545,7 @@ def cli(raw_args: list[str] | None = None) -> None:
         args["full_reannotation"],
     )
 
-    output_path = _get_output_path(args["input"], args["output"])
+    output_path = build_output_path(args["input"], args["output"])
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
         _add_tasks_tabixed(

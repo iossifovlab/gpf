@@ -17,6 +17,7 @@ from pysam import TabixFile
 
 from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
+    build_output_path,
     cache_pipeline_resources,
     get_stuff_from_context,
     produce_partfile_paths,
@@ -419,22 +420,6 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
         os.remove(partfile_path)
 
 
-def _get_output_path(raw_input_path: str, output_path: str | None) -> str:
-    if output_path:
-        return output_path.rstrip(".gz")
-    # no output filename given, produce from input filename
-    input_path = Path(raw_input_path.rstrip(".gz"))
-    # backup suffixes
-    suffixes = input_path.suffixes
-    # remove suffixes to get to base stem of filename
-    while input_path.suffix:
-        input_path = input_path.with_suffix("")
-    # append '_annotated' to filename stem
-    input_path = input_path.with_stem(f"{input_path.stem}_annotated")
-    # restore suffixes and return
-    return str(input_path.with_suffix("".join(suffixes)))
-
-
 def _add_tasks_tabixed(
     args: _ProcessingArgs,
     task_graph: TaskGraph,
@@ -590,7 +575,7 @@ def cli(raw_args: list[str] | None = None) -> None:
          for col in cols},
     )
 
-    output_path = _get_output_path(args["input"], args["output"])
+    output_path = build_output_path(args["input"], args["output"])
 
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):

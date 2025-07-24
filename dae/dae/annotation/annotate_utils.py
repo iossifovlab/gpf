@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from abc import abstractmethod
+from pathlib import Path
 from typing import Any
 
 from pysam import TabixFile, tabix_index
@@ -180,6 +181,23 @@ def cache_pipeline_resources(
         for res in annotator.resources
     }
     cache_resources(grr, resource_ids)
+
+
+def build_output_path(raw_input_path: str, output_path: str | None) -> str:
+    """Build an output filepath for an annotation tool's output."""
+    if output_path:
+        return output_path.rstrip(".gz")
+    # no output filename given, produce from input filename
+    input_path = Path(raw_input_path.rstrip(".gz"))
+    # backup suffixes
+    suffixes = input_path.suffixes
+    # remove suffixes to get to base stem of filename
+    while input_path.suffix:
+        input_path = input_path.with_suffix("")
+    # append '_annotated' to filename stem
+    input_path = input_path.with_stem(f"{input_path.stem}_annotated")
+    # restore suffixes and return
+    return str(input_path.with_suffix("".join(suffixes)))
 
 
 class AnnotationTool:
