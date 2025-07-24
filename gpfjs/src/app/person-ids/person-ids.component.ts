@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectPersonIds, setPersonIds } from './person-ids.state';
 import { take } from 'rxjs';
@@ -12,7 +12,7 @@ import { cloneDeep } from 'lodash';
   styleUrls: ['./person-ids.component.css'],
   standalone: false
 })
-export class PersonIdsComponent implements OnInit {
+export class PersonIdsComponent implements OnInit, OnDestroy {
   public personIds = '';
   public errors: string[] = [];
   @ViewChild('textArea') private textArea: ElementRef;
@@ -28,17 +28,16 @@ export class PersonIdsComponent implements OnInit {
         separator = ', ';
       }
       this.personIds = personIds.join(separator);
+      this.validateState();
     });
   }
 
   public setPersonIds(personIds: string): void {
-    this.validateState(personIds);
-
     const result = personIds
       .split(/[,\s]/)
       .filter(s => s !== '');
     this.personIds = personIds;
-
+    this.validateState();
     this.store.dispatch(setPersonIds({personIds: result}));
   }
 
@@ -59,9 +58,9 @@ export class PersonIdsComponent implements OnInit {
     });
   }
 
-  private validateState(personIds: string): void {
+  private validateState(): void {
     this.errors = [];
-    if (!personIds) {
+    if (!this.personIds) {
       this.errors.push('Please insert at least one person id.');
     }
 
@@ -74,5 +73,9 @@ export class PersonIdsComponent implements OnInit {
     } else {
       this.store.dispatch(resetErrors({componentId: 'personIds'}));
     }
+  }
+
+  public ngOnDestroy(): void {
+    this.store.dispatch(resetErrors({componentId: 'personIds'}));
   }
 }
