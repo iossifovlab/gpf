@@ -18,6 +18,7 @@ from pysam import TabixFile
 from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
     cache_pipeline_resources,
+    get_stuff_from_context,
     produce_partfile_paths,
     produce_regions,
     produce_tabix_index,
@@ -34,7 +35,6 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
-    get_context_pipeline,
 )
 from dae.annotation.processing_pipeline import (
     Annotation,
@@ -50,11 +50,6 @@ from dae.annotation.record_to_annotatable import (
     build_record_to_annotatable,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.genomic_resources.genomic_context import (
-    context_providers_init,
-    get_genomic_context,
-    register_context_provider,
-)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
@@ -572,21 +567,7 @@ def cli(raw_args: list[str] | None = None) -> None:
     args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
     args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
-    register_context_provider(CLIAnnotationContextProvider())
-    context_providers_init(**args)
-
-    registered_context = get_genomic_context()
-    # Maybe add a method to build a pipeline from a genomic context
-    # the pipeline arguments are registered as a context above, where
-    # the pipeline is also written into the context, only to be accessed
-    # 3 lines down
-    pipeline = get_context_pipeline(registered_context)
-    if pipeline is None:
-        raise ValueError("no valid annotation pipeline configured")
-    context = pipeline.build_pipeline_genomic_context()
-    grr = context.get_genomic_resources_repository()
-    if grr is None:
-        raise ValueError("no valid GRR configured")
+    pipeline, context, grr = get_stuff_from_context(args)
     assert grr.definition is not None
 
     ref_genome = context.get_reference_genome()

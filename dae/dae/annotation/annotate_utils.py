@@ -139,15 +139,12 @@ def setup_work_dir_and_task_dirs(args: dict) -> None:
     args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
 
-def setup_context(args: dict) -> None:
-    register_context_provider(CLIAnnotationContextProvider())
-    context_providers_init(**args)
-
-
-def get_stuff_from_context() -> tuple[AnnotationPipeline,
-                                      GenomicContext,
-                                      GenomicResourceRepo]:
+def get_stuff_from_context(
+    cli_args: dict[str, Any],
+) -> tuple[AnnotationPipeline, GenomicContext, GenomicResourceRepo]:
     """Helper method to collect necessary objects from the genomic context."""
+    register_context_provider(CLIAnnotationContextProvider())
+    context_providers_init(**cli_args)
     registered_context = get_genomic_context()
     # Maybe add a method to build a pipeline from a genomic context
     # the pipeline arguments are registered as a context above, where
@@ -155,8 +152,7 @@ def get_stuff_from_context() -> tuple[AnnotationPipeline,
     # 3 lines down
     pipeline = get_context_pipeline(registered_context)
     if pipeline is None:
-        raise ValueError(
-            "no valid annotation pipeline configured")
+        raise ValueError("no valid annotation pipeline configured")
     context = pipeline.build_pipeline_genomic_context()
     grr = context.get_genomic_resources_repository()
     if grr is None:
@@ -196,8 +192,8 @@ class AnnotationTool:
         if not raw_args:
             raw_args = sys.argv[1:]
         self.args = vars(self.get_argument_parser().parse_args(raw_args))
-        setup_context(self.args)
-        self.pipeline, self.context, self.grr = get_stuff_from_context()
+        self.pipeline, self.context, self.grr = \
+            get_stuff_from_context(self.args)
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
