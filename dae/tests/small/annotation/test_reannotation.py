@@ -589,6 +589,49 @@ def test_annotate_columns_reannotation_internal(
     assert out_file_header == out_expected_header
 
 
+def test_annotate_columns_reannotation_batched(
+    tmp_path: pathlib.Path,
+    reannotation_grr: GenomicResourceRepo,
+) -> None:
+    assert reannotation_grr is not None
+    in_content = (
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_effects\tgene_score1\tgene_score2\n"
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\n"
+        "chr1\t24\t0.1\tbla\tbla\tbla\tbla\tbla\n"
+        "chr1\t25\t0.1\tbla\tbla\tbla\tbla\tbla\n"
+        "chr1\t26\t0.1\tbla\tbla\tbla\tbla\tbla\n"
+    )
+    out_expected_header = [
+        "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
+    ]
+    in_file = tmp_path / "in.txt"
+    out_path = tmp_path / "out.txt"
+    annotation_file_old = tmp_path / "reannotation_old.yaml"
+    annotation_file_new = tmp_path / "reannotation_new.yaml"
+    grr_file = tmp_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file_new,
+            "-o", out_path,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--reannotate", annotation_file_old,
+            "-j", 1,
+            "--batch-size", 2,
+        ]
+    ])
+
+    with open(out_path, "rt", encoding="utf8") as out_file:
+        out_file_header = "".join(out_file.readline()).strip().split("\t")
+        lines = out_file.readlines()
+    assert out_file_header == out_expected_header
+    assert len(lines) == 4
+
+
 def test_annotate_vcf_reannotation(
     tmp_path: pathlib.Path,
     reannotation_grr: GenomicResourceRepo,

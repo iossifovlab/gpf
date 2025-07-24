@@ -13,7 +13,19 @@ from dae.annotation.annotatable import (
     Region,
     VCFAllele,
 )
-from dae.annotation.annotate_columns import cli as cli_columns
+from dae.annotation.annotate_columns import (
+    _CSVBatchSource,
+    _CSVBatchWriter,
+    _CSVSource,
+    _CSVWriter,
+    _get_output_path,
+    _ProcessingArgs,
+    cli,
+)
+from dae.annotation.processing_pipeline import (
+    Annotation,
+    AnnotationsWithSource,
+)
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
 from dae.genomic_resources.genomic_context import (
     GenomicContext,
@@ -21,6 +33,8 @@ from dae.genomic_resources.genomic_context import (
 )
 from dae.genomic_resources.testing import setup_tabix
 from dae.testing import setup_denovo, setup_genome
+
+pytestmark = pytest.mark.usefixtures("clear_context")
 
 
 @pytest.mark.parametrize(
@@ -179,7 +193,7 @@ def test_annotate_columns_basic_setup(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
@@ -188,36 +202,6 @@ def test_annotate_columns_basic_setup(
     ])
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
-
-
-def test_annotate_columns_no_header(
-    annotate_directory_fixture: pathlib.Path,
-    tmp_path: pathlib.Path,
-) -> None:
-    in_content = textwrap.dedent("""
-        chr1    23
-        chr1    24
-    """)
-    root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file = root_path / "annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
-
-    setup_denovo(in_file, in_content)
-
-    with pytest.raises(
-        ValueError,
-        match="no record to annotatable could be found",
-    ):
-        cli_columns([
-            str(a) for a in [
-                in_file, annotation_file, "--grr", grr_file, "-o", out_file,
-                "-w", work_dir,
-                "-j", 1,
-            ]
-        ])
 
 
 def test_annotate_columns_batch_mode(
@@ -244,7 +228,7 @@ def test_annotate_columns_batch_mode(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "-o", out_file,
             "-w", work_dir,
@@ -284,7 +268,7 @@ def test_annotate_columns_produce_tabix_correctly_position(
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=3)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "-o", out_file,
             "-w", work_dir,
@@ -323,7 +307,7 @@ def test_annotate_columns_produce_tabix_correctly_vcf_allele(
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=3)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "-o", out_file,
             "-w", work_dir,
@@ -362,7 +346,7 @@ def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=5)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "-o", out_file,
             "-w", work_dir,
@@ -398,7 +382,7 @@ def test_annotate_columns_idempotence(
     setup_denovo(in_file, in_content)
 
     for _ in range(10):
-        cli_columns([
+        cli([
             str(a) for a in [
                 in_file, annotation_file, "--grr", grr_file, "-o", out_file,
                 "-w", work_dir,
@@ -446,7 +430,7 @@ def test_annotate_columns_multiple_chrom(
     pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
                       start_col=1, end_col=1)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
@@ -500,7 +484,7 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
     pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
                       start_col=1, end_col=1)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
@@ -550,7 +534,7 @@ def test_annotate_columns_none_values(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file,
             "--grr", grr_file,
@@ -587,7 +571,7 @@ def test_annotate_columns_repeated_attributes(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file,
             "--grr", grr_file,
@@ -624,7 +608,7 @@ def test_annotate_with_pipeline_from_grr(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, pipeline, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
@@ -658,7 +642,7 @@ def test_annotate_columns_autodetect_columns_with_underscore(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
@@ -690,7 +674,7 @@ def test_annotate_columns_float_precision(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
@@ -724,7 +708,7 @@ def test_annotate_columns_internal_attributes(
 
     setup_denovo(in_file, in_content)
 
-    cli_columns([
+    cli([
         str(a) for a in [
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
@@ -733,3 +717,210 @@ def test_annotate_columns_internal_attributes(
     ])
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
+
+
+def test_csv_source_no_header_in_file(
+    tmp_path: pathlib.Path,
+) -> None:
+    csv_path = tmp_path / "data.csv"
+    setup_denovo(csv_path, """
+        chr1    23
+        chr1    24
+    """)
+
+    with pytest.raises(
+        ValueError,
+        match="no record to annotatable could be found",
+    ), _CSVSource(str(csv_path), None, {}, "\t") as source:
+        list(source.fetch())
+
+
+def test_csv_batch_source_no_header_in_file(
+    tmp_path: pathlib.Path,
+) -> None:
+    csv_path = tmp_path / "data.csv"
+    setup_denovo(csv_path, """
+        chr1    23
+        chr1    24
+    """)
+
+    with pytest.raises(
+        ValueError,
+        match="no record to annotatable could be found",
+    ), _CSVBatchSource(str(csv_path), None, {}, "\t") as source:
+        list(source.fetch())
+
+
+def test_csv_source_tabixed_fetch_without_region(
+    tmp_path: pathlib.Path,
+) -> None:
+    csv_path = tmp_path / "data.csv.gz"
+    setup_tabix(csv_path, """
+        #chrom  pos
+        chr1   23
+        chr1   24
+    """, seq_col=0, start_col=1, end_col=1)
+
+    with _CSVSource(str(csv_path), None, {}, "\t") as source:
+        result = list(source.fetch())
+        assert len(result) == 2
+        assert result[0] == AnnotationsWithSource(
+            {"chrom": "chr1", "pos": "23"},
+            [Annotation(Position("chr1", 23),
+                        {"chrom": "chr1", "pos": "23"})],
+        )
+        assert result[1] == AnnotationsWithSource(
+            {"chrom": "chr1", "pos": "24"},
+            [Annotation(Position("chr1", 24),
+                        {"chrom": "chr1", "pos": "24"})],
+        )
+
+
+def test_csv_writer_bad_input(tmp_path: pathlib.Path) -> None:
+    out_path = str(tmp_path / "data.csv")
+    header = ["chrom", "pos", "SCORE"]
+
+    writer = _CSVWriter(str(out_path), "\t", header)
+    with pytest.raises(KeyError), writer:
+        # no "SCORE" column in input which we're trying to write
+        writer.filter(AnnotationsWithSource(
+            {"chrom": "chr1", "pos": "23"},
+            [Annotation(Position("chr1", 23),
+                        {"chrom": "chr1", "pos": "23"})],
+        ))
+
+
+def test_csv_batch_writer_bad_input(tmp_path: pathlib.Path) -> None:
+    out_path = str(tmp_path / "data.csv")
+    header = ["chrom", "pos", "SCORE"]
+
+    writer = _CSVBatchWriter(str(out_path), "\t", header)
+    with pytest.raises(KeyError), writer:
+        # no "SCORE" column in input which we're trying to write
+        writer.filter([AnnotationsWithSource(
+            {"chrom": "chr1", "pos": "23"},
+            [Annotation(Position("chr1", 23),
+                        {"chrom": "chr1", "pos": "23"})],
+        )])
+
+
+def test_get_output_path_explicit() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/input_file.csv",
+        "some/directory/explicit_output_file.csv",
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/explicit_output_file.csv"
+
+
+def test_get_output_path_explicit_remove_gz() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/input_file.csv",
+        "some/directory/explicit_output_file.csv.gz",
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/explicit_output_file.csv"
+
+
+def test_get_output_path_none_given_explicitly() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/input_file.csv",
+        None,
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/input_file_annotated.csv"
+
+
+def test_get_output_path_none_given_explicitly_remove_gz() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/input_file.csv.gz",
+        None,
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/input_file_annotated.csv"
+
+
+def test_get_output_path_none_given_explicitly_no_extension() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/input_file",
+        None,
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/input_file_annotated"
+
+
+def test_get_output_path_none_given_explicitly_multiple_extensions() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/input_file.txt.csv",
+        None,
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/input_file_annotated.txt.csv"
+
+
+def test_get_output_path_none_given_explicitly_hidden_file() -> None:
+    assert _get_output_path(_ProcessingArgs(
+        "some/directory/.input_file.csv",
+        None,
+        # Below are irrelevant arguments for this testing scenario
+        None, "", 0, 0, "", "", False, False, {},  # noqa: FBT003
+    )) == "some/directory/.input_file_annotated.csv"
+
+
+def test_cli_nonexistent_input_file(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    root_path = annotate_directory_fixture
+    in_file = root_path / "blabla_does_not_exist_input.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    with pytest.raises(
+        ValueError,
+        match=r"blabla_does_not_exist_input.txt does not exist!",
+    ):
+        cli([
+            str(a) for a in [
+                in_file,
+                annotation_file,
+                "--grr", grr_file,
+                "-o", out_file,
+                "-w", work_dir,
+                "-j", 1,
+            ]
+        ])
+
+
+def test_cli_no_pipeline_in_context(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    with pytest.raises(
+        ValueError,
+        match="no valid annotation pipeline configured",
+    ):
+        cli([
+            str(a) for a in [
+                in_file,
+                "--grr", grr_file,
+                "-o", out_file,
+                "-w", work_dir,
+                "-j", 1,
+            ]
+        ])

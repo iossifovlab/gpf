@@ -74,8 +74,8 @@ logger = logging.getLogger("annotate_columns")
 @dataclass
 class _ProcessingArgs:
     input: str
-    output: str
-    reannotate: str
+    output: str | None
+    reannotate: str | None
     work_dir: str
     batch_size: int
     region_size: int
@@ -428,13 +428,17 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
 def _get_output_path(args: _ProcessingArgs) -> str:
     if args.output:
         return args.output.rstrip(".gz")
-
-    input_name = args.input.rstrip(".gz")
-    if "." in input_name:
-        idx = input_name.find(".")
-        return f"{input_name[:idx]}_annotated{input_name[idx:]}"
-
-    return f"{input_name}_annotated"
+    # no output filename given, produce from input filename
+    input_path = Path(args.input.rstrip(".gz"))
+    # backup suffixes
+    suffixes = input_path.suffixes
+    # remove suffixes to get to base stem of filename
+    while input_path.suffix:
+        input_path = input_path.with_suffix("")
+    # append '_annotated' to filename stem
+    input_path = input_path.with_stem(f"{input_path.stem}_annotated")
+    # restore suffixes and return
+    return str(input_path.with_suffix("".join(suffixes)))
 
 
 def _add_tasks_tabixed(
@@ -623,10 +627,6 @@ def cli(raw_args: list[str] | None = None) -> None:
             grr.definition,
             ref_genome_id,
         )
-
-    if len(task_graph.tasks) == 0:
-        logger.info("Nothing to be done. Exiting.")
-        return
 
     add_input_files_to_task_graph(args, task_graph)
     TaskGraphCli.process_graph(task_graph, **args)
