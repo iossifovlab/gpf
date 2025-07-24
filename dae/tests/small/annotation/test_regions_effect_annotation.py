@@ -86,11 +86,13 @@ def test_effect_annotator(
 
     pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
         print(annotatable, result)
 
     print(annotatable, result)
+    assert result is not None
     assert sorted(result["gene_list"]) == gene_list
     assert result["worst_effect"] == effect_type
     assert result["gene_effects"] == "|".join([
@@ -125,11 +127,13 @@ def test_effect_annotator_region_length_cutoff(
 
     pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
         print(annotatable, result)
 
     print(annotatable, result)
+    assert result is not None
     assert result["worst_effect"] == effect_type
     assert result["gene_effects"] == f"None:{effect_type}"
     assert result["effect_details"] == f"None:None:{effect_type}:{length}"

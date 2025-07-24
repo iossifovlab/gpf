@@ -11,7 +11,7 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 
 @pytest.fixture
 def fixture_repo() -> GenomicResourceRepo:
-    repo = build_inmemory_test_repository({
+    return build_inmemory_test_repository({
         "position_score1": {
             "genomic_resource.yaml": textwrap.dedent("""
             type: position_score
@@ -100,8 +100,6 @@ def fixture_repo() -> GenomicResourceRepo:
         },
     })
 
-    return repo
-
 
 @pytest.mark.parametrize("region,pos_aggregator, expected", [
     (("chr1", 10, 29), "mean", 1.5),
@@ -156,11 +154,12 @@ def test_np_score_annotator(
         """)
 
     pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
-
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
 
     print(annotatable, result)
+    assert result is not None
     assert result["test"] == expected, annotatable
 
 
@@ -189,10 +188,12 @@ def test_np_score_annotator_region_length_cutoff(
 
     pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
 
     print(annotatable, result)
+    assert result is not None
     assert result["test"] == expected, annotatable
 
 
@@ -220,8 +221,10 @@ def test_allele_score_annotator(
 
     pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
 
     print(annotatable, result)
+    assert result is not None
     assert result.get("test") == expected, annotatable

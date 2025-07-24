@@ -104,7 +104,6 @@ def test_position_score_annotator_all_attributes(
 #  0.02  0.01  0.01  0.1  0.1  0.2  0.2  0.3  0.3  0.4
 #
 
-# TODO: Add test for complex
 @pytest.mark.parametrize("allele,pos_aggregator, expected", [
     (("1", 14970, "C", "A"), "mean", 0.1),
 
@@ -123,6 +122,13 @@ def test_position_score_annotator_all_attributes(
 
     (("1", 14971, "C", "CAA"), "mean", (0.1 + 0.2) / 2),
     (("1", 14971, "C", "CAA"), "max", 0.2),
+
+    (("1", 14970, "CCT", "AT"), "mean", (0.1 + 0.1 + 0.2 + 0.2) / 4),
+    (("1", 14970, "CC", "AT"), "mean", (0.1 + 0.1 + 0.2) / 3),
+
+    (("1", 14970, "CCT", "ATTTT"), "mean", (0.1 + 0.1 + 0.2 + 0.2) / 4),
+    (("1", 14970, "CC", "ATTTT"), "mean", (0.1 + 0.1 + 0.2) / 3),
+
 ])
 def test_position_score_annotator(
         allele: tuple, pos_aggregator: str, expected: float,
@@ -238,12 +244,13 @@ def test_position_annotator_join_aggregation(
     print(pipeline_config)
 
     pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
-
+    result = None
     with pipeline.open() as work_pipeline:
         allele = ("1", 14970, "CC", "C")
         annotatable = VCFAllele(*allele)
         result = work_pipeline.annotate(annotatable)
 
+    assert result is not None
     assert result.get("test100") == "0.1, 0.1, 0.2"
 
 
@@ -263,10 +270,12 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
 
     pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
+    result = None
     with pipeline.open() as work_pipeline:
         allele = VCFAllele("1", 14971, "C", "CAA")
         result = work_pipeline.annotate(allele)
 
+    assert result is not None
     assert "test100min" in result
     assert "test100max" in result
     assert len(result) == 2
@@ -277,7 +286,7 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
 
 def test_position_score_annotator_attributes_with_aggr_fails(
         position_score_repo: GenomicResourceRepo) -> None:
-    with pytest.raises(ValueError) as error:
+    with pytest.raises(ValueError, match="nucleotide_aggregator") as error:
         load_pipeline_from_yaml("""
             - position_score:
                 resource_id: position_score1
@@ -292,7 +301,7 @@ def test_position_score_annotator_attributes_with_aggr_fails(
 
 def test_position_score_annotator_invalid_aggregator(
         position_score_repo: GenomicResourceRepo) -> None:
-    with pytest.raises(ValueError) as error:
+    with pytest.raises(ValueError, match="minn") as error:
         load_pipeline_from_yaml("""
             - position_score:
                 resource_id: position_score1

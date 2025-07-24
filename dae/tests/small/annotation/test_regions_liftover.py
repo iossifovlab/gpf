@@ -122,9 +122,11 @@ def test_liftover_annotator(
 
     pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
+    result = None
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
         print(annotatable, result)
 
     print(annotatable, result)
+    assert result is not None
     assert result["liftover_annotatable"] == expected
