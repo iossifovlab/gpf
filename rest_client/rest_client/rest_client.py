@@ -396,7 +396,6 @@ class GPFPasswordSession(GPFClientSession):
 
 class RESTClient:
     """REST client for the GPF users and groups REST API."""
-    # pylint: disable=too-many-public-methods
 
     def __init__(
         self, session: GPFClientSession, client_id: str = "rest",
@@ -938,6 +937,7 @@ class RESTClient:
             f"{self.api_url}/enrichment/test",
             json=query,
         )
+        response.raise_for_status()
         return response.json()
 
     def get_instruments_details(self, dataset_id: str) -> Any:

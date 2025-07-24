@@ -20,24 +20,15 @@ class BaseEnrichmentBuilder(GPFTool):
         super().__init__("enrichment_builder")
 
     @abstractmethod
-    def build(
+    def enrichment_test(
         self,
         gene_syms: list[str] | None,
         gene_score: dict[str, Any] | None,
         background_id: str | None,
         counting_id: str | None,
-    ) -> list[dict[str, Any]]:
-        """Build enrichment test result"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def create_enrichment_description(
-        self,
         gene_set_id: str | None,
-        gene_score: dict[str, Any] | None,
-        gene_syms: list[str] | None,
-    ) -> str:
-        """Build enrichment result description."""
+    ) -> dict[str, Any]:
+        """Build enrichment test result."""
 
 
 class EnrichmentBuilder(BaseEnrichmentBuilder):
@@ -116,6 +107,29 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
         return results
 
+    def enrichment_test(
+        self,
+        gene_syms: list[str] | None,
+        gene_score: dict[str, Any] | None,
+        background_id: str | None,
+        counting_id: str | None,
+        gene_set_id: str | None,
+    ) -> dict[str, Any]:
+        """Build enrichment test result."""
+        return {
+            "desc": self.create_enrichment_description(
+                gene_set_id,
+                gene_score,
+                gene_syms,
+            ),
+            "result": self.build(
+                gene_syms,
+                gene_score,
+                background_id,
+                counting_id,
+            ),
+        }
+
     def build(
         self,
         gene_syms: list[str] | None,
@@ -123,6 +137,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         background_id: str | None,
         counting_id: str | None,
     ) -> list[dict[str, Any]]:
+        """Build enrichment test result"""
         if gene_syms is None:
             gene_syms = self._get_gene_syms(gene_score)
 

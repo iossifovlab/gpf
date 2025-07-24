@@ -90,25 +90,17 @@ class EnrichmentTestView(QueryBaseView):
         gene_scores = cast(dict[str, Any] | None, query.get("geneScores", None))
 
         try:
-            desc = builder.create_enrichment_description(
-                cast(str, query.get("geneSet")),
-                gene_scores,
-                gene_syms,
-            )
-        except ValueError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            results = builder.build(
+            result = builder.enrichment_test(
                 gene_syms,
                 gene_scores,
                 query.get("enrichmentBackgroundModel", None),
                 query.get("enrichmentCountingModel", None),
+                cast(str, query.get("geneSet")),
             )
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"desc": desc, "result": results})
+        return Response(result)
 
 
 def create_enrichment_helper(
