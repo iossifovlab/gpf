@@ -8,7 +8,7 @@ import { combineLatest, Subscription, switchMap, take } from 'rxjs';
 import { selectPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Store } from '@ngrx/store';
 import {
-  PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
+  PHENO_TOOL_CNV, PHENO_TOOL_INITIAL_VALUES, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
 } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -20,7 +20,7 @@ import {
   selectPresentInParent,
   setPresentInParent
 } from 'app/present-in-parent/present-in-parent.state';
-import { selectEffectTypes } from 'app/effect-types/effect-types.state';
+import { selectEffectTypes, setEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectErrors } from 'app/common/errors.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';
@@ -70,10 +70,12 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       switchMap(datasetId => combineLatest([
         this.datasetsService.getDataset(datasetId),
         this.store.select(selectPresentInParent),
-      ]))
+        this.store.select(selectEffectTypes),
+      ]).pipe(take(1)))
     ).subscribe(([
       dataset,
       presentInParentState,
+      effectTypesState
     ]) => {
       if (!dataset) {
         return;
@@ -82,6 +84,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
 
       this.setPresentInParentDefaultState(presentInParentState);
+      this.setEffecTypesDefaultState(effectTypesState);
     });
 
     this.createPhenoToolState();
@@ -126,6 +129,15 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           }
         }
       }));
+    }
+  }
+
+  public setEffecTypesDefaultState(effectTypesState: string[]): void {
+    console.log('jkdhfjkhsddfhjk');
+    if (!effectTypesState.length) {
+      this.store.dispatch(
+        setEffectTypes({effectTypes: [...PHENO_TOOL_INITIAL_VALUES.values()]})
+      );
     }
   }
 
@@ -176,6 +188,8 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
         presentInParent['rarity']['maxFreq'] = presentInParentState.rarity.rarityIntervalEnd;
       }
 
+      console.log(effectTypesState);
+
       this.phenoToolState = {
         ...geneSymbolsState.length && {geneSymbols: geneSymbolsState},
         ...geneSetsState.geneSet && { geneSet: {
@@ -225,7 +239,6 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       {datasetId: this.selectedDataset.id, ...this.phenoToolState}
     ).subscribe((phenoToolResults) => {
       this.phenoToolResults = phenoToolResults;
-
       const columnSortOrder = [
         ...PHENO_TOOL_LGDS, ...PHENO_TOOL_OTHERS, ...PHENO_TOOL_CNV
       ].map(effect => effect.toLowerCase());
