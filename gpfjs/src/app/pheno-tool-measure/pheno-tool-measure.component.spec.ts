@@ -11,7 +11,7 @@ import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
 import { Observable, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store, StoreModule } from '@ngrx/store';
-import { phenoToolMeasureReducer } from './pheno-tool-measure.state';
+import { phenoToolMeasureReducer, setPhenoToolMeasure } from './pheno-tool-measure.state';
 import { ContinuousMeasure } from 'app/measures/measures';
 import { Dataset, GeneBrowser } from 'app/datasets/datasets';
 
@@ -112,7 +112,7 @@ describe('PhenoToolMeasureComponent', () => {
   });
 
   it('should set measure', () => {
-    const updateStateSpy = jest.spyOn(component, 'updateState');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.normalizeBy = [
       {
         display_name: 'd1',
@@ -125,23 +125,27 @@ describe('PhenoToolMeasureComponent', () => {
         measure_name: 'm2'
       }
     ];
-    component.measure = new ContinuousMeasure('i1.m1', 0, 10);
-    expect(component.normalizeBy).toStrictEqual([{
+    component.setMeasure(new ContinuousMeasure('i1.m1', 0, 10));
+    const normalizedBy = [{
       display_name: 'd2',
       instrument_name: 'i2',
       measure_name: 'm2'
-    }]);
+    }];
+    expect(component.normalizeBy).toStrictEqual(normalizedBy);
     expect(component.selectedMeasure).toStrictEqual(new ContinuousMeasure('i1.m1', 0, 10));
-    expect(updateStateSpy).toHaveBeenCalledWith();
-  });
-
-  it('should get measure', () => {
-    component.selectedMeasure = new ContinuousMeasure('i1.m1', 0, 10);
-    expect(component.measure).toStrictEqual(new ContinuousMeasure('i1.m1', 0, 10));
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setPhenoToolMeasure({
+        phenoToolMeasure: {
+          measureId: 'i1.m1',
+          normalizeBy: normalizedBy
+        }
+      })
+    );
   });
 
   it('should check normalize by', () => {
-    const updateStateSpy = jest.spyOn(component, 'updateState');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    component.setMeasure(new ContinuousMeasure('i1.m1', 0, 10));
     component.normalizeBy = [
       {
         display_name: 'd1',
@@ -158,7 +162,7 @@ describe('PhenoToolMeasureComponent', () => {
       target: {
         checked: true
       }
-    };
+    } as unknown as Event;
 
     component.onNormalizeByChange({
       display_name: 'd1',
@@ -178,7 +182,25 @@ describe('PhenoToolMeasureComponent', () => {
       }
     ]);
 
-    expect(updateStateSpy).toHaveBeenCalledWith();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setPhenoToolMeasure({
+        phenoToolMeasure: {
+          measureId: 'i1.m1',
+          normalizeBy: [
+            {
+              display_name: 'd1',
+              instrument_name: 'i1',
+              measure_name: 'm1'
+            },
+            {
+              display_name: 'd2',
+              instrument_name: 'i2',
+              measure_name: 'm2'
+            }
+          ]
+        }
+      })
+    );
 
     component.onNormalizeByChange({
       display_name: 'd3',
@@ -205,7 +227,8 @@ describe('PhenoToolMeasureComponent', () => {
   });
 
   it('should uncheck normalize by', () => {
-    const updateStateSpy = jest.spyOn(component, 'updateState');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    component.setMeasure(new ContinuousMeasure('i1.m1', 0, 10));
     component.normalizeBy = [
       {
         display_name: 'd1',
@@ -222,7 +245,7 @@ describe('PhenoToolMeasureComponent', () => {
       target: {
         checked: false
       }
-    };
+    } as unknown as Event;
 
     component.onNormalizeByChange({
       display_name: 'd1',
@@ -237,7 +260,20 @@ describe('PhenoToolMeasureComponent', () => {
       }
     ]);
 
-    expect(updateStateSpy).toHaveBeenCalledWith();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setPhenoToolMeasure({
+        phenoToolMeasure: {
+          measureId: 'i1.m1',
+          normalizeBy: [
+            {
+              display_name: 'd2',
+              instrument_name: 'i2',
+              measure_name: 'm2'
+            }
+          ]
+        }
+      })
+    );
   });
 
   it('should check if measure is normalized by', () => {

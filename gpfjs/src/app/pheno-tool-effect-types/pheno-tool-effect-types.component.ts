@@ -40,12 +40,7 @@ export class PhenoToolEffectTypesComponent implements OnInit {
     this.effectTypesButtons.set('NONE', new Set());
 
     this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
-      if (effectTypesState.length) {
-        this.selectedEffectTypes = new Set(effectTypesState);
-      } else {
-        this.selectedEffectTypes = this.initialEffectTypes;
-      }
-      this.setEffectTypes(this.selectedEffectTypes);
+      this.selectedEffectTypes = new Set(effectTypesState);
     });
   }
 

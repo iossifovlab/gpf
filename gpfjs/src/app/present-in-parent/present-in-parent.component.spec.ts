@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { PresentInParentComponent } from './present-in-parent.component';
 import { presentInParentReducer, setPresentInParent } from './present-in-parent.state';
 import { Store, StoreModule } from '@ngrx/store';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 describe('PresentInParentComponent', () => {
   let component: PresentInParentComponent;
@@ -148,26 +149,78 @@ describe('PresentInParentComponent', () => {
     }));
   });
 
-  it('should set default present in parent values when study has denovo', () => {
-    jest.spyOn(store, 'select').mockReturnValueOnce(of({presentInParent: [], rarity: null}));
-    component.hasDenovo = true;
-    component.presentInParentValues = new Set([
-      'mother only', 'father only', 'mother and father', 'neither'
-    ]);
+  it('should show error when rarity interval start and end are less than 0', () => {
+    component.selectedRarityType = 'interval';
+    component.rarityIntervalEnd = -1;
 
-    component.ngOnInit();
-    expect(component.selectedValues).toStrictEqual(new Set(['neither']));
+    component.updateRarityIntervalStart(-3);
+    expect(component.errors).toStrictEqual([
+      'rarityIntervalStart must not be less than 0',
+      'rarityIntervalEnd must not be less than 0'
+    ]);
   });
 
-  it('should set default present in parent values when study doesn\'t have denovo', () => {
-    jest.spyOn(store, 'select').mockReturnValueOnce(of({presentInParent: [], rarity: null}));
-    component.hasDenovo = false;
-    const allValues = new Set([
-      'mother only', 'father only', 'mother and father', 'neither'
-    ]);
-    component.presentInParentValues = allValues;
+  it('should show error when rarity interval start and end are more than 100', () => {
+    component.selectedRarityType = 'interval';
+    component.rarityIntervalEnd = 300;
 
-    component.ngOnInit();
-    expect(component.selectedValues).toStrictEqual(allValues);
+    component.updateRarityIntervalStart(200);
+    expect(component.errors).toStrictEqual([
+      'rarityIntervalStart must not be greater than 100',
+      'rarityIntervalEnd must not be greater than 100'
+    ]);
+  });
+
+  it('should show error when rarity interval start is more than interval end', () => {
+    component.selectedRarityType = 'interval';
+    component.rarityIntervalEnd = 10;
+
+    component.updateRarityIntervalStart(20);
+    expect(component.errors).toStrictEqual([
+      'rarityIntervalStart should be less than or equal to rarityIntervalEnd',
+      'rarityIntervalEnd should be more than or equal to rarityIntervalStart'
+    ]);
+  });
+
+  it('should show error when rarity type is rare and end interval is less than 0', () => {
+    component.selectedRarityType = 'rare';
+
+    component.updateRarityIntervalEnd(-1);
+    expect(component.errors).toStrictEqual([
+      'rarityIntervalEnd must not be less than 0'
+    ]);
+  });
+
+  it('should show error when rarity type is rare and end interval is more than 100', () => {
+    component.selectedRarityType = 'rare';
+
+    component.updateRarityIntervalEnd(200);
+    expect(component.errors).toStrictEqual([
+      'rarityIntervalEnd must not be greater than 100'
+    ]);
+  });
+
+  it('should dispatch error messages to state', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    component.selectedRarityType = 'rare';
+
+    component.updateRarityIntervalEnd(200);
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setErrors({
+        errors: {
+          componentId: 'presentInParent', errors: ['rarityIntervalEnd must not be greater than 100']
+        }
+      })
+    );
+  });
+
+  it('should clean error messages from state when there are no errors', () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    component.selectedRarityType = 'rare';
+
+    component.updateRarityIntervalEnd(1);
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      resetErrors({componentId: 'presentInParent'})
+    );
   });
 });

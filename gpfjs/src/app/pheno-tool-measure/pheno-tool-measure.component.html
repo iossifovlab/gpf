@@ -5,7 +5,7 @@
       <ng-container *ngIf="dataset">
         <gpf-pheno-measure-selector
           [datasetId]="dataset.id"
-          (selectedMeasureChange)="measure = $event; clearCheckbox()"
+          (selectedMeasureChange)="setMeasure($event); clearCheckbox()"
           (measuresChange)="measuresUpdate($event)">
         </gpf-pheno-measure-selector>
       </ng-container>
@@ -22,9 +22,9 @@
             [checked]="isNormalizedBy(regressions[regressionName].measure_name)"
             (change)="onNormalizeByChange(regressions[regressionName], $event)"
             [disabled]="
-              measure === null ||
+              selectedMeasure === null ||
               regressions[regressionName].instrument_name + '.' + regressions[regressionName].measure_name ===
-                measure.name
+                selectedMeasure.name
             " />
           <span style="margin-left: 5px">{{ regressions[regressionName].display_name }}</span>
         </label>
