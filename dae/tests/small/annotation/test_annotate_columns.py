@@ -859,3 +859,42 @@ def test_cli_no_pipeline_in_context(
                 "-j", 1,
             ]
         ])
+
+
+def test_cli_renamed_columns(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        CHROMOSOME   POSITION
+        chr1         23
+        chr1         24
+    """)
+    out_expected_content = (
+        "CHROMOSOME\tPOSITION\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--col-chrom", "CHROMOSOME",
+            "--col-pos", "POSITION",
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content

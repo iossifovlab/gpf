@@ -570,7 +570,7 @@ def cli(raw_args: list[str] | None = None) -> None:
         args["output_separator"],
         args["allow_repeated_attributes"],
         args["full_reannotation"],
-        {col: args[f"col_{col}"]
+        {f"col_{col}": args[f"col_{col}"]
          for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
          for col in cols},
     )
