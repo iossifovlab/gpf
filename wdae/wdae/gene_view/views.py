@@ -10,7 +10,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+from studies.study_wrapper import WDAEAbstractStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.logger import request_logging
 from utils.query_params import parse_query_params

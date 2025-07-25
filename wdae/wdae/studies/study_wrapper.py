@@ -34,13 +34,13 @@ class QueryTransformerProtocol(Protocol):
 
     @abstractmethod
     def transform_kwargs(
-        self, study: WDAEStudy, **kwargs: Any,
+        self, study: WDAEAbstractStudy, **kwargs: Any,
     ) -> dict[str, Any]:
         raise NotImplementedError
 
     @abstractmethod
     def extract_person_set_collection_query(
-            self, study: WDAEStudy, kwargs: dict[str, Any],
+            self, study: WDAEAbstractStudy, kwargs: dict[str, Any],
     ) -> PSCQuery:
         raise NotImplementedError
 
@@ -973,6 +973,7 @@ class WDAEStudy(WDAEAbstractStudy):
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
 
         limit = kwargs.pop("maxVariantsCount", None)
+
         runners = []
         for study_wrapper in self.children:
             try:
@@ -1006,6 +1007,7 @@ class WDAEStudy(WDAEAbstractStudy):
                     study_filters=query_kwargs.get("study_filters"),
                 ),
             )
+        # import pdb; pdb.set_trace()
 
         try:
             if not runners:
@@ -1067,7 +1069,7 @@ class WDAEStudy(WDAEAbstractStudy):
         **kwargs: Any,
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
-
+        # import pdb; pdb.set_trace()
         variants = self._query_gene_view_summary_variants(
             query_transformer, **kwargs,
         )

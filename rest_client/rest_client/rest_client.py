@@ -1,3 +1,4 @@
+import json
 import logging
 import urllib.parse
 from collections.abc import Generator, Iterable, Iterator
@@ -724,6 +725,24 @@ class RESTClient:
             stream=True,
         )
         return self._read_json_list_stream(response)
+
+
+    def post_gene_view_summary_variants(
+        self, data: dict,
+    ) -> Generator[Any, None, None]:
+        """Post query request for gene view summary variants."""
+        response = self.session.post(
+            f"{self.api_url}/gene_view/query_summary_variants",
+            json.dumps(dict(data)),
+            content_type="application/json",
+        )
+
+        import pdb; pdb.set_trace()  
+        return response
+        if response.status_code != 200:
+            raise RESTError(f"Get summary variants failed: {response.text}")
+        return cast(list[dict], response.json())
+
 
     def get_member_details(
         self, dataset_id: str, family_id: str, member_id: str,

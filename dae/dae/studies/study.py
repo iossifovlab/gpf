@@ -1081,7 +1081,7 @@ class GenotypeDataStudy(GenotypeData):
     ) -> list[QueryRunner]:
         if study_filters is not None and self.study_id not in study_filters:
             return []
-
+        import pdb; pdb.set_trace()
         runner = self.backend \
             .build_summary_variants_query_runner(
                 regions=regions,

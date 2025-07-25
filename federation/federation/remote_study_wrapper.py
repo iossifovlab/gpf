@@ -1,8 +1,12 @@
 import logging
-from collections.abc import Generator
+import time
+from collections.abc import Generator, Iterable
+from contextlib import closing
 from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
+from dae.query_variants.query_runners import QueryResult
+from dae.variants.variant import SummaryVariant
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     ResponseTransformerProtocol,
@@ -29,6 +33,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         remote_genotype_data: RemoteGenotypeData | None = None,
         remote_phenotype_data: RemotePhenotypeData | None = None,
     ):
+        self.children = [self]
         super().__init__(remote_genotype_data, remote_phenotype_data)
         self._families: FamiliesData | None = None
 
@@ -147,6 +152,178 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         # This method is not necessary for remote studies, as the phenotype
         # data is already initialized in the constructor.
         pass
+
+    def get_gene_view_summary_variants(
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Return gene browser summary variants."""
+        import pdb; pdb.set_trace() 
+        variants = self._query_gene_view_summary_variants(query_transformer, **kwargs,)
+        
+        for variant in variants:
+            yield from response_transformer.\
+                transform_gene_view_summary_variant(variant, frequency_column)
+
+    def get_gene_view_summary_variants_download(
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
+    ) -> Iterable:
+        """Return gene browser summary variants for downloading."""
+        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
+
+        variants = self._query_gene_view_summary_variants(
+            query_transformer, **kwargs,
+        )
+
+        return response_transformer.\
+            transform_gene_view_summary_variant_download(
+                variants, frequency_column, summary_variant_ids,
+            )
+
+    def _query_gene_view_summary_variants(
+        self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
+    ) -> Generator[SummaryVariant, None, None]:
+        study_filters = None
+        if kwargs.get("allowed_studies") is not None:
+            study_filters = set(kwargs.pop("allowed_studies"))
+
+        if kwargs.get("studyFilters"):
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
+
+        kwargs["study_filters"] = study_filters
+
+        kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
+
+        limit = kwargs.pop("maxVariantsCount", None)
+        # runners = []
+        # for study_wrapper in self.children:
+        #     try:
+        #         query_kwargs = query_transformer.transform_kwargs(
+        #             study_wrapper, **kwargs,
+        #         )
+        #     except ValueError:
+        #         logger.exception("Skipping study %s", study_wrapper.study_id)
+        #         continue
+        #     else:
+        #         if query_kwargs is None:
+        #             logger.info(
+        #                 "study %s skipped", study_wrapper.study_id)
+        #             continue
+        #     assert study_wrapper.genotype_data is not None
+
+        import pdb; pdb.set_trace()
+        
+
+            # tmp double check values
+        result = self.rest_client.post_gene_view_summary_variants(kwargs)
+        # if result is None:
+        #     return []
+
+        return result
+        # return cast(list[dict[str, Any]], result.get("results", []))
+
+            # runners.extend(
+            #     study_wrapper.genotype_data.create_summary_query_runners(
+            #         regions=query_kwargs.get("regions"),
+            #         genes=query_kwargs.get("genes"),
+            #         effect_types=query_kwargs.get("effect_types"),
+            #         variant_type=query_kwargs.get("variant_type"),
+            #         real_attr_filter=query_kwargs.get("real_attr_filter"),
+            #         category_attr_filter=query_kwargs.get(
+            #             "category_attr_filter"),
+            #         ultra_rare=query_kwargs.get("ultra_rare"),
+            #         frequency_filter=query_kwargs.get("frequency_filter"),
+            #         return_reference=query_kwargs.get("return_reference"),
+            #         return_unknown=query_kwargs.get("return_unknown"),
+            #         limit=query_kwargs.get("limit"),
+            #         study_filters=query_kwargs.get("study_filters"),
+            #     ),
+            # )
+
+        # try:
+        #     if not runners:
+        #         return
+
+        #     variants_result = QueryResult(runners, limit=limit)
+        #     started = time.time()
+        #     variants: dict[str, SummaryVariant] = {}
+        #     with closing(variants_result) as result:
+        #         result.start()
+
+        #         for v in result:
+        #             if v is None:
+        #                 continue
+
+        #             if v.svuid in variants:
+        #                 existing = variants[v.svuid]
+        #                 fv_count = existing.get_attribute(
+        #                     "family_variants_count")[0]
+        #                 if fv_count is None:
+        #                     continue
+        #                 fv_count += v.get_attribute("family_variants_count")[0]
+        #                 seen_in_status = existing.get_attribute(
+        #                     "seen_in_status")[0]
+        #                 seen_in_status = \
+        #                     seen_in_status | \
+        #                     v.get_attribute("seen_in_status")[0]
+
+        #                 seen_as_denovo = existing.get_attribute(
+        #                     "seen_as_denovo")[0]
+        #                 seen_as_denovo = \
+        #                     seen_as_denovo or \
+        #                     v.get_attribute("seen_as_denovo")[0]
+        #                 new_attributes = {
+        #                     "family_variants_count": [fv_count],
+        #                     "seen_in_status": [seen_in_status],
+        #                     "seen_as_denovo": [seen_as_denovo],
+        #                 }
+        #                 v.update_attributes(new_attributes)
+
+        #             variants[v.svuid] = v
+        #             if limit and len(variants) >= limit:
+        #                 break
+
+        #     elapsed = time.time() - started
+        #     logger.info(
+        #         "processing study %s elapsed: %.3f",
+        #         self.study_id, elapsed)
+
+        # # finally:
+        # #     logger.debug("[DONE] executor closed...")
+
+        # import pdb; pdb.set_trace()
+        # yield from variants.values()
+
+    def _extract_pre_kwargs(
+            self, query_transformer: QueryTransformerProtocol,
+            kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        pre_kwargs = {
+            "personFilters": kwargs.pop("personFilters", None),
+            "familyFilters": kwargs.pop("familyFilters", None),
+            "personFiltersBeta": kwargs.pop("personFiltersBeta", None),
+            "familyPhenoFilters": kwargs.pop("familyPhenoFilters", None),
+            "personIds": kwargs.pop("personIds", None),
+            "familyIds": kwargs.pop("familyIds", None),
+        }
+        pre_kwargs = {
+            k: v for k, v in pre_kwargs.items() if v is not None
+        }
+        pre_kwargs = query_transformer.transform_kwargs(
+            self, **pre_kwargs,
+        )
+        for key in ["person_ids", "family_ids"]:
+            if pre_kwargs.get(key) is not None:
+                kwargs[key] = pre_kwargs[key]
+        return kwargs
 
 
 class RemoteWDAEStudyGroup(RemoteWDAEStudy):

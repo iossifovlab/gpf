@@ -167,6 +167,7 @@ def test_enrichment_test(
 
     result = response.data  # type: ignore
 
+    # import pdb; pdb.set_trace()
     assert set(result.keys()) == {"desc", "result"}
     assert result["desc"] == "Gene Set: T4 Candidates (1)"
 
@@ -217,18 +218,16 @@ def test_gene_view_summary_variants_query(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
-    # data = {"datasetId": "TEST_REMOTE_t4c8_study_1"}
-    data = {
-        "queryData": json.dumps({
-            "datasetId": "t4c8_study_1",
-            "geneSymbols": ["t4"],
-        }),
-    }
+    data = {"datasetId": "TEST_REMOTE_t4c8_study_1", "geneSymbols": ["t4"]}
+    # data = {"datasetId": "t4c8_study_1"}
     response = admin_client.post(
         "/api/v3/gene_view/query_summary_variants",
         json.dumps(data),
         content_type="application/json",
     )
+
+    import pdb; pdb.set_trace()  
+
     assert response.status_code == status.HTTP_200_OK
     res = response.data  # type: ignore
     assert len(res) == 6
