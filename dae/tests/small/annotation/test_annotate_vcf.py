@@ -626,3 +626,30 @@ def test_writer_does_not_omit_literal_zeros_from_info(
     )
 
     assert variant.info["score_1"] == ("0",)
+
+
+def test_writer_does_not_write_empty_values_into_info(
+    sample_vcf: pathlib.Path,
+) -> None:
+    attributes = [
+        AttributeInfo("score_1", "source_string",
+                      internal=False, parameters={}),
+        AttributeInfo("score_2", "source_bool",
+                      internal=False, parameters={}),
+    ]
+
+    with pysam.VariantFile(str(sample_vcf)) as vcf:
+        variant = next(vcf.fetch())
+
+    variant.header.info.add("score_1", "A", "String", "blabla")
+    variant.header.info.add("score_2", "A", "String", "blabla")
+
+    _VCFWriter._update_variant(
+        variant,
+        [{"score_1": "", "score_2": False}],
+        attributes,
+        None,
+    )
+
+    assert "score_1" not in variant.info
+    assert "score_2" not in variant.info

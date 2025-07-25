@@ -129,7 +129,9 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     if isinstance(value, float):
         return f"{value:.3g}"
     if isinstance(value, bool):
-        return "yes" if value else ""
+        return "yes" if value else ("." if vcf else "")
+    if vcf is True and value == "":
+        return "."
     return str(value)
 
 
