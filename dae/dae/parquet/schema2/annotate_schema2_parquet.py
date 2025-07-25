@@ -8,8 +8,8 @@ import os
 import pathlib
 import shutil
 import sys
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 import yaml
 
@@ -65,6 +65,15 @@ from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region, split_into_regions
 
 logger = logging.getLogger("parquet_schema2_annotation")
+
+
+@dataclass
+class _ProcessingArgs:
+    work_dir: str
+    batch_size: int
+    region_size: int
+    allow_repeated_attributes: bool
+    full_reannotation: bool
 
 
 def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
@@ -134,13 +143,8 @@ def produce_schema2_annotation_tasks(
     output_dir: str,
     raw_pipeline: RawPipelineConfig,
     grr: GenomicResourceRepo,
-    region_size: int,
-    work_dir: str,
-    batch_size: int,
-    *,
-    target_region: str | None = None,
-    allow_repeated_attributes: bool = False,
-    full_reannotation: bool = False,
+    target_region: str | None,
+    args: _ProcessingArgs,
 ) -> list[Task]:
     """Produce TaskGraph tasks for Parquet file annotation."""
 
@@ -154,16 +158,15 @@ def produce_schema2_annotation_tasks(
     for contig in contigs:
         contig_lens[contig] = genome.get_chrom_length(contig)
 
-    regions = produce_regions(target_region, region_size, contig_lens)
+    regions = produce_regions(target_region, args.region_size, contig_lens)
     tasks = []
     for idx, region in enumerate(regions):
         tasks.append(task_graph.create_task(
             f"part_{region}",
             process_parquet,
             args=[loader.layout, raw_pipeline, grr.definition,
-                  output_dir, idx, work_dir,
-                  batch_size, Region.from_str(region),
-                  allow_repeated_attributes, full_reannotation],
+                  output_dir, idx, Region.from_str(region),
+                  args],
             deps=[],
         ))
     return tasks
@@ -260,11 +263,8 @@ def process_parquet(
     grr_definition: dict | None,
     output_dir: str,
     bucket_idx: int,
-    work_dir: str,
-    batch_size: int,
     region: Region,
-    allow_repeated_attributes: bool,  # noqa: FBT001
-    full_reannotation: bool,  # noqa: FBT001
+    args: _ProcessingArgs,
 ) -> None:
     """Process a Parquet dataset for annotation."""
     loader = ParquetLoader(input_layout)
@@ -278,10 +278,10 @@ def process_parquet(
 
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
-        allow_repeated_attributes=allow_repeated_attributes,
-        work_dir=pathlib.Path(work_dir),
+        allow_repeated_attributes=args.allow_repeated_attributes,
+        work_dir=pathlib.Path(args.work_dir),
         config_old_raw=pipeline_config_old,
-        full_reannotation=full_reannotation,
+        full_reannotation=args.full_reannotation,
     )
 
     writer = VariantsParquetWriter(
@@ -295,7 +295,7 @@ def process_parquet(
     source: Source
     filters: list[Filter] = []
 
-    if batch_size <= 0:
+    if args.batch_size <= 0:
         source = Schema2SummaryVariantsSource(loader)
         if isinstance(pipeline, ReannotationPipeline):
             filters.append(DeleteAttributesFromVariantFilter(
@@ -455,7 +455,8 @@ def _add_tasks_to_graph(
     output_layout: Schema2DatasetLayout,
     pipeline: AnnotationPipeline,
     grr: GenomicResourceRepo,
-    args: dict[str, Any],
+    region: str | None,
+    args: _ProcessingArgs,
 ) -> None:
     annotation_tasks = produce_schema2_annotation_tasks(
         task_graph,
@@ -463,12 +464,8 @@ def _add_tasks_to_graph(
         output_layout.study,
         pipeline.raw,
         grr,
-        args["region_size"],
-        args["work_dir"],
-        args["batch_size"],
-        target_region=args["region"],
-        allow_repeated_attributes=args["allow_repeated_attributes"],
-        full_reannotation=args["full_reannotation"],
+        region,
+        args,
     )
 
     annotation_sync = task_graph.create_task(
@@ -527,8 +524,24 @@ def cli(raw_args: list[str] | None = None) -> None:
     if not args["in_place"]:
         symlink_pedigree_and_family_variants(loader.layout, output_layout)
 
+    processing_args = _ProcessingArgs(
+        args["work_dir"],
+        args["batch_size"],
+        args["region_size"],
+        args["allow_repeated_attributes"],
+        args["full_reannotation"],
+    )
+
     task_graph = TaskGraph()
-    _add_tasks_to_graph(task_graph, loader, output_layout, pipeline, grr, args)
+    _add_tasks_to_graph(
+        task_graph,
+        loader,
+        output_layout,
+        pipeline,
+        grr,
+        args["region"],
+        processing_args,
+    )
 
     if len(task_graph.tasks) > 0:
         add_input_files_to_task_graph(args, task_graph)
