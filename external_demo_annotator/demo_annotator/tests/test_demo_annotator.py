@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import textwrap
 
 import pytest
-import yaml
-from dae.annotation.annotate_utils import AnnotationTool
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 
 from demo_annotator.adapter import DemoAnnotatorAdapter
 
@@ -81,12 +84,16 @@ def annotation_configs(
     ],
 )
 def test_demo_annotator_initialization(
-    annotation_configs: dict[str, str], config_key: str,
+    annotation_configs: dict[str, str],
+    config_key: str,
+    tmp_path: pathlib.Path,
 ) -> None:
-    config = yaml.safe_load(annotation_configs[config_key])
-    pipeline = AnnotationTool.produce_annotation_pipeline(
-        config, None, None, allow_repeated_attributes=True,
-    )
+    grr = build_genomic_resource_repository()
+    pipeline = load_pipeline_from_yaml(
+        annotation_configs[config_key], grr,
+        work_dir=tmp_path,
+        allow_repeated_attributes=True)
+
     annotators = pipeline.annotators
     assert len(annotators) == 1
     assert isinstance(annotators[0], DemoAnnotatorAdapter)

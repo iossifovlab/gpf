@@ -14,7 +14,7 @@ from demo_annotator.annotate_length import annotate_length_cli
 @pytest.fixture
 def sample_input_output() -> tuple[str, str]:
     test_files_dirname = tempfile.mkdtemp(
-        prefix="annotate_length", suffix="_test"
+        prefix="annotate_length", suffix="_test",
     )
 
     setup_directories(test_files_dirname, {
@@ -28,7 +28,7 @@ def sample_input_output() -> tuple[str, str]:
             VCFAllele(chr2,20,C,T)
             VCFAllele(chr2,40,T,C)
             VCFAllele(chr3,30,T,C)
-        """)
+        """),
     })
 
     yield (
