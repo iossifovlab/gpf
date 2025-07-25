@@ -128,7 +128,10 @@ class QueryResult:
     The result of the queries is enqueued on result_queue
     """
 
-    def __init__(self, runners: list[QueryRunner], limit: int | None = -1):
+    def __init__(
+        self, executor: ThreadPoolExecutor,
+        runners: list[QueryRunner], limit: int | None = -1,
+    ):
         self.result_queue: queue.Queue = queue.Queue(maxsize=5_000)
 
         if limit is None:
@@ -142,7 +145,7 @@ class QueryResult:
         for runner in self.runners:
             assert runner.result_queue is None
             runner.set_result_queue(self.result_queue)
-        self.executor = ThreadPoolExecutor(max_workers=len(runners))
+        self.executor = executor
         self._is_done_check = 0
 
     CHECK_VERBOSITY = 20
@@ -226,8 +229,6 @@ class QueryResult:
             if isinstance(item, Exception):
                 self._exceptions.append(item)
 
-        logger.debug("closing thread pool executor")
-        self.executor.shutdown(wait=True)
         elapsed = time.time() - self.timestamp
         logger.debug("result closed after %0.3f", elapsed)
         if self._exceptions:
