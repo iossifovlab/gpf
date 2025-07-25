@@ -10,9 +10,11 @@ from dae.annotation.annotate_vcf import (
     _annotate_vcf,
     _ProcessingArgs,
     _VCFSource,
+    _VCFWriter,
     cli,
     produce_partfile_paths,
 )
+from dae.annotation.annotation_config import AttributeInfo
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_vcf,
@@ -601,3 +603,26 @@ def test_cli_nonexistent_input_file(
                 "-j", 1,
             ]
         ])
+
+
+def test_writer_does_not_omit_literal_zeros_from_info(
+    sample_vcf: pathlib.Path,
+) -> None:
+    attributes = [
+        AttributeInfo("score_1", "source_number",
+                      internal=False, parameters={}),
+    ]
+
+    with pysam.VariantFile(str(sample_vcf)) as vcf:
+        variant = next(vcf.fetch())
+
+    variant.header.info.add("score_1", "A", "String", "blabla")
+
+    _VCFWriter._update_variant(
+        variant,
+        [{"score_1": 0}],
+        attributes,
+        None,
+    )
+
+    assert variant.info["score_1"] == ("0",)

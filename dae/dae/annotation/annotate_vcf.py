@@ -241,21 +241,18 @@ class _VCFWriter(Filter):
         return header
 
     @staticmethod
-    def _convert_to_string(buff: list[Any]) -> list[str]:
-        result = []
-        for attr in buff:
-            if isinstance(attr, list):
-                attr = ";".join(stringify(a, vcf=True) for a in attr)
-            elif isinstance(attr, dict):
-                attr = ";".join(
-                    f"{k}:{v}"
-                    for k, v in attr.items()
-                )
-            result.append(stringify(attr, vcf=True)
-                .replace(";", "|")
-                .replace(",", "|")
-                .replace(" ", "_"))
-        return result
+    def _convert_to_string(attr: Any) -> str:
+        if isinstance(attr, list):
+            attr = ";".join(stringify(a, vcf=True) for a in attr)
+        elif isinstance(attr, dict):
+            attr = ";".join(
+                f"{k}:{v}"
+                for k, v in attr.items()
+            )
+        return stringify(attr, vcf=True) \
+            .replace(";", "|") \
+            .replace(",", "|") \
+            .replace(" ", "_")
 
     @staticmethod
     def _update_variant(
@@ -271,19 +268,20 @@ class _VCFWriter(Filter):
                     del vcf_var.info[col]
 
             for buff, attribute in zip(buffers, attributes, strict=True):
-                buff.append(annotation.get(attribute.name))
+                value = annotation.get(attribute.name)
+                if vcf_var.header.info[attribute.name].type == "String":
+                    value = _VCFWriter._convert_to_string(value)
+                buff.append(value)
         # If the all values for a given attribute are
         # empty (i.e. - "."), then that attribute has no
         # values to be written and will be skipped in the output
         has_value = {
-            attr.name: any(filter(lambda x: x != ".", buffers[idx]))
+            attr.name: len(list(filter(lambda x: x != ".", buffers[idx])))
             for idx, attr in enumerate(attributes)
         }
         for buff, attribute in zip(buffers, attributes, strict=True):
             if attribute.internal or not has_value[attribute.name]:
                 continue
-            if vcf_var.header.info[attribute.name].type == "String":
-                buff = _VCFWriter._convert_to_string(buff)
             vcf_var.info[attribute.name] = buff
 
     def __enter__(self) -> _VCFWriter:
