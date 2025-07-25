@@ -44,7 +44,7 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
                         status=status.HTTP_200_OK)
 
 
-class QueryVariantsView(QueryBaseView):
+class QuerySummaryVariantsView(QueryBaseView):
     """Gene view summary variants view."""
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
@@ -65,9 +65,14 @@ class QueryVariantsView(QueryBaseView):
 
         freq_col = \
             dataset.genotype_data.config["gene_browser"]["frequency_column"]
-        # import pdb; pdb.set_trace();
+
         return Response(list(
-            dataset.get_gene_view_summary_variants(freq_col, self.query_transformer,self.response_transformer, **data,),
+            dataset.get_gene_view_summary_variants(
+                freq_col,
+                self.query_transformer,
+                self.response_transformer,
+                **data,
+            ),
         ))
 
 

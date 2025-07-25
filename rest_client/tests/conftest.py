@@ -41,7 +41,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--url",
         dest="url",
         action="store",
-        default="http://localhost:21010",
+        default="http://localhost:21011",
         help="REST API URL",
     )
 
