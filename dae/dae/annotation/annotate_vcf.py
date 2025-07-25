@@ -193,6 +193,9 @@ class _VCFWriter(Filter):
         self.header = self._update_header(header, pipeline)
         self.output_file: VariantFile
         self.annotation_attributes = self.pipeline.get_attributes()
+        self.to_delete = None
+        if isinstance(self.pipeline, ReannotationPipeline):
+            self.to_delete = self.pipeline.attributes_deleted
 
     @staticmethod
     def _update_header(
@@ -259,12 +262,12 @@ class _VCFWriter(Filter):
         vcf_var: VariantRecord,
         allele_annotations: list[dict],
         attributes: list[AttributeInfo],
-        pipeline: AnnotationPipeline,
+        to_delete: list[str] | None,
     ) -> None:
         buffers: list[list] = [[] for _ in attributes]
         for annotation in allele_annotations:
-            if isinstance(pipeline, ReannotationPipeline):
-                for col in pipeline.attributes_deleted:
+            if to_delete is not None:
+                for col in to_delete:
                     del vcf_var.info[col]
 
             for buff, attribute in zip(buffers, attributes, strict=True):
@@ -308,7 +311,7 @@ class _VCFWriter(Filter):
             data.source,
             [annotation.context for annotation in data.annotations],
             self.annotation_attributes,
-            self.pipeline,
+            self.to_delete,
         )
         self.output_file.write(data.source)
 
