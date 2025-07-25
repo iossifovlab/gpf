@@ -4,7 +4,6 @@ import logging
 import time
 from abc import abstractmethod
 from collections.abc import Callable, Generator, Iterable, Iterator
-from contextlib import closing
 from typing import Any, Protocol, cast
 
 from box import Box
@@ -24,10 +23,9 @@ from dae.person_sets import PersonSetCollection
 from dae.person_sets.person_sets import PSCQuery
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeData
-from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
@@ -664,52 +662,6 @@ class WDAEStudy(WDAEAbstractStudy):
 
         return [m.to_json() for m in measures]
 
-    def _collect_runners(
-        self, kwargs: dict[str, Any],
-        query_transformer: QueryTransformerProtocol,
-    ) -> list[QueryRunner]:
-        runners = []
-        for study in self.children:
-            try:
-                query_kwargs = query_transformer.transform_kwargs(
-                    study, **kwargs,
-                )
-            except ValueError:
-                logger.exception("Skipping study %s", study.study_id)
-                continue
-            else:
-                if query_kwargs is None:
-                    logger.info(
-                        "study %s skipped", study.study_id)
-                    continue
-            assert study.genotype_data is not None
-
-            runners.extend(study.genotype_data.create_query_runners(
-                regions=query_kwargs.get("regions"),
-                genes=query_kwargs.get("genes"),
-                effect_types=query_kwargs.get("effect_types"),
-                family_ids=query_kwargs.get("family_ids"),
-                person_ids=query_kwargs.get("person_ids"),
-                person_set_collection=query_kwargs.get(
-                    "person_set_collection"),
-                inheritance=query_kwargs.get("inheritance"),
-                roles=query_kwargs.get("roles"),
-                sexes=query_kwargs.get("sexes"),
-                affected_statuses=query_kwargs.get("affected_statuses"),
-                variant_type=query_kwargs.get("variant_type"),
-                real_attr_filter=query_kwargs.get("real_attr_filter"),
-                categorical_attr_filter=query_kwargs.get(
-                    "categorical_attr_filter"),
-                ultra_rare=query_kwargs.get("ultra_rare"),
-                frequency_filter=query_kwargs.get("frequency_filter"),
-                return_reference=query_kwargs.get("return_reference"),
-                return_unknown=query_kwargs.get("return_unknown"),
-                limit=query_kwargs.get("limit"),
-                study_filters=query_kwargs.get("study_filters"),
-                tags_query=query_kwargs.get("tags_query"),
-            ))
-        return runners
-
     def _extract_pre_kwargs(
             self, query_transformer: QueryTransformerProtocol,
             kwargs: dict[str, Any],
@@ -733,107 +685,6 @@ class WDAEStudy(WDAEAbstractStudy):
                 kwargs[key] = pre_kwargs[key]
         return kwargs
 
-    def query_variants_raw(
-        self, kwargs: dict[str, Any],
-        query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
-        max_variants_count: int | None = 10000,
-    ) -> Generator[FamilyVariant | None, None, None]:
-        """Wrap query variants method for WDAE streaming of variants."""
-        # pylint: disable=too-many-locals,too-many-branches
-
-        max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
-        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
-
-        study_filters = None
-        if kwargs.get("allowed_studies") is not None:
-            study_filters = set(kwargs.pop("allowed_studies"))
-
-        if kwargs.get("studyFilters"):
-            if study_filters is not None:
-                study_filters = study_filters & set(kwargs.pop("studyFilters"))
-            else:
-                study_filters = set(kwargs.pop("studyFilters"))
-
-        kwargs["study_filters"] = study_filters
-
-        kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
-        runners = self._collect_runners(kwargs, query_transformer)
-
-        if summary_variant_ids is None:
-            # pylint: disable=unused-argument
-            def filter_allele(
-                allele: FamilyAllele,  # noqa: ARG001
-            ) -> bool:
-                return True
-
-        elif len(summary_variant_ids) > 0:
-            summary_variant_ids = set(summary_variant_ids)
-
-            def filter_allele(allele: FamilyAllele) -> bool:
-                svid = f"{allele.cshl_location}:{allele.cshl_variant}"
-                return svid in summary_variant_ids
-
-        else:
-            # passed empty list of summary variants; empty result
-            return
-
-        index = 0
-        seen = set()
-        unique_family_variants = query_transformer.get_unique_family_variants(
-            kwargs)
-
-        started = time.time()
-        try:
-            logger.debug(
-                "study wrapper (%s) creating query_result_variants...",
-                self.name)
-            if len(runners) == 0:
-                return
-            variants_result = QueryResult(runners, limit=max_variants_count)
-
-            logger.debug(
-                "study wrapper (%s) starting query_result_variants...",
-                self.name)
-            variants_result.start()
-            elapsed = time.time() - started
-            logger.info(
-                "study wrapper (%s) variant result started in %0.3fsec",
-                self.name, elapsed)
-
-            with closing(variants_result) as variants:
-                for variant in variants:
-                    if variant is None:
-                        continue
-                    yield variant
-
-                    matched = True
-                    for aa in variant.matched_alleles:
-                        assert not aa.is_reference_allele
-                        if not filter_allele(cast(FamilyAllele, aa)):
-                            matched = False
-                            break
-                    if not matched:
-                        continue
-
-                    fvuid = variant.fvuid
-                    if unique_family_variants and fvuid in seen:
-                        continue
-                    seen.add(fvuid)
-
-                    index += 1
-                    if max_variants_count and index > max_variants_count:
-                        break
-
-                    yield variant
-        except GeneratorExit:
-            pass
-        finally:
-            elapsed = time.time() - started
-            logger.info(
-                "study wrapper (%s)  query returned %s variants; "
-                "closed in %0.3fsec", self.study_id, index, elapsed)
-
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
@@ -841,13 +692,12 @@ class WDAEStudy(WDAEAbstractStudy):
         response_transformer: ResponseTransformerProtocol,
         *,
         max_variants_count: int | None = 10000,
-        max_variants_message: bool = False,
+        max_variants_message: bool = False,  # noqa: ARG002
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
         # pylint: disable=too-many-locals,too-many-branches
 
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
-        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
 
         study_filters = None
         if kwargs.get("allowed_studies") is not None:
@@ -862,98 +712,36 @@ class WDAEStudy(WDAEAbstractStudy):
         kwargs["study_filters"] = study_filters
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
-        runners = self._collect_runners(kwargs, query_transformer)
 
-        if summary_variant_ids is None:
-            # pylint: disable=unused-argument
-            def filter_allele(
-                allele: FamilyAllele,  # noqa: ARG001
-            ) -> bool:
-                return True
-
-        elif len(summary_variant_ids) > 0:
-            summary_variant_ids = set(summary_variant_ids)
-
-            def filter_allele(allele: FamilyAllele) -> bool:
-                svid = f"{allele.cshl_location}:{allele.cshl_variant}"
-                return svid in summary_variant_ids
-
-        else:
-            # passed empty list of summary variants; empty result
-            return
-
-        start = time.time()
-        logger.debug(
-            "study wrapper (%s) creating variant transformer...",
-            self.name)
         transform = response_transformer.variant_transformer(
             self, self._pheno_values_cache,
         )
-        logger.debug(
-            "study wrapper (%s) variant transformer created in %.2f sec",
-            self.name, time.time() - start)
-
-        index = 0
-        seen = set()
-        unique_family_variants = query_transformer.get_unique_family_variants(
-            kwargs)
-        psc_query = query_transformer.extract_person_set_collection_query(
-            self, kwargs)
 
         started = time.time()
+        index = 0
+        logger.debug(
+            "study wrapper (%s) creating query_result_variants...",
+            self.name)
         try:
-            logger.debug(
-                "study wrapper (%s) creating query_result_variants...",
-                self.name)
-            if len(runners) == 0:
-                return
-            variants_result = QueryResult(runners, limit=max_variants_count)
+            variants = enumerate(self.registry.query_variants(
+                self.get_children_ids(leaves=True), kwargs, max_variants_count,
+            ))
+            psc_query = query_transformer.extract_person_set_collection_query(
+                self, kwargs)
 
-            logger.debug(
-                "study wrapper (%s) starting query_result_variants...",
-                self.name)
-            variants_result.start()
-            elapsed = time.time() - started
-            logger.info(
-                "study wrapper (%s) variant result started in %0.3fsec",
-                self.name, elapsed)
+            for idx, variant in variants:
+                if variant is None:
+                    continue
+                index = idx
+                v = transform(variant)
 
-            with closing(variants_result) as variants:
-                for variant in variants:
-                    if variant is None:
-                        continue
-                    v = transform(variant)
+                row_variant = response_transformer.build_variant_row(
+                    self,
+                    v, sources,
+                    person_set_collection=psc_query.psc_id if psc_query
+                    else None)
 
-                    matched = True
-                    for aa in v.matched_alleles:
-                        assert not aa.is_reference_allele
-                        if not filter_allele(cast(FamilyAllele, aa)):
-                            matched = False
-                            break
-                    if not matched:
-                        continue
-
-                    fvuid = variant.fvuid
-                    if unique_family_variants and fvuid in seen:
-                        continue
-                    seen.add(fvuid)
-
-                    index += 1
-                    if max_variants_count and index > max_variants_count:
-                        if max_variants_message:
-                            yield [
-                                f"# limit of {max_variants_count} variants "
-                                f"reached",
-                            ]
-                        break
-                    row_variant = response_transformer.build_variant_row(
-                        self,
-                        v, sources,
-                        person_set_collection=psc_query.psc_id
-                                              if psc_query
-                                              else None)
-
-                    yield row_variant
+                yield row_variant
         except GeneratorExit:
             pass
         finally:
@@ -979,94 +767,15 @@ class WDAEStudy(WDAEAbstractStudy):
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
 
-        limit = kwargs.pop("maxVariantsCount", None)
+        query_kwargs = query_transformer.transform_kwargs(
+            self, **kwargs,
+        )
 
-        runners = []
-        for study_wrapper in self.children:
-            try:
-                query_kwargs = query_transformer.transform_kwargs(
-                    study_wrapper, **kwargs,
-                )
-            except ValueError:
-                logger.exception("Skipping study %s", study_wrapper.study_id)
-                continue
-            else:
-                if query_kwargs is None:
-                    logger.info(
-                        "study %s skipped", study_wrapper.study_id)
-                    continue
-            assert study_wrapper.genotype_data is not None
+        variants = self.registry.query_summary_variants(
+            self.get_children_ids(leaves=True), query_kwargs,
+        )
 
-            runners.extend(
-                study_wrapper.genotype_data.create_summary_query_runners(
-                    regions=query_kwargs.get("regions"),
-                    genes=query_kwargs.get("genes"),
-                    effect_types=query_kwargs.get("effect_types"),
-                    variant_type=query_kwargs.get("variant_type"),
-                    real_attr_filter=query_kwargs.get("real_attr_filter"),
-                    category_attr_filter=query_kwargs.get(
-                        "category_attr_filter"),
-                    ultra_rare=query_kwargs.get("ultra_rare"),
-                    frequency_filter=query_kwargs.get("frequency_filter"),
-                    return_reference=query_kwargs.get("return_reference"),
-                    return_unknown=query_kwargs.get("return_unknown"),
-                    limit=query_kwargs.get("limit"),
-                    study_filters=query_kwargs.get("study_filters"),
-                ),
-            )
-
-        try:
-            if not runners:
-                return
-
-            variants_result = QueryResult(runners, limit=limit)
-            started = time.time()
-            variants: dict[str, SummaryVariant] = {}
-            with closing(variants_result) as result:
-                result.start()
-
-                for v in result:
-                    if v is None:
-                        continue
-
-                    if v.svuid in variants:
-                        existing = variants[v.svuid]
-                        fv_count = existing.get_attribute(
-                            "family_variants_count")[0]
-                        if fv_count is None:
-                            continue
-                        fv_count += v.get_attribute("family_variants_count")[0]
-                        seen_in_status = existing.get_attribute(
-                            "seen_in_status")[0]
-                        seen_in_status = \
-                            seen_in_status | \
-                            v.get_attribute("seen_in_status")[0]
-
-                        seen_as_denovo = existing.get_attribute(
-                            "seen_as_denovo")[0]
-                        seen_as_denovo = \
-                            seen_as_denovo or \
-                            v.get_attribute("seen_as_denovo")[0]
-                        new_attributes = {
-                            "family_variants_count": [fv_count],
-                            "seen_in_status": [seen_in_status],
-                            "seen_as_denovo": [seen_as_denovo],
-                        }
-                        v.update_attributes(new_attributes)
-
-                    variants[v.svuid] = v
-                    if limit and len(variants) >= limit:
-                        break
-
-            elapsed = time.time() - started
-            logger.info(
-                "processing study %s elapsed: %.3f",
-                self.study_id, elapsed)
-
-        finally:
-            logger.debug("[DONE] executor closed...")
-
-        yield from variants.values()
+        yield from variants
 
     def get_gene_view_summary_variants(
         self, frequency_column: str,

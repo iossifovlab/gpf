@@ -1,13 +1,11 @@
 """Classes to represent genotype data."""
 from __future__ import annotations
 
-import functools
 import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Generator, Iterable
-from contextlib import closing
+from collections.abc import Iterable
 from dataclasses import dataclass
 from os.path import basename, exists
 from pathlib import Path
@@ -19,7 +17,9 @@ from dae.common_reports.common_report import CommonReport
 from dae.common_reports.denovo_report import DenovoReport
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
-from dae.effect_annotation.effect import expand_effect_types
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import (
     PersonSetCollection,
@@ -28,7 +28,7 @@ from dae.person_sets import (
     parse_person_set_collections_study_config,
 )
 from dae.query_variants.base_query_variants import QueryVariantsBase
-from dae.query_variants.query_runners import QueryResult, QueryRunner
+from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
 )
@@ -83,8 +83,12 @@ class GenotypeData(CommonStudyMixin, ABC):
     """Abstract base class for genotype data."""
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, config: Box, studies: list[GenotypeData]):
+    def __init__(
+        self, registry: GenotypeStorageRegistry,
+        config: Box, studies: list[GenotypeData],
+    ):
         super().__init__(config)
+        self._registry = registry
         self.studies = studies
 
         self._description: str | None = None
@@ -215,33 +219,6 @@ class GenotypeData(CommonStudyMixin, ABC):
         return leafs
 
     @abstractmethod
-    def create_query_runners(  # pylint: disable=too-many-arguments
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        person_ids: list[str] | set[str] | None = None,
-        person_set_collection: PSCQuery | None = None,
-        inheritance: str | list[str] | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        affected_statuses: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        categorical_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        tags_query: TagsQuery | None = None,
-    ) -> list[QueryRunner]:
-        """Create query runners for a variants query."""
-        raise NotImplementedError
-
-    @abstractmethod
     def create_summary_query_runners(
         self, *,
         regions: list[Region] | None = None,
@@ -260,66 +237,6 @@ class GenotypeData(CommonStudyMixin, ABC):
     ) -> list[QueryRunner]:
         """Create query runners for a summary variants query."""
         raise NotImplementedError
-
-    def query_result_variants(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        person_ids: list[str] | set[str] | None = None,
-        person_set_collection: PSCQuery | None = None,
-        inheritance: str | list[str] | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        affected_statuses: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        categorical_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        tags_query: TagsQuery | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> QueryResult | None:
-        """Build a query result."""
-        # pylint: disable=too-many-locals,too-many-arguments
-
-        runners = []
-        logger.debug("query leaf studies...")
-
-        for study in self.get_query_leaf_studies(study_filters):
-            runners.extend(study.create_query_runners(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                person_set_collection=person_set_collection,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                affected_statuses=affected_statuses,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                categorical_attr_filter=categorical_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                study_filters=study_filters,
-                tags_query=tags_query,
-            ))
-
-        logger.debug("runners: %s", len(runners))
-        if len(runners) == 0:
-            return None
-
-        return QueryResult(runners, limit=limit)
 
     def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
         self, *,
@@ -345,113 +262,38 @@ class GenotypeData(CommonStudyMixin, ABC):
         unique_family_variants: bool = True,
         tags_query: TagsQuery | None = None,
         zygosity_in_status: str | None = None,
-        **kwargs: Any,
-    ) -> Generator[FamilyVariant, None, None]:
+    ) -> Iterable[FamilyVariant]:
         """Query and return generator containing variants."""
         if isinstance(inheritance, str):
             inheritance = [inheritance]
-        result = self.query_result_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            person_set_collection=person_set_collection,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            affected_statuses=affected_statuses,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            categorical_attr_filter=categorical_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            study_filters=study_filters,
-            tags_query=tags_query,
-            zygosity_in_status=zygosity_in_status,
-            **kwargs,
+        kwargs = {
+            "regions": regions,
+            "genes": genes,
+            "effect_types": effect_types,
+            "family_ids": family_ids,
+            "person_ids": person_ids,
+            "person_set_collection": person_set_collection,
+            "inheritance": inheritance,
+            "roles": roles,
+            "sexes": sexes,
+            "affected_statuses": affected_statuses,
+            "variant_type": variant_type,
+            "real_attr_filter": real_attr_filter,
+            "categorical_attr_filter": categorical_attr_filter,
+            "ultra_rare": ultra_rare,
+            "frequency_filter": frequency_filter,
+            "return_reference": return_reference,
+            "return_unknown": return_unknown,
+            "unique_family_variants": unique_family_variants,
+            "limit": limit,
+            "study_filters": study_filters,
+            "tags_query": tags_query,
+            "zygosity_in_status": zygosity_in_status,
+        }
+        return self._registry.query_variants(
+            [st.study_id for st in self.get_query_leaf_studies(study_filters)],
+            kwargs,
         )
-        if result is None:
-            return
-
-        started = time.time()
-        try:
-            result.start()
-
-            with closing(result) as result:
-                seen = set()
-
-                for v in result:
-                    if v is None:
-                        continue
-
-                    if unique_family_variants and v.fvuid in seen:
-                        continue
-
-                    seen.add(v.fvuid)
-                    yield v
-                    if limit and len(seen) >= limit:
-                        break
-
-        except GeneratorExit:
-            logger.info("generator closed")
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("unexpected exception:")
-        finally:
-            elapsed = time.time() - started
-            logger.info(
-                "processing study %s elapsed: %.3f", self.study_id, elapsed)
-
-            logger.debug("[DONE] executor closed...")
-
-    def query_result_summary_variants(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        category_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> QueryResult | None:
-        # pylint: disable=too-many-locals,too-many-arguments,unused-argument
-        """Build a query result for summary variants only."""
-        logger.info("summary query - study_filters: %s", study_filters)
-        logger.info(
-            "study %s children: %s", self.study_id, self.get_leaf_children())
-
-        if effect_types:
-            effect_types = expand_effect_types(effect_types)
-
-        runners = []
-        for study in self.get_query_leaf_studies(study_filters):
-            runners.extend(study.create_summary_query_runners(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                category_attr_filter=category_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-            ))
-
-        if len(runners) == 0:
-            return None
-
-        return QueryResult(runners)
 
     def query_summary_variants(
         self, *,
@@ -468,73 +310,27 @@ class GenotypeData(CommonStudyMixin, ABC):
         limit: int | None = None,
         study_filters: list[str] | None = None,
         **kwargs: Any,
-    ) -> Generator[SummaryVariant, None, None]:
+    ) -> Iterable[SummaryVariant]:
         """Query and return generator containing summary variants."""
         # pylint: disable=too-many-locals,too-many-arguments
-        result = self.query_result_summary_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            category_attr_filter=category_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            study_filters=study_filters,
-            **kwargs)
-        try:
-            if result is None:
-                return
-
-            started = time.time()
-            variants: dict[str, Any] = {}
-            with closing(result) as result:
-                result.start()
-
-                for v in result:
-                    if v is None:
-                        continue
-
-                    if v.svuid in variants:
-                        existing = variants[v.svuid]
-                        fv_count = existing.get_attribute(
-                            "family_variants_count")[0]
-                        if fv_count is None:
-                            continue
-                        fv_count += v.get_attribute("family_variants_count")[0]
-                        seen_in_status = existing.get_attribute(
-                            "seen_in_status")[0]
-                        seen_in_status = \
-                            seen_in_status | \
-                            v.get_attribute("seen_in_status")[0]
-
-                        seen_as_denovo = existing.get_attribute(
-                            "seen_as_denovo")[0]
-                        seen_as_denovo = \
-                            seen_as_denovo or \
-                            v.get_attribute("seen_as_denovo")[0]
-                        new_attributes = {
-                            "family_variants_count": [fv_count],
-                            "seen_in_status": [seen_in_status],
-                            "seen_as_denovo": [seen_as_denovo],
-                        }
-                        v.update_attributes(new_attributes)
-
-                    variants[v.svuid] = v
-                    if limit and len(variants) >= limit:
-                        break
-
-            elapsed = time.time() - started
-            logger.info(
-                "processing study %s elapsed: %.3f",
-                self.study_id, elapsed)
-
-            yield from variants.values()
-        finally:
-            logger.debug("[DONE] executor closed...")
+        kwargs = {
+            "regions": regions,
+            "genes": genes,
+            "effect_types": effect_types,
+            "variant_type": variant_type,
+            "real_attr_filter": real_attr_filter,
+            "category_attr_filter": category_attr_filter,
+            "ultra_rare": ultra_rare,
+            "frequency_filter": frequency_filter,
+            "return_reference": return_reference,
+            "return_unknown": return_unknown,
+            "limit": limit,
+            "study_filters": study_filters,
+        }
+        return self._registry.query_summary_variants(
+            [st.study_id for st in self.get_query_leaf_studies(study_filters)],
+            kwargs,
+        )
 
     @property
     @abstractmethod
@@ -729,11 +525,11 @@ class GenotypeDataGroup(GenotypeData):
     """
 
     def __init__(
-        self, config: Box,
+        self, registry: GenotypeStorageRegistry, config: Box,
         studies: Iterable[GenotypeData],
     ):
         super().__init__(
-            config, list(studies),
+            registry, config, list(studies),
         )
         self._families: FamiliesData
         self.rebuild_families()
@@ -848,55 +644,6 @@ class GenotypeDataGroup(GenotypeData):
             person.set_attr(psc_id, person_set_value.id)
         return psc
 
-    def create_query_runners(  # pylint: disable=too-many-arguments
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        person_ids: list[str] | set[str] | None = None,
-        person_set_collection: PSCQuery | None = None,
-        inheritance: str | list[str] | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        affected_statuses: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        categorical_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        tags_query: TagsQuery | None = None,
-    ) -> list[QueryRunner]:
-        runners = []
-        for study in self.get_query_leaf_studies(study_filters):
-            runners.extend(study.create_query_runners(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                person_set_collection=person_set_collection,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                affected_statuses=affected_statuses,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                categorical_attr_filter=categorical_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                study_filters=study_filters,
-                tags_query=tags_query,
-            ))
-        return runners
-
     def create_summary_query_runners(
         self, *,
         regions: list[Region] | None = None,
@@ -934,14 +681,15 @@ class GenotypeDataGroup(GenotypeData):
 class GenotypeDataStudy(GenotypeData):
     """Represents a singular genotype data study."""
 
-    def __init__(self, config: Box, backend: QueryVariantsBase):
-        super().__init__(config, [self])
-        self._backend = backend
+    def __init__(self, registry: GenotypeStorageRegistry, config: Box):
+        super().__init__(registry, config, [self])
+        self._registry = registry
         self.is_remote = False
 
     @property
     def backend(self) -> QueryVariantsBase:
-        return self._backend
+        storage = self._registry.find_storage(self.study_id)
+        return storage.loaded_variants[self.study_id]
 
     @property
     def study_phenotype(self) -> str:
@@ -959,7 +707,7 @@ class GenotypeDataStudy(GenotypeData):
 
     @property
     def families(self) -> FamiliesData:
-        return self._backend.families
+        return self.backend.families
 
     def _build_person_set_collection(
         self, psc_config: PersonSetCollectionConfig,
@@ -973,95 +721,6 @@ class GenotypeDataStudy(GenotypeData):
             assert person_set_value is not None
             person.set_attr(psc.id, person_set_value.id)
         return psc
-
-    def create_query_runners(  # pylint: disable=too-many-arguments
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        person_ids: list[str] | set[str] | None = None,
-        person_set_collection: PSCQuery | None = None,  # noqa: ARG002
-        inheritance: str | list[str] | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        affected_statuses: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        categorical_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        tags_query: TagsQuery | None = None,
-    ) -> list[QueryRunner]:
-
-        if study_filters is not None and self.study_id not in study_filters:
-            return []
-        if person_ids is not None and not person_ids:
-            return []
-
-        if isinstance(inheritance, str):
-            inheritance = [inheritance]
-
-        if effect_types:
-            effect_types = expand_effect_types(effect_types)
-
-        def adapt_study_variants(
-            study_name: str,
-            study_phenotype: str,
-            v: FamilyVariant | None,
-        ) -> FamilyVariant | None:
-            if v is None:
-                return None
-            for allele in v.alleles:
-                if allele.get_attribute("study_name") is None:
-                    allele.update_attributes(
-                        {"study_name": study_name})
-                if allele.get_attribute("study_phenotype") is None:
-                    allele.update_attributes(
-                        {"study_phenotype": study_phenotype})
-            return v
-
-        runner = self.backend\
-            .build_family_variants_query_runner(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=cast(list, person_ids),
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                affected_statuses=affected_statuses,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                categorical_attr_filter=categorical_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                tags_query=tags_query,
-            )
-
-        if runner is None:
-            logger.debug(
-                "study %s has no varants... skipping",
-                self.study_id)
-            return []
-
-        runner.set_study_id(self.study_id)
-        logger.debug("runner created")
-
-        study_name = self.name
-        study_phenotype = self.study_phenotype
-
-        runner.adapt(functools.partial(
-            adapt_study_variants, study_name, study_phenotype))
-        return [runner]
 
     def create_summary_query_runners(
         self, *,

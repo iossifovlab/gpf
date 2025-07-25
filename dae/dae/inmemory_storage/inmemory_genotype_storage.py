@@ -76,7 +76,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
     def get_data_dir(self, *path: str) -> str:
         return os.path.join(self.data_dir, *path)
 
-    def build_backend(
+    def _build_backend_internal(
         self, study_config: dict[str, Any],
         genome: ReferenceGenome,
         gene_models: GeneModels | None,  # noqa: ARG002
