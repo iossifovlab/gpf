@@ -12,7 +12,7 @@ test.describe('Management tests for reset password in Users', () => {
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
 
-    await page.locator('a:text("Management")').click();
+    await navigateToManagement(page);
     await utils.createUser(page, email, username);
 
     await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
@@ -39,7 +39,7 @@ test.describe('Management tests for reset password in Users', () => {
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
 
-    await page.locator('a:text("Management")').click();
+    await navigateToManagement(page);
     await utils.createUser(page, email, username);
 
     await Promise.all([
@@ -70,9 +70,9 @@ test.describe('Users management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
+    await navigateToManagement(page);
   });
   test('should not create user with already used email', async({ page }) => {
-    await page.locator('a:text("Management")').click();
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
     await page.locator('#create-user-form-button').click();
@@ -86,8 +86,6 @@ test.describe('Users management', () => {
   });
 
   test('should not create user with no email or name', async({ page }) => {
-    await page.locator('a:text("Management")').click();
-
     await page.locator('#create-user-form-button').click();
 
     await page.locator('.create-container').locator('#name-box').fill('no_username');
@@ -103,8 +101,6 @@ test.describe('Users management', () => {
   });
 
   test('should not create user with invalid email or name', async({ page }) => {
-    await page.locator('a:text("Management")').click();
-
     await page.locator('#create-user-form-button').click();
 
     await page.locator('.create-container').locator('#name-box').fill('valid_test_name');
@@ -132,7 +128,6 @@ test.describe('Users management', () => {
   test('should search and find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
@@ -145,7 +140,6 @@ test.describe('Users management', () => {
   test('should search and not find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
@@ -158,7 +152,6 @@ test.describe('Users management', () => {
   test('should edit username', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
@@ -172,7 +165,6 @@ test.describe('Users management', () => {
   test('should try to delete username', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
@@ -188,7 +180,6 @@ test.describe('Users management', () => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('a:text("Management")').click();
     await page.locator('#create-user-form-button').click();
 
     await page.locator('.create-container').locator('#name-box').fill(username);
@@ -199,7 +190,6 @@ test.describe('Users management', () => {
   });
 
   test('should check admin', async({ page }) => {
-    await page.locator('a:text("Management")').click();
     await searchInTable(page, 'admin@iossifovlab.com');
     await expect(page.locator('#admin-list-item gpf-confirm-button')).not.toBeVisible();
     await expect(page.locator('[id="admin@iossifovlab.com-datasets-cell"]'))
@@ -223,7 +213,6 @@ test.describe('Users management', () => {
   test('should add and remove group', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
@@ -531,7 +520,7 @@ test.describe('Datasets management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await page.locator('a:text("Management")').click();
+    await navigateToManagement(page);
   });
 
   test('should add group to user and check data in Datasets', async({ page }) => {
@@ -785,4 +774,9 @@ async function searchInMenu(page: Page, name: string): Promise<void> {
   await page.getByRole('textbox', { name: 'Search' }).clear();
   await page.getByRole('textbox', { name: 'Search' }).focus();
   await page.keyboard.type(name);
+}
+
+async function navigateToManagement(page: Page): Promise<void> {
+  await page.locator('a:text("Management")').click();
+  await page.waitForSelector('.grid-cell');
 }
