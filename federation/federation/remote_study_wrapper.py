@@ -160,7 +160,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         **kwargs: Any,
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
-        import pdb; pdb.set_trace() 
+        # import pdb; pdb.set_trace() 
         variants = self._query_gene_view_summary_variants(query_transformer, **kwargs,)
         
         for variant in variants:
@@ -219,7 +219,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         #             continue
         #     assert study_wrapper.genotype_data is not None
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         
 
             # tmp double check values

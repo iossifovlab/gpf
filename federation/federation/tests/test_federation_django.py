@@ -226,7 +226,7 @@ def test_gene_view_summary_variants_query(
         content_type="application/json",
     )
 
-    import pdb; pdb.set_trace()  
+    # import pdb; pdb.set_trace()  
 
     assert response.status_code == status.HTTP_200_OK
     res = response.data  # type: ignore

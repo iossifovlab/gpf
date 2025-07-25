@@ -737,7 +737,7 @@ class RESTClient:
             content_type="application/json",
         )
 
-        import pdb; pdb.set_trace()  
+        # import pdb; pdb.set_trace()  
         return response
         if response.status_code != 200:
             raise RESTError(f"Get summary variants failed: {response.text}")
