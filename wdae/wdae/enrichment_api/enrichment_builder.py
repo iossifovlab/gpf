@@ -7,6 +7,7 @@ from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.person_sets import PersonSetCollection
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+from utils.expand_gene_set import expand_gene_set
 
 from enrichment_api.enrichment_helper import EnrichmentHelper
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
@@ -20,24 +21,11 @@ class BaseEnrichmentBuilder(GPFTool):
         super().__init__("enrichment_builder")
 
     @abstractmethod
-    def build(
+    def enrichment_test(
         self,
-        gene_syms: list[str] | None,
-        gene_score: dict[str, Any] | None,
-        background_id: str | None,
-        counting_id: str | None,
-    ) -> list[dict[str, Any]]:
-        """Build enrichment test result"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def create_enrichment_description(
-        self,
-        gene_set_id: str | None,
-        gene_score: dict[str, Any] | None,
-        gene_syms: list[str] | None,
-    ) -> str:
-        """Build enrichment result description."""
+        query: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Build enrichment test result."""
 
 
 class EnrichmentBuilder(BaseEnrichmentBuilder):
@@ -116,6 +104,58 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
         return results
 
+    @staticmethod
+    def _parse_gene_syms(query: dict[str, Any]) -> list[str]:
+        gene_syms = query.get("geneSymbols")
+        if gene_syms is None:
+            return []
+
+        if isinstance(gene_syms, str):
+            gene_syms = gene_syms.split(",")
+        return [g.strip() for g in gene_syms]
+
+    def enrichment_test(
+        self,
+        query: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Build enrichment test result."""
+
+        query = expand_gene_set(cast(dict, query))
+
+        if "geneSymbols" not in query and (
+            "geneScores" not in query
+            or (
+                "geneScores" in query
+                and "score" not in query.get("geneScores", {})
+            )
+        ):
+            raise ValueError(
+                "Gene symbols must be provided or "
+                "gene_score must contain a valid score.",
+            )
+
+        gene_syms = None
+        if "geneSymbols" in query:
+            gene_syms = self._parse_gene_syms(query)
+        gene_score = cast(dict[str, Any] | None, query.get("geneScores", None))
+        background_id = query.get("enrichmentBackgroundModel", None)
+        counting_id = query.get("enrichmentCountingModel", None)
+        gene_set_id = cast(str, query.get("geneSet"))
+
+        return {
+            "desc": self.create_enrichment_description(
+                gene_set_id,
+                gene_score,
+                gene_syms,
+            ),
+            "result": self.build(
+                gene_syms,
+                gene_score,
+                background_id,
+                counting_id,
+            ),
+        }
+
     def build(
         self,
         gene_syms: list[str] | None,
@@ -123,6 +163,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         background_id: str | None,
         counting_id: str | None,
     ) -> list[dict[str, Any]]:
+        """Build enrichment test result"""
         if gene_syms is None:
             gene_syms = self._get_gene_syms(gene_score)
 
@@ -152,7 +193,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         if gene_set_id:
             desc = f"Gene Set: {gene_set_id}"
         elif gene_score and gene_score.get("score", "") \
-            in self.gene_scores_db:
+                in self.gene_scores_db:
             gene_scores_id = gene_score.get("score")
 
             if gene_scores_id is not None:

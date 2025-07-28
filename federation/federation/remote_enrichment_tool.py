@@ -1,5 +1,5 @@
-from collections.abc import Iterable
-from typing import Any, cast
+import logging
+from typing import Any
 
 from enrichment_api.enrichment_builder import BaseEnrichmentBuilder
 from enrichment_api.enrichment_helper import BaseEnrichmentHelper
@@ -7,7 +7,9 @@ from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy
 
 from federation.remote_study_wrapper import RemoteWDAEStudy
-from rest_client.rest_client import RESTClient
+from rest_client.rest_client import RESTClient, RESTError
+
+logger = logging.getLogger(__name__)
 
 
 class RemoteEnrichmentHelper(BaseEnrichmentHelper):
@@ -42,35 +44,22 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
         if not isinstance(study, RemoteWDAEStudy):
             return None
 
-        return RemoteEnrichmentBuilder(study.rest_client, study.remote_study_id)
+        return RemoteEnrichmentBuilder(
+            study.rest_client, study.remote_study_id)
 
-    def build(
+    def enrichment_test(
         self,
-        gene_syms: Iterable[str] | None,
-        gene_score: dict[str, Any] | None,
-        background_id: str | None,
-        counting_id: str | None,
-    ) -> list[dict[str, Any]]:
-        query: dict[str, Any] = {}
-        if gene_syms:
-            query["geneSymbols"] = list(gene_syms)
-        if gene_score:
-            query["geneScores"] = gene_score
-        if background_id:
-            query["enrichmentBackgroundModel"] = background_id
-        if counting_id:
-            query["enrichmentCountingModel"] = counting_id
+        query: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Build enrichment test result."""
+        logger.info("Building enrichment with query: %s", query)
+        query["datasetId"] = self.dataset_id
+        try:
+            result = self.rest_client.post_enrichment_test(query)
 
-        result = self.rest_client.post_enrichment_test(query)
-        if result is None:
-            return []
-        return cast(list[dict[str, Any]], result.get("results", []))
-
-    def create_enrichment_description(
-        self,
-        gene_set_id: str | None,  # noqa: ARG002
-        gene_score: dict[str, Any] | None,  # noqa: ARG002
-        gene_syms: list[str] | None,  # noqa: ARG002
-    ) -> str:
-        """Build enrichment result description."""
-        return ""
+        except RESTError as e:
+            raise ValueError(e) from e
+        return {
+            "desc": result.get("desc", ""),
+            "result": result.get("result", []),
+        }
