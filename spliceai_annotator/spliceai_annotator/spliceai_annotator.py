@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import logging
 import textwrap
 from collections import defaultdict
@@ -64,6 +65,23 @@ class _AttrDef:
     source: str
     documentation: str
     aggregator: Aggregator
+
+
+@dataclass
+class _AnnotationRequest:
+    vcf_allele: VCFAllele
+    x_ref: str
+    x_alt: str
+    strand: str
+    gene: str
+    transcripts: list[str]
+    context: Any
+
+
+@dataclass
+class _AnnotationResult:
+    request: _AnnotationRequest
+    y: np.ndarray
 
 
 class SpliceAIAnnotator(AnnotatorBase):
@@ -363,16 +381,16 @@ models to predict splice site variant effects.
 
         return True
 
-    def _do_annotate(
+    def _annotation_request(
         self, annotatable: Annotatable,
-        context: dict[str, Any],  # noqa: ARG002
-    ) -> dict[str, Any]:
+        context: Any,
+    ) -> dict[str, _AnnotationRequest] | None:
         logger.debug(
             "processing annotatable %s", annotatable)
         assert isinstance(annotatable, VCFAllele)
 
         if not self._is_valid_annotatable(annotatable):
-            return self._not_found()
+            return None
 
         assert not (len(annotatable.ref) > 1 and len(annotatable.alt) > 1)
 
@@ -381,31 +399,27 @@ models to predict splice site variant effects.
             annotatable.pos,
         )
         if not transcripts:
-            return self._not_found()
+            return None
 
         width = self._width()
-        seq = self.genome.get_sequence(
-            annotatable.chromosome,
-            annotatable.pos - width // 2,
-            annotatable.pos + width // 2,
-        )
+        seq = self._ref_sequence(annotatable)
         if len(seq) != width:
             logger.warning(
                 "Skipping record (near chromosome end): %s", annotatable,
             )
-            return self._not_found()
+            return None
         ref_len = len(annotatable.ref)
         if seq[width // 2: width // 2 + ref_len] != annotatable.ref:
             logger.warning(
                 "Skipping record (wrong reference): %s", annotatable,
             )
-            return self._not_found()
+            return None
 
         genes = defaultdict(list)
         for transcript in transcripts:
             genes[transcript.gene].append(transcript)
 
-        results = defaultdict(list)
+        results: dict[str, _AnnotationRequest] = {}
         for gene, transcripts in genes.items():
             tx = (
                 min(t.tx[0] for t in transcripts),
@@ -416,60 +430,102 @@ models to predict splice site variant effects.
                 logger.warning(
                     "Skipping record (mixed strands): %s", annotatable,
                 )
-                return self._not_found()
+                return None
             strand = strands[0]
 
             xref, xalt = self._seq_padding(
                 seq, tx, annotatable,
             )
+            results[gene] = _AnnotationRequest(
+                vcf_allele=annotatable,
+                x_ref=xref,
+                x_alt=xalt,
+                strand=strand,
+                gene=gene,
+                transcripts=[t.tr_id for t in transcripts],
+                context=context,
+            )
+        return results
 
+    def _do_annotate(
+        self, annotatable: Annotatable,
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        assert isinstance(annotatable, VCFAllele)
+        requests = self._annotation_request(
+            annotatable, context,
+        )
+        if requests is None:
+            return self._not_found()
+        assert requests is not None
+
+        results: dict[str, list[Any]] = defaultdict(list)
+        for request in requests.values():
             y = self._predict(
-                xref, xalt, strand,
+                request.x_ref,
+                request.x_alt,
+                request.strand,
                 annotatable,
             )
 
-            idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
-            idx_na = (y[0, :, 1] - y[1, :, 1]).argmax()
-            idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
-            idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
+            self._format_results(
+                results, request, y)
 
-            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1])
-            na = (y[0, idx_na, 1] - y[1, idx_na, 1])
-            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2])
-            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2])
+        if not results:
+            return self._not_found()
+        return {
+            attr.source: attr.aggregator.aggregate(results[attr.source])
+            for attr in self._attribute_defs
+        }
 
-            results["gene"].append(gene)
-            results["transcript_ids"].append(
-                ",".join([t.tr_id for t in transcripts]),
+    def _format_results(
+        self,
+        results: dict[str, list[Any]],
+        request: _AnnotationRequest,
+        y: np.ndarray,
+    ) -> None:
+        idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
+        idx_na = (y[0, :, 1] - y[1, :, 1]).argmax()
+        idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
+        idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
+
+        pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1])
+        na = (y[0, idx_na, 1] - y[1, idx_na, 1])
+        pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2])
+        nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2])
+
+        results["gene"].append(request.gene)
+        results["transcript_ids"].append(
+                ",".join(request.transcripts),
             )
-            results["DS_AG"].append(pa)
-            results["DS_AL"].append(na)
-            results["DS_DG"].append(pd)
-            results["DS_DL"].append(nd)
-            results["DS_MAX"].append(max(pa, na, pd, nd))
-            results["DP_AG"].append(idx_pa - self._distance)
-            results["DP_AL"].append(idx_na - self._distance)
-            results["DP_DG"].append(idx_pd - self._distance)
-            results["DP_DL"].append(idx_nd - self._distance)
+        results["DS_AG"].append(pa)
+        results["DS_AL"].append(na)
+        results["DS_DG"].append(pd)
+        results["DS_DL"].append(nd)
+        results["DS_MAX"].append(max(pa, na, pd, nd))
+        results["DP_AG"].append(idx_pa - self._distance)
+        results["DP_AL"].append(idx_na - self._distance)
+        results["DP_DG"].append(idx_pd - self._distance)
+        results["DP_DL"].append(idx_nd - self._distance)
 
-            results["ref_A_p"].append(
+        results["ref_A_p"].append(
                 ",".join(
                     [f"{p:.4f}" for p in y[0, :, 1]],
                 ))
-            results["ref_D_p"].append(
+        results["ref_D_p"].append(
                 ",".join(
                     [f"{p:.4f}" for p in y[0, :, 2]],
                 ))
-            results["alt_A_p"].append(
+        results["alt_A_p"].append(
                 ",".join(
                     [f"{p:.4f}" for p in y[1, :, 1]],
                 ))
-            results["alt_D_p"].append(
+        results["alt_D_p"].append(
                 ",".join(
                     [f"{p:.4f}" for p in y[1, :, 2]],
                 ))
-            results["delta_score"].append(
-                f"{annotatable.alt}|{gene}|"
+        results["delta_score"].append(
+                f"{request.vcf_allele.alt}|{request.gene}|"
                 f"{pa:.2f}|{na:.2f}|"
                 f"{pd:.2f}|{nd:.2f}|"
                 f"{idx_pa - self._distance}|"
@@ -478,12 +534,13 @@ models to predict splice site variant effects.
                 f"{idx_nd - self._distance}",
             )
 
-        if not results:
-            return self._not_found()
-        return {
-            attr.source: attr.aggregator.aggregate(results[attr.source])
-            for attr in self._attribute_defs
-        }
+    def _ref_sequence(self, annotatable: VCFAllele) -> str:
+        width = self._width()
+        return self.genome.get_sequence(
+            annotatable.chromosome,
+            annotatable.pos - width // 2,
+            annotatable.pos + width // 2,
+        )
 
     def _predict(
             self, xref: str, xalt: str, strand: str,
@@ -544,6 +601,7 @@ models to predict splice site variant effects.
             "N" * padding[1]
         xalt = xref[:self._width() // 2] + \
             annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
+
         return xref, xalt
 
     def _do_batch_annotate(
@@ -552,4 +610,7 @@ models to predict splice site variant effects.
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
-        return []
+
+        return list(itertools.starmap(
+            self._do_annotate, zip(annotatables, contexts, strict=True),
+        ))

@@ -15,7 +15,7 @@ from spliceai_annotator.spliceai_annotator import (
 )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def spliceai_grr() -> GenomicResourceRepo:
     """Fixture for SpliceAI genomic resources repository."""
     return build_filesystem_test_repository(
@@ -23,7 +23,7 @@ def spliceai_grr() -> GenomicResourceRepo:
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def spliceai_annotation_pipeline(
     spliceai_grr: GenomicResourceRepo,
 ) -> AnnotationPipeline:
@@ -43,7 +43,7 @@ def spliceai_annotation_pipeline(
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def spliceai_annotator(
     spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> SpliceAIAnnotator:

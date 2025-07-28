@@ -1,5 +1,6 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
+import pytest
+import pytest_mock
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
@@ -61,28 +62,61 @@ def test_spliceai_batch_annotate(
     spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> None:
     annotatables = [
+        VCFAllele("10", 94076, "C", "CCCCC"),
+        VCFAllele("10", 94076, "CAC", "C"),
         VCFAllele("10", 94077, "A", "C"),
         VCFAllele("10", 94555, "C", "T"),
     ]
     result = spliceai_annotation_pipeline.batch_annotate(annotatables)
     assert result is not None
-    assert len(result) == 2
+    assert len(result) == 4
 
     assert result[0]["delta_score"] == \
-        "C|TUBB8|0.15|0.27|0.00|0.05|89|-23|-267|193"
+        "CCCCC|TUBB8|0.15|0.27|0.00|0.05|90|-22|-266|194"
     assert result[1]["delta_score"] == \
+        "C|TUBB8|0.19|0.15|0.00|0.05|90|-22|289|175"
+    assert result[2]["delta_score"] == \
+        "C|TUBB8|0.15|0.27|0.00|0.05|89|-23|-267|193"
+    assert result[3]["delta_score"] == \
         "T|TUBB8|0.01|0.18|0.15|0.62|-2|110|-190|0"
 
 
+@pytest.mark.parametrize(
+    "chrom,pos,ref,alt, xalt_len",
+    [
+        ("10", 11, "G", "C", 21),
+        ("10", 11, "GTA", "G", 21 - 2),
+        ("10", 11, "G", "GCCC", 21 + 3),
+    ],
+)
 def test_spliceai_padding(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    xalt_len: int,
     spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
-    annotatable = VCFAllele("10", 94076, "CAC", "C")
-    width = spliceai_annotator._width()
-    assert width == 11001
-
-    transcripts = spliceai_annotator.gene_models.gene_models_by_location(
-        annotatable.chromosome,
-        annotatable.pos,
+    # ACGTACGTACGTACGTACGTA
+    # 0.        1........2
+    # 123456789012345678901
+    #                  NNNN
+    mocker.patch.object(
+        spliceai_annotator, "_width",
+        return_value=21,
     )
-    assert len(transcripts) == 1
+    annotatable = VCFAllele(chrom, pos, ref, alt)
+    width = spliceai_annotator._width()
+    assert width == 21
+
+    seq = 5 * "ACGT" + "A"
+
+    xref, xalt = spliceai_annotator._seq_padding(
+        seq,
+        (5, 17),
+        annotatable,
+    )
+
+    assert len(xref) == 21
+    assert len(xalt) == xalt_len
