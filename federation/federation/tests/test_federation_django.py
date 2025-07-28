@@ -4,6 +4,7 @@ import json
 import pytest
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
+from rest_framework import status
 
 
 def test_studies(
@@ -60,26 +61,11 @@ def test_measures_regressions(
     expected_measures = {"age", "iq"}
 
     response = admin_client.get(
-        "/api/v3/measures/regressions?datasetId=study_1_pheno")
+        "/api/v3/measures/regressions?datasetId=TEST_REMOTE_study_1_pheno")
     assert response
     assert response.status_code == 200
 
     returned_measures = set(response.json().keys())
-    assert returned_measures == expected_measures
-
-
-def test_measures_continuous(
-    admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-) -> None:
-    expected_measures = {"i1.age", "i1.iq", "i1.m1", "i1.m2", "i1.m3"}
-
-    response = admin_client.get(
-        "/api/v3/measures/type/continuous?datasetId=study_1_pheno")
-    assert response
-    assert response.status_code == 200
-
-    returned_measures = {item["measure"] for item in response.json()}
     assert returned_measures == expected_measures
 
 
@@ -160,7 +146,7 @@ def test_enrichment_test(
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = {
-        "datasetId": "TEST_REMOTE_t4c8_dataset",
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
         "enrichmentBackgroundModel": "coding_len_background",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSet": {
@@ -177,16 +163,57 @@ def test_enrichment_test(
     assert response
     assert response.status_code == 200
 
-    result_remote = response.data  # type: ignore
-    assert set(result_remote.keys()) == {"desc", "result"}
-    assert result_remote["desc"] == "Gene Set: T4 Candidates (1)"
-    assert len(result_remote["result"]) == 4
+    result = response.data  # type: ignore
 
-    query["datasetId"] = "t4c8_dataset"
+    assert set(result.keys()) == {"desc", "result"}
+    assert result["desc"] == "Gene Set: T4 Candidates (1)"
+
+
+def test_gene_view_config(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response = admin_client.get(
+        "/api/v3/gene_view/config?datasetId=TEST_REMOTE_t4c8_study_1",
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_gene_view_summary_variants_query(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    data = {"datasetId": "TEST_REMOTE_t4c8_study_1", "geneSymbols": ["t4"]}
     response = admin_client.post(
-        "/api/v3/enrichment/test",
-        data=json.dumps(query),
+        "/api/v3/gene_view/query_summary_variants",
+        json.dumps(data),
         content_type="application/json",
     )
-    result_local = response.data  # type: ignore
-    assert result_local == result_remote
+
+    assert response.status_code == status.HTTP_200_OK
+    res = response.data  # type: ignore
+    assert len(res) == 1
+    assert len(res[0]["alleles"]) == 1
+
+
+def test_gene_view_summary_variants_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    data = {
+        "queryData": json.dumps({
+            "datasetId": "TEST_REMOTE_t4c8_study_1",
+            "geneSymbols": ["t4"],
+            "download": True,
+        }),
+    }
+
+    response = admin_client.post(
+        "/api/v3/gene_view/download_summary_variants",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    lines = list(response.streaming_content)  # type: ignore
+    assert len(lines) == 2

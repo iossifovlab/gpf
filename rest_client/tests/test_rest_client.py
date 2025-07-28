@@ -1,4 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any
+
+import pytest
 from dae.pheno.common import MeasureType
 from requests import Response
 
@@ -147,3 +150,30 @@ def test_post_pheno_tool(rest_client: RESTClient) -> None:
 
     assert test_results is not None
     assert isinstance(test_results, dict)
+
+
+def test_post_query_variants(rest_client: RESTClient) -> None:
+    data = {"datasetId": "t4c8_study_1"}
+    variants_response = rest_client.post_query_variants(data)
+    assert variants_response is not None
+    result = list(variants_response)
+    assert len(result) == 12
+
+
+@pytest.mark.parametrize(
+    "data,expected_count",
+    [
+        ({"datasetId": "t4c8_study_1", "geneSymbols": ["t4"]}, 1),
+        ({"datasetId": "t4c8_study_1", "geneSymbols": ["t4", "c8"]}, 4),
+        ({"datasetId": "t4c8_study_1", "geneSymbols": None}, 6),
+    ],
+)
+def test_post_gene_view_summary_variants(
+    rest_client: RESTClient,
+    data: dict[str, Any],
+    expected_count: int,
+) -> None:
+    variants_response = rest_client.post_gene_view_summary_variants(data)
+    assert variants_response is not None
+    result = list(variants_response)
+    assert len(result) == expected_count
