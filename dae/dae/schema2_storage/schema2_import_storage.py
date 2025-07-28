@@ -27,6 +27,7 @@ from dae.parquet.partition_descriptor import (
     PartitionDescriptor,
 )
 from dae.parquet.schema2.annotate_schema2_parquet import (
+    _ProcessingArgs,
     backup_schema2_study,
     produce_schema2_annotation_tasks,
     produce_schema2_merging_tasks,
@@ -384,11 +385,14 @@ class Schema2ImportStorage(ImportStorage):
             study_dir,
             pipeline.raw,
             gpf_instance.grr,
-            region_size,
-            str(work_dir),
-            0,
-            allow_repeated_attributes=allow_repeated_attributes,
-            full_reannotation=full_reannotation,
+            None,
+            _ProcessingArgs(
+                str(work_dir),
+                0,
+                region_size,
+                allow_repeated_attributes,
+                full_reannotation,
+            ),
         )
 
         annotation_sync = graph.create_task(

@@ -10,6 +10,7 @@ from dae.genomic_resources.genomic_context import (
     _REGISTERED_CONTEXT_PROVIDERS,
     _REGISTERED_CONTEXTS,
 )
+from dae.genomic_resources.testing import setup_genome
 from dae.testing import setup_denovo, setup_directories
 
 
@@ -145,6 +146,12 @@ def annotate_directory_fixture(
                         filename: annotation.yaml
                     """,
                 },
+                "test_genome": {
+                    "genomic_resource.yaml": """
+                        type: genome
+                        filename: genome.fa
+                    """,
+                },
             },
         },
     )
@@ -181,8 +188,23 @@ def annotate_directory_fixture(
         chr3   43         0.501
         chr3   44         0.601
     """)
+
     setup_denovo(root_path / "grr" / "one" / "data.txt", one_content)
     setup_denovo(root_path / "grr" / "two" / "data.txt", two_content)
     setup_denovo(root_path / "grr" / "three" / "data.txt", three_content)
     setup_denovo(root_path / "grr" / "four" / "data.txt", four_content)
+
+    setup_genome(
+        root_path / "grr" / "test_genome" / "genome.fa",
+        textwrap.dedent(f"""
+        >chr1
+        {25 * 'ACGT'}
+        >chr2
+        {25 * 'ACGT'}
+        >chr3
+        {25 * 'ACGT'}
+        >chr4
+        {25 * 'ACGT'}
+        """))
+
     return root_path

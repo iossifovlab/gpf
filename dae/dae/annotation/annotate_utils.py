@@ -1,9 +1,6 @@
-import argparse
 import gzip
 import logging
 import os
-import sys
-from abc import abstractmethod
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +27,6 @@ from dae.genomic_resources.genomic_context import (
     register_context_provider,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.regions import (
     Region,
@@ -135,13 +131,6 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     return str(value)
 
 
-def setup_work_dir_and_task_dirs(args: dict) -> None:
-    if not os.path.exists(args["work_dir"]):
-        os.mkdir(args["work_dir"])
-    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
-    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
-
-
 def get_stuff_from_context(
     cli_args: dict[str, Any],
 ) -> tuple[AnnotationPipeline, GenomicContext, GenomicResourceRepo]:
@@ -200,50 +189,3 @@ def build_output_path(raw_input_path: str, output_path: str | None) -> str:
     input_path = input_path.with_stem(f"{input_path.stem}_annotated")
     # restore suffixes and return
     return str(input_path.with_suffix("".join(suffixes)))
-
-
-class AnnotationTool:
-    """Base class for annotation tools. Format-agnostic."""
-
-    def __init__(
-        self,
-        raw_args: list[str] | None = None,
-    ) -> None:
-        if not raw_args:
-            raw_args = sys.argv[1:]
-        self.args = vars(self.get_argument_parser().parse_args(raw_args))
-        self.pipeline, self.context, self.grr = \
-            get_stuff_from_context(self.args)
-
-    @abstractmethod
-    def get_argument_parser(self) -> argparse.ArgumentParser:
-        pass
-
-    def prepare_for_annotation(self) -> None:
-        """Perform operations required for annotation."""
-        return
-
-    def add_tasks_to_graph(
-        self, task_graph: TaskGraph,  # noqa: ARG002
-    ) -> None:
-        """Add tasks to annotation tool task graph."""
-        return
-
-    def run(self) -> None:
-        """Construct annotation tasks and execute task graph."""
-        # Is this too eager? What if a reannotation pipeline is created
-        # inside work() and the only caching that must be done is far smaller
-        # than the entire new annotation config suggests?
-        cache_pipeline_resources(self.grr, self.pipeline)
-
-        setup_work_dir_and_task_dirs(self.args)
-
-        self.prepare_for_annotation()
-
-        task_graph = TaskGraph()
-        self.add_tasks_to_graph(task_graph)
-
-        if len(task_graph.tasks) > 0:
-            add_input_files_to_task_graph(self.args, task_graph)
-
-            TaskGraphCli.process_graph(task_graph, **self.args)

@@ -121,6 +121,9 @@ class _CSVSource(Source):
 
         self.source_file.close()
 
+        if self.ref_genome is not None:
+            self.ref_genome.close()
+
         return exc_type is None
 
     def _extract_header(self) -> list[str]:
