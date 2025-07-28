@@ -642,13 +642,3 @@ class RESTClient:
 
     def get_visible_datasets(self) -> list:
         return self.gpf_rest_client.get_visible_datasets()
-
-    def post_enrichment_test(self, query: dict) -> dict[str, Any] | None:
-        """Return enrichment test result."""
-        response = self._post(
-            "enrichment/test",
-            data=query,
-        )
-        if response.status_code != 200:
-            return None
-        return response.json()

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, cast
+from typing import Any
 
 from enrichment_api.enrichment_builder import BaseEnrichmentBuilder
 from enrichment_api.enrichment_helper import BaseEnrichmentHelper
@@ -7,7 +7,7 @@ from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy
 
 from federation.remote_study_wrapper import RemoteWDAEStudy
-from rest_client.rest_client import RESTClient
+from rest_client.rest_client import RESTClient, RESTError
 
 logger = logging.getLogger(__name__)
 
@@ -49,37 +49,17 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
 
     def enrichment_test(
         self,
-        gene_syms: list[str] | None,
-        gene_score: dict[str, Any] | None,
-        background_id: str | None,
-        counting_id: str | None,
-        gene_set_id: str | None,
+        query: dict[str, Any],
     ) -> dict[str, Any]:
         """Build enrichment test result."""
-        query: dict[str, Any] = {}
-        query["datasetId"] = self.dataset_id
-
-        if gene_syms:
-            query["geneSymbols"] = list(gene_syms)
-        if gene_score:
-            query["geneScores"] = gene_score
-        if background_id:
-            query["enrichmentBackgroundModel"] = background_id
-        if counting_id:
-            query["enrichmentCountingModel"] = counting_id
-        if gene_set_id:
-            query["geneSet"] = {
-                "geneSet": {
-                    "desc": gene_set_id
-                },
-                "geneSetsTypes": [],
-            }
-
         logger.info("Building enrichment with query: %s", query)
-        result = self.rest_client.post_enrichment_test(query)
-        if result is None:
-            return {}
+        query["datasetId"] = self.dataset_id
+        try:
+            result = self.rest_client.post_enrichment_test(query)
+
+        except RESTError as e:
+            raise ValueError(e) from e
         return {
-            "desc": result.get("results", ""),
-            "result": cast(list[dict[str, Any]], result.get("results", [])),
+            "desc": result.get("desc", ""),
+            "result": result.get("result", []),
         }

@@ -7,6 +7,7 @@ from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.person_sets import PersonSetCollection
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+from utils.expand_gene_set import expand_gene_set
 
 from enrichment_api.enrichment_helper import EnrichmentHelper
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
@@ -22,11 +23,7 @@ class BaseEnrichmentBuilder(GPFTool):
     @abstractmethod
     def enrichment_test(
         self,
-        gene_syms: list[str] | None,
-        gene_score: dict[str, Any] | None,
-        background_id: str | None,
-        counting_id: str | None,
-        gene_set_id: str | None,
+        query: dict[str, Any],
     ) -> dict[str, Any]:
         """Build enrichment test result."""
 
@@ -107,15 +104,44 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
         return results
 
+    @staticmethod
+    def _parse_gene_syms(query: dict[str, Any]) -> list[str]:
+        gene_syms = query.get("geneSymbols")
+        if gene_syms is None:
+            return []
+
+        if isinstance(gene_syms, str):
+            gene_syms = gene_syms.split(",")
+        return [g.strip() for g in gene_syms]
+
     def enrichment_test(
         self,
-        gene_syms: list[str] | None,
-        gene_score: dict[str, Any] | None,
-        background_id: str | None,
-        counting_id: str | None,
-        gene_set_id: str | None,
+        query: dict[str, Any],
     ) -> dict[str, Any]:
         """Build enrichment test result."""
+
+        query = expand_gene_set(cast(dict, query))
+
+        if "geneSymbols" not in query and (
+            "geneScores" not in query
+            or (
+                "geneScores" in query
+                and "score" not in query.get("geneScores", {})
+            )
+        ):
+            raise ValueError(
+                "Gene symbols must be provided or "
+                "gene_score must contain a valid score.",
+            )
+
+        gene_syms = None
+        if "geneSymbols" in query:
+            gene_syms = self._parse_gene_syms(query)
+        gene_score = cast(dict[str, Any] | None, query.get("geneScores", None))
+        background_id = query.get("enrichmentBackgroundModel", None)
+        counting_id = query.get("enrichmentCountingModel", None)
+        gene_set_id = cast(str, query.get("geneSet"))
+
         return {
             "desc": self.create_enrichment_description(
                 gene_set_id,

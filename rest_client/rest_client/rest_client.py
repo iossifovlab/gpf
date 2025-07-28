@@ -933,11 +933,14 @@ class RESTClient:
         return cast(dict[str, Any], response.json())
 
     def post_enrichment_test(self, query: dict) -> Any:
+        """Return enrichment test result."""
         response = self.session.post(
             f"{self.api_url}/enrichment/test",
             json=query,
+            headers={"Content-Type": "application/json"},
         )
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise RESTError(response.status_code)
         return response.json()
 
     def get_instruments_details(self, dataset_id: str) -> Any:
@@ -945,11 +948,10 @@ class RESTClient:
         query_str = self.build_query_string({
             "datasetId": dataset_id,
         })
-        response = self.session.get(
-            f"{self.api_url}/pheno_tool/instruments{query_str}",
-        )
 
-        return response.json()
+        return self.session.get(
+            f"{self.api_url}/pheno_tool/instruments{query_str}",
+        ).json()
 
     def get_measure(self, dataset_id: str, measure_id: str) -> Any:
         """Get a measure in a dataset."""

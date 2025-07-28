@@ -1,4 +1,5 @@
-from typing import Any, cast
+import logging
+from typing import cast
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
@@ -9,7 +10,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
-from utils.expand_gene_set import expand_gene_set
 
 from enrichment_api.enrichment_builder import (
     BaseEnrichmentBuilder,
@@ -19,6 +19,8 @@ from enrichment_api.enrichment_helper import (
     BaseEnrichmentHelper,
     EnrichmentHelper,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EnrichmentModelsView(QueryBaseView):
@@ -46,19 +48,9 @@ class EnrichmentTestView(QueryBaseView):
         super().__init__()
         self.gene_scores_db = self.gpf_instance.gene_scores_db
 
-    @staticmethod
-    def _parse_gene_syms(query: dict[str, Any]) -> list[str]:
-        gene_syms = query.get("geneSymbols")
-        if gene_syms is None:
-            return []
-
-        if isinstance(gene_syms, str):
-            gene_syms = gene_syms.split(",")
-        return [g.strip() for g in gene_syms]
-
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
-        query = expand_gene_set(cast(dict, request.data))
+        query = cast(dict, request.data)
 
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
@@ -74,30 +66,12 @@ class EnrichmentTestView(QueryBaseView):
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if "geneSymbols" not in query and (
-            "geneScores" not in query
-            or (
-                "geneScores" in query
-                and "score" not in query.get("geneScores", {})
-            )
-        ):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        gene_syms = None
-        if "geneSymbols" in query:
-            gene_syms = self._parse_gene_syms(query)
-
-        gene_scores = cast(dict[str, Any] | None, query.get("geneScores", None))
-
         try:
-            result = builder.enrichment_test(
-                gene_syms,
-                gene_scores,
-                query.get("enrichmentBackgroundModel", None),
-                query.get("enrichmentCountingModel", None),
-                cast(str, query.get("geneSet")),
-            )
-        except ValueError:
+            result = builder.enrichment_test(query)
+        except ValueError as e:
+            logger.exception("Enrichment test failed")
+            if str(e).isdigit():
+                return Response(status=int(str(e)))
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(result)
