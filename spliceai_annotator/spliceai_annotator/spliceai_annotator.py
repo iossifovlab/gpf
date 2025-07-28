@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import logging
 import textwrap
 from collections import defaultdict
@@ -70,12 +69,13 @@ class _AttrDef:
 @dataclass
 class _AnnotationRequest:
     vcf_allele: VCFAllele
-    x_ref: str
-    x_alt: str
+    x_ref: np.ndarray
+    x_alt: np.ndarray
     strand: str
     gene: str
     transcripts: list[str]
     context: Any
+    batch_index: int = -1
 
 
 @dataclass
@@ -381,10 +381,11 @@ models to predict splice site variant effects.
 
         return True
 
-    def _annotation_request(
+    def _annotation_requests(
         self, annotatable: Annotatable,
-        context: Any,
-    ) -> dict[str, _AnnotationRequest] | None:
+        context: dict[str, Any],
+        batch_index: int = -1,
+    ) -> list[_AnnotationRequest] | None:
         logger.debug(
             "processing annotatable %s", annotatable)
         assert isinstance(annotatable, VCFAllele)
@@ -419,7 +420,7 @@ models to predict splice site variant effects.
         for transcript in transcripts:
             genes[transcript.gene].append(transcript)
 
-        results: dict[str, _AnnotationRequest] = {}
+        requests: list[_AnnotationRequest] = []
         for gene, transcripts in genes.items():
             tx = (
                 min(t.tx[0] for t in transcripts),
@@ -436,103 +437,107 @@ models to predict splice site variant effects.
             xref, xalt = self._seq_padding(
                 seq, tx, annotatable,
             )
-            results[gene] = _AnnotationRequest(
-                vcf_allele=annotatable,
-                x_ref=xref,
-                x_alt=xalt,
-                strand=strand,
-                gene=gene,
-                transcripts=[t.tr_id for t in transcripts],
-                context=context,
-            )
-        return results
+            xref_one_hot = one_hot_encode(xref)[None, :]
+            xalt_one_hot = one_hot_encode(xalt)[None, :]
+
+            if strand == "-":
+                xref_one_hot = xref_one_hot[:, ::-1, ::-1]
+                xalt_one_hot = xalt_one_hot[:, ::-1, ::-1]
+
+            requests.append(
+                _AnnotationRequest(
+                    vcf_allele=annotatable,
+                    x_ref=xref_one_hot,
+                    x_alt=xalt_one_hot,
+                    strand=strand,
+                    gene=gene,
+                    transcripts=[t.tr_id for t in transcripts],
+                    context=context,
+                    batch_index=batch_index,
+                ))
+        return requests
 
     def _do_annotate(
         self, annotatable: Annotatable,
         context: dict[str, Any],
     ) -> dict[str, Any]:
         assert isinstance(annotatable, VCFAllele)
-        requests = self._annotation_request(
-            annotatable, context,
+        requests = self._annotation_requests(
+            annotatable, context, batch_index=-1,
         )
         if requests is None:
             return self._not_found()
         assert requests is not None
 
+        annotation_results = [
+            self._predict(request)
+            for request in requests
+        ]
+        return self._format_results(annotation_results)
+
+    def _format_results(
+        self,
+        annotation_results: list[_AnnotationResult],
+    ) -> dict[str, Any]:
         results: dict[str, list[Any]] = defaultdict(list)
-        for request in requests.values():
-            y = self._predict(
-                request.x_ref,
-                request.x_alt,
-                request.strand,
-                annotatable,
-            )
+        for res in annotation_results:
+            y = res.y
+            request = res.request
+            idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
+            idx_na = (y[0, :, 1] - y[1, :, 1]).argmax()
+            idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
+            idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
 
-            self._format_results(
-                results, request, y)
+            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1])
+            na = (y[0, idx_na, 1] - y[1, idx_na, 1])
+            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2])
+            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2])
 
+            results["gene"].append(request.gene)
+            results["transcript_ids"].append(
+                    ",".join(request.transcripts),
+                )
+            results["DS_AG"].append(pa)
+            results["DS_AL"].append(na)
+            results["DS_DG"].append(pd)
+            results["DS_DL"].append(nd)
+            results["DS_MAX"].append(max(pa, na, pd, nd))
+            results["DP_AG"].append(idx_pa - self._distance)
+            results["DP_AL"].append(idx_na - self._distance)
+            results["DP_DG"].append(idx_pd - self._distance)
+            results["DP_DL"].append(idx_nd - self._distance)
+
+            results["ref_A_p"].append(
+                    ",".join(
+                        [f"{p:.4f}" for p in y[0, :, 1]],
+                    ))
+            results["ref_D_p"].append(
+                    ",".join(
+                        [f"{p:.4f}" for p in y[0, :, 2]],
+                    ))
+            results["alt_A_p"].append(
+                    ",".join(
+                        [f"{p:.4f}" for p in y[1, :, 1]],
+                    ))
+            results["alt_D_p"].append(
+                    ",".join(
+                        [f"{p:.4f}" for p in y[1, :, 2]],
+                    ))
+            results["delta_score"].append(
+                    f"{request.vcf_allele.alt}|{request.gene}|"
+                    f"{pa:.2f}|{na:.2f}|"
+                    f"{pd:.2f}|{nd:.2f}|"
+                    f"{idx_pa - self._distance}|"
+                    f"{idx_na - self._distance}|"
+                    f"{idx_pd - self._distance}|"
+                    f"{idx_nd - self._distance}",
+                )
         if not results:
             return self._not_found()
         return {
             attr.source: attr.aggregator.aggregate(results[attr.source])
             for attr in self._attribute_defs
         }
-
-    def _format_results(
-        self,
-        results: dict[str, list[Any]],
-        request: _AnnotationRequest,
-        y: np.ndarray,
-    ) -> None:
-        idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
-        idx_na = (y[0, :, 1] - y[1, :, 1]).argmax()
-        idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
-        idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
-
-        pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1])
-        na = (y[0, idx_na, 1] - y[1, idx_na, 1])
-        pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2])
-        nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2])
-
-        results["gene"].append(request.gene)
-        results["transcript_ids"].append(
-                ",".join(request.transcripts),
-            )
-        results["DS_AG"].append(pa)
-        results["DS_AL"].append(na)
-        results["DS_DG"].append(pd)
-        results["DS_DL"].append(nd)
-        results["DS_MAX"].append(max(pa, na, pd, nd))
-        results["DP_AG"].append(idx_pa - self._distance)
-        results["DP_AL"].append(idx_na - self._distance)
-        results["DP_DG"].append(idx_pd - self._distance)
-        results["DP_DL"].append(idx_nd - self._distance)
-
-        results["ref_A_p"].append(
-                ",".join(
-                    [f"{p:.4f}" for p in y[0, :, 1]],
-                ))
-        results["ref_D_p"].append(
-                ",".join(
-                    [f"{p:.4f}" for p in y[0, :, 2]],
-                ))
-        results["alt_A_p"].append(
-                ",".join(
-                    [f"{p:.4f}" for p in y[1, :, 1]],
-                ))
-        results["alt_D_p"].append(
-                ",".join(
-                    [f"{p:.4f}" for p in y[1, :, 2]],
-                ))
-        results["delta_score"].append(
-                f"{request.vcf_allele.alt}|{request.gene}|"
-                f"{pa:.2f}|{na:.2f}|"
-                f"{pd:.2f}|{nd:.2f}|"
-                f"{idx_pa - self._distance}|"
-                f"{idx_na - self._distance}|"
-                f"{idx_pd - self._distance}|"
-                f"{idx_nd - self._distance}",
-            )
 
     def _ref_sequence(self, annotatable: VCFAllele) -> str:
         width = self._width()
@@ -543,32 +548,31 @@ models to predict splice site variant effects.
         )
 
     def _predict(
-            self, xref: str, xalt: str, strand: str,
-            annotatable: Annotatable,
-    ) -> np.ndarray:
-        xref_one_hot = one_hot_encode(xref)[None, :]
-        xalt_one_hot = one_hot_encode(xalt)[None, :]
-
-        if strand == "-":
-            xref_one_hot = xref_one_hot[:, ::-1, ::-1]
-            xalt_one_hot = xalt_one_hot[:, ::-1, ::-1]
+            self, req: _AnnotationRequest,
+    ) -> _AnnotationResult:
 
         assert self._models is not None
         y_ref = np.mean([
-            self._models[m].predict(xref_one_hot, verbose=0)
+            self._models[m].predict(req.x_ref, verbose=0)
             for m in range(5)
         ], axis=0)
         y_alt = np.mean([
-            self._models[m].predict(xalt_one_hot, verbose=0)
+            self._models[m].predict(req.x_alt, verbose=0)
             for m in range(5)
         ], axis=0)
-        if strand == "-":
+        y = self._prediction_padding(req, y_ref, y_alt)
+
+        return _AnnotationResult(req, y)
+
+    def _prediction_padding(
+        self, req: _AnnotationRequest,
+        y_ref: np.ndarray, y_alt: np.ndarray,
+    ) -> np.ndarray:
+        if req.strand == "-":
             y_ref = y_ref[:, ::-1]
             y_alt = y_alt[:, ::-1]
-
-        assert isinstance(annotatable, VCFAllele)
-        ref_len = len(annotatable.ref)
-        alt_len = len(annotatable.alt)
+        ref_len = len(req.vcf_allele.ref)
+        alt_len = len(req.vcf_allele.alt)
 
         if ref_len > 1 and alt_len == 1:
             y_alt = np.concatenate([
@@ -584,8 +588,40 @@ models to predict splice site variant effects.
                     axis=1)[:, None, :],
                 y_alt[:, self._distance + alt_len:]],
                 axis=1)
-
         return np.concatenate([y_ref, y_alt])
+
+    def _predict_batch(
+        self, reqs: Sequence[_AnnotationRequest],
+    ) -> list[_AnnotationResult]:
+        assert self._models is not None
+        assert len(reqs) > 0
+        assert all(reqs[0].x_alt.shape == req.x_alt.shape
+                   for req in reqs)
+        assert all(len(reqs[0].vcf_allele.ref) == len(req.vcf_allele.ref)
+                   for req in reqs)
+        assert all(len(reqs[0].vcf_allele.alt) == len(req.vcf_allele.alt)
+                   for req in reqs)
+
+        x_ref_batch = np.concatenate(
+            [req.x_ref for req in reqs], axis=0)
+        x_alt_batch = np.concatenate(
+            [req.x_alt for req in reqs], axis=0)
+        y_ref_batch = np.mean([
+            self._models[m].predict(x_ref_batch, verbose=0)
+            for m in range(5)
+        ], axis=0)
+        y_alt_batch = np.mean([
+            self._models[m].predict(x_alt_batch, verbose=0)
+            for m in range(5)
+        ], axis=0)
+
+        results = []
+        for i, req in enumerate(reqs):
+            x_ref = y_ref_batch[i:i + 1, :, :]
+            x_alt = y_alt_batch[i:i + 1, :, :]
+            y = self._prediction_padding(req, x_ref, x_alt)
+            results.append(_AnnotationResult(req, y))
+        return results
 
     def _seq_padding(
             self, seq: str,
@@ -610,7 +646,35 @@ models to predict splice site variant effects.
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
+        annotations: dict[int, list[_AnnotationResult]] = defaultdict(list)
 
-        return list(itertools.starmap(
-            self._do_annotate, zip(annotatables, contexts, strict=True),
-        ))
+        batches = defaultdict(list)
+        for batch_index, (annotatable, context) in enumerate(zip(
+                annotatables, contexts, strict=True)):
+            if not isinstance(annotatable, VCFAllele):
+                annotations[batch_index] = []
+                continue
+            requests = self._annotation_requests(
+                annotatable, context, batch_index,
+            )
+            if requests is None:
+                annotations[batch_index] = []
+                continue
+            for request in requests:
+                batches[request.x_alt.shape[1]].append(request)
+        for batch_requests in batches.values():
+            if len(batch_requests) == 0:
+                continue
+            for bresult in self._predict_batch(batch_requests):
+                batch_index = bresult.request.batch_index
+                annotations[batch_index].append(bresult)
+
+        results = []
+        for _batch_index, res in sorted(annotations.items()):
+            if len(res) == 0:
+                results.append(self._not_found())
+                continue
+
+            results.append(self._format_results(res))
+
+        return results
