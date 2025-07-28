@@ -898,3 +898,44 @@ def test_cli_renamed_columns(
     ])
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
+
+
+def test_cli_annotatables_that_need_ref_genome(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        location  variant
+        chr1:23   sub(C->T)
+        chr1:24   sub(C->A)
+        chr2:33   ins(AAA)
+        chr2:34   del(3)
+    """)
+    out_expected_content = (
+        "location\tvariant\tscore\n"
+        "chr1:23\tsub(C->T)\t0.1\n"
+        "chr1:24\tsub(C->A)\t0.2\n"
+        "chr2:33\tins(AAA)\t0.3\n"
+        "chr2:34\tdel(3)\t0.35\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "--col-location", "location",
+            "--col-variant", "variant",
+            "-w", work_dir,
+            "-j", 1,
+            "-R", "test_genome",
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
