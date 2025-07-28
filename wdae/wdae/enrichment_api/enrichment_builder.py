@@ -193,7 +193,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         if gene_set_id:
             desc = f"Gene Set: {gene_set_id}"
         elif gene_score and gene_score.get("score", "") \
-            in self.gene_scores_db:
+                in self.gene_scores_db:
             gene_scores_id = gene_score.get("score")
 
             if gene_scores_id is not None:

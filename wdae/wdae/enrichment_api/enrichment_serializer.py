@@ -104,7 +104,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         )
         if overlapped_genes:
             assert result.overlapped_genes is not None
-            overlap_filter["overlappedGenes"] = result.overlapped_genes
+            overlap_filter["overlappedGenes"] = list(result.overlapped_genes)
 
         return overlap_filter
 

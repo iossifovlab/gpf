@@ -101,7 +101,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
         "complex",
     ]
-    assert rec_serialized["overlapFilter"]["overlappedGenes"] == {"SAMD11"}
+    assert rec_serialized["overlapFilter"]["overlappedGenes"] == ["SAMD11"]
 
     male_serialized = serialize[0]["missense"]["male"]
 
