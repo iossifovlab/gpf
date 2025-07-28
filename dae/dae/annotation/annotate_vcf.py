@@ -192,7 +192,10 @@ class _VCFWriter(Filter):
         self.pipeline = pipeline
         self.header = self._update_header(header, pipeline)
         self.output_file: VariantFile
-        self.annotation_attributes = self.pipeline.get_attributes()
+        self.annotation_attributes = [
+            attr for attr in self.pipeline.get_attributes()
+            if not attr.internal
+        ]
         self.to_delete = None
         if isinstance(self.pipeline, ReannotationPipeline):
             self.to_delete = self.pipeline.attributes_deleted
@@ -223,15 +226,13 @@ class _VCFWriter(Filter):
                    and info_key not in new_annotation_columns):
                     header.info.remove_header(info_key)
 
-            attributes = []
-            for attr in pipeline.get_attributes():
-                if attr.internal:
-                    continue
+        attributes = []
+        for attr in pipeline.get_attributes():
+            if attr.internal:
+                continue
 
-                if attr.name not in header.info:
-                    attributes.append(attr)
-        else:
-            attributes = pipeline.get_attributes()
+            if attr.name not in header.info:
+                attributes.append(attr)
 
         for attribute in attributes:
             description = attribute.description

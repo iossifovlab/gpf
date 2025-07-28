@@ -367,6 +367,8 @@ def test_annotate_vcf_internal_attributes(
 
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
+        assert "score_1" in vcf_file.header.info
+        assert "score_4" not in vcf_file.header.info
         for rec in vcf_file.fetch():
             assert "score_1" in rec.info
             assert "score_4" not in rec.info
