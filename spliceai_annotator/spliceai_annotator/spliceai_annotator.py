@@ -93,11 +93,12 @@ class SpliceAIAnnotator(AnnotatorBase):
         if genome_resource_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
-                raise ValueError(f"The {info} has no reference genome"
-                                  " specified and no genome was found"
-                                  " in the gene models' configuration,"
-                                  " the context or the annotation config's"
-                                  " preamble.")
+                raise ValueError(
+                    f"The {info} has no reference genome"
+                    " specified and no genome was found"
+                    " in the gene models' configuration,"
+                    " the context or the annotation config's"
+                    " preamble.")
         else:
             genome = build_reference_genome_from_resource_id(
                 genome_resource_id, pipeline.repository)
@@ -305,7 +306,7 @@ models to predict splice site variant effects.
         model_paths = [
             f"models/spliceai{i}.h5" for i in range(1, 6)
         ]
-        self._models = [
+        self._models = [  # type: ignore
             tf.keras.models.load_model(resource_filename(__name__, path))
             for path in model_paths
         ]
@@ -369,6 +370,7 @@ models to predict splice site variant effects.
 
         if not self._is_valid_annotatable(annotatable):
             return self._not_found()
+        assert isinstance(annotatable, VCFAllele)
         assert not (len(annotatable.ref) > 1 and len(annotatable.alt) > 1)
 
         transcripts = self.gene_models.gene_models_by_location(
@@ -490,6 +492,7 @@ models to predict splice site variant effects.
             xref_one_hot = xref_one_hot[:, ::-1, ::-1]
             xalt_one_hot = xalt_one_hot[:, ::-1, ::-1]
 
+        assert self._models is not None
         y_ref = np.mean([
             self._models[m].predict(xref_one_hot, verbose=0)
             for m in range(5)
@@ -515,7 +518,7 @@ models to predict splice site variant effects.
             y_alt = np.concatenate([
                 y_alt[:, :self._distance],
                 np.max(
-                    y_alt[:, self._distance : self._distance + alt_len],
+                    y_alt[:, self._distance: self._distance + alt_len],
                     axis=1)[:, None, :],
                 y_alt[:, self._distance + alt_len:]],
                 axis=1)
@@ -527,6 +530,7 @@ models to predict splice site variant effects.
             tx_region: tuple[int, int],
             annotatable: Annotatable,
     ) -> tuple[str, str]:
+        assert isinstance(annotatable, VCFAllele)
         padding = (
             max(self._width() // 2 + tx_region[0] - annotatable.pos, 0),
             max(self._width() // 2 - tx_region[1] + annotatable.pos, 0))
