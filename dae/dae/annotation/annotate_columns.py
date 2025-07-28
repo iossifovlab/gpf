@@ -104,6 +104,8 @@ class _CSVSource(Source):
         else:
             self.source_file = open(self.path, "rt")
             self.source_file.readline()  # Skip header line
+        if self.ref_genome is not None:
+            self.ref_genome.open()
         return self
 
     def __exit__(
