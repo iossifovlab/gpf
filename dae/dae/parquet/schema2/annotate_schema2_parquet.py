@@ -137,7 +137,7 @@ def produce_regions(
     return list(map(repr, regions))
 
 
-def produce_schema2_annotation_tasks(
+def produce_schema2_annotation_tasks(  # pylint:disable=R0917
     task_graph: TaskGraph,
     loader: ParquetLoader,
     output_dir: str,
@@ -257,7 +257,7 @@ def write_new_meta(
     append_meta_to_parquet(output_layout.meta, meta_keys, meta_values)
 
 
-def process_parquet(
+def process_parquet(  # pylint:disable=too-many-positional-arguments
     input_layout: Schema2DatasetLayout,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict | None,
@@ -449,7 +449,7 @@ def _setup_io_layouts(
     return input_layout, output_layout
 
 
-def _add_tasks_to_graph(
+def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     task_graph: TaskGraph,
     loader: ParquetLoader,
     output_layout: Schema2DatasetLayout,
