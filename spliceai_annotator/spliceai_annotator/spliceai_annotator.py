@@ -60,7 +60,7 @@ class _AttrConfig:
 class _AttrDef:
     """SpliceAI attributes definition class."""
 
-    name: str
+    source: str
     documentation: str
     aggregator: Aggregator
 
@@ -268,14 +268,14 @@ models to predict splice site variant effects.
         """Collect attributes configuration."""
         result = []
         for attr in attributes:
-            if attr.name not in self._attributes_definition():
+            if attr.source not in self._attributes_definition():
                 logger.error(
                     "Attribute %s is not supported by SpliceAI annotator",
-                    attr.name,
+                    attr.source,
                 )
                 continue
 
-            attr_config = self._attributes_definition()[attr.name]
+            attr_config = self._attributes_definition()[attr.source]
             aggregator = attr.parameters.get("aggregator")
             if aggregator is not None:
                 documenation = (
@@ -290,7 +290,7 @@ models to predict splice site variant effects.
                 )
             attr._documentation = documenation  # noqa: SLF001
             result.append(_AttrDef(
-                attr.name,
+                attr.source,
                 documenation,
                 build_aggregator(aggregator),
             ))
@@ -367,10 +367,11 @@ models to predict splice site variant effects.
     ) -> dict[str, Any]:
         logger.debug(
             "processing annotatable %s", annotatable)
+        assert isinstance(annotatable, VCFAllele)
 
         if not self._is_valid_annotatable(annotatable):
             return self._not_found()
-        assert isinstance(annotatable, VCFAllele)
+
         assert not (len(annotatable.ref) > 1 and len(annotatable.alt) > 1)
 
         transcripts = self.gene_models.gene_models_by_location(
@@ -465,7 +466,6 @@ models to predict splice site variant effects.
                 ",".join(
                     [f"{p:.4f}" for p in y[1, :, 2]],
                 ))
-
             results["delta_score"].append(
                 f"{annotatable.alt}|{gene}|"
                 f"{pa:.2f}|{na:.2f}|"
@@ -476,8 +476,10 @@ models to predict splice site variant effects.
                 f"{idx_nd - self._distance}",
             )
 
+        if not results:
+            return self._not_found()
         return {
-            attr.name: attr.aggregator.aggregate(results[attr.name])
+            attr.source: attr.aggregator.aggregate(results[attr.source])
             for attr in self._attribute_defs
         }
 
