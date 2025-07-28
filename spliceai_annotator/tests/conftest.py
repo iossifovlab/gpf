@@ -2,12 +2,17 @@
 
 import pathlib
 import textwrap
+from typing import cast
 
 import pytest
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import build_filesystem_test_repository
+
+from spliceai_annotator.spliceai_annotator import (
+    SpliceAIAnnotator,
+)
 
 
 @pytest.fixture
@@ -41,6 +46,8 @@ def spliceai_annotation_pipeline(
 @pytest.fixture
 def spliceai_annotator(
     spliceai_annotation_pipeline: AnnotationPipeline,
-) -> AnnotationPipeline:
+) -> SpliceAIAnnotator:
     """Fixture for SpliceAI annotator."""
-    return spliceai_annotation_pipeline.annotators[0]
+    annotator = spliceai_annotation_pipeline.annotators[0]
+    return cast(
+        SpliceAIAnnotator, annotator.open())

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import textwrap
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -307,7 +308,8 @@ models to predict splice site variant effects.
             f"models/spliceai{i}.h5" for i in range(1, 6)
         ]
         self._models = [  # type: ignore
-            tf.keras.models.load_model(resource_filename(__name__, path))
+            tf.keras.models.load_model(
+                resource_filename(__name__, path))
             for path in model_paths
         ]
         return super().open()
@@ -507,6 +509,7 @@ models to predict splice site variant effects.
             y_ref = y_ref[:, ::-1]
             y_alt = y_alt[:, ::-1]
 
+        assert isinstance(annotatable, VCFAllele)
         ref_len = len(annotatable.ref)
         alt_len = len(annotatable.alt)
 
@@ -542,3 +545,11 @@ models to predict splice site variant effects.
         xalt = xref[:self._width() // 2] + \
             annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
         return xref, xalt
+
+    def _do_batch_annotate(
+        self,
+        annotatables: Sequence[Annotatable | None],
+        contexts: list[dict[str, Any]],
+        batch_work_dir: str | None = None,  # noqa: ARG002
+    ) -> list[dict[str, Any]]:
+        return []

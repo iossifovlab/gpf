@@ -72,3 +72,17 @@ def test_spliceai_batch_annotate(
         "C|TUBB8|0.15|0.27|0.00|0.05|89|-23|-267|193"
     assert result[1]["delta_score"] == \
         "T|TUBB8|0.01|0.18|0.15|0.62|-2|110|-190|0"
+
+
+def test_spliceai_padding(
+    spliceai_annotator: SpliceAIAnnotator,
+) -> None:
+    annotatable = VCFAllele("10", 94076, "CAC", "C")
+    width = spliceai_annotator._width()
+    assert width == 11001
+
+    transcripts = spliceai_annotator.gene_models.gene_models_by_location(
+        annotatable.chromosome,
+        annotatable.pos,
+    )
+    assert len(transcripts) == 1
