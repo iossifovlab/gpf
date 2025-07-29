@@ -222,7 +222,7 @@ dae_conf_schema = {
     },
     "remotes": {
         "type": "list",
-        "valuesrules": {"type": "dict", "schema": remote_schema},
+        "schema": {"type": "dict", "schema": remote_schema},
     },
 
     "grr": {
