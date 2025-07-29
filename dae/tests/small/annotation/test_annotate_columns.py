@@ -6,6 +6,7 @@ import textwrap
 
 import pysam
 import pytest
+import pytest_mock
 from dae.annotation.annotatable import (
     Annotatable,
     CNVAllele,
@@ -205,6 +206,7 @@ def test_annotate_columns_basic_setup(
 def test_annotate_columns_batch_mode(
     annotate_directory_fixture: pathlib.Path,
     tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     in_content = textwrap.dedent("""
         chrom   pos
@@ -226,6 +228,8 @@ def test_annotate_columns_batch_mode(
 
     setup_denovo(in_file, in_content)
 
+    spy = mocker.spy(_CSVBatchSource, "__init__")
+
     cli([
         str(a) for a in [
             in_file, annotation_file, "-o", out_file,
@@ -236,7 +240,12 @@ def test_annotate_columns_batch_mode(
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
+
     assert out_file_content == out_expected_content
+
+    # assert correct batch size was actually passed to the reader
+    assert len(spy.call_args.args) == 6
+    assert spy.call_args.args[-1] == 1  # the last arg is the batch size
 
 
 def test_annotate_columns_produce_tabix_correctly_position(
@@ -745,7 +754,7 @@ def test_csv_batch_source_no_header_in_file(
     with pytest.raises(
         ValueError,
         match="no record to annotatable could be found",
-    ), _CSVBatchSource(str(csv_path), None, {}, "\t") as source:
+    ), _CSVBatchSource(str(csv_path), None, {}, "\t", 1) as source:
         list(source.fetch())
 
 

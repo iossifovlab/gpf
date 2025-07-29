@@ -186,7 +186,7 @@ class _CSVBatchSource(Source):
         ref_genome: ReferenceGenome | None,
         columns_args: dict[str, str],
         input_separator: str,
-        batch_size: int = 500,
+        batch_size: int,
     ):
         self.source = _CSVSource(
             path, ref_genome, columns_args, input_separator)
@@ -352,6 +352,7 @@ def _build_batched(
         reference_genome,
         args.columns_args,
         args.input_separator,
+        args.batch_size,
     )
     filters: list[Filter] = []
     new_header = _build_new_header(source.header, pipeline)
