@@ -387,7 +387,7 @@ models to predict splice site variant effects.
         batch_index: int = -1,
     ) -> list[_AnnotationRequest] | None:
         logger.debug(
-            "processing annotatable %s", annotatable)
+            "creating annotation request for %s", annotatable)
         assert isinstance(annotatable, VCFAllele)
 
         if not self._is_valid_annotatable(annotatable):
@@ -606,6 +606,10 @@ models to predict splice site variant effects.
             [req.x_ref for req in reqs], axis=0)
         x_alt_batch = np.concatenate(
             [req.x_alt for req in reqs], axis=0)
+        logger.debug(
+            "predicting a batch of request: %s; %s", len(reqs),
+            x_alt_batch.shape,
+        )
         y_ref_batch = np.mean([
             self._models[m].predict(x_ref_batch, verbose=0)
             for m in range(5)
@@ -615,12 +619,18 @@ models to predict splice site variant effects.
             for m in range(5)
         ], axis=0)
 
+        logger.debug(
+            "transforming results",
+        )
         results = []
         for i, req in enumerate(reqs):
             x_ref = y_ref_batch[i:i + 1, :, :]
             x_alt = y_alt_batch[i:i + 1, :, :]
             y = self._prediction_padding(req, x_ref, x_alt)
             results.append(_AnnotationResult(req, y))
+        logger.debug(
+            "returning results: %d", len(results),
+        )
         return results
 
     def _seq_padding(
@@ -662,7 +672,14 @@ models to predict splice site variant effects.
                 continue
             for request in requests:
                 batches[request.x_alt.shape[1]].append(request)
-        for batch_requests in batches.values():
+        logger.debug(
+            "batching requests: %s", {k: len(v) for k, v in batches.items()},
+        )
+        for batch_index, batch_requests in enumerate(batches.values()):
+            logger.debug(
+                "processing batch %d/%d with %d requests",
+                batch_index + 1, len(batches), len(batch_requests),
+            )
             if len(batch_requests) == 0:
                 continue
             for bresult in self._predict_batch(batch_requests):

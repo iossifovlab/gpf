@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 from pysam import TabixFile, tabix_index
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -122,7 +123,7 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     """Format the value to a string for human-readable output."""
     if value is None:
         return "." if vcf else ""
-    if isinstance(value, float):
+    if isinstance(value, (float, np.floating)):
         return f"{value:.3g}"
     if isinstance(value, bool):
         return "yes" if value else ("." if vcf else "")
