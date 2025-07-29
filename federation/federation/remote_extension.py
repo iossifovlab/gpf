@@ -17,6 +17,7 @@ from federation.remote_study_wrapper import (
 )
 from federation.utils import prefix_remote_identifier, prefix_remote_name
 from rest_client.rest_client import (
+    GPFAnonymousSession,
     GPFOAuthSession,
     RESTClient,
     RESTError,
@@ -125,10 +126,14 @@ class GPFRemoteExtension(GPFExtensionBase):
             try:
                 url = remote.get("url")
 
-                session = GPFOAuthSession(
-                    url, remote["client_id"], remote["client_secret"],
-                    remote.get("redirect_uri", ""),
-                )
+                if remote["client_id"] is None \
+                        and remote["client_secret"] is None:
+                    session = GPFAnonymousSession(url)
+                else:
+                    session = GPFOAuthSession(
+                        url, remote["client_id"], remote["client_secret"],
+                        remote.get("redirect_uri", ""),
+                    )
 
                 client = RESTClient(
                     session,

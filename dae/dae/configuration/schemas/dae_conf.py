@@ -56,8 +56,8 @@ remote_schema = {
     "id": {"type": "string"},
     "url": {"type": "string"},
     "redirect_uri": {"type": "string", "default": ""},
-    "client_id": {"type": "string", "default": None},
-    "client_secret": {"type": "string", "default": None},
+    "client_id": {"type": "string", "default": None, "nullable": True},
+    "client_secret": {"type": "string", "default": None, "nullable": True},
 }
 
 repository_schema = {
