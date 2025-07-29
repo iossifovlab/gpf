@@ -352,7 +352,7 @@ def _build_batched(
         reference_genome,
         args.columns_args,
         args.input_separator,
-        args.batch_size,
+        batch_size=args.batch_size,
     )
     filters: list[Filter] = []
     new_header = _build_new_header(source.header, pipeline)
