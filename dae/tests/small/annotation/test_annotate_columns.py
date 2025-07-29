@@ -726,6 +726,65 @@ def test_annotate_columns_internal_attributes(
     assert out_file_content == out_expected_content
 
 
+def test_csv_source(
+    tmp_path: pathlib.Path,
+) -> None:
+    csv_path = tmp_path / "data.csv"
+    setup_denovo(csv_path, """
+        #chrom  pos
+        chr1    1
+        chr1    2
+        chr1    3
+        chr1    4
+        chr1    5
+        chr1    6
+    """)
+
+    with _CSVSource(str(csv_path), None, {}, "\t") as source:
+        result = list(source.fetch())
+        assert len(result) == 6
+        for idx, item in enumerate(result):
+            assert item == \
+                AnnotationsWithSource(
+                    {"chrom": "chr1", "pos": str(idx + 1)},
+                    [Annotation(Position("chr1", idx + 1),
+                                {"chrom": "chr1", "pos": str(idx + 1)})],
+                )
+
+
+def test_csv_batch_source(
+    tmp_path: pathlib.Path,
+) -> None:
+    csv_path = tmp_path / "data.csv"
+    setup_denovo(csv_path, """
+        #chrom  pos
+        chr1    1
+        chr1    2
+        chr2    1
+        chr2    2
+        chr3    1
+        chr3    2
+    """)
+
+    with _CSVBatchSource(str(csv_path), None, {}, "\t", 2) as source:
+        result = list(source.fetch())
+        assert len(result) == 3
+        for idx, batch in enumerate(result):
+            chrom = f"chr{idx + 1}"
+            assert batch == (
+                AnnotationsWithSource(
+                    {"chrom": chrom, "pos": "1"},
+                    [Annotation(Position(chrom, 1),
+                                {"chrom": chrom, "pos": "1"})],
+                ),
+                AnnotationsWithSource(
+                    {"chrom": chrom, "pos": "2"},
+                    [Annotation(Position(chrom, 2),
+                                {"chrom": chrom, "pos": "2"})],
+                ),
+            )
+
+
 def test_csv_source_no_header_in_file(
     tmp_path: pathlib.Path,
 ) -> None:
