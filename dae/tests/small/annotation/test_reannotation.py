@@ -277,7 +277,6 @@ def test_new_annotators_detection(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 0
-    assert len(reannotation.attributes_reused) == 0
     assert len(reannotation.attributes_deleted) == 0
 
 
@@ -308,7 +307,6 @@ def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
 
     assert len(reannotation.annotators_new) == 0
     assert len(reannotation.annotators_rerun) == 0
-    assert len(reannotation.attributes_reused) == 0
     assert reannotation.attributes_deleted == [
         "worst_effect", "effect_details", "gene_effects",
     ]
@@ -344,10 +342,8 @@ def test_reused_attributes(
         new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
-    assert "hgX_annotatable" in reannotation.attributes_reused
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 0
-    assert len(reannotation.attributes_reused) == 1
     assert len(reannotation.attributes_deleted) == 0
 
 
@@ -402,10 +398,8 @@ def test_reused_attributes_indirect(
         new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
-    assert "hgX_annotatable" in reannotation.attributes_reused
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 1
-    assert len(reannotation.attributes_reused) == 1
     assert len(reannotation.attributes_deleted) == 0
 
 
@@ -461,7 +455,6 @@ def test_annotators_rerun_detection_upstream(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 2
-    assert len(reannotation.attributes_reused) == 0
     assert len(reannotation.attributes_deleted) == 1
 
 
@@ -513,7 +506,6 @@ def test_annotators_rerun_detection_downstream(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 2
-    assert len(reannotation.attributes_reused) == 0
     assert len(reannotation.attributes_deleted) == 1
 
 

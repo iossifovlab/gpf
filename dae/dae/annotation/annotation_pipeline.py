@@ -287,17 +287,8 @@ class ReannotationPipeline(AnnotationPipeline):
             if info in self.annotators_new or info in self.annotators_rerun:
                 self.annotators.append(annotator)
 
-        self.attributes_reused: dict[str, AttributeInfo] = {}
-        for annotator in self.annotators:
-            info = annotator.get_info()
-            for (dep_annotator, dep_attr) in self.dependency_graph[info]:
-                if dep_annotator in infos_old \
-                   and dep_annotator not in self.annotators_rerun:
-                    self.attributes_reused[dep_attr.name] = dep_attr
-
         logger.debug("REANNOTATION SUMMARY:")
         logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
-        logger.debug("REUSED ATTRIBUTES - %s", self.attributes_reused)
         logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
         logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)
 
@@ -365,18 +356,6 @@ class ReannotationPipeline(AnnotationPipeline):
                              attribute.name)
         return converted_value
 
-    def annotate(
-        self, annotatable: Annotatable | None,
-        context: dict | None = None,
-    ) -> dict:
-        reused_context = None
-        if context is not None:
-            reused_context = {
-                attr.name: self._convert_attr(context[attr.name], attr)
-                for attr in self.attributes_reused.values()
-            }
-        return super().annotate(annotatable, reused_context)
-
     def get_attributes(self) -> list[AttributeInfo]:
         return self.pipeline_new.get_attributes()
 
@@ -388,9 +367,6 @@ class ReannotationPipeline(AnnotationPipeline):
         print("DELETED ATTRIBUTES -")
         for dattr in self.attributes_deleted:
             print("    +", dattr)
-        print("REUSED ATTRIBUTES -")
-        for rattr in self.attributes_reused:
-            print("    +", rattr)
         print("NEW ANNOTATORS -")
         for anno in self.annotators_new:
             print("    +", anno.annotator_id, anno.type,
@@ -546,12 +522,10 @@ class FullReannotationPipeline(ReannotationPipeline):
         self.annotators_new: set[AnnotatorInfo] = set(pipeline_new.get_info())
 
         self.annotators_rerun: set[AnnotatorInfo] = set()
-        self.attributes_reused: dict[str, AttributeInfo] = {}
 
         self.annotators = self.pipeline_new.annotators
 
         logger.debug("REANNOTATION SUMMARY:")
         logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
-        logger.debug("REUSED ATTRIBUTES - %s", self.attributes_reused)
         logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
         logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)
