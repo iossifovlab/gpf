@@ -35,6 +35,80 @@ GC_GRR_KEY = "genomic_resources_repository"
 GC_REFERENCE_GENOME_KEY = "reference_genome"
 GC_GENE_MODELS_KEY = "gene_models"
 
+_AnnotationDependencyGraph = dict[
+    AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]],
+]
+
+
+def _get_dependencies_for(
+    info: AnnotatorInfo,
+    dependency_graph: _AnnotationDependencyGraph,
+) -> set[AnnotatorInfo]:
+    """Get all dependencies for a given annotator."""
+    result: set[AnnotatorInfo] = set()
+    if info in dependency_graph:
+        for annotator, attr in dependency_graph[info]:
+            if attr.internal:
+                result.add(annotator)
+                dependencies = _get_dependencies_for(
+                    annotator, dependency_graph)
+                if dependencies:
+                    result.add(*dependencies)
+    return result
+
+
+def _get_dependents_for(
+    info: AnnotatorInfo,
+    dependency_graph: _AnnotationDependencyGraph,
+) -> set[AnnotatorInfo]:
+    """Get all dependents for a given annotator."""
+    result: set[AnnotatorInfo] = set()
+    for dependent, dependencies in dependency_graph.items():
+        if not dependencies:
+            continue
+        for dep_annotator, _ in dependencies:
+            if dep_annotator == info:
+                result.add(dependent)
+                further = _get_dependents_for(dependent, dependency_graph)
+                if further:
+                    result.update(further)
+    return result
+
+
+def _build_dependency_graph(
+    pipeline: AnnotationPipeline,
+) -> _AnnotationDependencyGraph:
+    """Make dependency graph for an annotation pipeline."""
+    graph: _AnnotationDependencyGraph = {}
+    for annotator in pipeline.annotators:
+        annotator_info = annotator.get_info()
+        if annotator_info not in graph:
+            graph[annotator_info] = []
+        for attr in annotator.used_context_attributes:
+            attr_info = pipeline.get_attribute_info(attr)
+            assert attr_info is not None
+            upstream_annotator = \
+                pipeline.get_annotator_by_attribute_info(attr_info)
+            assert upstream_annotator is not None
+            graph[annotator_info].append(
+                (upstream_annotator.get_info(), attr_info),
+            )
+    return graph
+
+
+def _get_rerun_annotators(
+    pipeline: AnnotationPipeline,
+    annotators_new: Iterable[AnnotatorInfo],
+) -> set[AnnotatorInfo]:
+    result: set[AnnotatorInfo] = set()
+    dependency_graph = _build_dependency_graph(pipeline)
+    for i in annotators_new:
+        result.update(_get_dependencies_for(i, dependency_graph))
+        result.update(_get_dependents_for(i, dependency_graph))
+
+    logger.debug("RE-RUNNING ANNOTATORS - %s", result)
+    return result
+
 
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
@@ -242,10 +316,6 @@ class AnnotationPipeline:
 class ReannotationPipeline(AnnotationPipeline):
     """Special pipeline that handles reannotation of a previous pipeline."""
 
-    AnnotationDependencyGraph = dict[
-        AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]],
-    ]
-
     def __init__(
         self,
         pipeline_new: AnnotationPipeline,
@@ -262,10 +332,6 @@ class ReannotationPipeline(AnnotationPipeline):
         infos_new = pipeline_new.get_info()
         infos_old = pipeline_old.get_info()
 
-        self.dependency_graph = ReannotationPipeline.build_dependency_graph(
-            pipeline_new,
-        )
-
         self.attributes_deleted: list[str] = []
         for deleted_info in [i for i in infos_old if i not in infos_new]:
             for attr in deleted_info.attributes:
@@ -275,106 +341,23 @@ class ReannotationPipeline(AnnotationPipeline):
         self.annotators_new: set[AnnotatorInfo] = {
             i for i in infos_new if i not in infos_old
         }
-        self.annotators_rerun: set[AnnotatorInfo] = set()
-        for i in self.annotators_new:
-            for dep in self.get_dependencies_for(i):
-                self.annotators_rerun.add(dep)
-            for dep in self.get_dependents_for(i):
-                self.annotators_rerun.add(dep)
+
+        logger.debug("REANNOTATION SUMMARY:")
+        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
+        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
+
+        self.annotators_rerun = _get_rerun_annotators(
+            self.pipeline_new,
+            self.annotators_new,
+        )
 
         for annotator in self.pipeline_new.annotators:
             info = annotator.get_info()
             if info in self.annotators_new or info in self.annotators_rerun:
                 self.annotators.append(annotator)
 
-        logger.debug("REANNOTATION SUMMARY:")
-        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
-        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
-        logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)
-
-    @staticmethod
-    def build_dependency_graph(
-        pipeline: AnnotationPipeline,
-    ) -> AnnotationDependencyGraph:
-        """Make dependency graph for an annotation pipeline."""
-        graph: ReannotationPipeline.AnnotationDependencyGraph = {}
-        for annotator in pipeline.annotators:
-            annotator_info = annotator.get_info()
-            if annotator_info not in graph:
-                graph[annotator_info] = []
-            for attr in annotator.used_context_attributes:
-                attr_info = pipeline.get_attribute_info(attr)
-                assert attr_info is not None
-                upstream_annotator = \
-                    pipeline.get_annotator_by_attribute_info(attr_info)
-                assert upstream_annotator is not None
-                graph[annotator_info].append(
-                    (upstream_annotator.get_info(), attr_info),
-                )
-        return graph
-
-    def get_dependencies_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
-        """Get all dependencies for a given annotator."""
-        result: set[AnnotatorInfo] = set()
-        if info in self.dependency_graph:
-            for annotator, attr in self.dependency_graph[info]:
-                if attr.internal:
-                    result.add(annotator)
-                    dependencies = self.get_dependencies_for(annotator)
-                    if dependencies:
-                        result.add(*dependencies)
-        return result
-
-    def get_dependents_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
-        """Get all dependents for a given annotator."""
-        result: set[AnnotatorInfo] = set()
-        for dependent, dependencies in self.dependency_graph.items():
-            if not dependencies:
-                continue
-            for dep_annotator, _ in dependencies:
-                if dep_annotator == info:
-                    result.add(dependent)
-                    further = self.get_dependents_for(dependent)
-                    if further:
-                        result.update(further)
-        return result
-
-    def _convert_attr(self, raw_value: str, attribute: AttributeInfo) -> Any:
-        converted_value: Any = None
-        if attribute.type == "int":
-            converted_value = int(raw_value)
-        elif attribute.type == "float":
-            converted_value = float(raw_value)
-        elif attribute.type == "bool":
-            converted_value = bool(raw_value)
-        elif attribute.type == "annotatable":
-            converted_value = Annotatable.from_string(raw_value)
-        elif attribute.type == "str":
-            converted_value = str(raw_value)
-        elif attribute.type == "object":
-            raise ValueError("Cannot deserialize object attribute - ",
-                             attribute.name)
-        return converted_value
-
     def get_attributes(self) -> list[AttributeInfo]:
         return self.pipeline_new.get_attributes()
-
-    def print(self) -> None:
-        print("NEW ATTRIBUTES -")
-        for anno in self.annotators_new:
-            for attr in anno.attributes:
-                print("    +", attr.name)
-        print("DELETED ATTRIBUTES -")
-        for dattr in self.attributes_deleted:
-            print("    +", dattr)
-        print("NEW ANNOTATORS -")
-        for anno in self.annotators_new:
-            print("    +", anno.annotator_id, anno.type,
-                  [res.resource_id for res in anno.resources])
-        print("RE-RUNNING ANNOTATORS -")
-        for anno in self.annotators_rerun:
-            print("    +", anno.annotator_id, anno.type,
-                  [res.resource_id for res in anno.resources])
 
 
 class AnnotatorDecorator(Annotator):

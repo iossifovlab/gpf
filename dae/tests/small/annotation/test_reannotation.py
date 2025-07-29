@@ -7,7 +7,10 @@ import pytest
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.annotation_pipeline import (
+    ReannotationPipeline,
+    _build_dependency_graph,
+)
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import (
@@ -231,7 +234,7 @@ def test_dependency_graph_correctness(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
 ) -> None:
     pipeline = load_pipeline_from_yaml(simple_pipeline_config, reannotation_grr)
-    dependency_graph = ReannotationPipeline.build_dependency_graph(pipeline)
+    dependency_graph = _build_dependency_graph(pipeline)
 
     liftover_annotator = pipeline.annotators[0].get_info()
     effect_annotator = pipeline.annotators[1].get_info()
