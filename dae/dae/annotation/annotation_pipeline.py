@@ -256,6 +256,9 @@ class ReannotationPipeline(AnnotationPipeline):
         self.pipeline_new: AnnotationPipeline = pipeline_new
         self.pipeline_old: AnnotationPipeline = pipeline_old
 
+        self.preamble = self.pipeline_new.preamble
+        self.raw = self.pipeline_new.raw
+
         infos_new = pipeline_new.get_info()
         infos_old = pipeline_old.get_info()
 
@@ -342,7 +345,7 @@ class ReannotationPipeline(AnnotationPipeline):
                     result.add(dependent)
                     further = self.get_dependents_for(dependent)
                     if further:
-                        result.add(*further)
+                        result.update(further)
         return result
 
     def _convert_attr(self, raw_value: str, attribute: AttributeInfo) -> Any:

@@ -37,7 +37,6 @@ from dae.annotation.annotation_config import (
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
@@ -185,7 +184,7 @@ class _VCFWriter(Filter):
     def __init__(
         self,
         path: str,
-        pipeline: AnnotationPipeline,
+        pipeline: ReannotationPipeline,
         header: VariantHeader,
     ):
         self.path = path
@@ -196,35 +195,32 @@ class _VCFWriter(Filter):
             attr for attr in self.pipeline.get_attributes()
             if not attr.internal
         ]
-        self.to_delete = None
-        if isinstance(self.pipeline, ReannotationPipeline):
-            self.to_delete = self.pipeline.attributes_deleted
+        self.to_delete = self.pipeline.attributes_deleted
 
     @staticmethod
     def _update_header(
         header: VariantHeader,
-        pipeline: AnnotationPipeline,
+        pipeline: ReannotationPipeline,
     ) -> VariantHeader:
         """Update a variant file's header with annotation pipeline scores."""
         assert pipeline is not None
 
         header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
-        if isinstance(pipeline, ReannotationPipeline):
-            header_info_keys = header.info.keys()
-            old_annotation_columns = {
-                attr.name
-                for attr in pipeline.pipeline_old.get_attributes()
-                if not attr.internal
-            }
-            new_annotation_columns = {
-                attr.name for attr in pipeline.get_attributes()
-                if not attr.internal
-            }
+        header_info_keys = header.info.keys()
+        old_annotation_columns = {
+            attr.name
+            for attr in pipeline.pipeline_old.get_attributes()
+            if not attr.internal
+        }
+        new_annotation_columns = {
+            attr.name for attr in pipeline.get_attributes()
+            if not attr.internal
+        }
 
-            for info_key in header_info_keys:
-                if (info_key in old_annotation_columns
-                   and info_key not in new_annotation_columns):
-                    header.info.remove_header(info_key)
+        for info_key in header_info_keys:
+            if (info_key in old_annotation_columns
+               and info_key not in new_annotation_columns):
+                header.info.remove_header(info_key)
 
         attributes = []
         for attr in pipeline.get_attributes():
@@ -321,7 +317,7 @@ class _VCFBatchWriter(Filter):
     def __init__(
         self,
         path: str,
-        pipeline: AnnotationPipeline,
+        pipeline: ReannotationPipeline,
         header: VariantHeader,
     ):
         self.writer = _VCFWriter(path, pipeline, header)

@@ -97,7 +97,7 @@ def load_pipeline_from_file(
     raw_path: str, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
-) -> AnnotationPipeline:
+) -> ReannotationPipeline:
     """Load an annotation pipeline from a configuration file."""
     path = Path(raw_path)
     if not path.exists():
@@ -115,7 +115,7 @@ def load_pipeline_from_yaml(
     raw: str, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
-) -> AnnotationPipeline:
+) -> ReannotationPipeline:
     """Load an annotation pipeline from a YAML-formatted string."""
     config = yaml.safe_load(raw)
     return build_annotation_pipeline(
@@ -131,7 +131,7 @@ def build_annotation_pipeline(
     work_dir: Path | None = None,
     config_old_raw: str | None = None,
     full_reannotation: bool = False,
-) -> AnnotationPipeline:
+) -> ReannotationPipeline:
     """Build an annotation pipeline."""
     preamble, pipeline_config = AnnotationConfigParser.parse_raw(
         config, grr=grr,
@@ -169,31 +169,16 @@ def build_annotation_pipeline(
         pipeline, allow_repeated_attributes=allow_repeated_attributes,
     )
 
-    if config_old_raw is not None:
-        pipeline_old = load_pipeline_from_yaml(config_old_raw, grr,
-                                               work_dir=work_dir)
-        pipeline = ReannotationPipeline(pipeline, pipeline_old) \
-            if not full_reannotation \
-            else FullReannotationPipeline(pipeline, pipeline_old)
+    if not config_old_raw:
+        pipeline_old = AnnotationPipeline(grr)
+    else:
+        pipeline_old = load_pipeline_from_yaml(
+            config_old_raw, grr, work_dir=work_dir)
+    pipeline = ReannotationPipeline(pipeline, pipeline_old) \
+        if not full_reannotation \
+        else FullReannotationPipeline(pipeline, pipeline_old)
 
     return pipeline
-
-
-def copy_annotation_pipeline(
-    pipeline: AnnotationPipeline,
-) -> AnnotationPipeline:
-    """Copy an annotation pipeline instance."""
-    return build_annotation_pipeline(pipeline.raw, pipeline.repository)
-
-
-def copy_reannotation_pipeline(
-    pipeline: ReannotationPipeline,
-) -> ReannotationPipeline:
-    """Copy a reannotation pipeline instance."""
-    return ReannotationPipeline(
-        copy_annotation_pipeline(pipeline.pipeline_new),
-        copy_annotation_pipeline(pipeline.pipeline_old),
-    )
 
 
 def check_for_repeated_attributes_in_annotator(

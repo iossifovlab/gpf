@@ -10,6 +10,7 @@ import shutil
 import sys
 from dataclasses import dataclass
 from datetime import datetime
+from typing import cast
 
 import yaml
 
@@ -23,7 +24,6 @@ from dae.annotation.annotation_config import (
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.genomic_context import (
@@ -239,7 +239,7 @@ def symlink_pedigree_and_family_variants(
 
 def write_new_meta(
     loader: ParquetLoader,
-    pipeline: AnnotationPipeline,
+    pipeline: ReannotationPipeline,
     output_layout: Schema2DatasetLayout,
 ) -> None:
     """Produce and write new metadata to the output Parquet dataset."""
@@ -276,13 +276,13 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
         "json",
     )
 
-    pipeline = build_annotation_pipeline(
+    pipeline = cast(ReannotationPipeline, build_annotation_pipeline(
         pipeline_config, grr,
         allow_repeated_attributes=args.allow_repeated_attributes,
         work_dir=pathlib.Path(args.work_dir),
         config_old_raw=pipeline_config_old,
         full_reannotation=args.full_reannotation,
-    )
+    ))
 
     writer = VariantsParquetWriter(
         output_dir,
@@ -297,18 +297,16 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
 
     if args.batch_size <= 0:
         source = Schema2SummaryVariantsSource(loader)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromVariantFilter(
-                pipeline.attributes_deleted))
+        filters.append(DeleteAttributesFromVariantFilter(
+            pipeline.attributes_deleted))
         filters.extend([
             AnnotationPipelineVariantsFilter(pipeline),
             Schema2SummaryVariantConsumer(writer),
         ])
     else:
         source = Schema2SummaryVariantsBatchSource(loader)
-        if isinstance(pipeline, ReannotationPipeline):
-            filters.append(DeleteAttributesFromVariantsBatchFilter(
-                pipeline.attributes_deleted))
+        filters.append(DeleteAttributesFromVariantsBatchFilter(
+            pipeline.attributes_deleted))
         filters.extend([
             AnnotationPipelineVariantsBatchFilter(pipeline),
             Schema2SummaryVariantBatchConsumer(writer),
@@ -453,7 +451,7 @@ def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     task_graph: TaskGraph,
     loader: ParquetLoader,
     output_layout: Schema2DatasetLayout,
-    pipeline: AnnotationPipeline,
+    pipeline: ReannotationPipeline,
     grr: GenomicResourceRepo,
     region: str | None,
     args: _ProcessingArgs,

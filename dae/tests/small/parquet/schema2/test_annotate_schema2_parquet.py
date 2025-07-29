@@ -572,36 +572,6 @@ def test_internal_attributes_reannotation(
         assert not sv.has_attribute("score_A_internal")
 
 
-def test_annotationless_study_autodetection(
-    mocker: pytest_mock.MockerFixture,
-    tmp_path: pathlib.Path,
-    t4c8_instance: GPFInstance,
-    t4c8_annotationless_study: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
-) -> None:
-    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
-    annotation_file_new = str(root_path / "new_annotation.yaml")
-    grr_file = str(root_path / "grr.yaml")
-    output_dir = str(tmp_path / "out")
-    work_dir = str(tmp_path / "work")
-
-    gpf_instance_genomic_context_fixture(t4c8_instance)
-
-    mocker.spy(ReannotationPipeline, "__init__")
-
-    cli([
-        t4c8_annotationless_study, annotation_file_new,
-        "-o", output_dir,
-        "-w", work_dir,
-        "--grr", grr_file,
-        "-j", "1",
-    ])
-
-    # check auto-detection by asserting
-    # reannotation pipeline is NOT constructed
-    assert ReannotationPipeline.__init__.call_count == 0  # type: ignore
-
-
 def test_autodetection_reannotate(
     mocker: pytest_mock.MockerFixture,
     tmp_path: pathlib.Path,

@@ -31,7 +31,6 @@ from dae.annotation.annotation_config import (
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.genomic_context import (
@@ -304,13 +303,12 @@ class _CSVBatchWriter(Filter):
 
 def _build_new_header(
     input_header: list[str],
-    pipeline: AnnotationPipeline,
+    pipeline: ReannotationPipeline,
 ) -> list[str]:
     result = list(input_header)
-    if isinstance(pipeline, ReannotationPipeline):
-        for attr in pipeline.pipeline_old.get_attributes():
-            if not attr.internal:
-                result.remove(attr.name)
+    for attr in pipeline.pipeline_old.get_attributes():
+        if not attr.internal:
+            result.remove(attr.name)
     return result + [
         attr.name for attr in pipeline.get_attributes()
         if not attr.internal
@@ -320,7 +318,7 @@ def _build_new_header(
 def _build_sequential(
     args: _ProcessingArgs,
     output_path: str,
-    pipeline: AnnotationPipeline,
+    pipeline: ReannotationPipeline,
     reference_genome: ReferenceGenome | None,
 ) -> PipelineProcessor:
     source = _CSVSource(
@@ -331,9 +329,8 @@ def _build_sequential(
     )
     filters: list[Filter] = []
     new_header = _build_new_header(source.header, pipeline)
-    if isinstance(pipeline, ReannotationPipeline):
-        filters.append(DeleteAttributesFromAWSFilter(
-            pipeline.attributes_deleted))
+    filters.append(DeleteAttributesFromAWSFilter(
+        pipeline.attributes_deleted))
     filters.extend([
         AnnotationPipelineAnnotatablesFilter(pipeline),
         _CSVWriter(output_path, args.output_separator, new_header),
@@ -344,7 +341,7 @@ def _build_sequential(
 def _build_batched(
     args: _ProcessingArgs,
     output_path: str,
-    pipeline: AnnotationPipeline,
+    pipeline: ReannotationPipeline,
     reference_genome: ReferenceGenome | None,
 ) -> PipelineProcessor:
     source = _CSVBatchSource(
@@ -356,9 +353,8 @@ def _build_batched(
     )
     filters: list[Filter] = []
     new_header = _build_new_header(source.header, pipeline)
-    if isinstance(pipeline, ReannotationPipeline):
-        filters.append(DeleteAttributesFromAWSBatchFilter(
-            pipeline.attributes_deleted))
+    filters.append(DeleteAttributesFromAWSBatchFilter(
+        pipeline.attributes_deleted))
     filters.extend([
         AnnotationPipelineAnnotatablesBatchFilter(pipeline),
         _CSVBatchWriter(output_path, args.output_separator, new_header),
