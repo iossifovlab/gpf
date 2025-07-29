@@ -123,14 +123,7 @@ class GPFRemoteExtension(GPFExtensionBase):
         for remote in self.dae_config["remotes"]:
             logger.info("Creating remote %s", remote)
             try:
-                if "host" in remote:
-                    protocol = remote.get("protocol", "http://")
-                    url = (
-                        f"{protocol}{remote['host']}:{remote['port']}"
-                       f"/{remote['gpf_prefix']}{remote['base_url']}"
-                    )
-                else:
-                    url = remote.get("url")
+                url = remote.get("url")
 
                 session = GPFOAuthSession(
                     url, remote["client_id"], remote["client_secret"],
