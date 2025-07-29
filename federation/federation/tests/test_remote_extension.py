@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import cast
+
 import pytest
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
@@ -10,6 +12,10 @@ from federation.remote_study_wrapper import (
     RemoteWDAEStudyGroup,
 )
 from federation.rest_api_client import RESTClient
+from rest_client.rest_client import (
+    GPFAnonymousSession,
+    GPFOAuthSession,
+)
 
 
 def test_get_available_data_ids(t4c8_instance: WGPFInstance) -> None:
@@ -69,6 +75,38 @@ def test_extension_get_studies_ids(
 
     tool = test_remote_extension.get_tool(study, "pheno_tool")
     assert tool is not None
+
+
+def test_extension_load_clients(
+    test_remote_extension: GPFRemoteExtension,
+) -> None:
+    test_remote_extension.dae_config["remotes"] = None
+    clients = test_remote_extension.load_clients()
+    assert clients == {}
+
+    test_remote_extension.dae_config["remotes"] = [
+        {
+            "id": "id1",
+            "url": "url1",
+        },
+        {
+            "id": "id2",
+            "url": "url2",
+            "client_id": "client_id2",
+            "client_secret": "client_secret2",
+        },
+    ]
+    clients = test_remote_extension.load_clients()
+    assert clients["id1"].base_url == "url1"
+    assert isinstance(clients["id1"].session, GPFAnonymousSession)
+    assert clients["id2"].base_url == "url2"
+    assert isinstance(clients["id2"].session, GPFOAuthSession)
+    assert cast(
+        GPFOAuthSession, clients["id2"].session,
+    ).client_id == "client_id2"
+    assert cast(
+        GPFOAuthSession, clients["id2"].session,
+    ).client_secret == "client_secret2"  # noqa: S105
 
 
 def test_extension_get_tool(
