@@ -21,7 +21,11 @@ from dae.annotation.annotate_utils import (
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import (
+    adjust_for_reannotation,
+    build_annotation_pipeline,
+    load_pipeline_from_yaml,
+)
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
     get_deleted_attributes,
@@ -269,8 +273,6 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     """Process a Parquet dataset for annotation."""
     loader = ParquetLoader(input_layout)
     grr = build_genomic_resource_repository(definition=grr_definition)
-    pipeline_config_old = loader.meta["annotation_pipeline"] \
-        if loader.has_annotation else None
     variants_blob_serializer = loader.meta.get(
         "variants_blob_serializer",
         "json",
@@ -280,20 +282,37 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
         pipeline_config, grr,
         allow_repeated_attributes=args.allow_repeated_attributes,
         work_dir=pathlib.Path(args.work_dir),
-        config_old_raw=pipeline_config_old,
-        full_reannotation=args.full_reannotation,
     )
+
+    pipeline_config_old = loader.meta["annotation_pipeline"] \
+        if loader.has_annotation else None
+
+    pipeline_previous = None
+    if pipeline_config_old is not None:
+        pipeline_previous = load_pipeline_from_yaml(pipeline_config_old, grr)
+
+    if pipeline_previous and not args.full_reannotation:
+        adjust_for_reannotation(pipeline, pipeline_previous)
+
+    attributes_to_delete = []
+    if pipeline_previous:
+        attributes_to_delete = get_deleted_attributes(
+            pipeline,
+            pipeline_previous,
+            full_reannotation=args.full_reannotation,
+        )
+
+    annotation_attributes = [
+        attr for attr in pipeline.get_attributes()
+        if not attr.internal
+    ]
 
     writer = VariantsParquetWriter(
         output_dir,
-        pipeline.get_attributes(),
+        annotation_attributes,
         loader.partition_descriptor,
         bucket_index=bucket_idx,
         variants_blob_serializer=variants_blob_serializer,
-    )
-
-    attributes_to_delete = get_deleted_attributes(
-        pipeline.pipeline_new, pipeline.pipeline_old,
     )
 
     source: Source

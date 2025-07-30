@@ -7,9 +7,9 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from glob import glob
 
+import dae.parquet.schema2.annotate_schema2_parquet
 import pytest
 import pytest_mock
-from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
@@ -587,7 +587,8 @@ def test_autodetection_reannotate(
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
-    mocker.spy(ReannotationPipeline, "__init__")
+    spy = mocker.spy(dae.parquet.schema2.annotate_schema2_parquet,
+                     "adjust_for_reannotation")
 
     cli([
         t4c8_study_nonpartitioned, annotation_file_new,
@@ -597,8 +598,7 @@ def test_autodetection_reannotate(
         "-j", "1",
     ])
 
-    # check auto-detection by asserting reannotation pipeline is constructed
-    assert ReannotationPipeline.__init__.call_count >= 1  # type: ignore
+    assert spy.call_count == 1  # type: ignore
 
 
 def test_reannotate_in_place(
