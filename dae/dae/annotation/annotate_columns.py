@@ -32,6 +32,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
+    get_deleted_attributes,
 )
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
@@ -320,6 +321,7 @@ def _build_sequential(
     output_path: str,
     pipeline: ReannotationPipeline,
     reference_genome: ReferenceGenome | None,
+    attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVSource(
         args.input,
@@ -329,9 +331,8 @@ def _build_sequential(
     )
     filters: list[Filter] = []
     new_header = _build_new_header(source.header, pipeline)
-    filters.append(DeleteAttributesFromAWSFilter(
-        pipeline.attributes_deleted))
     filters.extend([
+        DeleteAttributesFromAWSFilter(attributes_to_delete),
         AnnotationPipelineAnnotatablesFilter(pipeline),
         _CSVWriter(output_path, args.output_separator, new_header),
     ])
@@ -343,6 +344,7 @@ def _build_batched(
     output_path: str,
     pipeline: ReannotationPipeline,
     reference_genome: ReferenceGenome | None,
+    attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVBatchSource(
         args.input,
@@ -353,9 +355,8 @@ def _build_batched(
     )
     filters: list[Filter] = []
     new_header = _build_new_header(source.header, pipeline)
-    filters.append(DeleteAttributesFromAWSBatchFilter(
-        pipeline.attributes_deleted))
     filters.extend([
+        DeleteAttributesFromAWSBatchFilter(attributes_to_delete),
         AnnotationPipelineAnnotatablesBatchFilter(pipeline),
         _CSVBatchWriter(output_path, args.output_separator, new_header),
     ])
@@ -391,9 +392,22 @@ def _annotate_csv(
         full_reannotation=args.full_reannotation,
     )
 
-    processor = _build_sequential(args, output_path, pipeline, ref_genome) \
+    attributes_to_delete = get_deleted_attributes(
+        pipeline.pipeline_new.get_info(),
+        pipeline.pipeline_old.get_info(),
+    )
+
+    build_processor = _build_sequential \
         if args.batch_size <= 0 \
-        else _build_batched(args, output_path, pipeline, ref_genome)
+        else _build_batched
+
+    processor = build_processor(
+        args,
+        output_path,
+        pipeline,
+        ref_genome,
+        attributes_to_delete,
+    )
 
     with processor:
         processor.process_region(region)

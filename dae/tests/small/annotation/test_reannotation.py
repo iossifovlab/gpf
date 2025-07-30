@@ -10,6 +10,7 @@ from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
     _build_dependency_graph,
+    get_deleted_attributes,
 )
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -217,7 +218,8 @@ def simple_pipeline_config() -> str:
 def test_annotators_used_context_attributes(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
 ) -> None:
-    pipeline = load_pipeline_from_yaml(simple_pipeline_config, reannotation_grr)
+    pipeline = load_pipeline_from_yaml(
+        simple_pipeline_config, reannotation_grr)
     # default behaviour
     assert pipeline.annotators[0].used_context_attributes == ()
 
@@ -233,7 +235,8 @@ def test_annotators_used_context_attributes(
 def test_dependency_graph_correctness(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
 ) -> None:
-    pipeline = load_pipeline_from_yaml(simple_pipeline_config, reannotation_grr)
+    pipeline = load_pipeline_from_yaml(
+        simple_pipeline_config, reannotation_grr)
     dependency_graph = _build_dependency_graph(pipeline)
 
     liftover_annotator = pipeline.annotators[0].get_info()
@@ -280,7 +283,6 @@ def test_new_annotators_detection(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 0
-    assert len(reannotation.attributes_deleted) == 0
 
 
 def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
@@ -306,11 +308,12 @@ def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
         old_pipeline_config, reannotation_grr)
     new_pipeline = load_pipeline_from_yaml(
         new_pipeline_config, reannotation_grr)
-    reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
-    assert len(reannotation.annotators_new) == 0
-    assert len(reannotation.annotators_rerun) == 0
-    assert reannotation.attributes_deleted == [
+    attributes_to_delete = get_deleted_attributes(
+        new_pipeline.get_info(), old_pipeline.get_info(),
+    )
+
+    assert attributes_to_delete == [
         "worst_effect", "effect_details", "gene_effects",
     ]
 
@@ -347,7 +350,6 @@ def test_reused_attributes(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 0
-    assert len(reannotation.attributes_deleted) == 0
 
 
 def test_reused_attributes_indirect(
@@ -403,7 +405,6 @@ def test_reused_attributes_indirect(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 1
-    assert len(reannotation.attributes_deleted) == 0
 
 
 def test_annotators_rerun_detection_upstream(
@@ -458,7 +459,6 @@ def test_annotators_rerun_detection_upstream(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 2
-    assert len(reannotation.attributes_deleted) == 1
 
 
 def test_annotators_rerun_detection_downstream(
@@ -509,7 +509,6 @@ def test_annotators_rerun_detection_downstream(
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.annotators_rerun) == 2
-    assert len(reannotation.attributes_deleted) == 1
 
 
 def test_annotate_columns_reannotation(

@@ -38,6 +38,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
+    get_deleted_attributes,
 )
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.processing_pipeline import (
@@ -195,7 +196,10 @@ class _VCFWriter(Filter):
             attr for attr in self.pipeline.get_attributes()
             if not attr.internal
         ]
-        self.to_delete = self.pipeline.attributes_deleted
+        self.attributes_to_delete = get_deleted_attributes(
+            self.pipeline.pipeline_new.get_info(),
+            self.pipeline.pipeline_old.get_info(),
+        )
 
     @staticmethod
     def _update_header(
@@ -256,12 +260,12 @@ class _VCFWriter(Filter):
         vcf_var: VariantRecord,
         allele_annotations: list[dict],
         attributes: list[AttributeInfo],
-        to_delete: list[str] | None,
+        attributes_to_delete: Sequence[str] | None,
     ) -> None:
         buffers: list[list] = [[] for _ in attributes]
         for annotation in allele_annotations:
-            if to_delete is not None:
-                for col in to_delete:
+            if attributes_to_delete is not None:
+                for col in attributes_to_delete:
                     del vcf_var.info[col]
 
             for buff, attribute in zip(buffers, attributes, strict=True):
@@ -306,7 +310,7 @@ class _VCFWriter(Filter):
             data.source,
             [annotation.context for annotation in data.annotations],
             self.annotation_attributes,
-            self.to_delete,
+            self.attributes_to_delete,
         )
         self.output_file.write(data.source)
 

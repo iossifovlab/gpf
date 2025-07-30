@@ -110,6 +110,18 @@ def _get_rerun_annotators(
     return result
 
 
+def get_deleted_attributes(
+    infos_new: Iterable[AnnotatorInfo],
+    infos_old: Iterable[AnnotatorInfo],
+) -> list[str]:
+    """Get a list of attributes that are deleted in the new annotation."""
+    result: list[str] = []
+    for deleted_info in [i for i in infos_old if i not in infos_new]:
+        result.extend([attr.name for attr in deleted_info.attributes
+                       if not attr.internal])
+    return result
+
+
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
@@ -171,14 +183,14 @@ class Annotator(abc.ABC):
 class AnnotationPipeline:
     """Provides annotation pipeline abstraction."""
 
-    def __init__(
-            self, repository: GenomicResourceRepo):
-
+    def __init__(self, repository: GenomicResourceRepo):
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
         self.preamble: AnnotationPreamble | None = None
         self.raw: RawPipelineConfig = []
         self._is_open = False
+
+        self._annotators_to_run: dict[AnnotatorInfo, bool] = {}
 
     def build_pipeline_genomic_context(self) -> GenomicContext:
         """Create a genomic context from the pipeline parameters."""
@@ -332,18 +344,11 @@ class ReannotationPipeline(AnnotationPipeline):
         infos_new = pipeline_new.get_info()
         infos_old = pipeline_old.get_info()
 
-        self.attributes_deleted: list[str] = []
-        for deleted_info in [i for i in infos_old if i not in infos_new]:
-            for attr in deleted_info.attributes:
-                if not attr.internal:
-                    self.attributes_deleted.append(attr.name)
-
         self.annotators_new: set[AnnotatorInfo] = {
             i for i in infos_new if i not in infos_old
         }
 
         logger.debug("REANNOTATION SUMMARY:")
-        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
         logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
 
         self.annotators_rerun = _get_rerun_annotators(

@@ -10,7 +10,6 @@ import shutil
 import sys
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
 
 import yaml
 
@@ -25,6 +24,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
+    get_deleted_attributes,
 )
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
@@ -276,13 +276,13 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
         "json",
     )
 
-    pipeline = cast(ReannotationPipeline, build_annotation_pipeline(
+    pipeline = build_annotation_pipeline(
         pipeline_config, grr,
         allow_repeated_attributes=args.allow_repeated_attributes,
         work_dir=pathlib.Path(args.work_dir),
         config_old_raw=pipeline_config_old,
         full_reannotation=args.full_reannotation,
-    ))
+    )
 
     writer = VariantsParquetWriter(
         output_dir,
@@ -292,22 +292,25 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
         variants_blob_serializer=variants_blob_serializer,
     )
 
+    attributes_to_delete = get_deleted_attributes(
+        pipeline.pipeline_new.get_info(),
+        pipeline.pipeline_old.get_info(),
+    )
+
     source: Source
     filters: list[Filter] = []
 
     if args.batch_size <= 0:
         source = Schema2SummaryVariantsSource(loader)
-        filters.append(DeleteAttributesFromVariantFilter(
-            pipeline.attributes_deleted))
         filters.extend([
+            DeleteAttributesFromVariantFilter(attributes_to_delete),
             AnnotationPipelineVariantsFilter(pipeline),
             Schema2SummaryVariantConsumer(writer),
         ])
     else:
         source = Schema2SummaryVariantsBatchSource(loader)
-        filters.append(DeleteAttributesFromVariantsBatchFilter(
-            pipeline.attributes_deleted))
         filters.extend([
+            DeleteAttributesFromVariantsBatchFilter(attributes_to_delete),
             AnnotationPipelineVariantsBatchFilter(pipeline),
             Schema2SummaryVariantBatchConsumer(writer),
         ])
