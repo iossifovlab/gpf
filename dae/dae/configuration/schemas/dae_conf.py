@@ -54,12 +54,10 @@ rsync_schema = {
 
 remote_schema = {
     "id": {"type": "string"},
-    "host": {"type": "string"},
-    "gpf_prefix": {"type": "string"},
-    "base_url": {"type": "string"},
-    "port": {"type": "integer", "default": "8000"},
-    "client_id": {"type": "string", "default": None},
-    "client_secret": {"type": "string", "default": None},
+    "url": {"type": "string"},
+    "redirect_uri": {"type": "string", "default": ""},
+    "client_id": {"type": "string", "default": None, "nullable": True},
+    "client_secret": {"type": "string", "default": None, "nullable": True},
 }
 
 repository_schema = {
@@ -222,7 +220,7 @@ dae_conf_schema = {
     },
     "remotes": {
         "type": "list",
-        "valuesrules": {"type": "dict", "schema": remote_schema},
+        "schema": {"type": "dict", "schema": remote_schema},
     },
 
     "grr": {
