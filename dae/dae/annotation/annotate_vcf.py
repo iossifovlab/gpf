@@ -35,9 +35,12 @@ from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
     RawPipelineConfig,
 )
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import (
+    adjust_for_reannotation,
+    build_annotation_pipeline,
+    load_pipeline_from_file,
+)
 from dae.annotation.annotation_pipeline import (
-    ReannotationPipeline,
     get_deleted_attributes,
 )
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
@@ -185,59 +188,44 @@ class _VCFWriter(Filter):
     def __init__(
         self,
         path: str,
-        pipeline: ReannotationPipeline,
         header: VariantHeader,
+        annotation_attributes: Sequence[AttributeInfo],
+        attributes_to_delete: Sequence[str],
     ):
         self.path = path
-        self.pipeline = pipeline
-        self.header = self._update_header(header, pipeline)
         self.output_file: VariantFile
-        self.annotation_attributes = [
-            attr for attr in self.pipeline.get_attributes()
-            if not attr.internal
-        ]
-        self.attributes_to_delete = get_deleted_attributes(
-            self.pipeline.pipeline_new, self.pipeline.pipeline_old,
-        )
+        self.header = self._update_header(
+            header, annotation_attributes, attributes_to_delete)
+        self.annotation_attributes = annotation_attributes
+        self.attributes_to_delete = attributes_to_delete
 
     @staticmethod
     def _update_header(
         header: VariantHeader,
-        pipeline: ReannotationPipeline,
+        annotation_attributes: Sequence[AttributeInfo],
+        attributes_to_delete: Sequence[str],
     ) -> VariantHeader:
-        """Update a variant file's header with annotation pipeline scores."""
-        assert pipeline is not None
-
+        """Update a variant file's header with annotation."""
         header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
-        header_info_keys = header.info.keys()
-        old_annotation_columns = {
-            attr.name
-            for attr in pipeline.pipeline_old.get_attributes()
-            if not attr.internal
-        }
-        new_annotation_columns = {
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal
-        }
 
-        for info_key in header_info_keys:
-            if (info_key in old_annotation_columns
-               and info_key not in new_annotation_columns):
+        annotation_attr_names = [attr.name for attr in annotation_attributes]
+
+        for info_key in header.info:
+            if info_key in attributes_to_delete \
+               and info_key not in annotation_attr_names:
                 header.info.remove_header(info_key)
 
-        attributes = []
-        for attr in pipeline.get_attributes():
-            if attr.internal:
-                continue
-
-            if attr.name not in header.info:
-                attributes.append(attr)
+        attributes = [
+            attr for attr in annotation_attributes
+            if attr.name not in header.info
+        ]
 
         for attribute in attributes:
             description = attribute.description
             description = description.replace("\n", " ")
             description = description.replace('"', '\\"')
             header.info.add(attribute.name, "A", "String", description)
+
         return header
 
     @staticmethod
@@ -258,15 +246,15 @@ class _VCFWriter(Filter):
     def _update_variant(
         vcf_var: VariantRecord,
         allele_annotations: list[dict],
-        attributes: list[AttributeInfo],
-        attributes_to_delete: Sequence[str] | None,
+        attributes: Sequence[AttributeInfo],
+        attributes_to_delete: Sequence[str],
     ) -> None:
         buffers: list[list] = [[] for _ in attributes]
-        for annotation in allele_annotations:
-            if attributes_to_delete is not None:
-                for col in attributes_to_delete:
-                    del vcf_var.info[col]
 
+        for col in attributes_to_delete:
+            del vcf_var.info[col]
+
+        for annotation in allele_annotations:
             for buff, attribute in zip(buffers, attributes, strict=True):
                 value = annotation.get(attribute.name)
                 if vcf_var.header.info[attribute.name].type == "String":
@@ -280,7 +268,7 @@ class _VCFWriter(Filter):
             for idx, attr in enumerate(attributes)
         }
         for buff, attribute in zip(buffers, attributes, strict=True):
-            if attribute.internal or not has_value[attribute.name]:
+            if not has_value[attribute.name]:
                 continue
             vcf_var.info[attribute.name] = buff
 
@@ -320,10 +308,12 @@ class _VCFBatchWriter(Filter):
     def __init__(
         self,
         path: str,
-        pipeline: ReannotationPipeline,
         header: VariantHeader,
+        annotation_attributes: Sequence[AttributeInfo],
+        attributes_to_delete: Sequence[str],
     ):
-        self.writer = _VCFWriter(path, pipeline, header)
+        self.writer = _VCFWriter(
+            path, header, annotation_attributes, attributes_to_delete)
 
     def __enter__(self) -> _VCFBatchWriter:
         self.writer.__enter__()
@@ -358,34 +348,56 @@ def _annotate_vcf(
 ) -> None:
     """Annotate a VCF file using a processing pipeline."""
 
-    pipeline_config_old = None
-    if args.reannotate:
-        pipeline_config_old = Path(args.reannotate).read_text()
-
     grr = build_genomic_resource_repository(definition=grr_definition)
+
+    pipeline_previous = None
+    if args.reannotate:
+        pipeline_previous = load_pipeline_from_file(args.reannotate, grr)
 
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
         allow_repeated_attributes=args.allow_repeated_attributes,
         work_dir=Path(args.work_dir),
-        config_old_raw=pipeline_config_old,
-        full_reannotation=args.full_reannotation,
     )
+
+    if pipeline_previous and not args.full_reannotation:
+        adjust_for_reannotation(pipeline, pipeline_previous)
+
+    attributes_to_delete = []
+    if pipeline_previous:
+        attributes_to_delete = get_deleted_attributes(
+            pipeline,
+            pipeline_previous,
+            full_reannotation=args.full_reannotation,
+        )
+
+    annotation_attributes = [
+        attr for attr in pipeline.get_attributes()
+        if not attr.internal
+    ]
 
     source: Source
     filters: list[Filter] = []
 
     if args.batch_size <= 0:
         source = _VCFSource(args.input)
+        header = source.header.copy()
         filters.extend([
             AnnotationPipelineAnnotatablesFilter(pipeline),
-            _VCFWriter(output_path, pipeline, source.header),
+            _VCFWriter(output_path,
+                       header,
+                       annotation_attributes,
+                       attributes_to_delete),
         ])
     else:
         source = _VCFBatchSource(args.input)
+        header = source.source.header.copy()
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            _VCFBatchWriter(output_path, pipeline, source.source.header),
+            _VCFBatchWriter(output_path,
+                            header,
+                            annotation_attributes,
+                            attributes_to_delete),
         ])
 
     with PipelineProcessor(source, filters) as processor:
@@ -397,7 +409,10 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
     header_donor = VariantFile(partfile_paths[0], "r")
-    output_file = VariantFile(output_path, "w", header=header_donor.header)
+    output_file = VariantFile(
+        output_path, "w",
+        header=header_donor.header.copy(),
+    )
     for path in partfile_paths:
         partfile = VariantFile(path, "r")
         for variant in partfile.fetch():
