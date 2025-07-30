@@ -197,8 +197,7 @@ class _VCFWriter(Filter):
             if not attr.internal
         ]
         self.attributes_to_delete = get_deleted_attributes(
-            self.pipeline.pipeline_new.get_info(),
-            self.pipeline.pipeline_old.get_info(),
+            self.pipeline.pipeline_new, self.pipeline.pipeline_old,
         )
 
     @staticmethod

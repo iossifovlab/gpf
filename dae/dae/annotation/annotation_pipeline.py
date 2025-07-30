@@ -96,7 +96,7 @@ def _build_dependency_graph(
     return graph
 
 
-def _get_rerun_annotators(
+def get_rerun_annotators(
     pipeline: AnnotationPipeline,
     annotators_new: Iterable[AnnotatorInfo],
 ) -> set[AnnotatorInfo]:
@@ -111,10 +111,18 @@ def _get_rerun_annotators(
 
 
 def get_deleted_attributes(
-    infos_new: Iterable[AnnotatorInfo],
-    infos_old: Iterable[AnnotatorInfo],
+    pipeline_current: AnnotationPipeline,
+    pipeline_previous: AnnotationPipeline,
+    *,
+    full_reannotation: bool = False,
 ) -> list[str]:
     """Get a list of attributes that are deleted in the new annotation."""
+    infos_new = pipeline_current.get_info()
+    infos_old = pipeline_previous.get_info()
+
+    if full_reannotation is True:
+        return [attr.name for info in infos_old for attr in info.attributes]
+
     result: list[str] = []
     for deleted_info in [i for i in infos_old if i not in infos_new]:
         result.extend([attr.name for attr in deleted_info.attributes
@@ -190,7 +198,7 @@ class AnnotationPipeline:
         self.raw: RawPipelineConfig = []
         self._is_open = False
 
-        self._annotators_to_run: dict[AnnotatorInfo, bool] = {}
+        self.subset_to_run: list[Annotator] = []
 
     def build_pipeline_genomic_context(self) -> GenomicContext:
         """Create a genomic context from the pipeline parameters."""
@@ -288,6 +296,10 @@ class AnnotationPipeline:
         assert not self._is_open
         for annotator in self.annotators:
             annotator.open()
+
+        if not self.subset_to_run:
+            self.subset_to_run = self.annotators
+
         self._is_open = True
         return self
 
@@ -348,10 +360,7 @@ class ReannotationPipeline(AnnotationPipeline):
             i for i in infos_new if i not in infos_old
         }
 
-        logger.debug("REANNOTATION SUMMARY:")
-        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
-
-        self.annotators_rerun = _get_rerun_annotators(
+        self.annotators_rerun = get_rerun_annotators(
             self.pipeline_new,
             self.annotators_new,
         )

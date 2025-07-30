@@ -16,10 +16,9 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    FullReannotationPipeline,
     InputAnnotableAnnotatorDecorator,
-    ReannotationPipeline,
     ValueTransformAnnotatorDecorator,
+    get_rerun_annotators,
 )
 from dae.genomic_resources.repository import (
     GenomicResourceRepo,
@@ -97,7 +96,7 @@ def load_pipeline_from_file(
     raw_path: str, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
-) -> ReannotationPipeline:
+) -> AnnotationPipeline:
     """Load an annotation pipeline from a configuration file."""
     path = Path(raw_path)
     if not path.exists():
@@ -115,7 +114,7 @@ def load_pipeline_from_yaml(
     raw: str, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
-) -> ReannotationPipeline:
+) -> AnnotationPipeline:
     """Load an annotation pipeline from a YAML-formatted string."""
     config = yaml.safe_load(raw)
     return build_annotation_pipeline(
@@ -125,13 +124,33 @@ def load_pipeline_from_yaml(
     )
 
 
+def adjust_for_reannotation(
+    pipeline: AnnotationPipeline,
+    pipeline_previous: AnnotationPipeline,
+) -> None:
+    infos_current = pipeline.get_info()
+    infos_previous = pipeline_previous.get_info()
+
+    infos_new: set[AnnotatorInfo] = {
+        i for i in infos_current
+        if i not in infos_previous
+    }
+
+    infos_rerun = get_rerun_annotators(pipeline, infos_new)
+
+    for annotator in pipeline.annotators:
+        info = annotator.get_info()
+        if info in infos_new or info in infos_rerun:
+            pipeline.subset_to_run.append(annotator)
+
+
 def build_annotation_pipeline(
-    config: RawPipelineConfig, grr: GenomicResourceRepo, *,
+    config: RawPipelineConfig,
+    grr: GenomicResourceRepo,
+    *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
-    config_old_raw: str | None = None,
-    full_reannotation: bool = False,
-) -> ReannotationPipeline:
+) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     preamble, pipeline_config = AnnotationConfigParser.parse_raw(
         config, grr=grr,
@@ -168,15 +187,6 @@ def build_annotation_pipeline(
     check_for_repeated_attributes_in_pipeline(
         pipeline, allow_repeated_attributes=allow_repeated_attributes,
     )
-
-    if not config_old_raw:
-        pipeline_old = AnnotationPipeline(grr)
-    else:
-        pipeline_old = load_pipeline_from_yaml(
-            config_old_raw, grr, work_dir=work_dir)
-    pipeline = ReannotationPipeline(pipeline, pipeline_old) \
-        if not full_reannotation \
-        else FullReannotationPipeline(pipeline, pipeline_old)
 
     return pipeline
 

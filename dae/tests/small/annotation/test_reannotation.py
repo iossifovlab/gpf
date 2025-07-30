@@ -309,9 +309,7 @@ def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
     new_pipeline = load_pipeline_from_yaml(
         new_pipeline_config, reannotation_grr)
 
-    attributes_to_delete = get_deleted_attributes(
-        new_pipeline.get_info(), old_pipeline.get_info(),
-    )
+    attributes_to_delete = get_deleted_attributes(new_pipeline, old_pipeline)
 
     assert attributes_to_delete == [
         "worst_effect", "effect_details", "gene_effects",

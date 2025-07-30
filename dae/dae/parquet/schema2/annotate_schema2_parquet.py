@@ -293,8 +293,7 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     )
 
     attributes_to_delete = get_deleted_attributes(
-        pipeline.pipeline_new.get_info(),
-        pipeline.pipeline_old.get_info(),
+        pipeline.pipeline_new, pipeline.pipeline_old,
     )
 
     source: Source
