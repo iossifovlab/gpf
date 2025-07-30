@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 from typing import cast
 
 import pytest
+import yaml
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
+from utils.testing import setup_t4c8_instance
 
 from federation.remote_extension import GPFRemoteExtension
 from federation.remote_pheno_tool_adapter import RemotePhenoToolAdapter
@@ -16,6 +19,75 @@ from rest_client.rest_client import (
     GPFAnonymousSession,
     GPFOAuthSession,
 )
+
+
+def test_config_validate_correct_config(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    instance = setup_t4c8_instance(root_path)
+
+    with open(instance.dae_config_path, "a") as f:
+        f.write(yaml.dump({
+            "remotes": [
+                {
+                    "id": "TEST_REMOTE 1",
+                    "url": os.environ.get(
+                        "TEST_REMOTE_HOST", "http://localhost:21010"),
+                    "client_id": "federation",
+                    "client_secret": "secret",
+                },
+                {
+                    "id": "TEST_REMOTE 2",
+                    "url": os.environ.get(
+                        "TEST_REMOTE_HOST", "http://localhost:21010"),
+                },
+            ],
+        }))
+
+    wgpf_instance = WGPFInstance.build(
+        instance.dae_config_path,
+        grr=instance.grr,
+    )
+    assert wgpf_instance.dae_config["remotes"][0].to_dict() == {
+        "id": "TEST_REMOTE 1",
+        "url": "http://localhost:21010",
+        "client_id": "federation",
+        "redirect_uri": "",
+        "client_secret": "secret",
+    }
+    assert wgpf_instance.dae_config["remotes"][1].to_dict() == {
+        "id": "TEST_REMOTE 2",
+        "url": "http://localhost:21010",
+        "client_id": None,
+        "redirect_uri": "",
+        "client_secret": None,
+    }
+
+
+def test_config_validate_fail_on_bad_config(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    instance = setup_t4c8_instance(root_path)
+
+    with open(instance.dae_config_path, "a") as f:
+        f.write(yaml.dump({
+            "remotes": [
+                {
+                    "id": "TEST_REMOTE",
+                    "client_id": "federation",
+                    # NO URL PROVIDED ON PURPOSE
+                    "client_secret": "secret",
+                },
+            ],
+        }))
+
+    with pytest.raises(ValueError, match="Invalid URL"):
+        WGPFInstance.build(
+            instance.dae_config_path,
+            grr=instance.grr,
+        )
 
 
 def test_get_available_data_ids(t4c8_instance: WGPFInstance) -> None:
