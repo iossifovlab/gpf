@@ -337,43 +337,6 @@ class AnnotationPipeline:
         return exc_type is None
 
 
-class ReannotationPipeline(AnnotationPipeline):
-    """Special pipeline that handles reannotation of a previous pipeline."""
-
-    def __init__(
-        self,
-        pipeline_new: AnnotationPipeline,
-        pipeline_old: AnnotationPipeline,
-    ):
-        """Produce a reannotation pipeline between two annotation pipelines."""
-        super().__init__(pipeline_new.repository)
-        self.pipeline_new: AnnotationPipeline = pipeline_new
-        self.pipeline_old: AnnotationPipeline = pipeline_old
-
-        self.preamble = self.pipeline_new.preamble
-        self.raw = self.pipeline_new.raw
-
-        infos_new = pipeline_new.get_info()
-        infos_old = pipeline_old.get_info()
-
-        self.annotators_new: set[AnnotatorInfo] = {
-            i for i in infos_new if i not in infos_old
-        }
-
-        self.annotators_rerun = get_rerun_annotators(
-            self.pipeline_new,
-            self.annotators_new,
-        )
-
-        for annotator in self.pipeline_new.annotators:
-            info = annotator.get_info()
-            if info in self.annotators_new or info in self.annotators_rerun:
-                self.annotators.append(annotator)
-
-    def get_attributes(self) -> list[AttributeInfo]:
-        return self.pipeline_new.get_attributes()
-
-
 class AnnotatorDecorator(Annotator):
     """Defines annotator decorator base class."""
 
@@ -493,36 +456,3 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
         return {k: (self.value_transformers[k](v)
                     if k in self.value_transformers else v)
                 for k, v in result.items()}
-
-
-class FullReannotationPipeline(ReannotationPipeline):
-    """
-    Special-case ReannotationPipeline.
-
-    Completely removes all old attributes and runs every new annotator,
-    without reusing anything.
-    """
-
-    def __init__(
-        self,
-        pipeline_new: AnnotationPipeline,
-        pipeline_old: AnnotationPipeline,
-    ):
-        super().__init__(pipeline_new, pipeline_old)
-
-        self.attributes_deleted: list[str] = []
-        for deleted_info in pipeline_old.get_info():
-            for attr in deleted_info.attributes:
-                if not attr.internal:
-                    self.attributes_deleted.append(attr.name)
-
-        self.annotators_new: set[AnnotatorInfo] = set(pipeline_new.get_info())
-
-        self.annotators_rerun: set[AnnotatorInfo] = set()
-
-        self.annotators = self.pipeline_new.annotators
-
-        logger.debug("REANNOTATION SUMMARY:")
-        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
-        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
-        logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)

@@ -27,7 +27,7 @@ from dae.annotation.annotation_factory import (
     load_pipeline_from_yaml,
 )
 from dae.annotation.annotation_pipeline import (
-    ReannotationPipeline,
+    AnnotationPipeline,
     get_deleted_attributes,
 )
 from dae.annotation.genomic_context import (
@@ -243,7 +243,7 @@ def symlink_pedigree_and_family_variants(
 
 def write_new_meta(
     loader: ParquetLoader,
-    pipeline: ReannotationPipeline,
+    pipeline: AnnotationPipeline,
     output_layout: Schema2DatasetLayout,
 ) -> None:
     """Produce and write new metadata to the output Parquet dataset."""
@@ -472,7 +472,7 @@ def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     task_graph: TaskGraph,
     loader: ParquetLoader,
     output_layout: Schema2DatasetLayout,
-    pipeline: ReannotationPipeline,
+    pipeline: AnnotationPipeline,
     grr: GenomicResourceRepo,
     region: str | None,
     args: _ProcessingArgs,
