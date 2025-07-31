@@ -226,10 +226,6 @@ def test_annotators_used_context_attributes(
     assert pipeline.annotators[1].used_context_attributes == \
         ("hgX_annotatable",)
 
-    # gene score annotator's input_gene_list
-    assert pipeline.annotators[2].used_context_attributes == \
-        ("my_genes",)
-
 
 def test_dependency_graph_correctness(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,

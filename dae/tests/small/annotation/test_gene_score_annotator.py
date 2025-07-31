@@ -49,14 +49,19 @@ def scores_repo() -> GenomicResourceRepo:
 def test_gene_score_annotator(scores_repo: GenomicResourceRepo) -> None:
     resource = scores_repo.get_resource("LGD_rank")
     annotator = GeneScoreAnnotator(
-        None, AnnotatorInfo(
+        None,
+        AnnotatorInfo(
             "gosho",
             [AttributeInfo(
-                "LGD_rank", "LGD_rank",
+                "LGD_rank",
+                "LGD_rank",
                 internal=False,
                 parameters={"gene_aggregator": "min"})],
-                {}),
-        resource, "gene_list")
+            {},
+        ),
+        resource,
+        "gene_list",
+    )
 
     result = annotator.annotate(None, {"gene_list": ["LRP1", "TRRAP"]})
 
@@ -83,3 +88,24 @@ def test_gene_score_annotator_resources(
                                    resource, "gene_list")
 
     assert annotator.resource_ids == {"LGD_rank"}
+
+
+def test_gene_score_annotator_used_context_attributes(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    resource = scores_repo.get_resource("LGD_rank")
+    annotator = GeneScoreAnnotator(
+        None,
+        AnnotatorInfo(
+            "gosho",
+            [AttributeInfo(
+                "LGD_rank",
+                "LGD_rank",
+                internal=False,
+                parameters={"gene_aggregator": "min"})],
+            {},
+        ),
+        resource,
+        "gene_list",
+    )
+    assert annotator.used_context_attributes == ("gene_list",)
