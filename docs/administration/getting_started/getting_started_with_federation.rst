@@ -33,7 +33,7 @@ local GPF instance. You can do this by editing the
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 31-34
+    :emphasize-lines: 31-33
 
     instance_id: minimal_instance
 
@@ -67,8 +67,7 @@ local GPF instance. You can do this by editing the
 
     remotes:
       - id: "sfari"
-        host: "gpf.sfari.org"
-        gpf_prefix: "hg38"
+        url: "https://gpf.sfari.org/hg38"
 
 
 .. note::
@@ -161,12 +160,11 @@ GPF instance to use them. You need to edit the
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 5-6
+    :emphasize-lines: 3-4
 
     remotes:
       - id: "sfari"
-        host: "gpf.sfari.org"
-        gpf_prefix: "hg38"
+        url: "https://gpf.sfari.org/hg38"
         client_id: "Tqtgr2e3YPiDQS6CHvMdH7rPgTnxmoA46OWSbagV"
         client_secret: "22xKTkewcxyTnKdHou21LRikUU2Hea2tLRBBOaPm2UCIUWEqZFogWk0nRysDrXepieOWYUkTZvG1xVULtwEspWG2YQ71lH7Vow7dNTMzG9ELdVQcOY8YQOD3y9XwRw8T"
 
