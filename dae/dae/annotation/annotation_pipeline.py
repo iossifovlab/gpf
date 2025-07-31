@@ -40,6 +40,26 @@ _AnnotationDependencyGraph = dict[
 ]
 
 
+def _build_dependency_graph(
+    pipeline: AnnotationPipeline,
+) -> _AnnotationDependencyGraph:
+    """Make dependency graph for an annotation pipeline."""
+    graph: _AnnotationDependencyGraph = {}
+    for annotator in pipeline.annotators:
+        annotator_info = annotator.get_info()
+        graph[annotator_info] = []
+        for attr in annotator.used_context_attributes:
+            attr_info = pipeline.get_attribute_info(attr)
+            assert attr_info is not None
+            upstream_annotator = \
+                pipeline.get_annotator_by_attribute_info(attr_info)
+            assert upstream_annotator is not None
+            graph[annotator_info].append(
+                (upstream_annotator.get_info(), attr_info),
+            )
+    return graph
+
+
 def _get_dependencies_for(
     info: AnnotatorInfo,
     dependency_graph: _AnnotationDependencyGraph,
@@ -57,7 +77,7 @@ def _get_dependencies_for(
     return result
 
 
-def _get_dependents_for(
+def _get_dependents_of(
     info: AnnotatorInfo,
     dependency_graph: _AnnotationDependencyGraph,
 ) -> set[AnnotatorInfo]:
@@ -69,31 +89,10 @@ def _get_dependents_for(
         for dep_annotator, _ in dependencies:
             if dep_annotator == info:
                 result.add(dependent)
-                further = _get_dependents_for(dependent, dependency_graph)
+                further = _get_dependents_of(dependent, dependency_graph)
                 if further:
                     result.update(further)
     return result
-
-
-def _build_dependency_graph(
-    pipeline: AnnotationPipeline,
-) -> _AnnotationDependencyGraph:
-    """Make dependency graph for an annotation pipeline."""
-    graph: _AnnotationDependencyGraph = {}
-    for annotator in pipeline.annotators:
-        annotator_info = annotator.get_info()
-        if annotator_info not in graph:
-            graph[annotator_info] = []
-        for attr in annotator.used_context_attributes:
-            attr_info = pipeline.get_attribute_info(attr)
-            assert attr_info is not None
-            upstream_annotator = \
-                pipeline.get_annotator_by_attribute_info(attr_info)
-            assert upstream_annotator is not None
-            graph[annotator_info].append(
-                (upstream_annotator.get_info(), attr_info),
-            )
-    return graph
 
 
 def get_rerun_annotators(
@@ -105,7 +104,7 @@ def get_rerun_annotators(
     dependency_graph = _build_dependency_graph(pipeline)
     for i in annotators_new:
         result.update(_get_dependencies_for(i, dependency_graph))
-        result.update(_get_dependents_for(i, dependency_graph))
+        result.update(_get_dependents_of(i, dependency_graph))
     return result
 
 
