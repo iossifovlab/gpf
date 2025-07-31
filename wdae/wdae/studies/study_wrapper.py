@@ -77,7 +77,7 @@ class ResponseTransformerProtocol(Protocol):
 
     @abstractmethod
     def build_variant_row(
-        self, study: WDAEStudy,
+        self, study: WDAEAbstractStudy,
         v: SummaryVariant | FamilyVariant,
         column_descs: list[dict], **kwargs: str | None,
     ) -> list:
@@ -943,8 +943,9 @@ class WDAEStudy(WDAEAbstractStudy):
                     row_variant = response_transformer.build_variant_row(
                         self,
                         v, sources,
-                        person_set_collection=psc_query.psc_id if psc_query
-                        else None)
+                        person_set_collection=psc_query.psc_id
+                                              if psc_query
+                                              else None)
 
                     yield row_variant
         except GeneratorExit:

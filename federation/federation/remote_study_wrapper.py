@@ -14,8 +14,8 @@ from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
 from federation.remote_utils import build_remote_families
 from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
-from federation.rest_api_client import RESTClient
 from federation.utils import prefix_remote_identifier
+from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +86,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         max_variants_message: bool = False,  # noqa: ARG002
     ) -> Generator[list, None, None]:
         study_filters = kwargs.get("study_filters")
-        person_set_collection_id = \
-            kwargs.get("personSetCollection", {}).get("id")
+
+        psc_query = query_transformer.extract_person_set_collection_query(
+            self, kwargs)
 
         if study_filters is not None:
             del kwargs["study_filters"]
@@ -132,7 +133,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
                 variant, family, list(map(get_source, sources)))
             # pylint: disable=protected-access
             row_variant = response_transformer.build_variant_row(
-                fv, sources, person_set_collection=person_set_collection_id)
+                self,
+                fv, sources,
+                person_set_collection=psc_query.psc_id if psc_query else None)
 
             yield row_variant
 

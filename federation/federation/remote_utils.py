@@ -1,7 +1,7 @@
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family, FamilyTag, Person
 
-from federation.rest_api_client import RESTClient
+from rest_client.rest_client import RESTClient
 
 
 def build_remote_families(
