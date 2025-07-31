@@ -6,9 +6,14 @@ import textwrap
 import pytest
 import pytest_mock
 from dae.annotation.annotatable import Position
+from dae.annotation.annotation_config import AttributeInfo
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,
     load_pipeline_from_yaml,
+)
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    InputAnnotableAnnotatorDecorator,
 )
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_context import (
@@ -19,6 +24,8 @@ from dae.genomic_resources.genomic_context import (
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
 from dae.testing.t4c8_import import t4c8_genome
+
+from tests.small.annotation.conftest import DummyAnnotator
 
 
 @pytest.fixture
@@ -111,6 +118,31 @@ def context_fixture(
     assert context is not None
 
     return context
+
+
+def test_input_annotatable_decorator_used_context_attributes(
+    test_grr: GenomicResourceRepo,
+) -> None:
+    pipeline = AnnotationPipeline(test_grr)
+    dummy_annotatable_provider = DummyAnnotator()
+    dummy_annotatable_provider.attributes.append(
+        AttributeInfo("dummy_annotatable", "dummy_annotatable",
+                      internal=False, parameters={},
+                      _type="annotatable"),
+    )
+    dummy_annotatable_provider.pipeline = pipeline
+    pipeline.add_annotator(dummy_annotatable_provider)
+
+    annotator = DummyAnnotator()
+    annotator.pipeline = pipeline
+    pipeline.add_annotator(annotator)
+    assert not annotator.used_context_attributes
+
+    annotator._info.parameters._data["input_annotatable"] = "dummy_annotatable"
+    annotator = \
+        InputAnnotableAnnotatorDecorator.decorate(annotator)  # type: ignore
+
+    assert annotator.used_context_attributes == ("dummy_annotatable",)
 
 
 def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:

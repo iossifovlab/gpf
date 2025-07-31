@@ -214,19 +214,6 @@ def simple_pipeline_config() -> str:
     """
 
 
-def test_annotators_used_context_attributes(
-    simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
-) -> None:
-    pipeline = load_pipeline_from_yaml(
-        simple_pipeline_config, reannotation_grr)
-    # default behaviour
-    assert pipeline.annotators[0].used_context_attributes == ()
-
-    # input annotatable, any annotator
-    assert pipeline.annotators[1].used_context_attributes == \
-        ("hgX_annotatable",)
-
-
 def test_dependency_graph_correctness(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
 ) -> None:
