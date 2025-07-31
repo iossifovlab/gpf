@@ -79,7 +79,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
-        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
+        query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
         max_variants_count: int | None = 10000,

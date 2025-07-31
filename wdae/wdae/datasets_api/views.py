@@ -17,7 +17,7 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import WDAEStudy
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 from users_api.models import WdaeUser
 
 from datasets_api.permissions import (
@@ -89,7 +89,7 @@ class DatasetView(QueryBaseView):
     def _collect_datasets_summary(
         self, user: User, *, studies_only: bool = False,
     ) -> list[dict[str, Any]]:
-        datasets: list[WDAEStudy] = list(filter(None, [
+        datasets: list[WDAEAbstractStudy] = list(filter(None, [
             self.gpf_instance.get_wdae_wrapper(data_id)
             for data_id in self.gpf_instance.get_available_data_ids()
         ]))
@@ -130,7 +130,7 @@ class DatasetView(QueryBaseView):
         return res
 
     def _collect_single_dataset(
-        self, user: User, dataset: WDAEStudy,
+        self, user: User, dataset: WDAEAbstractStudy,
     ) -> dict:
         if dataset.is_genotype:
             person_set_collection_configs = {
@@ -411,7 +411,7 @@ class DatasetHierarchyView(QueryBaseView):
 
     def produce_tree(
         self,
-        dataset: WDAEStudy,
+        dataset: WDAEAbstractStudy,
         selected: list[str],
         permitted_datasets: set[str],
     ) -> dict[str, Any] | None:
