@@ -176,6 +176,11 @@ class RESTClient:
     def get_datasets(self) -> list[dict]:
         return self.gpf_rest_client.get_federation_datasets()
 
+    def post_gene_view_summary_variants(
+        self, data: dict,
+    ) -> Generator[Any, None, None]:
+        return self.gpf_rest_client.post_gene_view_summary_variants(data)
+
     def get_variants_preview(self, data: dict) -> requests.Response:
         return self._post(
             "genotype_browser/preview/variants",

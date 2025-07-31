@@ -10,7 +10,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import WDAEStudy
+from studies.study_wrapper import WDAEAbstractStudy
 from utils.expand_gene_set import expand_gene_set
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
@@ -42,7 +42,7 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
                         status=status.HTTP_200_OK)
 
 
-class QueryVariantsView(QueryBaseView):
+class QuerySummaryVariantsView(QueryBaseView):
     """Gene view summary variants view."""
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
@@ -61,16 +61,15 @@ class QueryVariantsView(QueryBaseView):
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if dataset.genotype_data.is_remote:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         freq_col = \
             dataset.genotype_data.config["gene_browser"]["frequency_column"]
 
         return Response(list(
             dataset.get_gene_view_summary_variants(
-                freq_col, self.query_transformer,
-                self.response_transformer, **data,
+                freq_col,
+                self.query_transformer,
+                self.response_transformer,
+                **data,
             ),
         ))
 
@@ -84,7 +83,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
         self,
         data: dict,
         user: User,
-        dataset: WDAEStudy,
+        dataset: WDAEAbstractStudy,
     ) -> Generator[str, None, None]:
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
@@ -120,9 +119,6 @@ class DownloadSummaryVariantsView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if dataset.genotype_data.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         response = FileResponse(

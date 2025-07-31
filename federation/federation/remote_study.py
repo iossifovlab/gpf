@@ -38,8 +38,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
             )
 
         config["description_editable"] = False
-        if config.get("gene_browser"):
-            config["gene_browser"]["enabled"] = False
 
         if config["parents"]:
             config["parents"] = [

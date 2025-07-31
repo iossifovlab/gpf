@@ -90,7 +90,7 @@ class WGPFInstance(GPFInstance):
         dae_config_path: pathlib.Path,
         **kwargs: dict[str, Any],
     ) -> None:
-        self._study_wrappers: dict[str, WDAEStudy] = {}
+        self._study_wrappers: dict[str, WDAEAbstractStudy] = {}
         self._gp_configuration: dict[str, Any] | None = None
         self.extensions: dict[str, GPFExtensionBase] = {}
         super().__init__(
@@ -146,7 +146,7 @@ class WGPFInstance(GPFInstance):
     def get_about_description_path(self) -> str:
         return cast(str, self.dae_config.gpfjs.about_description_file)
 
-    def make_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
+    def make_wdae_wrapper(self, dataset_id: str) -> WDAEAbstractStudy | None:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
         if genotype_data is not None:
@@ -198,9 +198,9 @@ class WGPFInstance(GPFInstance):
             response_transformer=response_transformer,
         )
 
-    def get_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
+    def get_wdae_wrapper(self, dataset_id: str) -> WDAEAbstractStudy | None:
         """Return wdae study wrapper."""
-        wrapper: WDAEStudy | None = None
+        wrapper: WDAEAbstractStudy | None = None
         if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:

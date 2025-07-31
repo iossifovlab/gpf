@@ -34,13 +34,13 @@ class QueryTransformerProtocol(Protocol):
 
     @abstractmethod
     def transform_kwargs(
-        self, study: WDAEStudy, **kwargs: Any,
+        self, study: WDAEAbstractStudy, **kwargs: Any,
     ) -> dict[str, Any]:
         raise NotImplementedError
 
     @abstractmethod
     def extract_person_set_collection_query(
-            self, study: WDAEStudy, kwargs: dict[str, Any],
+            self, study: WDAEAbstractStudy, kwargs: dict[str, Any],
     ) -> PSCQuery:
         raise NotImplementedError
 
@@ -77,7 +77,7 @@ class ResponseTransformerProtocol(Protocol):
 
     @abstractmethod
     def build_variant_row(
-        self, study: WDAEStudy,
+        self, study: WDAEAbstractStudy,
         v: SummaryVariant | FamilyVariant,
         column_descs: list[dict], **kwargs: str | None,
     ) -> list:
@@ -355,6 +355,24 @@ class WDAEAbstractStudy:
         measure_type: MeasureType | None = None,
     ) -> dict[str, Measure]:
         return self.phenotype_data.get_measures(instrument_name, measure_type)
+
+    @abstractmethod
+    def get_gene_view_summary_variants(
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Return gene browser summary variants."""
+
+    @abstractmethod
+    def get_gene_view_summary_variants_download(
+        self, frequency_column: str,
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        **kwargs: Any,
+    ) -> Iterable:
+        """Return gene browser summary variants for downloading."""
 
 
 class WDAEStudy(WDAEAbstractStudy):
@@ -925,8 +943,9 @@ class WDAEStudy(WDAEAbstractStudy):
                     row_variant = response_transformer.build_variant_row(
                         self,
                         v, sources,
-                        person_set_collection=psc_query.psc_id if psc_query
-                        else None)
+                        person_set_collection=psc_query.psc_id
+                                              if psc_query
+                                              else None)
 
                     yield row_variant
         except GeneratorExit:
@@ -955,6 +974,7 @@ class WDAEStudy(WDAEAbstractStudy):
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
 
         limit = kwargs.pop("maxVariantsCount", None)
+
         runners = []
         for study_wrapper in self.children:
             try:
@@ -1049,7 +1069,6 @@ class WDAEStudy(WDAEAbstractStudy):
         **kwargs: Any,
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
-
         variants = self._query_gene_view_summary_variants(
             query_transformer, **kwargs,
         )

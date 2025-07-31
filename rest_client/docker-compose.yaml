@@ -23,7 +23,7 @@ services:
     depends_on:
       - setup
     ports:
-      - "21010:21010"
+      - "21011:21010"
     environment:
       DAE_DB_DIR: /wd/rest_client/tmp/gpf_instance
       GRR_DEFINITION_FILE: /wd/rest_client/tmp/grr_definition.yaml

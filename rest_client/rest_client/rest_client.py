@@ -724,6 +724,18 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
+    def post_gene_view_summary_variants(
+        self, data: dict,
+    ) -> Generator[Any, None, None]:
+        """Post query request for gene view summary variants."""
+        response = self.session.post(
+            f"{self.api_url}/gene_view/query_summary_variants",
+            json=data,
+            headers={"Content-Type": "application/json"},
+            stream=True,
+        )
+        return self._read_json_list_stream(response)
+
     def get_member_details(
         self, dataset_id: str, family_id: str, member_id: str,
     ) -> Any:

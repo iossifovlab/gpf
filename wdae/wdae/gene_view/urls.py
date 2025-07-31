@@ -10,7 +10,7 @@ urlpatterns = [
     ),
     re_path(
         r"^/query_summary_variants/?$",
-        views.QueryVariantsView.as_view(),
+        views.QuerySummaryVariantsView.as_view(),
         name="gene_view_summary_variants_query",
     ),
     re_path(

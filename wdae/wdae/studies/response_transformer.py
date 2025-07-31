@@ -31,6 +31,7 @@ from dae.variants.variant import SummaryVariant, VariantDesc
 
 from studies.study_wrapper import (
     ResponseTransformerProtocol,
+    WDAEAbstractStudy,
     WDAEStudy,
 )
 
@@ -243,7 +244,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         ]
 
     def _generate_pedigree(
-        self, study: WDAEStudy,
+        self, study: WDAEAbstractStudy,
         variant: FamilyVariant,
         psc_id: str | None,
     ) -> list:
@@ -296,7 +297,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
                 yield variant
 
     def build_variant_row(
-        self, study: WDAEStudy,
+        self, study: WDAEAbstractStudy,
         v: SummaryVariant | FamilyVariant,
         column_descs: list[dict], **kwargs: str | None,
     ) -> list:
