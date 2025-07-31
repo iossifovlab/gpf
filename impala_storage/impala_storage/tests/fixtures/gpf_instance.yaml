@@ -41,13 +41,6 @@ genotype_storage:
       storage_type: duckdb_parquet
       base_dir: /tmp/test_duckdb_storage/studies
 
-remotes:
-  - id: "TEST_REMOTE"
-    host: "localhost"
-    base_url: "api/v3"
-    port: 21010
-    credentials: "ZmVkZXJhdGlvbjpzZWNyZXQ="
-
 annotation:
   conf_file: "annotation_pipeline/import_annotation_no_effects.yaml"
 
