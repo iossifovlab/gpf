@@ -5,6 +5,10 @@ import pytest
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+from studies.query_transformer import QueryTransformer
+from studies.response_transformer import ResponseTransformer
+
+from federation.remote_study_wrapper import RemoteWDAEStudy
 
 
 def test_studies(
@@ -226,3 +230,38 @@ def test_gene_view_summary_variants_download(
     assert response.status_code == status.HTTP_200_OK
     lines = list(response.streaming_content)  # type: ignore
     assert len(lines) == 2
+
+
+@pytest.fixture
+def t4c8_response_transformer(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> ResponseTransformer:
+    return ResponseTransformer(
+        t4c8_wgpf_instance.gene_scores_db,
+    )
+
+
+@pytest.fixture
+def t4c8_query_transformer(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> QueryTransformer:
+    return QueryTransformer(
+        t4c8_wgpf_instance.gene_scores_db,
+        t4c8_wgpf_instance.reference_genome.chromosomes,
+        t4c8_wgpf_instance.reference_genome.chrom_prefix,
+    )
+
+
+def test_query_variants_wdae_remote(
+    t4c8_wgpf_instance: WGPFInstance,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+) -> None:
+    remote_study = t4c8_wgpf_instance.get_wdae_wrapper(
+        "TEST_REMOTE_t4c8_study_1")
+    assert remote_study is not None
+    assert isinstance(remote_study, RemoteWDAEStudy)
+
+    result = list(remote_study.query_variants_wdae(
+        {}, [], t4c8_query_transformer, t4c8_response_transformer))
+    assert len(result) == 12
