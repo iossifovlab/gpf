@@ -67,13 +67,12 @@ def _get_dependencies_for(
     """Get all dependencies for a given annotator."""
     result: set[AnnotatorInfo] = set()
     if info in dependency_graph:
-        for annotator, attr in dependency_graph[info]:
-            if attr.internal:
-                result.add(annotator)
-                dependencies = _get_dependencies_for(
-                    annotator, dependency_graph)
-                if dependencies:
-                    result.add(*dependencies)
+        for annotator, _ in dependency_graph[info]:
+            result.add(annotator)
+            dependencies = _get_dependencies_for(
+                annotator, dependency_graph)
+            if dependencies:
+                result.add(*dependencies)
     return result
 
 

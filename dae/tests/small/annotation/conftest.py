@@ -21,19 +21,25 @@ from dae.testing import setup_denovo, setup_directories
 class DummyAnnotator(Annotator):
     """A dummy annotator that does nothing."""
 
-    def __init__(self) -> None:
-        attributes = [AttributeInfo(
-            "index", "index",
-            internal=False,
-            parameters={})]
+    def __init__(
+        self,
+        attributes: list[AttributeInfo] | None = None,
+        dependencies: tuple[str, ...] = (),
+    ) -> None:
+        self.dependencies = dependencies
+
         info = AnnotatorInfo(
             "dummy_annotator",
             annotator_id="dummy",
-            attributes=attributes,
+            attributes=attributes or [],
             parameters={},
         )
         super().__init__(None, info)
         self.index = 0
+
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return self.dependencies
 
     def open(self) -> Annotator:
         """Reset the annotator state."""
