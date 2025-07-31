@@ -128,6 +128,7 @@ def adjust_for_reannotation(
     pipeline: AnnotationPipeline,
     pipeline_previous: AnnotationPipeline,
 ) -> None:
+    """Adjust an annotation pipeline instance for reannotation."""
     infos_current = pipeline.get_info()
     infos_previous = pipeline_previous.get_info()
 

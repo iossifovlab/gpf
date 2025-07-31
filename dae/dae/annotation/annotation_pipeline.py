@@ -100,13 +100,12 @@ def get_rerun_annotators(
     pipeline: AnnotationPipeline,
     annotators_new: Iterable[AnnotatorInfo],
 ) -> set[AnnotatorInfo]:
+    """Get all annotators that must be re-run for reannotation."""
     result: set[AnnotatorInfo] = set()
     dependency_graph = _build_dependency_graph(pipeline)
     for i in annotators_new:
         result.update(_get_dependencies_for(i, dependency_graph))
         result.update(_get_dependents_for(i, dependency_graph))
-
-    logger.debug("RE-RUNNING ANNOTATORS - %s", result)
     return result
 
 
