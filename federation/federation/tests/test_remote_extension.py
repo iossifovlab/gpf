@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 from typing import cast
 
 import pytest
+import pytest_mock
 import yaml
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
@@ -23,7 +23,9 @@ from rest_client.rest_client import (
 
 def test_config_validate_correct_config(
     tmp_path_factory: pytest.TempPathFactory,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
+    mocker.patch("federation.remote_extension.GPFRemoteExtension.load_clients")
     root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
     instance = setup_t4c8_instance(root_path)
 
@@ -32,15 +34,13 @@ def test_config_validate_correct_config(
             "remotes": [
                 {
                     "id": "TEST_REMOTE 1",
-                    "url": os.environ.get(
-                        "TEST_REMOTE_HOST", "http://localhost:21010"),
+                    "url": "http://localhost",
                     "client_id": "federation",
                     "client_secret": "secret",
                 },
                 {
                     "id": "TEST_REMOTE 2",
-                    "url": os.environ.get(
-                        "TEST_REMOTE_HOST", "http://localhost:21010"),
+                    "url": "http://localhost",
                 },
             ],
         }))
@@ -51,14 +51,14 @@ def test_config_validate_correct_config(
     )
     assert wgpf_instance.dae_config["remotes"][0].to_dict() == {
         "id": "TEST_REMOTE 1",
-        "url": "http://localhost:21010",
+        "url": "http://localhost",
         "client_id": "federation",
         "redirect_uri": "",
         "client_secret": "secret",
     }
     assert wgpf_instance.dae_config["remotes"][1].to_dict() == {
         "id": "TEST_REMOTE 2",
-        "url": "http://localhost:21010",
+        "url": "http://localhost",
         "client_id": None,
         "redirect_uri": "",
         "client_secret": None,
