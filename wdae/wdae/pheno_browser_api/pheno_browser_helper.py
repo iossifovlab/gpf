@@ -28,6 +28,10 @@ class BasePhenoBrowserHelper(GPFTool):
         """Get measures info."""
 
     @abstractmethod
+    def get_measure_description(self, measure_id: str) -> dict[str, Any]:
+        """Get measures description."""
+
+    @abstractmethod
     def get_measure_ids(
         self,
         data: dict[str, Any],
@@ -69,6 +73,18 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
                 f"Study {self.study.study_id} has no phenotype data.",
             )
         return self.study.phenotype_data.get_measures_info()
+
+    def get_measure_description(self, measure_id: str) -> dict[str, Any]:
+        if not self.study.has_pheno_data:
+            raise ValueError(
+                f"Study {self.study.study_id} has no phenotype data.",
+            )
+        if not self.study.phenotype_data.has_measure(measure_id):
+            raise KeyError(
+                f"Study {self.study.study_id} phenotype data "
+                f"has no measure with id {measure_id}",
+            )
+        return self.study.phenotype_data.get_measure_description(measure_id)
 
     def get_measure_ids(
         self,

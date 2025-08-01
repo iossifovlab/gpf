@@ -112,21 +112,32 @@ class PhenoMeasureDescriptionView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or not dataset.has_pheno_data:
+        if not dataset:
             return Response(
                 {"error": "Dataset not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            dataset,
+        )
         measure_id = request.query_params["measure_id"]
 
-        if not dataset.phenotype_data.has_measure(measure_id):
+        try:
+            res = pheno_browser_helper.get_measure_description(measure_id)
+        except ValueError:
+            logger.exception("Error when getting measure description")
+            return Response(
+                {"error": "Study has no phenotype data."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except KeyError:
+            logger.exception("Error when getting measure description")
             return Response(
                 {"error": "Measure not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        res = dataset.phenotype_data.get_measure_description(measure_id)
 
         return Response(res)
 
