@@ -1,37 +1,21 @@
 services:
 
   setup:
-    build:
-      context: ../
-      dockerfile: Dockerfile
-    restart: "no"
-    volumes:
-      - ../:/wd
-    entrypoint: /wd/rest_client/integration/setup.sh
+    extends:
+      file: docker-compose-jenkins.yaml
+      service: setup
 
   mail:
-    image: mailhog/mailhog
-    hostname: mail
+    extends:
+      file: docker-compose-jenkins.yaml
+      service: mail
     ports:
       - "1025:1025"
       - "8025:8025"
 
-  resttest:
-    build:
-      context: ../
-      dockerfile: Dockerfile
-    depends_on:
-      - setup
+  backend:
+    extends:
+      file: docker-compose-jenkins.yaml
+      service: backend
     ports:
-      - "21011:21010"
-    environment:
-      DAE_DB_DIR: /wd/rest_client/tmp/gpf_instance
-      GRR_DEFINITION_FILE: /wd/rest_client/tmp/grr_definition.yaml
-      WDAE_ALLOWED_HOST: "*"
-      WDAE_DEBUG: true
-      WDAE_PUBLIC_HOSTNAME: resttest
-      WDAE_EMAIL_HOST: "mail"
-      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://localhost:21010"
-    volumes:
-      - ../:/wd
-    entrypoint: /wd/rest_client/integration/entrypoint.sh
+      - "21011:21011"
