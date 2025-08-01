@@ -14,3 +14,12 @@ done
         /wd/rest_client/tests \
         --url http://backend:21011 \
         --mailhog http://mail:8025
+
+/opt/conda/bin/conda run -n gpf \
+    coverage xml
+
+cp /wd/rest_client/coverage.xml /wd/test-results/
+
+/opt/conda/bin/conda run -n gpf \
+    coverage html --title gpf_rest_client -d /wd/test-results/coverage-html
+
