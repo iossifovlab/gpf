@@ -84,10 +84,19 @@ class PhenoMeasuresInfoView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or not dataset.has_pheno_data:
+        if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        res = dataset.phenotype_data.get_measures_info()
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            dataset,
+        )
+
+        try:
+            res = pheno_browser_helper.get_measures_info()
+        except ValueError:
+            logger.exception("Error when getting measures info")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(res)
 
