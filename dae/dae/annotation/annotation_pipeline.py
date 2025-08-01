@@ -47,50 +47,26 @@ def _build_dependency_graph(
     graph: _AnnotationDependencyGraph = {}
     for annotator in pipeline.annotators:
         annotator_info = annotator.get_info()
-        graph[annotator_info] = []
-        for attr in annotator.used_context_attributes:
-            attr_info = pipeline.get_attribute_info(attr)
-            assert attr_info is not None
-            upstream_annotator = \
-                pipeline.get_annotator_by_attribute_info(attr_info)
-            assert upstream_annotator is not None
-            graph[annotator_info].append(
-                (upstream_annotator.get_info(), attr_info),
-            )
+        graph[annotator_info] = _get_dependencies_for(annotator, pipeline)
     return graph
 
 
 def _get_dependencies_for(
-    info: AnnotatorInfo,
-    dependency_graph: _AnnotationDependencyGraph,
-) -> set[AnnotatorInfo]:
+    annotator: Annotator,
+    pipeline: AnnotationPipeline,
+) -> list[tuple[AnnotatorInfo, AttributeInfo]]:
     """Get all dependencies for a given annotator."""
-    result: set[AnnotatorInfo] = set()
-    if info in dependency_graph:
-        for annotator, _ in dependency_graph[info]:
-            result.add(annotator)
-            dependencies = _get_dependencies_for(
-                annotator, dependency_graph)
-            if dependencies:
-                result.add(*dependencies)
-    return result
-
-
-def _get_dependents_of(
-    info: AnnotatorInfo,
-    dependency_graph: _AnnotationDependencyGraph,
-) -> set[AnnotatorInfo]:
-    """Get all dependents for a given annotator."""
-    result: set[AnnotatorInfo] = set()
-    for dependent, dependencies in dependency_graph.items():
-        if not dependencies:
-            continue
-        for dep_annotator, _ in dependencies:
-            if dep_annotator == info:
-                result.add(dependent)
-                further = _get_dependents_of(dependent, dependency_graph)
-                if further:
-                    result.update(further)
+    result: list[tuple[AnnotatorInfo, AttributeInfo]] = []
+    used_attrs = annotator.used_context_attributes
+    for attr in used_attrs:
+        attr_info = pipeline.get_attribute_info(attr)
+        assert attr_info is not None
+        upstream_annotator = \
+            pipeline.get_annotator_by_attribute_info(attr_info)
+        assert upstream_annotator is not None
+        result.append((upstream_annotator.get_info(), attr_info))
+        if upstream_annotator.used_context_attributes:
+            result.extend(_get_dependencies_for(upstream_annotator, pipeline))
     return result
 
 
@@ -100,10 +76,20 @@ def get_rerun_annotators(
 ) -> set[AnnotatorInfo]:
     """Get all annotators that must be re-run for reannotation."""
     result: set[AnnotatorInfo] = set()
+
     dependency_graph = _build_dependency_graph(pipeline)
-    for i in annotators_new:
-        result.update(_get_dependencies_for(i, dependency_graph))
-        result.update(_get_dependents_of(i, dependency_graph))
+
+    for dependent, dependencies in dependency_graph.items():
+        if dependent in annotators_new:
+            for dependency, dep_attr in dependencies:
+                if dep_attr.internal:
+                    result.add(dependency)
+        else:
+            for dependency, _ in dependencies:
+                if dependency in annotators_new:
+                    result.add(dependent)
+                    break
+
     return result
 
 

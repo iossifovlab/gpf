@@ -4,12 +4,13 @@
 from unittest.mock import MagicMock
 
 from dae.annotation.annotation_config import AttributeInfo
+from dae.annotation.annotation_factory import adjust_for_reannotation
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     _build_dependency_graph,
-    _get_dependencies_for,
-    _get_dependents_of,
+    get_deleted_attributes,
+    get_rerun_annotators,
 )
 
 from tests.small.annotation.conftest import DummyAnnotator
@@ -125,72 +126,8 @@ def test_dependency_graph_dependency_for_many() -> None:
     }
 
 
-def test_get_dependencies_for_nothing() -> None:
-    # zero dependencies
-    attribute_1 = \
-        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
-    dummy_annotator_1 = DummyAnnotator([attribute_1])
-
-    attribute_2 = \
-        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
-    dummy_annotator_2 = DummyAnnotator([attribute_2])
-
-    pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
-    graph = _build_dependency_graph(pipeline)
-
-    assert _get_dependencies_for(dummy_annotator_1.get_info(), graph) == set()
-    assert _get_dependencies_for(dummy_annotator_2.get_info(), graph) == set()
-
-
-def test_get_dependencies_for_singular() -> None:
-    # one dependency
-    attribute_1 = \
-        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
-    dummy_annotator_1 = DummyAnnotator([attribute_1])
-
-    attribute_2 = \
-        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
-    dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
-
-    pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
-    graph = _build_dependency_graph(pipeline)
-
-    assert _get_dependencies_for(dummy_annotator_1.get_info(), graph) == set()
-    assert _get_dependencies_for(dummy_annotator_2.get_info(), graph) == {
-        dummy_annotator_1.get_info(),
-    }
-
-
-def test_get_dependencies_for_multiple_flat() -> None:
-    # two dependencies - two parents (flat)
-    attribute_1 = \
-        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
-    dummy_annotator_1 = DummyAnnotator([attribute_1])
-
-    attribute_2 = \
-        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
-    dummy_annotator_2 = DummyAnnotator([attribute_2])
-
-    attribute_3 = \
-        AttributeInfo("attr_3", "attr_3", internal=False, parameters={})
-    dummy_annotator_3 = DummyAnnotator([attribute_3],
-                                       dependencies=("attr_1", "attr_2"))
-
-    pipeline = _make_pipeline_with([dummy_annotator_1,
-                                    dummy_annotator_2,
-                                    dummy_annotator_3])
-    graph = _build_dependency_graph(pipeline)
-
-    assert _get_dependencies_for(dummy_annotator_1.get_info(), graph) == set()
-    assert _get_dependencies_for(dummy_annotator_2.get_info(), graph) == set()
-    assert _get_dependencies_for(dummy_annotator_3.get_info(), graph) == {
-        dummy_annotator_1.get_info(),
-        dummy_annotator_2.get_info(),
-    }
-
-
-def test_get_dependencies_for_multiple_recursive() -> None:
-    # two dependencies - parent and grandparent (recursive)
+def test_dependency_graph_grandparent_dependency() -> None:
+    # annotator can be a dependency for a child as well as grandchildren
     attribute_1 = \
         AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
     dummy_annotator_1 = DummyAnnotator([attribute_1])
@@ -207,36 +144,19 @@ def test_get_dependencies_for_multiple_recursive() -> None:
                                     dummy_annotator_2,
                                     dummy_annotator_3])
     graph = _build_dependency_graph(pipeline)
-
-    assert _get_dependencies_for(dummy_annotator_1.get_info(), graph) == set()
-    assert _get_dependencies_for(dummy_annotator_2.get_info(), graph) == {
-        dummy_annotator_1.get_info(),
+    assert graph == {
+        dummy_annotator_1.get_info(): [],
+        dummy_annotator_2.get_info(): [
+            (dummy_annotator_1.get_info(), attribute_1),
+        ],
+        dummy_annotator_3.get_info(): [
+            (dummy_annotator_2.get_info(), attribute_2),
+            (dummy_annotator_1.get_info(), attribute_1),
+        ],
     }
-    assert _get_dependencies_for(dummy_annotator_3.get_info(), graph) == {
-        dummy_annotator_1.get_info(),
-        dummy_annotator_2.get_info(),
-    }
 
 
-def test_get_dependents_of_nothing() -> None:
-    # zero dependents
-    attribute_1 = \
-        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
-    dummy_annotator_1 = DummyAnnotator([attribute_1])
-
-    attribute_2 = \
-        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
-    dummy_annotator_2 = DummyAnnotator([attribute_2])
-
-    pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
-    graph = _build_dependency_graph(pipeline)
-
-    assert _get_dependents_of(dummy_annotator_1.get_info(), graph) == set()
-    assert _get_dependents_of(dummy_annotator_2.get_info(), graph) == set()
-
-
-def test_get_dependents_of_singular() -> None:
-    # one dependent
+def test_get_rerun_annotators_dependency_changed() -> None:
     attribute_1 = \
         AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
     dummy_annotator_1 = DummyAnnotator([attribute_1])
@@ -246,49 +166,43 @@ def test_get_dependents_of_singular() -> None:
     dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
 
     pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
-    graph = _build_dependency_graph(pipeline)
 
-    assert _get_dependents_of(dummy_annotator_1.get_info(), graph) == {
+    # should not rerun if upstream annotator hasn't changed
+    rerun = get_rerun_annotators(pipeline, [])
+    assert rerun == set()
+
+    # should rerun if upstream annotator HAS changed
+    rerun = get_rerun_annotators(pipeline, [dummy_annotator_1.get_info()])
+    assert rerun == {
         dummy_annotator_2.get_info(),
     }
-    assert _get_dependents_of(dummy_annotator_2.get_info(), graph) == set()
 
 
-def test_get_dependents_of_multiple_flat() -> None:
-    # two dependents - two children (flat)
+def test_get_rerun_annotators_internal_new_dependent() -> None:
     attribute_1 = \
-        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+        AttributeInfo("attr_1", "attr_1", internal=True, parameters={})
     dummy_annotator_1 = DummyAnnotator([attribute_1])
 
     attribute_2 = \
         AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
     dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
 
-    attribute_3 = \
-        AttributeInfo("attr_3", "attr_3", internal=False, parameters={})
-    dummy_annotator_3 = DummyAnnotator([attribute_3], dependencies=("attr_1",))
+    pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
 
-    pipeline = _make_pipeline_with([dummy_annotator_1,
-                                    dummy_annotator_2,
-                                    dummy_annotator_3])
-    graph = _build_dependency_graph(pipeline)
-
-    assert _get_dependents_of(dummy_annotator_1.get_info(), graph) == {
-        dummy_annotator_2.get_info(),
-        dummy_annotator_3.get_info(),
+    # should rerun if internal and a new dependent has been added downstream
+    rerun = get_rerun_annotators(pipeline, [dummy_annotator_2.get_info()])
+    assert rerun == {
+        dummy_annotator_1.get_info(),
     }
-    assert _get_dependents_of(dummy_annotator_2.get_info(), graph) == set()
-    assert _get_dependents_of(dummy_annotator_3.get_info(), graph) == set()
 
 
-def test_get_dependents_of_multiple_recursive() -> None:
-    # two dependents - child and grandchild (recursive)
+def test_get_rerun_annotators_internal_dependent_rerun() -> None:
     attribute_1 = \
-        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+        AttributeInfo("attr_1", "attr_1", internal=True, parameters={})
     dummy_annotator_1 = DummyAnnotator([attribute_1])
 
     attribute_2 = \
-        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
+        AttributeInfo("attr_2", "attr_2", internal=True, parameters={})
     dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
 
     attribute_3 = \
@@ -298,37 +212,147 @@ def test_get_dependents_of_multiple_recursive() -> None:
     pipeline = _make_pipeline_with([dummy_annotator_1,
                                     dummy_annotator_2,
                                     dummy_annotator_3])
-    graph = _build_dependency_graph(pipeline)
 
-    assert _get_dependents_of(dummy_annotator_1.get_info(), graph) == {
+    # should rerun if internal (annotator 1) and a downstream
+    # annotator is rerun (annotator 2)
+    rerun = get_rerun_annotators(pipeline, [dummy_annotator_3.get_info()])
+    assert rerun == {
         dummy_annotator_2.get_info(),
-        dummy_annotator_3.get_info(),
+        dummy_annotator_1.get_info(),
     }
-    assert _get_dependents_of(dummy_annotator_2.get_info(), graph) == {
-        dummy_annotator_3.get_info(),
-    }
-    assert _get_dependents_of(dummy_annotator_3.get_info(), graph) == set()
 
 
-def test_get_rerun_annotators() -> None:
-    # should rerun if dependency is new
-    # should not rerun if dependency is only rerun
+def test_get_rerun_annotators_non_internal_new_dependent() -> None:
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
 
-    # should rerun if internal and dependent is new
-    # should rerun if internal and dependent is rerun
+    attribute_2 = \
+        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
+
+    pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
 
     # should not rerun if not internal and dependent is new
-    # should not rerun if not internal and dependent is rerun
-    pass
+    rerun = get_rerun_annotators(pipeline, [dummy_annotator_2.get_info()])
+    assert rerun == set()
+
+
+def test_get_rerun_annotators_non_internal_rerun_dependent() -> None:
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
+
+    attribute_2 = \
+        AttributeInfo("attr_2", "attr_2", internal=True, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
+
+    attribute_3 = \
+        AttributeInfo("attr_3", "attr_3", internal=False, parameters={})
+    dummy_annotator_3 = DummyAnnotator([attribute_3], dependencies=("attr_2",))
+
+    pipeline = _make_pipeline_with([dummy_annotator_1,
+                                    dummy_annotator_2,
+                                    dummy_annotator_3])
+
+    # shouldn't rerun if not internal (annotator 1) and a downstream
+    # annotator is rerun (annotator 2)
+    rerun = get_rerun_annotators(pipeline, [dummy_annotator_3.get_info()])
+    assert rerun == {
+        dummy_annotator_2.get_info(),
+    }
 
 
 def test_get_deleted_attributes() -> None:
     # attribute deleted in new pipeline
-    # attribute completely changed in new pipeline - still delete from old
-    pass
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
+
+    attribute_2 = \
+        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2])
+
+    old_pipeline = _make_pipeline_with([dummy_annotator_1])
+    new_pipeline = _make_pipeline_with([dummy_annotator_2])
+
+    assert get_deleted_attributes(new_pipeline, old_pipeline) == ["attr_1"]
+
+
+def test_get_deleted_attributes_shared_name() -> None:
+    # new attribute in new pipeline shares name with old - must still delete
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
+
+    attribute_2 = \
+        AttributeInfo("attr_1", "attr_2", internal=False, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2])
+
+    old_pipeline = _make_pipeline_with([dummy_annotator_1])
+    new_pipeline = _make_pipeline_with([dummy_annotator_2])
+
+    assert get_deleted_attributes(new_pipeline, old_pipeline) == ["attr_1"]
+
+
+def test_get_deleted_attributes_ignore_internal() -> None:
+    # don't try to delete internal attributes
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=True, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
+
+    attribute_2 = \
+        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2])
+
+    old_pipeline = _make_pipeline_with([dummy_annotator_1])
+    new_pipeline = _make_pipeline_with([dummy_annotator_2])
+
+    assert not get_deleted_attributes(new_pipeline, old_pipeline)
+
+
+def test_get_deleted_attributes_full_reannotation() -> None:
+    # full reannotation - delete all
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=True, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
+
+    attribute_2 = \
+        AttributeInfo("attr_2", "attr_2", internal=False, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2])
+
+    old_pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
+    new_pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
+
+    assert get_deleted_attributes(
+        new_pipeline, old_pipeline, full_reannotation=True,
+    ) == ["attr_1", "attr_2"]
 
 
 def test_adjust_for_reannotation() -> None:
-    # annotator subset to run should have all new annotators
-    # annotator subset to run should have all rerun annotators
-    pass
+    attribute_1 = \
+        AttributeInfo("attr_1", "attr_1", internal=False, parameters={})
+    dummy_annotator_1 = DummyAnnotator([attribute_1])
+
+    attribute_2 = \
+        AttributeInfo("attr_2", "attr_2", internal=True, parameters={})
+    dummy_annotator_2 = DummyAnnotator([attribute_2], dependencies=("attr_1",))
+
+    attribute_3 = \
+        AttributeInfo("attr_3", "attr_3", internal=False, parameters={})
+    dummy_annotator_3 = DummyAnnotator([attribute_3], dependencies=("attr_2",))
+
+    old_pipeline = _make_pipeline_with(
+        [dummy_annotator_1, dummy_annotator_2])
+
+    new_pipeline = _make_pipeline_with(
+        [dummy_annotator_1, dummy_annotator_2, dummy_annotator_3])
+
+    adjust_for_reannotation(new_pipeline, old_pipeline)
+
+    assert new_pipeline.subset_to_run == [
+        # annotator subset to run should have all rerun annotators
+        dummy_annotator_2,
+        # annotator subset to run should have all new annotators
+        dummy_annotator_3,
+    ]
