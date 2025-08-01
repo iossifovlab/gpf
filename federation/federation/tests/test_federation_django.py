@@ -146,7 +146,7 @@ def test_enrichment_test(
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = {
-        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "datasetId": "TEST_REMOTE_t4c8_dataset",
         "enrichmentBackgroundModel": "coding_len_background",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSet": {
@@ -163,10 +163,19 @@ def test_enrichment_test(
     assert response
     assert response.status_code == 200
 
-    result = response.data  # type: ignore
+    result_remote = response.data  # type: ignore
+    assert set(result_remote.keys()) == {"desc", "result"}
+    assert result_remote["desc"] == "Gene Set: T4 Candidates (1)"
+    assert len(result_remote["result"]) == 4
 
-    assert set(result.keys()) == {"desc", "result"}
-    assert result["desc"] == "Gene Set: T4 Candidates (1)"
+    query["datasetId"] = "t4c8_dataset"
+    response = admin_client.post(
+        "/api/v3/enrichment/test",
+        data=json.dumps(query),
+        content_type="application/json",
+    )
+    result_local = response.data  # type: ignore
+    assert result_local == result_remote
 
 
 def test_gene_view_config(
