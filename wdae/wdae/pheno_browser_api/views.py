@@ -348,51 +348,6 @@ class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
         return Response({"count": count})
 
 
-class PhenoMeasureValues(QueryBaseView, DatasetAccessRightsView):
-    """Phenotype measure values view."""
-
-    def post(self, request: Request) -> Response:
-        """Return measure values as stream."""
-        data = request.data
-        if "dataset_id" not in data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset_id = data["dataset_id"]
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or not dataset.has_pheno_data:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        measure_ids = data.get("measure_ids", None)
-        instrument = data.get("instrument", None)
-        if instrument is None:
-            if measure_ids is None:
-                measure_ids = list(dataset.phenotype_data.measures.keys())
-        else:
-            if instrument not in dataset.phenotype_data.instruments:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-
-            instrument_measures = \
-                dataset.phenotype_data.get_instrument_measures(instrument)
-            if measure_ids is None:
-                measure_ids = instrument_measures
-
-            if not set(measure_ids).issubset(set(instrument_measures)):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if len(measure_ids) > 1900:
-            measure_ids = measure_ids[0:1900]
-
-        values_iterator = dataset.phenotype_data.get_people_measure_values(
-            measure_ids,
-        )
-
-        return StreamingHttpResponse(
-            iterator_to_json(values_iterator),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream",
-        )
-
-
 class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
     """Remote pheno images view."""
 
