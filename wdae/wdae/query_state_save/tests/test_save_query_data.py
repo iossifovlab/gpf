@@ -1,4 +1,8 @@
+# pylint: disable=C0116
+
 import json
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 from rest_framework import status
@@ -6,23 +10,35 @@ from rest_framework import status
 from query_state_save.models import PAGE_TYPE_OPTIONS
 
 
-def test_save_endpoint(query_save, simple_query_data):
+def test_save_endpoint(
+    query_save: Callable[[Any, str, str], str | None],
+    simple_query_data: dict[str, Any],
+) -> None:
     url_code = query_save(simple_query_data, "genotype", "user")
 
     assert url_code != ""
 
 
-@pytest.mark.parametrize("type", PAGE_TYPE_OPTIONS)
-def test_load_endpoint(query_save, query_load, simple_query_data, type):
-    url_code = query_save(simple_query_data, type, "user")
+@pytest.mark.parametrize("page_type", PAGE_TYPE_OPTIONS)
+def test_load_endpoint(
+    query_save: Callable[[Any, str, str], str | None],
+    query_load: Callable[[str], Any],
+    simple_query_data: dict[str, Any],
+    page_type: str,
+) -> None:
+    url_code = query_save(simple_query_data, page_type, "user")
+    assert url_code is not None
 
     loaded = query_load(url_code)
 
     assert loaded["data"] == simple_query_data
-    assert loaded["page"] == type
+    assert loaded["page"] == page_type
 
 
-def test_invalid_page_fails(db, user_client, simple_query_data):
+@pytest.mark.usefixtures("db")
+def test_invalid_page_fails(
+    user_client: Any, simple_query_data: dict[str, Any],
+) -> None:
     url = "/api/v3/query_state/save"
     query = {"data": simple_query_data, "page": "alabala", "origin": "user"}
 

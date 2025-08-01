@@ -32,7 +32,7 @@ def empty_group_2(db: None) -> Group:
 
 @pytest.fixture
 def active_user(db: None, user_model: type[WdaeUser]) -> WdaeUser:
-    user = user_model.objects.create_user(  # type: ignore
+    user = user_model.objects.create_user(  # pyright: ignore
         email="new@new.com", password="secret",
     )
 
@@ -42,7 +42,8 @@ def active_user(db: None, user_model: type[WdaeUser]) -> WdaeUser:
 
 @pytest.fixture
 def inactive_user(db: None, user_model: type[WdaeUser]) -> WdaeUser:
-    user = user_model.objects.create_user(email="new@new.com")  # type: ignore
+    user = user_model.objects.create_user(  # pyright: ignore
+        email="new@new.com")
 
     assert not user.is_active
     return user
@@ -73,7 +74,8 @@ def admin_group(user: WdaeUser) -> Group:
 
 @pytest.fixture
 def researcher(db: None) -> WdaeUser:
-    res = WdaeUser.objects.create_user(email="fake@fake.com")  # type: ignore
+    res = WdaeUser.objects.create_user(  # pyright: ignore
+        email="fake@fake.com")
     res.name = "fname"
     res.set_password("alabala")
     res.save()
@@ -83,7 +85,8 @@ def researcher(db: None) -> WdaeUser:
 
 @pytest.fixture
 def researcher_without_password(db: None) -> WdaeUser:
-    res = WdaeUser.objects.create_user(email="fake@fake.com")  # type: ignore
+    res = WdaeUser.objects.create_user(  # pyright: ignore
+        email="fake@fake.com")
     res.name = "fname"
     res.save()
 
@@ -93,7 +96,7 @@ def researcher_without_password(db: None) -> WdaeUser:
 @pytest.fixture
 def unique_test_user(db: None) -> WdaeUser:
     uid = uuid.uuid1()
-    res = WdaeUser.objects.create_user(  # type: ignore
+    res = WdaeUser.objects.create_user(  # pyright: ignore
         email=f"fake{uid}@unique.com")
     res.name = f"fname{uid}"
     res.set_password("alabala")
