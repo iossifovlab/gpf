@@ -919,12 +919,12 @@ class RESTClient:
             f"{self.api_url}/pheno_browser/measures_count{query_str}",
             stream=True,
         )
-        res = response.json()
-        if res.status_code != 200:
+        if response.status_code != 200:
             raise ValueError(
                 f"{self.client_id}: Failed to get measure count"
                 f"from {dataset_id}",
             )
+        res = response.json()
         if "count" not in res:
             raise ValueError(f"{self.client_id}: Invalid response")
 
