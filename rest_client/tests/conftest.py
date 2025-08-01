@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 import pytest
 import yaml
 from gpf_instance.gpf_instance import WGPFInstance
-from rest_client.mailhog_client import MailhogClient
 from utils.testing import setup_t4c8_instance
 
 from rest_client.rest_client import (
@@ -14,6 +13,8 @@ from rest_client.rest_client import (
     GPFPasswordSession,
     RESTClient,
 )
+
+from .mailhog_client import MailhogClient
 
 
 def build_remote_config(base_url: str) -> dict[str, str]:
