@@ -1,10 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from collections.abc import Iterator
+from typing import cast
 
 import pytest
+from django.http import StreamingHttpResponse
 from django.test.client import Client
 from federation.remote_study_wrapper import RemoteWDAEStudy
 from gpf_instance.gpf_instance import WGPFInstance
+from pheno_browser_api.tests.test_pheno_browser_api import DOWNLOAD_URL
 from rest_framework import status
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
@@ -322,3 +326,34 @@ def test_genotype_browser_query_explicit_person_set_collection(
         for row in first_row
         for cell in row[4]
     )
+
+def test_pheno_browser_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response_remote = cast(StreamingHttpResponse, admin_client.get(
+        DOWNLOAD_URL,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "instrument": "i1",
+        },
+    ))
+
+    assert response_remote.status_code == 200
+
+    response_local = cast(StreamingHttpResponse, admin_client.get(
+        DOWNLOAD_URL,
+        {
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
+        },
+    ))
+
+    assert response_local.status_code == 200
+
+    local_first_line = next(
+        cast(Iterator[bytes], response_local.streaming_content))
+    remote_first_line = next(
+        cast(Iterator[bytes], response_local.streaming_content))
+
+    assert remote_first_line.decode("utf-8") == local_first_line.decode("utf-8")
