@@ -10,6 +10,7 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
+  - sqlalchemy=2.0.21
   - openjdk=8.0.412
   - hadoop=3.3.6
   - impyla=0.17

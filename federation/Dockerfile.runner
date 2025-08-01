@@ -1,0 +1,8 @@
+FROM federation-backend
+
+COPY federation/federation-environment.yml /federation-environment.yml
+COPY rest_client/rest-environment.yml /rest-environment.yml
+
+RUN /opt/conda/bin/mamba env update --name gpf --file /rest-environment.yml
+RUN /opt/conda/bin/mamba env update --name gpf --file /federation-environment.yml
+

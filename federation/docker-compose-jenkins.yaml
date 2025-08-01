@@ -1,0 +1,37 @@
+name: federation
+
+services:
+
+  backend:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    volumes:
+    - ..:/wd
+    environment:
+    - DAE_DB_DIR=/wd/federation/tmp/gpf_instance
+
+    entrypoint: /wd/federation/scripts/backend/run_gpf.sh
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -X GET http://backend:21010/api/v3/datasets/hierarchy"]
+      interval: 10s
+      retries: 6
+      start_period: 15s
+      timeout: 10s
+
+  runner:
+    build:
+      context: ..
+      dockerfile: federation/Dockerfile.runner
+    volumes:
+    - ..:/wd
+    environment:
+      - TEST_REMOTE_HOST=http://backend:21010
+    entrypoint: /wd/federation/scripts/runner/run_tests.sh
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  main:

@@ -28,13 +28,13 @@ services:
       WDAE_DEBUG: true
       WDAE_PUBLIC_HOSTNAME: resttest
       WDAE_EMAIL_HOST: "mail"
-      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://backend:21010"
+      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://backend:21011"
     volumes:
       - ../:/wd
-    entrypoint: /wd/rest_client/jenkins-backend-entrypoint.sh
+    entrypoint: /wd/rest_client/backend-entrypoint.sh
 
     healthcheck:
-      test: ["CMD-SHELL", "curl -X GET http://backend:21010/api/v3/datasets/hierarchy"]
+      test: ["CMD-SHELL", "curl -X GET http://backend:21011/api/v3/datasets/hierarchy"]
       interval: 10s
       retries: 6
       start_period: 15s
