@@ -1,12 +1,8 @@
 services:
-  remote:
-    build:
-      context: ../
-      dockerfile: Dockerfile
+
+  backend:
+    extends:
+      file: docker-compose-jenkins.yaml
+      service: backend
     ports:
       - "21010:21010"
-    environment:
-      DAE_DB_DIR: /wd/federation/tmp/gpf_instance
-    volumes:
-      - ../:/wd
-    entrypoint: /wd/federation/testing_entrypoint.sh
