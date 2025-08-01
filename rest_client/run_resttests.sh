@@ -9,6 +9,8 @@ done
 /opt/conda/bin/conda run -n gpf \
     py.test -vv -s --log-level=DEBUG \
         --junitxml=/wd/test-results/resttests-junit.xml \
+        --cov-config /wd/coveragerc \
+        --cov rest_client \
         /wd/rest_client/tests \
         --url http://backend:21011 \
         --mailhog http://mail:8025
