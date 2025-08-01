@@ -3,17 +3,18 @@ import os
 import pathlib
 import textwrap
 
-import dae.annotation.annotation_factory
 import pytest
 import pytest_mock
 from dae.annotation.annotatable import Position
+from dae.annotation.annotation_config import AttributeInfo
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,
-    copy_annotation_pipeline,
-    copy_reannotation_pipeline,
     load_pipeline_from_yaml,
 )
-from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    InputAnnotableAnnotatorDecorator,
+)
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_context import (
     GenomicContext,
@@ -23,6 +24,8 @@ from dae.genomic_resources.genomic_context import (
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
 from dae.testing.t4c8_import import t4c8_genome
+
+from tests.small.annotation.conftest import DummyAnnotator
 
 
 @pytest.fixture
@@ -117,6 +120,31 @@ def context_fixture(
     return context
 
 
+def test_input_annotatable_decorator_used_context_attributes(
+    test_grr: GenomicResourceRepo,
+) -> None:
+    pipeline = AnnotationPipeline(test_grr)
+    dummy_annotatable_provider = DummyAnnotator()
+    dummy_annotatable_provider.attributes.append(
+        AttributeInfo("dummy_annotatable", "dummy_annotatable",
+                      internal=False, parameters={},
+                      _type="annotatable"),
+    )
+    dummy_annotatable_provider.pipeline = pipeline
+    pipeline.add_annotator(dummy_annotatable_provider)
+
+    annotator = DummyAnnotator()
+    annotator.pipeline = pipeline
+    pipeline.add_annotator(annotator)
+    assert not annotator.used_context_attributes
+
+    annotator._info.parameters._data["input_annotatable"] = "dummy_annotatable"
+    annotator = \
+        InputAnnotableAnnotatorDecorator.decorate(annotator)  # type: ignore
+
+    assert annotator.used_context_attributes == ("dummy_annotatable",)
+
+
 def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:
     pipeline_config = """
         - position_score: score_*
@@ -154,56 +182,6 @@ def test_pipeline_repeated_attributes_allowed(
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
     assert result == {"s1_A0_score_one": 0.1, "s1_A0_dup_score_one": 0.123}
-
-
-def test_copy_pipeline(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = """
-        - position_score: score_one
-        - position_score: score_two
-    """
-    pipeline = load_pipeline_from_yaml(pipeline_config, test_grr)
-    copied_pipeline = copy_annotation_pipeline(pipeline)
-
-    assert len(pipeline.annotators) == 2
-    assert len(copied_pipeline.annotators) == 2
-
-    # pylint: disable=C0200
-    for idx in range(len(copied_pipeline.annotators)):
-        info_src = pipeline.annotators[idx].get_info()
-        info_copy = copied_pipeline.annotators[idx].get_info()
-        assert info_copy == info_src
-        assert id(info_copy) != id(info_src)
-
-
-def test_copy_reannotation_pipeline(
-    mocker: pytest_mock.MockerFixture,
-    test_grr: GenomicResourceRepo,
-) -> None:
-    pipeline_config_a = """
-        - position_score: score_one
-    """
-    pipeline_config_b = """
-        - position_score: score_one
-        - position_score: score_two
-    """
-    pipeline_a = load_pipeline_from_yaml(pipeline_config_a, test_grr)
-    pipeline_b = load_pipeline_from_yaml(pipeline_config_b, test_grr)
-
-    reannotation = ReannotationPipeline(
-        pipeline_a, pipeline_b)
-
-    mocker.spy(ReannotationPipeline, "__init__")
-    mocker.spy(dae.annotation.annotation_factory, "copy_annotation_pipeline")
-    copy_method = dae.annotation.annotation_factory.copy_annotation_pipeline
-
-    copied_pipeline = copy_reannotation_pipeline(reannotation)
-
-    assert ReannotationPipeline.__init__.call_count == 1  # type: ignore
-    assert copy_method.call_count == 2  # type: ignore
-    copy_method.assert_any_call(pipeline_a)  # type: ignore
-    copy_method.assert_any_call(pipeline_b)  # type: ignore
-
-    assert len(copied_pipeline.annotators) == len(reannotation.annotators)
 
 
 def test_annotation_pipeline_context(

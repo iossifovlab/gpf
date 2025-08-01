@@ -4,14 +4,57 @@ import os
 import pathlib
 import textwrap
 from collections.abc import Generator
+from typing import Any
 
 import pytest
+from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotation_pipeline import Annotator
 from dae.genomic_resources.genomic_context import (
     _REGISTERED_CONTEXT_PROVIDERS,
     _REGISTERED_CONTEXTS,
 )
 from dae.genomic_resources.testing import setup_genome
 from dae.testing import setup_denovo, setup_directories
+
+
+class DummyAnnotator(Annotator):
+    """A dummy annotator that does nothing."""
+
+    def __init__(
+        self,
+        attributes: list[AttributeInfo] | None = None,
+        dependencies: tuple[str, ...] = (),
+    ) -> None:
+        self.dependencies = dependencies
+
+        info = AnnotatorInfo(
+            "dummy_annotator",
+            annotator_id="dummy",
+            attributes=attributes or [],
+            parameters={},
+        )
+        super().__init__(None, info)
+        self.index = 0
+
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return self.dependencies
+
+    def open(self) -> Annotator:
+        """Reset the annotator state."""
+        self.index = 0
+        return self
+
+    def annotate(
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
+        """Produce annotation attributes for an annotatable."""
+        if annotatable is None:
+            return {}
+        self.index += 1
+        return {"index": self.index, "annotatable": annotatable}
 
 
 def relative_to_this_test_folder(path: str) -> str:

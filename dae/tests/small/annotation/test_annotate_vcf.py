@@ -624,7 +624,7 @@ def test_writer_does_not_omit_literal_zeros_from_info(
         variant,
         [{"score_1": 0}],
         attributes,
-        None,
+        [],
     )
 
     assert variant.info["score_1"] == ("0",)
@@ -650,7 +650,7 @@ def test_writer_does_not_write_empty_values_into_info(
         variant,
         [{"score_1": "", "score_2": False}],
         attributes,
-        None,
+        [],
     )
 
     assert "score_1" not in variant.info

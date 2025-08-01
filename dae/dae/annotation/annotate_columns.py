@@ -26,13 +26,18 @@ from dae.annotation.annotate_utils import (
     stringify,
 )
 from dae.annotation.annotation_config import (
+    AttributeInfo,
     RawAnnotatorsConfig,
     RawPipelineConfig,
 )
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import (
+    adjust_for_reannotation,
+    build_annotation_pipeline,
+    load_pipeline_from_file,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
-    ReannotationPipeline,
+    get_deleted_attributes,
 )
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
@@ -304,16 +309,14 @@ class _CSVBatchWriter(Filter):
 
 def _build_new_header(
     input_header: list[str],
-    pipeline: AnnotationPipeline,
+    annotation_attributes: list[AttributeInfo],
+    attributes_to_delete: Sequence[str],
 ) -> list[str]:
     result = list(input_header)
-    if isinstance(pipeline, ReannotationPipeline):
-        for attr in pipeline.pipeline_old.get_attributes():
-            if not attr.internal:
-                result.remove(attr.name)
+    for attr_name in attributes_to_delete:
+        result.remove(attr_name)
     return result + [
-        attr.name for attr in pipeline.get_attributes()
-        if not attr.internal
+        attr.name for attr in annotation_attributes if not attr.internal
     ]
 
 
@@ -322,6 +325,7 @@ def _build_sequential(
     output_path: str,
     pipeline: AnnotationPipeline,
     reference_genome: ReferenceGenome | None,
+    attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVSource(
         args.input,
@@ -330,11 +334,10 @@ def _build_sequential(
         args.input_separator,
     )
     filters: list[Filter] = []
-    new_header = _build_new_header(source.header, pipeline)
-    if isinstance(pipeline, ReannotationPipeline):
-        filters.append(DeleteAttributesFromAWSFilter(
-            pipeline.attributes_deleted))
+    new_header = _build_new_header(
+        source.header, pipeline.get_attributes(), attributes_to_delete)
     filters.extend([
+        DeleteAttributesFromAWSFilter(attributes_to_delete),
         AnnotationPipelineAnnotatablesFilter(pipeline),
         _CSVWriter(output_path, args.output_separator, new_header),
     ])
@@ -346,6 +349,7 @@ def _build_batched(
     output_path: str,
     pipeline: AnnotationPipeline,
     reference_genome: ReferenceGenome | None,
+    attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVBatchSource(
         args.input,
@@ -355,11 +359,10 @@ def _build_batched(
         args.batch_size,
     )
     filters: list[Filter] = []
-    new_header = _build_new_header(source.header, pipeline)
-    if isinstance(pipeline, ReannotationPipeline):
-        filters.append(DeleteAttributesFromAWSBatchFilter(
-            pipeline.attributes_deleted))
+    new_header = _build_new_header(
+        source.header, pipeline.get_attributes(), attributes_to_delete)
     filters.extend([
+        DeleteAttributesFromAWSBatchFilter(attributes_to_delete),
         AnnotationPipelineAnnotatablesBatchFilter(pipeline),
         _CSVBatchWriter(output_path, args.output_separator, new_header),
     ])
@@ -376,11 +379,11 @@ def _annotate_csv(
 ) -> None:
     """Annotate a CSV file using a processing pipeline."""
 
-    pipeline_config_old = None
-    if args.reannotate:
-        pipeline_config_old = Path(args.reannotate).read_text()
-
     grr = build_genomic_resource_repository(definition=grr_definition)
+
+    pipeline_previous = None
+    if args.reannotate:
+        pipeline_previous = load_pipeline_from_file(args.reannotate, grr)
 
     ref_genome = None
     if reference_genome_resource_id is not None:
@@ -391,13 +394,30 @@ def _annotate_csv(
         pipeline_config, grr,
         allow_repeated_attributes=args.allow_repeated_attributes,
         work_dir=Path(args.work_dir),
-        config_old_raw=pipeline_config_old,
-        full_reannotation=args.full_reannotation,
     )
 
-    processor = _build_sequential(args, output_path, pipeline, ref_genome) \
+    if pipeline_previous and not args.full_reannotation:
+        adjust_for_reannotation(pipeline, pipeline_previous)
+
+    attributes_to_delete = []
+    if pipeline_previous:
+        attributes_to_delete = get_deleted_attributes(
+            pipeline,
+            pipeline_previous,
+            full_reannotation=args.full_reannotation,
+        )
+
+    build_processor = _build_sequential \
         if args.batch_size <= 0 \
-        else _build_batched(args, output_path, pipeline, ref_genome)
+        else _build_batched
+
+    processor = build_processor(
+        args,
+        output_path,
+        pipeline,
+        ref_genome,
+        attributes_to_delete,
+    )
 
     with processor:
         processor.process_region(region)

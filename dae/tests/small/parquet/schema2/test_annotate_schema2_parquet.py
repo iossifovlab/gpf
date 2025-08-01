@@ -7,9 +7,9 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from glob import glob
 
+import dae.parquet.schema2.annotate_schema2_parquet
 import pytest
 import pytest_mock
-from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
@@ -572,36 +572,6 @@ def test_internal_attributes_reannotation(
         assert not sv.has_attribute("score_A_internal")
 
 
-def test_annotationless_study_autodetection(
-    mocker: pytest_mock.MockerFixture,
-    tmp_path: pathlib.Path,
-    t4c8_instance: GPFInstance,
-    t4c8_annotationless_study: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
-) -> None:
-    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
-    annotation_file_new = str(root_path / "new_annotation.yaml")
-    grr_file = str(root_path / "grr.yaml")
-    output_dir = str(tmp_path / "out")
-    work_dir = str(tmp_path / "work")
-
-    gpf_instance_genomic_context_fixture(t4c8_instance)
-
-    mocker.spy(ReannotationPipeline, "__init__")
-
-    cli([
-        t4c8_annotationless_study, annotation_file_new,
-        "-o", output_dir,
-        "-w", work_dir,
-        "--grr", grr_file,
-        "-j", "1",
-    ])
-
-    # check auto-detection by asserting
-    # reannotation pipeline is NOT constructed
-    assert ReannotationPipeline.__init__.call_count == 0  # type: ignore
-
-
 def test_autodetection_reannotate(
     mocker: pytest_mock.MockerFixture,
     tmp_path: pathlib.Path,
@@ -617,7 +587,8 @@ def test_autodetection_reannotate(
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
-    mocker.spy(ReannotationPipeline, "__init__")
+    spy = mocker.spy(dae.parquet.schema2.annotate_schema2_parquet,
+                     "adjust_for_reannotation")
 
     cli([
         t4c8_study_nonpartitioned, annotation_file_new,
@@ -627,8 +598,7 @@ def test_autodetection_reannotate(
         "-j", "1",
     ])
 
-    # check auto-detection by asserting reannotation pipeline is constructed
-    assert ReannotationPipeline.__init__.call_count >= 1  # type: ignore
+    assert spy.call_count == 1  # type: ignore
 
 
 def test_reannotate_in_place(
