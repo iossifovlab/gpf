@@ -118,10 +118,14 @@ class PhenoMeasureDescriptionView(QueryBaseView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            dataset,
+        )
         measure_id = request.query_params["measure_id"]
 
         try:
-            res = dataset.phenotype_data.get_measure_description(measure_id)
+            res = pheno_browser_helper.get_measure_description(measure_id)
         except ValueError:
             logger.exception("Error when getting measure description")
             return Response(
