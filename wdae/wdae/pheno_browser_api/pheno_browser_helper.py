@@ -18,6 +18,11 @@ class BasePhenoBrowserHelper(GPFTool):
     def __init__(self) -> None:
         super().__init__("pheno_browser_helper")
 
+
+    @abstractmethod
+    def get_instruments(self) -> list[str]:
+        """Get instruments."""
+
     @abstractmethod
     def get_measure_ids(
         self,
@@ -46,6 +51,13 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
     @staticmethod
     def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
         raise NotImplementedError
+
+    def get_instruments(self) -> list[str]:
+        if not self.study.has_pheno_data:
+            raise ValueError(
+                f"Study {self.study.study_id} has no phenotype data.",
+            )
+        return sorted(self.study.phenotype_data.get_instruments())
 
     def get_measure_ids(
         self,

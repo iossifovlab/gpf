@@ -23,7 +23,7 @@ from pheno_browser_api.pheno_browser_helper import (
 logger = logging.getLogger(__name__)
 
 
-class PhenoConfigView(QueryBaseView, DatasetAccessRightsView):
+class PhenoConfigView(QueryBaseView, DatasetAccessRightsView):  # unused?
     """Phenotype data configuration view."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
@@ -52,10 +52,20 @@ class PhenoInstrumentsView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or not dataset.has_pheno_data:
+        if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = sorted(dataset.phenotype_data.get_instruments())
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            dataset,
+        )
+
+        try:
+            instruments = pheno_browser_helper.get_instruments()
+        except ValueError:
+            logger.exception("Error when getting instruments")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         res = {
             "instruments": instruments,
             "default": instruments[0],
