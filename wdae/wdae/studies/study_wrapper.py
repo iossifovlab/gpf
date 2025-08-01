@@ -697,8 +697,6 @@ class WDAEStudy(WDAEAbstractStudy):
         """Wrap query variants method for WDAE streaming of variants."""
         # pylint: disable=too-many-locals,too-many-branches
 
-        max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
-
         study_filters = None
         if kwargs.get("allowed_studies") is not None:
             study_filters = set(kwargs.pop("allowed_studies"))
@@ -712,6 +710,9 @@ class WDAEStudy(WDAEAbstractStudy):
         kwargs["study_filters"] = study_filters
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
+        kwargs = query_transformer.transform_kwargs(self, **kwargs)
+
+        limit = kwargs.get("limit", max_variants_count)
 
         transform = response_transformer.variant_transformer(
             self, self._pheno_values_cache,
@@ -724,7 +725,7 @@ class WDAEStudy(WDAEAbstractStudy):
             self.name)
         try:
             variants = enumerate(self.registry.query_variants(
-                self.get_children_ids(leaves=True), kwargs, max_variants_count,
+                self.get_children_ids(leaves=True), kwargs, limit,
             ))
             psc_query = query_transformer.extract_person_set_collection_query(
                 self, kwargs)

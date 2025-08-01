@@ -3,7 +3,7 @@ import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
-from typing import Any, cast
+from typing import Any
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.query_variants.query_runners import QueryResult
@@ -188,7 +188,7 @@ class GenotypeStorageRegistry:
 
     def query_variants(
         self, study_ids: list[str], kwargs: dict[str, Any],
-        max_variants_count: int | None = 10000,
+        limit: int | None = 10000,
     ) -> Iterable[FamilyVariant]:
         runners = []
         for study_id in study_ids:
@@ -220,13 +220,14 @@ class GenotypeStorageRegistry:
         index = 0
         seen = set()
         unique_family_variants = bool(kwargs.get("uniqueFamilyVariants"))
+        limit = kwargs.get("limit", limit)
 
         started = time.time()
         try:
             if len(runners) == 0:
                 return
             variants_result = QueryResult(
-                self.executor, runners, limit=max_variants_count)
+                self.executor, runners, limit=limit)
 
             variants_result.start()
             elapsed = time.time() - started
@@ -236,22 +237,13 @@ class GenotypeStorageRegistry:
                     if variant is None:
                         continue
 
-                    matched = True
-                    for aa in variant.matched_alleles:
-                        assert not aa.is_reference_allele
-                        if not filter_allele(cast(FamilyAllele, aa)):
-                            matched = False
-                            break
-                    if not matched:
-                        continue
-
                     fvuid = variant.fvuid
                     if unique_family_variants and fvuid in seen:
                         continue
                     seen.add(fvuid)
 
                     index += 1
-                    if max_variants_count and index > max_variants_count:
+                    if limit and index > limit:
                         break
 
                     yield variant
@@ -263,7 +255,7 @@ class GenotypeStorageRegistry:
 
     def query_summary_variants(
         self, study_ids: list[str], kwargs: dict[str, Any],
-        max_variants_count: int | None = 10000,
+        limit: int | None = 10000,
     ) -> Iterable[SummaryVariant]:
         runners = []
         for study_id in study_ids:
@@ -271,13 +263,13 @@ class GenotypeStorageRegistry:
             runner = storage.create_summary_runner(study_id, kwargs)
             if runner is not None:
                 runners.append(runner)
+        limit = kwargs.get("limit", limit)
         query = QueryResult(
-            self.executor, runners, limit=max_variants_count)
+            self.executor, runners, limit=limit)
 
         if query is None:
             return
         variants: dict[str, Any] = {}
-        limit = kwargs.get("limit")
         started = time.time()
         query.start()
         with closing(query) as variants_result:

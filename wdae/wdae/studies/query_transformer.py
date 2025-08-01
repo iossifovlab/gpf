@@ -48,6 +48,7 @@ class QueryTransformer(QueryTransformerProtocol):
         "variantTypes": "variant_type",
         "effectTypes": "effect_types",
         "regionS": "regions",
+        "maxVariantsCount": "limit",
     }
 
     def __init__(
