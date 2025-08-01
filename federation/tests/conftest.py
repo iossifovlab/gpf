@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
 from django.test import Client
 from django.utils import timezone
+from federation.remote_extension import GPFRemoteExtension
 from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
 from oauth2_provider.models import (
     AccessToken,
@@ -22,7 +23,6 @@ from studies.response_transformer import ResponseTransformer
 from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance
 
-from federation.remote_extension import GPFRemoteExtension
 from rest_client.rest_client import GPFOAuthSession, RESTClient
 
 

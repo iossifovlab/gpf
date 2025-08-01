@@ -1,8 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.pheno.common import MeasureType
-from requests import Response
-
 from federation.rest_api_client import RESTClient
+from requests import Response
 
 
 def test_get_datasets(rest_client: RESTClient) -> None:
