@@ -210,9 +210,5 @@ def test_wdae_get_all_from_genotype_browser(
                      "any([denovo,mendelian,missing,omission])"],
         real_attr_filter=[],
         study_filters=["test_partitions"],
-        inheritanceTypeFilter=[],
-        studyTypes=["we", "wg", "tg"],
-        studyFilters=[],
-        datasetId="test_partitions",
         unique_family_variants=False))
     assert len(res) == 8
