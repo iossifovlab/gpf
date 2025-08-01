@@ -10,7 +10,6 @@ from federation.remote_study_wrapper import (
     RemoteWDAEStudy,
     RemoteWDAEStudyGroup,
 )
-from federation.rest_api_client import RESTClient
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
 from utils.testing import setup_t4c8_instance
@@ -18,6 +17,7 @@ from utils.testing import setup_t4c8_instance
 from rest_client.rest_client import (
     GPFAnonymousSession,
     GPFOAuthSession,
+    RESTClient,
 )
 
 
