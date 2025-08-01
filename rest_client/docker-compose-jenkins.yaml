@@ -34,7 +34,7 @@ services:
     entrypoint: /wd/rest_client/backend-entrypoint.sh
 
     healthcheck:
-      test: ["CMD-SHELL", "curl -X GET http://backend:21010/api/v3/datasets/hierarchy"]
+      test: ["CMD-SHELL", "curl -X GET http://backend:21011/api/v3/datasets/hierarchy"]
       interval: 10s
       retries: 6
       start_period: 15s
