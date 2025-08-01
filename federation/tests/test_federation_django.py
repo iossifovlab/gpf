@@ -3,12 +3,11 @@ import json
 
 import pytest
 from django.test.client import Client
+from federation.remote_study_wrapper import RemoteWDAEStudy
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
-
-from federation.remote_study_wrapper import RemoteWDAEStudy
 
 
 def test_studies(
@@ -265,3 +264,81 @@ def test_query_variants_wdae_remote(
     result = list(remote_study.query_variants_wdae(
         {}, [], t4c8_query_transformer, t4c8_response_transformer))
     assert len(result) == 12
+
+
+def test_query_variants_wdae_remote_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    data = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "download": True,
+    }
+    response = admin_client.post(
+        "/api/v3/genotype_browser/query",
+        json.dumps(data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    res = "".join([
+        p.decode("utf8")
+        for p in response.streaming_content
+    ]).split("\n")
+    res = [r for r in res if r]
+    assert len(res) == 13
+
+
+def test_genotype_browser_query_default_person_set_collection(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    data = {"datasetId": "TEST_REMOTE_t4c8_study_1"}
+    response = admin_client.post(
+        "/api/v3/genotype_browser/query",
+        json.dumps(data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    res = "".join(
+        p.decode("utf8") for p in response.streaming_content if p).split("\n")
+    res = [r for r in res if r]
+
+    first_row = json.loads(res[0])
+    assert any(
+        cell[6] != "#ffffff"
+        for row in first_row
+        for cell in row[4]
+    )
+
+
+def test_genotype_browser_query_explicit_person_set_collection(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    data = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "personSetCollection": {
+            "id": "phenotype",
+            "checkedValues": ["autism"],
+        },
+    }
+
+    response = admin_client.post(
+        "/api/v3/genotype_browser/query",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    res = "".join(
+        p.decode("utf8") for p in response.streaming_content if p).split("\n")
+    res = [r for r in res if r]
+
+    first_row = json.loads(res[0])
+    assert any(
+        cell[6] != "#ffffff"
+        for row in first_row
+        for cell in row[4]
+    )
