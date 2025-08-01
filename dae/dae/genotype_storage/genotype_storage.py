@@ -212,17 +212,6 @@ class GenotypeStorage(abc.ABC):
     ) -> QueryRunner | None:
         study_filters = kwargs.get("study_filters", [])
 
-        regions = kwargs.pop("regions")
-        genes = kwargs.pop("genes")
-        effect_types = kwargs.pop("effect_types")
-        variant_type = kwargs.pop("variant_type")
-        real_attr_filter = kwargs.pop("real_attr_filter")
-        category_attr_filter = kwargs.pop("category_attr_filter")
-        ultra_rare = kwargs.pop("ultra_rare")
-        frequency_filter = kwargs.pop("frequency_filter")
-        return_reference = kwargs.pop("return_reference")
-        return_unknown = kwargs.pop("return_unknown")
-        limit = kwargs.pop("limit")
         if study_filters is not None and study_id not in study_filters:
             return None
 
@@ -231,17 +220,6 @@ class GenotypeStorage(abc.ABC):
 
         backend = self.loaded_variants[study_id]
         runner = backend.build_summary_variants_query_runner(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                category_attr_filter=category_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
                 **kwargs,
             )
         if runner is None:
