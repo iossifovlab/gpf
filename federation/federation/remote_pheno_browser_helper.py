@@ -41,7 +41,7 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
 
     @abstractmethod
     def get_measures_info(self) -> dict[str, Any]:
-        """Get measures info."""
+        return self.rest_client.get_browser_measures_info(self.dataset_id)
 
     @abstractmethod
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
