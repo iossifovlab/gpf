@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from dae.pedigrees.family import Family, Person
 from federation.remote_variant import (
+    RemoteAllele,
     RemoteFamilyAllele,
     RemoteFamilyVariant,
 )
@@ -138,3 +139,20 @@ def test_remote_variant_alleles(
     assert (allele.genotype == [[0, 0], [0, 0], [1, 0], [0, 0]]).all()
     assert isinstance(allele.best_state, np.ndarray)
     assert (allele.best_state == [[2, 2, 1, 2], [0, 0, 1, 0]]).all()
+
+
+def test_remote_allele_find_attribute_source_not_in_columns(
+        sample_attributes_columns):
+    attributes, columns = sample_attributes_columns
+    ra = RemoteAllele(attributes, 0, columns)
+    result = ra._find_attribute("not_a_column")
+    assert result is None
+
+
+def test_remote_family_allele_find_attribute_source_not_in_columns(
+    sample_attributes_columns, sample_family,
+):
+    attributes, columns = sample_attributes_columns
+    rfa = RemoteFamilyAllele(attributes, 0, sample_family, columns)
+    result = rfa._find_attribute("not_a_column")
+    assert result is None
