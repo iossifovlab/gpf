@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
 from federation.gene_sets_db import RemoteGeneSetCollection
 
 from rest_client.rest_client import RESTClient
@@ -16,6 +17,12 @@ def test_get_all_gene_sets(rest_client: RESTClient) -> None:
     assert gene_set_names == [
         "all_candidates", "c8_candidates", "t4_candidates",
     ]
+
+
+def test_get_all_gene_sets_empty_collection(rest_client: RESTClient) -> None:
+    rgsc = RemoteGeneSetCollection("", rest_client, "", "")
+    with pytest.raises(ValueError, match="unable to load remote gene sets"):
+        rgsc.get_all_gene_sets()
 
 
 def test_get_gene_set(rest_client: RESTClient) -> None:
