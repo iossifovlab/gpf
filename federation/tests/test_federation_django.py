@@ -328,12 +328,39 @@ def test_genotype_browser_query_explicit_person_set_collection(
     )
 
 
+def test_pheno_browser_instruments(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    instruments_url = "/api/v3/pheno_browser/instruments"
+    response_remote = admin_client.get(
+        instruments_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+        },
+    )
+
+    assert response_remote.status_code == 200
+
+    response_local = admin_client.get(
+        instruments_url,
+        {
+            "dataset_id": "t4c8_study_1",
+        },
+    )
+
+    assert response_local.status_code == 200
+
+    assert response_remote.json() == response_local.json()
+
+
 def test_pheno_browser_download(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
+    download_url = "/api/v3/pheno_browser/download"
     response_remote = cast(StreamingHttpResponse, admin_client.get(
-        DOWNLOAD_URL,
+        download_url,
         {
             "dataset_id": "TEST_REMOTE_t4c8_study_1",
             "instrument": "i1",
@@ -343,7 +370,7 @@ def test_pheno_browser_download(
     assert response_remote.status_code == 200
 
     response_local = cast(StreamingHttpResponse, admin_client.get(
-        DOWNLOAD_URL,
+        download_url,
         {
             "dataset_id": "t4c8_study_1",
             "instrument": "i1",

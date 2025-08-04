@@ -4,7 +4,7 @@ from datasets_api.permissions import (
     get_instance_timestamp_etag,
     get_permissions_etag,
 )
-from django.http.response import HttpResponse, StreamingHttpResponse
+from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from gpf_instance.gpf_instance import WGPFInstance
