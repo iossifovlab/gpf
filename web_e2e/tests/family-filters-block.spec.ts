@@ -743,7 +743,6 @@ test.describe('Pheno Measures tests', () => {
     await page.getByRole('button', { name: 'Table Preview'}).click();
     await expect(page.locator('#variants-count-span')).toHaveText('4 variants selected');
   });
-
   test('filtering by pheno measures in Phenotype Tool', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Phenotype tool');
     await page.locator('input#search-box').click();
@@ -755,6 +754,10 @@ test.describe('Pheno Measures tests', () => {
 
     await page.locator('gpf-family-filters-block').getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
+
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
+    );
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
     await page.getByRole('button', {name: 'Download'}).click();
