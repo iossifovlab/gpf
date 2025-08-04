@@ -165,28 +165,33 @@ class PhenoMeasuresView(QueryBaseView):
                 "Received deprecated params %s", request.query_params,
             )
 
-        instrument = request.query_params.get("instrument", None)
-        search_term = request.query_params.get("search", None)
-
-        pheno_instruments = dataset.phenotype_data.get_instruments()
-
-        if instrument and instrument not in pheno_instruments:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            dataset,
+        )
 
         try:
-            measures = dataset.phenotype_data.search_measures(
-                instrument, search_term,
-            )
-
-            measures_page = list(measures)
+            res = pheno_browser_helper.search_measures(request.query_params)
         except ValueError:
             logger.exception("Error when searching measures")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Error when searching measures."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except KeyError:
+            logger.exception("Error when searching measures")
+            return Response(
+                {"error": "Instrument not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        if measures_page is None:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if res is None:
+            return Response(
+                {"error": "No measures found"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        return Response(measures_page)
+        return Response(res)
 
 
 class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):

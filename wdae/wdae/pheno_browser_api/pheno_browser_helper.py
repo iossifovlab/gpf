@@ -1,4 +1,5 @@
 import csv
+import logging
 from abc import abstractmethod
 from collections.abc import Generator
 from io import StringIO
@@ -6,6 +7,8 @@ from typing import Any
 
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+
+logger = logging.getLogger(__name__)
 
 
 class CountError(Exception):
@@ -30,6 +33,13 @@ class BasePhenoBrowserHelper(GPFTool):
     @abstractmethod
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         """Get measures description."""
+
+    @abstractmethod
+    def search_measures(
+        self,
+        data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Search measures."""
 
     @abstractmethod
     def get_measure_ids(
@@ -85,6 +95,33 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
                 f"has no measure with id {measure_id}",
             )
         return self.study.phenotype_data.get_measure_description(measure_id)
+
+    def search_measures(
+        self,
+        data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        if not self.study.has_pheno_data:
+            raise ValueError(
+                f"Study {self.study.study_id} has no phenotype data.",
+            )
+
+        instrument = data.get("instrument")
+        search_term = data.get("search")
+
+        pheno_instruments = self.get_instruments()
+
+        if instrument and instrument not in pheno_instruments:
+            raise KeyError(
+                f"Instrument {instrument} not found in study "
+                f"{self.study.study_id} phenotype data.",
+            )
+
+        measures = self.study.phenotype_data.search_measures(
+            instrument,
+            search_term,
+        )
+
+        return list(measures)
 
     def get_measure_ids(
         self,
