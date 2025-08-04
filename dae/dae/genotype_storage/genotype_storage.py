@@ -114,7 +114,7 @@ class GenotypeStorage(abc.ABC):
         study_id: str,
         kwargs: dict[str, Any],
     ) -> QueryRunner | None:
-        study_filters = kwargs.get("study_filters", [])
+        study_filters = kwargs.get("study_filters")
 
         regions = kwargs.get("regions")
         genes = kwargs.get("genes")
@@ -210,7 +210,7 @@ class GenotypeStorage(abc.ABC):
         study_id: str,
         kwargs: dict[str, Any],
     ) -> QueryRunner | None:
-        study_filters = kwargs.get("study_filters", [])
+        study_filters = kwargs.get("study_filters")
 
         if study_filters is not None and study_id not in study_filters:
             return None
