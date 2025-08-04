@@ -59,6 +59,10 @@ class BasePhenoBrowserHelper(GPFTool):
     def get_count(self, data: dict[str, Any]) -> int:
         """Return measure count for request."""
 
+    @abstractmethod
+    def get_image(self, image_path: str) -> tuple[bytes, str]:
+        """Get image by path."""
+
 
 class PhenoBrowserHelper(BasePhenoBrowserHelper):
     """Build enrichment tool test."""
@@ -227,3 +231,8 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         return self.study.phenotype_data.count_measures(
             instrument, search_term,
         )
+
+    def get_image(self, image_path: str) -> tuple[bytes, str]:
+        if not self.study.has_pheno_data:
+            raise KeyError
+        return self.study.phenotype_data.get_image(image_path)

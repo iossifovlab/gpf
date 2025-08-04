@@ -39,7 +39,7 @@ urlpatterns = [
         name="pheno_browser_download",
     ),
     re_path(
-        r"^/images/(?P<pheno_id>[^/]+)/(?P<image_path>.+)?",
+        r"^/images/?$",
         views.PhenoImagesView.as_view(),
         name="pheno_browser_images",
     ),
