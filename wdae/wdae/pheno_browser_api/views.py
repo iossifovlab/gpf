@@ -23,24 +23,6 @@ from pheno_browser_api.pheno_browser_helper import (
 logger = logging.getLogger(__name__)
 
 
-class PhenoConfigView(QueryBaseView, DatasetAccessRightsView):  # unused?
-    """Phenotype data configuration view."""
-
-    @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, request: Request) -> Response:
-        """Get the phenotype data configuration."""
-        if "db_name" not in request.query_params:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dbname = request.query_params["db_name"]
-        logger.debug("dbname: %s", dbname)
-
-        if dbname not in self.gpf_instance.get_phenotype_data_ids():
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response(self.gpf_instance.get_phenotype_data_config(dbname))
-
-
 class PhenoInstrumentsView(QueryBaseView):
     """Phenotype instruments view."""
 
@@ -313,44 +295,6 @@ class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         return Response({"count": count})
-
-
-class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
-    """Remote pheno images view."""
-
-    @method_decorator(etag(get_permissions_etag))
-    def get(
-        self, request: Request,
-    ) -> Response | HttpResponse:
-        """Return raw image data from a remote GPF instance."""
-        data = request.query_params
-
-        if "dataset_id" not in data or "image_path" not in data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset_id = data["dataset_id"]
-
-        study = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        if not study:
-            logger.info("Study not found")
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        pheno_browser_helper = create_pheno_browser_helper(
-            self.gpf_instance,
-            study,
-        )
-
-        try:
-            image, mimetype = pheno_browser_helper.get_image(data["image_path"])
-        except ValueError:
-            logger.exception(
-                "Could not get image %s for %s",
-                data["image_path"],
-                data["dataset_id"],
-            )
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        return HttpResponse(image, content_type=mimetype)
 
 
 def create_pheno_browser_helper(
