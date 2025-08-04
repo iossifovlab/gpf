@@ -109,6 +109,11 @@ test.describe('Gene browser family alleles count and table tests', () => {
     await expect(page.locator('#family-variants-count')).toHaveText('0 / 8');
 
     await getInheritanceTypesFilter(page, 'Denovo').click();
+
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/genotype_browser/query') && resp.status() === 200
+    );
+
     await expect(page.locator('#nothing-found-row')).not.toBeVisible();
   });
 
