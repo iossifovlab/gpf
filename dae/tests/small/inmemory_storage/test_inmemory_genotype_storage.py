@@ -38,14 +38,19 @@ def test_build_backend(
 ) -> None:
     gpf_instance = simple_project.get_gpf_instance()
 
-    backend = filesystem_genotype_storage.build_backend(
+    filesystem_genotype_storage.build_backend(
         study_config, gpf_instance.reference_genome,
         gpf_instance.gene_models,
     )
 
+    backend = filesystem_genotype_storage.loaded_variants[study_config["id"]]
+    registry = gpf_instance.genotype_storages
+
     assert len(backend.families) == 1
     assert len(backend.families["f1"].members_ids) == 5
-    assert len(list(backend.query_variants())) == 2
+    assert len(list(
+        registry.query_variants([study_config["id"]], {}),
+    )) == 2
 
 
 def test_query_summary_variants(
@@ -55,12 +60,15 @@ def test_query_summary_variants(
 ) -> None:
 
     gpf_instance = simple_project.get_gpf_instance()
-    backend = filesystem_genotype_storage.build_backend(
+    filesystem_genotype_storage.build_backend(
         study_config, gpf_instance.reference_genome,
         gpf_instance.gene_models,
     )
+    registry = gpf_instance.genotype_storages
 
-    assert len(list(backend.query_summary_variants())) == 2
+    assert len(list(
+        registry.query_summary_variants([study_config["id"]], {}),
+    )) == 2
 
 
 def test_storage_type(

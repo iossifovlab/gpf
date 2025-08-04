@@ -3,31 +3,41 @@ from typing import Any, cast
 
 import pytest
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
     TagsQuery,
 )
-from dae.studies.study import GenotypeData
+from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
 
 
 @pytest.fixture
-def duckdb2_variants(
-    t4c8_study_1: GenotypeData,
-) -> DuckDb2Variants:
+def t4c8_storage_registry(
+    t4c8_instance: GPFInstance,
+    t4c8_study_1: GenotypeDataStudy,
+) -> GenotypeStorageRegistry:
     duckdb_variants = cast(
         DuckDb2Variants,
-        t4c8_study_1._backend,  # type: ignore
+        t4c8_study_1.backend,
     )
     duckdb_variants.query_builder\
         .GENE_REGIONS_HEURISTIC_EXTEND = 0  # type: ignore
-    return duckdb_variants
+    return cast(GenotypeStorageRegistry, t4c8_instance.genotype_storages)
 
 
 @pytest.fixture
 def query_builder(
+    t4c8_study_1: GenotypeDataStudy,
     duckdb2_variants: DuckDb2Variants,
 ) -> SqlQueryBuilder:
+    duckdb2_variants = cast(
+        DuckDb2Variants,
+        t4c8_study_1.backend,
+    )
     sql_query_builder = duckdb2_variants.query_builder
     assert sql_query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     return sql_query_builder
@@ -58,9 +68,13 @@ def query_builder(
 def test_query_summary_variants_counting(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_study_1: GenotypeDataStudy,
+    t4c8_storage_registry: GenotypeStorageRegistry,
 ) -> None:
-    svs = list(duckdb2_variants.query_summary_variants(**params))
+    svs = list(
+        t4c8_storage_registry.query_summary_variants(
+            [t4c8_study_1.study_id], params),
+    )
     assert len(svs) == count
 
 
@@ -89,9 +103,11 @@ def test_query_summary_variants_counting(
 def test_query_family_variants_counting(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_study_1: GenotypeDataStudy,
+    t4c8_storage_registry: GenotypeStorageRegistry,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_1.study_id], params))
     assert len(fvs) == count
 
 
@@ -110,7 +126,9 @@ def test_query_family_variants_counting(
 def test_family_tag_queries_working(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
-):
-    fvs = list(duckdb2_variants.query_variants(**params))
+    t4c8_study_1: GenotypeDataStudy,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+) -> None:
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_1.study_id], params))
     assert len(fvs) == count

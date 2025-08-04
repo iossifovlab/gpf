@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from typing import cast
 
 import pytest
 from dae.duckdb_storage.duckdb_genotype_storage import (
@@ -12,7 +13,7 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
-from dae.studies.study import GenotypeData
+from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
@@ -58,7 +59,7 @@ def t4c8_genome(t4c8_instance: GPFInstance) -> ReferenceGenome:
 @pytest.fixture
 def t4c8_study_1(
     t4c8_instance: GPFInstance,
-) -> GenotypeData:
+) -> GenotypeDataStudy:
     root_path = pathlib.Path(t4c8_instance.dae_dir).parent
     ped_path = setup_pedigree(
         root_path / "study_1" / "pedigree" / "in.ped",
@@ -94,7 +95,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
         .genotype_storages.get_genotype_storage("duckdb_test")
     assert storage is not None
     t4c8_instance.reload()
-    return t4c8_instance.get_genotype_data("study_1")
+    return cast(GenotypeDataStudy, t4c8_instance.get_genotype_data("study_1"))
 
 
 @pytest.fixture

@@ -3,22 +3,28 @@ from typing import Any, cast
 
 import pytest
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
     TagsQuery,
 )
-from dae.studies.study import GenotypeData
+from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
 
 
 @pytest.fixture
-def duckdb2_variants(
-    t4c8_study_2: GenotypeData,
-) -> DuckDb2Variants:
-    return cast(
-        DuckDb2Variants,
-        t4c8_study_2._backend,  # type: ignore
-    )
+def t4c8_storage_registry(
+    t4c8_instance: GPFInstance,
+) -> GenotypeStorageRegistry:
+    return cast(GenotypeStorageRegistry, t4c8_instance.genotype_storages)
+
+
+@pytest.fixture
+def duckdb2_variants(t4c8_study_2: GenotypeDataStudy) -> DuckDb2Variants:
+    return cast(DuckDb2Variants, t4c8_study_2.backend)
 
 
 @pytest.fixture
@@ -218,13 +224,17 @@ def test_frequency_bin_heuristics_family_query(
             assert f"fa.frequency_bin IN {frequency_bins}" in query
 
 
-def test_duckdb2_variants_simple(duckdb2_variants: DuckDb2Variants) -> None:
-    assert duckdb2_variants is not None
+def test_duckdb2_variants_simple(
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
+) -> None:
 
-    svs = list(duckdb2_variants.query_summary_variants())
+    svs = list(t4c8_storage_registry.query_summary_variants(
+        [t4c8_study_2.study_id], {}))
     assert len(svs) == 6
 
-    fvs = list(duckdb2_variants.query_variants())
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], {}))
     assert len(fvs) == 12
 
 
@@ -314,9 +324,11 @@ def test_gene_regions_heuristics_family_query(
 def test_query_family_variants_counting(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count
 
 
@@ -344,9 +356,11 @@ def test_query_family_variants_counting(
 def test_query_summary_variants_counting(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    svs = list(duckdb2_variants.query_summary_variants(**params))
+    svs = list(t4c8_storage_registry.query_summary_variants(
+        [t4c8_study_2.study_id], params))
     assert len(svs) == count
 
 
@@ -363,11 +377,12 @@ def test_query_family_variants_by_role(
     skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(
-        skip_inmemory_filterng=skip,
-        **params))
+    params.update({"skip_inmemory_filterng": skip})
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count
 
 
@@ -382,12 +397,12 @@ def test_query_family_variants_by_sex(
     skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(
-        skip_inmemory_filterng=skip,
-        **params,
-    ))
+    params.update({"skip_inmemory_filterng": skip})
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count
 
 
@@ -405,12 +420,12 @@ def test_query_family_variants_by_inheritance(
     skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(
-        skip_inmemory_filterng=skip,
-        **params,
-    ))
+    params.update({"skip_inmemory_filterng": skip})
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count
 
 
@@ -459,9 +474,11 @@ def test_calc_frequency_bin_heuristics(
 def test_query_family_variants_by_variant_type(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count
 
 
@@ -479,12 +496,12 @@ def test_query_family_variants_by_family_and_person_ids(
     skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(
-        skip_inmemory_filterng=skip,
-        **params,
-    ))
+    params.update({"skip_inmemory_filterng": skip})
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count
 
 
@@ -528,7 +545,9 @@ def test_pedigree_schema(
 def test_family_tag_queries_working(
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
-):
-    fvs = list(duckdb2_variants.query_variants(**params))
+    t4c8_storage_registry: GenotypeStorageRegistry,
+    t4c8_study_2: GenotypeDataStudy,
+) -> None:
+    fvs = list(t4c8_storage_registry.query_variants(
+        [t4c8_study_2.study_id], params))
     assert len(fvs) == count

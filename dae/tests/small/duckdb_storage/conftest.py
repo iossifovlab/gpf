@@ -1,5 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from pathlib import Path
+from typing import cast
+
 import pytest
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
@@ -11,8 +14,10 @@ from dae.genomic_resources.testing import (
 )
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
     get_genotype_storage_factory,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
@@ -93,13 +98,21 @@ def duckdb_storage_fixture(
 
 
 @pytest.fixture(scope="module")
-def imported_study(
+def foobar_gpf_fixture(
     tmp_path_factory: pytest.TempPathFactory,
     duckdb_storage_fixture: DuckDbLegacyStorage,
-) -> GenotypeData:
+) -> tuple[Path, GPFInstance]:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{duckdb_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, duckdb_storage_fixture)
+    return root_path, gpf_instance
+
+
+@pytest.fixture(scope="module")
+def imported_study(
+    foobar_gpf_fixture: tuple[Path, GPFInstance],
+) -> GenotypeData:
+    root_path, gpf_instance = foobar_gpf_fixture
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -123,3 +136,11 @@ def imported_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
+
+
+@pytest.fixture(scope="module")
+def foobar_storage_registry(
+    foobar_gpf_fixture: tuple[Path, GPFInstance],
+) -> GenotypeStorageRegistry:
+    _, instance = foobar_gpf_fixture
+    return cast(GenotypeStorageRegistry, instance.genotype_storages)

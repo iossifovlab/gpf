@@ -10,7 +10,7 @@ from gcp_storage.bigquery_variants import BigQueryVariants
 
 @pytest.fixture(scope="session")
 def bq_backend(partition_study: GenotypeDataStudy) -> BigQueryVariants:
-    return cast(BigQueryVariants, partition_study._backend)
+    return cast(BigQueryVariants, partition_study.backend)
 
 
 @pytest.mark.parametrize("index,query,ecount", [
