@@ -21,7 +21,6 @@ class BasePhenoBrowserHelper(GPFTool):
     def __init__(self) -> None:
         super().__init__("pheno_browser_helper")
 
-
     @abstractmethod
     def get_instruments(self) -> list[str]:
         """Get instruments."""

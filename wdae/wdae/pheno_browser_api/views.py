@@ -198,7 +198,6 @@ class PhenoMeasuresView(QueryBaseView):
 class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measure downloads view."""
 
-
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""

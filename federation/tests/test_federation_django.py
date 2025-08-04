@@ -327,6 +327,7 @@ def test_genotype_browser_query_explicit_person_set_collection(
         for cell in row[4]
     )
 
+
 def test_pheno_browser_download(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001

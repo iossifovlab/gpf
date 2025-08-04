@@ -4,8 +4,6 @@ from collections.abc import Iterator
 from typing import Any, cast
 
 import pytest
-import pytest_mock
-from dae.pheno.pheno_data import PhenotypeStudy
 from django.http import StreamingHttpResponse
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
