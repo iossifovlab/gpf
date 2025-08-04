@@ -35,7 +35,7 @@ def one_hot_encode(
     for seq_index, nucleotide in enumerate(seq):
         if nucleotide not in {"N", "A", "C", "G", "T"}:
             logger.warning(
-                "unexpected nucleotied %s in pos %s at %s:",
+                "unexpected nucleotide %s in pos %s at %s:",
                 nucleotide, seq_index, seq)
 
         result[seq_index, :] = MAPPING.get(nucleotide, MAPPING["N"])

@@ -38,6 +38,16 @@ def test_spliceai_annotate_del_acceptor(
         "C|TUBB8|0.19|0.15|0.00|0.05|90|-22|289|175"
 
 
+def test_spliceai_annotate_del_acceptor_2(
+    spliceai_annotation_pipeline: AnnotationPipeline,
+) -> None:
+    annotatable = VCFAllele("10", 94076, "CA", "C")
+    result = spliceai_annotation_pipeline.annotate(annotatable)
+    assert result is not None
+    assert result["delta_score"] == \
+        "C|TUBB8|0.24|0.20|0.00|0.05|90|-22|-266|194"
+
+
 def test_spliceai_annotate_ins_acceptor(
     spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> None:
@@ -85,8 +95,8 @@ def test_spliceai_batch_annotate(
     "chrom,pos,ref,alt, xalt_len",
     [
         ("10", 11, "G", "C", 21),
-        ("10", 11, "GTA", "G", 21 - 2),
-        ("10", 11, "G", "GCCC", 21 + 3),
+        ("10", 11, "GTA", "G", 21),  # - 2),
+        ("10", 11, "G", "GCCC", 21),  # + 3),
     ],
 )
 def test_spliceai_padding(

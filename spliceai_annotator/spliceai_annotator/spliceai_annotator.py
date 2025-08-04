@@ -86,6 +86,7 @@ class _AnnotationResult:
 
 class SpliceAIAnnotator(AnnotatorBase):
     """SpliceAI annotator class."""
+    DEFAULT_DISTANCE = 50
 
     def __init__(
         self,
@@ -156,13 +157,14 @@ models to predict splice site variant effects.
 
         self.genome = genome
         self.gene_models = gene_models
-        self._distance = int(info.parameters.get("distance", 50))
+        self._distance = int(info.parameters.get(
+            "distance", self.DEFAULT_DISTANCE))
         if self._distance < 0 or self._distance > 5000:
             logger.warning(
                 "distance %s is out of range. "
                 "Setting it to 50.", self._distance,
             )
-            self._distance = 50
+            self._distance = self.DEFAULT_DISTANCE
         self._mask = int(info.parameters.get("mask", 0))
         if self._mask not in [0, 1]:
             logger.warning(
@@ -415,6 +417,11 @@ models to predict splice site variant effects.
                 "Skipping record (wrong reference): %s", annotatable,
             )
             return None
+        if ref_len >= self._distance or len(annotatable.alt) >= self._distance:
+            logger.warning(
+                "Skipping record (ref/alt too long): %s", annotatable,
+            )
+            return None
 
         genes = defaultdict(list)
         for transcript in transcripts:
@@ -568,17 +575,17 @@ models to predict splice site variant effects.
         self, req: _AnnotationRequest,
         y_ref: np.ndarray, y_alt: np.ndarray,
     ) -> np.ndarray:
+        logger.debug("processing prediction for %s", req.vcf_allele)
         if req.strand == "-":
             y_ref = y_ref[:, ::-1]
             y_alt = y_alt[:, ::-1]
         ref_len = len(req.vcf_allele.ref)
         alt_len = len(req.vcf_allele.alt)
-
         if ref_len > 1 and alt_len == 1:
             y_alt = np.concatenate([
                 y_alt[:, :self._distance + alt_len],
                 np.zeros((1, ref_len - alt_len, 3)),
-                y_alt[:, self._distance + alt_len:]],
+                y_alt[:, self._distance + alt_len:-(ref_len - alt_len)]],
                 axis=1)
         elif ref_len == 1 and alt_len > 1:
             y_alt = np.concatenate([
@@ -586,8 +593,15 @@ models to predict splice site variant effects.
                 np.max(
                     y_alt[:, self._distance: self._distance + alt_len],
                     axis=1)[:, None, :],
-                y_alt[:, self._distance + alt_len:]],
+                y_alt[:, self._distance + alt_len:],
+                np.zeros((1, alt_len - ref_len, 3)),
+                ],
                 axis=1)
+
+        assert y_ref.shape == y_alt.shape, (
+            f"y_ref shape {y_ref.shape} != y_alt shape {y_alt.shape}; "
+            f"allele: {req.vcf_allele}")
+
         return np.concatenate([y_ref, y_alt])
 
     def _predict_batch(
@@ -596,10 +610,6 @@ models to predict splice site variant effects.
         assert self._models is not None
         assert len(reqs) > 0
         assert all(reqs[0].x_alt.shape == req.x_alt.shape
-                   for req in reqs)
-        assert all(len(reqs[0].vcf_allele.ref) == len(req.vcf_allele.ref)
-                   for req in reqs)
-        assert all(len(reqs[0].vcf_allele.alt) == len(req.vcf_allele.alt)
                    for req in reqs)
 
         x_ref_batch = np.concatenate(
@@ -647,7 +657,12 @@ models to predict splice site variant effects.
             "N" * padding[1]
         xalt = xref[:self._width() // 2] + \
             annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
+        if len(xalt) > len(xref):
+            xalt = xalt[:len(xref)]
+        else:
+            xalt = xalt.ljust(len(xref), "N")
 
+        assert len(xref) == len(xalt)
         return xref, xalt
 
     def _do_batch_annotate(
