@@ -215,7 +215,7 @@ test.describe('Users management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, 'denovo_helloworld');
     await page.waitForSelector('button:text("denovo_helloworld")');
@@ -412,7 +412,7 @@ test.describe('Groups management', () => {
     await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText(groupName1);
 
     // add the second group to the user in Users
-    await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName2);
     await page.waitForSelector(`button:text("${groupName2}")`);
@@ -531,7 +531,7 @@ test.describe('Datasets management', () => {
     const groupName = 'vcf_helloworld';
 
     // add group to user
-    await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName);
     await page.waitForSelector(`button:text("${groupName}")`);
@@ -633,7 +633,7 @@ test.describe('Datasets management', () => {
 
     // add the group to dataset in Datasets
     await page.getByRole('tab', { name: 'Datasets' }).click();
-    await page.locator(`[id="${datasetName}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${datasetName}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName);
     await page.waitForSelector(`button:text("${groupName}")`);
@@ -670,7 +670,7 @@ test.describe('Datasets management', () => {
 
     // add the group to dataset in Datasets
     await page.getByRole('tab', { name: 'Datasets' }).click();
-    await page.locator(`[id="${datasetName}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${datasetName}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName);
     await page.waitForSelector(`button:text("${groupName}")`);
@@ -731,7 +731,7 @@ async function deleteGroup(page: Page, name: string): Promise<void> {
 }
 
 async function addUserToGroup(page: Page, groupName: string, email: string): Promise<void> {
-  await page.locator(`[id="${groupName}-users-cell"]`).getByText('Add').click();
+  await page.locator(`[id="${groupName}-users-cell"]`).getByRole('button', { name: 'Add' }).click();
   await page.waitForSelector('.add-item-button');
   await searchInMenu(page, email);
   await page.waitForSelector(`button:text("${email}")`);
@@ -741,7 +741,7 @@ async function addUserToGroup(page: Page, groupName: string, email: string): Pro
 }
 
 async function addDatasetToGroup(page: Page, groupName: string, datasetName: string): Promise<void> {
-  await page.locator(`[id="${groupName}-datasets-cell"]`).getByText('Add').click();
+  await page.locator(`[id="${groupName}-datasets-cell"]`).getByRole('button', { name: 'Add' }).click();
   await page.waitForSelector('.add-item-button');
   await searchInMenu(page, datasetName);
   await page.waitForSelector(`button:text("${datasetName}")`);

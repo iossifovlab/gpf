@@ -130,7 +130,8 @@ test.describe('Dataset description access rights tests', () => {
        'whether the newly created description exists and that it cannot be edited', async({ page }) => {
     await page.locator('a:text("Management")').click();
 
-    await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]').getByText('Add').click();
+    await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]')
+      .getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await page.getByRole('textbox', { name: 'Search' }).focus();
     await page.keyboard.type('iossifov_2014_liftover');

@@ -173,7 +173,7 @@ test.describe('Access rights and icons', () => {
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await searchInTable(page, study);
 
-    await page.locator(`[id="${study}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${study}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, group);
     await page.waitForSelector(`button:text("${group}")`);
@@ -217,7 +217,7 @@ test.describe('Access rights and icons', () => {
     await page.locator('a:text("Management")').click();
     await searchInTable(page, researcher);
 
-    await page.locator(`[id="${researcher}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${researcher}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, study);
     await page.waitForSelector(`button:text("${study}")`);
@@ -264,7 +264,7 @@ test.describe('Access rights and icons', () => {
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await searchInTable(page, study);
 
-    await page.locator(`[id="${study}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${study}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, group);
     await page.waitForSelector(`button:text("${group}")`);
@@ -303,7 +303,7 @@ test.describe('Access rights and icons', () => {
     await page.locator('a:text("Management")').click();
     await searchInTable(page, researcher);
 
-    await page.locator(`[id="${researcher}-groups-cell"]`).getByText('Add').click();
+    await page.locator(`[id="${researcher}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, study);
     await page.waitForSelector(`button:text("${study}")`);
