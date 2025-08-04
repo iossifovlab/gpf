@@ -153,7 +153,8 @@ class PhenoMeasuresView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or not dataset.has_pheno_data:
+
+        if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if (
@@ -209,8 +210,8 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
 
         study = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        if not study or not study.has_pheno_data:
-            logger.info("Measures not found")
+        if not study:
+            logger.info("Study not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         pheno_browser_helper = create_pheno_browser_helper(
@@ -250,8 +251,8 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
 
         study = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        if not study or not study.has_pheno_data:
-            logger.info("Measures not found")
+        if not study:
+            logger.info("Study not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         pheno_browser_helper = create_pheno_browser_helper(
@@ -280,36 +281,28 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
 class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measure search count view."""
 
-    def get_count(self, request: Request) -> int:
-        """Return measure count for request."""
-        data = request.query_params
-        data = {k: str(v) for k, v in data.items()}
-
-        if "dataset_id" not in data:
-            raise ValueError
-        dataset_id = data["dataset_id"]
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or not dataset.has_pheno_data:
-            raise KeyError
-
-        search_term = data.get("search_term", None)
-        instrument = data.get("instrument", None)
-
-        if (instrument is not None
-                and instrument != ""
-                and instrument not in dataset.phenotype_data.instruments):
-            raise KeyError
-
-        return dataset.phenotype_data.count_measures(
-            instrument, search_term,
-        )
-
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
+        data = request.query_params
+
+        if "dataset_id" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = data["dataset_id"]
+
+        study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
+        if not study:
+            logger.info("Study not found")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            study,
+        )
+
         try:
-            count = self.get_count(request)
+            count = pheno_browser_helper.get_count(data)
         except ValueError:
             logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)

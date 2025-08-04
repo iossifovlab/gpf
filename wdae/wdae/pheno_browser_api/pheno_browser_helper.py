@@ -55,6 +55,10 @@ class BasePhenoBrowserHelper(GPFTool):
     ) -> int:
         """Get measure ids."""
 
+    @abstractmethod
+    def get_count(self, data: dict[str, Any]) -> int:
+        """Return measure count for request."""
+
 
 class PhenoBrowserHelper(BasePhenoBrowserHelper):
     """Build enrichment tool test."""
@@ -192,6 +196,24 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         data = {k: str(v) for k, v in data.items()}
 
         if not self.study.has_pheno_data:
+            raise KeyError
+
+        search_term = data.get("search_term", None)
+        instrument = data.get("instrument", None)
+
+        if (instrument is not None
+                and instrument != ""
+                and instrument not in self.study.phenotype_data.instruments):
+            raise KeyError
+
+        return self.study.phenotype_data.count_measures(
+            instrument, search_term,
+        )
+
+    def get_count(self, data: dict[str, Any]) -> int:
+        data = {k: str(v) for k, v in data.items()}
+
+        if not self.study or not self.study.has_pheno_data:
             raise KeyError
 
         search_term = data.get("search_term", None)
