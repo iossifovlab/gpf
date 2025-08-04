@@ -320,9 +320,9 @@ def t4c8_study_2_wrapper(
 
 @pytest.fixture(scope="session")
 def session_t4c8_wgpf_instance(
-    tmp_path_factory: pytest.TempPathFactory,
+    t4c8_instance: GPFInstance,
 ) -> WGPFInstance:
-    root_path = tmp_path_factory.mktemp("session_t4c8_wgpf_instance")
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
     return setup_wgpf_instance(root_path)
 
 

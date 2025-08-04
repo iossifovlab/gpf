@@ -835,3 +835,13 @@ class WDAEStudyGroup(WDAEStudy):
 
     def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
         return self.genotype_data.get_studies_ids(leaves=leaves)
+
+    def get_children_ids(self, *, leaves: bool = True) -> list[str]:
+        """Return the list of children ids."""
+        if self.is_phenotype:
+            children = self.phenotype_data.get_children_ids(leaves=leaves)
+        else:
+            children = self.genotype_data.get_studies_ids(leaves=leaves)
+
+        return list(
+            filter(lambda child_id: child_id != self.study_id, children))
