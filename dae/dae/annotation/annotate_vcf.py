@@ -36,12 +36,11 @@ from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import (
-    adjust_for_reannotation,
     build_annotation_pipeline,
     load_pipeline_from_file,
 )
 from dae.annotation.annotation_pipeline import (
-    get_deleted_attributes,
+    ReannotationPipeline,
 )
 from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.processing_pipeline import (
@@ -360,16 +359,13 @@ def _annotate_vcf(
         work_dir=Path(args.work_dir),
     )
 
-    if pipeline_previous and not args.full_reannotation:
-        adjust_for_reannotation(pipeline, pipeline_previous)
-
     attributes_to_delete = []
+
     if pipeline_previous:
-        attributes_to_delete = get_deleted_attributes(
-            pipeline,
-            pipeline_previous,
-            full_reannotation=args.full_reannotation,
-        )
+        pipeline = ReannotationPipeline(
+            pipeline, pipeline_previous,
+            full_reannotation=args.full_reannotation)
+        attributes_to_delete = pipeline.deleted_attributes
 
     annotation_attributes = [
         attr for attr in pipeline.get_attributes()
