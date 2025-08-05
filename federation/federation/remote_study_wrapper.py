@@ -187,14 +187,15 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
         study_filters = None
         if kwargs.get("allowed_studies") is not None:
-            study_filters = set(kwargs.pop("allowed_studies"))
+            study_filters = kwargs.pop("allowed_studies")
 
         if kwargs.get("studyFilters"):
             if study_filters is not None:
-                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+                study_filters_param = kwargs.pop("studyFilters")
+                study_filters = [
+                    x for x in study_filters if x in study_filters_param]
             else:
-                study_filters = set(kwargs.pop("studyFilters"))
-
+                study_filters = kwargs.pop("studyFilters")
         kwargs["study_filters"] = study_filters
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
