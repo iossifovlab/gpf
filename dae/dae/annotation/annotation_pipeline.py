@@ -70,7 +70,7 @@ def _get_dependencies_for(
     return result
 
 
-def get_rerun_annotators(
+def _get_rerun_annotators(
     pipeline: AnnotationPipeline,
     annotators_new: Iterable[AnnotatorInfo],
 ) -> set[AnnotatorInfo]:
@@ -93,7 +93,7 @@ def get_rerun_annotators(
     return result
 
 
-def get_deleted_attributes(
+def _get_deleted_attributes(
     pipeline_current: AnnotationPipeline,
     pipeline_previous: AnnotationPipeline,
     *,
@@ -180,8 +180,6 @@ class AnnotationPipeline:
         self.preamble: AnnotationPreamble | None = None
         self.raw: RawPipelineConfig = []
         self._is_open = False
-
-        self.subset_to_run: list[Annotator] = []
 
     def build_pipeline_genomic_context(self) -> GenomicContext:
         """Create a genomic context from the pipeline parameters."""
@@ -277,11 +275,9 @@ class AnnotationPipeline:
             return self
 
         assert not self._is_open
+
         for annotator in self.annotators:
             annotator.open()
-
-        if not self.subset_to_run:
-            self.subset_to_run = self.annotators
 
         self._is_open = True
         return self
@@ -318,6 +314,45 @@ class AnnotationPipeline:
                 exc_type, exc_value, exc_tb)
         self.close()
         return exc_type is None
+
+
+class ReannotationPipeline(AnnotationPipeline):
+    """Provides functionality for reannotation."""
+
+    def __init__(
+        self,
+        pipeline_new: AnnotationPipeline,
+        pipeline_previous: AnnotationPipeline,
+        *,
+        full_reannotation: bool = False,
+    ):
+        super().__init__(pipeline_new.repository)
+
+        self.pipeline_new = pipeline_new
+
+        self.annotators: list[Annotator] = []
+
+        infos_current = pipeline_new.get_info()
+        infos_previous = pipeline_previous.get_info()
+
+        infos_new: set[AnnotatorInfo] = {
+            i for i in infos_current
+            if i not in infos_previous
+        }
+
+        infos_rerun = _get_rerun_annotators(pipeline_new, infos_new)
+
+        for annotator in pipeline_new.annotators:
+            info = annotator.get_info()
+            if info in infos_new or info in infos_rerun:
+                self.annotators.append(annotator)
+
+        self.deleted_attributes = _get_deleted_attributes(
+            pipeline_new, pipeline_previous,
+            full_reannotation=full_reannotation)
+
+    def get_attributes(self) -> list[AttributeInfo]:
+        return self.pipeline_new.get_attributes()
 
 
 class AnnotatorDecorator(Annotator):

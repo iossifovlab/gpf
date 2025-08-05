@@ -4,13 +4,13 @@
 from unittest.mock import MagicMock
 
 from dae.annotation.annotation_config import AttributeInfo
-from dae.annotation.annotation_factory import adjust_for_reannotation
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    ReannotationPipeline,
     _build_dependency_graph,
-    get_deleted_attributes,
-    get_rerun_annotators,
+    _get_deleted_attributes,
+    _get_rerun_annotators,
 )
 
 from tests.small.annotation.conftest import DummyAnnotator
@@ -168,11 +168,11 @@ def test_get_rerun_annotators_dependency_changed() -> None:
     pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
 
     # should not rerun if upstream annotator hasn't changed
-    rerun = get_rerun_annotators(pipeline, [])
+    rerun = _get_rerun_annotators(pipeline, [])
     assert rerun == set()
 
     # should rerun if upstream annotator HAS changed
-    rerun = get_rerun_annotators(pipeline, [dummy_annotator_1.get_info()])
+    rerun = _get_rerun_annotators(pipeline, [dummy_annotator_1.get_info()])
     assert rerun == {
         dummy_annotator_2.get_info(),
     }
@@ -190,7 +190,7 @@ def test_get_rerun_annotators_internal_new_dependent() -> None:
     pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
 
     # should rerun if internal and a new dependent has been added downstream
-    rerun = get_rerun_annotators(pipeline, [dummy_annotator_2.get_info()])
+    rerun = _get_rerun_annotators(pipeline, [dummy_annotator_2.get_info()])
     assert rerun == {
         dummy_annotator_1.get_info(),
     }
@@ -215,7 +215,7 @@ def test_get_rerun_annotators_internal_dependent_rerun() -> None:
 
     # should rerun if internal (annotator 1) and a downstream
     # annotator is rerun (annotator 2)
-    rerun = get_rerun_annotators(pipeline, [dummy_annotator_3.get_info()])
+    rerun = _get_rerun_annotators(pipeline, [dummy_annotator_3.get_info()])
     assert rerun == {
         dummy_annotator_2.get_info(),
         dummy_annotator_1.get_info(),
@@ -234,7 +234,7 @@ def test_get_rerun_annotators_non_internal_new_dependent() -> None:
     pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
 
     # should not rerun if not internal and dependent is new
-    rerun = get_rerun_annotators(pipeline, [dummy_annotator_2.get_info()])
+    rerun = _get_rerun_annotators(pipeline, [dummy_annotator_2.get_info()])
     assert rerun == set()
 
 
@@ -257,7 +257,7 @@ def test_get_rerun_annotators_non_internal_rerun_dependent() -> None:
 
     # shouldn't rerun if not internal (annotator 1) and a downstream
     # annotator is rerun (annotator 2)
-    rerun = get_rerun_annotators(pipeline, [dummy_annotator_3.get_info()])
+    rerun = _get_rerun_annotators(pipeline, [dummy_annotator_3.get_info()])
     assert rerun == {
         dummy_annotator_2.get_info(),
     }
@@ -276,7 +276,7 @@ def test_get_deleted_attributes() -> None:
     old_pipeline = _make_pipeline_with([dummy_annotator_1])
     new_pipeline = _make_pipeline_with([dummy_annotator_2])
 
-    assert get_deleted_attributes(new_pipeline, old_pipeline) == ["attr_1"]
+    assert _get_deleted_attributes(new_pipeline, old_pipeline) == ["attr_1"]
 
 
 def test_get_deleted_attributes_shared_name() -> None:
@@ -292,7 +292,7 @@ def test_get_deleted_attributes_shared_name() -> None:
     old_pipeline = _make_pipeline_with([dummy_annotator_1])
     new_pipeline = _make_pipeline_with([dummy_annotator_2])
 
-    assert get_deleted_attributes(new_pipeline, old_pipeline) == ["attr_1"]
+    assert _get_deleted_attributes(new_pipeline, old_pipeline) == ["attr_1"]
 
 
 def test_get_deleted_attributes_ignore_internal() -> None:
@@ -308,7 +308,7 @@ def test_get_deleted_attributes_ignore_internal() -> None:
     old_pipeline = _make_pipeline_with([dummy_annotator_1])
     new_pipeline = _make_pipeline_with([dummy_annotator_2])
 
-    assert not get_deleted_attributes(new_pipeline, old_pipeline)
+    assert not _get_deleted_attributes(new_pipeline, old_pipeline)
 
 
 def test_get_deleted_attributes_full_reannotation() -> None:
@@ -324,7 +324,7 @@ def test_get_deleted_attributes_full_reannotation() -> None:
     old_pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
     new_pipeline = _make_pipeline_with([dummy_annotator_1, dummy_annotator_2])
 
-    assert get_deleted_attributes(
+    assert _get_deleted_attributes(
         new_pipeline, old_pipeline, full_reannotation=True,
     ) == ["attr_1", "attr_2"]
 
@@ -348,9 +348,9 @@ def test_adjust_for_reannotation() -> None:
     new_pipeline = _make_pipeline_with(
         [dummy_annotator_1, dummy_annotator_2, dummy_annotator_3])
 
-    adjust_for_reannotation(new_pipeline, old_pipeline)
+    pipeline = ReannotationPipeline(new_pipeline, old_pipeline)
 
-    assert new_pipeline.subset_to_run == [
+    assert pipeline.annotators == [
         # annotator subset to run should have all rerun annotators
         dummy_annotator_2,
         # annotator subset to run should have all new annotators

@@ -18,7 +18,6 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
     InputAnnotableAnnotatorDecorator,
     ValueTransformAnnotatorDecorator,
-    get_rerun_annotators,
 )
 from dae.genomic_resources.repository import (
     GenomicResourceRepo,
@@ -122,27 +121,6 @@ def load_pipeline_from_yaml(
         allow_repeated_attributes=allow_repeated_attributes,
         work_dir=work_dir,
     )
-
-
-def adjust_for_reannotation(
-    pipeline: AnnotationPipeline,
-    pipeline_previous: AnnotationPipeline,
-) -> None:
-    """Adjust an annotation pipeline instance for reannotation."""
-    infos_current = pipeline.get_info()
-    infos_previous = pipeline_previous.get_info()
-
-    infos_new: set[AnnotatorInfo] = {
-        i for i in infos_current
-        if i not in infos_previous
-    }
-
-    infos_rerun = get_rerun_annotators(pipeline, infos_new)
-
-    for annotator in pipeline.annotators:
-        info = annotator.get_info()
-        if info in infos_new or info in infos_rerun:
-            pipeline.subset_to_run.append(annotator)
 
 
 def build_annotation_pipeline(

@@ -22,13 +22,12 @@ from dae.annotation.annotation_config import (
     RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import (
-    adjust_for_reannotation,
     build_annotation_pipeline,
     load_pipeline_from_yaml,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
-    get_deleted_attributes,
+    ReannotationPipeline,
 )
 from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
@@ -291,16 +290,13 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     if pipeline_config_old is not None:
         pipeline_previous = load_pipeline_from_yaml(pipeline_config_old, grr)
 
-    if pipeline_previous and not args.full_reannotation:
-        adjust_for_reannotation(pipeline, pipeline_previous)
-
     attributes_to_delete = []
+
     if pipeline_previous:
-        attributes_to_delete = get_deleted_attributes(
-            pipeline,
-            pipeline_previous,
-            full_reannotation=args.full_reannotation,
-        )
+        pipeline = ReannotationPipeline(
+            pipeline, pipeline_previous,
+            full_reannotation=args.full_reannotation)
+        attributes_to_delete = pipeline.deleted_attributes
 
     annotation_attributes = [
         attr for attr in pipeline.get_attributes()

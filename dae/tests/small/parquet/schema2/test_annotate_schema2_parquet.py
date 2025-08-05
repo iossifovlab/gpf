@@ -588,7 +588,7 @@ def test_autodetection_reannotate(
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     spy = mocker.spy(dae.parquet.schema2.annotate_schema2_parquet,
-                     "adjust_for_reannotation")
+                     "ReannotationPipeline")
 
     cli([
         t4c8_study_nonpartitioned, annotation_file_new,
@@ -598,7 +598,7 @@ def test_autodetection_reannotate(
         "-j", "1",
     ])
 
-    assert spy.call_count == 1  # type: ignore
+    assert spy.call_count == 1
 
 
 def test_reannotate_in_place(
