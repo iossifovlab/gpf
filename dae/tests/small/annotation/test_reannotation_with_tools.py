@@ -16,6 +16,9 @@ from dae.testing import (
     setup_genome,
     setup_vcf,
 )
+import pytest_mock
+import dae.annotation.annotate_columns
+import dae.annotation.annotate_vcf
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
 
@@ -190,6 +193,7 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
 def test_annotate_columns_reannotation(
     tmp_path: pathlib.Path,
     reannotation_grr: GenomicResourceRepo,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
@@ -208,6 +212,9 @@ def test_annotate_columns_reannotation(
 
     setup_denovo(in_file, in_content)
 
+    spy = mocker.spy(dae.annotation.annotate_columns,
+                     "ReannotationPipeline")
+
     cli_columns([
         str(a) for a in [
             in_file, annotation_file_new,
@@ -221,11 +228,14 @@ def test_annotate_columns_reannotation(
 
     with open(out_file, "rt", encoding="utf8") as _:
         out_file_header = "".join(_.readline()).strip().split("\t")
+    assert spy.call_count == 1
     assert out_file_header == out_expected_header
 
 
 def test_annotate_columns_reannotation_internal(
-    tmp_path: pathlib.Path, reannotation_grr: GenomicResourceRepo,
+    tmp_path: pathlib.Path,
+    reannotation_grr: GenomicResourceRepo,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
@@ -244,6 +254,9 @@ def test_annotate_columns_reannotation_internal(
 
     setup_denovo(in_file, in_content)
 
+    spy = mocker.spy(dae.annotation.annotate_columns,
+                     "ReannotationPipeline")
+
     cli_columns([
         str(a) for a in [
             in_file, annotation_file_new,
@@ -256,12 +269,14 @@ def test_annotate_columns_reannotation_internal(
     ])
     with open(out_file, "rt", encoding="utf8") as _:
         out_file_header = "".join(_.readline()).strip().split("\t")
+    assert spy.call_count == 1
     assert out_file_header == out_expected_header
 
 
 def test_annotate_columns_reannotation_batched(
     tmp_path: pathlib.Path,
     reannotation_grr: GenomicResourceRepo,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert reannotation_grr is not None
     in_content = (
@@ -283,6 +298,9 @@ def test_annotate_columns_reannotation_batched(
 
     setup_denovo(in_file, in_content)
 
+    spy = mocker.spy(dae.annotation.annotate_columns,
+                     "ReannotationPipeline")
+
     cli_columns([
         str(a) for a in [
             in_file, annotation_file_new,
@@ -298,6 +316,7 @@ def test_annotate_columns_reannotation_batched(
     with open(out_path, "rt", encoding="utf8") as out_file:
         out_file_header = "".join(out_file.readline()).strip().split("\t")
         lines = out_file.readlines()
+    assert spy.call_count == 1
     assert out_file_header == out_expected_header
     assert len(lines) == 4
 
@@ -305,6 +324,7 @@ def test_annotate_columns_reannotation_batched(
 def test_annotate_vcf_reannotation(
     tmp_path: pathlib.Path,
     reannotation_grr: GenomicResourceRepo,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert reannotation_grr is not None
     in_content = textwrap.dedent("""
@@ -335,6 +355,9 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
 
     setup_vcf(in_file, in_content)
 
+    spy = mocker.spy(dae.annotation.annotate_vcf,
+                     "ReannotationPipeline")
+
     cli_vcf([
         str(a) for a in [
             in_file,
@@ -350,6 +373,7 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
 
     info_keys = set(out_vcf.header.info.keys())
 
+    assert spy.call_count == 1
     assert info_keys == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",
     }
@@ -358,6 +382,7 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
 def test_annotate_vcf_reannotation_batch(
     tmp_path: pathlib.Path,
     reannotation_grr: GenomicResourceRepo,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert reannotation_grr is not None
 
@@ -391,6 +416,9 @@ def test_annotate_vcf_reannotation_batch(
 
     setup_vcf(in_file, in_content)
 
+    spy = mocker.spy(dae.annotation.annotate_vcf,
+                     "ReannotationPipeline")
+
     cli_vcf([
         str(a) for a in [
             in_file,
@@ -407,6 +435,7 @@ def test_annotate_vcf_reannotation_batch(
 
     info_keys = set(out_vcf.header.info.keys())
 
+    assert spy.call_count == 1
     assert info_keys == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",
     }
