@@ -35,9 +35,7 @@ test.describe('Gene profiles row data tests', () => {
     }
   ].forEach(data => {
     test(`should display correct gene data for ${data.geneSymbol}`, async({ page }) => {
-      await page.locator('input#gene-search-input').focus();
-      await page.keyboard.type(data.geneSymbol);
-      await expect(page.locator('.search-loading-icon')).toHaveCount(0);
+      await searchInGeneProfilesTable(page, data.geneSymbol);
       await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(1);
 
       const cells = await page.locator('.table-body-row').locator('.row-cell').all();
@@ -312,9 +310,7 @@ test.describe('Gene profiles table functionality tests', () => {
   });
   test('should sort genes by autism gene sets', async({ page }) => {
     const row = page.locator('.table-body-row:not(#nothing-found)');
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('RAPGEF');
-    await expect(page.locator('.search-loading-icon')).toHaveCount(0);
+    await searchInGeneProfilesTable(page, 'RAPGEF');
     await expect(row).toHaveCount(4);
 
     await page.locator('#category-filtering-button').click();
@@ -345,8 +341,7 @@ test.describe('Gene profiles table functionality tests', () => {
 
   test('should sort genes by relevant gene sets', async({ page }) => {
     const row = page.locator('.table-body-row:not(#nothing-found)');
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('SENP');
+    await searchInGeneProfilesTable(page, 'SENP');
     await expect(page.locator('.search-loading-icon')).toHaveCount(0);
     await expect(row).toHaveCount(6);
 
@@ -408,9 +403,7 @@ test.describe('Gene profiles table functionality tests', () => {
   ].forEach(data => {
     test(`should compare protection scores when sort by ${data.score}`, async({ page }) => {
       const row = page.locator('.table-body-row:not(#nothing-found)');
-      await page.locator('input#gene-search-input').focus();
-      await page.keyboard.type('RAPGEF');
-      await expect(page.locator('.search-loading-icon')).toHaveCount(0);
+      await searchInGeneProfilesTable(page, 'RAPGEF');
       await expect(row).toHaveCount(4);
 
       await page.getByText(data.score).click();
@@ -433,9 +426,7 @@ test.describe('Gene profiles table functionality tests', () => {
   test('should show nothing found when search query doesn\'t match', async({ page }) => {
     await expect(page.locator('#nothing-found')).not.toBeVisible();
 
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('ewoqoqwekwoqkeowqkeowqkeoqwk');
-    await expect(page.locator('.search-loading-icon')).toHaveCount(0);
+    await searchInGeneProfilesTable(page, 'ewoqoqwekwoqkeowqkeowqkeoqwk');
     await expect(page.locator('#nothing-found')).toBeVisible();
 
     await page.locator('input#gene-search-input').clear();
@@ -538,23 +529,12 @@ test.describe('Gene profiles table state tests', () => {
   });
 });
 
-async function changeTable(page: Page): Promise<void> {
+export async function changeTable(page: Page): Promise<void> {
   // open tab
   await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
   await page.getByRole('button', {name: 'All genes'}).click();
 
-  const searchResponsePromise = page.waitForResponse(
-    resp => resp.url().includes(
-      '/api/v3/gene_profiles/table/rows?page=4&symbol=RAPGEF&sortBy=autism_gene_sets_rank&order=desc'
-    ) && resp.status() === 200
-  );
-
-  // search
-  await page.locator('input#gene-search-input').focus();
-  await page.keyboard.type('RAPGEF');
-
-  await searchResponsePromise;
-  await expect(page.locator('.search-loading-icon')).toHaveCount(0);
+  await searchInGeneProfilesTable(page, 'RAPGEF');
 
   // highlight rows and open tab
   await page.keyboard.down('Control');
@@ -607,7 +587,7 @@ async function checkDefaultTable(page: Page): Promise<void> {
     .toHaveText('CHD8 target genes');// check column reorder
 }
 
-async function checkTable(page: Page): Promise<void> {
+export async function checkTable(page: Page): Promise<void> {
   const columnHeader = page.locator('.header-cell-content-span');
   // check search and search result
   await expect(page.locator('input#gene-search-input')).toHaveValue('RAPGEF');
@@ -637,4 +617,19 @@ async function checkTable(page: Page): Promise<void> {
   await page.locator('#relevant_gene_sets_rank-column-filtering-button').click();
   await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
   await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
+}
+
+export async function searchInGeneProfilesTable(page: Page, searchValue: string): Promise<void> {
+  const searchResponsePromise = page.waitForResponse(
+    resp => resp.url().includes(
+      `/api/v3/gene_profiles/table/rows?page=4&symbol=${searchValue}`
+    ) && resp.status() === 200
+  );
+
+  // search
+  await page.locator('input#gene-search-input').focus();
+  await page.keyboard.type(searchValue);
+
+  await searchResponsePromise;
+  await expect(page.locator('.search-loading-icon')).toHaveCount(0);
 }

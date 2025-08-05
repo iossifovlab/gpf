@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { searchInGeneProfilesTable } from './gene-profiles-table.spec';
 
 test.describe('Gene profiles single view basic tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await page.locator('#header a:text("Gene Profiles")').click();
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('CHD8');
+    await searchInGeneProfilesTable(page, 'CHD8');
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
   });
 
@@ -73,8 +73,7 @@ test.describe('Gene profiles navigation to single view tests', () => {
   });
 
   test('should open single view', async({ page }) => {
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('GRIN2B');
+    await searchInGeneProfilesTable(page, 'GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
     expect(page.url()).toEqual(`${utils.frontendUrl}/gene-profiles/GRIN2B`);
@@ -171,9 +170,7 @@ test.describe('Gene profiles navigation to single view tests', () => {
   });
 
   test('should open single view and check table\'s state', async({ page }) => {
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('GRIN2B');
-    await page.waitForTimeout(500);
+    await searchInGeneProfilesTable(page, 'GRIN2B');
 
     await expect(page.locator('.table-body-row').filter({hasNotText: 'Nothing found'})).toContainText('GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
@@ -295,10 +292,7 @@ test.describe('Gene profiles single view dynamic data and links tests', () => {
 
     await utils.resetGeneProfiles(page);
 
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('GRIN2B');
-    await page.waitForLoadState();
-
+    await searchInGeneProfilesTable(page, 'GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
   });
 
