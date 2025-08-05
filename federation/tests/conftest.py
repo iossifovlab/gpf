@@ -210,3 +210,23 @@ def oauth_app(admin: AbstractUser) -> Application:
     )
     new_application.save()
     return cast(Application, new_application)
+
+
+@pytest.fixture
+def t4c8_response_transformer(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> ResponseTransformer:
+    return ResponseTransformer(
+        t4c8_wgpf_instance.gene_scores_db,
+    )
+
+
+@pytest.fixture
+def t4c8_query_transformer(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> QueryTransformer:
+    return QueryTransformer(
+        t4c8_wgpf_instance.gene_scores_db,
+        t4c8_wgpf_instance.reference_genome.chromosomes,
+        t4c8_wgpf_instance.reference_genome.chrom_prefix,
+    )
