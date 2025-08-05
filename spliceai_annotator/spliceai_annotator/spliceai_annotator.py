@@ -165,6 +165,9 @@ models to predict splice site variant effects.
                 "Setting it to 50.", self._distance,
             )
             self._distance = self.DEFAULT_DISTANCE
+        logger.info(
+            "SpliceAI annotator distance set to %d", self._distance,
+        )
         self._mask = int(info.parameters.get("mask", 0))
         if self._mask not in [0, 1]:
             logger.warning(
@@ -417,11 +420,6 @@ models to predict splice site variant effects.
                 "Skipping record (wrong reference): %s", annotatable,
             )
             return None
-        if ref_len >= self._distance or len(annotatable.alt) >= self._distance:
-            logger.warning(
-                "Skipping record (ref/alt too long): %s", annotatable,
-            )
-            return None
 
         genes = defaultdict(list)
         for transcript in transcripts:
@@ -443,6 +441,7 @@ models to predict splice site variant effects.
 
             xref, xalt = self._seq_padding(
                 seq, tx, annotatable,
+                consistent_batch=(batch_index >= 0),
             )
             xref_one_hot = one_hot_encode(xref)[None, :]
             xalt_one_hot = one_hot_encode(xalt)[None, :]
@@ -477,7 +476,7 @@ models to predict splice site variant effects.
         assert requests is not None
 
         annotation_results = [
-            self._predict(request)
+            self._predict_sequential(request)
             for request in requests
         ]
         return self._format_results(annotation_results)
@@ -554,7 +553,7 @@ models to predict splice site variant effects.
             annotatable.pos + width // 2,
         )
 
-    def _predict(
+    def _predict_sequential(
             self, req: _AnnotationRequest,
     ) -> _AnnotationResult:
 
@@ -567,11 +566,39 @@ models to predict splice site variant effects.
             self._models[m].predict(req.x_alt, verbose=0)
             for m in range(5)
         ], axis=0)
-        y = self._prediction_padding(req, y_ref, y_alt)
+        y = self._prediction_padding_sequential(req, y_ref, y_alt)
 
         return _AnnotationResult(req, y)
 
-    def _prediction_padding(
+    def _prediction_padding_sequential(
+        self, req: _AnnotationRequest,
+        y_ref: np.ndarray, y_alt: np.ndarray,
+    ) -> np.ndarray:
+        logger.debug("processing prediction for %s", req.vcf_allele)
+        if req.strand == "-":
+            y_ref = y_ref[:, ::-1]
+            y_alt = y_alt[:, ::-1]
+        ref_len = len(req.vcf_allele.ref)
+        alt_len = len(req.vcf_allele.alt)
+
+        if ref_len > 1 and alt_len == 1:
+            y_alt = np.concatenate([
+                y_alt[:, :self._distance + alt_len],
+                np.zeros((1, ref_len - alt_len, 3)),
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
+        elif ref_len == 1 and alt_len > 1:
+            y_alt = np.concatenate([
+                y_alt[:, :self._distance],
+                np.max(
+                    y_alt[:, self._distance: self._distance + alt_len],
+                    axis=1)[:, None, :],
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
+
+        return np.concatenate([y_ref, y_alt])
+
+    def _prediction_padding_batch(
         self, req: _AnnotationRequest,
         y_ref: np.ndarray, y_alt: np.ndarray,
     ) -> np.ndarray:
@@ -584,8 +611,8 @@ models to predict splice site variant effects.
         if ref_len > 1 and alt_len == 1:
             y_alt = np.concatenate([
                 y_alt[:, :self._distance + alt_len],
-                np.zeros((1, ref_len - alt_len, 3)),
-                y_alt[:, self._distance + alt_len:-(ref_len - alt_len)]],
+                np.zeros((1, min(self._distance, ref_len - 1), 3)),
+                y_alt[:, self._distance + 1:-(ref_len - 1)]],
                 axis=1)
         elif ref_len == 1 and alt_len > 1:
             y_alt = np.concatenate([
@@ -594,9 +621,10 @@ models to predict splice site variant effects.
                     y_alt[:, self._distance: self._distance + alt_len],
                     axis=1)[:, None, :],
                 y_alt[:, self._distance + alt_len:],
-                np.zeros((1, alt_len - ref_len, 3)),
-                ],
-                axis=1)
+                np.zeros(
+                    (1, alt_len - 1
+                     if alt_len < self._distance else self._distance, 3)),
+                ], axis=1)
 
         assert y_ref.shape == y_alt.shape, (
             f"y_ref shape {y_ref.shape} != y_alt shape {y_alt.shape}; "
@@ -636,7 +664,7 @@ models to predict splice site variant effects.
         for i, req in enumerate(reqs):
             x_ref = y_ref_batch[i:i + 1, :, :]
             x_alt = y_alt_batch[i:i + 1, :, :]
-            y = self._prediction_padding(req, x_ref, x_alt)
+            y = self._prediction_padding_batch(req, x_ref, x_alt)
             results.append(_AnnotationResult(req, y))
         logger.debug(
             "returning results: %d", len(results),
@@ -646,7 +674,8 @@ models to predict splice site variant effects.
     def _seq_padding(
             self, seq: str,
             tx_region: tuple[int, int],
-            annotatable: Annotatable,
+            annotatable: Annotatable, *,
+            consistent_batch: bool = False,
     ) -> tuple[str, str]:
         assert isinstance(annotatable, VCFAllele)
         padding = (
@@ -657,12 +686,15 @@ models to predict splice site variant effects.
             "N" * padding[1]
         xalt = xref[:self._width() // 2] + \
             annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
-        if len(xalt) > len(xref):
-            xalt = xalt[:len(xref)]
-        else:
-            xalt = xalt.ljust(len(xref), "N")
 
-        assert len(xref) == len(xalt)
+        if consistent_batch:
+            if len(xalt) > len(xref):
+                xalt = xalt[:len(xref)]
+            else:
+                xalt = xalt.ljust(len(xref), "N")
+
+            assert len(xref) == len(xalt)
+
         return xref, xalt
 
     def _do_batch_annotate(
