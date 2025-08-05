@@ -168,13 +168,14 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     ds_config.id = "big_dataset"
 
     dataset = GenotypeDataGroup(
+        custom_wgpf.genotype_storages,
         ds_config, [dataset1_wrapper.genotype_data,
                     dataset2_wrapper.genotype_data],
     )
     assert dataset is not None
     assert dataset.study_id == "big_dataset"
 
-    dataset_wrapper = WDAEStudy(dataset, None)
+    dataset_wrapper = WDAEStudy(custom_wgpf.genotype_storages, dataset, None)
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 

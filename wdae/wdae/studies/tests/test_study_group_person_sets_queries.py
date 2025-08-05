@@ -108,7 +108,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
             },
         },
     }
-    return WDAEStudy(vcf_study(
+    return WDAEStudy(wgpf_fixture.genotype_storages, vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         wgpf_fixture,
@@ -194,7 +194,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
             },
         },
     }
-    return WDAEStudy(vcf_study(
+    return WDAEStudy(wgpf_fixture.genotype_storages, vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
         wgpf_fixture,
@@ -252,7 +252,7 @@ def dataset(
     root_path = pathlib.Path(wgpf_fixture.dae_dir)
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return WDAEStudyGroup(setup_dataset(
+    return WDAEStudyGroup(wgpf_fixture.genotype_storages, setup_dataset(
         "dataset", wgpf_fixture,
         study_1.genotype_data, study_2.genotype_data,
         dataset_config_update=textwrap.dedent(f"""

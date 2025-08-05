@@ -23,9 +23,6 @@ from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     build_inmemory_test_repository,
@@ -38,8 +35,6 @@ from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.studies.study import GenotypeData
 from dae.testing import (
-    setup_empty_gene_models,
-    setup_genome,
     setup_gpf_instance,
 )
 from dae.testing.import_helpers import vcf_study
@@ -389,35 +384,9 @@ def f1_trio(
     tmp_path: pathlib.Path,
     study_data: tuple[pathlib.Path, pathlib.Path],
     psc_config: dict,
-    grr: GenomicResourceRepo,
+    t4c8_fixture: GPFInstance,
     mocker: pytest_mock.MockerFixture,
 ) -> GenotypeData:
-
-    setup_genome(
-        tmp_path / "alla_gpf" / "genome" / "allChr.fa",
-        f"""
-        >1
-        {1_000_000 * "A"}
-        """,
-    )
-    setup_empty_gene_models(
-        tmp_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
-
-    local_repo = build_genomic_resource_repository({
-        "id": "alla_local",
-        "type": "directory",
-        "directory": str(tmp_path / "alla_gpf"),
-    })
-
-    grr = GenomicResourceGroupRepo(
-        [grr, local_repo], "enrichment_testing_repo",
-    )
-
-    gpf_instance = setup_gpf_instance(
-        tmp_path / "gpf_instance",
-        reference_genome_id="genome",
-        gene_models_id="empty_gene_models",
-        grr=local_repo)
 
     ped_path, vcf_path = study_data
     study = vcf_study(
@@ -425,7 +394,7 @@ def f1_trio(
         "f1_trio",
         ped_path,
         vcf_paths=[vcf_path],
-        gpf_instance=gpf_instance,
+        gpf_instance=t4c8_fixture,
         study_config_update=psc_config,
     )
 
