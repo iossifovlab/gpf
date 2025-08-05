@@ -543,9 +543,17 @@ async function changeTable(page: Page): Promise<void> {
   await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
   await page.getByRole('button', {name: 'All genes'}).click();
 
+  const searchResponsePromise = page.waitForResponse(
+    resp => resp.url().includes(
+      '/api/v3/gene_profiles/table/rows?page=4&symbol=RAPGEF&sortBy=autism_gene_sets_rank&order=desc'
+    ) && resp.status() === 200
+  );
+
   // search
   await page.locator('input#gene-search-input').focus();
   await page.keyboard.type('RAPGEF');
+
+  await searchResponsePromise;
   await expect(page.locator('.search-loading-icon')).toHaveCount(0);
 
   // highlight rows and open tab
