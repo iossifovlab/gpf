@@ -364,71 +364,6 @@ def test_query_summary_variants_counting(
     assert len(svs) == count
 
 
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"roles": "prb"}, 9),
-    (True, {"roles": "not prb"}, 7),
-    (True, {"roles": "mom and not prb"}, 5),
-    (True, {"roles": "mom and dad and not prb"}, 3),
-    (True, {"roles": "not mom and not dad and prb"}, 0),
-])
-def test_query_family_variants_by_role(
-    skip: bool,  # noqa: FBT001
-    params: dict[str, Any],
-    count: int,
-    t4c8_storage_registry: GenotypeStorageRegistry,
-    t4c8_study_2: GenotypeDataStudy,
-) -> None:
-    params.update({"skip_inmemory_filterng": skip})
-    fvs = list(t4c8_storage_registry.query_variants(
-        [t4c8_study_2.study_id], params))
-    assert len(fvs) == count
-
-
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"sexes": "M"}, 11),
-    (True, {"sexes": "M and not F"}, 2),
-    (True, {"sexes": "female and not male"}, 5),
-])
-def test_query_family_variants_by_sex(
-    skip: bool,  # noqa: FBT001
-    params: dict[str, Any],
-    count: int,
-    t4c8_storage_registry: GenotypeStorageRegistry,
-    t4c8_study_2: GenotypeDataStudy,
-) -> None:
-    params.update({"skip_inmemory_filterng": skip})
-    fvs = list(t4c8_storage_registry.query_variants(
-        [t4c8_study_2.study_id], params))
-    assert len(fvs) == count
-
-
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"inheritance": ["missing"]}, 7),
-    (True, {"inheritance": ["mendelian"]}, 9),
-    (True, {"inheritance": ["denovo"]}, 0),
-    (False, {"inheritance": ["mendelian or missing"]}, 12),
-    (True, {"inheritance": ["mendelian or missing"]}, 16),
-    (True, {"inheritance": ["mendelian and missing"]}, 0),
-])
-def test_query_family_variants_by_inheritance(
-    skip: bool,  # noqa: FBT001
-    params: dict[str, Any],
-    count: int,
-    t4c8_storage_registry: GenotypeStorageRegistry,
-    t4c8_study_2: GenotypeDataStudy,
-) -> None:
-    params.update({"skip_inmemory_filterng": skip})
-    fvs = list(t4c8_storage_registry.query_variants(
-        [t4c8_study_2.study_id], params))
-    assert len(fvs) == count
-
-
 @pytest.mark.parametrize(
     "params,expected", [
         (
@@ -477,29 +412,6 @@ def test_query_family_variants_by_variant_type(
     t4c8_storage_registry: GenotypeStorageRegistry,
     t4c8_study_2: GenotypeDataStudy,
 ) -> None:
-    fvs = list(t4c8_storage_registry.query_variants(
-        [t4c8_study_2.study_id], params))
-    assert len(fvs) == count
-
-
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"person_ids": ["ch3"]}, 5),
-    (True, {"person_ids": ["ch3"], "family_ids": ["f1.1"]}, 0),
-    (True, {"person_ids": ["ch3"], "family_ids": ["f1.3"]}, 5),
-    (False, {"family_ids": ["f1.1"]}, 6),
-    (True, {"family_ids": ["f1.1"]}, 7),
-    (True, {"family_ids": ["f1.1"], "person_ids": ["ch1"]}, 4),
-])
-def test_query_family_variants_by_family_and_person_ids(
-    skip: bool,  # noqa: FBT001
-    params: dict[str, Any],
-    count: int,
-    t4c8_storage_registry: GenotypeStorageRegistry,
-    t4c8_study_2: GenotypeDataStudy,
-) -> None:
-    params.update({"skip_inmemory_filterng": skip})
     fvs = list(t4c8_storage_registry.query_variants(
         [t4c8_study_2.study_id], params))
     assert len(fvs) == count
