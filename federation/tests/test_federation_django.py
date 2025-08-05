@@ -448,6 +448,7 @@ def test_pheno_browser_download(
         {
             "dataset_id": "TEST_REMOTE_t4c8_study_1",
             "instrument": "i1",
+            "search_term": "m1",
         },
     ))
 
@@ -458,14 +459,10 @@ def test_pheno_browser_download(
         {
             "dataset_id": "t4c8_study_1",
             "instrument": "i1",
+            "search_term": "m1",
         },
     ))
 
     assert response_local.status_code == 200
 
-    local_first_line = next(
-        cast(Iterator[bytes], response_local.streaming_content))
-    remote_first_line = next(
-        cast(Iterator[bytes], response_local.streaming_content))
-
-    assert remote_first_line.decode("utf-8") == local_first_line.decode("utf-8")
+    assert list(response_remote) == list(response_local)

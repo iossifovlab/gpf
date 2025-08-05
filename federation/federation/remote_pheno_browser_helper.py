@@ -56,12 +56,17 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
             data["search"],
         )
 
-    @abstractmethod
     def get_measure_ids(
         self,
         data: dict[str, Any],
     ) -> Generator[str, None, None]:
-        """Get measure ids."""
+        measures = self.rest_client.get_pheno_browser_download(
+            self.dataset_id,
+            data["instrument"],
+            data["search_term"],
+        )
+        for measure_line in measures:
+            yield measure_line + b"\r\n"
 
     @abstractmethod
     def count_measure_ids(
