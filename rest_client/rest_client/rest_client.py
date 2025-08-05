@@ -994,8 +994,8 @@ class RESTClient:
     def get_measure_description(self, dataset_id: str, measure_id: str) -> Any:
         """Get a measure description."""
         query_str = self.build_query_string({
-            "datasetId": dataset_id,
-            "measureId": measure_id,
+            "dataset_id": dataset_id,
+            "measure_id": measure_id,
         })
         response = self.session.get(
             f"{self.api_url}/pheno_browser/measure_description{query_str}",

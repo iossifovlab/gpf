@@ -380,6 +380,35 @@ def test_pheno_browser_measures_info(
     assert response_remote.json() == response_local.json()
 
 
+def test_pheno_browser_measure_description(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    descriptions_url = "/api/v3/pheno_browser/measure_description"
+    response_remote = admin_client.get(
+        descriptions_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "measure_id": "i1.m1",
+        },
+    )
+
+    assert response_remote.status_code == 200
+
+    response_local = admin_client.get(
+        descriptions_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "measure_id": "i1.m1",
+        },
+    )
+
+    assert response_local.status_code == 200
+
+    assert response_remote.json() == response_local.json()
+
+
+
 def test_pheno_browser_download(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001

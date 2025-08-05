@@ -24,7 +24,6 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         self.rest_client = rest_client
         self.dataset_id = dataset_id
 
-
     @staticmethod
     def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
         if not isinstance(study, RemoteWDAEStudy):
@@ -35,17 +34,17 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
             study.remote_study_id,
         )
 
-    @abstractmethod
     def get_instruments(self) -> list[str]:
         return self.rest_client.get_instruments(self.dataset_id)
 
-    @abstractmethod
     def get_measures_info(self) -> dict[str, Any]:
         return self.rest_client.get_browser_measures_info(self.dataset_id)
 
-    @abstractmethod
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
-        """Get measures description."""
+        return self.rest_client.get_measure_description(
+            self.dataset_id,
+            measure_id,
+        )
 
     @abstractmethod
     def search_measures(
