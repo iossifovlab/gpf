@@ -46,12 +46,15 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
             measure_id,
         )
 
-    @abstractmethod
     def search_measures(
         self,
         data: dict[str, Any],
     ) -> list[dict[str, Any]]:
-        """Search measures."""
+        return self.rest_client.get_pheno_browser_measures(
+            self.dataset_id,
+            data["instrument"],
+            data["search"],
+        )
 
     @abstractmethod
     def get_measure_ids(

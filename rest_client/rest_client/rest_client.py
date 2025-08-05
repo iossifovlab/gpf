@@ -1006,6 +1006,27 @@ class RESTClient:
 
         return response.json()
 
+    def get_pheno_browser_measures(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measures for a dataset."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search": search_term,
+        })
+        response = self.session.get(
+            f"{self.api_url}/pheno_browser/measures{query_str}",
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
     def get_measures(
         self, dataset_id: str,
         instrument_name: str | None,
