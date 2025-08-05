@@ -562,9 +562,9 @@ def test_query_unique_family_variants(
         t4c8_query_transformer,
         t4c8_response_transformer,
     ))
-    assert spy.call_count == 2
-    assert "uniqueFamilyVariants" in spy.call_args.args[0]
-    assert spy.call_args.args[0]["uniqueFamilyVariants"] is True
+    assert spy.call_count == 1
+    assert "unique_family_variants" in spy.call_args.args[0]
+    assert spy.call_args.args[0]["unique_family_variants"] is True
 
 
 @pytest.mark.parametrize(

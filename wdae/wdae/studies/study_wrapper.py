@@ -4,6 +4,7 @@ import logging
 import time
 from abc import abstractmethod
 from collections.abc import Callable, Generator, Iterable, Iterator
+from copy import copy
 from typing import Any, Protocol, cast
 
 from box import Box
@@ -685,38 +686,18 @@ class WDAEStudy(WDAEAbstractStudy):
                 kwargs[key] = pre_kwargs[key]
         return kwargs
 
-    def query_variants_wdae(
+    def query_variants_raw(
         self, kwargs: dict[str, Any],
-        sources: list[dict[str, Any]],
         query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,
         *,
         max_variants_count: int | None = 10000,
         max_variants_message: bool = False,  # noqa: ARG002
-    ) -> Generator[list | None, None, None]:
-        """Wrap query variants method for WDAE streaming of variants."""
-        # pylint: disable=too-many-locals,too-many-branches
-
-        study_filters = None
-        if kwargs.get("allowed_studies") is not None:
-            study_filters = set(kwargs.pop("allowed_studies"))
-
-        if kwargs.get("studyFilters"):
-            if study_filters is not None:
-                study_filters = study_filters & set(kwargs.pop("studyFilters"))
-            else:
-                study_filters = set(kwargs.pop("studyFilters"))
-
-        kwargs["study_filters"] = study_filters
+    ) -> Iterator[FamilyVariant]:
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
         kwargs = query_transformer.transform_kwargs(self, **kwargs)
 
         limit = kwargs.get("limit", max_variants_count)
-
-        transform = response_transformer.variant_transformer(
-            self, self._pheno_values_cache,
-        )
 
         started = time.time()
         index = 0
@@ -724,16 +705,50 @@ class WDAEStudy(WDAEAbstractStudy):
             "study wrapper (%s) creating query_result_variants...",
             self.name)
         try:
-            variants = enumerate(self.registry.query_variants(
+            variants = enumerate(filter(None, self.registry.query_variants(
                 self.get_children_ids(leaves=True), kwargs, limit,
-            ))
-            psc_query = query_transformer.extract_person_set_collection_query(
-                self, kwargs)
+            )))
 
             for idx, variant in variants:
-                if variant is None:
-                    continue
                 index = idx
+                yield variant
+        except GeneratorExit:
+            pass
+        finally:
+            elapsed = time.time() - started
+            logger.info(
+                "study wrapper (%s)  query returned %s variants; "
+                "closed in %0.3fsec", self.study_id, index, elapsed)
+
+    def query_variants_wdae(
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        *,
+        max_variants_count: int | None = 10000,
+        max_variants_message: bool = False,
+    ) -> Generator[list | None, None, None]:
+        """Wrap query variants method for WDAE streaming of variants."""
+        # pylint: disable=too-many-locals,too-many-branches
+
+        transform = response_transformer.variant_transformer(
+            self, self._pheno_values_cache,
+        )
+
+        logger.debug(
+            "study wrapper (%s) creating query_variants_wdae...",
+            self.name)
+        try:
+            variants = self.query_variants_raw(
+                kwargs, query_transformer,
+                max_variants_count=max_variants_count,
+                max_variants_message=max_variants_message,
+            )
+            psc_query = query_transformer.extract_person_set_collection_query(
+                self, copy(kwargs))
+
+            for variant in variants:
                 v = transform(variant)
 
                 row_variant = response_transformer.build_variant_row(
@@ -745,26 +760,10 @@ class WDAEStudy(WDAEAbstractStudy):
                 yield row_variant
         except GeneratorExit:
             pass
-        finally:
-            elapsed = time.time() - started
-            logger.info(
-                "study wrapper (%s)  query returned %s variants; "
-                "closed in %0.3fsec", self.study_id, index, elapsed)
 
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
-        study_filters = None
-        if kwargs.get("allowed_studies") is not None:
-            study_filters = set(kwargs.pop("allowed_studies"))
-
-        if kwargs.get("studyFilters"):
-            if study_filters is not None:
-                study_filters = study_filters & set(kwargs.pop("studyFilters"))
-            else:
-                study_filters = set(kwargs.pop("studyFilters"))
-
-        kwargs["study_filters"] = study_filters
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
 

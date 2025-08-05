@@ -256,8 +256,10 @@ def create_test_study(
 def enrichment_helper(
     grr: GenomicResourceRepo,
     f1_trio: GenotypeData,
+    t4c8_fixture: GPFInstance,
 ) -> EnrichmentHelper:
-    return EnrichmentHelper(grr, WDAEStudy(f1_trio, None))
+    return EnrichmentHelper(
+        grr, WDAEStudy(t4c8_fixture.genotype_storages, f1_trio, None))
 
 
 @pytest.fixture
@@ -269,7 +271,7 @@ def enrichment_builder(
     return EnrichmentBuilder(
         enrichment_helper,
         t4c8_fixture.gene_scores_db,
-        WDAEStudy(f1_trio, None),
+        WDAEStudy(t4c8_fixture.genotype_storages, f1_trio, None),
     )
 
 
