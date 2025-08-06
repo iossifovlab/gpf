@@ -38,14 +38,143 @@ def test_spliceai_annotate_del_acceptor(
         "C|TUBB8|0.19|0.15|0.00|0.05|90|-22|289|175"
 
 
-def test_spliceai_annotate_ins_acceptor(
+def test_spliceai_annotate_del_acceptor_2(
     spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> None:
-    annotatable = VCFAllele("10", 94076, "C", "CCCCC")
+    annotatable = VCFAllele("10", 94076, "CA", "C")
     result = spliceai_annotation_pipeline.annotate(annotatable)
     assert result is not None
     assert result["delta_score"] == \
-        "CCCCC|TUBB8|0.15|0.27|0.00|0.05|90|-22|-266|194"
+        "C|TUBB8|0.24|0.20|0.00|0.05|90|-22|-266|194"
+
+
+def test_spliceai_annotate_del_acceptor_too_long(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    annotatable = VCFAllele(  # 100nt deletion
+        "10", 94076,
+        "CACTCGACGGCCAGGTATACGGTCATCAGTGGTCACCACCATAATGCAGAAAGAGCCAAGCGTCACAC"
+        "GTGAGGTGAGAGCACCGTTCGCCCTGCAGGTGGA",
+        "C")
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    result = spliceai_annotator.annotate(annotatable, {})
+    assert result is not None
+    assert result["delta_score"] is None
+
+
+def test_spliceai_annotate_del_acceptor_long(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    annotatable = VCFAllele(
+        "10", 94076,
+        "CACTCGACGGCCAGGTATACGGTCATCAGTGGTCACCACCATAATGCAGAAAGAGCCAAGCGTCACAC",
+        "C")
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    result = spliceai_annotator.annotate(annotatable, {})
+    assert result is not None
+    assert result["delta_score"] == \
+        "C|TUBB8|0.02|0.03|0.00|0.07|-22|1|-27|-21"
+
+
+def test_spliceai_annotate_del_acceptor_long_batch(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    annotatable = VCFAllele(
+        "10", 94076,
+        "CACTCGACGGCCAGGTATACGGTCATCAGTGGTCACCACCATAATGCAGAAAGAGCCAAGCGTCACAC",
+        "C")
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    result = spliceai_annotator.batch_annotate([annotatable], [{}])
+    assert result is not None
+    assert result[0]["delta_score"] == \
+        "C|TUBB8|0.02|0.03|0.00|0.07|-22|1|-27|-21"
+
+
+def test_spliceai_annotate_ins_acceptor(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    annotatable = VCFAllele("10", 94076, "C", "CCCCC")
+    result = spliceai_annotator.annotate(annotatable, {})
+    assert result is not None
+    assert result["delta_score"] == \
+        "CCCCC|TUBB8|0.03|0.27|0.00|0.02|1|-22|39|-21"
+    # "CCCCC|TUBB8|0.15|0.27|0.00|0.05|90|-22|-266|194"
+
+
+def test_spliceai_annotate_ins_acceptor_batch(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    annotatable = VCFAllele("10", 94076, "C", "CCCCC")
+    result = spliceai_annotator.batch_annotate([annotatable], [{}])
+    assert result is not None
+    assert result[0]["delta_score"] == \
+        "CCCCC|TUBB8|0.03|0.27|0.00|0.02|1|-22|39|-21"
+    # "CCCCC|TUBB8|0.15|0.27|0.00|0.05|90|-22|-266|194"
+
+
+def test_spliceai_annotate_ins_acceptor_long(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    annotatable = VCFAllele("10", 94076, "C", 60 * "CA")
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    result = spliceai_annotator.annotate(annotatable, {})
+    assert result is not None
+    assert result["delta_score"] == (
+        "CACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
+        "CACACACACACACACACACACACACACACACACACACACACACACACACACA|"
+        "TUBB8|0.02|0.03|0.01|0.10|-22|1|39|-21"
+    )
+
+
+def test_spliceai_annotate_ins_acceptor_long_batch(
+    spliceai_annotator: SpliceAIAnnotator,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    annotatable = VCFAllele("10", 94076, "C", 60 * "CA")
+    mocker.patch.object(
+        spliceai_annotator, "_distance",
+        new=50,
+    )
+
+    result = spliceai_annotator.batch_annotate([annotatable], [{}])
+    assert result is not None
+    assert result[0]["delta_score"] == (
+        "CACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
+        "CACACACACACACACACACACACACACACACACACACACACACACACACACA|"
+        "TUBB8|0.02|0.03|0.01|0.10|-22|1|39|-21"
+    )
 
 
 def test_spliceai_annotate_simple_donor(

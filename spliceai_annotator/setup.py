@@ -29,7 +29,7 @@ setuptools.setup(
     ],
     entry_points="""
     [dae.annotation.annotators]
-    spliceai_annotator=spliceai_annotator.spliceai_annotator:build_spliceai_annotator
+    spliceai_annotator=spliceai_annotator:build_spliceai_annotator
 
     """,
     classifiers=[
