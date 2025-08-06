@@ -33,4 +33,9 @@ urlpatterns = [
         views.PhenoMeasuresDownload.as_view(),
         name="pheno_browser_download",
     ),
+    re_path(
+        r"^/images/?$",
+        views.PhenoImagesView.as_view(),
+        name="pheno_browser_images",
+    ),
 ]

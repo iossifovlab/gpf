@@ -4,7 +4,7 @@ from datasets_api.permissions import (
     get_instance_timestamp_etag,
     get_permissions_etag,
 )
-from django.http.response import StreamingHttpResponse
+from django.http.response import HttpResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from gpf_instance.gpf_instance import WGPFInstance
@@ -295,6 +295,44 @@ class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         return Response({"count": count})
+
+
+class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
+    """Remote pheno images view."""
+
+    @method_decorator(etag(get_permissions_etag))
+    def get(
+        self, request: Request,
+    ) -> Response | HttpResponse:
+        """Return raw image data from a remote GPF instance."""
+        data = request.query_params
+
+        if "dataset_id" not in data or "image_path" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = data["dataset_id"]
+
+        study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
+        if not study:
+            logger.info("Study not found")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        pheno_browser_helper = create_pheno_browser_helper(
+            self.gpf_instance,
+            study,
+        )
+
+        try:
+            image, mimetype = pheno_browser_helper.get_image(data["image_path"])
+        except ValueError:
+            logger.exception(
+                "Could not get image %s for %s",
+                data["image_path"],
+                data["dataset_id"],
+            )
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return HttpResponse(image, content_type=mimetype)
 
 
 def create_pheno_browser_helper(
