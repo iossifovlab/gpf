@@ -49,7 +49,7 @@ def test_build_backend(
     assert len(backend.families) == 1
     assert len(backend.families["f1"].members_ids) == 5
     assert len(list(
-        registry.query_variants([study_config["id"]], {}),
+        registry.query_variants([(study_config["id"], {})]),
     )) == 2
 
 

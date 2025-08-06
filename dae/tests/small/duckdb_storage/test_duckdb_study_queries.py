@@ -20,7 +20,7 @@ def test_family_queries(
         query: dict, ecount: int) -> None:
     vs = list(
         foobar_storage_registry.query_variants(
-            [imported_study.study_id], query,
+            [(imported_study.study_id, query)],
         ),
     )
     assert len(vs) == ecount

@@ -107,7 +107,7 @@ def test_query_family_variants_counting(
     t4c8_storage_registry: GenotypeStorageRegistry,
 ) -> None:
     fvs = list(t4c8_storage_registry.query_variants(
-        [t4c8_study_1.study_id], params))
+        [(t4c8_study_1.study_id, params)]))
     assert len(fvs) == count
 
 
@@ -130,5 +130,5 @@ def test_family_tag_queries_working(
     t4c8_storage_registry: GenotypeStorageRegistry,
 ) -> None:
     fvs = list(t4c8_storage_registry.query_variants(
-        [t4c8_study_1.study_id], params))
+        [(t4c8_study_1.study_id, params)]))
     assert len(fvs) == count

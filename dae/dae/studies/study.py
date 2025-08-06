@@ -290,10 +290,10 @@ class GenotypeData(CommonStudyMixin, ABC):
             "tags_query": tags_query,
             "zygosity_in_status": zygosity_in_status,
         }
-        return self._registry.query_variants(
-            [st.study_id for st in self.get_query_leaf_studies(study_filters)],
-            kwargs,
-        )
+        return self._registry.query_variants([
+            (st.study_id, kwargs)
+            for st in self.get_query_leaf_studies(study_filters)
+        ])
 
     def query_summary_variants(
         self, *,
