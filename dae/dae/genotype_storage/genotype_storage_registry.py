@@ -7,7 +7,7 @@ from typing import Any
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.query_variants.query_runners import QueryResult
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
@@ -187,35 +187,19 @@ class GenotypeStorageRegistry:
         raise ValueError(f"{study_id} not found in registry!")
 
     def query_variants(
-        self, study_ids: list[str], kwargs: dict[str, Any],
+            self, study_kwargs: list[tuple[str, dict[str, Any]]],
         limit: int | None = 10000,
     ) -> Iterable[FamilyVariant]:
+        if not len(study_kwargs):
+            return
         runners = []
-        for study_id in study_ids:
+        for study_id, kwargs in study_kwargs:
             storage = self.find_storage(study_id)
             runner = storage.create_runner(study_id, kwargs)
             if runner is not None:
                 runners.append(runner)
 
-        summary_variant_ids = kwargs.pop("summaryVariantIds", None)
-
-        if summary_variant_ids is None:
-            # pylint: disable=unused-argument
-            def filter_allele(
-                allele: FamilyAllele,  # noqa: ARG001
-            ) -> bool:
-                return True
-
-        elif len(summary_variant_ids) > 0:
-            summary_variant_ids = set(summary_variant_ids)
-
-            def filter_allele(allele: FamilyAllele) -> bool:
-                svid = f"{allele.cshl_location}:{allele.cshl_variant}"
-                return svid in summary_variant_ids
-
-        else:
-            # passed empty list of summary variants; empty result
-            return
+        kwargs = study_kwargs[0][1]
 
         index = 0
         seen = set()

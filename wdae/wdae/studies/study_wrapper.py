@@ -695,6 +695,30 @@ class WDAEStudy(WDAEAbstractStudy):
     ) -> Iterator[FamilyVariant]:
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
+        children_kwargs = []
+        for child_id in self.get_children_ids(leaves=True):
+            child = None
+            if child_id == self.study_id:
+                child = self
+            else:
+                for ch in self.children:
+                    if ch.study_id == child_id:
+                        child = ch
+                        break
+            if child is None:
+                raise ValueError(
+                    f"Child study {child_id} of {self.study_id} "
+                    f"not found in {self.children}!",
+                )
+            try:
+                child_kwargs = query_transformer.transform_kwargs(
+                    child, **kwargs)
+                children_kwargs.append((child_id, child_kwargs))
+            except ValueError:
+                logger.exception(
+                    "Could not transform kwargs for child %s of study %s",
+                    child_id, self.study_id,
+                )
         kwargs = query_transformer.transform_kwargs(self, **kwargs)
 
         limit = kwargs.get("limit", max_variants_count)
@@ -706,7 +730,7 @@ class WDAEStudy(WDAEAbstractStudy):
             self.name)
         try:
             variants = enumerate(filter(None, self.registry.query_variants(
-                self.get_children_ids(leaves=True), kwargs, limit,
+                children_kwargs, limit,
             )))
 
             for idx, variant in variants:

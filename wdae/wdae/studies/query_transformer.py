@@ -332,10 +332,7 @@ class QueryTransformer(QueryTransformerProtocol):
         assert psc is not None
 
         if study_wrapper.is_group:
-            raise ValueError(
-                "Determining person set collection kwargs for groups "
-                "is not supported!",
-            )
+            return {}
         genotype_data = cast(GenotypeDataStudy, study_wrapper.genotype_data)
 
         # Handling of person set collections for roles and sexes
