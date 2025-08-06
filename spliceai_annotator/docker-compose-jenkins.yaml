@@ -1,0 +1,29 @@
+name: spliceai
+
+services:
+
+  base:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    volumes:
+    - ..:/wd
+    entrypoint: /bin/bash
+
+  runner:
+    build:
+      context: ..
+      dockerfile: spliceai_annotator/Dockerfile.runner
+    volumes:
+    - ..:/wd
+    entrypoint: /wd/spliceai_annotator/scripts/run_tests.sh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]    
+
+networks:
+  main:
