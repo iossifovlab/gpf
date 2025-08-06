@@ -176,3 +176,18 @@ export async function resetGeneProfiles(page: Page): Promise<void> {
   await expect(page.locator('.active-sort-header')).toContainText('Autism Gene Sets');
 }
 
+export async function searchInGeneProfilesTable(page: Page, searchValue: string): Promise<void> {
+  const searchResponsePromise = page.waitForResponse(
+    resp => resp.url().includes(
+      `/api/v3/gene_profiles/table/rows?page=4&symbol=${searchValue}`
+    ) && resp.status() === 200
+  );
+
+  // search
+  await page.locator('input#gene-search-input').focus();
+  await page.keyboard.type(searchValue);
+
+  await searchResponsePromise;
+  await expect(page.locator('.search-loading-icon')).toHaveCount(0);
+}
+

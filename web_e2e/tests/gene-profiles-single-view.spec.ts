@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
-import { searchInGeneProfilesTable } from './gene-profiles-table.spec';
+import { searchInGeneProfilesTable } from './utils';
 
 test.describe('Gene profiles single view basic tests', () => {
   test.beforeEach(async({ page }) => {

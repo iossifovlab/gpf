@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
+import { searchInGeneProfilesTable } from './utils';
 
 test.describe('Gene profiles row data tests', () => {
   test.beforeEach(async({ page }) => {
@@ -617,19 +618,4 @@ export async function checkTable(page: Page): Promise<void> {
   await page.locator('#relevant_gene_sets_rank-column-filtering-button').click();
   await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
   await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
-}
-
-export async function searchInGeneProfilesTable(page: Page, searchValue: string): Promise<void> {
-  const searchResponsePromise = page.waitForResponse(
-    resp => resp.url().includes(
-      `/api/v3/gene_profiles/table/rows?page=4&symbol=${searchValue}`
-    ) && resp.status() === 200
-  );
-
-  // search
-  await page.locator('input#gene-search-input').focus();
-  await page.keyboard.type(searchValue);
-
-  await searchResponsePromise;
-  await expect(page.locator('.search-loading-icon')).toHaveCount(0);
 }
