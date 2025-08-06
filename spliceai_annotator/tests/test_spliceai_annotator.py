@@ -146,7 +146,7 @@ def test_spliceai_annotate_ins_acceptor_long(
     annotatable = VCFAllele("10", 94076, "C", 60 * "CA")
     mocker.patch.object(
         spliceai_annotator, "_distance",
-        new=500,
+        new=50,
     )
 
     result = spliceai_annotator.annotate(annotatable, {})
@@ -154,14 +154,10 @@ def test_spliceai_annotate_ins_acceptor_long(
     assert result["delta_score"] == (
         "CACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
         "CACACACACACACACACACACACACACACACACACACACACACACACACACA|"
-        # "TUBB8|0.02|0.03|0.01|0.10|-22|1|39|-21"
-        "TUBB8|0.02|0.56|0.22|0.10|-22|146|194|-21"
+        "TUBB8|0.02|0.03|0.01|0.10|-22|1|39|-21"
     )
 
 
-@pytest.mark.xfail(
-    reason="Long insertions are not well supported yet",
-)
 def test_spliceai_annotate_ins_acceptor_long_batch(
     spliceai_annotator: SpliceAIAnnotator,
     mocker: pytest_mock.MockerFixture,
@@ -169,7 +165,7 @@ def test_spliceai_annotate_ins_acceptor_long_batch(
     annotatable = VCFAllele("10", 94076, "C", 60 * "CA")
     mocker.patch.object(
         spliceai_annotator, "_distance",
-        new=500,
+        new=50,
     )
 
     result = spliceai_annotator.batch_annotate([annotatable], [{}])
@@ -177,8 +173,7 @@ def test_spliceai_annotate_ins_acceptor_long_batch(
     assert result[0]["delta_score"] == (
         "CACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACACA"
         "CACACACACACACACACACACACACACACACACACACACACACACACACACA|"
-        # "|TUBB8|0.02|0.03|0.01|0.10|-22|1|39|-21"
-        "TUBB8|0.02|0.56|0.22|0.10|-22|146|194|-21"
+        "TUBB8|0.02|0.03|0.01|0.10|-22|1|39|-21"
     )
 
 

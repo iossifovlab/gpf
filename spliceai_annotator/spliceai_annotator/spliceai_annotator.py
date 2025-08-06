@@ -441,7 +441,7 @@ models to predict splice site variant effects.
 
             xref, xalt = self._seq_padding(
                 seq, tx, annotatable,
-                consistent_batch=(batch_index >= 0),
+                batch_mode=(batch_index >= 0),
             )
             xref_one_hot = one_hot_encode(xref)[None, :]
             xalt_one_hot = one_hot_encode(xalt)[None, :]
@@ -582,12 +582,14 @@ models to predict splice site variant effects.
         alt_len = len(req.vcf_allele.alt)
 
         if ref_len > 1 and alt_len == 1:
+            # deletion
             y_alt = np.concatenate([
                 y_alt[:, :self._distance + alt_len],
                 np.zeros((1, ref_len - alt_len, 3)),
                 y_alt[:, self._distance + alt_len:]],
                 axis=1)
         elif ref_len == 1 and alt_len > 1:
+            # insertion
             y_alt = np.concatenate([
                 y_alt[:, :self._distance],
                 np.max(
@@ -615,16 +617,14 @@ models to predict splice site variant effects.
                 y_alt[:, self._distance + 1:-(ref_len - 1)]],
                 axis=1)
         elif ref_len == 1 and alt_len > 1:
+            # insertion
             y_alt = np.concatenate([
                 y_alt[:, :self._distance],
                 np.max(
                     y_alt[:, self._distance: self._distance + alt_len],
                     axis=1)[:, None, :],
-                y_alt[:, self._distance + alt_len:],
-                np.zeros(
-                    (1, alt_len - 1
-                     if alt_len < self._distance else self._distance, 3)),
-                ], axis=1)
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
 
         assert y_ref.shape == y_alt.shape, (
             f"y_ref shape {y_ref.shape} != y_alt shape {y_alt.shape}; "
@@ -675,7 +675,7 @@ models to predict splice site variant effects.
             self, seq: str,
             tx_region: tuple[int, int],
             annotatable: Annotatable, *,
-            consistent_batch: bool = False,
+            batch_mode: bool = False,
     ) -> tuple[str, str]:
         assert isinstance(annotatable, VCFAllele)
         padding = (
@@ -687,12 +687,9 @@ models to predict splice site variant effects.
         xalt = xref[:self._width() // 2] + \
             annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
 
-        if consistent_batch:
-            if len(xalt) > len(xref):
-                xalt = xalt[:len(xref)]
-            else:
-                xalt = xalt.ljust(len(xref), "N")
-
+        if batch_mode and len(xref) > len(xalt):
+            # deletions
+            xalt = xalt.ljust(len(xref), "N")
             assert len(xref) == len(xalt)
 
         return xref, xalt
