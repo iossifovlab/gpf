@@ -466,3 +466,29 @@ def test_pheno_browser_download(
     assert response_local.status_code == 200
 
     assert list(response_remote) == list(response_local)
+
+
+def test_pheno_browser_download_check(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    download_url = "/api/v3/pheno_browser/download"
+    response_remote = cast(StreamingHttpResponse, admin_client.head(
+        download_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m1",
+        },
+    ))
+
+    response_local = cast(StreamingHttpResponse, admin_client.head(
+        download_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m1",
+        },
+    ))
+
+    assert response_remote.status_code == response_local.status_code

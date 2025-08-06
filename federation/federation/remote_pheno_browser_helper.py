@@ -68,12 +68,25 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         for measure_line in measures:
             yield measure_line + b"\r\n"
 
-    @abstractmethod
-    def count_measure_ids(
+    def measures_count_status(
         self,
         data: dict[str, Any],
-    ) -> int:
-        """Get measure ids."""
+    ) -> str:
+        status = self.rest_client.get_pheno_browser_measure_count(
+            self.dataset_id,
+            data["instrument"],
+            data["search_term"],
+        )
+
+        if status == 413:
+            return "too_large"
+        if status == 204:
+            return "zero"
+        if status == 404:
+            raise KeyError
+        if status == 400:
+            raise ValueError
+        return "ok"
 
     @abstractmethod
     def get_count(self, data: dict[str, Any]) -> int:

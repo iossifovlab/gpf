@@ -241,7 +241,7 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
             study,
         )
         try:
-            measure_ids_count = pheno_browser_helper.count_measure_ids(data)
+            count_status = pheno_browser_helper.measures_count_status(data)
         except ValueError:
             logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -249,10 +249,10 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
             logger.exception("Measures not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if measure_ids_count > 1900:
+        if count_status == "too_large":
             logger.info("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-        if measure_ids_count == 0:
+        if count_status == "zero":
             logger.info("Measure count zero")
             return Response(status=status.HTTP_204_NO_CONTENT)
 

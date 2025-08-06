@@ -48,11 +48,11 @@ class BasePhenoBrowserHelper(GPFTool):
         """Get measure ids."""
 
     @abstractmethod
-    def count_measure_ids(
+    def measures_count_status(
         self,
         data: dict[str, Any],
-    ) -> int:
-        """Get measure ids."""
+    ) -> str:
+        """Get measure ids count status."""
 
     @abstractmethod
     def get_count(self, data: dict[str, Any]) -> int:
@@ -195,7 +195,19 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
 
         buffer.close()
 
-    def count_measure_ids(self, data: dict[str, Any]) -> int:
+    def measures_count_status(
+        self,
+        data: dict[str, Any],
+    ) -> str:
+        count = self._count_measure_ids(data)
+
+        if count > 1900:
+            return "too large"
+        if count == 0:
+            return "zero"
+        return "ok"
+
+    def _count_measure_ids(self, data: dict[str, Any]) -> int:
         data = {k: str(v) for k, v in data.items()}
 
         if not self.study.has_pheno_data:

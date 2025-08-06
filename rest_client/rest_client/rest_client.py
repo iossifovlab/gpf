@@ -56,6 +56,13 @@ class GPFClientSession(Protocol):
     ) -> requests.Response:
         ...
 
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        ...
+
     def post(
         self, url: str,
         headers: dict[str, str] | None = None,
@@ -100,6 +107,22 @@ class GPFAnonymousSession(GPFClientSession):
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
         return requests.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Head request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.head(
             url,
             headers=headers,
             timeout=timeout,
@@ -226,6 +249,32 @@ class GPFOAuthSession(GPFClientSession):
         **kwargs: Any,
     ) -> requests.Response:
         """Get request."""
+        request_headers = headers or {}
+        request_headers["Authorization"] = f"Bearer {self.token}"
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        def make_request() -> requests.Response:
+            headers = request_headers
+
+            return requests.get(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs,
+            )
+        response = make_request()
+        if response.status_code == 401:
+            self.refresh_token()
+            request_headers["Authorization"] = f"Bearer {self.token}"
+            response = make_request()
+        return response
+
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Head request."""
         request_headers = headers or {}
         request_headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
@@ -1049,6 +1098,25 @@ class RESTClient:
             return None
 
         return response.iter_lines()
+
+    def get_pheno_browser_measure_count(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measure ids for a dataset."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search_term": search_term,
+        })
+
+        response = self.session.head(
+            f"{self.api_url}/pheno_browser/download{query_str}",
+        )
+
+        return response.status_code
 
     def get_measures(
         self, dataset_id: str,
