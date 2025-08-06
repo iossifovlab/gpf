@@ -1099,12 +1099,12 @@ class RESTClient:
 
         return response.iter_lines()
 
-    def get_pheno_browser_measure_count(
+    def get_pheno_browser_measure_count_status(
         self, dataset_id: str,
         instrument_name: str | None,
         search_term: MeasureType | None,
     ) -> Any:
-        """Get measure ids for a dataset."""
+        """Get measure ids count status."""
 
         query_str = self.build_query_string({
             "dataset_id": dataset_id,
@@ -1117,6 +1117,23 @@ class RESTClient:
         )
 
         return response.status_code
+
+    def get_pheno_browser_measure_count(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measure ids count."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search_term": search_term,
+        })
+
+        return self.session.get(
+            f"{self.api_url}/pheno_browser/measures_count{query_str}",
+        )
 
     def get_measures(
         self, dataset_id: str,

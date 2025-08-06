@@ -72,7 +72,7 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         self,
         data: dict[str, Any],
     ) -> str:
-        status = self.rest_client.get_pheno_browser_measure_count(
+        status = self.rest_client.get_pheno_browser_measure_count_status(
             self.dataset_id,
             data["instrument"],
             data["search_term"],
@@ -88,9 +88,12 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
             raise ValueError
         return "ok"
 
-    @abstractmethod
     def get_count(self, data: dict[str, Any]) -> int:
-        """Return measure count for request."""
+        return self.rest_client.get_pheno_browser_measure_count(
+            self.dataset_id,
+            data["instrument"],
+            data["search_term"],
+        ).json().get("count", 0)
 
     @abstractmethod
     def get_image(self, image_path: str) -> tuple[bytes, str]:
