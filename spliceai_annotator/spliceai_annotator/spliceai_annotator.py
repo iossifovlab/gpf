@@ -40,13 +40,6 @@ from spliceai_annotator.utils import one_hot_encode
 logger = logging.getLogger(__name__)
 
 
-def build_spliceai_annotator(
-    pipeline: AnnotationPipeline,
-    info: AnnotatorInfo,
-) -> Annotator:
-    return SpliceAIAnnotator(pipeline, info)
-
-
 @dataclass
 class _AttrConfig:
     """SpliceAI attributes definition class."""
