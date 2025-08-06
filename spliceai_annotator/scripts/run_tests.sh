@@ -11,6 +11,7 @@ export XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/conda/envs/gpf
 
 nvidia-smi
 
+mkdir -p /wd/test-results
 cd /wd/spliceai_annotator/
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
