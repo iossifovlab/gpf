@@ -15,7 +15,6 @@ setuptools.setup(
         where=".", exclude=[
             "impala2_storage.docs", "tests.*", "*.tests.*", "*.tests"],
     ),
-    # include_package_data=True,
     package_data={
         "impala2_storage": ["py.typed"],
     },
