@@ -2,6 +2,7 @@
 
 import pytest
 import pytest_mock
+from gpf_instance.gpf_instance import WGPFInstance
 
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
@@ -627,3 +628,17 @@ def test_query_inheritance_types(
         t4c8_response_transformer,
     ))
     assert len(variants) == 12
+
+
+def test_nested_queries(
+    custom_wgpf: WGPFInstance, custom_query_transformer: QueryTransformer,
+    custom_response_transformer: ResponseTransformer,
+) -> None:
+    omni_dataset = custom_wgpf.get_wdae_wrapper("omni_dataset")
+    assert omni_dataset is not None
+    vs = list(omni_dataset.query_variants_wdae(
+        {}, [{"source": "location"}],
+        custom_query_transformer, custom_response_transformer,
+    ))
+    assert vs is not None
+    assert len(vs) > 0
