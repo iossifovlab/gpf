@@ -177,3 +177,17 @@ def test_post_gene_view_summary_variants(
     assert variants_response is not None
     result = list(variants_response)
     assert len(result) == expected_count
+
+
+def test_post_gene_view_summary_variants_download(
+    rest_client: RESTClient,
+) -> None:
+    data = {
+        "datasetId": "t4c8_study_1",
+        "geneSymbols": ["t4"],
+    }
+    variants_response = \
+        rest_client.post_gene_view_summary_variants_download(data)
+    assert variants_response is not None
+    result = list(variants_response)
+    assert len(result) == 798

@@ -228,7 +228,7 @@ def test_gene_view_summary_variants_download(
 
     assert response.status_code == status.HTTP_200_OK
     lines = list(response.streaming_content)  # type: ignore
-    assert len(lines) == 2
+    assert len(lines) == 3
 
 
 def test_query_variants_wdae_remote(

@@ -1,3 +1,4 @@
+import json
 import logging
 from collections.abc import Generator, Iterable
 from typing import Any, cast
@@ -171,14 +172,16 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     def get_gene_view_summary_variants_download(
         self,
         frequency_column: str,  # noqa: ARG002
-        query_transformer: QueryTransformerProtocol,
+        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
         response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
         **kwargs: Any,
     ) -> Iterable:
         """Return gene browser summary variants for downloading."""
-        return self._query_gene_view_summary_variants(
-            query_transformer, **kwargs,
-        )
+        kwargs["datasetId"] = self.remote_study_id
+        data = {
+            "queryData": json.dumps(kwargs),
+        }
+        return self.rest_client.post_gene_view_summary_variants_download(data)
 
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,

@@ -736,6 +736,17 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
+    def post_gene_view_summary_variants_download(
+        self, data: dict,
+    ) -> requests.Response:
+        """Post query request for gene view summary variants download."""
+        return self.session.post(
+            f"{self.api_url}/gene_view/download_summary_variants",
+            json=data,
+            headers={"Content-Type": "application/json"},
+            stream=True,
+        )
+
     def get_member_details(
         self, dataset_id: str, family_id: str, member_id: str,
     ) -> Any:
