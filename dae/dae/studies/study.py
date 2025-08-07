@@ -176,6 +176,13 @@ class GenotypeData(CommonStudyMixin, ABC):
     ) -> list[str]:
         pass
 
+    @abstractmethod
+    def get_children_ids(
+        self, *,
+        leaves: bool = True,
+    ) -> list[str]:
+        pass
+
     def get_leaf_children(self) -> list[GenotypeDataStudy]:
         """Return list of genotype studies children of this group."""
         if not self.is_group:
@@ -576,6 +583,22 @@ class GenotypeDataGroup(GenotypeData):
                 ])
         return result
 
+    def get_children_ids(
+        self, *,
+        leaves: bool = True,
+    ) -> list[str]:
+        result = []
+        for study in self.studies:
+            if leaves:
+                result.extend([
+                    child_id
+                    for child_id in study.get_children_ids(leaves=True)
+                    if child_id not in result
+                ])
+            else:
+                result.append(study.study_id)
+        return result
+
     def rebuild_families(self) -> None:
         """Construct genotype group families data from child studies."""
         logger.info(
@@ -700,6 +723,12 @@ class GenotypeDataStudy(GenotypeData):
         return False
 
     def get_studies_ids(
+        self, *,
+        leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
+        return [self.study_id]
+
+    def get_children_ids(
         self, *,
         leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:

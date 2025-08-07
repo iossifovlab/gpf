@@ -425,7 +425,7 @@ class DatasetHierarchyView(QueryBaseView):
         children = None
         if dataset.is_group:
             children = []
-            for child_id in dataset.get_children_ids(leaves=False):
+            for child_id in dataset.get_studies_ids(leaves=False):
                 if child_id == dataset.study_id:
                     continue
                 if child_id in selected:

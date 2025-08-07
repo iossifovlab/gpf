@@ -415,7 +415,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
         Dataset.set_broken(data_id, broken=False)
         Dataset.update_name(data_id, wdae_study.name)
 
-        for study_id in wdae_study.get_children_ids(leaves=False):
+        for study_id in wdae_study.get_studies_ids(leaves=False):
             if study_id is None or study_id == data_id:
                 continue
             Dataset.recreate_dataset_perm(study_id)
@@ -428,8 +428,8 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
             gpf_instance.instance_id, data_id, data_id,
         )
         assert wdae_study is not None
-        direct_descendants = wdae_study.get_children_ids(leaves=False)
-        for study_id in wdae_study.get_children_ids():
+        direct_descendants = wdae_study.get_studies_ids(leaves=False)
+        for study_id in wdae_study.get_studies_ids():
             if study_id == data_id:
                 continue
             is_direct = study_id in direct_descendants
