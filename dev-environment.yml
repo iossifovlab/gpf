@@ -20,7 +20,8 @@ dependencies:
   - pytest-doctestplus=1.2
   - ruff==0.12.0
   - pylint=3.3.4
-  - pyright=1.1.402
+  - pyright=1.1.403
+  - nodejs>=24
   - mypy=1.15
   - flake8=7.1.1
   - pyarrow-stubs
