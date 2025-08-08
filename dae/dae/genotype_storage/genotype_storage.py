@@ -3,7 +3,6 @@ from __future__ import annotations
 import abc
 import functools
 import logging
-from collections.abc import Iterable
 from typing import Any, cast
 
 from dae.effect_annotation.effect import expand_effect_types
@@ -228,17 +227,3 @@ class GenotypeStorage(abc.ABC):
         runner.set_study_id(study_id)
 
         return runner
-
-    def query_variants(
-        self,
-        study_id: str,
-        kwargs: dict[str, Any],
-    ) -> Iterable[FamilyVariant] | None:
-        """Return an iterable for variants."""
-        if study_id not in self.study_configs:
-            return None
-        if study_id not in self.loaded_variants:
-            raise ValueError(
-                f"{study_id} has no loaded QueryVariants backend!")
-
-        return self.loaded_variants[study_id].query_variants(**kwargs)

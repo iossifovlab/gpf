@@ -1,7 +1,5 @@
 import abc
 import logging
-from collections.abc import Generator
-from contextlib import closing
 from typing import Any
 
 import pandas as pd
@@ -11,7 +9,7 @@ from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.base_query_variants import QueryVariantsBase
-from dae.query_variants.query_runners import QueryResult, QueryRunner
+from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
@@ -319,119 +317,3 @@ class SqlSchema2Variants(QueryVariantsBase):
 
         runner.adapt(filter_func)
         return runner
-
-    def query_summary_variants(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> Generator[SummaryVariant, None, None]:
-        """Query summary variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        if limit is None:
-            limit = -1
-            request_limit = None
-        else:
-            request_limit = 10 * limit
-
-        runner = self.build_summary_variants_query_runner(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=request_limit,
-        )
-        if runner is None:
-            return
-
-        result = QueryResult(runners=[runner], limit=limit)
-        result.start()
-
-        seen = set()
-        with closing(result) as result:
-            for v in result:
-                if v is None:
-                    continue
-                if v.svuid in seen:
-                    continue
-                if v is None:
-                    continue
-                yield v
-                seen.add(v.svuid)
-
-    def query_variants(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        person_ids: list[str] | None = None,
-        inheritance: list[str] | None = None,
-        roles_in_parent: str | None = None,
-        roles_in_child: str | None = None,
-        sexes: str | None = None,
-        affected_status: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> Generator[FamilyVariant, None, None]:
-        """Query family variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        if limit is None:
-            limit = -1
-            request_limit = None
-        else:
-            request_limit = 10 * limit
-
-        runner = self.build_family_variants_query_runner(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles_in_parent=roles_in_parent,
-            roles_in_child=roles_in_child,
-            sexes=sexes,
-            affected_status=affected_status,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=request_limit,
-        )
-        if runner is None:
-            return
-
-        result = QueryResult(runners=[runner], limit=limit)
-
-        result.start()
-        with closing(result) as result:
-            seen = set()
-            for v in result:
-                if v is None:
-                    continue
-                if v.fvuid in seen:
-                    continue
-                yield v
-                seen.add(v.fvuid)

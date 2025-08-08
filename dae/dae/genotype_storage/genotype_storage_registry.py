@@ -187,7 +187,7 @@ class GenotypeStorageRegistry:
         raise ValueError(f"{study_id} not found in registry!")
 
     def query_variants(
-            self, study_kwargs: list[tuple[str, dict[str, Any]]],
+        self, study_kwargs: list[tuple[str, dict[str, Any]]],
         limit: int | None = 10000,
     ) -> Iterable[FamilyVariant]:
         if not len(study_kwargs):

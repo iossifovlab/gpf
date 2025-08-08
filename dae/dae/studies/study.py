@@ -28,7 +28,6 @@ from dae.person_sets import (
     parse_person_set_collections_study_config,
 )
 from dae.query_variants.base_query_variants import QueryVariantsBase
-from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
 )
@@ -224,26 +223,6 @@ class GenotypeData(CommonStudyMixin, ABC):
             leafs = [st for st in leafs if st.study_id in study_filters]
         logger.debug("studies to query: %s", [st.study_id for st in leafs])
         return leafs
-
-    @abstractmethod
-    def create_summary_query_runners(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        category_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        **kwargs: Any,
-    ) -> list[QueryRunner]:
-        """Create query runners for a summary variants query."""
-        raise NotImplementedError
 
     def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
         self, *,
@@ -667,39 +646,6 @@ class GenotypeDataGroup(GenotypeData):
             person.set_attr(psc_id, person_set_value.id)
         return psc
 
-    def create_summary_query_runners(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        category_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> list[QueryRunner]:
-        runners = []
-        for study in self.get_query_leaf_studies(study_filters):
-            runners.extend(study.create_summary_query_runners(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                category_attr_filter=category_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-            ))
-        return runners
-
 
 class GenotypeDataStudy(GenotypeData):
     """Represents a singular genotype data study."""
@@ -750,44 +696,3 @@ class GenotypeDataStudy(GenotypeData):
             assert person_set_value is not None
             person.set_attr(psc.id, person_set_value.id)
         return psc
-
-    def create_summary_query_runners(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: list[tuple] | None = None,
-        category_attr_filter: list[tuple] | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: list[tuple] | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        study_filters: list[str] | None = None,
-        **kwargs: Any,
-    ) -> list[QueryRunner]:
-        if study_filters is not None and self.study_id not in study_filters:
-            return []
-
-        runner = self.backend \
-            .build_summary_variants_query_runner(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                category_attr_filter=category_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                **kwargs,
-            )
-        if runner is None:
-            return []
-
-        runner.set_study_id(self.study_id)
-
-        return [runner]
