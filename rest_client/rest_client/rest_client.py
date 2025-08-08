@@ -282,7 +282,7 @@ class GPFOAuthSession(GPFClientSession):
         def make_request() -> requests.Response:
             headers = request_headers
 
-            return requests.get(
+            return requests.head(
                 url,
                 headers=headers,
                 timeout=timeout,
