@@ -1,0 +1,118 @@
+import logging
+import os
+from collections.abc import Generator
+from typing import Any
+
+from gpf_instance.extension import GPFTool
+from pheno_browser_api.pheno_browser_helper import BasePhenoBrowserHelper
+from studies.study_wrapper import WDAEAbstractStudy
+
+from federation.remote_study_wrapper import RemoteWDAEStudy
+from rest_client.rest_client import RESTClient
+
+logger = logging.getLogger(__name__)
+
+
+class CountError(Exception):
+    pass
+
+
+class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
+    """Base class for pheno browser helpers."""
+    def __init__(self, rest_client: RESTClient, dataset_id: str) -> None:
+        super().__init__()
+        self.rest_client = rest_client
+        self.dataset_id = dataset_id
+
+    @staticmethod
+    def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
+        if not isinstance(study, RemoteWDAEStudy):
+            return None
+
+        return RemotePhenoBrowserHelper(
+            study.rest_client,
+            study.remote_study_id,
+        )
+
+    def get_instruments(self) -> list[str]:
+        return self.rest_client.get_instruments(self.dataset_id)
+
+    def get_measures_info(self) -> dict[str, Any]:
+        measures_info = self.rest_client.get_browser_measures_info(
+            self.dataset_id,
+        )
+        url = measures_info.get("base_image_url", "")
+        url = url.strip("/")
+        url = url[url.rindex("/") + 1:]
+        gpf_prefix = os.environ.get("GPF_PREFIX")
+        if gpf_prefix:
+            gpf_prefix = gpf_prefix.strip("/")
+            gpf_prefix = f"/{gpf_prefix}/"
+        else:
+            gpf_prefix = ""
+        measures_info["base_image_url"] = (
+            f"{gpf_prefix}"
+            f"api/v3/pheno_browser/"
+            f"{url}/"
+            f"{self.rest_client.client_id}_"
+        )
+        return measures_info
+
+    def get_measure_description(self, measure_id: str) -> dict[str, Any]:
+        return self.rest_client.get_measure_description(
+            self.dataset_id,
+            measure_id,
+        )
+
+    def search_measures(
+        self,
+        data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        return self.rest_client.get_pheno_browser_measures(
+            self.dataset_id,
+            data.get("instrument", ""),
+            data.get("search", ""),
+        )
+
+    def get_measure_ids(
+        self,
+        data: dict[str, Any],
+    ) -> Generator[str, None, None]:
+        measures = self.rest_client.get_pheno_browser_download(
+            self.dataset_id,
+            data.get("instrument", ""),
+            data.get("search_term", ""),
+        )
+        for measure_line in measures:
+            yield measure_line + b"\r\n"
+
+    def measures_count_status(
+        self,
+        data: dict[str, Any],
+    ) -> str:
+        status = self.rest_client.get_pheno_browser_measure_count_status(
+            self.dataset_id,
+            data.get("instrument", ""),
+            data.get("search_term", ""),
+        )
+        if status == 413:
+            return "too_large"
+        if status == 204:
+            return "zero"
+        if status == 404:
+            raise KeyError
+        if status == 400:
+            raise ValueError
+        return "ok"
+
+    def get_count(self, data: dict[str, Any]) -> int:
+        return self.rest_client.get_pheno_browser_measure_count(
+            self.dataset_id,
+            data["instrument"],
+            data.get("search_term", ""),
+        ).json().get("count", 0)
+
+    def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
+        return self.rest_client.get_pheno_image(
+            f"{self.dataset_id}/{image_path}",
+        )

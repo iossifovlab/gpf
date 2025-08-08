@@ -1,7 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from typing import cast
 
 import pytest
+from django.http import StreamingHttpResponse
 from django.test.client import Client
 from federation.remote_study_wrapper import RemoteWDAEStudy
 from gpf_instance.gpf_instance import WGPFInstance
@@ -321,4 +323,230 @@ def test_genotype_browser_query_explicit_person_set_collection(
         cell[6] != "#ffffff"
         for row in first_row
         for cell in row[4]
+    )
+
+
+def test_pheno_browser_instruments(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    instruments_url = "/api/v3/pheno_browser/instruments"
+    response_remote = admin_client.get(
+        instruments_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+        },
+    )
+
+    assert response_remote.status_code == 200
+
+    response_local = admin_client.get(
+        instruments_url,
+        {
+            "dataset_id": "t4c8_study_1",
+        },
+    )
+
+    assert response_local.status_code == 200
+
+    assert response_remote.json() == response_local.json()
+
+
+def test_pheno_browser_measures_info(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    info_url = "/api/v3/pheno_browser/measures_info"
+    response_remote = admin_client.get(
+        info_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+        },
+    )
+
+    assert response_remote.status_code == 200
+
+    response_local = admin_client.get(
+        info_url,
+        {
+            "dataset_id": "t4c8_study_1",
+        },
+    )
+
+    assert response_local.status_code == 200
+
+    remote_json = response_remote.json()
+    local_json = response_remote.json()
+
+    assert remote_json["has_descriptions"] == local_json["has_descriptions"]
+    assert remote_json["regression_names"] == local_json["regression_names"]
+    assert remote_json["base_image_url"] == (
+        "api/v3/pheno_browser/images/TEST_REMOTE_"
+    )
+
+
+def test_pheno_browser_measure_description(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    descriptions_url = "/api/v3/pheno_browser/measure_description"
+    response_remote = admin_client.get(
+        descriptions_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "measure_id": "i1.m1",
+        },
+    )
+
+    assert response_remote.status_code == 200
+
+    response_local = admin_client.get(
+        descriptions_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "measure_id": "i1.m1",
+        },
+    )
+
+    assert response_local.status_code == 200
+
+    assert response_remote.json() == response_local.json()
+
+
+def test_pheno_browser_measures_search(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    measures_url = "/api/v3/pheno_browser/measures"
+    response_remote = admin_client.get(
+        measures_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "instrument": "i1",
+            "search": "m1",
+        },
+    )
+
+    assert response_remote.status_code == 200
+
+    response_local = admin_client.get(
+        measures_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
+            "search": "m1",
+        },
+    )
+
+    assert response_local.status_code == 200
+
+    assert response_remote.json() == response_local.json()
+
+
+def test_pheno_browser_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    download_url = "/api/v3/pheno_browser/download"
+    response_remote = cast(StreamingHttpResponse, admin_client.get(
+        download_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m1",
+        },
+    ))
+
+    assert response_remote.status_code == 200
+
+    response_local = cast(StreamingHttpResponse, admin_client.get(
+        download_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m1",
+        },
+    ))
+
+    assert response_local.status_code == 200
+
+    assert list(response_remote) == list(response_local)
+
+
+def test_pheno_browser_download_check(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    download_url = "/api/v3/pheno_browser/download"
+    response_remote = cast(StreamingHttpResponse, admin_client.head(
+        download_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m1",
+        },
+    ))
+
+    response_local = cast(StreamingHttpResponse, admin_client.head(
+        download_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m1",
+        },
+    ))
+
+    assert response_remote.status_code == response_local.status_code
+
+
+def test_pheno_browser_measure_count(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    measures_count_url = "/api/v3/pheno_browser/measures_count"
+    response_remote = admin_client.get(
+        measures_count_url,
+        {
+            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m",
+        },
+    )
+
+    response_local = admin_client.get(
+        measures_count_url,
+        {
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
+            "search_term": "m",
+        },
+    )
+
+    assert response_remote.json() == response_local.json()
+
+
+def test_pheno_browser_image_links(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response_info = admin_client.get(
+        "/api/v3/pheno_browser/measures_info",
+        {
+            "dataset_id": "TEST_REMOTE_study_1_pheno",
+        },
+    )
+    response_measures = admin_client.get(
+        "/api/v3/pheno_browser/measures",
+        {
+            "dataset_id": "TEST_REMOTE_study_1_pheno",
+            "instrument": "i1",
+            "search_term": "m",
+        },
+    )
+    url = response_info.json()["base_image_url"]
+    image_path = response_measures.json()[0]["measure"]["figure_distribution"]
+
+    assert url + image_path == (
+        "api/v3/pheno_browser/images/"
+        "TEST_REMOTE_study_1_pheno/i1/i1.age.violinplot.png"
     )

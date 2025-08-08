@@ -224,7 +224,7 @@ class RemotePhenotypeData(PhenotypeData):
         )
         return cast(dict[str, Any], output)
 
-    def get_image(self, image_path: str) -> tuple[bytes, str]:
+    def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
         """Return binary image data with mimetype."""
         image, mimetype = self.rest_client.get_pheno_image(image_path)
         if image is None or mimetype is None:

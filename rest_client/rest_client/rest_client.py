@@ -56,6 +56,13 @@ class GPFClientSession(Protocol):
     ) -> requests.Response:
         ...
 
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        ...
+
     def post(
         self, url: str,
         headers: dict[str, str] | None = None,
@@ -100,6 +107,22 @@ class GPFAnonymousSession(GPFClientSession):
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
         return requests.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Head request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.head(
             url,
             headers=headers,
             timeout=timeout,
@@ -226,6 +249,32 @@ class GPFOAuthSession(GPFClientSession):
         **kwargs: Any,
     ) -> requests.Response:
         """Get request."""
+        request_headers = headers or {}
+        request_headers["Authorization"] = f"Bearer {self.token}"
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        def make_request() -> requests.Response:
+            headers = request_headers
+
+            return requests.get(
+                url,
+                headers=headers,
+                timeout=timeout,
+                **kwargs,
+            )
+        response = make_request()
+        if response.status_code == 401:
+            self.refresh_token()
+            request_headers["Authorization"] = f"Bearer {self.token}"
+            response = make_request()
+        return response
+
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Head request."""
         request_headers = headers or {}
         request_headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
@@ -919,12 +968,12 @@ class RESTClient:
             f"{self.api_url}/pheno_browser/measures_count{query_str}",
             stream=True,
         )
-        res = response.json()
-        if res.status_code != 200:
+        if response.status_code != 200:
             raise ValueError(
                 f"{self.client_id}: Failed to get measure count"
                 f"from {dataset_id}",
             )
+        res = response.json()
         if "count" not in res:
             raise ValueError(f"{self.client_id}: Invalid response")
 
@@ -994,8 +1043,8 @@ class RESTClient:
     def get_measure_description(self, dataset_id: str, measure_id: str) -> Any:
         """Get a measure description."""
         query_str = self.build_query_string({
-            "datasetId": dataset_id,
-            "measureId": measure_id,
+            "dataset_id": dataset_id,
+            "measure_id": measure_id,
         })
         response = self.session.get(
             f"{self.api_url}/pheno_browser/measure_description{query_str}",
@@ -1005,6 +1054,86 @@ class RESTClient:
             return None
 
         return response.json()
+
+    def get_pheno_browser_measures(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measures for a dataset."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search": search_term,
+        })
+        response = self.session.get(
+            f"{self.api_url}/pheno_browser/measures{query_str}",
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_pheno_browser_download(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measure ids for a dataset."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search_term": search_term,
+        })
+
+        response = self.session.get(
+            f"{self.api_url}/pheno_browser/download{query_str}",
+            stream=True,
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.iter_lines()
+
+    def get_pheno_browser_measure_count_status(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measure ids count status."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search_term": search_term,
+        })
+
+        response = self.session.head(
+            f"{self.api_url}/pheno_browser/download{query_str}",
+        )
+
+        return response.status_code
+
+    def get_pheno_browser_measure_count(
+        self, dataset_id: str,
+        instrument_name: str | None,
+        search_term: MeasureType | None,
+    ) -> Any:
+        """Get measure ids count."""
+
+        query_str = self.build_query_string({
+            "dataset_id": dataset_id,
+            "instrument": instrument_name,
+            "search_term": search_term,
+        })
+
+        return self.session.get(
+            f"{self.api_url}/pheno_browser/measures_count{query_str}",
+        )
 
     def get_measures(
         self, dataset_id: str,
@@ -1197,9 +1326,11 @@ class RESTClient:
 
         Accesses static files on the remote GPF instance.
         """
-        url = f"{self.api_url}/static/{image_path}"
+        url = f"{self.base_url}/static/images/{image_path}"
         response = requests.get(url, timeout=300_000)
         if response.status_code != 200:
+            raise ValueError
+        if response.content is None or response.headers["content-type"] is None:
             return None, None
 
         return response.content, response.headers["content-type"]

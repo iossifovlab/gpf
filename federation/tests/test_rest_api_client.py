@@ -51,13 +51,6 @@ def test_get_common_report_families_data_columns(
     assert len(first_row) == 31
 
 
-def test_get_pheno_browser_config(rest_client: RESTClient) -> None:
-    config = rest_client.get_pheno_browser_config("study_1_pheno")
-
-    assert config is not None
-    assert isinstance(config, dict)
-
-
 def test_get_browser_measures_info(rest_client: RESTClient) -> None:
     measures_info = rest_client.get_browser_measures_info("t4c8_study_1")
 

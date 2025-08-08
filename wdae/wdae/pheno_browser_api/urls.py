@@ -4,11 +4,6 @@ from pheno_browser_api import views
 
 urlpatterns = [
     re_path(
-        r"^/config/?$",
-        views.PhenoConfigView.as_view(),
-        name="pheno_browser_config",
-    ),
-    re_path(
         r"^/instruments/?$",
         views.PhenoInstrumentsView.as_view(),
         name="pheno_browser_instruments",
@@ -37,11 +32,6 @@ urlpatterns = [
         r"^/download/?$",
         views.PhenoMeasuresDownload.as_view(),
         name="pheno_browser_download",
-    ),
-    re_path(
-        r"^/measure_values/?$",
-        views.PhenoMeasureValues.as_view(),
-        name="pheno_browser_values",
     ),
     re_path(
         r"^/images/(?P<pheno_id>[^/]+)/(?P<image_path>.+)?",
