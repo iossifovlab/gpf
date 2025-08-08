@@ -699,6 +699,7 @@ class WDAEStudy(WDAEAbstractStudy):
         max_variants_count: int | None = 10000,
         max_variants_message: bool = False,  # noqa: ARG002
     ) -> Iterator[FamilyVariant]:
+        """Query for raw family variants from registry."""
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
         children_kwargs = []
