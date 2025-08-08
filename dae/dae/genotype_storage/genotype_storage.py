@@ -102,6 +102,7 @@ class GenotypeStorage(abc.ABC):
         genome: ReferenceGenome,
         gene_models: GeneModels,
     ) -> None:
+        """Create and cache backend for study."""
         study_id = study_config["id"]
         if study_id not in self.loaded_variants:
             self.study_configs[study_id] = study_config
@@ -113,6 +114,7 @@ class GenotypeStorage(abc.ABC):
         study_id: str,
         kwargs: dict[str, Any],
     ) -> QueryRunner | None:
+        """Create a query runner for a study with given query kwargs."""
         study_filters = kwargs.get("study_filters")
 
         regions = kwargs.get("regions")
@@ -209,6 +211,7 @@ class GenotypeStorage(abc.ABC):
         study_id: str,
         kwargs: dict[str, Any],
     ) -> QueryRunner | None:
+        """Create a query runner for summary variants for a given study."""
         study_filters = kwargs.get("study_filters")
 
         if study_filters is not None and study_id not in study_filters:

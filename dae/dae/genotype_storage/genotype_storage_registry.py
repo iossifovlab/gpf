@@ -144,8 +144,6 @@ class GenotypeStorageRegistry:
         If the method can not find storage with the specified ID, it will raise
         ValueError exception.
         """
-        if storage_id is None:
-            return self.get_default_genotype_storage()
         if storage_id not in self._genotype_storages:
             raise ValueError(f"unknown storage id: <{storage_id}>")
         return self._genotype_storages[storage_id]
@@ -190,7 +188,8 @@ class GenotypeStorageRegistry:
         self, study_kwargs: list[tuple[str, dict[str, Any]]],
         limit: int | None = 10000,
     ) -> Iterable[FamilyVariant]:
-        if not len(study_kwargs):
+        """Query variants for the given of study ids and kwargs."""
+        if not len(study_kwargs) > 0:
             return
         runners = []
         for study_id, kwargs in study_kwargs:
@@ -241,6 +240,7 @@ class GenotypeStorageRegistry:
         self, study_ids: list[str], kwargs: dict[str, Any],
         limit: int | None = 10000,
     ) -> Iterable[SummaryVariant]:
+        """Query summary variants for the given of study ids and kwargs."""
         runners = []
         for study_id in study_ids:
             storage = self.find_storage(study_id)
