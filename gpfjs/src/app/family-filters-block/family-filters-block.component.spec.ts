@@ -310,7 +310,7 @@ describe('FamilyFiltersBlockComponent', () => {
     expect(component.selectedFamiliesCount).toBe(353);
   });
 
-  it('should get family tags', () => {
+  it('should get family tags and invoke on resize method', () => {
     const onResizeSpy = jest.spyOn(component, 'onResize');
     const setFamiliesCountSpy = jest.spyOn(component, 'setFamiliesCount');
     component.ngOnInit();

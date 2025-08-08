@@ -85,7 +85,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
   @HostListener('window:resize')
   public onResize(): void {
-    const containerWidth = document.getElementsByClassName('family-filters-block')[0].clientWidth;
+    const containerWidth = document.getElementsByClassName('family-filters-block')[0]?.clientWidth;
     this.numOfCols = Math.floor(Math.sqrt(containerWidth/(2.4*this.tags.length)) - 1);
   }
 
