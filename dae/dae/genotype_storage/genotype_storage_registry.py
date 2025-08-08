@@ -144,6 +144,8 @@ class GenotypeStorageRegistry:
         If the method can not find storage with the specified ID, it will raise
         ValueError exception.
         """
+        if storage_id is None:
+            return self.get_default_genotype_storage()
         if storage_id not in self._genotype_storages:
             raise ValueError(f"unknown storage id: <{storage_id}>")
         return self._genotype_storages[storage_id]
