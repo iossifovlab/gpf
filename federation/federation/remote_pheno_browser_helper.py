@@ -1,5 +1,5 @@
 import logging
-from abc import abstractmethod
+import os
 from collections.abc import Generator
 from typing import Any
 
@@ -38,7 +38,25 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         return self.rest_client.get_instruments(self.dataset_id)
 
     def get_measures_info(self) -> dict[str, Any]:
-        return self.rest_client.get_browser_measures_info(self.dataset_id)
+        measures_info = self.rest_client.get_browser_measures_info(
+            self.dataset_id,
+        )
+        url = measures_info.get("base_image_url", "")
+        url = url.strip("/")
+        url = url[url.rindex("/") + 1:]
+        gpf_prefix = os.environ.get("GPF_PREFIX")
+        if gpf_prefix:
+            gpf_prefix = gpf_prefix.strip("/")
+            gpf_prefix = f"/{gpf_prefix}/"
+        else:
+            gpf_prefix = ""
+        measures_info["base_image_url"] = (
+            f"{gpf_prefix}"
+            f"api/v3/pheno_browser/"
+            f"{url}/"
+            f"{self.rest_client.client_id}_"
+        )
+        return measures_info
 
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         return self.rest_client.get_measure_description(
@@ -52,8 +70,8 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
     ) -> list[dict[str, Any]]:
         return self.rest_client.get_pheno_browser_measures(
             self.dataset_id,
-            data["instrument"],
-            data["search"],
+            data.get("instrument", ""),
+            data.get("search", ""),
         )
 
     def get_measure_ids(
@@ -62,8 +80,8 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
     ) -> Generator[str, None, None]:
         measures = self.rest_client.get_pheno_browser_download(
             self.dataset_id,
-            data["instrument"],
-            data["search_term"],
+            data.get("instrument", ""),
+            data.get("search_term", ""),
         )
         for measure_line in measures:
             yield measure_line + b"\r\n"
@@ -74,10 +92,9 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
     ) -> str:
         status = self.rest_client.get_pheno_browser_measure_count_status(
             self.dataset_id,
-            data["instrument"],
-            data["search_term"],
+            data.get("instrument", ""),
+            data.get("search_term", ""),
         )
-
         if status == 413:
             return "too_large"
         if status == 204:
@@ -92,9 +109,10 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         return self.rest_client.get_pheno_browser_measure_count(
             self.dataset_id,
             data["instrument"],
-            data["search_term"],
+            data.get("search_term", ""),
         ).json().get("count", 0)
 
-    @abstractmethod
-    def get_image(self, image_path: str) -> tuple[bytes, str]:
-        """Get image by path."""
+    def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
+        return self.rest_client.get_pheno_image(
+            f"{self.dataset_id}/{image_path}",
+        )

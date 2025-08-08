@@ -1326,9 +1326,11 @@ class RESTClient:
 
         Accesses static files on the remote GPF instance.
         """
-        url = f"{self.api_url}/static/{image_path}"
+        url = f"{self.base_url}/static/images/{image_path}"
         response = requests.get(url, timeout=300_000)
         if response.status_code != 200:
+            raise ValueError
+        if response.content is None or response.headers["content-type"] is None:
             return None, None
 
         return response.content, response.headers["content-type"]

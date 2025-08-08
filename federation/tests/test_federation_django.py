@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from collections.abc import Iterator
 from typing import cast
 
 import pytest
@@ -8,7 +7,6 @@ from django.http import StreamingHttpResponse
 from django.test.client import Client
 from federation.remote_study_wrapper import RemoteWDAEStudy
 from gpf_instance.gpf_instance import WGPFInstance
-from pheno_browser_api.tests.test_pheno_browser_api import DOWNLOAD_URL
 from rest_framework import status
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
@@ -377,7 +375,14 @@ def test_pheno_browser_measures_info(
 
     assert response_local.status_code == 200
 
-    assert response_remote.json() == response_local.json()
+    remote_json = response_remote.json()
+    local_json = response_remote.json()
+
+    assert remote_json["has_descriptions"] == local_json["has_descriptions"]
+    assert remote_json["regression_names"] == local_json["regression_names"]
+    assert remote_json["base_image_url"] == (
+        "api/v3/pheno_browser/images/TEST_REMOTE_"
+    )
 
 
 def test_pheno_browser_measure_description(
@@ -518,3 +523,30 @@ def test_pheno_browser_measure_count(
     )
 
     assert response_remote.json() == response_local.json()
+
+
+def test_pheno_browser_image_links(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response_info = admin_client.get(
+        "/api/v3/pheno_browser/measures_info",
+        {
+            "dataset_id": "TEST_REMOTE_study_1_pheno",
+        },
+    )
+    response_measures = admin_client.get(
+        "/api/v3/pheno_browser/measures",
+        {
+            "dataset_id": "TEST_REMOTE_study_1_pheno",
+            "instrument": "i1",
+            "search_term": "m",
+        },
+    )
+    url = response_info.json()["base_image_url"]
+    image_path = response_measures.json()[0]["measure"]["figure_distribution"]
+
+    assert url + image_path == (
+        "api/v3/pheno_browser/images/"
+        "TEST_REMOTE_study_1_pheno/i1/i1.age.violinplot.png"
+    )

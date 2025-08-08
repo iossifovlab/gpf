@@ -302,16 +302,14 @@ class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,
+        self, _request: Request, pheno_id: str | None, image_path: str | None,
     ) -> Response | HttpResponse:
         """Return raw image data from a remote GPF instance."""
-        data = request.query_params
 
-        if "dataset_id" not in data or "image_path" not in data:
+        if pheno_id is None or image_path is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset_id = data["dataset_id"]
 
-        study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        study = self.gpf_instance.get_wdae_wrapper(pheno_id)
 
         if not study:
             logger.info("Study not found")
@@ -323,16 +321,16 @@ class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
         )
 
         try:
-            image, mimetype = pheno_browser_helper.get_image(data["image_path"])
+            image, _mimetype = pheno_browser_helper.get_image(image_path)
         except ValueError:
             logger.exception(
                 "Could not get image %s for %s",
-                data["image_path"],
-                data["dataset_id"],
+                image_path,
+                pheno_id,
             )
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return HttpResponse(image, content_type=mimetype)
+        return HttpResponse(image, content_type="image/jpeg")
 
 
 def create_pheno_browser_helper(
