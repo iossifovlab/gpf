@@ -22,7 +22,10 @@ from dae.inmemory_storage.raw_variants import (
     RealAttrFilterType,
 )
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.query_variants.base_query_variants import QueryVariants
+from dae.query_variants.base_query_variants import (
+    QueryVariants,
+    QueryVariantsBase,
+)
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
 )
@@ -244,12 +247,12 @@ class ParquetGenotypeStorage(GenotypeStorage):
         """No resources to close."""
         return self
 
-    def build_backend(
+    def _build_backend_internal(
         self,
         study_config: dict[str, Any],
         genome: ReferenceGenome,
         gene_models: GeneModels | None,
-    ) -> ParquetLoaderVariants:
+    ) -> QueryVariantsBase:
         study_id = study_config["id"]
         if self.data_dir is not None:
             study_path = pathlib.Path(self.data_dir, study_id)
@@ -261,7 +264,10 @@ class ParquetGenotypeStorage(GenotypeStorage):
         else:
             table_path = study_config["genotype_storage"]["tables"]["summary"]
             path = pathlib.Path(table_path).parent
-        return ParquetLoaderVariants(str(path), genome, gene_models)
+        return cast(
+            QueryVariantsBase,
+            ParquetLoaderVariants(str(path), genome, gene_models),
+        )
 
     def import_dataset(
         self, study_id: str, layout: Schema2DatasetLayout,

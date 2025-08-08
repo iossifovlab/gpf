@@ -359,7 +359,6 @@ def main(
     gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Entry point for the script."""
-    # flake8: noqa: C901
     # pylint: disable=too-many-branches, too-many-statements, too-many-locals
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
@@ -384,8 +383,7 @@ def main(
         assert study.study_id == study_id
         assert isinstance(study, GenotypeDataStudy)
 
-        # pylint: disable=protected-access
-        study_backend = study._backend
+        study_backend = study.backend
         if not isinstance(study_backend, ImpalaVariants):
             logger.warning("not an impala study: %s; skipping...", study_id)
             continue

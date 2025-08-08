@@ -142,7 +142,7 @@ def test_study_1_enrichment(
 ) -> None:
     enrichment_helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(study_1, None),
+        WDAEStudy(t4c8_fixture.genotype_storages, study_1, None),
     )
     assert enrichment_helper is not None
 
@@ -180,7 +180,7 @@ def test_study_1_enrichment_with_caching(
 
     enrichment_helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(study_1, None),
+        WDAEStudy(t4c8_fixture.genotype_storages, study_1, None),
     )
     assert enrichment_helper is not None
 
@@ -229,7 +229,7 @@ def test_build_study_1_enrichment_cache(
 
     enrichment_helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(study_1, None),
+        WDAEStudy(t4c8_fixture.genotype_storages, study_1, None),
     )
     assert enrichment_helper is not None
     cache = enrichment_helper._load_enrichment_event_counts_cache()

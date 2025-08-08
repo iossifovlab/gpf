@@ -505,11 +505,13 @@ class VariantsDb:
             return None
 
         try:
-            variants = genotype_storage.build_backend(
+            genotype_storage.build_backend(
                 study_config, self.genome, self.gene_models,
             )
 
-            return GenotypeDataStudy(study_config, variants)  # type: ignore
+            return GenotypeDataStudy(
+                self.storage_registry, study_config,
+            )
         except Exception:  # pylint: disable=broad-except
             logger.exception("unable to create study %s", study_config.id)
             return None
@@ -559,7 +561,8 @@ class VariantsDb:
                 group_studies.append(child_data)
             assert group_studies
 
-            genotype_group = GenotypeDataGroup(group_config, group_studies)
+            genotype_group = GenotypeDataGroup(
+                self.storage_registry, group_config, group_studies)
             self._genotype_group_cache[group_config.id] = genotype_group
         except Exception:  # pylint: disable=broad-except
             logger.exception(

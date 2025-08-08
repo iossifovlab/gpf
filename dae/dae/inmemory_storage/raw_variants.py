@@ -2,7 +2,6 @@ import abc
 import logging
 import queue
 from collections.abc import Callable, Iterator, Sequence
-from contextlib import closing
 from functools import reduce
 from typing import Any, cast
 
@@ -14,7 +13,7 @@ from dae.query_variants.attribute_queries import (
 from dae.query_variants.base_query_variants import (
     QueryVariantsBase,
 )
-from dae.query_variants.query_runners import QueryResult, QueryRunner
+from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
@@ -147,7 +146,8 @@ class RawFamilyVariants(abc.ABC):
                     return True
             if reg.start is not None and reg.stop is not None:
                 assert reg.start <= reg.stop
-                if (reg.start <= pos <= reg.stop
+                if (
+                    reg.start <= pos <= reg.stop
                     or reg.start <= end_pos <= reg.stop
                     or (reg.start >= pos and reg.stop <= end_pos)
                 ):
@@ -431,32 +431,6 @@ class RawFamilyVariants(abc.ABC):
             variants_iterator=self.summary_variants_iterator(),
             deserializer=filter_func)
 
-    def query_summary_variants(
-        self, **kwargs: Any,
-    ) -> Iterator[SummaryVariant]:
-        """Run a sammary variant query and yields the results."""
-        runner = self.build_summary_variants_query_runner(**kwargs)
-
-        result = QueryResult(
-            runners=[runner],
-            limit=kwargs.get("limit", -1),
-        )
-
-        try:
-            logger.debug("starting result")
-            result.start()
-            seen = set()
-            with closing(result) as result:
-                for sv in result:
-                    if sv is None:
-                        continue
-                    if sv.svuid in seen:
-                        continue
-                    seen.add(sv.svuid)
-                    yield sv
-        finally:
-            pass
-
     @classmethod
     def family_variant_filter_function(
         cls, *,
@@ -560,7 +534,7 @@ class RawFamilyVariants(abc.ABC):
                     v.set_matched_alleles(alleles_matched)
                     return v
                 logger.info("no matched alleles for family variant: %s", v)
-            except Exception as ex:  # pylint: disable=broad-except  # noqa: BLE001
+            except Exception as ex:  # noqa: BLE001
                 logger.warning(
                     "unexpected error: %s; %s", ex, v, exc_info=True)
                 return None
@@ -625,30 +599,6 @@ class RawFamilyVariants(abc.ABC):
         return RawVariantsQueryRunner(
             variants_iterator=self.family_variants_iterator(),
             deserializer=filter_func)
-
-    def query_variants(self, **kwargs: Any) -> Iterator[FamilyVariant]:
-        """Query family variants and yield the results."""
-        runner = self.build_family_variants_query_runner(**kwargs)
-
-        result = QueryResult(
-            runners=[runner],
-            limit=kwargs.get("limit", -1),
-        )
-
-        try:
-            logger.debug("starting result")
-            result.start()
-            seen = set()
-            with closing(result) as result:
-                for v in result:
-                    if v is None:
-                        continue
-                    if v.fvuid in seen:
-                        continue
-                    seen.add(v.fvuid)
-                    yield v
-        finally:
-            pass
 
 
 class RawMemoryVariants(RawFamilyVariants):

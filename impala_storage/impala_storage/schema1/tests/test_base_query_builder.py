@@ -116,7 +116,7 @@ def impala_variants(
     t4c8_study_1: GenotypeData,
 ) -> ImpalaVariants:
     assert isinstance(t4c8_study_1, GenotypeDataStudy)
-    variants = t4c8_study_1._backend
+    variants = t4c8_study_1.backend
     assert isinstance(variants, ImpalaVariants)
     return variants
 

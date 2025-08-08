@@ -48,6 +48,7 @@ class QueryTransformer(QueryTransformerProtocol):
         "variantTypes": "variant_type",
         "effectTypes": "effect_types",
         "regionS": "regions",
+        "maxVariantsCount": "limit",
     }
 
     def __init__(
@@ -331,10 +332,7 @@ class QueryTransformer(QueryTransformerProtocol):
         assert psc is not None
 
         if study_wrapper.is_group:
-            raise ValueError(
-                "Determining person set collection kwargs for groups "
-                "is not supported!",
-            )
+            return {}
         genotype_data = cast(GenotypeDataStudy, study_wrapper.genotype_data)
 
         # Handling of person set collections for roles and sexes
@@ -468,7 +466,7 @@ class QueryTransformer(QueryTransformerProtocol):
         # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         start = time.time()
-        logger.debug("kwargs in study wrapper: %s", kwargs)
+        logger.debug("kwargs in study wrapper %s: %s", study.study_id, kwargs)
 
         if kwargs.get("personIds"):
             # Temporarily transform to set for easier combining of person IDs.
@@ -676,6 +674,18 @@ class QueryTransformer(QueryTransformerProtocol):
         kwargs["roles"] = self._transform_present_in_child_and_parent_roles(
             kwargs,
         )
+
+        study_filters = None
+        if kwargs.get("allowed_studies") is not None:
+            study_filters = set(kwargs.pop("allowed_studies"))
+
+        if kwargs.get("studyFilters"):
+            if study_filters is not None:
+                study_filters = study_filters & set(kwargs.pop("studyFilters"))
+            else:
+                study_filters = set(kwargs.pop("studyFilters"))
+
+        kwargs["study_filters"] = study_filters
 
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:

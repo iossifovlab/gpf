@@ -128,7 +128,7 @@ def main(
         assert study.study_id == study_id
         assert isinstance(study, GenotypeDataStudy)
 
-        study_backend = study._backend  # pylint: disable=protected-access
+        study_backend = study.backend  # pylint: disable=protected-access
         if not isinstance(study_backend, ImpalaVariants):
             logger.info("not an impala study: %s; skipping...", study_id)
             continue

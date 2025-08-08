@@ -298,8 +298,10 @@ def t4c8_study_1_wrapper(
 
     data_study = t4c8_instance.get_genotype_data("t4c8_study_1")
     pheno_data = t4c8_instance.get_phenotype_data("study_1_pheno")
+    registry = t4c8_instance.genotype_storages
 
     return WDAEStudy(
+        registry,
         data_study,
         pheno_data,
     )
@@ -311,15 +313,16 @@ def t4c8_study_2_wrapper(
 ) -> WDAEStudy:
 
     data_study = t4c8_instance.get_genotype_data("t4c8_study_2")
+    registry = t4c8_instance.genotype_storages
 
-    return WDAEStudy(data_study, None)
+    return WDAEStudy(registry, data_study, None)
 
 
 @pytest.fixture(scope="session")
 def session_t4c8_wgpf_instance(
-    tmp_path_factory: pytest.TempPathFactory,
+    t4c8_instance: GPFInstance,
 ) -> WGPFInstance:
-    root_path = tmp_path_factory.mktemp("session_t4c8_wgpf_instance")
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
     return setup_wgpf_instance(root_path)
 
 

@@ -13,6 +13,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.query_variants.base_query_variants import QueryVariantsBase
 
 from impala_storage.helpers.hdfs_helpers import HdfsHelpers
 from impala_storage.helpers.impala_helpers import ImpalaHelpers
@@ -184,21 +185,21 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def _construct_pedigree_table(study_id: str) -> str:
         return f"{study_id}_pedigree"
 
-    def build_backend(
+    def _build_backend_internal(
         self, study_config: dict[str, Any],
         genome: ReferenceGenome,  # noqa: ARG002
         gene_models: GeneModels,
-    ) -> ImpalaVariants:
+    ) -> QueryVariantsBase:
         assert study_config is not None
 
         variants_table, pedigree_table = self.study_tables(study_config)
-        return ImpalaVariants(
+        return cast(QueryVariantsBase, ImpalaVariants(
             self.impala_helpers,
             self.storage_config["impala"]["db"],
             variants_table,
             pedigree_table,
             gene_models,
-        )
+        ))
 
     def _generate_study_config(
         self, study_id: str,

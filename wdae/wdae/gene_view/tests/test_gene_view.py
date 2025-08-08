@@ -222,9 +222,10 @@ def test_query_gene_view_summary_variants_dataset(
 ) -> None:
     data["geneSymbols"] = ["t4"]
     with patch(
-        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+        "dae.genotype_storage.genotype_storage"
+        ".GenotypeStorage.create_summary_runner",
     ) as mock_create:
-        mock_create.return_value = []
+        mock_create.return_value = None
         response = admin_client.post(
             "/api/v3/gene_view/query_summary_variants",
             json.dumps(
@@ -235,7 +236,7 @@ def test_query_gene_view_summary_variants_dataset(
         assert response.status_code == status.HTTP_200_OK
         mock_create.assert_called()
 
-        called_kwargs = mock_create.call_args.kwargs
+        called_kwargs = mock_create.call_args.args[1]
         for key, value in expected.items():
             assert called_kwargs[key] == value
 
@@ -249,9 +250,10 @@ def test_query_gene_view_summary_variants_download_dataset(
 ) -> None:
     data["geneSymbols"] = ["t4"]
     with patch(
-        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+        "dae.genotype_storage.genotype_storage"
+        ".GenotypeStorage.create_summary_runner",
     ) as mock_create:
-        mock_create.return_value = []
+        mock_create.return_value = None
         query_data = {
             "queryData": json.dumps({
                 **data,
@@ -270,7 +272,7 @@ def test_query_gene_view_summary_variants_download_dataset(
         _ = list(response.streaming_content)  # type: ignore
         mock_create.assert_called()
 
-        called_kwargs = mock_create.call_args.kwargs
+        called_kwargs = mock_create.call_args.args[1]
         for key, value in expected.items():
             assert called_kwargs[key] == value
 
@@ -284,9 +286,10 @@ def test_query_gene_view_summary_variants_study(
 ) -> None:
     data["geneSymbols"] = ["t4"]
     with patch(
-        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+        "dae.genotype_storage.genotype_storage"
+        ".GenotypeStorage.create_summary_runner",
     ) as mock_create:
-        mock_create.return_value = []
+        mock_create.return_value = None
         response = admin_client.post(
             "/api/v3/gene_view/query_summary_variants",
             json.dumps(
@@ -297,7 +300,7 @@ def test_query_gene_view_summary_variants_study(
         assert response.status_code == status.HTTP_200_OK
         mock_create.assert_called()
 
-        called_kwargs = mock_create.call_args.kwargs
+        called_kwargs = mock_create.call_args.args[1]
         for key, value in expected.items():
             assert called_kwargs[key] == value
 
@@ -311,9 +314,10 @@ def test_query_gene_view_summary_variants_download_study(
 ) -> None:
     data["geneSymbols"] = ["t4"]
     with patch(
-        "dae.studies.study.GenotypeDataStudy.create_summary_query_runners",
+        "dae.genotype_storage.genotype_storage"
+        ".GenotypeStorage.create_summary_runner",
     ) as mock_create:
-        mock_create.return_value = []
+        mock_create.return_value = None
         query_data = {
             "queryData": json.dumps({
                 **data,
@@ -332,6 +336,6 @@ def test_query_gene_view_summary_variants_download_study(
         _ = list(response.streaming_content)  # type: ignore
         mock_create.assert_called()
 
-        called_kwargs = mock_create.call_args.kwargs
+        called_kwargs = mock_create.call_args.args[1]
         for key, value in expected.items():
             assert called_kwargs[key] == value

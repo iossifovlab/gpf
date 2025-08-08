@@ -1,8 +1,14 @@
 import logging
-from collections.abc import Callable
+import time
+from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from typing import Any
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.query_variants.query_runners import QueryResult
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +101,7 @@ class GenotypeStorageRegistry:
     def __init__(self) -> None:
         self._genotype_storages: dict[str, GenotypeStorage] = {}
         self._default_genotype_storage: GenotypeStorage | None = None
+        self.executor = ThreadPoolExecutor()
 
     def register_storage_config(
             self, storage_config: dict[str, Any]) -> GenotypeStorage:
@@ -171,3 +178,123 @@ class GenotypeStorageRegistry:
         for storage_id, storage in self._genotype_storages.items():
             logger.info("shutting down genotype storage %s", storage_id)
             storage.shutdown()
+
+    def find_storage(self, study_id: str) -> GenotypeStorage:
+        for storage in self._genotype_storages.values():
+            if study_id not in storage.loaded_variants:
+                continue
+            return storage
+        raise ValueError(f"{study_id} not found in registry!")
+
+    def query_variants(
+        self, study_kwargs: list[tuple[str, dict[str, Any]]],
+        limit: int | None = 10000,
+    ) -> Iterable[FamilyVariant]:
+        """Query variants for the given of study ids and kwargs."""
+        if not len(study_kwargs) > 0:
+            return
+        runners = []
+        for study_id, kwargs in study_kwargs:
+            storage = self.find_storage(study_id)
+            runner = storage.create_runner(study_id, kwargs)
+            if runner is not None:
+                runners.append(runner)
+
+        kwargs = study_kwargs[0][1]
+
+        index = 0
+        seen = set()
+        unique_family_variants = bool(kwargs.get("uniqueFamilyVariants"))
+        limit = kwargs.get("limit", limit)
+
+        started = time.time()
+        try:
+            if len(runners) == 0:
+                return
+            variants_result = QueryResult(
+                self.executor, runners, limit=limit)
+
+            variants_result.start()
+            elapsed = time.time() - started
+
+            with closing(variants_result) as variants:
+                for variant in variants:
+                    if variant is None:
+                        continue
+
+                    fvuid = variant.fvuid
+                    if unique_family_variants and fvuid in seen:
+                        continue
+                    seen.add(fvuid)
+
+                    index += 1
+                    if limit and index > limit:
+                        break
+
+                    yield variant
+        except GeneratorExit:
+            pass
+        finally:
+            elapsed = time.time() - started
+            print(elapsed)
+
+    def query_summary_variants(
+        self, study_ids: list[str], kwargs: dict[str, Any],
+        limit: int | None = 10000,
+    ) -> Iterable[SummaryVariant]:
+        """Query summary variants for the given of study ids and kwargs."""
+        runners = []
+        for study_id in study_ids:
+            storage = self.find_storage(study_id)
+            runner = storage.create_summary_runner(study_id, kwargs)
+            if runner is not None:
+                runners.append(runner)
+        limit = kwargs.get("limit", limit)
+        query = QueryResult(
+            self.executor, runners, limit=limit)
+
+        if query is None:
+            return
+        variants: dict[str, Any] = {}
+        started = time.time()
+        query.start()
+        with closing(query) as variants_result:
+            for v in variants_result:
+                if v is None:
+                    continue
+
+                if v.svuid in variants:
+                    existing = variants[v.svuid]
+                    fv_count = existing.get_attribute(
+                        "family_variants_count")[0]
+                    if fv_count is None:
+                        continue
+                    fv_count += v.get_attribute("family_variants_count")[0]
+                    seen_in_status = existing.get_attribute(
+                        "seen_in_status")[0]
+                    seen_in_status = \
+                        seen_in_status | \
+                        v.get_attribute("seen_in_status")[0]
+
+                    seen_as_denovo = existing.get_attribute(
+                        "seen_as_denovo")[0]
+                    seen_as_denovo = \
+                        seen_as_denovo or \
+                        v.get_attribute("seen_as_denovo")[0]
+                    new_attributes = {
+                        "family_variants_count": [fv_count],
+                        "seen_in_status": [seen_in_status],
+                        "seen_as_denovo": [seen_as_denovo],
+                    }
+                    v.update_attributes(new_attributes)
+
+                variants[v.svuid] = v
+                if limit and len(variants) >= limit:
+                    break
+
+        elapsed = time.time() - started
+        logger.info(
+            "processing studies %s elapsed: %.3f",
+            study_ids, elapsed)
+
+        yield from variants.values()

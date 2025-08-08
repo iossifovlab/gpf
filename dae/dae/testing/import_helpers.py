@@ -335,6 +335,7 @@ def setup_dataset(
         dataset_config.update(config_update)
 
     dataset = GenotypeDataGroup(
+        gpf_instance.genotype_storages,
         Box(dataset_config, default_box=True), studies)
     # pylint: disable=protected-access
     gpf_instance._variants_db.register_genotype_data(dataset)  # noqa: SLF001

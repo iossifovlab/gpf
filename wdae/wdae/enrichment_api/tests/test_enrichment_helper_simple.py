@@ -27,7 +27,10 @@ def test_get_study_background(
 ) -> None:
     assert t4c8_fixture.grr.repo_id == "enrichment_testing_repo"
 
-    helper = EnrichmentHelper(t4c8_fixture.grr, WDAEStudy(f1_trio, None))
+    helper = EnrichmentHelper(
+        t4c8_fixture.grr,
+        WDAEStudy(t4c8_fixture.genotype_storages, f1_trio, None),
+    )
 
     assert isinstance(
         helper.create_background(
@@ -76,7 +79,11 @@ def test_get_selected_counting_models(
 
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_selected_counting_models() == [
         "enrichment_gene_counting"]
@@ -94,7 +101,11 @@ def test_get_selected_counting_models_default(
     }
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_selected_counting_models() == [
         "enrichment_events_counting", "enrichment_gene_counting"]
@@ -119,7 +130,11 @@ def test_get_selected_counting_models_default_with_counting(
     }
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_selected_counting_models() == [
         "enrichment_events_counting",
@@ -144,7 +159,11 @@ def test_get_default_background_model(
 
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_default_background_model() == \
         "enrichment/samocha_background"
@@ -167,7 +186,11 @@ def test_get_default_background_model_default(
 
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_default_background_model() == \
         "hg38/enrichment/coding_length_ref_gene_v20170601"
@@ -192,7 +215,11 @@ def test_get_selected_person_set_collections(
 
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_selected_person_set_collections() == "role"
 
@@ -253,6 +280,10 @@ def test_get_selected_person_set_collections_default(
 
     helper = EnrichmentHelper(
         t4c8_fixture.grr,
-        WDAEStudy(create_test_study(study_config), None),
+        WDAEStudy(
+            t4c8_fixture.genotype_storages,
+            create_test_study(study_config),
+            None,
+        ),
     )
     assert helper.get_selected_person_set_collections() == "role"

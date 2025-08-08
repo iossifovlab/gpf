@@ -82,7 +82,6 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         assert self.study.response_transformer is not None
         variants = self.study.query_variants_raw(
             query_data, self.study.query_transformer,
-            self.study.response_transformer,
         )
 
         adapted_variants = self.helper.genotype_data_variants(
@@ -204,7 +203,6 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         assert self.study.response_transformer is not None
         variants = self.study.query_variants_raw(
             query_data, self.study.query_transformer,
-            self.study.response_transformer,
         )
 
         people_variants = self.helper.genotype_data_variants(

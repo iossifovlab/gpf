@@ -107,5 +107,5 @@ def test_can_close_study_group_query(svmergingdataset: GenotypeData) -> None:
         print(variant)
         break
 
-    variants.close()
+    variants.close()  # type: ignore
     time.sleep(1)
