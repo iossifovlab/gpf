@@ -169,7 +169,7 @@ class PhenoRegistry:
             pheno_data = self._load_group(config)
         else:
             raise ValueError(f"Invalid type '{config['type']}'"
-                                f" in config for {pheno_id}")
+                             f" in config for {pheno_id}")
 
         cache_path = self._make_cache_path_for(config)
         pheno_data.cache_path = cache_path

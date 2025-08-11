@@ -60,7 +60,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
         self._common_report: CommonReport | None = None
         self._remote_common_report = None
 
-        super().__init__(self.config, None)
+        super().__init__(None, self.config)
 
         self._parents = set(config["parents"])
 

@@ -326,30 +326,29 @@ def test_genotype_browser_query_explicit_person_set_collection(
     )
 
 
+@pytest.mark.parametrize(
+    "dataset_id", [
+        "t4c8_study_1",
+        "TEST_REMOTE_t4c8_study_1",
+
+])
 def test_pheno_browser_instruments(
     admin_client: Client,
+    dataset_id: str,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     instruments_url = "/api/v3/pheno_browser/instruments"
-    response_remote = admin_client.get(
+    response = admin_client.get(
         instruments_url,
         {
-            "dataset_id": "TEST_REMOTE_t4c8_study_1",
+            "dataset_id": dataset_id,
         },
     )
 
-    assert response_remote.status_code == 200
+    assert response.status_code == 200
 
-    response_local = admin_client.get(
-        instruments_url,
-        {
-            "dataset_id": "t4c8_study_1",
-        },
-    )
-
-    assert response_local.status_code == 200
-
-    assert response_remote.json() == response_local.json()
+    assert len(response.json()["instruments"]) == 2
+    assert set(response.json()["instruments"]) == {"i1", "pheno_common"}
 
 
 def test_pheno_browser_measures_info(
