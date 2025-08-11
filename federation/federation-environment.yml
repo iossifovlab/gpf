@@ -10,5 +10,5 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - gpf_rest_client
+  - ijson=3.2
 
