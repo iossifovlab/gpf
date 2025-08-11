@@ -15,6 +15,7 @@ from typing import Any, cast
 
 import duckdb
 import pandas as pd
+from box import Box
 
 from dae.common_reports.common_report import CommonReport
 from dae.common_reports.family_report import FamiliesReport
@@ -249,7 +250,7 @@ class PhenotypeData(CommonStudyMixin, ABC):
         cache_path: Path | None = None,
     ) -> None:
         self._pheno_id: str = pheno_id
-        super().__init__(config if config is not None else {})
+        super().__init__(Box(config if config is not None else {}))
 
         self.name = self.config.get("name", pheno_id) \
             if self.config is not None \
