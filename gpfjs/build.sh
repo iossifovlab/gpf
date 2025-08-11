@@ -84,7 +84,7 @@ function main() {
   {
     build_run bash -c 'npm run-script test:ci || false'
     build_run bash -c 'ln -svf . wd'
-    build_run bash -c 'sed -i -e "/^\\s\\+<source>/wd</source>/ { s|/wd|./wd| }|" coverage/cobertura-coverage.xml || true'
+    build_run bash -c 'sed -i -e "/^\\s\\+<source>\\/wd<\\/source>/ { s|/wd|./wd| }|" coverage/cobertura-coverage.xml || true'
   }
 
   build_stage "Compile production"
