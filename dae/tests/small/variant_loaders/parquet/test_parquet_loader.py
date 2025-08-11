@@ -2,8 +2,15 @@
 import pathlib
 
 import pytest
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+import yaml
+from dae.genomic_resources.testing import (
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
 from dae.testing.import_helpers import vcf_study
 from dae.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
@@ -127,3 +134,48 @@ def test_fetch_family_variants(
 ) -> None:
     variants = list(parquet_loader.fetch_family_variants(region=region))
     assert len(variants) == expected
+
+
+def test_import_project(
+    t4c8_instance: GPFInstance,
+    t4c8_parquet_study: str,
+    tmp_path: pathlib.Path,
+) -> None:
+    import_config = {
+        "id": "test_parquet_study",
+        "processing_config": {
+            "work_dir": f"{tmp_path / 'work_dir'}",
+        },
+        "input": {
+            "parquet": {
+                "dir": t4c8_parquet_study,
+            },
+            "pedigree": {
+                "file": "",
+            },
+        },
+        "destination": {
+            "storage_id": "internal",
+        },
+    }
+
+    config_path = tmp_path / "import_project" / "import_config.yaml"
+
+    setup_directories(
+        config_path,
+        yaml.dump(import_config))
+
+    project = ImportProject.build_from_file(
+        config_path, gpf_instance=t4c8_instance)
+
+    assert len(t4c8_instance.get_genotype_data_ids()) == 5
+    assert "test_parquet_study" not in t4c8_instance.get_genotype_data_ids()
+
+    run_with_project(project)
+    t4c8_instance.reload()
+
+    assert len(t4c8_instance.get_genotype_data_ids()) == 5 + 1
+    assert "test_parquet_study" in t4c8_instance.get_genotype_data_ids()
+
+    study = t4c8_instance.get_genotype_data("test_parquet_study")
+    assert len(list(study.query_variants())) == 12

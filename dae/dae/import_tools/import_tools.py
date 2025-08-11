@@ -45,6 +45,7 @@ from dae.utils.regions import Region
 from dae.utils.stats_collection import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.parquet.loader import ParquetLoader
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 
@@ -184,13 +185,16 @@ class ImportProject:
 
     def get_pedigree(self) -> FamiliesData:
         """Load, parse and return the pedigree data."""
+        if "parquet" in self.import_config["input"]:
+            loader = self.get_variant_loader(loader_type="parquet")
+            return loader.families
         families_loader = self.get_pedigree_loader()
         return families_loader.load()
 
     def get_variant_loader_types(self) -> set[str]:
         """Collect all variant import types used in the project."""
         result = set()
-        for loader_type in ["denovo", "vcf", "cnv", "dae"]:
+        for loader_type in ["denovo", "vcf", "cnv", "dae", "parquet"]:
             config = self.import_config["input"].get(loader_type)
             if config is not None:
                 result.add(loader_type)
@@ -246,7 +250,7 @@ class ImportProject:
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Split variant files into buckets enabling parallel processing."""
         buckets: list[Bucket] = []
-        for loader_type in ["denovo", "vcf", "cnv", "dae"]:
+        for loader_type in ["denovo", "vcf", "cnv", "dae", "parquet"]:
             config = self.import_config["input"].get(loader_type, None)
             if config is not None:
                 buckets.extend(self._loader_region_bins(loader_type))
@@ -311,6 +315,13 @@ class ImportProject:
             f"No input config for loader {loader_type}"
         if reference_genome is None:
             reference_genome = self.get_gpf_instance().reference_genome
+
+        if loader_type == "parquet":
+            return ParquetLoader(
+                self.import_config["input"]["parquet"]["dir"],
+                genome=reference_genome,
+            )
+
         variants_filenames, variants_params = \
             self.get_variant_params(loader_type)
         loader_cls = {
@@ -319,6 +330,7 @@ class ImportProject:
             "cnv": CNVLoader,
             "dae": DaeTransmittedLoader,
         }[loader_type]
+
         loader: VariantsGenotypesLoader = loader_cls(
             self.get_pedigree(),
             variants_filenames,
@@ -510,6 +522,7 @@ class ImportProject:
             "vcf": 100_000,
             "dae": 200_000,
             "cnv": 300_000,
+            "parquet": 400_000,
         }[loader_type]
 
     @staticmethod

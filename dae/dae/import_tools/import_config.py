@@ -3,6 +3,7 @@ from typing import Any
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.parquet.loader import ParquetLoader
 from dae.variants_loaders.raw.loader import CLILoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 
@@ -54,6 +55,12 @@ embedded_input_schema = {
     "dae": {
         "type": "dict",
         "schema": {},
+    },
+    "parquet": {
+        "type": "dict",
+        "schema": {
+            "dir": {"type": "string", "required": True},
+        },
     },
     "pedigree": {
         "type": "dict",
@@ -183,6 +190,10 @@ def _fill_with_loader_arguments() -> None:
         DaeTransmittedLoader,
         import_config_schema["input"]["anyof_schema"][1]["dae"]["schema"],
         "dae_")
+    _copy_loader_args(
+        ParquetLoader,
+        import_config_schema["input"]["anyof_schema"][1]["parquet"]["schema"],
+        "parquet_")
     _copy_loader_args(
         FamiliesLoader,
         import_config_schema["input"]["anyof_schema"][1]["pedigree"]["schema"],

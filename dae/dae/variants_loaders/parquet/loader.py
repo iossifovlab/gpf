@@ -2,6 +2,7 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.schema2.loader import ParquetLoader as Schema2Loader
 from dae.utils.regions import Region
 from dae.variants_loaders.raw.loader import (
+    CLIArgument,
     FullVariantsIterator,
     VariantsGenotypesLoader,
 )
@@ -35,6 +36,17 @@ class ParquetLoader(VariantsGenotypesLoader):
             expect_genotype=False,
             expect_best_state=True,
         )
+
+    @classmethod
+    def _arguments(cls) -> list[CLIArgument]:
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
+            "dir",
+            value_type=str,
+            metavar="<Parquet dir>",
+            help_text="The directory of the parquet study to import",
+        ))
+        return arguments
 
     def close(self) -> None:
         pass
