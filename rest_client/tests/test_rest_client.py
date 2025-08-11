@@ -183,4 +183,4 @@ def test_post_gene_view_summary_variants_download(
         rest_client.post_gene_view_summary_variants_download(data)
     assert variants_response is not None
     result = list(variants_response)
-    assert len(result) == 798
+    assert len(result) == 802

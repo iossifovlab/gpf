@@ -1330,7 +1330,8 @@ class RESTClient:
         response = requests.get(url, timeout=300_000)
         if response.status_code != 200:
             raise ValueError
-        if response.content is None or response.headers["content-type"] is None:
+        if response.content is None or \
+                response.headers["content-type"] is None:
             return None, None
 
         return response.content, response.headers["content-type"]
