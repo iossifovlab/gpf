@@ -19,6 +19,7 @@ include liblog.sh
 # shellcheck source=build-scripts/libopt.sh
 include libopt.sh
 
+#
 function main() {
   local -A options
   libopt_parse options \
