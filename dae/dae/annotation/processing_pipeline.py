@@ -168,6 +168,14 @@ class DeleteAttributesFromAWSFilter(Filter):
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self.to_remove = set(attributes_to_remove)
 
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        return exc_type is None
+
     def filter(self, data: AnnotationsWithSource) -> AnnotationsWithSource:
         for attr in self.to_remove:
             del data.source[attr]
@@ -180,6 +188,14 @@ class DeleteAttributesFromAWSBatchFilter(Filter):
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self._delete_filter = DeleteAttributesFromAWSFilter(
             attributes_to_remove)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        return exc_type is None
 
     def filter(
         self, data: Sequence[AnnotationsWithSource],

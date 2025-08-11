@@ -64,6 +64,14 @@ class DeleteAttributesFromVariantFilter(Filter):
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self.to_remove = set(attributes_to_remove)
 
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        return exc_type is None
+
     def filter(
         self, data: FullVariant,
     ) -> FullVariant:
@@ -81,6 +89,14 @@ class DeleteAttributesFromVariantsBatchFilter(Filter):
     def __init__(self, attributes_to_remove: Sequence[str]) -> None:
         self._delete_filter = DeleteAttributesFromVariantFilter(
             attributes_to_remove)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        return exc_type is None
 
     def filter(
         self, data: Sequence[FullVariant],

@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 
 from collections.abc import Sequence
+from types import TracebackType
 
 import pytest
 from dae.annotation.annotation_pipeline import (
@@ -112,6 +113,14 @@ class DummyBatchConsumer(Filter):
         super().__init__()
         self.batches: list[list[FullVariant]] = []
 
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        return exc_type is None
+
     def filter(self, data: Sequence[FullVariant]) -> None:
         self.batches.append(list(data))
 
@@ -156,6 +165,14 @@ class DummyConsumer(Filter):
     def __init__(self) -> None:
         super().__init__()
         self.variants: list[FullVariant] = []
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        return exc_type is None
 
     def filter(self, data: FullVariant) -> None:
         self.variants.append(data)
