@@ -37,8 +37,8 @@ pipeline {
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml, test-results/dae-tests-junit.xml, test-results/wdae-tests-junit.xml'
           sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
 
-          recordCoverage sourceCodeEncoding: 'ASCII', enabledForFailure: true, sourceCodeRetention: 'LAST_BUILD', tools: [
-            [tool: 'COBERTURA', pattern: 'test-results/coverage.xml']
+          recordCoverage sourceCodeEncoding: 'UTF-8', enabledForFailure: true, sourceCodeRetention: 'LAST_BUILD', tools: [
+            [parser: 'COBERTURA', pattern: 'test-results/coverage.xml']
           ]
 
           recordIssues(
