@@ -15,14 +15,6 @@ logger = logging.getLogger(__name__)
 class Filter(AbstractContextManager):
     """Base class for all processing pipeline filters."""
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> bool:
-        return exc_type is None
-
     @abc.abstractmethod
     def filter(self, data: Any) -> Any:
         ...
