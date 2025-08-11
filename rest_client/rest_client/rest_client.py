@@ -81,7 +81,7 @@ class GPFClientSession(Protocol):
 class GPFAnonymousSession(GPFClientSession):
     """GPF anonymous REST client."""
 
-    DEFAULT_TIMEOUT = 10
+    DEFAULT_TIMEOUT = (10, 100)
 
     def __init__(
         self, base_url: str,
@@ -165,7 +165,7 @@ class GPFAnonymousSession(GPFClientSession):
 class GPFOAuthSession(GPFClientSession):
     """GPF Rest Client."""
 
-    DEFAULT_TIMEOUT = 10
+    DEFAULT_TIMEOUT = (10, 100)
 
     def __init__(
         self,
@@ -1097,7 +1097,7 @@ class RESTClient:
         if response.status_code != 200:
             return None
 
-        return response.iter_lines()
+        return response.iter_content(chunk_size=1024)
 
     def get_pheno_browser_measure_count_status(
         self, dataset_id: str,

@@ -469,7 +469,8 @@ def test_pheno_browser_download(
 
     assert response_local.status_code == 200
 
-    assert list(response_remote) == list(response_local)
+    assert b"".join(map(bytes, response_remote)) == \
+        b"".join(map(bytes, response_local))
 
 
 def test_pheno_browser_download_check(

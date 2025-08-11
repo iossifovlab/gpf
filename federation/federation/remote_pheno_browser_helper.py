@@ -78,13 +78,11 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         self,
         data: dict[str, Any],
     ) -> Generator[str, None, None]:
-        measures = self.rest_client.get_pheno_browser_download(
+        yield from self.rest_client.get_pheno_browser_download(
             self.dataset_id,
             data.get("instrument", ""),
             data.get("search_term", ""),
         )
-        for measure_line in measures:
-            yield measure_line + b"\r\n"
 
     def measures_count_status(
         self,
