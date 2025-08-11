@@ -62,8 +62,9 @@ def test_impala_runner_result_with_exception(
 
     runner = create_runner(impala_helpers, query)
     assert not runner.is_started()
+    executor = ThreadPoolExecutor(max_workers=1)
 
-    result = QueryResult([runner])
+    result = QueryResult(executor, [runner])
     result.start()
     time.sleep(0.1)
 
@@ -95,8 +96,9 @@ def test_impala_runner_result_experimental_1(
 
     runner = create_runner(impala_helpers, query)
     assert not runner.is_started()
+    executor = ThreadPoolExecutor(max_workers=1)
 
-    result = QueryResult([runner])
+    result = QueryResult(executor, [runner])
     result.start()
 
     for row in result:
@@ -122,8 +124,9 @@ def test_impala_runner_result_experimental_2(
 
     runner = create_runner(impala_helpers, query)
     assert not runner.is_started()
+    executor = ThreadPoolExecutor(max_workers=1)
 
-    result = QueryResult([runner])
+    result = QueryResult(executor, [runner])
     result.start()
     time.sleep(0.1)
 
@@ -150,8 +153,9 @@ def test_impala_runner_result_experimental(
     runner = create_runner(impala_helpers, query)
 
     assert not runner.is_started()
+    executor = ThreadPoolExecutor(max_workers=1)
 
-    result = QueryResult([runner])
+    result = QueryResult(executor, [runner])
     result.start()
     time.sleep(0.1)
 

@@ -3,8 +3,11 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.annotation.annotation_config import AttributeInfo
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
@@ -58,10 +61,20 @@ def extra_attrs_impala(
         project, gpf_instance=gpf_instance_2013)
     run_with_project(import_project)
 
-    return impala_genotype_storage.build_backend(
+    impala_genotype_storage.build_backend(
         FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
         gpf_instance_2013.gene_models,
     )
+    return cast(
+        ImpalaVariants, impala_genotype_storage.loaded_variants[study_id])
+
+
+@pytest.fixture(scope="session")
+def impala_storage_registry(
+        extra_attrs_impala: ImpalaVariants,  # noqa: ARG001
+        gpf_instance_2013: GPFInstance,
+) -> GenotypeStorageRegistry:
+    return cast(GenotypeStorageRegistry, gpf_instance_2013.genotype_storages)
 
 
 def test_all_properties_in_blob(
@@ -181,8 +194,12 @@ def test_extra_attributes_loading_with_person_id(
         print(variant)
 
 
-def test_extra_attributes_impala(extra_attrs_impala: ImpalaVariants) -> None:
-    variants = extra_attrs_impala.query_variants()
+def test_extra_attributes_impala(
+    impala_storage_registry: GenotypeStorageRegistry,
+) -> None:
+    variants = impala_storage_registry.query_variants([
+        ("denovo_extra_attrs_impala_test_storage", {}),
+    ])
     first_variant = next(iter(variants))
     assert first_variant.get_attribute("someAttr")[0] == "asdf"
 

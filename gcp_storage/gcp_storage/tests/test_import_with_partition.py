@@ -22,12 +22,12 @@ def bq_backend(partition_study: GenotypeDataStudy) -> BigQueryVariants:
     (6, {"regions": [Region("foo", 10, 10)]}, 2),
 ])
 def test_family_queries(
-    bq_backend: BigQueryVariants,
+    partition_study: GenotypeDataStudy,
     index: int,  # noqa: ARG001
     query: dict[str, Any],
     ecount: int,
 ) -> None:
-    vs = list(bq_backend.query_variants(**query))
+    vs = list(partition_study.query_variants(**query))
     assert len(vs) == ecount
 
 
@@ -40,12 +40,12 @@ def test_family_queries(
     (6, {"regions": [Region("foo", 10, 10)]}, 1),
 ])
 def test_summary_queries(
-    bq_backend: BigQueryVariants,
+    partition_study: GenotypeDataStudy,
     index: int,  # noqa: ARG001
     query: dict[str, Any],
     ecount: int,
 ) -> None:
 
-    vs = list(bq_backend.query_summary_variants(**query))
+    vs = list(partition_study.query_summary_variants(**query))
 
     assert len(vs) == ecount
