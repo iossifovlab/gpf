@@ -67,6 +67,7 @@ function main() {
 
   build_stage "Clean and fetch fresh dependencies"
   {
+    build_run rm -f wd
     build_run rm -rf dist dist.orig packages
     build_run rm -rf node_modules package-lock.json
     build_run mkdir -p packages
@@ -82,9 +83,8 @@ function main() {
 
   build_stage "Tests"
   {
-    build_run bash -c 'npm run-script test:ci || false'
-    build_run bash -c 'ln -svf . wd'
-    build_run bash -c 'sed -i -e "/^\\s\\+<source>\\/wd<\\/source>/ { s|/wd|./wd| }" coverage/cobertura-coverage.xml || true'
+    build_run rm -vf wd
+    build_run bash -c 'npm run-script test:ci || false && ( ln -sv . wd && sed -i -e "/^\\s*<source>\\/wd<\\/source>/ { s|/wd|./wd| }" coverage/cobertura-coverage.xml || true)'
   }
 
   build_stage "Compile production"
