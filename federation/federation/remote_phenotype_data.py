@@ -32,7 +32,7 @@ class RemotePhenotypeData(PhenotypeData):
         self._pheno_id = prefix_remote_identifier(
             config["id"], self.rest_client,
         )
-
+        config["id"] = self._pheno_id
         config["name"] = prefix_remote_name(
             config.get("name", self._pheno_id), self.rest_client,
         )

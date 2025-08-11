@@ -50,8 +50,8 @@ class GPFRemoteExtension(GPFExtensionBase):
             for study in studies:
                 self.studies[study.study_id] = study
                 logger.info("register remote study %s", study.study_id)
-                self.instance._study_wrappers[study.study_id] = cast(  # noqa: SLF001
-                    WDAEStudy, study)
+                self.instance._study_wrappers[  # noqa: SLF001
+                    study.study_id] = cast(WDAEStudy, study)
                 pheno_registry = self.instance._pheno_registry  # noqa: SLF001
 
                 if study.has_pheno_data:
@@ -59,11 +59,13 @@ class GPFRemoteExtension(GPFExtensionBase):
                         if candidate_study.study_id == \
                                 study.phenotype_data.pheno_id:
                             study.phenotype_data.name = candidate_study.name
-                    pheno_registry.register_phenotype_data(study.phenotype_data)
+                    pheno_registry.register_phenotype_data(
+                        study.phenotype_data)
 
                 if study.is_genotype:
-                    self.instance._variants_db. \
-                        register_genotype_data(study.genotype_data)  # noqa: SLF001
+                    self.instance\
+                        ._variants_db.register_genotype_data(  # noqa: SLF001
+                            study.genotype_data)
 
             gs_db = self.instance.gene_sets_db
             for collection in client.get_gene_set_collections():
@@ -82,7 +84,8 @@ class GPFRemoteExtension(GPFExtensionBase):
             # Important - must initialize the db first by accessing these
             # member variables, otherwise it will not load the local cache
             # since it will be non-empty because of the remote denovo gene sets
-            # being loaded into the internal _collections and _configs variables
+            # being loaded into the internal _collections and _configs
+            # variables
             _ = d_gs_db._denovo_gene_set_collections  # noqa: SLF001
             _ = d_gs_db._denovo_gene_set_configs  # noqa: SLF001
 
