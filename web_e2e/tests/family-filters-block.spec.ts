@@ -772,20 +772,18 @@ test.describe('Pheno Measures tests', () => {
 });
 
 async function selectRole(page: Page, measure: string, role: string): Promise<void> {
-  const histogramResponsePromise = page.waitForResponse(
-    resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
-  );
-
-  const rolesListResponsePromise = page.waitForResponse(
-    resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
-  );
-
   await page.locator('gpf-person-filter').filter({ hasText: measure })
     .getByPlaceholder('Select role').click();
   await page.locator('mat-option').getByText(role).click();
 
-  await histogramResponsePromise;
-  await rolesListResponsePromise;
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
+  );
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
+  );
+
+  await page.waitForSelector('gpf-person-filter .role-wrapper');
 }
 
 async function checkIfRoleIsDisabled(page: Page, role: string): Promise<void> {
