@@ -112,6 +112,11 @@ class ReferenceGenome(
 
     def close(self) -> None:
         """Close reference genome sequence file-like objects."""
+        if self._sequence is not None:
+            self._sequence.close()
+            self._sequence = None
+
+        self._index = {}
 
     def open(self) -> ReferenceGenome:
         """Open reference genome resources."""

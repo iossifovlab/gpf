@@ -284,6 +284,7 @@ class AnnotationPipeline:
 
     def close(self) -> None:
         """Close the annotation pipeline."""
+        logger.error("closing annotation pipeline")
         for annotator in self.annotators:
             try:
                 annotator.close()
@@ -291,6 +292,7 @@ class AnnotationPipeline:
                 logger.exception(
                     "exception while closing annotator %s",
                     annotator.get_info())
+        self.repository = None  # type: ignore
         self._is_open = False
 
     def print(self) -> None:

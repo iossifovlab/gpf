@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import gc
 import logging
+import sys
 import textwrap
 from collections import defaultdict
 from collections.abc import Sequence
@@ -38,6 +40,26 @@ from pkg_resources import resource_filename
 from spliceai_annotator.utils import one_hot_encode
 
 logger = logging.getLogger(__name__)
+
+
+def _module_cleaner(root_module: str) -> None:
+    modules_to_remove = [
+        module_name for module_name in sys.modules
+        if module_name == root_module or
+        module_name.startswith(f"{root_module}.")
+    ]
+
+    modules_to_remove = sorted(
+        modules_to_remove, key=lambda mn: -mn.count("."))
+
+    to_remove = {}
+    for module_name in modules_to_remove:
+        module = sys.modules[module_name]
+        to_remove[module_name] = module
+
+    for module_name, module in to_remove.items():
+        del sys.modules[module_name]
+        del module
 
 
 @dataclass
@@ -314,7 +336,20 @@ models to predict splice site variant effects.
         return result
 
     def close(self) -> None:
+        logger.info("Closing SpliceAI annotator")
         self.genome.close()
+        self.gene_models.close()
+        if self._models is not None:
+            for model in self._models:
+                del model
+        self._models = None
+
+        tf.keras.backend.clear_session()
+        gc.collect()
+        # pylint: disable=import-outside-toplevel
+        import ctypes
+        libc = ctypes.CDLL("libc.so.6")
+        libc.malloc_trim(0)
         super().close()
 
     def open(self) -> Annotator:

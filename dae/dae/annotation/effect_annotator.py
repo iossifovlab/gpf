@@ -134,6 +134,10 @@ Annotator to identify the effect of the variant on protein coding.
 
     def close(self) -> None:
         self.genome.close()
+        self.gene_models.close()
+        assert self.effect_annotator is not None
+        self.effect_annotator.close()
+        self.effect_annotator = None  # type: ignore
         super().close()
 
     def open(self) -> Annotator:
