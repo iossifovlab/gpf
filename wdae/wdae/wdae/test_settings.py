@@ -22,6 +22,8 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:8001",
 ]
 
+INSTALLED_APPS.remove("gpf_instance.apps.WDAEConfig")
+
 CORS_ALLOW_CREDENTIALS = True
 
 OPEN_REGISTRATION = False
