@@ -496,21 +496,26 @@ test.describe('Gene profiles table state tests', () => {
 
   test('should check table state when navigating to Genotype browser', async({ page }) => {
     await changeTable(page);
-    await page.waitForTimeout(1500); // wait for user's gene profile state query
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
+    );
 
     // go to Genotype browser and return to Gene Profiles
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
     await page.locator('#header a:text("Gene Profiles")').click();
 
     await page.waitForResponse(
-      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
+      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 200
     );
     await checkTable(page);
   });
 
   test('should check if table state is saved when logout and login', async({ page }) => {
+    const saveStateQuery = page.waitForResponse(
+      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
+    );
     await changeTable(page);
-    await page.waitForTimeout(1500); // wait for user's gene profile state query
+    await saveStateQuery;
 
     await utils.logout(page);
     await page.locator('#header a:text("Gene Profiles")').click();
@@ -521,8 +526,12 @@ test.describe('Gene profiles table state tests', () => {
   });
 
   test('should check reset table button', async({ page }) => {
+    const saveStateQuery = page.waitForResponse(
+      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
+    );
     await changeTable(page);
-    await page.waitForTimeout(1500); // wait for user's gene profile state query
+    await saveStateQuery;
+
     await utils.resetGeneProfiles(page);
     await page.waitForSelector('gpf-gene-profiles-table');
     await page.waitForSelector('#loading', {state: 'detached'});
