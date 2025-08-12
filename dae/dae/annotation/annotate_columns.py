@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import gzip
 import itertools
 import logging
@@ -621,3 +622,9 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     add_input_files_to_task_graph(args, task_graph)
     TaskGraphCli.process_graph(task_graph, **args)
+
+    pipeline.close()
+    if ref_genome is not None:
+        ref_genome.close()
+
+    gc.collect()

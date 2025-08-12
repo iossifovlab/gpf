@@ -160,7 +160,14 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         return self.url
 
     def invalidate(self) -> None:
+        if self._all_resources is not None:
+            for resource in self._all_resources:
+                resource.proto = None  # type: ignore
         self._all_resources = None
+
+    def close(self) -> None:
+        """Close the genomic resource."""
+        self.invalidate()
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
