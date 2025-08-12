@@ -294,6 +294,7 @@ test.describe('Gene profiles single view dynamic data and links tests', () => {
 
     await searchInGeneProfilesTable(page, 'GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    await page.waitForSelector('gpf-gene-profiles-single-view');
   });
 
   test('should compare all data in single view for GRIN2B', async({ page }) => {
@@ -333,44 +334,36 @@ test.describe('Gene profiles single view dynamic data and links tests', () => {
   });
 
   test('should navigate to UCSC genome browser from single view', async({ page, context }) => {
-    const pagePromise = context.waitForEvent('page');
-
     await page.getByRole('link', { name: 'UCSC genome browser' }).click();
 
-    const newPage = await pagePromise;
+    const newPage = await context.waitForEvent('page');
     await newPage.waitForLoadState();
 
     expect(newPage.url()).toContain('https://genome.ucsc.edu/');
   });
 
   test('should navigate to GeneCards from single view', async({ page, context }) => {
-    const pagePromise = context.waitForEvent('page');
-
     await page.getByRole('link', { name: 'GeneCards' }).click();
 
-    const newPage = await pagePromise;
+    const newPage = await context.waitForEvent('page');
     await newPage.waitForLoadState();
 
     expect(newPage.url()).toContain('https://www.genecards.org/');
   });
 
   test('should navigate to Pubmed from single view', async({ page, context }) => {
-    const pagePromise = context.waitForEvent('page');
-
     await page.getByRole('link', { name: 'Pubmed' }).click();
 
-    const newPage = await pagePromise;
+    const newPage = await context.waitForEvent('page');
     await newPage.waitForLoadState();
 
     expect(newPage.url()).toContain('pubmed.ncbi.nlm.nih.gov/');
   });
 
   test('should navigate to SFARI gene from single view', async({ page, context }) => {
-    const pagePromise = context.waitForEvent('page');
-
     await page.getByRole('link', { name: 'SFARI gene' }).click();
 
-    const newPage = await pagePromise;
+    const newPage = await context.waitForEvent('page');
     await newPage.waitForLoadState();
 
     expect(newPage.url()).toContain('https://gene.sfari.org/');
