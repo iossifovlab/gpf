@@ -27,6 +27,7 @@ setuptools.setup(
     enrichment_helper=federation.remote_enrichment_tool:RemoteEnrichmentHelper
     enrichment_builder=federation.remote_enrichment_tool:RemoteEnrichmentBuilder
     pheno_browser_helper=federation.remote_pheno_browser_helper:RemotePhenoBrowserHelper
+    common_reports_helper=federation.remote_common_reports_helper:RemoteCommonReportsHelper
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
