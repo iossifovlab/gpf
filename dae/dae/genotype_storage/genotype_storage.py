@@ -135,6 +135,7 @@ class GenotypeStorage(abc.ABC):
         return_unknown = kwargs.get("return_unknown")
         limit = kwargs.get("limit")
         tags_query = kwargs.get("tags_query")
+        summary_variant_ids = kwargs.get("summary_variant_ids")
         if study_filters is not None and study_id not in study_filters:
             return None
         if person_ids is not None and not person_ids:
@@ -149,10 +150,16 @@ class GenotypeStorage(abc.ABC):
         def adapt_study_variants(
             study_name: str,
             study_phenotype: str,
+            summary_variant_ids: list[str] | None,
             v: FamilyVariant | None,
         ) -> FamilyVariant | None:
             if v is None:
                 return None
+            if summary_variant_ids is not None:
+                for aa in v.alt_alleles:
+                    svid = f"{aa.cshl_location}:{aa.cshl_variant}"
+                    if svid not in summary_variant_ids:
+                        return None
             for allele in v.alleles:
                 if allele.get_attribute("study_name") is None:
                     allele.update_attributes(
@@ -202,7 +209,8 @@ class GenotypeStorage(abc.ABC):
         study_phenotype = study_config.get("study_phenotype", "-")
 
         runner.adapt(functools.partial(
-            adapt_study_variants, study_name, study_phenotype))
+            adapt_study_variants,
+            study_name, study_phenotype, summary_variant_ids))
 
         return runner
 
