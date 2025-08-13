@@ -41,10 +41,10 @@ class ParquetLoader(VariantsGenotypesLoader):
     def _arguments(cls) -> list[CLIArgument]:
         arguments = super()._arguments()
         arguments.append(CLIArgument(
-            "dir",
+            "path",
             value_type=str,
-            metavar="<Parquet dir>",
-            help_text="The directory of the parquet study to import",
+            metavar="<Parquet data path>",
+            help_text="The path to the parquet study to import",
         ))
         return arguments
 

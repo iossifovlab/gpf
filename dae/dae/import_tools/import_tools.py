@@ -318,7 +318,7 @@ class ImportProject:
 
         if loader_type == "parquet":
             return ParquetLoader(
-                self.import_config["input"]["parquet"]["dir"],
+                self.import_config["input"]["parquet"]["path"],
                 genome=reference_genome,
             )
 

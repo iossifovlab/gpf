@@ -148,7 +148,7 @@ def test_import_project(
         },
         "input": {
             "parquet": {
-                "dir": t4c8_parquet_study,
+                "path": t4c8_parquet_study,
             },
             "pedigree": {
                 "file": "",

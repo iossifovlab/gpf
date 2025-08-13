@@ -59,7 +59,7 @@ embedded_input_schema = {
     "parquet": {
         "type": "dict",
         "schema": {
-            "dir": {"type": "string", "required": True},
+            "path": {"type": "string", "required": True},
         },
     },
     "pedigree": {
