@@ -204,7 +204,7 @@ class GenotypeStorageRegistry:
 
         index = 0
         seen = set()
-        unique_family_variants = bool(kwargs.get("uniqueFamilyVariants"))
+        unique_family_variants = bool(kwargs.get("unique_family_variants"))
         limit = kwargs.get("limit", limit)
 
         started = time.time()
