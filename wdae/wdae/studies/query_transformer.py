@@ -28,7 +28,7 @@ from dae.variants.core import Allele
 
 from studies.study_wrapper import (
     QueryTransformerProtocol,
-    WDAEStudy,
+    WDAEAbstractStudy,
 )
 
 logger = logging.getLogger(__name__)
@@ -248,7 +248,7 @@ class QueryTransformer(QueryTransformerProtocol):
 
     def _transform_filters_to_ids(
         self, filters: list[dict],
-        study_wrapper: WDAEStudy,
+        study_wrapper: WDAEAbstractStudy,
     ) -> set[str]:
         result = []
         for filter_conf in filters:
@@ -266,7 +266,7 @@ class QueryTransformer(QueryTransformerProtocol):
 
     def _transform_pheno_filters_to_ids(
         self, filters: list[dict],
-        study_wrapper: WDAEStudy,
+        study_wrapper: WDAEAbstractStudy,
     ) -> set[str]:
         result = []
         for filter_conf in filters:
@@ -293,7 +293,7 @@ class QueryTransformer(QueryTransformerProtocol):
         kwargs["inheritance"] = inheritance
 
     def extract_person_set_collection_query(
-            self, study: WDAEStudy, kwargs: dict[str, Any],
+            self, study: WDAEAbstractStudy, kwargs: dict[str, Any],
     ) -> PSCQuery:
         psc_query_raw = kwargs.pop("personSetCollection", {})
         logger.debug("person set collection requested: %s", psc_query_raw)
@@ -315,7 +315,7 @@ class QueryTransformer(QueryTransformerProtocol):
         return psc_query
 
     def _handle_person_set_collection(
-        self, study_wrapper: WDAEStudy, kwargs: dict[str, Any],
+        self, study_wrapper: WDAEAbstractStudy, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         psc_query = \
             self.extract_person_set_collection_query(study_wrapper, kwargs)
@@ -453,7 +453,7 @@ class QueryTransformer(QueryTransformerProtocol):
         return bool(kwargs["uniqueFamilyVariants"])
 
     def transform_kwargs(
-        self, study: WDAEStudy, **kwargs: Any,
+        self, study: WDAEAbstractStudy, **kwargs: Any,
     ) -> dict[str, Any]:
         """
         Transform WEB query variants params into genotype data params.
