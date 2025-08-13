@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from box import Box
-from dae.common_reports.common_report import CommonReport
 from dae.studies.study import GenotypeDataStudy
 from studies.study_wrapper import WDAEStudy
 
@@ -60,17 +59,3 @@ def test_get_genotype_data_config_nonexistant(
 ) -> None:
     data_config = t4c8_wgpf_instance.get_genotype_data_config("asjglkshj")
     assert data_config is None
-
-
-def test_get_common_report(
-    t4c8_wgpf_instance: WGPFInstance,
-) -> None:
-    common_report = t4c8_wgpf_instance.get_common_report("t4c8_study_1")
-    assert isinstance(common_report, CommonReport)
-
-
-def test_get_common_report_nonexistant(
-    t4c8_wgpf_instance: WGPFInstance,
-) -> None:
-    common_report = t4c8_wgpf_instance.get_common_report("aklghs")
-    assert common_report is None

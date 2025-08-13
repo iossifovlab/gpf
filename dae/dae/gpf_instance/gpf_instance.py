@@ -16,7 +16,6 @@ from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
 )
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
@@ -475,27 +474,6 @@ class GPFInstance:
 
     def get_all_gene_score_descs(self) -> list[GeneScoreDesc]:
         return cast(list[GeneScoreDesc], self.gene_scores_db.get_scores())
-
-    # Common reports
-    def get_common_report(self, study_id: str) -> CommonReport | None:
-        """Load and return common report (dataset statistics) for a study."""
-        study = self.get_genotype_data(study_id)
-        if study is None:
-            if self.has_phenotype_data(study_id):
-                study = self.get_phenotype_data(study_id)
-            else:
-                return None
-        return study.get_common_report()
-
-    def get_all_common_report_configs(self) -> list[Box]:
-        """Return all common report configuration."""
-        configs = []
-        local_ids = self.get_genotype_data_ids()
-        for gd_id in local_ids:
-            config = self.get_genotype_data_config(gd_id)
-            if config is not None and config.common_report is not None:
-                configs.append(config.common_report)
-        return configs
 
     # Variants DB
     def get_dataset(self, dataset_id: str) -> GenotypeData:
