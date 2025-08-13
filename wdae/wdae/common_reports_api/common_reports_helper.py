@@ -18,8 +18,20 @@ class BaseCommonReportsHelper(GPFTool):
         super().__init__("common_reports_helper")
 
     @abstractmethod
-    def get_common_report(self) -> CommonReport | None:
-        """Load and return common report (dataset statistics) for a study."""
+    def get_common_report(self) -> dict[str, Any] | None:
+        """Load and return common report for a study."""
+
+    @abstractmethod
+    def get_full_common_report(self) -> dict[str, Any] | None:
+        """Load and return full common report for a study."""
+
+    @abstractmethod
+    def get_family_counter_list(
+        self,
+        group_name: str,
+        counter_id: int,
+    ) -> Any:
+        """Return family counters as list."""
 
     @abstractmethod
     def get_family_counter_tsv(
@@ -57,7 +69,19 @@ class CommonReportsHelper(BaseCommonReportsHelper):
     def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
         raise NotImplementedError
 
-    def get_common_report(self) -> CommonReport | None:
+    def get_common_report(self) -> dict[str, Any] | None:
+        common_report = self._get_common_report_from_data()
+        if common_report is None:
+            return None
+        return common_report.to_dict()
+
+    def get_full_common_report(self) -> dict[str, Any] | None:
+        common_report = self._get_common_report_from_data()
+        if common_report is None:
+            return None
+        return common_report.to_dict(full=True)
+
+    def _get_common_report_from_data(self) -> CommonReport | None:
         common_report = None
         if self.study.has_genotype_data:
             common_report = self.study.genotype_data.get_common_report()
@@ -65,12 +89,24 @@ class CommonReportsHelper(BaseCommonReportsHelper):
             common_report = self.study.phenotype_data.get_common_report()
         return common_report
 
+    def get_family_counter_list(
+        self,
+        group_name: str,
+        counter_id: int,
+    ) -> Any:
+        common_report = self._get_common_report_from_data()
+        if common_report is None:
+            raise ValueError
+        group = common_report.families_report.families_counters[group_name]
+        counter = group.counters[int(counter_id)]
+        return counter.families
+
     def get_family_counter_tsv(
         self,
         group_name: str,
         counter_id: int,
     ) -> list[str]:
-        common_report = self.get_common_report()
+        common_report = self._get_common_report_from_data()
         if common_report is None:
             raise ValueError
         group = common_report.families_report.families_counters[group_name]
