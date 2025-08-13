@@ -156,10 +156,12 @@ class GenotypeStorage(abc.ABC):
             if v is None:
                 return None
             if summary_variant_ids is not None:
-                for aa in v.alt_alleles:
-                    svid = f"{aa.cshl_location}:{aa.cshl_variant}"
-                    if svid not in summary_variant_ids:
-                        return None
+                svids = [
+                    f"{aa.cshl_location}:{aa.cshl_variant}"
+                    for aa in v.alt_alleles
+                ]
+                if not any(svid in summary_variant_ids for svid in svids):
+                    return None
             for allele in v.alleles:
                 if allele.get_attribute("study_name") is None:
                     allele.update_attributes(

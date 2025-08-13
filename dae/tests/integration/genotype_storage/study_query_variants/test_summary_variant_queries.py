@@ -14,7 +14,7 @@ def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp("test_query_by_person_ids")
+    root_path = tmp_path_factory.mktemp("test_query_by_summary_ids")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
@@ -75,7 +75,15 @@ chrA   14   .  A   C,G,T .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
 @pytest.mark.parametrize(
     "summary_variant_ids, count",
     [
+        (["chrA:1:sub(A->C)"], 1),
+        (["chrA:1:sub(A->G)"], 1),
         (["chrA:2:sub(A->C)"], 2),
+        (["chrA:3:sub(A->C)"], 2),
+        (["chrA:4:sub(A->C)"], 1),
+        (["chrA:5:sub(A->C)"], 1),
+        (["chrA:6:sub(A->C)"], 2),
+        (["chrA:7:sub(A->C)"], 2),
+        (["chrA:8:sub(A->C)"], 2),
     ],
 )
 def test_query_by_summary_variant_ids(
