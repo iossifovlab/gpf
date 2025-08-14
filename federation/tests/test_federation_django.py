@@ -550,3 +550,157 @@ def test_pheno_browser_image_links(
         "api/v3/pheno_browser/images/"
         "TEST_REMOTE_study_1_pheno/i1/i1.age.violinplot.png"
     )
+
+
+def test_variant_reports(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    common_report_url = (
+        "/api/v3/common_reports/studies/"
+    )
+    response_remote = admin_client.get(
+        common_report_url + "TEST_REMOTE_t4c8_study_1")
+
+    assert response_remote.json()["denovo_report"]["tables"][0]["rows"][0] == {
+        "effect_type": "LGDs",
+        "row": [
+            {
+                "column": "autism (2)",
+                "number_of_children_with_event": 1,
+                "number_of_observed_events": 1,
+                "observed_rate_per_child": 0.5,
+                "percent_of_children_with_events": 0.5,
+            },
+            {
+                "column": "unaffected (2)",
+                "number_of_children_with_event": 0,
+                "number_of_observed_events": 0,
+                "observed_rate_per_child": 0,
+                "percent_of_children_with_events": 0,
+            },
+        ],
+    }
+
+
+def test_full_variant_reports(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    common_report_url = (
+        "/api/v3/common_reports/studies/"
+    )
+    response_remote = admin_client.get(
+        common_report_url + "TEST_REMOTE_t4c8_study_1" + "/full")
+
+    res_data = response_remote.json()
+    assert res_data == {}
+    assert res_data[
+        "families_report"][0]["counters"][0]["pedigree"][0] == [
+            "f1.1", "mom1", "0", "0", "F", "mom",
+            "#ffffff", "1:10.0,50.0", False, "", "",
+        ]
+    assert res_data[
+        "families_report"][0]["counters"][0]["pedigree"][3] == [
+            "f1.1", "s1", "mom1", "dad1", "M", "sib",
+            "#ffffff", "2:10.0,80.0", False, "", "",
+        ]
+
+
+def test_family_counter_list(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    family_counter_url = (
+        "/api/v3/common_reports/family_counters"
+    )
+
+    response_remote = admin_client.post(
+        family_counter_url,
+        {
+            "study_id": "TEST_REMOTE_t4c8_study_1",
+            "group_name": "Phenotype",
+            "counter_id": 0,
+        },
+    )
+    counter_one = response_remote.json()
+    assert counter_one == ["f1.1"]
+
+    response_remote = admin_client.post(
+        family_counter_url,
+        {
+            "study_id": "TEST_REMOTE_t4c8_study_1",
+            "group_name": "Phenotype",
+            "counter_id": 1,
+        },
+    )
+    counter_two = response_remote.json()
+    assert counter_two == ["f1.3"]
+
+
+def test_family_counter_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    data = {
+        "queryData": json.dumps({
+            "study_id": "TEST_REMOTE_t4c8_study_1",
+            "group_name": "Phenotype",
+            "counter_id": "0",
+        }),
+    }
+    url = "/api/v3/common_reports/family_counters/download"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json",
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    res = list(response.streaming_content)  # type: ignore
+    print(b"".join(res).decode())
+
+    assert len(res) == 5
+
+
+def test_families_data_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = (
+        "/api/v3/common_reports/families_data/TEST_REMOTE_t4c8_dataset"
+    )
+    response = admin_client.get(url)
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    res = list(response.streaming_content)  # type: ignore
+    assert len(res) == 16
+
+
+def test_families_tags_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = (
+        "/api/v3/common_reports/families_data/TEST_REMOTE_t4c8_dataset"
+    )
+    body = {
+        "queryData": json.dumps({
+            "tagsQuery": {
+                "orMode": False,
+                "includeTags": ["tag_nuclear_family", "tag_trio_family"],
+                "excludeTags": [],
+            },
+        }),
+    }
+    response = admin_client.post(
+        url, json.dumps(body), content_type="application/json",
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    res = list(response.streaming_content)  # type: ignore
+    assert len(res) == 4

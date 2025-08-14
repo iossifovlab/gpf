@@ -1,3 +1,4 @@
+import json
 import logging
 import urllib.parse
 from collections.abc import Generator, Iterable, Iterator
@@ -860,20 +861,6 @@ class RESTClient:
 
         return response.json()
 
-    def get_common_report(
-        self, common_report_id: str, *, full: bool = False,
-    ) -> Any:
-        """Get the commont report for a dataset."""
-        if full:
-            url = (
-                f"{self.api_url}/common_reports"
-                f"/studies/{common_report_id}/full"
-            )
-        else:
-            url = f"{self.api_url}/common_reports/studies/{common_report_id}"
-        response = self.session.get(url)
-        return response.json()
-
     def get_common_report_families_data(
         self, common_report_id: str,
     ) -> Any:
@@ -1335,3 +1322,93 @@ class RESTClient:
             return None, None
 
         return response.content, response.headers["content-type"]
+
+    def get_common_report(
+        self, study_id: str, *, full: bool = False,
+    ) -> dict[str, Any]:
+        """Get common report for study."""
+        url = f"{self.api_url}/common_reports/studies/{study_id}"
+        if full:
+            url += "/full"
+
+        response = self.session.get(url)
+        if response.status_code != 200:
+            raise ValueError(response.status_code)
+        return cast(dict[str, Any], response.json())
+
+    def get_family_counter_list(
+        self,
+        study_id: str,
+        group_name: str,
+        counter_id: int,
+    ) -> list[Any]:
+        """Get common report for study."""
+        response = self.session.post(
+            f"{self.api_url}/common_reports/family_counters",
+            json={
+                "study_id": study_id,
+                "group_name": group_name,
+                "counter_id": counter_id,
+            },
+        )
+
+        if response.status_code != 200:
+            raise ValueError(response.status_code)
+        return cast(list[Any], response.json())
+
+    def download_family_counter_tsv(
+        self,
+        study_id: str,
+        group_name: str,
+        counter_id: int,
+    ) -> Iterator[str]:
+        """Get common report for study."""
+        url = f"{self.api_url}/common_reports/family_counters/download"
+        data = {
+                "queryData": json.dumps({
+                    "study_id": study_id,
+                    "group_name": group_name,
+                    "counter_id": counter_id,
+                }),
+            }
+        response = self.session.post(
+            url,
+            data=json.dumps(data),
+            stream=True,
+        )
+        if response.status_code != 200:
+            raise ValueError(response.status_code)
+
+        return response.iter_content(chunk_size=1024)
+
+    def get_family_data_pedigree_file(
+        self,
+        study_id: str,
+    ) -> Iterator[str]:
+        """Get common report for study."""
+        response = self.session.get(
+            f"{self.api_url}/common_reports/families_data/{study_id}",
+            stream=True,
+        )
+
+        if response.status_code != 200:
+            raise ValueError(response.status_code)
+
+        return response.iter_lines()
+
+    def get_filtered_family_data_pedigree_file(
+        self,
+        study_id: str,
+        data: dict[str, Any],
+    ) -> Iterator[str]:
+        """Get common report for study."""
+        response = self.session.post(
+            f"{self.api_url}/common_reports/families_data/{study_id}",
+            data=data,
+            stream=True,
+        )
+
+        if response.status_code != 200:
+            raise ValueError(response.status_code)
+
+        return response.iter_lines()
