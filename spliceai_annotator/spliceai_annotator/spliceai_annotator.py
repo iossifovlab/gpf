@@ -6,6 +6,7 @@ import sys
 import textwrap
 from collections import defaultdict
 from collections.abc import Sequence
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
@@ -93,10 +94,33 @@ class _AnnotationRequest:
     batch_index: int = -1
 
 
+def reset_annotation_request(req: _AnnotationRequest) -> None:
+    req.vcf_allele = None  # type: ignore
+    del req.x_ref
+    del req.x_alt
+    req.x_ref = None  # type: ignore
+    req.x_alt = None  # type: ignore
+
+
 @dataclass
 class _AnnotationResult:
     request: _AnnotationRequest
     y: np.ndarray
+
+
+def reset_annotation_result(result: _AnnotationResult) -> None:
+    reset_annotation_request(result.request)
+    del result.request
+    result.request = None  # type: ignore
+    del result.y
+    result.y = None  # type: ignore
+
+
+@dataclass
+class _BatchResult:
+    y_ref_batch: np.ndarray
+    y_alt_batch: np.ndarray
+    results: list[_AnnotationResult]
 
 
 class SpliceAIAnnotator(AnnotatorBase):
@@ -355,6 +379,12 @@ models to predict splice site variant effects.
     def open(self) -> Annotator:
         self.genome.open()
         self.gene_models.load()
+        physical_devices = tf.config.list_physical_devices("GPU")
+        for device in physical_devices:
+            with suppress(Exception):
+                tf.config.experimental.set_memory_growth(
+                    device, enable=True)
+
         model_paths = [
             f"models/spliceai{i}.h5" for i in range(1, 6)
         ]
@@ -507,7 +537,12 @@ models to predict splice site variant effects.
             self._predict_sequential(request)
             for request in requests
         ]
-        return self._format_results(annotation_results)
+        result = self._format_results(annotation_results)
+        for res in annotation_results:
+            reset_annotation_result(res)
+        annotation_results.clear()
+
+        return result
 
     def _format_results(
         self,
@@ -566,6 +601,7 @@ models to predict splice site variant effects.
                     f"{idx_pd - self._distance}|"
                     f"{idx_nd - self._distance}",
                 )
+
         if not results:
             return self._not_found()
         return {
@@ -586,14 +622,24 @@ models to predict splice site variant effects.
     ) -> _AnnotationResult:
 
         assert self._models is not None
-        y_ref = np.mean([
+        y_ref_pred = [
             self._models[m].predict(req.x_ref, verbose=0)
             for m in range(5)
-        ], axis=0)
-        y_alt = np.mean([
+        ]
+        y_ref = np.mean(y_ref_pred, axis=0)
+        p1, p2, p3, p4, p5 = y_ref_pred
+        y_ref_pred = []
+        del p1, p2, p3, p4, p5
+
+        y_alt_pred = [
             self._models[m].predict(req.x_alt, verbose=0)
             for m in range(5)
-        ], axis=0)
+        ]
+        y_alt = np.mean(y_alt_pred, axis=0)
+        p1, p2, p3, p4, p5 = y_alt_pred
+        y_alt_pred = []
+        del p1, p2, p3, p4, p5
+
         y = self._prediction_padding_sequential(req, y_ref, y_alt)
 
         return _AnnotationResult(req, y)
@@ -662,7 +708,7 @@ models to predict splice site variant effects.
 
     def _predict_batch(
         self, reqs: Sequence[_AnnotationRequest],
-    ) -> list[_AnnotationResult]:
+    ) -> _BatchResult:
         assert self._models is not None
         assert len(reqs) > 0
         assert all(reqs[0].x_alt.shape == req.x_alt.shape
@@ -676,14 +722,19 @@ models to predict splice site variant effects.
             "predicting a batch of request: %s; %s", len(reqs),
             x_alt_batch.shape,
         )
-        y_ref_batch = np.mean([
+        y_ref_pred = [
             self._models[m].predict(x_ref_batch, verbose=0)
             for m in range(5)
-        ], axis=0)
-        y_alt_batch = np.mean([
+        ]
+        y_ref_batch = np.mean(y_ref_pred, axis=0)
+        y_alt_pred = [
             self._models[m].predict(x_alt_batch, verbose=0)
             for m in range(5)
-        ], axis=0)
+        ]
+        y_alt_batch = np.mean(y_alt_pred, axis=0)
+
+        for p in [*y_ref_pred, *y_alt_pred]:
+            del p
 
         logger.debug(
             "transforming results",
@@ -697,7 +748,11 @@ models to predict splice site variant effects.
         logger.debug(
             "returning results: %d", len(results),
         )
-        return results
+        return _BatchResult(
+            y_ref_batch=y_ref_batch,
+            y_alt_batch=y_alt_batch,
+            results=results,
+        )
 
     def _seq_padding(
             self, seq: str,
@@ -747,6 +802,7 @@ models to predict splice site variant effects.
         logger.debug(
             "batching requests: %s", {k: len(v) for k, v in batches.items()},
         )
+        batch_results = []
         for batch_index, batch_requests in enumerate(batches.values()):
             logger.debug(
                 "processing batch %d/%d with %d requests",
@@ -754,7 +810,9 @@ models to predict splice site variant effects.
             )
             if len(batch_requests) == 0:
                 continue
-            for bresult in self._predict_batch(batch_requests):
+            batch_result = self._predict_batch(batch_requests)
+            batch_results.append(batch_result)
+            for bresult in batch_result.results:
                 batch_index = bresult.request.batch_index
                 annotations[batch_index].append(bresult)
 
@@ -765,5 +823,12 @@ models to predict splice site variant effects.
                 continue
 
             results.append(self._format_results(res))
+
+        for batch_result in batch_results:
+            del batch_result.y_ref_batch
+            del batch_result.y_alt_batch
+            for r in batch_result.results:
+                reset_annotation_result(r)
+            del batch_result.results
 
         return results
