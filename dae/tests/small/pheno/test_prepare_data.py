@@ -471,7 +471,7 @@ def test_handle_regressions(
         str(fake_pheno_db_dir), str(fake_pheno_db_dir),
     )
     assert len(res) == 2
-    print(res)
+    assert res[1] is not None
     assert sorted(
         [r["regression_id"] for r in res[1]]) == sorted(["age", "nviq"],
     )
@@ -664,7 +664,7 @@ def test_draw_violinplot(
         x="i1.m5",
         y="i1.m6",
         hue="sex",
-        hue_order=[Sex.male, Sex.female],
+        hue_order=[Sex.male.value, Sex.female.value],
         linewidth=1,
         split=True,
         density_norm="count",
@@ -691,7 +691,7 @@ def test_draw_stripplot(
         x="i1.m5",
         y="i1.m6",
         hue="sex",
-        hue_order=[Sex.male, Sex.female],
+        hue_order=[Sex.male.value, Sex.female.value],
         jitter=0.025,
         size=2,
         palette=gender_palette(),

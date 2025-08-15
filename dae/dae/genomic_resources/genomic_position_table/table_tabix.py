@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class TabixGenomicPositionTable(GenomicPositionTable):
     """Represents Tabix file genome position table."""
 
-    BUFFER_MAXSIZE = 20_000
+    BUFFER_MAXSIZE: int = 20_000
 
     def __init__(
             self, genomic_resource: GenomicResource, table_definition: dict):

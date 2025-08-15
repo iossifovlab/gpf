@@ -882,11 +882,13 @@ def test_tabix_middle_optimization(tmp_path: pathlib.Path) -> None:
         for row in table.get_records_in_region("1", 1, 1):
             assert tuple(row.row()) == ("1", "1", "1")
             break
+        assert row is not None
         assert tuple(row.row()) == ("1", "1", "1")
 
         row = None
         for row in table.get_records_in_region("1", 1, 1):
             assert tuple(row.row()) == ("1", "1", "1")
+        assert row is not None
         assert tuple(row.row()) == ("1", "1", "1")
 
 
@@ -927,16 +929,19 @@ def test_tabix_middle_optimization_regions(tmp_path: pathlib.Path) -> None:
         row = None
         for row in table.get_records_in_region("1", 4, 4):  # noqa: B007
             pass
+        assert row is not None
         assert tuple(row.row()) == ("1", "4", "8", "2")
 
         row = None
         for row in table.get_records_in_region("1", 4, 4):  # noqa: B007
             break
+        assert row is not None
         assert tuple(row.row()) == ("1", "4", "8", "2")
 
         row = None
         for row in table.get_records_in_region("1", 5, 5):  # noqa: B007
             break
+        assert row is not None
         assert tuple(row.row()) == ("1", "4", "8", "2")
 
 

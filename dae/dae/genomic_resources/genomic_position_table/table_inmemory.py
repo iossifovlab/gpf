@@ -94,7 +94,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         self._build_chrom_mapping()
         return self
 
-    @cache
+    @cache  # pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> list[str]:
         return sorted(self.records_by_chr.keys())
 

@@ -36,6 +36,7 @@ exclude = [
     "docs",
     "migrations",
     "*.ipynb",
+    "typings",
 ]
 
 line-length = 80
