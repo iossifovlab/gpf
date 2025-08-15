@@ -494,16 +494,15 @@ class GPFInstance:
         symbol_like: str | None = None,
         sort_by: str | None = None,
         order: str | None = None,
-    ) -> list[GPStatistic]:
+    ) -> list[dict]:
         """Query AGR statistics and return results."""
         rows = self._gene_profile_db.query_gps(
             page, symbol_like, sort_by, order,
         )
-        statistics = list(map(
+        return list(map(
             self._gene_profile_db.gp_from_table_row,
             rows,
         ))
-        return cast(list[GPStatistic], statistics)
 
     def list_gp_gene_symbols(
         self,
