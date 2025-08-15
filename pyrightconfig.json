@@ -1,14 +1,14 @@
 {
     "include": [
         "dae",
-        "wdae",
     ],
     "exclude": [
+        "wdae",
         "**/__pycache__",
         "dae/docs",
         "wdae/docs",
         "**/migrations",
         "**/build",
     ],
-    "pythonVersion": "3.11",
+    "pythonVersion": "3.12",
 }
