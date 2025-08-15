@@ -21,8 +21,8 @@ class Variant:
 
         self.variant_type = None
         self.length = None
-        self.reference = None
-        self.alternate = None
+        self.reference: str | None = None
+        self.alternate: str | None = None
         self.set_position(chrom, position, loc)
 
         if variant_type in {
@@ -38,6 +38,7 @@ class Variant:
             self.variant_type = variant_type
         else:
             self.set_ref_alt(var, ref, alt, length, seq, variant_type)
+            assert self.reference is not None
 
             self.ref_position_last = self.position + len(self.reference)
 
@@ -94,6 +95,8 @@ class Variant:
 
     def trim_equal_ref_alt_parts(self):
         """Trim reference and alternative."""
+        assert self.reference is not None
+        assert self.alternate is not None
         start_index = -1
         for i in range(min(len(self.reference), len(self.alternate))):
             if self.reference[i] == self.alternate[i]:
@@ -109,6 +112,7 @@ class Variant:
         """Set reference and alternative from CSHL variant."""
         if var.startswith("complex"):
             res = re.match(".*\\((.*)->(.*)\\)", var)
+            assert res is not None
             self.reference = res.group(1).upper()
             self.alternate = res.group(2).upper()
             return
@@ -116,20 +120,23 @@ class Variant:
         var_type = var[0].upper()
         if var_type == "S":
             res = re.match(".*\\((.*)->(.*)\\)", var)
+            assert res is not None
             self.reference = res.group(1).upper()
             self.alternate = res.group(2).upper()
             return
 
         if var_type == "D":
             res = re.match(".*\\((.*)\\)", var)
+            assert res is not None
             self.reference = "0" * int(res.group(1))
             self.alternate = ""
             return
 
         if var_type == "I":
             res = re.match(".*\\((.*)\\)", var)
+            assert res is not None
             self.reference = ""
-            self.alternate = re.sub("[0-9]+", "", res.group(1).upper())
+            self.alternate = re.sub(r"[0-9]+", "", res.group(1).upper())
             return
 
         raise ValueError(f"Unknown variant!: {var}")

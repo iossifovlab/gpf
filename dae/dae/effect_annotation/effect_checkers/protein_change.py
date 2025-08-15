@@ -1,14 +1,15 @@
 
-from ..effect import EffectFactory
-from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
+from dae.effect_annotation.annotation_request import AnnotationRequest
+from dae.effect_annotation.effect import AnnotationEffect, EffectFactory
+from dae.effect_annotation.effect_checkers.effect_checker import EffectChecker
 
 
 class ProteinChangeEffectChecker(EffectChecker):
     """Protein change effect checker."""
 
     def mutation_type(
-            self, aaref: list[str | None],
-            aaalt: list[str | None]) -> str:
+            self, aaref: list[str],
+            aaalt: list[str]) -> str:
         """Check the mutation type."""
         assert len(aaref) == len(aaalt)
 
