@@ -80,7 +80,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
                 infile,
                 usecols=[
                     "gene", "F", "M", "P_LGDS", "P_MISSENSE", "P_SYNONYMOUS",
-                ],
+                ],  # pyright: ignore
             )
 
     def calc_enrichment_test(

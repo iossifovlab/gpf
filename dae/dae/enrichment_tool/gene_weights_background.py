@@ -17,7 +17,7 @@ from dae.enrichment_tool.event_counters import (
     EnrichmentSingleResult,
     EventCountersResult,
 )
-from dae.gene_scores.implementations.gene_scores_impl import (
+from dae.gene_scores.gene_scores import (
     build_gene_score_from_resource,
 )
 from dae.genomic_resources.repository import GenomicResource
@@ -86,7 +86,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
             return expected, 1.0
         assert observed >= 1
         binom = stats.binomtest(observed, events_count, events_prob)
-        return expected, binom.pvalue
+        return expected, binom.pvalue  # pyright: ignore
 
     def calc_enrichment_test(
         self,
@@ -173,7 +173,7 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
         assert len(score_ids) == 1
         return score_ids[0]
 
-    @cached_property
+    @property
     def name(self) -> str:
         return self.gene_score.score_definitions[self.score_id].name
 
@@ -228,7 +228,7 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
             return expected, 1.0
         assert observed >= 1
         binom = stats.binomtest(observed, events_count, events_prob)
-        return expected, binom.pvalue
+        return expected, binom.pvalue  # pyright: ignore
 
     def calc_enrichment_test(
         self,
