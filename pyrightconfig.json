@@ -6,6 +6,7 @@
         "wdae",
         "**/__pycache__",
         "dae/docs",
+        "dae/demo_scripts",
         "wdae/docs",
         "**/migrations",
         "**/build",

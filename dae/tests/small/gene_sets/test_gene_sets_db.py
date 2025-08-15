@@ -178,17 +178,23 @@ def test_get_gene_set_collection_files(gene_sets_db: GeneSetsDb) -> None:
     """Get a collection list of files"""
     gene_set_collections = gene_sets_db.gene_set_collections
 
-    assert gene_set_collections["main"].files == {
+    main = gene_set_collections["main"]
+    assert isinstance(main, GeneSetCollection)
+    assert main.files == {
         "GeneSets/main_candidates.txt",
         "GeneSets/alt_candidates.txt",
     }
 
-    assert gene_set_collections["test_mapping"].files == {
+    test_mapping = gene_set_collections["test_mapping"]
+    assert isinstance(test_mapping, GeneSetCollection)
+    assert test_mapping.files == {
         "test-map.txt",
         "test-mapnames.txt",
     }
 
-    assert gene_set_collections["test_gmt"].files == {
+    test_gmt = gene_set_collections["test_gmt"]
+    assert isinstance(test_gmt, GeneSetCollection)
+    assert test_gmt.files == {
         "test-gmt.gmt",
     }
 

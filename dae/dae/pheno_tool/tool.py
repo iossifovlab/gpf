@@ -186,11 +186,12 @@ class PhenoTool:
         if normalize_by is None:
             normalize_by = []
 
-        normalize_by = self.init_normalize_measures(measure_id, normalize_by)
+        normalize_measures = \
+            self.init_normalize_measures(measure_id, normalize_by)
 
         # currently filtering only for probands, expand with additional
         # options via PeopleGroup
-        all_measures = [measure_id, *normalize_by]
+        all_measures = [measure_id, *normalize_measures]
 
         pheno_df = self.phenotype_data.get_people_measure_values_df(
             all_measures,
@@ -203,7 +204,7 @@ class PhenoTool:
 
         if not pheno_df.empty:
             pheno_df = self._normalize_df(
-                pheno_df, measure_id, normalize_by,
+                pheno_df, measure_id, normalize_measures,
             )
 
         return pheno_df
@@ -257,7 +258,8 @@ class PhenoTool:
         assert isinstance(variants, Counter)
 
         persons_variants = pd.DataFrame(
-            data=list(variants.items()), columns=["person_id", "variant_count"],
+            data=list(variants.items()),
+            columns=["person_id", "variant_count"],
         )
         persons_variants = persons_variants.set_index("person_id")
 
@@ -313,7 +315,7 @@ class PhenoTool:
             return "NA"  # type: ignore
         tt = ttest_ind(positive, negative)
         pv = tt[1]
-        return float(pv)
+        return float(pv)  # pyright: ignore
 
     @classmethod
     def _calc_stats(

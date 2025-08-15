@@ -101,8 +101,9 @@ def gp_config() -> dict:
 
 
 def gp_gpf_instance(
-        gp_config: str,
-        tmp_path: pathlib.Path) -> GPFInstance:
+    gp_config: dict,
+    tmp_path: pathlib.Path,
+) -> GPFInstance:
     setup_directories(
         tmp_path,
         {
@@ -283,6 +284,9 @@ def test_generate_gene_profile(
     t4 = gpdb.get_gp("t4")
     c8 = gpdb.get_gp("c8")
 
+    assert t4 is not None
+    assert c8 is not None
+
     assert t4.gene_sets == [
         "gene_sets_test_gene_set_1",
         "gene_sets_test_gene_set_3",
@@ -362,7 +366,7 @@ def test_generate_gene_profile(
 
 
 def test_generate_gene_profile_with_incomplete_config(
-        gp_config: str,
+        gp_config: dict,
         tmp_path: pathlib.Path) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
     argv = [
@@ -376,7 +380,7 @@ def test_generate_gene_profile_with_incomplete_config(
     gpf_instance = gp_gpf_instance(gp_config, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
-        + "['required field'], 'order': ['required field']}")
+         "['required field'], 'order': ['required field']}")
     with pytest.raises(
             ValueError,
             match=r"^(.*?)" + expected_error):
@@ -384,7 +388,7 @@ def test_generate_gene_profile_with_incomplete_config(
 
 
 def test_generate_gene_profile_with_incomplete_config_order(
-        gp_config: str,
+        gp_config: dict,
         tmp_path: pathlib.Path) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
     argv = [
