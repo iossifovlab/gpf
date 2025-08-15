@@ -64,7 +64,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         self.mRNA_position: int | None = None
         self.ref_aa: list[str] | None = None
         self.alt_aa: list[str] | None = None
-        self.dist_from_5utr = None
+        self.dist_from_5utr: int | None = None
 
     def __repr__(self) -> str:
         return (

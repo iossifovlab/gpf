@@ -1,9 +1,9 @@
 
+from dae.effect_annotation.annotation_request import AnnotationRequest
+from dae.effect_annotation.effect import AnnotationEffect, EffectFactory
+from dae.effect_annotation.effect_checkers.effect_checker import EffectChecker
+from dae.effect_annotation.variant import Variant
 from dae.genomic_resources.gene_models import TranscriptModel
-
-from ..effect import EffectFactory
-from ..variant import Variant
-from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 
 class PromoterEffectChecker(EffectChecker):
