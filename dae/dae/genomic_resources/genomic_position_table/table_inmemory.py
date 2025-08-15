@@ -1,5 +1,6 @@
 import collections
 from collections.abc import Generator
+from functools import cache
 from typing import IO, ClassVar
 
 from dae.genomic_resources.repository import GenomicResource
@@ -93,6 +94,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         self._build_chrom_mapping()
         return self
 
+    @cache
     def get_file_chromosomes(self) -> list[str]:
         return sorted(self.records_by_chr.keys())
 

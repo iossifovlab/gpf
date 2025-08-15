@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from collections.abc import Callable, Generator
+from functools import cache
 from typing import Any
 
 import pysam
@@ -96,6 +97,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 for chrom in self.get_file_chromosomes()
             ]))
 
+    @cache  # pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> list[str]:
         if self.pysam_file is None:
             raise ValueError(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from functools import cache
 
 from dae.genomic_resources.genomic_position_table.line import BigWigLine
 from dae.genomic_resources.genomic_position_table.table import (
@@ -227,6 +228,7 @@ class BigWigTable(GenomicPositionTable):
             )
         return self.chroms[fchrom]
 
+    @cache  # pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> list[str]:
         assert self._bw_file is not None
         return list(self.chroms.keys())

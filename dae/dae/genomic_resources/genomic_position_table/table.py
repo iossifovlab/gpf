@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import logging
 from collections.abc import Generator
+from functools import cache
 from types import TracebackType
 from typing import cast
 
@@ -237,6 +238,7 @@ class GenomicPositionTable(abc.ABC):
         Returned value is guarnteed to be larget than the actual contig length.
         """
 
+    @cache  # pylint: disable=method-cache-max-size-none
     @abc.abstractmethod
     def get_file_chromosomes(self) -> list[str]:
         """Return chromosomes in a genomic table file.
