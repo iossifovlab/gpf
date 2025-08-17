@@ -4,6 +4,9 @@
     ],
     "exclude": [
         "wdae",
+        "external_demo_annotator",
+        "external_vep_annotator",
+        "gcp_storage",
         "**/__pycache__",
         "dae/docs",
         "dae/demo_scripts",
