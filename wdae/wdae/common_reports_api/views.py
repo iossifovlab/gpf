@@ -84,7 +84,7 @@ class FamilyCounterListView(QueryBaseView, DatasetAccessRightsView):
 
         assert common_report_id
         assert group_name
-        assert counter_id
+        assert counter_id is not None
 
         study = self.gpf_instance.get_wdae_wrapper(common_report_id)
         if not study:
