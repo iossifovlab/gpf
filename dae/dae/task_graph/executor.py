@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing as mp
+import os
+import pickle  # noqa: S403
 import sys
 import time
 import traceback
@@ -11,6 +14,7 @@ from copy import copy
 from types import TracebackType
 from typing import Any, cast
 
+import fsspec
 from dask.distributed import Client, Future
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
@@ -50,8 +54,9 @@ class TaskGraphExecutor:
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> None:
+    ) -> bool:
         self.close()
+        return exc_type is None
 
     @abstractmethod
     def close(self) -> None:
@@ -70,7 +75,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         self._executing = False
 
     @staticmethod
-    def _exec(
+    def _exec_internal(
         task_func: Callable, args: list, _deps: list, params: dict[str, Any],
     ) -> Any:
         verbose = params.get("verbose")
@@ -88,12 +93,71 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         task_logger = logging.getLogger("task_executor")
         task_logger.info("task <%s> started", task_id)
         start = time.time()
+
         result = task_func(*args)
         elapsed = time.time() - start
         task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
 
         root_logger.removeHandler(handler)
         handler.close()
+        return result
+
+    @staticmethod
+    def _exec_forked(
+        task_func: Callable, args: list, deps: list, params: dict[str, Any],
+    ) -> None:
+
+        result_fn = AbstractTaskGraphExecutor._result_fn(params)
+        try:
+            result = AbstractTaskGraphExecutor._exec_internal(
+                task_func, args, deps, params,
+            )
+        except Exception as exp:  # noqa: BLE001
+            # pylint: disable=broad-except
+            result = exp
+        try:
+            with fsspec.open(result_fn, "wb") as out:
+                pickle.dump(result, out)  # pyright: ignore
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "cannot write result for task %s. Ignoring and continuing.",
+                result_fn,
+            )
+
+    @staticmethod
+    def _result_fn(params: dict[str, Any]) -> str:
+        task_id = params["task_id"]
+        status_dir = params.get("task_status_dir", ".")
+        return os.path.join(status_dir, f"{task_id}.result")
+
+    @staticmethod
+    def _exec(
+        task_func: Callable, args: list, _deps: list, params: dict[str, Any],
+    ) -> Any:
+        fork_worker = params.get("fork_worker", False)
+        if not fork_worker:
+            return AbstractTaskGraphExecutor._exec_internal(
+                task_func, args, _deps, params,
+            )
+        mp.current_process()._config[  # type: ignore  # noqa: SLF001
+            "daemon"] = False
+        p = mp.Process(
+            target=AbstractTaskGraphExecutor._exec_forked,
+            args=(task_func, args, _deps, params),
+        )
+        p.start()
+        p.join()
+
+        result_fn = AbstractTaskGraphExecutor._result_fn(params)
+        try:
+            with fsspec.open(result_fn, "rb") as infile:
+                result = pickle.load(infile)  # pyright: ignore
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "cannot write result for task %s. Ignoring and continuing.",
+                result_fn,
+            )
+            result = None
         return result
 
     def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:

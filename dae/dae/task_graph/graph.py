@@ -96,3 +96,7 @@ class TaskGraph:
             if dep.task_id not in task_set:
                 task_set.add(dep.task_id)
                 TaskGraph._add_task_deps(dep, task_set)
+
+
+def sync_tasks() -> None:
+    return None

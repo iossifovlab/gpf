@@ -88,6 +88,11 @@ class TaskGraphCli:
                 default=default_task_status_dir,
                 type=str, help="Directory to store the task progress.",
             )
+            execution_mode_group.add_argument(
+                "--fork-worker", dest="fork_worker", action="store_true",
+                help="Whether to fork a new worker process for each task",
+            )
+
         else:
             assert not task_progress_mode, \
                 "task_progress_mode must be False if no cache is used"
