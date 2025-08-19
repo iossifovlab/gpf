@@ -698,8 +698,27 @@ def test_families_data_download(
     assert response
     assert response.status_code == status.HTTP_200_OK
 
-    res = list(response.streaming_content)  # type: ignore
-    assert len(res) == 16
+    text = b"".join(list(response.streaming_content)).decode()  # type: ignore
+    lines = text.split("\n")
+    assert len(lines) == 17
+    assert lines[0] == (
+        "familyId\tpersonId\tmomId\tdadId\tsex\tstatus\trole\tsample_id\t"
+        "layout\tgenerated\tnot_sequenced\ttag_nuclear_family\t"
+        "tag_quad_family\ttag_trio_family\ttag_simplex_family\t"
+        "tag_multiplex_family\ttag_control_family\ttag_affected_dad_family\t"
+        "tag_affected_mom_family\ttag_affected_prb_family\t"
+        "tag_affected_sib_family\ttag_unaffected_dad_family\t"
+        "tag_unaffected_mom_family\ttag_unaffected_prb_family\t"
+        "tag_unaffected_sib_family\ttag_male_prb_family\t"
+        "tag_female_prb_family\ttag_missing_mom_family\t"
+        "tag_missing_dad_family\tmember_index\tphenotype"
+    )
+    assert (
+        "f2.1\tch1\tmom1\tdad1\tF\taffected\tprb\tch1\t2:31.75,80.0\t"
+        "False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tFalse\tFalse\t"
+        "False\tTrue\tFalse\tTrue\tTrue\tFalse\tFalse\t"
+        "False\tTrue\tFalse\tFalse\t2\tepilepsy"
+    ) in lines
 
 
 def test_families_tags_download(
@@ -725,5 +744,24 @@ def test_families_tags_download(
     assert response
     assert response.status_code == status.HTTP_200_OK
 
-    res = list(response.streaming_content)  # type: ignore
-    assert len(res) == 4
+    text = b"".join(list(response.streaming_content)).decode()  # type: ignore
+    lines = text.split("\n")
+    assert len(lines) == 5
+    assert lines[0] == (
+        "familyId\tpersonId\tmomId\tdadId\tsex\tstatus\trole\tsample_id\t"
+        "layout\tgenerated\tnot_sequenced\ttag_nuclear_family\t"
+        "tag_quad_family\ttag_trio_family\ttag_simplex_family\t"
+        "tag_multiplex_family\ttag_control_family\ttag_affected_dad_family\t"
+        "tag_affected_mom_family\ttag_affected_prb_family\t"
+        "tag_affected_sib_family\ttag_unaffected_dad_family\t"
+        "tag_unaffected_mom_family\ttag_unaffected_prb_family\t"
+        "tag_unaffected_sib_family\ttag_male_prb_family\t"
+        "tag_female_prb_family\ttag_missing_mom_family\t"
+        "tag_missing_dad_family\tmember_index\tphenotype"
+    )
+    assert (
+        "f2.1\tmom1\t0\t0\tF\tunaffected\tmom\tmom1\t1:10.0,50.0\t"
+        "False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tFalse\tFalse\t"
+        "False\tTrue\tFalse\tTrue\tTrue\tFalse\tFalse\tFalse\t"
+        "True\tFalse\tFalse\t0\tunaffected"
+    ) in lines

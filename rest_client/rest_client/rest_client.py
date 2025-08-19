@@ -1395,7 +1395,7 @@ class RESTClient:
         if response.status_code != 200:
             raise ValueError(response.status_code)
 
-        return response.iter_lines()
+        return response.iter_content(chunk_size=1024)
 
     def get_filtered_family_data_pedigree_file(
         self,
@@ -1412,4 +1412,4 @@ class RESTClient:
         if response.status_code != 200:
             raise ValueError(response.status_code)
 
-        return response.iter_lines()
+        return response.iter_content(chunk_size=1024)
