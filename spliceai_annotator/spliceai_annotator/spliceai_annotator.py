@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-import gc
 import logging
 import sys
 import textwrap
 from collections import defaultdict
 from collections.abc import Sequence
-from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-import tensorflow as tf
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
@@ -36,7 +33,6 @@ from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
 )
-from pkg_resources import resource_filename
 
 from spliceai_annotator.utils import one_hot_encode
 
@@ -366,31 +362,19 @@ models to predict splice site variant effects.
                 del model
         self._models = None
 
-        tf.keras.backend.clear_session()
-        gc.collect()
         # pylint: disable=import-outside-toplevel
-        import ctypes
-        libc = ctypes.CDLL("libc.so.6")
-        libc.malloc_trim(0)
+        from . import spliceai_annotator_impl as impl
+        impl.spliceai_close()
+
         super().close()
 
     def open(self) -> Annotator:
         self.genome.open()
         self.gene_models.load()
-        physical_devices = tf.config.list_physical_devices("GPU")
-        for device in physical_devices:
-            with suppress(Exception):
-                tf.config.experimental.set_memory_growth(
-                    device, enable=True)
 
-        model_paths = [
-            f"models/spliceai{i}.h5" for i in range(1, 6)
-        ]
-        self._models = [  # type: ignore
-            tf.keras.models.load_model(
-                resource_filename(__name__, path))
-            for path in model_paths
-        ]
+        # pylint: disable=import-outside-toplevel
+        from . import spliceai_annotator_impl as impl
+        self._models = impl.spliceai_open()  # type: ignore
         return super().open()
 
     def _not_found(self) -> dict[str, Any]:
@@ -620,23 +604,15 @@ models to predict splice site variant effects.
     ) -> _AnnotationResult:
 
         assert self._models is not None
-        y_ref_pred = [
-            self._models[m].predict(req.x_ref, verbose=0)
-            for m in range(5)
-        ]
-        y_ref = np.mean(y_ref_pred, axis=0)
-        p1, p2, p3, p4, p5 = y_ref_pred
-        y_ref_pred = []
-        del p1, p2, p3, p4, p5
+        # pylint: disable=import-outside-toplevel
+        from . import spliceai_annotator_impl as impl
 
-        y_alt_pred = [
-            self._models[m].predict(req.x_alt, verbose=0)
-            for m in range(5)
-        ]
-        y_alt = np.mean(y_alt_pred, axis=0)
-        p1, p2, p3, p4, p5 = y_alt_pred
-        y_alt_pred = []
-        del p1, p2, p3, p4, p5
+        y_ref = impl.spliceai_predict(
+            self._models, req.x_ref,
+        )
+        y_alt = impl.spliceai_predict(
+            self._models, req.x_alt,
+        )
 
         y = self._prediction_padding_sequential(req, y_ref, y_alt)
 
@@ -721,20 +697,15 @@ models to predict splice site variant effects.
             x_alt_batch.shape,
         )
 
-        y_ref_pred = [
-            self._models[m].predict(x_ref_batch, verbose=0)
-            for m in range(5)
-        ]
-        y_ref_batch = np.mean(y_ref_pred, axis=0)
-
-        y_alt_pred = [
-            self._models[m].predict(x_alt_batch, verbose=0)
-            for m in range(5)
-        ]
-        y_alt_batch = np.mean(y_alt_pred, axis=0)
-
-        for p in [*y_ref_pred, *y_alt_pred]:
-            del p
+        assert self._models is not None
+        # pylint: disable=import-outside-toplevel
+        from . import spliceai_annotator_impl as impl
+        y_ref_batch = impl.spliceai_predict(
+            self._models, x_ref_batch,
+        )
+        y_alt_batch = impl.spliceai_predict(
+            self._models, x_alt_batch,
+        )
 
         del x_ref_batch
         del x_alt_batch
