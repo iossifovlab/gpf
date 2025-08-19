@@ -642,6 +642,7 @@ def test_family_counter_download(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
+    url = "/api/v3/common_reports/family_counters/download"
     data = {
         "queryData": json.dumps({
             "study_id": "TEST_REMOTE_t4c8_study_1",
@@ -649,18 +650,40 @@ def test_family_counter_download(
             "counter_id": "0",
         }),
     }
-    url = "/api/v3/common_reports/family_counters/download"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json",
+        url, data=json.dumps(data), content_type="application/json",
     )
 
     assert response
     assert response.status_code == status.HTTP_200_OK
 
-    res = list(response.streaming_content)  # type: ignore
-    print(b"".join(res).decode())
+    text = b"".join(list(response.streaming_content)).decode()  # type: ignore
+    lines = text.split("\n")
 
-    assert len(res) == 5
+    assert lines[0] == (
+        "familyId\tpersonId\tmomId\tdadId\tsex\tstatus\trole\t"
+        "sample_id\tlayout\tgenerated\tnot_sequenced\ttag_nuclear_family\t"
+        "tag_quad_family\ttag_trio_family\ttag_simplex_family\t"
+        "tag_multiplex_family\ttag_control_family\ttag_affected_dad_family\t"
+        "tag_affected_mom_family\ttag_affected_prb_family\t"
+        "tag_affected_sib_family\ttag_unaffected_dad_family\t"
+        "tag_unaffected_mom_family\ttag_unaffected_prb_family\t"
+        "tag_unaffected_sib_family\ttag_male_prb_family\t"
+        "tag_female_prb_family\ttag_missing_mom_family\t"
+        "tag_missing_dad_family\tmember_index\tphenotype"
+    )
+    assert lines[1] == (
+        "f1.1\tmom1\t0\t0\tF\tunaffected\tmom\tmom1\t1:10.0,50.0"
+        "\tFalse\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse\tFalse\t"
+        "False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tTrue\t"
+        "False\tTrue\tFalse\tFalse\t0\tunaffected"
+    )
+    assert lines[2] == (
+        "f1.1\tdad1\t0\t0\tM\tunaffected\tdad\tdad1\t1:39.0,50.0"
+        "\tFalse\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse\tFalse\t"
+        "False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse"
+        "\tTrue\tFalse\tFalse\t1\tunaffected"
+    )
 
 
 def test_families_data_download(
@@ -696,7 +719,7 @@ def test_families_tags_download(
         }),
     }
     response = admin_client.post(
-        url, json.dumps(body), content_type="application/json",
+        url, data=json.dumps(body), content_type="application/json",
     )
 
     assert response

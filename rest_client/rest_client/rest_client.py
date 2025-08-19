@@ -1373,6 +1373,7 @@ class RESTClient:
             }
         response = self.session.post(
             url,
+            headers={"Content-Type": "application/json"},
             data=json.dumps(data),
             stream=True,
         )
