@@ -128,7 +128,6 @@ class DuckDb2Variants(QueryVariantsBase):
         pedigree_schema = self._fetch_pedigree_schema()
         summary_schema = self._fetch_summary_schema()
         family_schema = self._fetch_family_schema()
-        variants_blob_serializer = self._fetch_variants_blob_serializer()
         schema = SqlQueryBuilder.build_schema(
             pedigree_schema=pedigree_schema,
             summary_schema=summary_schema,
@@ -138,8 +137,6 @@ class DuckDb2Variants(QueryVariantsBase):
         families = self._fetch_families()
         super().__init__(
             families,
-            summary_schema=summary_schema,
-            variants_blob_serializer=variants_blob_serializer,
         )
 
         self.query_builder = SqlQueryBuilder(

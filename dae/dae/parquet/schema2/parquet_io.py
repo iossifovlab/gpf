@@ -21,7 +21,6 @@ from dae.parquet.schema2.serializers import (
     FamilyAlleleParquetSerializer,
     SummaryAlleleParquetSerializer,
     VariantsDataSerializer,
-    build_summary_blob_schema,
 )
 from dae.utils import fs_utils
 from dae.utils.variant_utils import (
@@ -169,7 +168,6 @@ class VariantsParquetWriterDeprecated:
         bucket_index: int = 1,
         row_group_size: int = 10_000,
         include_reference: bool = False,
-        variants_blob_serializer: str = "json",
     ) -> None:
         self.out_dir = out_dir
 
@@ -199,12 +197,7 @@ class VariantsParquetWriterDeprecated:
         }
 
         if blob_serializer is None:
-            blob_serializer = VariantsDataSerializer.build_serializer(
-                build_summary_blob_schema(
-                    self.annotation_pipeline.get_attributes(),
-                ),
-                serializer_type=variants_blob_serializer,
-            )
+            blob_serializer = VariantsDataSerializer.build_serializer()
         self.blob_serializer = blob_serializer
 
     def _build_family_filename(

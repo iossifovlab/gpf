@@ -399,14 +399,6 @@ class ImportProject:
 
         return work_dir
 
-    def get_variants_blob_serializer(self) -> str:
-        """Return the variant blob serializer to use."""
-        processing_config = self.import_config.get("processing_config", {})
-        return cast(
-            str,
-            processing_config.get("variants_blob_serializer", "json"),
-        )
-
     @property
     def include_reference(self) -> bool:
         """Check if the import should include ref allele in the output data."""

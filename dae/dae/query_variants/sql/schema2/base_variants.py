@@ -72,8 +72,6 @@ class SqlSchema2Variants(QueryVariantsBase):
 
         super().__init__(
             families,
-            summary_schema=self.summary_allele_schema,
-            variants_blob_serializer=self._fetch_variants_blob_serializer(),
         )
 
         self.partition_descriptor = PartitionDescriptor.parse_string(

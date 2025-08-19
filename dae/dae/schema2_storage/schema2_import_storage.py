@@ -44,7 +44,6 @@ from dae.parquet.schema2.processing_pipeline import (
 from dae.parquet.schema2.serializers import (
     VariantsDataSerializer,
     build_family_schema,
-    build_summary_blob_schema,
 )
 from dae.parquet.schema2.variants_parquet_writer import (
     Schema2VariantBatchConsumer,
@@ -162,7 +161,6 @@ class Schema2ImportStorage(ImportStorage):
                 "annotation_pipeline",
                 "study",
                 "contigs",
-                "variants_blob_serializer",
             ],
             [
                 cls._get_partition_description(project).serialize(),
@@ -175,7 +173,6 @@ class Schema2ImportStorage(ImportStorage):
                 annotation_pipeline,
                 study,
                 contigs,
-                project.get_variants_blob_serializer(),
             ])
 
     @classmethod
@@ -196,12 +193,7 @@ class Schema2ImportStorage(ImportStorage):
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
 
-        blob_serializer = VariantsDataSerializer.build_serializer(
-            build_summary_blob_schema(
-                annotation_pipeline.get_attributes(),
-            ),
-            project.get_variants_blob_serializer(),
-        )
+        blob_serializer = VariantsDataSerializer.build_serializer()
 
         batch_size = project.get_processing_annotation_batch_size()
 
