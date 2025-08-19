@@ -16,6 +16,9 @@ class IntronicEffectChecker(EffectChecker):
         self, request: AnnotationRequest,
     ) -> AnnotationEffect | None:
 
+        assert request.variant.ref_position_last is not None
+        assert request.variant.corrected_ref_position_last is not None
+
         coding_regions = request.cds_regions()
         prev = coding_regions[0].stop
 

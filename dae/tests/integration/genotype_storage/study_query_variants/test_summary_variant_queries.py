@@ -85,7 +85,7 @@ def test_query_by_summary_variant_ids(
     summary_variant_ids: list[str],
     count: int,
 ) -> None:
-    query = {"summary_variant_ids": summary_variant_ids}
-    vs = list(imported_study.query_variants(**query))
+    vs = list(imported_study.query_variants(
+        summary_variant_ids=summary_variant_ids))
 
     assert len(vs) == count

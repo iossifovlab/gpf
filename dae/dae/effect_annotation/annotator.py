@@ -166,6 +166,7 @@ class EffectAnnotator:
             effects.append(EffectFactory.create_effect("intergenic"))
             return effects
 
+        assert variant.ref_position_last is not None
         for key in self.gene_models.utr_models[variant.chromosome]:
             if (
                 variant.position <= key[1] + self.promoter_len
@@ -218,8 +219,14 @@ class EffectAnnotator:
                     cnv_type)
             raise ValueError("unexpected CNV variant description")
         return self.annotate(Variant(
-            chrom, pos, location, variant, ref, alt, length,
-            seq, variant_type))
+            chrom, pos,
+            loc=location,
+            var=variant,
+            ref=ref,
+            alt=alt,
+            length=length,
+            seq=seq,
+            variant_type=variant_type))
 
     def annotate_allele(
         self, *,
@@ -229,11 +236,16 @@ class EffectAnnotator:
         alt: str,
         length: int | None = None,
         seq: str | None = None,
-        variant_type: str | None = None,
+        variant_type: Annotatable.Type | None = None,
     ) -> list[AnnotationEffect]:
         """Annotate effects for a variant."""
         variant = Variant(
-            chrom, pos, None, None, ref, alt, length, seq, variant_type,
+            chrom, pos,
+            ref=ref,
+            alt=alt,
+            length=length,
+            seq=seq,
+            variant_type=variant_type,
         )
         return self.annotate(variant)
 

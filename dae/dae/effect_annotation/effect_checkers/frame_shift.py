@@ -4,12 +4,11 @@ from ..annotation_request import AnnotationRequest
 from ..effect import AnnotationEffect, EffectFactory
 from .effect_checker import EffectChecker
 
+logger = logging.getLogger(__name__)
+
 
 class FrameShiftEffectChecker(EffectChecker):
     """Frame shift effect checker class."""
-
-    def __init__(self) -> None:
-        self.logger = logging.getLogger(__name__)
 
     def create_effect(
         self, request: AnnotationRequest, change_length: int,
@@ -38,10 +37,8 @@ class FrameShiftEffectChecker(EffectChecker):
         for aa in ref_aa:
             if aa == "End":
                 return False
-        for aa in alt_aa:
-            if aa == "End":
-                return True
-        return False
+
+        return any(aa == "End" for aa in alt_aa)
 
     def check_stop_codon(
         self, request: AnnotationRequest,
@@ -84,7 +81,7 @@ class FrameShiftEffectChecker(EffectChecker):
             if len(request.variant.reference) == 0:
                 stop += 1
 
-            self.logger.debug(
+            logger.debug(
                 "frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
                 start,
                 request.variant.position,
@@ -96,7 +93,7 @@ class FrameShiftEffectChecker(EffectChecker):
             )
 
             if start <= request.variant.position <= stop:
-                self.logger.debug(
+                logger.debug(
                     "fs detected %d<=%d-%d<=%d cds:%d-%d",
                     start,
                     request.variant.position,

@@ -3,6 +3,8 @@ import logging
 from ..effect import EffectFactory
 from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
+logger = logging.getLogger(__name__)
+
 
 class CodingEffectChecker(EffectChecker):
     """Coding effect checker class."""
@@ -10,7 +12,9 @@ class CodingEffectChecker(EffectChecker):
     def get_effect(
         self, request: AnnotationRequest,
     ) -> AnnotationEffect | None:
-        logger = logging.getLogger(__name__)
+        assert request.variant.ref_position_last is not None
+        assert request.variant.corrected_ref_position_last is not None
+
         logger.debug("is coding=%s", request.transcript_model.is_coding())
         if not request.transcript_model.is_coding():
             all_regs = request.transcript_model.all_regions()
