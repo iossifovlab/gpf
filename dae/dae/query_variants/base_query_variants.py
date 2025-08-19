@@ -147,17 +147,12 @@ class QueryVariantsBase(QueryVariants):
     RUNNER_CLASS: type[QueryRunner]
 
     def __init__(
-        self, families: FamiliesData, *,
-        summary_schema: dict[str, Any],
-        variants_blob_serializer: str,
+        self, families: FamiliesData,
     ) -> None:
         super().__init__(families)
 
         self.serializer: VariantsDataSerializer = \
-            VariantsDataSerializer.build_serializer(
-                summary_schema,
-                variants_blob_serializer,
-            )
+            VariantsDataSerializer.build_serializer()
 
     def has_affected_status_queries(self) -> bool:
         """Schema2 do support affected status queries."""

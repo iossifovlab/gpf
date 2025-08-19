@@ -207,6 +207,7 @@ class BaseAnnotationRequest(abc.ABC):
         return "?"
 
     def is_start_codon_affected(self) -> bool:
+        assert self.variant.corrected_ref_position_last is not None
         return (
             self.variant.position <= self.transcript_model.cds[0] + 2
             and self.transcript_model.cds[0]
@@ -214,6 +215,7 @@ class BaseAnnotationRequest(abc.ABC):
         )
 
     def is_stop_codon_affected(self) -> bool:
+        assert self.variant.corrected_ref_position_last is not None
         return (
             self.variant.position <= self.transcript_model.cds[1]
             and self.transcript_model.cds[1] - 2
@@ -264,6 +266,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
     def get_protein_position(self) -> tuple[int, int]:
         """Calculate protein position."""
         start_pos = self._clamp_in_cds(self.variant.position)
+        assert self.variant.ref_position_last is not None
         end_pos = self._clamp_in_cds(self.variant.ref_position_last - 1)
         end_pos = max(start_pos, end_pos)
 
@@ -387,6 +390,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     def get_protein_position(self) -> tuple[int, int]:
         """Calculate the protein position."""
         start_pos = self._clamp_in_cds(self.variant.position)
+        assert self.variant.ref_position_last is not None
         end_pos = self._clamp_in_cds(self.variant.ref_position_last - 1)
         end_pos = max(start_pos, end_pos)
 

@@ -3,17 +3,19 @@ import logging
 from ..effect import EffectFactory
 from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
+logger = logging.getLogger(__name__)
+
 
 class UTREffectChecker(EffectChecker):
     """UTR effect checker class."""
-
-    def __init__(self) -> None:
-        self.logger = logging.getLogger(__name__)
 
     def create_utr_effect(
         self, request: AnnotationRequest, strand: str,
     ) -> AnnotationEffect:
         """Create an UTR annotation effect."""
+        assert request.variant.ref_position_last is not None
+        assert request.variant.corrected_ref_position_last is not None
+
         if request.transcript_model.strand == strand:
             effect_name = "5'UTR"
         else:
@@ -22,7 +24,7 @@ class UTREffectChecker(EffectChecker):
         effect = EffectFactory.create_effect_with_prot_length(
             effect_name, request,
         )
-        self.logger.debug(
+        logger.debug(
             "pos=%d cds end=%d",
             request.variant.ref_position_last - 1,
             request.transcript_model.cds[0],
@@ -43,6 +45,9 @@ class UTREffectChecker(EffectChecker):
         self, request: AnnotationRequest, strand: str,
     ) -> AnnotationEffect | None:
         """Create UTR effect."""
+        assert request.variant.ref_position_last is not None
+        assert request.variant.corrected_ref_position_last is not None
+
         coding_regions = request.transcript_model.exons
         last_position = request.variant.corrected_ref_position_last
         prev = None
@@ -98,7 +103,7 @@ class UTREffectChecker(EffectChecker):
         if request.is_stop_codon_affected():
             return self.check_stop_codon(request)
 
-        self.logger.debug(
+        logger.debug(
             "utr check: %d<%d or %d>%d exons:%d-%d",
             request.variant.position,
             request.transcript_model.cds[0],

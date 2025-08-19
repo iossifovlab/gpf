@@ -372,6 +372,7 @@ class EffectFactory:
         start: int, end: int, index: int,
     ) -> AnnotationEffect:
         """Create intronic non coding effect."""
+        assert request.variant.ref_position_last is not None
         effect = cls.create_effect_with_prot_length(effect_type, request)
         dist_left = request.variant.position - start - 1
         dist_right = end - request.variant.ref_position_last

@@ -2,7 +2,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Generator, Iterable
-from typing import Any, ClassVar, cast
+from typing import ClassVar
 
 import numpy as np
 import yaml
@@ -184,24 +184,8 @@ class ParquetLoader:
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
-        summary_schema: dict[str, Any] = {}
-        if "summary_schema" in self.meta:
-            schema_content = self.meta["summary_schema"].strip()
-            summary_schema = cast(
-                dict[str, Any],
-                dict(
-                    line.split("|") for line in schema_content.split("\n")),
-            )
-        if "variants_blob_serializer" in self.meta:
-            variants_blob_serializer = \
-                str(self.meta["variants_blob_serializer"].strip())
-        else:
-            variants_blob_serializer = "json"
 
-        self.serializer = VariantsDataSerializer.build_serializer(
-            summary_schema,
-            variants_blob_serializer,
-        )
+        self.serializer = VariantsDataSerializer.build_serializer()
 
         self.files_per_region = self._scan_region_bins()
 

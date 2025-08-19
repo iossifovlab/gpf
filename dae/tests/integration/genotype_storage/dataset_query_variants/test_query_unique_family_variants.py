@@ -94,7 +94,7 @@ def test_unique_family_variants(
     unique_family_variants: bool,  # noqa: FBT001
     count: int,
 ) -> None:
-    query = {"unique_family_variants": unique_family_variants}
-    vs = list(dataset.query_variants(**query))
+    vs = list(dataset.query_variants(
+        unique_family_variants=unique_family_variants))
 
     assert len(vs) == count

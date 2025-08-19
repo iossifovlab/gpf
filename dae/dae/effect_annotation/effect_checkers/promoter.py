@@ -20,6 +20,9 @@ class PromoterEffectChecker(EffectChecker):
         variant: Variant,
     ) -> AnnotationEffect:
         """Create a positive strand promoter effect."""
+        assert variant.ref_position_last is not None
+        assert variant.corrected_ref_position_last is not None
+
         effect = self.create_effect(transcript_model)
         effect.dist_from_5utr = (
             transcript_model.exons[0].start - variant.ref_position_last
@@ -39,6 +42,9 @@ class PromoterEffectChecker(EffectChecker):
     ) -> AnnotationEffect | None:
         if request.promoter_len == 0:
             return None
+
+        assert request.variant.ref_position_last is not None
+        assert request.variant.corrected_ref_position_last is not None
 
         if (
             request.variant.position < request.transcript_model.exons[0].start

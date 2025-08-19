@@ -193,12 +193,13 @@ Annotator to identify the effect of the variant on protein coding.
         if isinstance(annotatable, VCFAllele):
             try:
                 assert self.effect_annotator is not None
+
                 effects = self.effect_annotator.annotate_allele(
                     chrom=annotatable.chromosome,
                     pos=annotatable.position,
                     ref=annotatable.reference,
                     alt=annotatable.alternative,
-                    variant_type=annotatable.type.name,
+                    variant_type=annotatable.type,
                     length=length,
                 )
             except Exception:  # pylint: disable=broad-except

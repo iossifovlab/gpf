@@ -272,10 +272,6 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     """Process a Parquet dataset for annotation."""
     loader = ParquetLoader(input_layout)
     grr = build_genomic_resource_repository(definition=grr_definition)
-    variants_blob_serializer = loader.meta.get(
-        "variants_blob_serializer",
-        "json",
-    )
 
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
@@ -308,7 +304,6 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
         annotation_attributes,
         loader.partition_descriptor,
         bucket_index=bucket_idx,
-        variants_blob_serializer=variants_blob_serializer,
     )
 
     source: Source

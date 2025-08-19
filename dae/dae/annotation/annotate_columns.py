@@ -561,13 +561,15 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def cli(raw_args: list[str] | None = None) -> None:
+def cli(argv: list[str] | None = None) -> None:
     """Entry point for running the columns annotation tool."""
-    if not raw_args:
-        raw_args = sys.argv[1:]
+    if not argv:
+        argv = sys.argv[1:]
 
     arg_parser = _build_argument_parser()
-    args = vars(arg_parser.parse_args(raw_args))
+    args = vars(arg_parser.parse_args(argv))
+    VerbosityConfiguration.set_verbosity(args["verbose"])
+
     if not os.path.exists(args["input"]):
         raise ValueError(f"{args['input']} does not exist!")
     if not os.path.exists(args["work_dir"]):
