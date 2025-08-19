@@ -98,6 +98,7 @@ class ParquetLoaderVariants(QueryVariants):
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Execute the family variants query and yields family variants."""
+        # pylint: disable=too-many-arguments
         raise NotImplementedError
 
     def build_summary_variants_query_runner(
@@ -233,12 +234,12 @@ class ParquetGenotypeStorage(GenotypeStorage):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore[call-arg]
-        if not validator.validate(config):  # type: ignore[no-untyped-call]
+        validator = Validator(cls.VALIDATION_SCHEMA)
+        if not validator.validate(config):
             raise ValueError(
                 f"wrong config format for parquet storage: "
-                f"{validator.errors}")  # type: ignore[no-untyped-call]
-        return cast(dict, validator.document)  # type: ignore[no-untyped-call]
+                f"{validator.errors}")
+        return cast(dict, validator.document)
 
     def start(self) -> GenotypeStorage:
         return self
