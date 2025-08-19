@@ -13,7 +13,6 @@ from studies.study_wrapper import (
 
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
-from federation.remote_utils import build_remote_families
 from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
 from federation.utils import prefix_remote_identifier
 from rest_client.rest_client import RESTClient
@@ -66,16 +65,6 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     @description.setter
     def description(self, input_text: str) -> None:  # noqa: ARG002
         return
-
-    @property
-    def families(self) -> FamiliesData:
-        if self._families is None:
-            self._families = build_remote_families(
-                self.remote_study_id,
-                self.rest_client,
-            )
-            self.genotype_data._families = self._families  # noqa: SLF001
-        return self._families
 
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
