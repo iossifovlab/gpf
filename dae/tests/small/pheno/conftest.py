@@ -22,7 +22,9 @@ def fake_pheno_db_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def fake_pheno_storage_registry(fake_pheno_db_dir) -> PhenotypeStorageRegistry:
+def fake_pheno_storage_registry(
+    fake_pheno_db_dir: Path,
+) -> PhenotypeStorageRegistry:
     storage_config = {"id": "fake_storage", "base_dir": fake_pheno_db_dir}
     storage = PhenotypeStorage.from_config(storage_config)
     registry = PhenotypeStorageRegistry()
@@ -35,8 +37,9 @@ def fake_pheno_db(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_pheno_db_dir: Path,
 ) -> PhenoRegistry:
-    configs = PhenoRegistry.load_configurations(str(fake_pheno_db_dir))
-    return PhenoRegistry(fake_pheno_storage_registry, configs)
+    return PhenoRegistry(
+        fake_pheno_storage_registry,
+        configurations_dir=str(fake_pheno_db_dir))
 
 
 @pytest.fixture(scope="session")
@@ -62,7 +65,9 @@ def fake_phenotype_data_browser_dbfile() -> str:
 
 
 @pytest.fixture(scope="session")
-def fake_pheno_browser(fake_phenotype_data_browser_dbfile: str) -> PhenoBrowser:
+def fake_pheno_browser(
+    fake_phenotype_data_browser_dbfile: str,
+) -> PhenoBrowser:
     return PhenoBrowser(fake_phenotype_data_browser_dbfile)
 
 
@@ -90,7 +95,7 @@ def temp_dirname_figures() -> Generator[str, None, None]:
 @pytest.fixture
 def fake_browserdb_file_copy(
     tmp_path: Path,
-    fake_phenotype_data_browser_dbfile,
+    fake_phenotype_data_browser_dbfile: str,
 ) -> str:
     temp_dbfile = str(tmp_path / "fake_browser.db")
     shutil.copy(

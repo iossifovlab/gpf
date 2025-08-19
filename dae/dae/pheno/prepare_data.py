@@ -474,9 +474,9 @@ class PreparePhenoBrowserBase:
         cache_dir: str,
     ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
         """Create images and regressions for a given measure."""
-        configs = PhenoRegistry.load_configurations(pheno_dir)
         registry = PhenoRegistry(
-            storage_registry, configurations=configs,
+            storage_registry,
+            configurations_dir=pheno_dir,
             browser_cache_path=Path(cache_dir),
         )
         pheno_data = registry.get_phenotype_data(pheno_id)
