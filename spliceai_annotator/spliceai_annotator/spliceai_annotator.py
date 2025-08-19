@@ -355,6 +355,10 @@ models to predict splice site variant effects.
 
     def close(self) -> None:
         logger.info("Closing SpliceAI annotator")
+        if not self.is_open():
+            logger.info("SpliceAI annotator is not open, skipping close")
+            return
+
         self.genome.close()
         self.gene_models.close()
         if self._models is not None:

@@ -284,7 +284,7 @@ class AnnotationPipeline:
 
     def close(self) -> None:
         """Close the annotation pipeline."""
-        logger.error("closing annotation pipeline")
+        logger.info("closing annotation pipeline")
         for annotator in self.annotators:
             try:
                 annotator.close()
