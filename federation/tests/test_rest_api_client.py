@@ -29,6 +29,10 @@ def test_get_common_report(rest_client: RESTClient) -> None:
     common_report = rest_client.get_common_report("t4c8_study_1")
     assert common_report is not None
     assert isinstance(common_report, dict)
+    assert common_report["id"] == "t4c8_study_1"
+    assert common_report["people_report"][0]["columns"] == [
+        "autism", "unaffected",
+    ]
 
 
 def test_get_common_report_families_data(rest_client: RESTClient) -> None:

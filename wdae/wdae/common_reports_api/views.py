@@ -36,7 +36,7 @@ class VariantReportsView(QueryBaseView):
         common_report = common_reports_helper.get_common_report()
 
         if common_report is not None:
-            return Response(common_report.to_dict())
+            return Response(common_report)
         return Response(
             {"error": f"Common report {common_report_id} not found"},
             status=status.HTTP_404_NOT_FOUND,
@@ -60,10 +60,10 @@ class VariantReportsFullView(QueryBaseView, DatasetAccessRightsView):
             study,
         )
 
-        common_report = common_reports_helper.get_common_report()
+        full_common_report = common_reports_helper.get_full_common_report()
 
-        if common_report is not None:
-            return Response(common_report.to_dict(full=True))
+        if full_common_report is not None:
+            return Response(full_common_report)
         return Response(
             {"error": f"Common report {common_report_id} not found"},
             status=status.HTTP_404_NOT_FOUND,
@@ -84,7 +84,7 @@ class FamilyCounterListView(QueryBaseView, DatasetAccessRightsView):
 
         assert common_report_id
         assert group_name
-        assert counter_id
+        assert counter_id is not None
 
         study = self.gpf_instance.get_wdae_wrapper(common_report_id)
         if not study:
@@ -95,19 +95,18 @@ class FamilyCounterListView(QueryBaseView, DatasetAccessRightsView):
             study,
         )
 
-        common_report = common_reports_helper.get_common_report()
-
-        if common_report is None:
+        try:
+            counter_list = common_reports_helper.get_family_counter_list(
+                group_name,
+                int(counter_id),
+            )
+        except ValueError:
             return Response(
                 {"error": f"Common report {common_report_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        group = common_report.families_report.families_counters[group_name]
-
-        counter = group.counters[int(counter_id)]
-
-        return Response(counter.families)
+        return Response(counter_list)
 
 
 class FamilyCounterDownloadView(QueryBaseView, DatasetAccessRightsView):
