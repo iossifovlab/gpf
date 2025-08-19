@@ -35,45 +35,40 @@ def mock_classes(
 
 
 @pytest.fixture
-def pheno_study_configs(tmp_path: pathlib.Path) -> pathlib.Path:
+def pheno_study_configs(
+    tmp_path: pathlib.Path,
+    fake_pheno_db_dir: pathlib.Path,
+) -> pathlib.Path:
     conf_dir = pathlib.Path(tmp_path / "pheno_confs")
     conf_dir.mkdir()
 
-    fake = """
+    fake = f"""
         id: fake
         enabled: true
         name: Fake Study
         type: study
-        phenotype_storage:
-          id: fake_storage
-          db: fake/fake.db
+        dbfile: {fake_pheno_db_dir / "fake" / "fake.db"}
     """
-    fake_i1 = """
+    fake_i1 = f"""
         id: fake_i1
         enabled: True
         name: Fake Study 1
         type: study
-        phenotype_storage:
-          id: fake_storage
-          db: fake_i1/fake_i1.db
+        dbfile: {fake_pheno_db_dir / "fake_i1" / "fake_i1.db"}
     """
-    fake2 = """
+    fake2 = f"""
         id: fake2
         enabled: True
         name: Fake Study 2
         type: study
-        phenotype_storage:
-          id: fake_storage
-          db: fake2/fake2.db
+        dbfile: {fake_pheno_db_dir / "fake2" / "fake2.db"}
     """
-    fake3 = """
+    fake3 = f"""
         id: fake3
         enabled: False
         name: Fake Study 3
         type: study
-        phenotype_storage:
-          id: fake_storage
-          db: fake3/fake3.db
+        dbfile: {fake_pheno_db_dir / "fake" / "fake.db"}
     """
     group = """
         id: group

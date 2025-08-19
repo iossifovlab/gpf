@@ -1,10 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import pathlib
+
 import pytest
 from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
 
 
 @pytest.fixture
-def fake_pheno_storage(fake_pheno_db_dir) -> PhenotypeStorage:
+def fake_pheno_storage(
+    fake_pheno_db_dir: pathlib.Path,
+) -> PhenotypeStorage:
     storage_config = {"id": "fake_storage", "base_dir": fake_pheno_db_dir}
     return PhenotypeStorage.from_config(storage_config)
 
@@ -28,7 +32,7 @@ def empty_storage(
 
 @pytest.fixture
 def fake_pheno_storage_registry(
-    fake_pheno_storage,
+    fake_pheno_storage: PhenotypeStorage,
 ) -> PhenotypeStorageRegistry:
     registry = PhenotypeStorageRegistry()
     registry.register_default_storage(fake_pheno_storage)
@@ -142,3 +146,21 @@ def test_registry_getters(
         "fake_storage",
         "storage1",
     }
+
+
+def test_storage_build(
+    fake_pheno_storage: PhenotypeStorage,
+    fake_pheno_db_dir: pathlib.Path,
+) -> None:
+    study = fake_pheno_storage.build_phenotype_study(
+        {"id": "fake"}, None,
+    )
+    assert study is not None
+    assert study.db.dbfile.endswith("fake.db")
+
+    study = fake_pheno_storage.build_phenotype_study(
+        {"id": "fake_with_different_dbfile",
+         "dbfile": f"{fake_pheno_db_dir}/fake2/fake2.db"}, None,
+    )
+    assert study is not None
+    assert study.db.dbfile.endswith("fake2.db")
