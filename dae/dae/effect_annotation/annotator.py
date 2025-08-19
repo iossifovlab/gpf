@@ -38,6 +38,7 @@ class AnnotationRequestFactory:
             variant: Variant,
             transcript_model: TranscriptModel) -> AnnotationRequest:
         """Create an annotation request."""
+        assert annotator.reference_genome is not None
         if transcript_model.strand == "+":
             return PositiveStrandAnnotationRequest(
                 annotator.reference_genome, annotator.code,
@@ -56,9 +57,11 @@ class EffectAnnotator:
 
     def __init__(
             self, reference_genome: ReferenceGenome, gene_models: GeneModels,
-            code: NuclearCode = NuclearCode(),
+            code: NuclearCode | None = None,
             promoter_len: int = 0):
 
+        if code is None:
+            code = NuclearCode()
         self.reference_genome = reference_genome
         self.gene_models = gene_models
         self.code = code
@@ -98,6 +101,7 @@ class EffectAnnotator:
         variant_type: Annotatable.Type,
     ) -> list[AnnotationEffect]:
         """Annotate a CNV variant."""
+        assert self.gene_models is not None
         if self.gene_models.utr_models is None:
             raise ValueError("bad gene models")
 
@@ -118,6 +122,7 @@ class EffectAnnotator:
         effect_type: str = "unknown",
     ) -> list[AnnotationEffect]:
         """Annotate a region or position."""
+        assert self.gene_models is not None
         if self.gene_models.utr_models is None:
             raise ValueError("bad gene models")
         region = Region(chrom, pos_start, pos_end)
@@ -142,6 +147,8 @@ class EffectAnnotator:
 
     def annotate(self, variant: Variant) -> list[AnnotationEffect]:
         """Annotate effects for a variant."""
+        assert self.gene_models is not None
+
         if self.gene_models.utr_models is None:
             raise ValueError("bad gene models")
         if variant.variant_type in {
@@ -177,7 +184,7 @@ class EffectAnnotator:
         return effects
 
     def do_annotate_variant(
-        self,
+        self, *,
         chrom: str | None = None,
         pos: int | None = None,
         location: str | None = None,
@@ -215,7 +222,7 @@ class EffectAnnotator:
             seq, variant_type))
 
     def annotate_allele(
-        self,
+        self, *,
         chrom: str,
         pos: int,
         ref: str,
@@ -233,9 +240,9 @@ class EffectAnnotator:
     @staticmethod
     def annotate_variant(
         gm: GeneModels,
-        reference_genome: ReferenceGenome,
+        reference_genome: ReferenceGenome, *,
         chrom: str | None = None,
-        position: int | None = None,
+        pos: int | None = None,
         location: str | None = None,
         variant: str | None = None,
         ref: str | None = None,
@@ -250,104 +257,11 @@ class EffectAnnotator:
         annotator = EffectAnnotator(
             reference_genome, gm, promoter_len=promoter_len)
         effects = annotator.do_annotate_variant(
-            chrom, position, location, variant, ref, alt, length,
-            seq, variant_type,
+            chrom=chrom, pos=pos, location=location,
+            variant=variant, ref=ref, alt=alt, length=length,
+            seq=seq, variant_type=variant_type,
         )
         desc = AnnotationEffect.effects_description(effects)
         logger.debug("effect: %s", desc)
 
         return effects
-
-    # @classmethod
-    # def effect_description1(cls, E):
-    #     if E[0].effect == "unk_chr":
-    #         return ("unk_chr", "unk_chr", "unk_chr")
-
-    #     effect_type = []
-    #     effect_gene = []
-    #     effect_details = []
-
-    #     D = {}
-    #     [D.setdefault(
-    #         AnnotationEffect.Severity[i.effect], []).append(i) for i in E]
-
-    #     set_worst_effect = False
-
-    #     for key in sorted(D, key=int, reverse=True):
-    #         if set_worst_effect is False:
-    #             effect_type = [D[key][0].effect]
-    #             set_worst_effect = True
-
-    #         if effect_type == "intergenic":
-    #             return ("intergenic", "intergenic", "intergenic")
-
-    #         if effect_type == "no-mutation":
-    #             return ("no-mutation", "no-mutation", "no-mutation")
-
-    #         G = {}
-    #         [G.setdefault(i.gene, []).append(i) for i in D[key]]
-
-    #         for gene in G:
-    #             for v in G[gene]:
-    #                 effect_details.append(v.create_effect_details())
-    #             if gene is not None:
-    #                 gene_str = str(gene)
-    #             else:
-    #                 gene_str = ""
-    #             effect_gene.append(gene_str + ":" + G[gene][0].effect)
-
-    #     return (effect_type, effect_gene, effect_details)
-
-    # @classmethod
-    # def effect_description(cls, E):
-    #     effect_type, effect_gene, effect_details = cls.effect_simplify(E)
-    #     if isinstance(effect_gene, list):
-    #         effect_gene = "|".join([":".join(eg) for eg in effect_gene])
-    #     if isinstance(effect_details, list):
-    #         effect_details = "|".join(
-    #             [";".join([e for e in ed]) for ed in effect_details]
-    #         )
-    #     return (effect_type, effect_gene, effect_details)
-
-    # @classmethod
-    # def effect_simplify(cls, E):
-    #     if E[0].effect == "unk_chr":
-    #         return ("unk_chr", "unk_chr", "unk_chr")
-
-    #     effect_type = ""
-    #     effect_gene = []
-    #     effect_details = []
-
-    #     D = {}
-    #     [D.setdefault(AnnotationEffect.Severity[i.effect], []).append(i)
-    #      for i in E]
-
-    #     set_worst_effect = False
-
-    #     for key in sorted(D, key=int, reverse=True):
-    #         if set_worst_effect is False:
-    #             effect_type = D[key][0].effect
-    #             set_worst_effect = True
-
-    #         if effect_type == "intergenic":
-    #             return (
-    #                 "intergenic",
-    #                 [("intergenic", "intergenic")],
-    #                 "intergenic",
-    #             )
-
-    #         if effect_type == "no-mutation":
-    #             return ("no-mutation", "no-mutation", "no-mutation")
-
-    #         G = {}
-    #         [G.setdefault(i.gene, []).append(i) for i in D[key]]
-
-    #         effect_detail = []
-    #         for gene in G:
-    #             for v in G[gene]:
-    #                 effect_detail.append(v.create_effect_details())
-    #             effect_gene.append((gene, G[gene][0].effect))
-
-    #         effect_details.append(effect_detail)
-
-    #     return (effect_type, effect_gene, effect_details)

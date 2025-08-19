@@ -53,7 +53,7 @@ def test_synonymous_sub_ref_alt_pos(
         gene_models_2013,
         genome_2013,
         chrom="1",
-        position=897349,
+        pos=897349,
         ref="G",
         alt="A",
     )

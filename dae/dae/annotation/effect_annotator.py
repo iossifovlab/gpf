@@ -186,13 +186,13 @@ Annotator to identify the effect of the variant on protein coding.
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         result: dict = {}
-
         if annotatable is None:
             return self._not_found(result)
 
         length = len(annotatable)
         if isinstance(annotatable, VCFAllele):
             try:
+                assert self.effect_annotator is not None
                 effects = self.effect_annotator.annotate_allele(
                     chrom=annotatable.chromosome,
                     pos=annotatable.position,
@@ -213,10 +213,13 @@ Annotator to identify the effect of the variant on protein coding.
                 length, self._region_length_cutoff, annotatable)
             return self._region_length_cutoff_effect(result, annotatable)
         elif isinstance(annotatable, CNVAllele):
+            assert self.effect_annotator is not None
             effects = self.effect_annotator.annotate_cnv(
                 annotatable.chrom,
                 annotatable.pos, annotatable.pos_end, annotatable.type)
         elif isinstance(annotatable, Annotatable):
+            assert self.effect_annotator is not None
+
             effects = self.effect_annotator.annotate_region(
                 annotatable.chrom,
                 annotatable.pos, annotatable.pos_end)
