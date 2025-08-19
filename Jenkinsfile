@@ -55,7 +55,7 @@ pipeline {
                 pyLint(pattern: 'test-results/mypy_dae_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-dae-pylint', name: 'MyPy - dae (converted to PyLint)'),
                 pyLint(pattern: 'test-results/mypy_wdae_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-wdae-pylint', name: 'MyPy - wdae (converted to PyLint)'),
 
-                pyLint(pattern: 'test-results/pylint_report', reportEncoding: 'UTF-8')
+                pyLint(pattern: 'test-results/pylint_report', id: 'pylint-id', reportEncoding: 'UTF-8')
             ],
             qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]
           )
