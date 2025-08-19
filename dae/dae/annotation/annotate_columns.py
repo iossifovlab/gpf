@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import gzip
 import itertools
 import logging
@@ -63,7 +64,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph import TaskGraphCli
-from dae.task_graph.graph import TaskGraph
+from dae.task_graph.graph import TaskGraph, sync_tasks
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -471,7 +472,7 @@ def _add_tasks_tabixed(
 
     annotation_sync = task_graph.create_task(
         "sync_csv_write",
-        lambda: None,
+        sync_tasks,
         args=[],
         deps=annotation_tasks,
     )
@@ -621,3 +622,9 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     add_input_files_to_task_graph(args, task_graph)
     TaskGraphCli.process_graph(task_graph, **args)
+
+    pipeline.close()
+    if ref_genome is not None:
+        ref_genome.close()
+
+    gc.collect()

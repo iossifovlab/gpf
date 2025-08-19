@@ -107,7 +107,8 @@ def test_calling_execute_twice(executor: AbstractTaskGraphExecutor) -> None:
 
 
 def test_executing_with_cache(
-        executor: AbstractTaskGraphExecutor, tmp_path: pathlib.Path) -> None:
+    executor: AbstractTaskGraphExecutor, tmp_path: pathlib.Path,
+) -> None:
     graph = _create_graph_with_result_passing()
 
     # initial execution of the graph

@@ -464,6 +464,10 @@ def _setup_io_layouts(
     return input_layout, output_layout
 
 
+def _sync_tasks() -> None:
+    return
+
+
 def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     task_graph: TaskGraph,
     loader: ParquetLoader,
@@ -484,7 +488,7 @@ def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     )
 
     annotation_sync = task_graph.create_task(
-        "sync_parquet_write", lambda: None,
+        "sync_parquet_write", _sync_tasks,
         args=[], deps=annotation_tasks,
     )
 

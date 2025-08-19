@@ -22,7 +22,7 @@ dependencies:
   - numpy=2.2.6
   - scipy=1.15.2
   - pandas=2.2.3
-  - pyarrow>=19
+  - pyarrow>=18
   - avro=1.12.0
   - scikit-learn=1.5
   - matplotlib-base=3.8

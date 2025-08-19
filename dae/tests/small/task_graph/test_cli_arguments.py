@@ -130,3 +130,32 @@ def test_cli_args_task_status_dir(
     args = parser.parse_args(argv)
 
     assert args.task_status_dir == task_status_dir
+
+
+@pytest.mark.parametrize("argv,fork_worker", [
+    ([], False),
+    (["--fork-worker"], True),
+])
+def test_cli_args_fork_worker(
+    argv: list[str], fork_worker: bool,  # noqa: FBT001
+) -> None:
+    parser = argparse.ArgumentParser(description="test_basic")
+    TaskGraphCli.add_arguments(parser)
+    args = parser.parse_args(argv)
+
+    assert args.fork_worker == fork_worker
+
+
+@pytest.mark.parametrize("argv", [
+    (["--fork-worker"],),
+    (["--force"],),
+    (["-f"],),
+    (["-d"],),
+])
+def test_cli_args_without_progress_mode(
+    argv: list[str],
+) -> None:
+    parser = argparse.ArgumentParser(description="test_basic")
+    TaskGraphCli.add_arguments(parser, task_progress_mode=False)
+    with pytest.raises(SystemExit):
+        parser.parse_args(argv)

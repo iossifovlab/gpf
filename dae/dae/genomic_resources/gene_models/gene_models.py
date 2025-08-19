@@ -36,7 +36,8 @@ class Exon:
 
         Args:
             start: The genomic start position of the exon (1-based).
-            stop (int): The genomic stop position of the exon (1-based, closed).
+            stop (int): The genomic stop position of the exon
+                (1-based, closed).
             frame (Optional[int]): The frame of the exon.
         """
 
@@ -289,7 +290,8 @@ class TranscriptModel:
                 elif exon.start > self.cds[1]:
                     regions.append(
                         BedRegion(
-                            chrom=self.chrom, start=exon.start, stop=exon.stop),
+                            chrom=self.chrom,
+                            start=exon.start, stop=exon.stop),
                     )
                 else:
                     if exon.stop >= self.cds[1]:
@@ -372,7 +374,8 @@ class TranscriptModel:
                 k += 1
             while self.exons[k].stop < self.cds[1] and k < length:
                 fms.append(
-                    (fms[k] + self.exons[k].stop - self.exons[k].start + 1) % 3,
+                    (fms[k] +
+                     self.exons[k].stop - self.exons[k].start + 1) % 3,
                 )
                 k += 1
             fms += [-1] * (length - len(fms))
@@ -453,12 +456,16 @@ class GeneModels(
     def resource_id(self) -> str:
         return self.resource.resource_id
 
+    def close(self) -> None:
+        self.reset()
+
     def reset(self) -> None:
         self.alternative_names = {}
 
         self.utr_models = defaultdict(lambda: defaultdict(list))
         self.transcript_models = {}
         self.gene_models = defaultdict(list)
+        self.chrom_gene_models = defaultdict(list)
 
     def add_transcript_model(self, transcript_model: TranscriptModel) -> None:
         """Add a transcript model to the gene models."""

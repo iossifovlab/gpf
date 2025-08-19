@@ -930,6 +930,9 @@ class GenomicResourceRepo(abc.ABC):
         self._repo_id: str = repo_id
         self._definition: dict[str, Any] | None = None
 
+    def close(self) -> None:
+        self._definition = None
+
     @property
     def definition(self) -> dict[str, Any] | None:
         if self._definition:
@@ -979,6 +982,10 @@ class GenomicResourceProtocolRepo(GenomicResourceRepo):
             proto: ReadOnlyRepositoryProtocol | ReadWriteRepositoryProtocol):
         super().__init__(proto.get_id())
         self.proto = proto
+
+    def close(self) -> None:
+        self.invalidate()
+        super().close()
 
     def invalidate(self) -> None:
         self.proto.invalidate()

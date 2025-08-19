@@ -75,6 +75,10 @@ class EffectAnnotator:
             IntronicEffectChecker(),
         ]
 
+    def close(self) -> None:
+        self.reference_genome = None  # type: ignore
+        self.gene_models = None  # type: ignore
+
     def get_effect_for_transcript(
         self, variant: Variant, transcript_model: TranscriptModel,
     ) -> AnnotationEffect | None:

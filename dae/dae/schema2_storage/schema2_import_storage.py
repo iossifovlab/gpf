@@ -55,7 +55,7 @@ from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskGraph, sync_tasks
 from dae.utils import fs_utils
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -305,7 +305,7 @@ class Schema2ImportStorage(ImportStorage):
 
         # merge small parquet files into larger ones
         bucket_sync = graph.create_task(
-            "sync_parquet_write", lambda: None,
+            "sync_parquet_write", sync_tasks,
             args=[], deps=bucket_tasks,
         )
 
@@ -344,7 +344,7 @@ class Schema2ImportStorage(ImportStorage):
             family_merge_tasks.append(task)
 
         all_parquet_task = graph.create_task(
-            "all_parquet_tasks", lambda: None,
+            "all_parquet_tasks", sync_tasks,
             args=[],
             deps=[*summary_merge_tasks, *family_merge_tasks, bucket_sync],
         )
@@ -396,7 +396,7 @@ class Schema2ImportStorage(ImportStorage):
         )
 
         annotation_sync = graph.create_task(
-            "sync_parquet_write", lambda: None,
+            "sync_parquet_write", sync_tasks,
             args=[], deps=annotation_tasks,
         )
 

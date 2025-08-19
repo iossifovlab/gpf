@@ -85,6 +85,7 @@ def test_pheno_import_tool(
         task_ids=None,
         keep_going=False,
         force=False,
+        fork_worker=False,
         task_status_dir=f"{test_dir}/test_out/.task-progress/first",
     )
 
