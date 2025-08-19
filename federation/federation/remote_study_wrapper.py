@@ -13,7 +13,6 @@ from studies.study_wrapper import (
 
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
-from federation.remote_utils import build_remote_families
 from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
 from federation.utils import prefix_remote_identifier
 from rest_client.rest_client import RESTClient
