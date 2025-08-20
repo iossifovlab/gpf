@@ -135,7 +135,27 @@ def test_unique_family_variants(
     unique_family_variants: bool,  # noqa: FBT001
     count: int,
 ) -> None:
-    query: dict[str, Any] = {"unique_family_variants": unique_family_variants}
+    query: dict[str, Any] = {"uniqueFamilyVariants": unique_family_variants}
+    vs = list(dataset.query_variants_raw(query, query_transformer))
+
+    assert len(vs) == count
+
+
+@pytest.mark.parametrize(
+    "summary_variant_ids, count",
+    [
+        (["chrA:1:sub(A->C)"], 3),
+        (["chrA:1:sub(A->G)"], 2),
+        (["chrA:2:sub(A->C)"], 4),
+    ],
+)
+def test_summary_variant_ids(
+    dataset: WDAEStudyGroup,
+    query_transformer: QueryTransformer,
+    summary_variant_ids: list[str],
+    count: int,
+) -> None:
+    query: dict[str, Any] = {"summaryVariantIds": summary_variant_ids}
     vs = list(dataset.query_variants_raw(query, query_transformer))
 
     assert len(vs) == count

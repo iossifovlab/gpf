@@ -669,6 +669,10 @@ class QueryTransformer(QueryTransformerProtocol):
                 status.lower() for status in statuses
             ]
 
+        if "summaryVariantIds" in kwargs:
+            summary_variant_ids = kwargs.pop("summaryVariantIds")
+            kwargs["summary_variant_ids"] = summary_variant_ids
+
         self._apply_zygosity(kwargs)
 
         kwargs["roles"] = self._transform_present_in_child_and_parent_roles(
