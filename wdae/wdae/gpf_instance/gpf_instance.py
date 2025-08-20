@@ -88,7 +88,7 @@ class WGPFInstance(GPFInstance):
         self, dae_config: dict[str, Any],
         dae_dir: str | pathlib.Path,
         dae_config_path: pathlib.Path,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         self._study_wrappers: dict[str, WDAEAbstractStudy] = {}
         self._gp_configuration: dict[str, Any] | None = None
