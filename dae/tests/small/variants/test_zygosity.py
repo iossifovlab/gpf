@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
+# pylint: disable=R0917,C0114,C0116,protected-access,fixme,W0621
 from io import StringIO
 
 import numpy as np

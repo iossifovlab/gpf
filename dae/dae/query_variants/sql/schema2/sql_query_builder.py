@@ -472,7 +472,8 @@ class QueryBuilderBase:
         )
 
 
-class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-methods
+class SqlQueryBuilder(QueryBuilderBase):
+    # pylint: disable=too-many-public-methods
     """Build SQL queries using sqlglot."""
 
     def __init__(
@@ -934,7 +935,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         tags_query: TagsQuery, pedigree_table: Table,
     ) -> Expression | None:
         """Resolve tags query to an expression to use as a condition."""
-        pedigree_tags = None
+        pedigree_tags: Condition | None = None
         if tags_query.selected_family_tags is not None:
             for tag in tags_query.selected_family_tags:
                 comparison = column(
@@ -1055,7 +1056,8 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             ctes[-1][0] = "family"
             query = Select()
             for cte in ctes:
-                query = self._append_cte(query, cte[1], cte[0])
+                query = self._append_cte(
+                    query, cast(Select, cte[1]), cast(str, cte[0]))
             query = query.select("*").from_("family")
 
         return query

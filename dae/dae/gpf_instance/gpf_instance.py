@@ -98,11 +98,12 @@ class GPFInstance:
         )
 
     def __init__(
-            self,
-            dae_config: Box,
-            dae_dir: str | Path,
-            dae_config_path: Path,
-            **kwargs: dict[str, Any]):
+        self,
+        dae_config: Box,
+        dae_dir: str | Path,
+        dae_config_path: Path,
+        **kwargs: Any,
+    ):
         assert dae_dir is not None
 
         self.dae_config = dae_config

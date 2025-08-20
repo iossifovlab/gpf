@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from io import StringIO
 
 from dae.pedigrees.loader import FamiliesLoader
@@ -24,7 +25,7 @@ SF0014912,SP0014912,SP0024751,SP0015221,1,2,prb
 """
 
 
-def test_pedigree_keep_family_order_local():
+def test_pedigree_keep_family_order_local() -> None:
     loader = FamiliesLoader(StringIO(PED_FILE1), ped_sep=",")
     families = loader.load()
 

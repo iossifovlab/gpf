@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from dae.variants.attributes import Role
 
@@ -12,9 +13,8 @@ from dae.variants.attributes import Role
         ("mother", Role.mom),
         ("Younger sibling", Role.sib),
         ("Older sibling", Role.sib),
-        # ("half Sibling", Role.half_sibling),
     ],
 )
-def test_roles_simple(name, role):
+def test_roles_simple(name: str, role: Role) -> None:
 
     assert Role.from_name(name) == role

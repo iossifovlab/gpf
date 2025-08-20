@@ -11,5 +11,5 @@ from dae.variants.core import Allele
         Allele.Type.tandem_repeat_del,
         Allele.Type.tandem_repeat_ins,
     ])
-def test_is_indel(allele_type):
+def test_is_indel(allele_type: Allele.Type) -> None:
     assert allele_type & Allele.Type.indel

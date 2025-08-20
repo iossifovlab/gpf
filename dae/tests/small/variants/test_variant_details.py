@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from dae.variants.variant import VariantDetails
 
@@ -23,10 +24,8 @@ from dae.variants.variant import VariantDetails
         ),
     ],
 )
-def test_variant_details(variant, position):
-    print(variant)
+def test_variant_details(variant: str, position: int) -> None:
     [chrom, pos, ref, alt] = variant.split(":")
     detail = VariantDetails.from_vcf(chrom, int(pos), ref, alt)
-    print(detail)
 
     assert detail.cshl_position == position

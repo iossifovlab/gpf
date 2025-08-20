@@ -45,7 +45,8 @@ def test_region_partition(
 
 
 def test_region_partition_chromosome_filter(
-        vcf_variants_loaders: Callable, temp_dirname: str) -> None:
+    vcf_variants_loaders: Callable, temp_dirname: str,
+) -> None:
 
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import logging
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline, AttributeInfo
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    AttributeInfo,
+)
 from dae.effect_annotation.effect import AlleleEffects
 from dae.variants_loaders.raw.loader import (
     FullVariantsIterator,
