@@ -15,7 +15,8 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 logger = logging.getLogger(__name__)
 
 
-class EffectCell:  # pylint: disable=too-many-instance-attributes
+class EffectCell:
+    # pylint: disable=too-many-instance-attributes
     """Class representing a cell in the denovo report table."""
 
     def __init__(self, person_set: PersonSet, effect: str) -> None:
@@ -218,9 +219,10 @@ class DenovoReportTable:
             ),
         )
 
-        effect_rows_empty_columns_index = list(
-            np.where(effect_rows_empty_columns)[0],
-        )
+        effect_rows_empty_columns_index = [
+            int(v)
+            for v in np.where(effect_rows_empty_columns)[0]
+        ]
 
         for index in sorted(effect_rows_empty_columns_index, reverse=True):
             person_sets.pop(index)

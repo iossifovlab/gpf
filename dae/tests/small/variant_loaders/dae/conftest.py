@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pathlib
 import textwrap
+from collections.abc import Callable
 
 import pytest
 from dae.pedigrees.families_data import FamiliesData
@@ -9,7 +10,7 @@ from dae.testing import setup_denovo, setup_pedigree
 
 
 @pytest.fixture(scope="session")
-def fake_families(fixture_dirname):
+def fake_families(fixture_dirname: Callable[[str], str]) -> FamiliesData:
     ped_df = FamiliesLoader.flexible_pedigree_read(
         fixture_dirname("denovo_import/fake_pheno.ped"),
     )

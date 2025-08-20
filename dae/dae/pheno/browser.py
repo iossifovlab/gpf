@@ -227,7 +227,7 @@ class PhenoBrowser:
             with self.connection.cursor() as cursor:
                 cursor.execute(update_query)
 
-    def save_regression_values(self, reg: dict[str, str]) -> None:
+    def save_regression_values(self, reg: dict[str, Any]) -> None:
         """Save regression values into the databases."""
         query = insert(
             values([(*reg.values(),)]),
@@ -277,7 +277,8 @@ class PhenoBrowser:
             column("measure_name", self.variable_browser.alias_or_name),
             column("measure_type", self.variable_browser.alias_or_name),
             column("values_domain", self.variable_browser.alias_or_name),
-            column("figure_distribution_small",
+            column(
+                "figure_distribution_small",
                 self.variable_browser.alias_or_name),
             column("figure_distribution", self.variable_browser.alias_or_name),
         ]

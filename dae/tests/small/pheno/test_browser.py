@@ -113,8 +113,10 @@ def test_save_regression_values(tmp_path: pathlib.Path) -> None:
         "pvalue_regression_male": 0.1,
         "pvalue_regression_female": 0.2,
     }
+
     browser.save_regression_values(regression_val)
-    result = browser.connection.execute("SELECT * FROM regression_values;").df()
+    result = browser.connection.execute(
+        "SELECT * FROM regression_values;").df()
     assert len(result) == 1
 
 
@@ -132,13 +134,15 @@ def test_save_regression_values_already_existing(
         "pvalue_regression_female": 0.2,
     }
     browser.save_regression_values(regression_val)
-    result = browser.connection.execute("SELECT * FROM regression_values;").df()
+    result = browser.connection.execute(
+        "SELECT * FROM regression_values;").df()
     assert len(result) == 1
     assert result["pvalue_regression_male"][0] == 0.1
 
     regression_val["pvalue_regression_male"] = 123.456
     browser.save_regression_values(regression_val)
-    result = browser.connection.execute("SELECT * FROM regression_values;").df()
+    result = browser.connection.execute(
+        "SELECT * FROM regression_values;").df()
     assert len(result) == 1
     assert result["pvalue_regression_male"][0] == 123.456
 

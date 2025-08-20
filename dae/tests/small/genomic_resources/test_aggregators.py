@@ -79,8 +79,8 @@ def test_count_aggregator() -> None:
 
     advanced_values = [{"a": 1}, {"b": 2}, {"c": 3}]
     agg = CountAggregator()
-    for val in advanced_values:
-        agg.add(val)
+    for val1 in advanced_values:
+        agg.add(val1)
 
     assert agg.get_final() == 3
 

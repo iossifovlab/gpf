@@ -265,6 +265,7 @@ def force_type_inference(
     """Perform type inference when a type is forced."""
     count_total = len(values)
     transformed_values: TransformedValuesType = values
+    value_type: type[int | float | str] = str
     if config.value_type == "str":
         value_type = str
     elif config.value_type == "int":

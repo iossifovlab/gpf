@@ -472,22 +472,21 @@ def test_handle_regressions(
     )
     assert len(res) == 2
     assert res[1] is not None
-    assert sorted(
-        [r["regression_id"] for r in res[1]]) == sorted(["age", "nviq"],
-    )
+    assert sorted([
+        r["regression_id"] for r in res[1]]) == sorted(["age", "nviq"])
 
     mocked.assert_called()
     phenotype_data, images_dir, measure, reg_measure, jitter = \
         mocked.call_args_list[0][0]
     assert phenotype_data.pheno_id == fake_phenotype_data.pheno_id
-    assert images_dir == "test_dir"
+    assert str(images_dir) == "test_dir"
     assert measure.measure_id == "i1.m1"
     assert reg_measure.measure_id == "i1.age"
     assert jitter == 0.1
     phenotype_data, images_dir, measure, reg_measure, jitter = \
         mocked.call_args_list[1][0]
     assert phenotype_data.pheno_id == fake_phenotype_data.pheno_id
-    assert images_dir == "test_dir"
+    assert str(images_dir) == "test_dir"
     assert measure.measure_id == "i1.m1"
     assert reg_measure.measure_id == "i1.iq"
     assert jitter == 0.1

@@ -96,7 +96,7 @@ def test_summary_variants_sharing(
     two_families_vcf: VcfLoader,
     region: Region,
     count: int,
-):
+) -> None:
     two_families_vcf.reset_regions([region])
     full_variants = list(two_families_vcf.full_variants_iterator())
     assert len(full_variants) == count
@@ -116,7 +116,7 @@ def test_summary_alleles_sharing(
     two_families_vcf: VcfLoader,
     region: Region,
     count: int,
-):
+) -> None:
     two_families_vcf.reset_regions([region])
     full_variants = list(two_families_vcf.full_variants_iterator())
     assert len(full_variants) == count

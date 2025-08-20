@@ -131,7 +131,8 @@ def test_get_locus_ploidy(
 
 def test_get_locus_ploidy_y_chrom_female(genome: ReferenceGenome) -> None:
     with pytest.raises(
-        ValueError, match="Chromosome Y identified for a female individual!"):
+            ValueError,
+            match="Chromosome Y identified for a female individual!"):
         get_locus_ploidy("Y", 57217415, Sex.F, genome)
 
 
@@ -246,7 +247,8 @@ def test_trim_str_left(
     ((100, "TGGTGCAGGC", "TGGTGCAGGT"), (109, "C", "T")),
 ])
 def test_trim_parsimonious(
-    allele: tuple[int, str, str], parsimonious: tuple[int, str, str]) -> None:
+    allele: tuple[int, str, str], parsimonious: tuple[int, str, str],
+) -> None:
     pos, ref, alt = trim_parsimonious(*allele)
 
     assert (pos, ref, alt) == parsimonious
@@ -324,7 +326,7 @@ def test_trim_parsimonious(
 def test_bitmask_translator(
         main_enum: type[Enum], partition_by_enum: type[Enum],
         value: Enum, partition_value: Enum, expected: int,
-):
+) -> None:
     translator = BitmaskEnumTranslator(
         main_enum_type=main_enum, partition_by_enum_type=partition_by_enum)
 

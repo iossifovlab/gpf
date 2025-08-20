@@ -5,7 +5,7 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
-from scipy.stats import ttest_ind  # type: ignore
+from scipy.stats import ttest_ind
 
 from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 from dae.pheno.common import MeasureType
@@ -212,6 +212,7 @@ class PhenoTool:
     def init_normalize_measures(
         self, measure_id: str, normalize_by: list[dict[str, str]],
     ) -> list[str]:
+        """Initialize normalization measures."""
         result = list(filter(
             None,
             [
@@ -229,6 +230,7 @@ class PhenoTool:
     def get_normalize_measure_id(
         self, measure_id: str, normalize_measure: dict[str, str],
     ) -> str | None:
+        """Return normalized measures ID"""
         assert isinstance(normalize_measure, dict)
         assert "measure_name" in normalize_measure
         assert "instrument_name" in normalize_measure

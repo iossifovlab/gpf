@@ -6,7 +6,7 @@ from dae.query_variants.attribute_queries import (
 from dae.variants.attributes import Role
 
 
-def test_roles_matcher():
+def test_roles_matcher() -> None:
     roles = "dad"
 
     matcher = transform_attribute_query_to_function(Role, roles)

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import cast
-
 import numpy as np
 import yaml
 
@@ -58,7 +56,7 @@ class MinMaxValue(Statistic):
         }
         if self.count != 0:
             serialized["count"] = self.count
-        return cast(str, yaml.dump(serialized))
+        return yaml.dump(serialized)
 
     @staticmethod
     def deserialize(content: str) -> MinMaxValue:

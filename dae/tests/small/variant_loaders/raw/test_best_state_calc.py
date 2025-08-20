@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines,R0917
 import textwrap
 from collections.abc import Callable
 from io import StringIO
@@ -73,7 +73,7 @@ def sv1() -> SummaryVariant:
 
 
 @pytest.fixture(scope="session")
-def fam1():
+def fam1() -> Family:
     families_loader = FamiliesLoader(StringIO(textwrap.dedent("""
         familyId,    personId,    dadId,    momId,    sex,   status,    role
         f1,          m1,          0,        0,        2,     1,         mom

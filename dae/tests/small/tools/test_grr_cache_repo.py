@@ -1,8 +1,12 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 import os
 import pathlib
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
+import pytest_mock
 from dae.tools.grr_cache_repo import cli_cache_repo
 
 
@@ -12,18 +16,18 @@ from dae.tools.grr_cache_repo import cli_cache_repo
      "gpf_instance_embedded_annotation.yaml"],
 )
 def test_cli_cache_instance(
-    mocker,
-    fixture_path,
-    instance_conf_name,
+    mocker: pytest_mock.MockerFixture,
+    fixture_path: Callable[[str], str],
+    instance_conf_name: str,
     tmp_path: pathlib.Path,
-):
-    definition = {
+) -> None:
+    definition: dict[str, Any] = {
         "id": "local",
         "type": "directory",
         "directory": fixture_path("repo"),
         "cache_dir": tmp_path,
     }
-    mocked = mocker.patch(
+    mocked: MagicMock = mocker.patch(
         "dae.tools.grr_cache_repo.load_definition_file")
     mocked.return_value = definition
 
@@ -35,7 +39,7 @@ def test_cli_cache_instance(
         fixture_path(instance_conf_name),
     ])
 
-    paths = [
+    paths: list[tuple[str, str]] = [
         ("genomes", "mock"),
         ("genomes", "mock0"),
         ("gene_models", "mock"),
@@ -44,7 +48,7 @@ def test_cli_cache_instance(
         ("scores", "mock2"),
     ]
     for path in paths:
-        full_path = os.path.join(
+        full_path: str = os.path.join(
             tmp_path,
             "local",
             *path,
@@ -62,17 +66,17 @@ def test_cli_cache_instance(
 
 
 def test_cli_cache_annotation(
-        mocker,
-        fixture_path,
+        mocker: pytest_mock.MockerFixture,
+        fixture_path: Callable[[str], str],
         tmp_path: pathlib.Path,
 ) -> None:
-    definition = {
+    definition: dict[str, Any] = {
         "id": "local",
         "type": "directory",
         "directory": fixture_path("repo"),
         "cache_dir": tmp_path,
     }
-    mocked = mocker.patch(
+    mocked: MagicMock = mocker.patch(
         "dae.tools.grr_cache_repo.load_definition_file")
     mocked.return_value = definition
 
@@ -84,14 +88,14 @@ def test_cli_cache_annotation(
         fixture_path("annotation.yaml"),
     ])
 
-    paths = [
+    paths: list[tuple[str, str]] = [
         ("genomes", "mock"),
         ("liftover", "mock"),
         ("scores", "mock1"),
         ("scores", "mock2"),
     ]
     for path in paths:
-        full_path = os.path.join(
+        full_path: str = os.path.join(
             tmp_path,
             "local",
             *path,

@@ -7,7 +7,7 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def resources_dir(request) -> Path:
+def resources_dir(request: pytest.FixtureRequest) -> Path:
     resources_path = os.path.join(
         os.path.dirname(os.path.realpath(request.module.__file__)),
         "resources")
