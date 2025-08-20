@@ -63,7 +63,7 @@ f2       ch2      dad2  mom2  2   2      prb
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=chrA>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/0
+chrA   1   .  A   C,G   .    .      .    GT     0/1  0/2  1/0 0/1  1/0 0/0
 chrA   2   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/1
         """)
 
@@ -85,7 +85,7 @@ f2       ch2      dad2  mom2  2   2      prb
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=chrA>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/0  0/0 0/0
+chrA   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/0  0/1 0/0
 chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
         """)
 
@@ -258,8 +258,8 @@ def query_transformer(
 @pytest.mark.parametrize(
     "person_set_collection, count",
     [
-        ({"id": "phenotype", "checkedValues": ["autism"]}, 7),
-        ({"id": "phenotype", "checkedValues": ["developmental_disorder"]}, 7),
+        ({"id": "phenotype", "checkedValues": ["autism"]}, 1),
+        ({"id": "phenotype", "checkedValues": ["developmental_disorder"]}, 2),
     ],
 )
 def test_person_set_collection_queries(

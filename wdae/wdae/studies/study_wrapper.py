@@ -722,7 +722,7 @@ class WDAEStudy(WDAEAbstractStudy):
                     child, **kwargs)
                 children_kwargs.append((child_id, child_kwargs))
             except ValueError:
-                logger.exception(
+                logger.warning(
                     "Could not transform kwargs for child %s of study %s",
                     child_id, self.study_id,
                 )
