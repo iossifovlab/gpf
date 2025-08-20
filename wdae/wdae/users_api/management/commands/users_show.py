@@ -1,20 +1,30 @@
+from typing import Any, cast
+
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
+from django.contrib.auth.models import AbstractUser
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+    CommandParser,
+)
 
 from .export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
+    """Show user information."""
     help = "Show all information about user"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("email", type=str)
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
         try:
+            # pylint: disable=invalid-name
             UserModel = get_user_model()
             user = UserModel.objects.get(email=options["email"])
-            groups = ",".join(self.get_visible_groups(user))
+            groups: str = ",".join(self.get_visible_groups(
+                cast(AbstractUser, user)))
 
             print(
                 f"User email: {user.email}\n"
@@ -22,5 +32,5 @@ class Command(BaseCommand, ExportUsersBase):
                 f"groups: {groups}\n"
                 f"password: {user.password}",
             )
-        except UserModel.DoesNotExist:
-            raise CommandError("User not found")
+        except UserModel.DoesNotExist as exc:
+            raise CommandError("User not found") from exc

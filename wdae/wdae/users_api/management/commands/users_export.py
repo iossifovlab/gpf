@@ -1,9 +1,9 @@
 import csv
-import io
 import sys
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.core.management.base import BaseCommand, CommandParser
 
 from users_api.models import WdaeUser
@@ -19,14 +19,11 @@ class Command(BaseCommand, ExportUsersBase):
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("--file", type=str)
 
-    def handle_user(self, user: WdaeUser, writer: csv.DictWriter) -> None:
+    def handle_user(self, user: WdaeUser, writer: csv.DictWriter[str]) -> None:
         """Handle user export."""
-        groups_str = ":".join(self.get_visible_groups(user))
-
-        if user.is_active:
-            password = user.password
-        else:
-            password = ""
+        groups_str: str = ":".join(self.get_visible_groups(
+            cast(AbstractUser, user)))
+        password: str = user.password if user.is_active else ""
 
         writer.writerow(
             {
@@ -37,23 +34,27 @@ class Command(BaseCommand, ExportUsersBase):
             },
         )
 
-    def handle(self, *args: Any, **options: Any) -> None:
+    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
         users = get_user_model().objects.all()
 
-        csvfile: TextIO | io.TextIOWrapper
         if options["file"]:
-            # pylint: disable=consider-using-with
-            csvfile = open(options["file"], "w")
+            with open(options["file"], "w", encoding="utf-8") as csvfile:
+                self._write_users_to_csv(users, csvfile)
+            print("\033[92mSuccessfully exported the users!\033[0m")
         else:
-            csvfile = sys.stdout
+            self._write_users_to_csv(users, sys.stdout)
 
-        fieldnames = ["Email", "Name", "Groups", "Password"]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    def _write_users_to_csv(
+        self,
+        users: Any,
+        csvfile: TextIO,
+    ) -> None:
+        """Write users to CSV file."""
+        fieldnames: list[str] = ["Email", "Name", "Groups", "Password"]
+        writer: csv.DictWriter[str] = csv.DictWriter(
+            csvfile, fieldnames=fieldnames,
+        )
         writer.writeheader()
 
         for user in users:
             self.handle_user(user, writer)
-
-        if options["file"]:
-            csvfile.close()
-            print("\033[92m" + "Successfully exported the users!" + "\033[0m")

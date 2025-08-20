@@ -1,10 +1,16 @@
-from builtins import object
+
+from django.contrib.auth.models import AbstractUser
 
 
-class ExportUsersBase(object):
+class ExportUsersBase:
+    """Base class for exporting user-related data."""
 
-    def get_visible_groups(self, user):
-        groups = set(user.groups.values_list("name", flat=True).all())
+    def get_visible_groups(self, user: AbstractUser) -> set[str]:
+        """Get the groups visible to the user."""
+
+        groups: set[str] = set(
+            user.groups.values_list("name", flat=True).all(),
+        )
 
         if user.is_superuser:
             groups.add("superuser")

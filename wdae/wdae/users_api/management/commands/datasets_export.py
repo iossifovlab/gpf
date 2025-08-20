@@ -23,7 +23,7 @@ class Command(BaseCommand, DatasetBaseMixin):
         parser.add_argument("--file", type=str)
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
-
+        # pylint: disable=consider-using-with
         if options["file"]:
             outfile: TextIO = open(options["file"], "w")  # noqa: SIM115
         else:

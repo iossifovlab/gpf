@@ -2,7 +2,11 @@ import csv
 import os
 from typing import Any
 
-from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+    CommandParser,
+)
 
 from users_api.models import WdaeUser
 
@@ -21,25 +25,23 @@ class Command(ImportUsersBase, BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("file", type=str)
 
-    def handle(self, *args: Any, **options: Any) -> None:
-        csvfilename = options["file"]
+    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+        csvfilename: str = options["file"]
         assert os.path.exists(csvfilename)
 
         try:
-            with open(csvfilename, "rt") as csvfile:
-                resreader = csv.DictReader(csvfile)
+            with open(csvfilename, "rt", encoding="utf-8") as csvfile:
+                resreader: csv.DictReader[str] = csv.DictReader(csvfile)
                 WdaeUser.objects.all().delete()
                 for res in resreader:
                     self.handle_user(res)
             print(
-                "\033[92m"
-                + "Successfully restored users from file!"
-                + "\033[0m",
+                "\033[92mSuccessfully restored users from file!\033[0m",
             )
 
         except csv.Error as ex:
             raise CommandError(
-                f"There was a problem while reading {args[0]}",
+                f"There was a problem while reading {csvfilename}",
             ) from ex
         except OSError as ex:
-            raise CommandError(f"File {args[0]} not found") from ex
+            raise CommandError(f"File {csvfilename} not found") from ex

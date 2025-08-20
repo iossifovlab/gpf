@@ -1,11 +1,13 @@
 import logging
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any, TypeVar
 
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.request import Request
 
-# LOGGER = logging.getLogger("wdae.api")
+# Type variable for decorated functions
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 def log_filter(
@@ -15,20 +17,18 @@ def log_filter(
     """Filter request info for logging."""
     if len(args) > 0:
         message = message % args
-    request_method = getattr(request, "method", "-")
-    path_info = getattr(request, "path_info", "-")
-    username = "guest"
+    request_method: str = getattr(request, "method", "-")
+    path_info: str = getattr(request, "path_info", "-")
+    username: str = "guest"
     if request.user.is_authenticated:
         user = request.user
         username = user.email  # type: ignore
 
     # Headers
-    meta = getattr(request, "META", {})
-    remote_addr = meta.get("REMOTE_ADDR", "-")
-    # server_protocol = META.get('SERVER_PROTOCOL', '-')
-    # http_user_agent = META.get('HTTP_USER_AGENT', '-')
-    data = getattr(request, "data", "-")
-    query_params = getattr(request, "query_params", "-")
+    meta: dict[str, Any] = getattr(request, "META", {})
+    remote_addr: str = meta.get("REMOTE_ADDR", "-")
+    data: Any = getattr(request, "data", "-")
+    query_params: Any = getattr(request, "query_params", "-")
 
     return (
         f"user: {username}; remote addr: {remote_addr}; "
@@ -37,43 +37,52 @@ def log_filter(
     )
 
 
-def request_logging(logger: logging.Logger) -> Callable:
+def request_logging(logger: logging.Logger) -> Callable[[F], F]:
     """Automatically log request info on views."""
 
-    def logging_decorator(func: Callable) -> Callable:
+    def logging_decorator(func: F) -> F:
         @wraps(func)
-        def func_wrapper(self, request, *args, **kwargs):
-            message = []
+        def func_wrapper(
+            self: Any,
+            request: Request | WSGIRequest,
+            *args: Any,
+            **kwargs: Any,
+        ) -> Any:
+            message_parts: list[str] = []
             if args:
-                message.append(f"{args}")
+                message_parts.append(f"{args}")
             if kwargs:
-                message.append(f"{kwargs}")
-            message = "; ".join(message)
+                message_parts.append(f"{kwargs}")
+            message: str = "; ".join(message_parts)
             logger.info(log_filter(request, message).strip())
 
             return func(self, request, *args, **kwargs)
 
-        return func_wrapper
+        return func_wrapper  # type: ignore[return-value]
 
     return logging_decorator
 
 
-def request_logging_function_view(logger: logging.Logger) -> Callable:
+def request_logging_function_view(logger: logging.Logger) -> Callable[[F], F]:
     """Automatically log request info on view functions."""
 
-    def logging_decorator(func):
+    def logging_decorator(func: F) -> F:
         @wraps(func)
-        def func_wrapper(request, *args, **kwargs):
-            message = []
+        def func_wrapper(
+            request: Request | WSGIRequest,
+            *args: Any,
+            **kwargs: Any,
+        ) -> Any:
+            message_parts: list[str] = []
             if args:
-                message.append(f"{args}")
+                message_parts.append(f"{args}")
             if kwargs:
-                message.append(f"{kwargs}")
-            message = "; ".join(message)
+                message_parts.append(f"{kwargs}")
+            message: str = "; ".join(message_parts)
             logger.info(log_filter(request, message).strip())
 
             return func(request, *args, **kwargs)
 
-        return func_wrapper
+        return func_wrapper  # type: ignore[return-value]
 
     return logging_decorator

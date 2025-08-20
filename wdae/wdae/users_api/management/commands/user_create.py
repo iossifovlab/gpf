@@ -1,14 +1,22 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import (
+    BaseCommand,
+    CommandError,
+    CommandParser,
+)
 
 from .import_base import ImportUsersBase
 
 
 class Command(BaseCommand, ImportUsersBase):
+    """Create a new user."""
+
     help = "Create new user"
 
-    def add_arguments(self, parser) -> None:  # type: ignore
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "-g",
             action="store",
@@ -37,7 +45,8 @@ class Command(BaseCommand, ImportUsersBase):
 
         parser.add_argument("email", help="The emails of the new user")
 
-    def handle(self, *args, **options) -> None:  # type: ignore
+    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+        # pylint: disable=invalid-name
         UserModel = get_user_model()
         if UserModel.objects.filter(email=options["email"]).exists():
             raise CommandError("User exists")
@@ -52,7 +61,8 @@ class Command(BaseCommand, ImportUsersBase):
 
         if options["password"] is None:
             call_command(
-                "changepassword", username=options["email"], stdout=self.stdout,
+                "changepassword", username=options["email"],
+                stdout=self.stdout,
             )
         else:
             user.set_password(options["password"])
