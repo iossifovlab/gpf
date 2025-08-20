@@ -4,9 +4,11 @@ import os
 import pathlib
 import shutil
 import tempfile
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from typing import Any
 
 import pytest
+from box import Box
 from dae.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,
@@ -23,6 +25,7 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     GenotypeStorageRegistry,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import (
     construct_import_annotation_pipeline,
 )
@@ -86,22 +89,20 @@ def impala_genotype_storage(
 
 @pytest.fixture(scope="session")
 def vcf_variants_loaders(
-        vcf_loader_data, gpf_instance_2019):
-
-    annotation_pipeline = construct_import_annotation_pipeline(
-        gpf_instance_2019,
-    )
+    vcf_loader_data: Callable[[str], DefaultBox],
+    gpf_instance_2019: Any,
+) -> Callable[[str, dict[str, Any]], list[AnnotationPipelineDecorator]]:
 
     def builder(  # pylint: disable=W0102
-        path,
-        params={  # noqa: B006
+        path: str,
+        params: dict[str, Any] = {  # noqa: B006
             "vcf_include_reference_genotypes": True,
             "vcf_include_unknown_family_genotypes": True,
             "vcf_include_unknown_person_genotypes": True,
             "vcf_denovo_mode": "denovo",
             "vcf_omission_mode": "omission",
         },
-    ):
+    ) -> list[AnnotationPipelineDecorator]:
         config = vcf_loader_data(path)
 
         families_loader = FamiliesLoader(config.pedigree)
@@ -123,6 +124,10 @@ def vcf_variants_loaders(
                     "denovo_alt": "alt",
                 },
             )
+            annotation_pipeline = construct_import_annotation_pipeline(
+                gpf_instance_2019,
+            )
+
             loaders.append(AnnotationPipelineDecorator(
                 denovo_loader, annotation_pipeline))
 
@@ -133,6 +138,9 @@ def vcf_variants_loaders(
             params=params,
         )
 
+        annotation_pipeline = construct_import_annotation_pipeline(
+            gpf_instance_2019,
+        )
         loaders.append(AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline,
         ))
@@ -142,31 +150,33 @@ def vcf_variants_loaders(
     return builder
 
 
-def relative_to_this_test_folder(path):
+def relative_to_this_test_folder(path: str) -> str:
     return os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "tests", path,
     )
 
 
 @pytest.fixture(scope="session")
-def fixture_dirname():
-    def builder(relpath):
+def fixture_dirname() -> Callable[[str], str]:
+    def builder(relpath: str) -> str:
         return relative_to_this_test_folder(os.path.join("fixtures", relpath))
 
     return builder
 
 
-def get_global_dae_fixtures_dir():
+def get_global_dae_fixtures_dir() -> str:
     return relative_to_this_test_folder("fixtures")
 
 
 @pytest.fixture(scope="session")
-def global_dae_fixtures_dir():
+def global_dae_fixtures_dir() -> str:
     return get_global_dae_fixtures_dir()
 
 
 @pytest.fixture(scope="session")
-def default_dae_config(fixture_dirname):
+def default_dae_config(
+    fixture_dirname: Callable[[str], str],
+) -> Generator[tuple[Box, str], None, None]:
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
     datasets_dirname = tempfile.mkdtemp(prefix="datasets_", suffix="_test")
 
@@ -192,7 +202,7 @@ def default_dae_config(fixture_dirname):
 
 
 @pytest.fixture(scope="session")
-def grr_test_repo(fixture_dirname):
+def grr_test_repo(fixture_dirname: Callable[[str], str]) -> Any:
     return build_genomic_resource_repository(
         {
             "id": "grr_test_repo",
@@ -203,11 +213,13 @@ def grr_test_repo(fixture_dirname):
 
 
 @pytest.fixture(scope="session")
-def gpf_instance(default_dae_config, fixture_dirname, grr_test_repo):  # noqa: ARG001
-    # pylint: disable=import-outside-toplevel
-    from dae.gpf_instance.gpf_instance import GPFInstance
+def gpf_instance(
+    default_dae_config: tuple[Box, str],  # noqa: ARG001
+    fixture_dirname: Callable[[str], str],
+    grr_test_repo: Any,
+) -> Callable[[str], Any]:
 
-    def build(config_filename):
+    def build(config_filename: str) -> Any:
         repositories = [
             grr_test_repo,
             build_genomic_resource_repository(
@@ -227,10 +239,11 @@ def gpf_instance(default_dae_config, fixture_dirname, grr_test_repo):  # noqa: A
 
 @pytest.fixture(scope="session")
 def gpf_instance_2013(
-        default_dae_config, fixture_dirname,
-        global_dae_fixtures_dir, grr_test_repo):
-    # pylint: disable=import-outside-toplevel
-    from dae.gpf_instance.gpf_instance import GPFInstance
+    default_dae_config: tuple[Box, str],
+    fixture_dirname: Callable[[str], str],
+    global_dae_fixtures_dir: str,
+    grr_test_repo: Any,
+) -> GPFInstance:
 
     dae_config, dae_config_path = default_dae_config
 
@@ -258,12 +271,14 @@ def gpf_instance_2013(
     return GPFInstance(
         dae_config=dae_config,
         dae_dir=global_dae_fixtures_dir,
-        dae_config_path=dae_config_path,
-        grr=grr, gene_models=gene_models, reference_genome=genome)  # type: ignore
+        dae_config_path=pathlib.Path(dae_config_path),
+        grr=grr,
+        gene_models=gene_models,
+        reference_genome=genome)
 
 
 @pytest.fixture
-def temp_filename():
+def temp_filename() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
     output = os.path.join(dirname, "temp_filename.tmp")
@@ -273,19 +288,22 @@ def temp_filename():
 
 
 @pytest.fixture
-def temp_dirname():
+def temp_dirname() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_data", prefix="variants_")
     yield dirname
     shutil.rmtree(dirname)
 
 
 @pytest.fixture(scope="session")
-def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
+def fixtures_gpf_instance(
+    gpf_instance: Callable[[str], Any],
+    global_dae_fixtures_dir: str,
+) -> Any:
     return gpf_instance(
         os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
 
-def from_prefix_vcf(prefix):
+def from_prefix_vcf(prefix: str) -> DefaultBox:
     pedigree_filename = f"{prefix}.ped"
     assert os.path.exists(pedigree_filename)
     conf = {
@@ -306,8 +324,8 @@ def from_prefix_vcf(prefix):
 
 
 @pytest.fixture(scope="session")
-def vcf_loader_data():
-    def builder(path):
+def vcf_loader_data() -> Callable[[str], DefaultBox]:
+    def builder(path: str) -> DefaultBox:
         if os.path.isabs(path):
             prefix = path
         else:
@@ -321,11 +339,11 @@ def vcf_loader_data():
 
 @pytest.fixture(scope="session")
 def gpf_instance_2019(
-        default_dae_config, fixture_dirname,
-        global_dae_fixtures_dir, grr_test_repo):
-    # pylint: disable=import-outside-toplevel
-    from dae.gpf_instance.gpf_instance import GPFInstance
-
+    default_dae_config: tuple[Box, str],
+    fixture_dirname: Callable[[str], str],
+    global_dae_fixtures_dir: str,
+    grr_test_repo: Any,
+) -> GPFInstance:
     dae_config, dae_config_path = default_dae_config
 
     repositories = [
@@ -351,12 +369,13 @@ def gpf_instance_2019(
     return GPFInstance(
         dae_config=dae_config,
         dae_dir=global_dae_fixtures_dir,
-        dae_config_path=dae_config_path,
-        grr=grr, gene_models=gene_models,  # type: ignore
-        reference_genome=genome)  # type: ignore
+        dae_config_path=pathlib.Path(dae_config_path),
+        grr=grr,
+        gene_models=gene_models,
+        reference_genome=genome)
 
 
-def from_prefix_dae(prefix):
+def from_prefix_dae(prefix: str) -> FrozenBox:
     summary_filename = f"{prefix}.txt.gz"
     toomany_filename = f"{prefix}-TOOMANY.txt.gz"
     family_filename = f"{prefix}.families.txt"
@@ -372,7 +391,7 @@ def from_prefix_dae(prefix):
 
 
 @pytest.fixture
-def dae_transmitted_config():
+def dae_transmitted_config() -> Any:
     fullpath = relative_to_this_test_folder(
         "fixtures/dae_transmitted/transmission",
     )
@@ -380,7 +399,7 @@ def dae_transmitted_config():
     return config.dae
 
 
-def from_prefix_denovo(prefix):
+def from_prefix_denovo(prefix: str) -> DefaultBox:
     denovo_filename = f"{prefix}.txt"
     family_filename = f"{prefix}_families.ped"
 
@@ -393,17 +412,17 @@ def from_prefix_denovo(prefix):
 
 
 @pytest.fixture
-def dae_denovo_config():
+def dae_denovo_config() -> DefaultBox:
     fullpath = relative_to_this_test_folder("fixtures/dae_denovo/denovo")
     return from_prefix_denovo(fullpath)
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline_no_effects_config():
+def annotation_pipeline_no_effects_config() -> str:
     return relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation_no_effects.yaml")
 
 
 @pytest.fixture(scope="session")
-def annotation_scores_dirname():
+def annotation_scores_dirname() -> str:
     return relative_to_this_test_folder("fixtures/annotation_pipeline/")
