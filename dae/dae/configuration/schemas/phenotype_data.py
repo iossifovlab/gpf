@@ -48,13 +48,6 @@ pheno_conf_schema = {
             "type": ["study"],
         },
     },
-    "phenotype_storage": {
-        "type": "dict",
-        "schema": {
-            "id": {"type": "string"},
-            "db": {"type": "string"},
-        },
-    },
     "children": {
         "type": "list",
         "schema": {"type": "string"},

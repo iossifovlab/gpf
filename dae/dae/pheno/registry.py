@@ -35,7 +35,7 @@ class PhenoRegistry:
 
     def __init__(
         self, storage_registry: PhenotypeStorageRegistry,
-        configurations: list[dict] | None = None,
+        configurations_dir: str | None = None,
         browser_cache_path: Path | None = None,
     ) -> None:
         self._study_configs: dict[str, dict] = {}
@@ -44,47 +44,26 @@ class PhenoRegistry:
         self._storage_registry = storage_registry
         if self.browser_cache_path is not None:
             self.browser_cache_path.mkdir(parents=True, exist_ok=True)
-        if configurations is not None:
-            for configuration in configurations:
+
+        if configurations_dir is not None:
+            config_files = GPFConfigParser.collect_directory_configs(
+                configurations_dir)
+            for config_file in config_files:
                 try:
-                    self.register_study_config(configuration)
+                    self._register_study_config(config_file)
                 except ValueError:
                     logger.exception(
                         "Failure while registering "
-                        "phenotype study configuration %s", configuration,
+                        "phenotype study configuration %s", config_file,
                     )
 
-    @staticmethod
-    def load_configurations(pheno_data_dir: str) -> list[dict]:
-        config_files = GPFConfigParser.collect_directory_configs(
-            pheno_data_dir,
-        )
-        logger.info("phenotype data config files: %s", config_files)
-        return [
-            GPFConfigParser.load_config_dict(file, pheno_conf_schema)
-            for file in config_files
-        ]
-
-    def register_phenotype_data(
-        self, phenotype_data: PhenotypeData, *, lock: bool = True,
-    ) -> None:
-        """Register a phenotype data instance in the registry."""
-        if lock:
-            with self.CACHE_LOCK:
-                if phenotype_data.pheno_id in self._cache:
-                    return
-                self.register_study_config(phenotype_data.config, lock=False)
-                self._cache[phenotype_data.pheno_id] = phenotype_data
-        else:
-            if phenotype_data.pheno_id in self._cache:
-                return
-            self.register_study_config(phenotype_data.config, lock=False)
-            self._cache[phenotype_data.pheno_id] = phenotype_data
-
-    def register_study_config(
-        self, study_config: dict, *, lock: bool = True,
+    def _register_study_config(
+        self, config_path: str, *, lock: bool = True,
     ) -> None:
         """Register a configuration as a loadable phenotype data."""
+        study_config = GPFConfigParser.load_config_dict(
+            config_path, pheno_conf_schema)
+
         # Allow loading of phenotype data without enabled flag.
         if not study_config.get("enabled", True):
             return
@@ -107,6 +86,24 @@ class PhenoRegistry:
                 self._study_configs[study_config["id"]] = study_config
 
         self._study_configs[study_config["id"]] = study_config
+
+    def register_phenotype_data(
+        self, phenotype_data: PhenotypeData, *, lock: bool = True,
+    ) -> None:
+        """Register a phenotype data instance in the registry."""
+        if lock:
+            with self.CACHE_LOCK:
+                if phenotype_data.pheno_id in self._cache:
+                    return
+                self._cache[phenotype_data.pheno_id] = phenotype_data
+                self._study_configs[phenotype_data.pheno_id] = \
+                    phenotype_data.config
+        else:
+            if phenotype_data.pheno_id in self._cache:
+                return
+            self._cache[phenotype_data.pheno_id] = phenotype_data
+            self._study_configs[phenotype_data.pheno_id] = \
+                phenotype_data.config
 
     def has_phenotype_data(self, data_id: str, *, lock: bool = True) -> bool:
         if lock:

@@ -148,9 +148,7 @@ def main(argv: list[str] | None = None) -> int:
 
         registry = PhenoRegistry(
             storage_registry,
-            configurations=PhenoRegistry.load_configurations(
-                str(pheno_db_dir),
-            ),
+            configurations_dir=str(pheno_db_dir),
         )
 
         if args.phenotype_data_id is None:

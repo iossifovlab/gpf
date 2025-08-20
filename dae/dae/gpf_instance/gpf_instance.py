@@ -19,7 +19,6 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
-from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_scores.gene_scores import GeneScore
@@ -261,18 +260,9 @@ class GPFInstance:
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
-        config_files = GPFConfigParser.collect_directory_configs(
-            pheno_data_dir,
-        )
-        logger.info("phenotype data config files: %s", config_files)
-        configurations = [
-            GPFConfigParser.load_config_dict(file, pheno_conf_schema)
-            for file in config_files
-        ]
-        logger.debug("phenotype data configurations: %s", configurations)
         return PhenoRegistry(
             self.phenotype_storages,
-            configurations=configurations,
+            configurations_dir=pheno_data_dir,
             browser_cache_path=self.get_pheno_cache_path(),
         )
 
