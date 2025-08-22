@@ -155,7 +155,7 @@ def test_enrichment_test(
         "enrichmentBackgroundModel": "coding_len_background",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSet": {
-            "geneSetsCollection": "main",
+            "geneSetsCollection": "TEST_REMOTE_main",
             "geneSet": "t4_candidates",
         },
     }

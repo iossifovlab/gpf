@@ -54,6 +54,12 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
         """Build enrichment test result."""
         logger.info("Building enrichment with query: %s", query)
         query["datasetId"] = self.dataset_id
+        if "geneSet" in query:
+            query["geneSet"]["geneSetsCollection"] = \
+                query["geneSet"]["geneSetsCollection"].replace(
+                    f"{self.rest_client.client_id}_",
+                    "",
+                )
         try:
             result = self.rest_client.post_enrichment_test(query)
 
