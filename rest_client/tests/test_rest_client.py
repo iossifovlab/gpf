@@ -189,7 +189,7 @@ def test_post_gene_view_summary_variants_download(
     assert variants_response.status_code == 200
     assert len(result) == 2
     assert result[0].split("\t") == [
-        "location", "position", 
+        "location", "position",
         "end_position",
         "chrom", "frequency", "effect", "variant",
         "family_variants_count", "is_denovo",
