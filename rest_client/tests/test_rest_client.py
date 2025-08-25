@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import json
 from typing import Any
 
 import pytest
@@ -176,11 +177,25 @@ def test_post_gene_view_summary_variants_download(
     rest_client: RESTClient,
 ) -> None:
     data = {
-        "datasetId": "t4c8_study_1",
-        "geneSymbols": ["t4"],
+        "queryData": json.dumps({
+            "datasetId": "t4c8_study_1",
+            "geneSymbols": ["t4"],
+        }),
     }
     variants_response = \
         rest_client.post_gene_view_summary_variants_download(data)
     assert variants_response is not None
-    result = list(variants_response)
-    assert len(result) == 802
+    result = variants_response.content.decode().strip().split("\n")
+    assert variants_response.status_code == 200
+    assert len(result) == 2
+    assert result[0].split("\t") == [
+        "location", "position", 
+        "end_position",
+        "chrom", "frequency", "effect", "variant",
+        "family_variants_count", "is_denovo",
+        "seen_in_affected", "seen_in_unaffected",
+    ]
+    assert result[1].split("\t") == [
+        "chr1:54", "54", "54", "chr1", "0.02",
+        "synonymous", "sub(T->C)", "2", "True", "True", "True",
+    ]
