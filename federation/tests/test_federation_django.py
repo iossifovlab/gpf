@@ -765,3 +765,67 @@ def test_families_tags_download(
         "False\tTrue\tFalse\tTrue\tTrue\tFalse\tFalse\tFalse\t"
         "True\tFalse\tFalse\t0\tunaffected"
     ) in lines
+
+
+def test_measure_list_categorical(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = (
+        "/api/v3/measures/type/categorical?datasetId=TEST_REMOTE_t4c8_study_1"
+    )
+    response = admin_client.get(url)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 2  # type: ignore
+
+
+def test_measure_list_continuous(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = (
+        "/api/v3/measures/type/continuous?datasetId=TEST_REMOTE_t4c8_study_1"
+    )
+    response = admin_client.get(url)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 5  # type: ignore
+
+
+def test_regressions(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = admin_client.get(
+        "/api/v3/measures/regressions?datasetId=TEST_REMOTE_t4c8_study_1",
+    )
+    assert response.status_code == 200
+    assert "age" in response.data  # type: ignore
+    assert "iq" in response.data  # type: ignore
+
+
+def test_measures_list_wrong_request(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = admin_client.post("/api/v3/measures/histogram", {
+        "datasetId": "TEST_REMOTE_t4c8_study_1", "measure": "i1.age",
+    })
+    assert response.status_code == 200
+
+    response = admin_client.post("/api/v3/measures/histogram", {
+        "datasetId": "t4c8_study_1", "measure": "asian",
+    })
+    assert response.status_code == 400
+
+
+def test_role_list(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = admin_client.post("/api/v3/measures/role-list", {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+    })
+    assert response.status_code == 200
+    assert response.content == b'["dad","mom","prb","sib"]'
