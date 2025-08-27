@@ -106,7 +106,7 @@ class RemotePhenotypeData(PhenotypeData):
             self._remote_pheno_id, measure_id,
         )
 
-        return Measure.from_record(measure)
+        return Measure.from_json(measure)
 
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         measure_description = self.rest_client.get_measure_description(
@@ -124,7 +124,7 @@ class RemotePhenotypeData(PhenotypeData):
             instrument_name,
             measure_type,
         )
-        return {m["measureName"]: Measure.from_record(m) for m in measures}
+        return {m["measureName"]: Measure.from_json(m) for m in measures}
 
     def count_measures(
         self, instrument: str | None,
@@ -160,6 +160,30 @@ class RemotePhenotypeData(PhenotypeData):
         return cast(dict[str, Any], self.rest_client.post_measures_values(
             self._remote_pheno_id, measure_ids=measure_ids))
 
+    def get_people_measure_values_df(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> pd.DataFrame:
+        if person_ids is not None:
+            logger.warning("Unsupported argument used: person_ids")
+        if family_ids is not None:
+            logger.warning("Unsupported argument used: family_ids")
+        if roles is not None:
+            logger.warning("Unsupported argument used: roles")
+
+        return pd.DataFrame.from_dict(
+            cast(
+                dict[str, Any],
+                    self.rest_client.post_measures_values(
+                    self._remote_pheno_id, measure_ids=measure_ids,
+                ),
+            ),
+        )
+
+
     @property
     def instruments(self) -> dict[str, Instrument]:
         if self._instruments is None:
@@ -168,7 +192,7 @@ class RemotePhenotypeData(PhenotypeData):
                 self._remote_pheno_id)
             for name, instrument in instruments.items():
                 measures = [
-                    Measure.from_record(m) for m in instrument["measures"]
+                    Measure.from_json(m) for m in instrument["measures"]
                 ]
                 instrument = Instrument(name)
                 instrument.measures = {m.measure_id: m for m in measures}

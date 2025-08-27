@@ -214,6 +214,29 @@ class Measure:
 
         return mes
 
+    @classmethod
+    def from_json(cls, row: dict[str, Any]) -> Measure:
+        """Create `Measure` object from pandas data frame row."""
+        native_row: dict[str, Any] = {}
+        measure_type = row.get("measureType")
+        if measure_type:
+            measure_type = MeasureType[measure_type]
+        native_row["measure_type"] = measure_type
+        native_row["measure_id"] = row["measureId"]
+        native_row["measure_name"] = row["measureName"]
+        native_row["instrument_name"] = row["instrumentName"]
+        native_row["instrument_description"] = row["instrumentDescription"]
+        native_row["value_type"] = row["valueType"]
+        native_row["histogram_type"] = row["histogramType"]
+        native_row["histogram_config"] = row["histogramConfig"]
+        native_row["description"] = row["description"]
+        native_row["default_filter"] = row["defaultFilter"]
+        native_row["values_domain"] = row.get("valuesDomain")
+        native_row["min_value"] = row.get("minValue")
+        native_row["max_value"] = row.get("maxValue")
+
+        return Measure.from_record(native_row)
+
     def to_json(self) -> dict[str, Any]:
         """Return measure description in JSON freindly format."""
         result: dict[str, Any] = {}
