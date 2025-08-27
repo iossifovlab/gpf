@@ -183,6 +183,8 @@ class RemotePhenotypeData(PhenotypeData):
             ),
         )
 
+    def get_person_roles(self) -> list[str]:
+        return self.rest_client.get_pheno_roles(self._remote_pheno_id)
 
     @property
     def instruments(self) -> dict[str, Instrument]:

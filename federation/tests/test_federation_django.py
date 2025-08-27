@@ -863,8 +863,9 @@ def test_role_list(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    response = admin_client.post("/api/v3/measures/role-list", {
-        "datasetId": "TEST_REMOTE_t4c8_study_1",
-    })
+    response = admin_client.post(
+        "/api/v3/measures/role-list",
+        {"datasetId": "TEST_REMOTE_t4c8_study_1"},
+    )
     assert response.status_code == 200
     assert response.content == b'["dad","mom","prb","sib"]'

@@ -1181,6 +1181,17 @@ class RESTClient:
 
         return response.json()
 
+    def get_pheno_roles(self, dataset_id: str) -> Any:
+        """Get pheno measures regressions in a dataset."""
+        response = self.session.post(
+            f"{self.api_url}/measures/role-list",
+            json={"datasetId": dataset_id},
+            headers={"Content-Type": "application/json"},
+        )
+        if response.status_code != 200:
+            return None
+        return response.json()
+
     def post_measure_values(
         self, dataset_id: str,
         measure_id: str,

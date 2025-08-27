@@ -144,3 +144,8 @@ def test_post_pheno_tool(rest_client: RESTClient) -> None:
 
     assert test_results is not None
     assert isinstance(test_results, dict)
+
+
+def test_roles_list(rest_client: RESTClient) -> None:
+    test_results = rest_client.get_pheno_roles("t4c8_study_1")
+    assert test_results == ["dad", "mom", "prb", "sib"]
