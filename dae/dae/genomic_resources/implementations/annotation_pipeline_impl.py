@@ -99,7 +99,8 @@ class AnnotationPipelineImplementation(
     def _get_template_data(self) -> dict[str, Any]:
         if self.pipeline is None:
             raise ValueError
-        env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa
+        env = Environment(  # noqa
+            loader=PackageLoader("dae.annotation", "templates"))
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
         return {
             "content": doc_template.render(
@@ -120,6 +121,7 @@ class AnnotationPipelineImplementation(
     def calc_info_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph: TaskGraph,   # noqa: ARG002
-                                   **kwargs: Any) -> list[Task]:  # noqa: ARG002
+    def add_statistics_build_tasks(
+            self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
+    ) -> list[Task]:
         return []
