@@ -2,7 +2,8 @@
 
 import textwrap
 import time
-from typing import Callable, ContextManager
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 
 import pytest
 import requests
@@ -73,7 +74,7 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     vcf_study(
         root_path,
         "study", ped_path, [vcf_path],
-        gpf)
+        gpf_instance=gpf)
 
     return gpf
 
@@ -81,7 +82,7 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
 def test_empty_wgpf_instance_study(
     alla_wgpf: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
 ) -> None:
 
     with wdae_django_server(

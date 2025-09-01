@@ -3,8 +3,8 @@
 import contextlib
 import textwrap
 import time
-from collections.abc import Generator
-from typing import Callable, ContextManager
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager
 
 import pytest
 from dae.genomic_resources.repository_factory import (
@@ -73,7 +73,7 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     vcf_study(
         root_path,
         "study", ped_path, [vcf_path],
-        gpf)
+        gpf_instance=gpf)
 
     return gpf
 
@@ -82,8 +82,8 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
 def remote_wgpf_instance(
     alla_wgpf: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
-) -> Callable[[], ContextManager[LiveServer]]:
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
+) -> Callable[[], AbstractContextManager[LiveServer]]:
 
     @contextlib.contextmanager
     def builder() -> Generator[LiveServer, None, None]:

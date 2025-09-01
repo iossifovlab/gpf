@@ -65,7 +65,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
     return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "study_1"),
@@ -150,7 +150,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
     return vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "study_2"),
@@ -207,7 +207,7 @@ def t4c8_dataset(
     return setup_dataset(
         "dataset", t4c8_instance, t4c8_study_1, t4c8_study_2,
         dataset_config_update=textwrap.dedent(f"""
-            conf_dir: { root_path / "dataset "}
+            conf_dir: {root_path / "dataset "}
             person_set_collections:
                 phenotype:
                   id: phenotype

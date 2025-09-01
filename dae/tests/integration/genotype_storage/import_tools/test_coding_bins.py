@@ -91,7 +91,7 @@ def vcf_fixture(
         root_path,
         "vcf_coding_bin", layout.pedigree,
         layout.vcf,
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
 
@@ -205,7 +205,7 @@ def denovo_fixture(
     study = denovo_study(
         root_path,
         "denovo_coding_bin", layout.pedigree, layout.denovo,
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
     return root_path, study
 

@@ -85,7 +85,7 @@ def vcf_fixture(
         root_path,
         "vcf_frequency_bin", layout.pedigree,
         layout.vcf,
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
 
@@ -192,7 +192,8 @@ def denovo_import_data(
 
     return (
         root_path, gpf_instance, genotype_storage,
-        StudyInputLayout("denovo_fixture", ped_path, [], [denovo_path], [], []))
+        StudyInputLayout(
+            "denovo_fixture", ped_path, [], [denovo_path], [], []))
 
 
 @pytest.fixture
@@ -215,7 +216,7 @@ def denovo_project_to_parquet(
     return denovo_import(
         root_path,
         "denovo_frequency_bin", layout.pedigree, layout.denovo,
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
 

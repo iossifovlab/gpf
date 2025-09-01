@@ -50,7 +50,7 @@ def trio_study(
     return denovo_study(
         root_path,
         "trio", ped_path, [vcf_path],
-        gpf_fixture,
+        gpf_instance=gpf_fixture,
         study_config_update={
             "id": "trio",
         })

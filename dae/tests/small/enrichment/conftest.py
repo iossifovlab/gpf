@@ -229,13 +229,14 @@ def create_test_study(
     tmp_path_factory: pytest.TempPathFactory,
     study_data: tuple[pathlib.Path, pathlib.Path],
     t4c8_fixture: GPFInstance,
-) ->  Generator[Callable[[dict], GenotypeData], None, None]:
+) -> Generator[Callable[[dict], GenotypeData], None, None]:
     study_path = tmp_path_factory.mktemp("f1_trio")
     ped_path, vcf_path = study_data
 
     def _create_study(study_config: dict) -> GenotypeData:
         return vcf_study(
-            study_path, "f1_trio", ped_path, [vcf_path], t4c8_fixture,
+            study_path, "f1_trio", ped_path, [vcf_path],
+            gpf_instance=t4c8_fixture,
             study_config_update=study_config)
 
     yield _create_study

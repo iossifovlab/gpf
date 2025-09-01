@@ -217,7 +217,7 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
     vcf_study(
         tmp_path,
         "study_1", ped_path, [vcf_path],
-        instance,
+        gpf_instance=instance,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(tmp_path / "study_1"),
@@ -380,7 +380,7 @@ def test_generate_gene_profile_with_incomplete_config(
     gpf_instance = gp_gpf_instance(gp_config, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
-         "['required field'], 'order': ['required field']}")
+        "['required field'], 'order': ['required field']}")
     with pytest.raises(
             ValueError,
             match=r"^(.*?)" + expected_error):

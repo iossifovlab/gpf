@@ -136,7 +136,7 @@ def setup_import_project(
 def pedigree_import(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path,
+    ped_path: pathlib.Path, *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -154,7 +154,7 @@ def pedigree_import(
 def vcf_import(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
+    ped_path: pathlib.Path, vcf_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -173,7 +173,7 @@ def dae_import(
     root_path: pathlib.Path,
     study_id: str,
     ped_path: pathlib.Path,
-    dae_paths: list[pathlib.Path],
+    dae_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -199,7 +199,7 @@ def vcf_study(
     root_path: pathlib.Path,
     study_id: str,
     ped_path: pathlib.Path,
-    vcf_paths: list[pathlib.Path],
+    vcf_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -207,7 +207,8 @@ def vcf_study(
 ) -> GenotypeData:
     """Import a VCF study and return the imported study."""
     project = vcf_import(
-        root_path, study_id, ped_path, vcf_paths, gpf_instance,
+        root_path, study_id, ped_path, vcf_paths,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
     run_with_project(project)
@@ -223,7 +224,7 @@ def dae_study(
     root_path: pathlib.Path,
     study_id: str,
     ped_path: pathlib.Path,
-    dae_paths: list[pathlib.Path],
+    dae_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -231,7 +232,8 @@ def dae_study(
 ) -> GenotypeData:
     """Import a VCF study and return the imported study."""
     project = dae_import(
-        root_path, study_id, ped_path, dae_paths, gpf_instance,
+        root_path, study_id, ped_path, dae_paths,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
     run_with_project(project)
@@ -246,7 +248,7 @@ def dae_study(
 def denovo_import(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
+    ped_path: pathlib.Path, denovo_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -262,7 +264,7 @@ def denovo_import(
 def denovo_study(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
+    ped_path: pathlib.Path, denovo_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -270,7 +272,8 @@ def denovo_study(
 ) -> GenotypeData:
     """Import a de Novo study and return the imported study."""
     project = denovo_import(
-        root_path, study_id, ped_path, denovo_paths, gpf_instance,
+        root_path, study_id, ped_path, denovo_paths,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
     run_with_project(project)
@@ -285,7 +288,7 @@ def denovo_study(
 def cnv_import(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path, cnv_paths: list[pathlib.Path],
+    ped_path: pathlib.Path, cnv_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -301,7 +304,7 @@ def cnv_import(
 def cnv_study(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path, cnv_paths: list[pathlib.Path],
+    ped_path: pathlib.Path, cnv_paths: list[pathlib.Path], *,
     gpf_instance: GPFInstance,
     project_config_update: dict[str, Any] | None = None,
     project_config_overwrite: dict[str, Any] | None = None,
@@ -309,7 +312,8 @@ def cnv_study(
 ) -> GenotypeData:
     """Import a de Novo study and return the imported study."""
     project = cnv_import(
-        root_path, study_id, ped_path, cnv_paths, gpf_instance,
+        root_path, study_id, ped_path, cnv_paths,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
     run_with_project(project)

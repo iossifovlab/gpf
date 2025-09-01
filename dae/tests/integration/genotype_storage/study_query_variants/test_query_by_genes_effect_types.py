@@ -49,7 +49,7 @@ bar    16  .  C   A     .    .      .    GT     1/1  1/1  0/0
         root_path,
         "test_query_by_genes_effect_types", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 # (foo:3 A->G f1 000/010,

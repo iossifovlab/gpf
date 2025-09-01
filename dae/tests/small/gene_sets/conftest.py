@@ -81,7 +81,7 @@ def trios2_study(
     return denovo_study(
         root_path,
         "trios2", ped_path, [vcf_path],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         study_config_update={
             "id": "trios2",
             "denovo_gene_sets": {

@@ -45,7 +45,7 @@ def imported_dataset(
     study1 = vcf_study(
         root_path,
         "study_1", ped_path1, [vcf_path1],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
     ped_path2 = setup_pedigree(
         root_path / "study_2" / "in.ped",
@@ -74,7 +74,7 @@ def imported_dataset(
     study2 = vcf_study(
         root_path,
         "study_2", ped_path2, [vcf_path2],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
     return setup_dataset(
         "ds1", gpf_instance, study1, study2,

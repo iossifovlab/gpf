@@ -89,7 +89,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
     )
     storage = t4c8_instance\
         .genotype_storages.get_genotype_storage("duckdb_test")
@@ -164,7 +164,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
     )
     storage = t4c8_instance\

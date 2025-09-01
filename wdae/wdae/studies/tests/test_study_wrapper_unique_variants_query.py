@@ -92,11 +92,11 @@ chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
     study1 = vcf_study(
         root_path,
         "study_1", ped_path1, [vcf_path1],
-        wgpf_instance)
+        gpf_instance=wgpf_instance)
     study2 = vcf_study(
         root_path,
         "study_2", ped_path2, [vcf_path2],
-        wgpf_instance)
+        gpf_instance=wgpf_instance)
 
     (root_path / "dataset").mkdir(exist_ok=True)
 

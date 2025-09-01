@@ -48,7 +48,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
     )
 
 

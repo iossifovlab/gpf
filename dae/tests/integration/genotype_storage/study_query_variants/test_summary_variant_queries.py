@@ -49,7 +49,7 @@ chrA   8   .  A   C     .    .      .    GT     0/0  0/0  1/1 0/0  1/1 0/0
         root_path,
         "test_query_by_person_ids", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {

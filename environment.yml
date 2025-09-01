@@ -18,6 +18,7 @@ dependencies:
   - pyliftover=0.4.1
   - pybigwig=0.3.24
   - lark=1.2.2
+  - filelock=3.19
   - networkx=2.8.5
   - numpy=2.2.6
   - scipy=1.15.2

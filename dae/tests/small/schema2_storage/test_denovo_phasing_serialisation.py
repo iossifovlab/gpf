@@ -40,7 +40,7 @@ def study(tmp_path: pathlib.Path) -> GenotypeData:
     return denovo_study(
         root_path,
         "trios2", ped_path, [denovo_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.mark.parametrize("params, count, phasing", [
@@ -52,7 +52,8 @@ def test_phasing_serialization(
     params: dict[str, Any],
     count: int,
     phasing: str,
-    study: GenotypeData) -> None:
+    study: GenotypeData,
+) -> None:
     assert study is not None
 
     vs = list(study.query_variants(**params))

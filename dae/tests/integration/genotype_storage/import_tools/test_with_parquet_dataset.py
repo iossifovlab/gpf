@@ -61,7 +61,7 @@ def vcf_project_to_parquet(
     return vcf_import(
         root_path,
         "parquet_dataset", layout.pedigree, layout.vcf,
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_overwrite=project_config_overwrite)
 
 
@@ -82,7 +82,7 @@ def vcf_project_from_parquet(
     return vcf_import(
         root_path,
         "from_parquet_dataset", layout.pedigree, layout.vcf,
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_replace=project_config_replace)
 
 

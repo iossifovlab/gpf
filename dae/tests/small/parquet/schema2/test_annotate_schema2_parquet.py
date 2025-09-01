@@ -212,7 +212,7 @@ def t4c8_study_nonpartitioned(
     vcf_study(
         root_path, "study_nonpartitioned",
         ped_path, [vcf_path],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_overwrite=t4c8_project_config,
     )
     return f"{root_path}/work_dir/study_nonpartitioned"
@@ -260,7 +260,7 @@ def t4c8_study_partitioned(
     vcf_study(
         root_path, "study_partitioned",
         ped_path, [vcf_path],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
         project_config_overwrite=t4c8_project_config,
     )
@@ -285,7 +285,7 @@ def t4c8_annotationless_study(
     vcf_study(
         root_path, "annotationless_study",
         ped_path, [vcf_path],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_overwrite={
             "destination": {"storage_type": "schema2"},
             "annotation": [],
@@ -327,7 +327,7 @@ def t4c8_study_denovo(
     denovo_study(
         root_path, "study_denovo",
         ped_path, [dnv_path],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=config_update,
         project_config_overwrite=t4c8_project_config,
     )

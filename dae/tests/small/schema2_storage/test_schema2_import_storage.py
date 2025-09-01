@@ -39,7 +39,7 @@ chr3   1    .  A   G,TA .    .      .    GT     0/1  0/1  0/0
     vcf_study(
         root_path,
         "study", ped_path, [vcf_path],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return create_schema2_dataset_layout(f"{root_path}/work_dir/study")

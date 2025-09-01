@@ -258,7 +258,7 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
     return vcf_study(
         root_path,
         "t4c8_study_1", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update={
             "input": {
                 "vcf": {
@@ -314,7 +314,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/1 0/1
     return vcf_study(
         root_path,
         "t4c8_study_2", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "t4c8_study_2"),
@@ -908,7 +908,7 @@ chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0
     return vcf_study(
         root_path,
         "t4c8_study_4", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update={
             "input": {
                 "vcf": {

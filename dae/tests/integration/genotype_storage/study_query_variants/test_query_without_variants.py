@@ -35,7 +35,7 @@ def imported_vcf_study(
     return vcf_study(
         root_path,
         "test_query_without_variants", ped_path, [],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 def test_query_family_variants(

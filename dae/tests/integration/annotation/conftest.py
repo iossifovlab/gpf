@@ -139,7 +139,7 @@ def t4c8_study(instance: GPFInstance) -> str:
     vcf_study(
         root_path, "study",
         ped_path, [vcf_path],
-        instance,
+        gpf_instance=instance,
         project_config_overwrite=project_config_update,
         project_config_update=project_config,
     )
