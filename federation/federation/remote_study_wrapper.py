@@ -93,7 +93,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
         if study_filters is not None:
             del kwargs["study_filters"]
-        if kwargs.get("allowed_studies"):
+        if kwargs.get("allowed_studies") is not None:
             del kwargs["allowed_studies"]
 
         kwargs["datasetId"] = self.remote_study_id
