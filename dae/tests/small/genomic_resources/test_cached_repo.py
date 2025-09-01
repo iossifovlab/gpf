@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import contextlib
-import fcntl
 import os
 import pathlib
 import threading
@@ -272,9 +271,33 @@ def test_cached_repository_file_level_cache(
 
 
 @pytest.mark.grr_full
+def test_filesystem_lock_implementation(
+    cache_repository: CacheRepositoryBuilder,
+) -> None:
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "config",
+                "data.txt": "data",
+            }}) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        assert resource is not None
+
+        cache_proto = cast(CachingProtocol, resource.proto)
+        lock1 = cache_proto.local_protocol.obtain_resource_file_lock(
+            resource, "data.txt")
+        with lock1:
+            lock2 = cache_proto.local_protocol.obtain_resource_file_lock(
+                resource, "data.txt", timeout=0.1)
+            with pytest.raises(TimeoutError), lock2:
+                pass
+
+
+@pytest.mark.grr_full
 def test_filesystem_caching_lock_implementation(
-        mocker: MockerFixture,
-        cache_repository: CacheRepositoryBuilder) -> None:
+    mocker: MockerFixture,
+    cache_repository: CacheRepositoryBuilder,
+) -> None:
     with cache_repository({
             "one": {
                 GR_CONF_FILE_NAME: "config",
@@ -287,7 +310,6 @@ def test_filesystem_caching_lock_implementation(
         obtain_lock_spy = mocker.spy(
             FsspecReadWriteProtocol, "obtain_resource_file_lock",
         )
-        flock_spy = mocker.spy(fcntl, "flock")
 
         with resource.open_raw_file("data.txt"):
             cache_proto = cast(CachingProtocol, resource.proto)
@@ -295,9 +317,6 @@ def test_filesystem_caching_lock_implementation(
                 ._get_resource_file_lockfile_path(resource, "data.txt")
             assert os.path.exists(lockfile_path)
             obtain_lock_spy.assert_called_once()
-            flock_spy.assert_called_once()
-            assert flock_spy.call_args[0][0].name == lockfile_path
-            assert flock_spy.call_args[0][1] == fcntl.LOCK_EX
 
 
 @pytest.mark.grr_full

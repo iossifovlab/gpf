@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import fcntl
 import hashlib
 import json
 import logging
@@ -24,6 +23,7 @@ import jinja2
 import pyBigWig  # type: ignore
 import pysam
 import yaml
+from filelock import FileLock
 
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -322,10 +322,11 @@ class FsspecReadWriteProtocol(
 
     def obtain_resource_file_lock(
         self, resource: GenomicResource, filename: str,
+        timeout: float = -1,
     ) -> AbstractContextManager:
         """Lock a resource's file."""
 
-        class Lock:
+        class NoLock:
             """Lock representation."""
 
             def __enter__(self) -> None:
@@ -335,24 +336,14 @@ class FsspecReadWriteProtocol(
                     self,
                     exc_type: type[BaseException] | None,
                     exc_value: BaseException | None,
-                    exc_tb: TracebackType | None) -> None:
-                pass
+                    exc_tb: TracebackType | None) -> bool:
+                return exc_type is None
 
-        lock = Lock()
+        if self.scheme != "file":
+            return NoLock()
 
-        if self.scheme == "file":
-            path = self._get_resource_file_lockfile_path(resource, filename)
-            if not self.filesystem.exists(os.path.dirname(path)):
-                self.filesystem.makedirs(
-                    os.path.dirname(path), exist_ok=True)
-            # pylint: disable=consider-using-with
-            lockfile = open(path, "wt", encoding="utf8")  # noqa
-            lockfile.write(str(datetime.datetime.now()) + "\n")
-            fcntl.flock(lockfile, fcntl.LOCK_EX)
-            lock.__enter__ = lockfile.__enter__  # type: ignore
-            lock.__exit__ = lockfile.__exit__  # type: ignore
-
-        return lock
+        lockfile = self._get_resource_file_lockfile_path(resource, filename)
+        return FileLock(lockfile, timeout=timeout)
 
     def _scan_path_for_resources(
         self, path_array: list[str],
