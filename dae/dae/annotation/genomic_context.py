@@ -16,9 +16,6 @@ from dae.genomic_resources.genomic_context import (
 from dae.genomic_resources.genomic_context_cli import (
     CLIGenomicContextProvider,
 )
-from dae.genomic_resources.implementations.annotation_pipeline_impl import (
-    AnnotationPipelineImplementation,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +63,11 @@ class CLIAnnotationContextProvider(CLIGenomicContextProvider):
             if pipeline_path.exists():
                 raw_pipeline = pipeline_path.read_text()
             elif pipeline_resource is not None:
-                raw_pipeline = AnnotationPipelineImplementation(
-                   pipeline_resource).raw
+                if pipeline_resource.get_type() != "annotation_pipeline":
+                    raise TypeError(
+                        "Expected an annotation_pipeline resource.")
+                raw_pipeline = pipeline_resource.get_file_content(
+                    pipeline_resource.get_config()["filename"])
             else:
                 raise ValueError(
                     f"The provided argument for an annotation"
