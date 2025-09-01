@@ -3,6 +3,7 @@
 import copy
 import json
 
+import pandas as pd
 from datasets_api.permissions import (
     add_group_perm_to_dataset,
     add_group_perm_to_user,
@@ -126,11 +127,9 @@ def test_simple_query_download(
 
 def test_simple_query_summary_variants(
     admin_client: Client,
-    summary_preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
-    data["sources"] = list(summary_preview_sources)
 
     response = admin_client.post(
         QUERY_VARIANTS_URL,
@@ -146,13 +145,11 @@ def test_simple_query_summary_variants(
 
 def test_simple_query_summary_variants_download(
     admin_client: Client,
-    summary_download_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
         "download": True,
-        "sources": summary_download_sources,
     }
 
     response = admin_client.post(
@@ -167,22 +164,101 @@ def test_simple_query_summary_variants_download(
     assert len(res) == 13
 
     assert set(header) == {
+        "family id",
+        "study",
+        "study phenotype",
         "location",
         "variant",
-        "worstEffect",
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "family person ids",
+        "family structure",
+        "family best state",
+        "family genotype",
+        "carrier person ids",
+        "carrier person attributes",
+        "inheritance type",
+        "family phenotypes",
+        "carrier phenotypes",
+        "parents called",
+        "allele frequency",
+        "worst effect",
         "genes",
-        "geneEffect",
-        "effectDetails",
-        "LGD_rank",
-        "RVIS_rank",
-        "pLI_rank",
-        "SSC-freq",
-        "EVS-freq",
-        "E65-freq",
-        "instrument1.categorical",
-        "instrument1.continuous",
-        "instrument1.ordinal",
-        "instrument1.raw",
+        "all effects",
+        "effect details",
+        "t4c8 score",
+        "Age",
+        "IQ",
+    }
+
+
+def test_query_summary_variants_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = {
+        **EXAMPLE_REQUEST,
+        "download": True,
+    }
+
+    response = admin_client.post(
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+    )
+    assert response.status_code == status.HTTP_200_OK
+    res = list(response.streaming_content)  # type: ignore
+    assert res
+    assert res[0]
+    rows = [row.decode("utf-8")[:-1] for row in res]
+    data = pd.DataFrame(
+        [x.split("\t") for x in rows[1:3]],
+        columns=rows[0].split("\t"),
+    )
+
+    assert data.to_dict(orient="list") == {
+        "family id": ["f1.1", "f1.3"],
+        "study": ["t4c8_study_1", "t4c8_study_1"],
+        "study phenotype": ["autism", "autism"],
+        "location": ["chr1:4", "chr1:4; chr1:5"],
+        "variant": ["sub(T->G)", "sub(T->G); ins(A)"],
+        "CHROM": ["chr1", "chr1"],
+        "POS": ["4", "4"],
+        "REF": ["T", "T"],
+        "ALT": ["G", "G; TA"],
+        "family person ids": ["mom1;dad1;p1;s1", "mom3;dad3;p3;s3"],
+        "family structure": [
+            "mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:M:unaffected",
+            "mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:F:unaffected",
+        ],
+        "family best state": ["1122/1100", "1112/1000/0110"],
+        "family genotype": ["0/1;0/1;0/0;0/0", "0/1;0/2;0/2;0/0"],
+        "carrier person ids": ["mom1;dad1", "mom3; dad3;p3"],
+        "carrier person attributes": [
+            "mom:F:unaffected;dad:M:unaffected",
+            "mom:F:unaffected; dad:M:unaffected;prb:F:affected",
+        ],
+        "inheritance type": ["mendelian", "mendelian"],
+        "family phenotypes": [
+            "unaffected:unaffected:autism:unaffected",
+            "unaffected:unaffected:autism:unaffected",
+        ],
+        "carrier phenotypes": [
+            "unaffected:unaffected",
+            "unaffected,unaffected:autism",
+        ],
+        "parents called": ["4", "4"],
+        "allele frequency": ["37.5", "37.5; 12.5"],
+        "worst effect": ["intergenic", "intergenic"],
+        "genes": ["intergenic", "intergenic"],
+        "all effects": ["intergenic:intergenic", "intergenic:intergenic"],
+        "effect details": [
+            "intergenic:intergenic:intergenic:intergenic",
+            "intergenic:intergenic:intergenic:intergenic",
+        ],
+        "t4c8 score": ["-", "-"],
+        "Age": ["166.340", "68.001"],
+        "IQ": ["104.912", "69.333"],
     }
 
 
