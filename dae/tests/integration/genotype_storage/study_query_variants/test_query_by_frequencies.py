@@ -60,7 +60,7 @@ chrA   13  .  A   G,T,C .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
     return vcf_study(
         root_path,
         "test_query_by_frequencies", ped_path, [vcf_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.mark.parametrize(
@@ -124,7 +124,7 @@ def imported_denovo_study(
     return denovo_study(
         root_path,
         "helloworld", ped_path, [denovo_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 def test_query_denovo_variants_by_allele_frequency(

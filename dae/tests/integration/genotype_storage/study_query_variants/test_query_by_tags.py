@@ -43,7 +43,7 @@ chrA   2   .  A   G     .    .      .    GT     0/0  0/0  0/0 1/1  0/0  1/1
     return vcf_study(
         root_path,
         "test_query_by_family_tags", ped_path, [vcf_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.mark.parametrize(
@@ -67,7 +67,7 @@ def test_query_by_family_ids(
         deselected_family_tags: list[str],
         tags_or_mode: bool,  # noqa: FBT001
         count: int,
-):
+) -> None:
     vs = list(imported_study.query_variants(
         tags_query=TagsQuery(
             selected_family_tags=selected_family_tags,

@@ -111,7 +111,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
     return WDAEStudy(wgpf_fixture.genotype_storages, vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        wgpf_fixture,
+        gpf_instance=wgpf_fixture,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "study_1"),
@@ -197,7 +197,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
     return WDAEStudy(wgpf_fixture.genotype_storages, vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
-        wgpf_fixture,
+        gpf_instance=wgpf_fixture,
         project_config_update=project_config_update,
         study_config_update={
             "conf_dir": str(root_path / "study_2"),
@@ -256,7 +256,7 @@ def dataset(
         "dataset", wgpf_fixture,
         study_1.genotype_data, study_2.genotype_data,
         dataset_config_update=textwrap.dedent(f"""
-            conf_dir: { root_path / "dataset "}
+            conf_dir: {root_path / "dataset "}
             genotype_browser:
               enabled: true
             person_set_collections:
@@ -319,8 +319,9 @@ def test_dataset_simple(dataset: WDAEStudyGroup) -> None:
         (PSCQuery("phenotype", {"epilepsy", "autism"}), 6),
         (PSCQuery("phenotype", {"unaffected", "autism"}), 4),
         (PSCQuery("phenotype", {"epilepsy", "autism", "unaffected"}), 6),
-        (PSCQuery("phenotype",
-          {"epilepsy", "autism", "unaffected", "unspecified"}), 8),
+        (PSCQuery(
+            "phenotype",
+            {"epilepsy", "autism", "unaffected", "unspecified"}), 8),
     ],
 )
 def test_dataset_person_sets_queries(

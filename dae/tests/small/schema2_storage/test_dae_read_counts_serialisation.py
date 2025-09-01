@@ -43,7 +43,7 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
     return dae_study(
         tmp_path,
         "transmitted_study", ped_path, [summary_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.mark.parametrize("params, count, expected", [

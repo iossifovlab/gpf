@@ -51,7 +51,7 @@ f2       ch2      dad2  mom2  2   2      prb
     study1 = denovo_study(
         root_path,
         "study_1", ped_path1, [var_path1],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         study_config_update={
             "conf_dir": str(root_path / "study_1"),
             "person_set_collections": {
@@ -96,7 +96,7 @@ f2       ch2      dad2  mom2  2   2      prb
     study2 = denovo_study(
         root_path,
         "study_2", ped_path2, [var_path2],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         study_config_update={
             "conf_dir": str(root_path / "study_2"),
             "person_set_collections": {
@@ -144,7 +144,7 @@ f2       ch2      dad2  mom2  2   2      prb
     return setup_dataset(
         "ds1", gpf_instance, study1, study2,
         dataset_config_update=textwrap.dedent(f"""
-            conf_dir: { root_path / "dataset "}
+            conf_dir: {root_path / "dataset "}
             person_set_collections:
                 phenotype:
                     id: phenotype
@@ -183,11 +183,11 @@ def test_dataset_build_person_set_collection(
     assert len(psc.person_sets["unaffected"]) == 4
 
     all_persons = dataset.families.persons
-    person = all_persons[("f1", "ch1")]
+    person = all_persons["f1", "ch1"]
     assert person.get_attr("phenotype") == "developmental_disorder"
 
-    person = all_persons[("f2", "ch2")]
+    person = all_persons["f2", "ch2"]
     assert person.get_attr("phenotype") == "autism"
 
-    person = all_persons[("f1", "dad1")]
+    person = all_persons["f1", "dad1"]
     assert person.get_attr("phenotype") == "unaffected"

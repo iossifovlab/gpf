@@ -37,7 +37,7 @@ f1.3     ch3      dad3  mom3  2   2      prb
     vcf_study(
         root_path,
         "study_no_vs", ped_path, [],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_no_vs"
@@ -74,7 +74,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_1"
@@ -136,7 +136,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
@@ -183,7 +183,7 @@ chr3   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
     vcf_study(
         root_path,
         "study_3", ped_path, [vcf_path1],
-        acgt_instance,
+        gpf_instance=acgt_instance,
         project_config_update=project_config_update,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )

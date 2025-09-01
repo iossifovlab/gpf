@@ -67,7 +67,7 @@ chr1   100  .  T   G    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/1 
     vcf_study(
         root_path,
         "study_odd", ped_path, [vcf_path1],
-        t4c8_instance,
+        gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )

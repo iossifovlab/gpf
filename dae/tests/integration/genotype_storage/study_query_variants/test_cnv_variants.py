@@ -44,7 +44,7 @@ f2        chrA:81-100 CNV-     2||2||1
         root_path,
         "test_cnv_variants", pathlib.Path(ped_path),
         [pathlib.Path(cnv_path)],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.mark.parametrize(

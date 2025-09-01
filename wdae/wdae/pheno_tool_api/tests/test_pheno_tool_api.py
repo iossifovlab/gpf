@@ -57,7 +57,7 @@ def test_pheno_tool_api_permissions(
     url: str,
     method: str,
     body: dict,
-    status: status,
+    status: int,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":

@@ -43,7 +43,7 @@ chr3   1   .  A   C   .    .      .    GT     0/0  0/1  0/0  0/1
     return vcf_study(
         root_path,
         "quads_f1", ped_path, [vcf_path],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
 

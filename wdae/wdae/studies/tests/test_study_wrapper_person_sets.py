@@ -92,7 +92,7 @@ chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
     study1 = vcf_study(
         root_path,
         "study_1", ped_path1, [vcf_path1],
-        wgpf_instance,
+        gpf_instance=wgpf_instance,
         study_config_update={
             "conf_dir": str(root_path / "study_1"),
             "person_set_collections": {
@@ -145,7 +145,7 @@ chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
     study2 = vcf_study(
         root_path,
         "study_2", ped_path2, [vcf_path2],
-        wgpf_instance,
+        gpf_instance=wgpf_instance,
         study_config_update={
             "conf_dir": str(root_path / "study_2"),
             "person_set_collections": {

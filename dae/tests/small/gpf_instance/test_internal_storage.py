@@ -155,7 +155,7 @@ def test_internal_genotype_storage_import_study(
         "minimal_vcf",
         ped_path,
         [vcf_path],
-        gpf,
+        gpf_instance=gpf,
     )
 
     # When

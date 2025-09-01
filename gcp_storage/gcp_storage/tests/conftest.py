@@ -70,7 +70,7 @@ def imported_study(
     return vcf_study(
         root_path,
         "bq_test_minimal_vcf", ped_path, [vcf_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.fixture(scope="session")
@@ -108,7 +108,8 @@ def partition_study(
     return vcf_study(
         root_path,
         "bq_partition_vcf", ped_path, [vcf_path],
-        gpf_instance, project_config_update=yaml.safe_load(textwrap.dedent("""
+        gpf_instance=gpf_instance,
+        project_config_update=yaml.safe_load(textwrap.dedent("""
           partition_description:
             region_bin:
               chromosomes: foo,bar

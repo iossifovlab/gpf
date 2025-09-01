@@ -43,7 +43,7 @@ def denovo_broken_pedigrees(
     return denovo_study(
         tmp_path, "test_denovo_broken_pedigrees",
         ped_path, [denovo_path],
-        gpf)
+        gpf_instance=gpf)
 
 
 def test_query_denovo_variants(denovo_broken_pedigrees: GenotypeData) -> None:

@@ -49,7 +49,7 @@ def imported_study(
     return vcf_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 @pytest.mark.parametrize("region,family_variants_count", [
@@ -70,7 +70,7 @@ def test_summary_variants_family_variants_count_single_allele(
     assert aa.get_attribute("family_variants_count") == family_variants_count
 
 
-@pytest.mark.gs_inmemory()
+@pytest.mark.gs_inmemory
 @pytest.mark.gs_impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 5, 5), [1, 1]),

@@ -44,7 +44,7 @@ bar    8   .  A   T,C,G .    .      .    GT     0/0 0/0 ./. 0/0
         root_path,
         "test_f1_unknown_and_reference", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {

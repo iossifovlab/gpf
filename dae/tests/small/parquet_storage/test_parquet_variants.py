@@ -101,7 +101,8 @@ def imported_study(
 
     study = vcf_study(
         root_path, "study", ped_path, [vcf_path],
-        gpf_instance, project_config_update=PROJECT_CONF,
+        gpf_instance=gpf_instance,
+        project_config_update=PROJECT_CONF,
     )
     assert parquet_storage_fixture.data_dir is not None
     assert pathlib.Path(parquet_storage_fixture.data_dir).exists()
@@ -125,7 +126,8 @@ def imported_study_dirless_storage(
 
     study = vcf_study(
         root_path, "study", ped_path, [vcf_path],
-        gpf_instance, project_config_update=PROJECT_CONF,
+        gpf_instance=gpf_instance,
+        project_config_update=PROJECT_CONF,
     )
     assert parquet_storage_fixture_without_dir.data_dir is None
     assert study is not None

@@ -46,7 +46,7 @@ bar    9   .  A   T,C,G .    .      .    GT     0/1 0/1 0/1 0/2
         f"test_f1_denovo_{genotype_storage.storage_id}",
         pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {

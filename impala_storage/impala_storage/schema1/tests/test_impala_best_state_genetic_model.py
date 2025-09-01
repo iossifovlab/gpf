@@ -38,11 +38,11 @@ chr1   1   .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0
 chr1   2   .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "effects_trio_vcf", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {
@@ -57,7 +57,6 @@ chr1   2   .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
                 "include_reference": True,
             },
         })
-    return study
 
 
 def test_best_state_genetic_model(quads_f1: GenotypeData) -> None:

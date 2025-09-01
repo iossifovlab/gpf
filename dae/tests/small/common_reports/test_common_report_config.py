@@ -40,7 +40,7 @@ def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
     return denovo_study(
         root_path,
         "trios2", ped_path, [denovo_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 def test_trios2_study_common_reports_enabled(

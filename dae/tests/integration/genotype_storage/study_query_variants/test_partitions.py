@@ -80,7 +80,7 @@ def imported_study(
     return vcf_study(
         root_path,
         "test_partitions", ped_path, [vcf_path],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
 

@@ -56,11 +56,11 @@ chrA   2   .  A   C,G,T .    .      .    GT     1/3    2/3    1/3   1/2   1/2   
 chrA   3   .  A   C,G,T .    .      .    GT     1/2    1/2    1/1   2/2   0/2    0/2    0/2   2/2   1/2    1/2    1/2   2/2   2/3    2/3    2/3   2/2   0/3    0/3    3/3   0/0
         """)  # noqa
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "summary_stats", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {
@@ -75,7 +75,6 @@ chrA   3   .  A   C,G,T .    .      .    GT     1/2    1/2    1/1   2/2   0/2   
                 "include_reference": True,
             },
         })
-    return study
 
 
 def test_summary_stats_simple(summary_stats: GenotypeData) -> None:

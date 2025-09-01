@@ -43,7 +43,7 @@ def pedigree_only_project(
     return pedigree_import(
         root_path,
         "pedigree_dataset", layout.pedigree,
-        gpf_instance,
+        gpf_instance=gpf_instance,
     )
 
 

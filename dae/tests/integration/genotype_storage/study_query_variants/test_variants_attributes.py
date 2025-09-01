@@ -43,7 +43,7 @@ chrA   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
         root_path,
         "test_variant_attributes", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {

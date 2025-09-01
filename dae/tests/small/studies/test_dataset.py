@@ -61,12 +61,12 @@ chr1   4   .  T   A   .    .      .    GT     0/0  0/0  0/0 0/1  0/0  0/0
     study1 = vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
     study2 = vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path2],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
     return setup_dataset(

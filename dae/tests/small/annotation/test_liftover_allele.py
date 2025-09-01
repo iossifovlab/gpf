@@ -1,5 +1,5 @@
 # ruff: noqa: ARG002
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme,R0917
 import textwrap
 from unittest.mock import MagicMock, patch
 

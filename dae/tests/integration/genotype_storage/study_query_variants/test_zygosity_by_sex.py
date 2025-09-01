@@ -50,7 +50,7 @@ def imported_study(
     return vcf_study(
         root_path,
         "test_query_by_zygosity_in_status", ped_path, [vcf_path],
-        gpf_instance)
+        gpf_instance=gpf_instance)
 
 
 translator = BitmaskEnumTranslator(

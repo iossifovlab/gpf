@@ -57,7 +57,7 @@ chrA   15  .  A   G     .    .      .    GT     1/.  1/1  1/0
         root_path,
         "test_query_by_inheritance_trio", pathlib.Path(ped_path),
         [vcf_path],
-        gpf_instance,
+        gpf_instance=gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {

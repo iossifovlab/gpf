@@ -59,7 +59,7 @@ def study_1(
 ) -> GenotypeData:
     return denovo_study(
         tmp_path, "study_1", ped_1, [denovo_1],
-        t4c8_fixture,
+        gpf_instance=t4c8_fixture,
         study_config_update={
             "enrichment": {
                 "enabled": True,
