@@ -220,6 +220,15 @@ class VariantsLoaderSource(Source):
         """Fetch full variants from a variant loader."""
         yield from self.loader.fetch(region)
 
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        self.loader.close()
+        return exc_type is None
+
 
 class VariantsLoaderBatchSource(Source):
     """A source that can fetch variants in batches from a loader."""
@@ -239,6 +248,15 @@ class VariantsLoaderBatchSource(Source):
         variants = self.loader.fetch(region)
         while batch := tuple(itertools.islice(variants, self.batch_size)):
             yield batch
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        self.loader.close()
+        return exc_type is None
 
 
 class Schema2SummaryVariantsSource(Source):

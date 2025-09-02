@@ -770,6 +770,7 @@ class VcfLoader(VariantsGenotypesLoader):
             return
         for vcf_loader in self.vcf_loaders:
             vcf_loader.close()
+        self.families.close()
 
     @classmethod
     def _arguments(cls) -> list[CLIArgument]:

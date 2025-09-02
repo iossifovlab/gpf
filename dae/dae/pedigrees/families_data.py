@@ -126,15 +126,23 @@ class FamiliesData(Mapping[str, Family]):
 
     def __deepcopy__(self, memo: dict[int, Any]) -> FamiliesData:
         families_data = FamiliesData()
-        families_data._families = copy.deepcopy(  # noqa: SLF001
+        families_data._families = copy.deepcopy(
             self._families, memo)
-        families_data._real_persons = copy.deepcopy(  # noqa: SLF001
+        families_data._real_persons = copy.deepcopy(
             self._real_persons, memo)
         families_data.persons = copy.deepcopy(self.persons, memo)
         families_data.persons_by_person_id = copy.deepcopy(
             self.persons_by_person_id, memo)
 
         return families_data
+
+    def close(self) -> None:
+        self._ped_df = None
+        self._families = {}
+        self.persons_by_person_id = defaultdict(list)
+        self.persons = {}
+        self._broken = {}
+        self._real_persons = None
 
     def redefine(self) -> None:
         """Rebuild all families."""
@@ -218,7 +226,7 @@ class FamiliesData(Mapping[str, Family]):
 
             family = Family.from_persons(persons)
             # pylint: disable=protected-access
-            families_data._families[family_id] = family  # noqa: SLF001
+            families_data._families[family_id] = family
         families_data.redefine()
         return families_data
 

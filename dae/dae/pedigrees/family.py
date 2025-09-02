@@ -134,7 +134,7 @@ class Person:
             key: value
             for key, value in attributes.items()
             if key not in ALL_FAMILY_TAG_LABELS
-               and key != "tag_family_type_full"
+            and key != "tag_family_type_full"
         }
         self._tags: set[FamilyTag] = set()
         for tag, tag_value in tags.items():
@@ -420,10 +420,10 @@ class Family:
                     f"multiple person with the same person id "
                     f"{person.person_id} in family {family_id}")
             family.persons[person.person_id] = person
-            family._tags |= person.tags  # noqa: SLF001
+            family._tags |= person.tags
 
         # pylint: disable=protected-access
-        family._connect_family()  # noqa: SLF001
+        family._connect_family()
 
         return family
 
@@ -537,8 +537,8 @@ class Family:
         self, person_id: str, *,
         allow_missing: bool = False,
     ) -> bool:
-        return self.member_has_mom(person_id, allow_missing=allow_missing) and \
-            self.member_has_dad(person_id, allow_missing=allow_missing)
+        return self.member_has_mom(person_id, allow_missing=allow_missing) \
+            and self.member_has_dad(person_id, allow_missing=allow_missing)
 
     def member_is_child(self, person_id: str) -> bool:
         member = self.persons[person_id]

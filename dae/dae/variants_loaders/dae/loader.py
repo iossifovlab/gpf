@@ -239,7 +239,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             yield summary_variants, family_variants
 
     def close(self) -> None:
-        pass
+        self.families.close()
 
     @staticmethod
     def split_location(location: str) -> tuple[str, int]:
@@ -990,7 +990,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         }
 
     def close(self) -> None:
-        pass
+        self.families.close()
 
     def _produce_family_variants(
         self, summary_variant: SummaryVariant,
