@@ -192,7 +192,7 @@ def _configure_cnv_best_state(
         header: list[str],
         transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
         families: FamiliesData,
-        genome: ReferenceGenome,
+        genome: ReferenceGenome, *,
         cnv_person_id: str | None = None,
         cnv_family_id: str | None = None,
         cnv_best_state: str | None = None) -> None:
@@ -282,7 +282,7 @@ def _configure_cnv_variant_type(
 def _configure_loader(
         header: list[str],
         families: FamiliesData,
-        genome: ReferenceGenome,
+        genome: ReferenceGenome, *,
         cnv_chrom: str | None = None,
         cnv_start: str | None = None,
         cnv_end: str | None = None,
@@ -315,8 +315,9 @@ def _configure_loader(
     _configure_cnv_best_state(
         header, transformers,
         families, genome,
-        cnv_person_id,
-        cnv_family_id, cnv_best_state)
+        cnv_person_id=cnv_person_id,
+        cnv_family_id=cnv_family_id,
+        cnv_best_state=cnv_best_state)
 
     return header, transformers
 
@@ -324,7 +325,7 @@ def _configure_loader(
 def flexible_cnv_loader(
     filepath_or_buffer: str | Path | TextIO,
     families: FamiliesData,
-    genome: ReferenceGenome,
+    genome: ReferenceGenome, *,
     cnv_chrom: str | None = None,
     cnv_start: str | None = None,
     cnv_end: str | None = None,
@@ -361,16 +362,16 @@ def flexible_cnv_loader(
             header,
             families,
             genome,
-            cnv_chrom,
-            cnv_start,
-            cnv_end,
-            cnv_location,
-            cnv_person_id,
-            cnv_family_id,
-            cnv_best_state,
-            cnv_variant_type,
-            cnv_plus_values,
-            cnv_minus_values)
+            cnv_chrom=cnv_chrom,
+            cnv_start=cnv_start,
+            cnv_end=cnv_end,
+            cnv_location=cnv_location,
+            cnv_person_id=cnv_person_id,
+            cnv_family_id=cnv_family_id,
+            cnv_best_state=cnv_best_state,
+            cnv_variant_type=cnv_variant_type,
+            cnv_plus_values=cnv_plus_values,
+            cnv_minus_values=cnv_minus_values)
 
         variant_generator = flexible_variant_loader(
             infile, header, line_splitter, transformers,

@@ -77,11 +77,13 @@ def test_allele_best_state(
 
     fa = FamilyAllele(
         SummaryAllele(
-            chromosome, position, reference, alternative, 0, allele_index,
+            chromosome, position, reference,
+            alternative=alternative,
+            summary_index=0, allele_index=allele_index,
         ),
         sample_family,
-        genotype,
-        None,
+        genotype=genotype,
+        best_state=None,
     )
     fa.update_attributes({"allele_count": allele_count})
     assert np.array_equal(fa.best_state, expected)

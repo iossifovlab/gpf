@@ -125,14 +125,14 @@ class DuckDbQueryDialect(Dialect):
 
 
 class DuckDbVariants(SqlSchema2Variants):
-    """Backend for DuckDb storage backend."""
+    """Backend for DuckDb legacy storage backend."""
 
     RUNNER_CLASS = DuckDbRunner
 
     def __init__(
         self,
         connection_factory: DuckDbConnectionFactory,
-        db: str | None,
+        db: str | None, *,
         family_variant_table: str | None,
         summary_allele_table: str | None,
         pedigree_table: str,

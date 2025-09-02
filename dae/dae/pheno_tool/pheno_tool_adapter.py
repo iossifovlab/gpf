@@ -12,7 +12,7 @@ class PhenoToolAdapterBase:
     """Base class for pheno tool adapters."""
 
     def calc_by_effect(
-        self, measure_id: str, effect: str, people_variants: Counter,
+        self, measure_id: str, effect: str, people_variants: Counter, *,
         person_ids: list[str] | None = None,
         family_ids: list[str] | None = None,
         normalize_by: list[dict[str, str]] | None = None,
@@ -22,7 +22,7 @@ class PhenoToolAdapterBase:
     def calc_variants(
         self,
         measure_id: str,
-        family_ids: list[str] | None,
+        family_ids: list[str] | None, *,
         person_ids: set[str],
         normalize_by: list[dict[str, str]],
         variants: Iterable[FamilyVariant],
@@ -63,7 +63,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         }
 
     def calc_by_effect(
-        self, measure_id: str, effect: str, people_variants: Counter,
+        self, measure_id: str, effect: str, people_variants: Counter, *,
         person_ids: list[str] | None = None,
         family_ids: list[str] | None = None,
         normalize_by: list[dict[str, str]] | None = None,
@@ -105,6 +105,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
     def build_report_description(
         self, measure_id: str, normalize_by: Any,
     ) -> str:
+        """Build report description."""
         normalize_by = self.pheno_tool.init_normalize_measures(
             measure_id, normalize_by,
         )
@@ -115,13 +116,13 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
     def calc_variants(
         self,
-            measure_id: str,
-            family_ids: list[str] | None,
-            person_ids: set[str],
-            normalize_by: list[dict[str, str]],
-            variants: Iterable[FamilyVariant],
-            effect_types: list[str],
-            effect_groups: list[str],
+        measure_id: str,
+        family_ids: list[str] | None, *,
+        person_ids: set[str],
+        normalize_by: list[dict[str, str]],
+        variants: Iterable[FamilyVariant],
+        effect_types: list[str],
+        effect_groups: list[str],
     ) -> dict[str, Any]:
         """Run pheno tool on given data."""
         effect_groups = EffectTypesMixin.build_effect_types_list(effect_groups)

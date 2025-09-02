@@ -22,12 +22,10 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         self,
         dialect: Dialect,
         db: str | None,
-        family_variant_table: str | None,  # noqa: ARG002
         summary_allele_table: str,
-        pedigree_table: str,
-        family_variant_schema: TableSchema,  # noqa: ARG002
+        pedigree_table: str, *,
         summary_allele_schema: TableSchema,
-        table_properties: dict | None,
+        partition_config: dict | None,
         pedigree_schema: TableSchema,
         families: FamiliesData,
         gene_models: GeneModels | None = None,
@@ -39,11 +37,11 @@ class SummaryQueryBuilder(BaseQueryBuilder):
             None,                      # family_variant_table,
             summary_allele_table,
             pedigree_table,
-            None,                      # family_variant_schema,
-            summary_allele_schema,
-            table_properties,
-            pedigree_schema,
-            families,
+            family_variant_schema=None,
+            summary_allele_schema=summary_allele_schema,
+            partition_config=partition_config,
+            pedigree_schema=pedigree_schema,
+            families=families,
             gene_models=gene_models,
         )
 

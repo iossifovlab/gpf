@@ -190,6 +190,7 @@ class VariantColumnInputFile:
             if filename.endswith("gz"):
                 self.file = gzip.open(filename, "rt")  # noqa: SIM115
             else:
+                # pylint: disable=consider-using-with
                 self.file = open(filename, "rt")  # noqa: SIM115
 
         # read header
@@ -245,6 +246,7 @@ class VariantColumnOutputFile:
             if filename.endswith("gz"):
                 self.file = gzip.open(filename, "wt")  # noqa: SIM115
             else:
+                # pylint: disable=consider-using-with
                 self.file = open(filename, "wt")  # noqa: SIM115
 
     def write_columns(self, columns: list[str]) -> None:
@@ -374,6 +376,7 @@ def cli_vcf() -> None:
     if args.output_filename is None:
         outfile = sys.stdout
     else:
+        # pylint: disable=consider-using-with
         outfile = open(args.output_filename, "w")  # noqa: SIM115
 
     # handling the header
@@ -428,7 +431,3 @@ def cli_vcf() -> None:
     infile.close()
     if args.output_filename:
         outfile.close()
-
-
-if __name__ == "__main__":
-    cli_columns()

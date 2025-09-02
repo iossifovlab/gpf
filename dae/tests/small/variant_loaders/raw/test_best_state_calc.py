@@ -65,9 +65,9 @@ def genome(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
 def sv1() -> SummaryVariant:
     return SummaryVariant(
         [
-            SummaryAllele("1", 4, "T", None, 0, 0),
-            SummaryAllele("1", 4, "T", "TA", 0, 1),
-            SummaryAllele("1", 4, "T", "TG", 0, 2),
+            SummaryAllele("1", 4, "T", None, summary_index=0, allele_index=0),
+            SummaryAllele("1", 4, "T", "TA", summary_index=0, allele_index=1),
+            SummaryAllele("1", 4, "T", "TG", summary_index=0, allele_index=2),
         ],
     )
 
@@ -250,9 +250,9 @@ def test_family_variant_best2gt(
 def sv_x1() -> SummaryVariant:
     return SummaryVariant(
         [
-            SummaryAllele("X", 52, "T", None, 0, 0),
-            SummaryAllele("X", 52, "T", "A", 0, 1),
-            SummaryAllele("X", 52, "T", "G", 0, 2),
+            SummaryAllele("X", 52, "T", None, summary_index=0, allele_index=0),
+            SummaryAllele("X", 52, "T", "A", summary_index=0, allele_index=1),
+            SummaryAllele("X", 52, "T", "G", summary_index=0, allele_index=2),
         ],
     )
 
@@ -261,9 +261,9 @@ def sv_x1() -> SummaryVariant:
 def sv_x2() -> SummaryVariant:
     return SummaryVariant(
         [
-            SummaryAllele("X", 2, "C", None, 0, 0),
-            SummaryAllele("X", 2, "C", "A", 0, 1),
-            SummaryAllele("X", 2, "C", "A", 0, 2),
+            SummaryAllele("X", 2, "C", None, summary_index=0, allele_index=0),
+            SummaryAllele("X", 2, "C", "A", summary_index=0, allele_index=1),
+            SummaryAllele("X", 2, "C", "A", summary_index=0, allele_index=2),
         ],
     )
 

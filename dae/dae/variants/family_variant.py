@@ -92,7 +92,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     def __init__(
         self,
         summary_allele: SummaryAllele,
-        family: Family,
+        family: Family, *,
         genotype: np.ndarray | None,
         best_state: np.ndarray | None,
         genetic_model: GeneticModel | None = None,
@@ -606,8 +606,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             FamilyAllele(
                 self.summary_variant.alleles[0],
                 self.family,
-                self.gt,
-                self._best_state,
+                genotype=self.gt,
+                best_state=self._best_state,
                 inheritance_in_members=self._inheritance_in_members.get(0),
             ),
         ]
@@ -627,8 +627,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             allele = FamilyAllele(
                 summary_allele,
                 self.family,
-                self.gt,
-                self._best_state,
+                genotype=self.gt,
+                best_state=self._best_state,
                 inheritance_in_members=inheritance,
             )
 

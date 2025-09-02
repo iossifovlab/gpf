@@ -128,12 +128,10 @@ def summary_query_builder(families: FamiliesData) -> SummaryQueryBuilder:
     return SummaryQueryBuilder(
         dialect=dialect,
         db="db",
-        family_variant_table="family_alleles",
         summary_allele_table="summary_alleles",
         pedigree_table="pedigree",
-        family_variant_schema=FAMILY_VARIANT_SCHEMA,
         summary_allele_schema=SUMMARY_ALLELE_SCHEMA,
-        table_properties=NO_PARTITIONING_PROPERTIES,
+        partition_config=NO_PARTITIONING_PROPERTIES,
         pedigree_schema=PEDIGREE_SCHEMA,
         families=families,
         gene_models=None,
