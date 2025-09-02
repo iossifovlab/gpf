@@ -167,7 +167,8 @@ def main(
             lo_variant = liftover_variant_func(
                     vcf_variant.chrom, vcf_variant.pos,
                     vcf_variant.ref, list(vcf_variant.alts),
-                    chain, source_genome, target_genome,
+                    chain,
+                    source_genome=source_genome, target_genome=target_genome,
             )
             if lo_variant is None:
                 logger.warning(

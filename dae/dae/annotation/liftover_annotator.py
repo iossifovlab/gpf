@@ -2,8 +2,7 @@
 import abc
 import logging
 import textwrap
-from collections.abc import Callable
-from typing import Any
+from typing import Any, Protocol
 
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
@@ -318,7 +317,7 @@ def bcf_liftover_allele(
     pos: int,
     ref: str,
     alt: str,
-    liftover_chain: LiftoverChain,
+    liftover_chain: LiftoverChain, *,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> tuple[str, int, str, str] | None:
@@ -356,7 +355,7 @@ def basic_liftover_allele(
     pos: int,
     ref: str,
     alt: str,
-    liftover_chain: LiftoverChain,
+    liftover_chain: LiftoverChain, *,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> tuple[str, int, str, str] | None:
@@ -399,25 +398,39 @@ def basic_liftover_allele(
     return lo_chrom, lo_pos, lo_ref, lo_alt
 
 
+class LiftoverFunction(Protocol):
+    """Protocol for liftover function."""
+
+    def __call__(
+        self,
+        chrom: str,
+        pos: int,
+        ref: str,
+        alt: str,
+        liftover_chain: LiftoverChain, *,
+        source_genome: ReferenceGenome,
+        target_genome: ReferenceGenome,
+    ) -> tuple[str, int, str, str] | None:
+        ...
+
+
 def _liftover_variant(
     chrom: str,
     pos: int,
     ref: str,
     alts: list[str],
-    liftover_chain: LiftoverChain,
+    liftover_chain: LiftoverChain, *,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
-    liftover_allele_func: Callable[
-        [str, int, str, str, LiftoverChain, ReferenceGenome, ReferenceGenome],
-        tuple[str, int, str, str] | None,
-    ],
+    liftover_allele_func: LiftoverFunction,
 ) -> tuple[str, int, str, list[str]] | None:
     """Liftover a variant."""
     lo_alleles: list[tuple[str, int, str, str]] = []
     for alt in alts:
         lo_allele = liftover_allele_func(
             chrom, pos, ref, alt,
-            liftover_chain, source_genome, target_genome,
+            liftover_chain,
+            source_genome=source_genome, target_genome=target_genome,
         )
         if lo_allele is None:
             return None
@@ -454,14 +467,16 @@ def bcf_liftover_variant(
     pos: int,
     ref: str,
     alts: list[str],
-    liftover_chain: LiftoverChain,
+    liftover_chain: LiftoverChain, *,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> tuple[str, int, str, list[str]] | None:
     """BCF liftover variant utility function."""
     return _liftover_variant(
-        chrom, pos, ref, alts, liftover_chain, source_genome, target_genome,
-        bcf_liftover_allele,
+        chrom, pos, ref, alts,
+        liftover_chain=liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
+        liftover_allele_func=bcf_liftover_allele,  # pyright: ignore
     )
 
 
@@ -470,14 +485,16 @@ def basic_liftover_variant(
     pos: int,
     ref: str,
     alts: list[str],
-    liftover_chain: LiftoverChain,
+    liftover_chain: LiftoverChain, *,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> tuple[str, int, str, list[str]] | None:
     """Basic liftover variant utility function."""
     return _liftover_variant(
-        chrom, pos, ref, alts, liftover_chain, source_genome, target_genome,
-        basic_liftover_allele,
+        chrom, pos, ref, alts,
+        liftover_chain=liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
+        liftover_allele_func=basic_liftover_allele,
     )
 
 
@@ -490,7 +507,8 @@ class BasicLiftoverAnnotator(AbstractLiftoverAnnotator):
         """Liftover an allele."""
         return basic_liftover_allele(
             allele.chrom, allele.position, allele.ref, allele.alt,
-            self.chain, self.source_genome, self.target_genome,
+            self.chain,
+            source_genome=self.source_genome, target_genome=self.target_genome,
         )
 
 
@@ -503,5 +521,6 @@ class BcfLiftoverAnnotator(AbstractLiftoverAnnotator):
         """Liftover an allele."""
         return bcf_liftover_allele(
             allele.chrom, allele.position, allele.ref, allele.alt,
-            self.chain, self.source_genome, self.target_genome,
+            self.chain,
+            source_genome=self.source_genome, target_genome=self.target_genome,
         )

@@ -63,7 +63,8 @@ def test_liftover_allele_util(
 
     lresult = bcf_liftover_allele(
         chrom, pos, ref, alt,
-        liftover_chain, source_genome, target_genome,
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
 
     assert lresult is not None
@@ -442,7 +443,8 @@ def test_ex3a_liftover_parts(
 
     result = bcf_liftover_allele(
         "10", 40, "GATA", "G",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -477,7 +479,8 @@ def test_ex4a_liftover_parts(
 
     result = bcf_liftover_allele(
         "22", 30, "A", "G",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -504,7 +507,8 @@ def test_ex4a_liftover_variant(
 
     result = bcf_liftover_allele(
         "22", 25, "TAA", "T",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -515,7 +519,8 @@ def test_ex4a_liftover_variant(
 
     result = bcf_liftover_allele(
         "22", 25, "T", "G",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -528,7 +533,8 @@ def test_ex4a_liftover_variant(
     # 22:25 TAA > CAA,T
     result = bcf_liftover_allele(
         "22", 25, "TAA", "CAA",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -539,7 +545,8 @@ def test_ex4a_liftover_variant(
 
     result = bcf_liftover_allele(
         "22", 25, "TAA", "C",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -550,7 +557,8 @@ def test_ex4a_liftover_variant(
 
     r_variant = bcf_liftover_variant(
         "22", 25, "TAA", ["CAA", "C"],
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert r_variant is not None
 
     lchrom, lpos, lref, lalts = r_variant
@@ -585,7 +593,8 @@ def test_ex4b_liftover_parts(
 
     result = bcf_liftover_allele(
         "18", 29, "C", "T",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -620,7 +629,8 @@ def test_ex4c_liftover_parts(
 
     result = bcf_liftover_allele(
         "X", 30, "C", "T",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is not None
 
     lchrom, lpos, lref, lalt = result
@@ -655,7 +665,8 @@ def test_ex4d_liftover_parts(
 
     result = bcf_liftover_allele(
         "21", 30, "C", "T",
-        liftover_chain, source_genome, target_genome)
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome)
     assert result is None
 
 
@@ -689,7 +700,8 @@ def test_basic_liftover_allele(
 
     lresult = basic_liftover_allele(
         chrom, pos, ref, alt,
-        liftover_chain, source_genome, target_genome,
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
 
     assert lresult is not None
@@ -718,7 +730,8 @@ def test_basic_liftover_allele_missing_chromosome(
 
     lresult = basic_liftover_allele(
         "foo", 6, "C", "C",
-        liftover_chain, source_genome, target_genome,
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
     assert lresult is None
 
@@ -741,7 +754,8 @@ def test_basic_liftover_allele_no_target_sequence(
     with patch.object(target_genome, "get_sequence", return_value=""):
         lresult = basic_liftover_allele(
             "foo", 6, "A", "A",
-            liftover_chain, source_genome, target_genome,
+            liftover_chain,
+            source_genome=source_genome, target_genome=target_genome,
         )
         assert lresult is None
 
@@ -763,7 +777,8 @@ def test_basic_liftover_allele_no_variant(
 
     lresult = basic_liftover_allele(
         "foo", 6, "A", "C",
-        liftover_chain, source_genome, target_genome,
+        liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
     assert lresult is None
 
@@ -876,7 +891,8 @@ def test_basic_liftover_allele_coordinates_none(
     alt = "T"
 
     result = basic_liftover_allele(
-        chrom, pos, ref, alt, liftover_chain, source_genome, target_genome,
+        chrom, pos, ref, alt, liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
 
     assert result is None
@@ -907,16 +923,20 @@ def test_liftover_variant_allele_none(
     alts = ["T", "G"]
 
     result = _liftover_variant(
-        chrom, pos, ref, alts, liftover_chain, source_genome,
-        target_genome, liftover_allele_func,
+        chrom, pos, ref, alts, liftover_chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+        liftover_allele_func=liftover_allele_func,
     )
 
     assert result is None
     liftover_allele_func.assert_any_call(
-        chrom, pos, ref, "T", liftover_chain, source_genome, target_genome,
+        chrom, pos, ref, "T", liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
     liftover_allele_func.assert_any_call(
-        chrom, pos, ref, "G", liftover_chain, source_genome, target_genome,
+        chrom, pos, ref, "G", liftover_chain,
+        source_genome=source_genome, target_genome=target_genome,
     )
 
 
@@ -947,8 +967,10 @@ def test_liftover_variant_different_chromosomes(
     alts = ["T", "G"]
 
     result = _liftover_variant(
-        chrom, pos, ref, alts, liftover_chain, source_genome,
-        target_genome, liftover_allele_func,
+        chrom, pos, ref, alts, liftover_chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+        liftover_allele_func=liftover_allele_func,
     )
     assert result is None
 
@@ -980,8 +1002,10 @@ def test_liftover_variant_different_positions(
     alts = ["T", "G"]
 
     result = _liftover_variant(
-        chrom, pos, ref, alts, liftover_chain, source_genome,
-        target_genome, liftover_allele_func,
+        chrom, pos, ref, alts, liftover_chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+        liftover_allele_func=liftover_allele_func,
     )
 
     assert result is None
