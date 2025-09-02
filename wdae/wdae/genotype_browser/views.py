@@ -77,7 +77,6 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             download (boolean): Change response type for easier download.
             genomicScores (json): Genomic score range filter.
             maxVariantsCount (integer): Maximum amount of variants to query.
-            sources (list): List of name-source objects: columns to fetch.
             summaryVariantIds (list): List of summary variant IDs for filter.
             querySummary (boolean): True if should query only summary variants.
             uniqueFamilyVariants (boolean): Query for unique variants only.
@@ -149,26 +148,19 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if not dataset.genotype_data.is_remote:
-            data = expand_gene_set(data)
-        elif "geneSet" in data:
+        if "geneSet" in data:
             gene_set = expand_gene_syms(data)
             data["geneSymbols"] = list(gene_set["syms"])
             del data["geneSet"]
 
-        if "sources" in data:
-            sources = data.pop("sources")
+        study_config = dataset.genotype_data.config
+        if is_download:
+            cols = study_config["genotype_browser"]["download_columns"]
         else:
-            # TODO Handle summary variant preview and download sources
-            study_config = dataset.genotype_data.config
-            if is_download:
-                cols = study_config["genotype_browser"]["download_columns"]
-            else:
-                cols = study_config["genotype_browser"]["preview_columns"]
-            sources = WDAEStudy.get_columns_as_sources(
-                dataset.genotype_data.config, cols,
-            )
+            cols = study_config["genotype_browser"]["preview_columns"]
+        sources = WDAEStudy.get_columns_as_sources(
+            dataset.genotype_data.config, cols,
+        )
 
         if not isinstance(sources, list):
             return Response(status=status.HTTP_400_BAD_REQUEST)

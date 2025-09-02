@@ -115,13 +115,11 @@ def test_simple_query_any_user_with_anonymous(
 
 def test_simple_query_download_anonymous(
     anonymous_client: Client,
-    download_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
         "download": True,
-        "sources": download_sources,
     }
     response = anonymous_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
@@ -131,13 +129,11 @@ def test_simple_query_download_anonymous(
 
 def test_simple_query_download(
     admin_client: Client,
-    download_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
         "download": True,
-        "sources": download_sources,
     }
 
     response = admin_client.post(
@@ -150,31 +146,34 @@ def test_simple_query_download(
     header = res[0].decode("utf-8")[:-1].split("\t")
 
     assert len(res) == 13
-
     assert set(header) == {
         "family id",
-        "studyName",
-        "phenotype",
+        "study",
+        "study phenotype",
         "location",
         "variant",
-        "bestSt",
-        "fromParentS",
-        "inChS",
-        "worstEffect",
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "family person ids",
+        "family structure",
+        "family best state",
+        "family genotype",
+        "carrier person ids",
+        "carrier person attributes",
+        "inheritance type",
+        "family phenotypes",
+        "carrier phenotypes",
+        "parents called",
+        "allele frequency",
+        "worst effect",
         "genes",
-        "counts",
-        "geneEffect",
-        "effectDetails",
-        "LGD_rank",
-        "RVIS_rank",
-        "pLI_rank",
-        "SSC-freq",
-        "EVS-freq",
-        "E65-freq",
-        "instrument1.categorical",
-        "instrument1.continuous",
-        "instrument1.ordinal",
-        "instrument1.raw",
+        "all effects",
+        "effect details",
+        "t4c8 score",
+        "Age",
+        "IQ",
     }
 
 
@@ -317,11 +316,9 @@ def test_query_summary_variants_download(
 
 def test_missing_dataset(
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
-    data["sources"] = list(preview_sources)
     del data["datasetId"]
 
     response = user_client.post(
@@ -332,11 +329,9 @@ def test_missing_dataset(
 
 def test_bad_dataset(
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
-    data["sources"] = list(preview_sources)
     data["datasetId"] = "ala bala portokala"
 
     response = user_client.post(
@@ -349,12 +344,10 @@ def test_bad_dataset(
 def test_normal_dataset_rights_query(
     user: User,
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "sources": list(preview_sources),
     }
 
     add_group_perm_to_user("t4c8_dataset", user)
@@ -372,12 +365,10 @@ def test_normal_dataset_rights_query(
 def test_mixed_dataset_rights_query(
     user: User,
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "sources": list(preview_sources),
     }
 
     add_group_perm_to_user("t4c8_study_1", user)
@@ -395,12 +386,10 @@ def test_mixed_dataset_rights_query(
 def test_mixed_layered_dataset_rights_query(
     user: User,
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "sources": list(preview_sources),
     }
 
     add_group_perm_to_user("t4c8_study_1", user)
@@ -419,12 +408,10 @@ def test_mixed_layered_dataset_rights_query(
 def test_mixed_layered_diff_group_dataset_rights_query(
     user: User,
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "sources": list(preview_sources),
     }
 
     add_group_perm_to_dataset("new_custom_group", "t4c8_dataset")
@@ -444,12 +431,10 @@ def test_mixed_layered_diff_group_dataset_rights_query(
 def test_mixed_dataset_rights_download(
     user: User,
     user_client: Client,
-    download_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "sources": list(download_sources),
         "download": True,
     }
 
@@ -467,12 +452,10 @@ def test_mixed_dataset_rights_download(
 def test_mixed_dataset_rights_third_party_group(
     user: User,
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "sources": list(preview_sources),
     }
 
     add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
@@ -491,13 +474,11 @@ def test_mixed_dataset_rights_third_party_group(
 def test_mixed_dataset_rights_with_study_filters(
     user: User,
     user_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
         "studyFilters": [{"studyId": "t4c8_study_2"}],
-        "sources": list(preview_sources),
     }
 
     add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
