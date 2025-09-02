@@ -94,7 +94,6 @@ def test_query(
     assert "2:39.0,80.0" in ped_coords
 
 
-
 def test_simple_query_any_user_with_anonymous(
     anonymous_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
