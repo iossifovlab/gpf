@@ -24,11 +24,9 @@ JSON_CONTENT_TYPE = "application/json"
 
 def test_simple_query(
     admin_client: Client,
-    preview_sources: list[dict],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
-    data["sources"] = list(preview_sources)
 
     response = admin_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
@@ -39,6 +37,62 @@ def test_simple_query(
         "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore
 
     assert len(res) == 12
+
+
+def test_query(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = copy.deepcopy(EXAMPLE_REQUEST)
+
+    response = admin_client.post(
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    res = json.loads(
+        "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore
+
+    assert len(res) == 12
+
+    assert res[0][0] == ["f1.1"]
+    assert res[0][1] == ["t4c8_study_1"]
+    assert res[0][2] == ["chr1:4"]
+    assert res[0][3] == ["sub(T->G)"]
+    assert res[0][5] == ["mom:F:unaffected;dad:M:unaffected"]
+    assert res[0][6] == [
+        "mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:M:unaffected"]
+    assert res[0][7] == ["intergenic"]
+    assert res[0][8] == ["intergenic"]
+    assert res[0][9] == ["-"]
+    assert res[0][10] == ["166.340"]
+    assert res[0][11] == ["104.912"]
+
+    ped_data = res[0][4]
+    ped_coords = [
+        ped_data[0][7], ped_data[1][7], ped_data[2][7], ped_data[3][7]]
+    del ped_data[0][7]
+    del ped_data[1][7]
+    del ped_data[2][7]
+    del ped_data[3][7]
+
+    assert [
+        "f1.1", "mom1", "0", "0", "F", "mom", "#ffffff", False, "1", 0,
+    ] in ped_data
+    assert [
+        "f1.1", "dad1", "0", "0", "M", "dad", "#ffffff", False, "1", 0,
+    ] in ped_data
+    assert [
+        "f1.1", "p1", "mom1", "dad1", "F", "prb", "#ff2121", False, "", 0,
+    ] in ped_data
+    assert [
+        "f1.1", "s1", "mom1", "dad1", "M", "sib", "#ffffff", False, "", 0,
+    ] in ped_data
+    assert "1:10.0,50.0" in ped_coords
+    assert "1:39.0,50.0" in ped_coords
+    assert "2:10.0,80.0" in ped_coords
+    assert "2:39.0,80.0" in ped_coords
+
 
 
 def test_simple_query_any_user_with_anonymous(
