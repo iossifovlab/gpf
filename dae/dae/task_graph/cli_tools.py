@@ -89,7 +89,8 @@ class TaskGraphCli:
                 type=str, help="Directory to store the task progress.",
             )
             execution_mode_group.add_argument(
-                "--fork-worker", dest="fork_worker", action="store_true",
+                "--fork-tasks", "--fork-task", "--fork",
+                dest="fork_tasks", action="store_true",
                 help="Whether to fork a new worker process for each task",
             )
 

@@ -134,8 +134,8 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _exec(
         task_func: Callable, args: list, _deps: list, params: dict[str, Any],
     ) -> Any:
-        fork_worker = params.get("fork_worker", False)
-        if not fork_worker:
+        fork_tasks = params.get("fork_tasks", False)
+        if not fork_tasks:
             return AbstractTaskGraphExecutor._exec_internal(
                 task_func, args, _deps, params,
             )

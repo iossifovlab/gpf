@@ -132,22 +132,24 @@ def test_cli_args_task_status_dir(
     assert args.task_status_dir == task_status_dir
 
 
-@pytest.mark.parametrize("argv,fork_worker", [
+@pytest.mark.parametrize("argv,fork_tasks", [
     ([], False),
-    (["--fork-worker"], True),
+    (["--fork-tasks"], True),
+    (["--fork-task"], True),
+    (["--fork"], True),
 ])
-def test_cli_args_fork_worker(
-    argv: list[str], fork_worker: bool,  # noqa: FBT001
+def test_cli_args_fork_tasks(
+    argv: list[str], fork_tasks: bool,  # noqa: FBT001
 ) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
 
-    assert args.fork_worker == fork_worker
+    assert args.fork_tasks == fork_tasks
 
 
 @pytest.mark.parametrize("argv", [
-    (["--fork-worker"],),
+    (["--fork-tasks"],),
     (["--force"],),
     (["-f"],),
     (["-d"],),
