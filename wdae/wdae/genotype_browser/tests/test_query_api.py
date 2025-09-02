@@ -19,6 +19,7 @@ EXAMPLE_REQUEST: dict = {
 
 
 QUERY_VARIANTS_URL = "/api/v3/genotype_browser/query"
+QUERY_VARIANTS_DOWNLOAD_URL = "/api/v3/genotype_browser/query-download"
 JSON_CONTENT_TYPE = "application/json"
 
 
@@ -119,10 +120,11 @@ def test_simple_query_download_anonymous(
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
-        "download": True,
     }
     response = anonymous_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_DOWNLOAD_URL,
+        json.dumps(data),
+        content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -133,11 +135,12 @@ def test_simple_query_download(
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
-        "download": True,
     }
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_DOWNLOAD_URL,
+        json.dumps(data),
+        content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)  # type: ignore
@@ -201,11 +204,12 @@ def test_simple_query_summary_variants_download(
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
-        "download": True,
     }
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_DOWNLOAD_URL,
+        json.dumps(data),
+        content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)  # type: ignore
@@ -252,11 +256,12 @@ def test_query_summary_variants_download(
 ) -> None:
     query = {
         **EXAMPLE_REQUEST,
-        "download": True,
     }
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(query), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_DOWNLOAD_URL,
+        json.dumps(query),
+        content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)  # type: ignore
@@ -435,14 +440,15 @@ def test_mixed_dataset_rights_download(
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
-        "download": True,
     }
 
     add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_DOWNLOAD_URL,
+        json.dumps(data),
+        content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)  # type: ignore

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import itertools
 import logging
 import time
 from abc import abstractmethod
@@ -25,6 +27,7 @@ from dae.person_sets.person_sets import PSCQuery
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeData
 from dae.studies.study import GenotypeData
+from dae.utils.dae_utils import join_line
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
@@ -364,6 +367,26 @@ class WDAEAbstractStudy:
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
+
+    @abstractmethod
+    def query_variants_preview_wdae(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        *,
+        max_variants_count: int | None = 10000,
+    ) -> Generator[list | None, None, None]:
+        """Wrap query variants method for WDAE streaming as preview."""
+
+    @abstractmethod
+    def query_variants_download_wdae(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        *,
+        max_variants_count: int | None = 10000,
+    ) -> Generator[list | None, None, None]:
+        """Wrap query variants method for WDAE streaming as download."""
 
     def get_measures(
         self,
@@ -797,6 +820,52 @@ class WDAEStudy(WDAEAbstractStudy):
                 yield row_variant
         except GeneratorExit:
             pass
+
+    def query_variants_preview_wdae(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        *,
+        max_variants_count: int | None = 10000,
+    ) -> Generator[list | None, None, None]:
+        cols = self.genotype_data.config["genotype_browser"]["preview_columns"]
+        sources = WDAEStudy.get_columns_as_sources(
+            self.genotype_data.config, cols,
+        )
+        yield from self.query_variants_wdae(
+            kwargs,
+            sources,
+            query_transformer,
+            response_transformer,
+            max_variants_count=max_variants_count,
+            max_variants_message=True,
+        )
+
+    def query_variants_download_wdae(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,
+        response_transformer: ResponseTransformerProtocol,
+        *,
+        max_variants_count: int | None = 10000,
+    ) -> Generator[list | None, None, None]:
+        cols = self.genotype_data.config["genotype_browser"]["download_columns"]
+        sources = WDAEStudy.get_columns_as_sources(
+            self.genotype_data.config, cols,
+        )
+
+        result = self.query_variants_wdae(
+            kwargs,
+            sources,
+            query_transformer,
+            response_transformer,
+            max_variants_count=max_variants_count,
+            max_variants_message=True,
+        )
+
+        columns = [s.get("name", s["source"]) for s in sources]
+
+        yield from map(
+            join_line, itertools.chain([columns], filter(None, result)))  # type: ignore
 
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
