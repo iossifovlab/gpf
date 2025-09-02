@@ -480,8 +480,8 @@ class GeneProfileDBWriter:
             connection.execute(to_duckdb_transpile(query))
             return
 
-        with duckdb.connect(f"{self.dbfile}") as connection:
-            connection.execute(to_duckdb_transpile(query))
+        with duckdb.connect(f"{self.dbfile}") as conn:
+            conn.execute(to_duckdb_transpile(query))
 
     def insert_gp(
         self,
@@ -499,8 +499,8 @@ class GeneProfileDBWriter:
             connection.execute(to_duckdb_transpile(query))
             return
 
-        with duckdb.connect(f"{self.dbfile}") as connection:
-            connection.execute(to_duckdb_transpile(query))
+        with duckdb.connect(f"{self.dbfile}") as conn:
+            conn.execute(to_duckdb_transpile(query))
 
     def _create_insert_map(
         self,

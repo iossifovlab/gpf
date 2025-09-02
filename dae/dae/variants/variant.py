@@ -67,7 +67,7 @@ class VariantDesc:
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(
-            self, variant_type: core.Allele.Type, position: int,
+            self, variant_type: core.Allele.Type, position: int, *,
             end_position: int | None = None,
             ref: str | None = None,
             alt: str | None = None,
@@ -297,7 +297,7 @@ class SummaryAllele(core.Allele):
         chromosome: str,
         position: int,
         reference: str | None,
-        alternative: str | None = None,
+        alternative: str | None = None, *,
         end_position: int | None = None,
         summary_index: int = -1,
         allele_index: int = 0,

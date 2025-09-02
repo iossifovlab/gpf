@@ -404,7 +404,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
     ) -> None:
         """Create a table from a partitioned parquet dataset."""
         with connection.cursor() as cursor:
-            dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
+            dataset_path = f"{parquet_path}/{'*/' * len(partition)}*.parquet"
             logger.debug("creating table %s from %s", table_name, dataset_path)
             memory_limit = self.get_memory_limit()
             if memory_limit:
@@ -573,11 +573,11 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
             return DuckDbVariants(
                 self,
                 db_name,
-                tables_layout.family,
-                tables_layout.summary,
-                tables_layout.pedigree,
-                tables_layout.meta,
-                gene_models)
+                family_variant_table=tables_layout.family,
+                summary_allele_table=tables_layout.summary,
+                pedigree_table=tables_layout.pedigree,
+                meta_table=tables_layout.meta,
+                gene_models=gene_models)
 
         raise ValueError(
             f"Unsuported DuckDb storage type: {self.storage_type}")

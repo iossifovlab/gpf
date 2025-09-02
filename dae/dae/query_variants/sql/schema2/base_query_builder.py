@@ -101,7 +101,7 @@ class BaseQueryBuilder(ABC):
         db: str | None,
         family_variant_table: str | None,
         summary_allele_table: str,
-        pedigree_table: str,
+        pedigree_table: str, *,
         family_variant_schema: TableSchema | None,
         summary_allele_schema: TableSchema,
         partition_config: dict[str, Any] | None,

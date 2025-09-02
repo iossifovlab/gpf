@@ -83,10 +83,12 @@ def test_fv_zygosity_in_status(
     sv = SummaryVariant(
         [
             SummaryAllele(
-                chromosome, position, reference, None, 0, 0,
+                chromosome, position, reference, None,
+                summary_index=0, allele_index=0,
             ),
             SummaryAllele(
-                chromosome, position, reference, alternative, 0, 1,
+                chromosome, position, reference, alternative,
+                summary_index=0, allele_index=1,
             ),
         ],
     )
@@ -157,10 +159,12 @@ def test_fv_zygosity_in_roles(
     sv = SummaryVariant(
         [
             SummaryAllele(
-                chromosome, position, reference, None, 0, 0,
+                chromosome, position, reference, None,
+                summary_index=0, allele_index=0,
             ),
             SummaryAllele(
-                chromosome, position, reference, alternative, 0, 1,
+                chromosome, position, reference, alternative,
+                summary_index=0, allele_index=1,
             ),
         ],
     )
@@ -223,10 +227,12 @@ def test_zygosity_in_sexes(
     sv = SummaryVariant(
         [
             SummaryAllele(
-                chromosome, position, reference, None, 0, 0,
+                chromosome, position, reference, None,
+                summary_index=0, allele_index=0,
             ),
             SummaryAllele(
-                chromosome, position, reference, alternative, 0, 1,
+                chromosome, position, reference, alternative,
+                summary_index=0, allele_index=1,
             ),
         ],
     )

@@ -167,7 +167,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 if genotype is None:
                     (fv.gt,
                      fv._genetic_model,  # noqa: SLF001
-                    ) = self._calc_genotype(fv, self.genome)
+                     ) = self._calc_genotype(fv, self.genome)
                     for fa in fv.family_alleles:
                         fa.gt = fv.gt
                         # pylint: disable=protected-access
@@ -209,8 +209,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             fvs = self._produce_family_variants(svariant, values)
             yield svariant, fvs
 
-    def full_variants_iterator(self) -> Generator[
-        tuple[SummaryVariant, list[FamilyVariant]], None, None]:
+    def full_variants_iterator(
+        self,
+    ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
             for fvariant in family_variants:
@@ -349,7 +350,6 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    # flake8: noqa: C901
     @classmethod
     def parse_cli_arguments(
         cls, argv: argparse.Namespace, *,
@@ -438,7 +438,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self,
             filepath: str,
             genome: ReferenceGenome,
-            families: FamiliesData,
+            families: FamiliesData, *,
             denovo_location: str | None = None,
             denovo_variant: str | None = None,
             denovo_chrom: str | None = None,
@@ -500,7 +500,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         if denovo_location:
             chrom_col, pos_col = zip(
                 *map(self.split_location,
-                raw_df[denovo_location]),
+                     raw_df[denovo_location]),
                 strict=True,
             )
         else:
@@ -584,7 +584,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                             continue
                         if len(families.persons_by_person_id[person_id]) == 1:
                             variant_families.add(
-                                families.persons_by_person_id[person_id][0].family_id,
+                                families.persons_by_person_id[person_id][0]
+                                .family_id,
                             )
                         else:
                             logger.warning(
@@ -675,7 +676,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self,
             filepath: str,
             genome: ReferenceGenome,
-            families: FamiliesData,
+            families: FamiliesData, *,
             denovo_location: str | None = None,
             denovo_variant: str | None = None,
             denovo_chrom: str | None = None,

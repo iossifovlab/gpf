@@ -146,14 +146,12 @@ class SqlSchema2Variants(QueryVariantsBase):
         query_builder = SummaryQueryBuilder(
             self.dialect,
             self.db,
-            self.family_variant_table,
             self.summary_allele_table,
             self.pedigree_table,
-            self.family_variant_schema,
-            self.summary_allele_schema,
-            self.partition_descriptor.to_dict(),
-            self.pedigree_schema,
-            self.families,
+            summary_allele_schema=self.summary_allele_schema,
+            partition_config=self.partition_descriptor.to_dict(),
+            pedigree_schema=self.pedigree_schema,
+            families=self.families,
             gene_models=self.gene_models,
         )
         if limit is None or limit < 0:

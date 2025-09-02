@@ -41,11 +41,11 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             family_variant_table,
             summary_allele_table,
             pedigree_table,
-            family_variant_schema,
-            summary_allele_schema,
-            table_properties,
-            pedigree_schema,
-            families,
+            family_variant_schema=family_variant_schema,
+            summary_allele_schema=summary_allele_schema,
+            partition_config=table_properties,
+            pedigree_schema=pedigree_schema,
+            families=families,
             gene_models=gene_models,
         )
         self.do_join_allele_in_members = do_join_allele_in_members

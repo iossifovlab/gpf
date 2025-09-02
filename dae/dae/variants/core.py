@@ -93,9 +93,11 @@ class Allele:
                 return False
             return bool(vt & cls.tandem_repeat)
 
-    def __init__(self, chrom: str, pos: int, pos_end: int | None = None,
-                 ref: str | None = None, alt: str | None = None,
-                 allele_type: Allele.Type | None = None):
+    def __init__(
+            self, chrom: str, pos: int, *,
+            pos_end: int | None = None,
+            ref: str | None = None, alt: str | None = None,
+            allele_type: Allele.Type | None = None):
         self._chrom: str = chrom
         self._pos: int = pos
         self._pos_end: int | None = pos_end
@@ -209,6 +211,8 @@ class Allele:
         return Allele(chrom, pos, ref=ref, alt=alt)
 
     @staticmethod
-    def build_cnv_allele(chrom: str, pos: int, pos_end: int,
-                         allele_type: Type) -> Allele:
-        return Allele(chrom, pos, pos_end, allele_type=allele_type)
+    def build_cnv_allele(
+        chrom: str, pos: int, pos_end: int,
+        allele_type: Type,
+    ) -> Allele:
+        return Allele(chrom, pos, pos_end=pos_end, allele_type=allele_type)

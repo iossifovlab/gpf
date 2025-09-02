@@ -99,21 +99,22 @@ logger = logging.getLogger(__name__)
 
 
 def _cnv_loader(
-        filepath_or_buffer: str | Path | TextIO,
-        families: FamiliesData,
-        genome: ReferenceGenome,
-        cnv_chrom: str | None = None,
-        cnv_start: str | None = None,
-        cnv_end: str | None = None,
-        cnv_location: str | None = None,
-        cnv_person_id: str | None = None,
-        cnv_family_id: str | None = None,
-        cnv_best_state: str | None = None,
-        cnv_variant_type: str | None = None,
-        cnv_plus_values: list[str] | None = None,
-        cnv_minus_values: list[str] | None = None,
-        cnv_sep: str = "\t",
-        **kwargs: Any) -> pd.DataFrame:
+    filepath_or_buffer: str | Path | TextIO,
+    families: FamiliesData,
+    genome: ReferenceGenome, *,
+    cnv_chrom: str | None = None,
+    cnv_start: str | None = None,
+    cnv_end: str | None = None,
+    cnv_location: str | None = None,
+    cnv_person_id: str | None = None,
+    cnv_family_id: str | None = None,
+    cnv_best_state: str | None = None,
+    cnv_variant_type: str | None = None,
+    cnv_plus_values: list[str] | None = None,
+    cnv_minus_values: list[str] | None = None,
+    cnv_sep: str = "\t",
+    **kwargs: Any,
+) -> pd.DataFrame:
     """Flexible load of CNV variants.
 
     This function uses flexible variant loader infrastructure to
@@ -384,17 +385,18 @@ class CNVLoader(VariantsGenotypesLoader):
         for summary_variants, family_variants in full_iterator:
             for fvar in family_variants:
                 for fa in fvar.family_alt_alleles:
-                    if self.transmission_type == TransmissionType.denovo:
-                        inheritance = [
-                            Inheritance.denovo if mem is not None else inh
-                            for inh, mem in zip(
-                                fa.inheritance_in_members,
-                                fa.variant_in_members,
-                                strict=True,
-                            )
-                        ]
-                        # pylint: disable=protected-access
-                        fa._inheritance_in_members = inheritance  # noqa: SLF001
+                    if self.transmission_type != TransmissionType.denovo:
+                        continue
+                    inheritance = [
+                        Inheritance.denovo if mem is not None else inh
+                        for inh, mem in zip(
+                            fa.inheritance_in_members,
+                            fa.variant_in_members,
+                            strict=True,
+                        )
+                    ]
+                    # pylint: disable=protected-access
+                    fa._inheritance_in_members = inheritance  # noqa: SLF001
 
             yield summary_variants, family_variants
 
