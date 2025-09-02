@@ -13,13 +13,13 @@ def add_to_list(what: int, where: list[int]) -> list[int]:
     return where
 
 
-def test_executor_fork_worker(
+def test_executor_fork_tasks(
     tmp_path: pathlib.Path,
 ) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, task_progress_mode=True)
     args = parser.parse_args(
-        ["--fork-worker", "-j", "1", "-f", "-d", str(tmp_path)])
+        ["--fork-tasks", "-j", "1", "-f", "-d", str(tmp_path)])
     executor = TaskGraphCli.create_executor(**vars(args))
     assert executor
 
