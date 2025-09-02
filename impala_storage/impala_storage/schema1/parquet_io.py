@@ -100,10 +100,12 @@ class ParquetWriterBuilder(Protocol):
         filesystem: fsspec.AbstractFileSystem | None = None,
     ) -> AbstractVariantsParquetWriter:
         """Build a variants parquet writer object."""
+        ...
 
     @staticmethod
     def build_pedigree_writer() -> Callable[[pd.DataFrame, str], None]:
         """Build a variants parquet writer object."""
+        ...
 
 
 class ParquetWriter:
@@ -236,7 +238,7 @@ class ContinuousParquetFileWriter:
         self.schema = self.serializer.schema
 
         if filesystem is not None:
-            filesystem.create_dir(filepath)
+            filesystem.create_dir(filepath)  # pyright: ignore
             self.dirname = filepath
         else:
             dirname = os.path.dirname(filepath)
@@ -244,7 +246,7 @@ class ContinuousParquetFileWriter:
                 os.makedirs(dirname, exist_ok=True)
             self.dirname = dirname
 
-        filesystem, filepath = url_to_pyarrow_fs(filepath)
+        filesystem, filepath = url_to_pyarrow_fs(filepath)  # pyright: ignore
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
             version="1.0",
@@ -261,7 +263,7 @@ class ContinuousParquetFileWriter:
         return len(self._data["chromosome"])
 
     def build_table(self) -> pa.Table:
-        return pa.Table.from_pydict(self._data, self.schema)
+        return pa.Table.from_pydict(self._data, self.schema)  # type: ignore
 
     def _write_table(self) -> None:
         self._writer.write_table(self.build_table())
@@ -369,8 +371,9 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
         ref_summary_allele = summary_variant.ref_allele
         return FamilyAllele(
-            ref_summary_allele, family, genotype,
-            best_state)
+            ref_summary_allele, family,
+            genotype=genotype,
+            best_state=best_state)
 
     @staticmethod
     def _setup_all_unknown_allele(
@@ -395,8 +398,8 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 attributes={},
             ),
             family,
-            genotype,
-            best_state,
+            genotype=genotype,
+            best_state=best_state,
         )
 
     def _setup_all_unknown_variant(
@@ -439,7 +442,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 path,
                 self.variants_loader,
-                filesystem=filesystem,
+                filesystem=filesystem,  # pyright: ignore
                 rows=self.rows,
             )
         return self.data_writers[filename]
@@ -566,9 +569,9 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             v = schema.field(k)
             config["variants_schema"][k] = str(v.type)
 
-        schema = self.serializer.describe_blob_schema()
+        schema = self.serializer.describe_blob_schema()  # type: ignore
         config["blob"] = {}
-        for k, v in schema.items():
+        for k, v in schema.items():  # type: ignore
             config["blob"][k] = v
 
         filename = os.path.join(
@@ -581,14 +584,15 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
         with fsspec.open(filename, "w") as configfile:
             content = toml.dumps(config)
-            configfile.write(content)
+            configfile.write(content)  # pyright: ignore
 
     def write_partition(self) -> None:
         """Write dataset metadata."""
         filename = os.path.join(self.out_dir, "_PARTITION_DESCRIPTION")
 
         with fsspec.open(filename, "w") as configfile:
-            configfile.write(self.partition_descriptor.serialize())
+            configfile.write(  # pyright: ignore
+                self.partition_descriptor.serialize())
 
     def write_dataset(self) -> list[str | Any]:
         """Write the variants, parittion description and schema."""

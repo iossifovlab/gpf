@@ -55,15 +55,15 @@ def fam2() -> Family:
 
 
 summary_alleles_chr1 = [
-    SummaryAllele("1", 11539, "T", None, 0, 0),
-    SummaryAllele("1", 11539, "T", "TA", 0, 1),
-    SummaryAllele("1", 11539, "T", "TG", 0, 2),
+    SummaryAllele("1", 11539, "T", None, summary_index=0, allele_index=0),
+    SummaryAllele("1", 11539, "T", "TA", summary_index=0, allele_index=1),
+    SummaryAllele("1", 11539, "T", "TG", summary_index=0, allele_index=2),
 ]
 
 summary_alleles_chr2 = [
-    SummaryAllele("2", 11539, "T", None, 0, 0),
-    SummaryAllele("2", 11539, "T", "TA", 0, 1),
-    SummaryAllele("2", 11539, "T", "TG", 0, 2),
+    SummaryAllele("2", 11539, "T", None, summary_index=0, allele_index=0),
+    SummaryAllele("2", 11539, "T", "TA", summary_index=0, allele_index=1),
+    SummaryAllele("2", 11539, "T", "TG", summary_index=0, allele_index=2),
 ]
 
 
@@ -135,7 +135,9 @@ def test_parquet_frequency_bin(
     expected: str,
 ) -> None:
     summary_alleles = [
-        SummaryAllele("1", 11539, "T", None, 0, 0, attributes=attributes),
+        SummaryAllele(
+            "1", 11539, "T", None,
+            summary_index=0, allele_index=0, attributes=attributes),
     ] * 3
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)
