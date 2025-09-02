@@ -116,18 +116,15 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         from django.conf import settings
 
         if from_email is None:
-            from_email = settings.DEFAULT_FROM_EMAIL  # type: ignore
+            from_email = settings.DEFAULT_FROM_EMAIL
 
         override = None
         try:
             override = settings.EMAIL_OVERRIDE  # type: ignore
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:  # noqa: BLE001
             logger.debug("no email override; sending email")
             override = None
-        if override:
-            to_email = override
-        else:
-            to_email = self.email
+        to_email = override or self.email
 
         mail = send_mail(subject, message, from_email, [to_email])
         logger.info("email sent: to:      <%s>", str(self.email))
@@ -478,7 +475,7 @@ def send_verif_email(user: WdaeUser, verif_path: BaseVerificationCode) -> None:
     # pylint: disable=import-outside-toplevel
     from django.conf import settings
     email = _create_verif_email(
-        settings.EMAIL_VERIFICATION_ENDPOINT,  # type: ignore
+        settings.EMAIL_VERIFICATION_ENDPOINT,
         settings.EMAIL_VERIFICATION_SET_PATH,
         str(verif_path.path),
     )

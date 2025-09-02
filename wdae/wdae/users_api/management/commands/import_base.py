@@ -9,7 +9,7 @@ class ImportUsersBase:
     def handle_user(self, res: dict[str, str]) -> WdaeUser:
         """Handle creation of user on import."""
         email = BaseUserManager.normalize_email(res["Email"])
-        user = WdaeUser.objects.create_user(email=email)
+        user = WdaeUser.objects.create_user(email=email)  # pyright: ignore
 
         if "Groups" in res:
             groups = res["Groups"].split(":")
@@ -19,7 +19,7 @@ class ImportUsersBase:
                 if group_name == "":
                     continue
                 group, _ = Group.objects.get_or_create(name=group_name)
-                group.user_set.add(user)  # type: ignore
+                group.user_set.add(user)  # pyright: ignore
 
             if WdaeUser.SUPERUSER_GROUP in res["Groups"]:
                 user.is_superuser = True

@@ -45,7 +45,7 @@ def get_permissions_etag(
 class IsDatasetAllowed(permissions.BasePermission):
     """Checks the permissions to a dataset."""
 
-    def has_permission(  # type: ignore
+    def has_permission(
         self, request: HttpRequest,
         view: Any,
     ) -> bool:
@@ -56,7 +56,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
         return self.has_object_permission(request, view, dataset_id)
 
-    def has_object_permission(  # type: ignore
+    def has_object_permission(
         self, request: HttpRequest, _view: Any, obj: str,
     ) -> bool:
         wgpf_instance = get_wgpf_instance()

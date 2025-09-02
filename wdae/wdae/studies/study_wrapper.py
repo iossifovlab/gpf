@@ -206,6 +206,13 @@ class WDAEAbstractStudy:
             return self.phenotype_data.get_children_ids(leaves=leaves)
         return self.genotype_data.get_studies_ids(leaves=leaves)
 
+    @abstractmethod
+    def get_measures_json(
+        self,
+        used_types: list[str],
+    ) -> list[dict[str, Any]]:
+        """Get list of measures in json format"""
+
     @property
     def config_columns(self) -> dict[str, Any] | None:
         if not self.config["genotype_browser"]["enabled"]:
@@ -663,7 +670,6 @@ class WDAEStudy(WDAEAbstractStudy):
         self,
         used_types: list[str],
     ) -> list[dict[str, Any]]:
-        """Get list of measures in json format"""
         measures = list(self.get_measures().values())
         measures = [m for m in measures if m.measure_type.name in used_types]
 

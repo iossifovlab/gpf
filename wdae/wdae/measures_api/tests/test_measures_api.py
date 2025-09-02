@@ -2,7 +2,7 @@
 import pytest
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
-from rest_framework import status  # type: ignore
+from rest_framework import status
 
 MEASURES_URL = "/api/v3/measures/type"
 REGRESSIONS_URL = "/api/v3/measures/regressions"

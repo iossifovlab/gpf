@@ -198,13 +198,13 @@ def test_query_summary_variants_download(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    data = {
+    query = {
         **EXAMPLE_REQUEST,
         "download": True,
     }
 
     response = admin_client.post(
-        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_URL, json.dumps(query), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)  # type: ignore
