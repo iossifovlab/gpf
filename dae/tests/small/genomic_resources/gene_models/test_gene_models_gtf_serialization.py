@@ -173,7 +173,7 @@ def test_save_as_gtf_simple(ensembl_gtf_example: GeneModels) -> None:
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": serialized,
-    }))
+        }))
     gene_models.load()
 
     assert len(gene_models.gene_models) == 1
@@ -203,7 +203,7 @@ def test_save_as_gtf_complex(ensembl_gtf_example_shh: GeneModels) -> None:
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": serialized,
-    }))
+        }))
     gene_models.load()
 
     assert len(gene_models.gene_models) == 1
@@ -232,7 +232,7 @@ def test_save_as_gtf_noncoding(
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": serialized,
-    }))
+        }))
     gene_models.load()
     assert len(gene_models.gene_models) == 1
     assert len(gene_models.transcript_models) == 1
@@ -260,7 +260,7 @@ def test_save_as_gtf_no_exons(
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": serialized,
-    }))
+        }))
     gene_models.load()
     assert len(gene_models.gene_models) == 1
     assert len(gene_models.transcript_models) == 1
@@ -288,7 +288,7 @@ def test_save_as_gtf_split_start_stop_codons(
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": serialized,
-    }))
+        }))
     gene_models.load()
 
     assert "start_codon\t21\t21" in serialized
@@ -600,10 +600,10 @@ def transcript_builder() -> Callable[
             "test_transcript_1",
             "test_transcript_1",
             "chr1",
-            strand,
-            tx,
-            cds,
-            exons,
+            strand=strand,
+            tx=tx,
+            cds=cds,
+            exons=exons,
         )
         transcript.update_frames()
         return transcript
@@ -729,7 +729,8 @@ def test_calc_gtf_frame_for_start_codons(
     start_codons = collect_gtf_start_codon_regions(
         transcript.strand, transcript.cds_regions())
     assert len(start_codons) == len(expected_gtf_features)
-    assert [(sc.start, sc.stop) for sc in start_codons] == expected_gtf_features
+    assert [
+        (sc.start, sc.stop) for sc in start_codons] == expected_gtf_features
 
     sc_frames = []
     for start_codon in start_codons:
@@ -986,7 +987,7 @@ def test_with_various_formats(filename: str, fmt: str) -> None:
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": serialized,
-    }))
+        }))
     gtf_models.load()
 
     assert gtf_models is not None
@@ -1028,7 +1029,7 @@ def refseq_trim17_example() -> GeneModels:
 
 def test_serialization_with_gene_on_multiple_chromosomes(
     refseq_trim17_example: GeneModels,
-):
+) -> None:
     refseq_trim17_example.load()
     buffer = gene_models_to_gtf(refseq_trim17_example)
 

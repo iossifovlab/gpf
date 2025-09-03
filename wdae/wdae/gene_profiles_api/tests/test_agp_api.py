@@ -88,7 +88,8 @@ def test_get_statistic(
 
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
     assert response.data["geneSymbol"] == "CHD8"  # type: ignore
-    assert response.data["geneSets"] == ["gene_set_1", "gene_set_2"]  # type: ignore
+    assert response.data["geneSets"] == [  # type: ignore
+        "gene_set_1", "gene_set_2"]
     assert response.data["geneScores"] == [{  # type: ignore
         "id": "category_1",
         "scores": [{
@@ -168,12 +169,21 @@ def test_get_links(
         t4c8_wgpf_instance, "get_transcript_models",
         return_value=(
             "CHD8", [
-                TranscriptModel("CHD8", "", "", "mock_chr", "", (0, 0), (0, 0),
-                    [Exon(1, 2, 0), Exon(3, 4, 0)]),
-                TranscriptModel("CHD8", "", "", "mock_chr", "", (0, 0), (0, 0),
-                    [Exon(5, 6, 0), Exon(7, 8, 0)]),
-                TranscriptModel("CHD8", "", "", "mock_chr", "", (0, 0), (0, 0),
-                    [Exon(9, 10, 0), Exon(11, 12, 0)]),
+                TranscriptModel(
+                    "CHD8", "", "", "mock_chr", "",
+                    tx=(0, 0),
+                    cds=(0, 0),
+                    exons=[Exon(1, 2, 0), Exon(3, 4, 0)]),
+                TranscriptModel(
+                    "CHD8", "", "", "mock_chr", "",
+                    tx=(0, 0),
+                    cds=(0, 0),
+                    exons=[Exon(5, 6, 0), Exon(7, 8, 0)]),
+                TranscriptModel(
+                    "CHD8", "", "", "mock_chr", "",
+                    tx=(0, 0),
+                    cds=(0, 0),
+                    exons=[Exon(9, 10, 0), Exon(11, 12, 0)]),
             ],
         ),
     )
