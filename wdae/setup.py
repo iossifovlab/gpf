@@ -4,9 +4,24 @@ import setuptools
 import versioneer
 
 
+def _collect_typing(
+    root_dir: str,
+) -> dict[str, list[str]]:
+    result: dict[str, list[str]] = {}
+    root = (Path(__file__).parent / root_dir).resolve()
+    for fpath in root.glob("*/py.typed"):
+        module = str(fpath.relative_to(root).parent)
+        if module not in result:
+            result[module] = []
+        result[module].append("py.typed")
+    return result
+
+
 def _expand_recursive_globs(
-        root_dir: str,
-        package_data: dict[str, list[str]]) -> dict[str, list[str]]:
+    root_dir: str,
+    package_data: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    result: dict[str, list[str]] = _collect_typing(root_dir)
     root = (Path(__file__).parent / root_dir).resolve()
     for module, patterns in package_data.items():
         new_patterns = []
@@ -24,8 +39,11 @@ def _expand_recursive_globs(
                     new_patterns.append(subdir_pattern)
             else:
                 new_patterns.append(pat)
-        package_data[module] = new_patterns
-    return package_data
+        if module not in result:
+            result[module] = new_patterns
+        else:
+            result[module].extend(new_patterns)
+    return result
 
 
 long_description = Path("README.md").read_text(encoding="utf8")
