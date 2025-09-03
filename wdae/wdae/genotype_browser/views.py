@@ -120,6 +120,7 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
                     and score.get("values") is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        max_variants: int | None = None
         if "maxVariantsCount" in data:
             max_variants = cast(int, data["maxVariantsCount"])
         else:

@@ -359,55 +359,6 @@ def test_query_variants_download(
     }
 
 
-def test_query_variants_wdae_remote_download(
-    admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-) -> None:
-    data = {
-        "effectTypes": ["Nonsense","Missense","noStart","noEnd","Synonymous","Intron","Intergenic","Frame-shift","Splice-site","No-frame-shift","Non coding","3'-UTR","5'-UTR"],
-        "inheritanceTypeFilter": ["denovo","mendelian","omission","missing"],
-        "affectedStatus": ["Affected only","Unaffected only","Affected and unaffected"],
-        "variantTypes": ["sub","ins","del","CNV+","CNV-","comp"],
-        "datasetId": "TEST_REMOTE_t4c8_study_1",
-        "regions": ["chr1:1-10"],
-        "summaryVariantIds": ["chr1:4:sub(T->G)"],
-    }
-    response = admin_client.post(
-        "/api/v3/genotype_browser/query-download",
-        json.dumps(data),
-        content_type="application/json",
-    )
-    assert response.status_code == status.HTTP_200_OK
-    res = "".join([
-        p.decode("utf8")
-        for p in response.streaming_content  # pyright: ignore
-    ]).split("\n")
-    res = [r for r in res if r]
-
-    data = {
-        "effectTypes": ["Nonsense","Missense","noStart","noEnd","Synonymous","Intron","Intergenic","Frame-shift","Splice-site","No-frame-shift","Non coding","3'-UTR","5'-UTR"],
-        "inheritanceTypeFilter": ["denovo","mendelian","omission","missing"],
-        "affectedStatus": ["Affected only","Unaffected only","Affected and unaffected"],
-        "variantTypes": ["sub","ins","del","CNV+","CNV-","comp"],
-        "datasetId": "t4c8_study_1",
-        "regions": ["chr1:1-10"],
-        "summaryVariantIds": ["chr1:4:sub(T->G)"],
-    }
-    response1 = admin_client.post(
-        "/api/v3/genotype_browser/query-download",
-        json.dumps(data),
-        content_type="application/json",
-    )
-    assert response1.status_code == status.HTTP_200_OK
-    res1 = "".join([
-        p.decode("utf8")
-        for p in response.streaming_content
-    ]).split("\n")
-    res1 = [r for r in res if r
-    ]
-    assert res == res1
-
-
 def test_genotype_browser_query_default_person_set_collection(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
