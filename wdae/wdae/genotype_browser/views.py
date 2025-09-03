@@ -152,7 +152,6 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             status=status.HTTP_200_OK,
             content_type="text/event-stream",
         )
-
         response["Cache-Control"] = "no-cache"
         return response
 
@@ -224,7 +223,6 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
             self.response_transformer,
             max_variants_count=max_variants,
         )
-
         response = FileResponse(
             result, filename="variants.tsv",
             as_attachment=True, content_type="text/tsv",

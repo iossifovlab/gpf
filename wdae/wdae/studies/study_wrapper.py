@@ -865,7 +865,7 @@ class WDAEStudy(WDAEAbstractStudy):
         columns = [s.get("name", s["source"]) for s in sources]
 
         yield from map(
-            join_line, itertools.chain([columns], filter(None, result)))  # type: ignore
+            join_line, itertools.chain([columns], filter(None, result)))  # pyright: ignore
 
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
