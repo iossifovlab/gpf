@@ -13,7 +13,6 @@ from studies.study_wrapper import (
 
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
-from federation.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
 from federation.utils import prefix_remote_identifier
 from rest_client.rest_client import RESTClient
 
@@ -73,61 +72,37 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         response_transformer: ResponseTransformerProtocol,
         *,
         max_variants_count: int | None = 10000,
-        max_variants_message: bool = False,  # noqa: ARG002
-    ) -> Generator[list, None, None]:
-        study_filters = kwargs.get("study_filters")
+        max_variants_message: bool = False,
+    ) -> Generator[list | None, None, None]:
+        raise NotImplementedError
 
-        psc_query = query_transformer.extract_person_set_collection_query(
-            self, kwargs)
-
-        if study_filters is not None:
-            del kwargs["study_filters"]
+    def query_variants_preview_wdae(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
+        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        *,
+        max_variants_count: int | None = 10000,  # noqa: ARG002
+    ) -> Generator[Any | None, None, None]:
+        kwargs["datasetId"] = self.remote_study_id
         if kwargs.get("allowed_studies") is not None:
             del kwargs["allowed_studies"]
-
-        kwargs["datasetId"] = self.remote_study_id
-        kwargs["maxVariantsCount"] = max_variants_count
-        new_sources = []
-        for query_s in QUERY_SOURCES:
-            if not any(query_s["source"] == s["source"] for s in sources):
-                new_sources.append(query_s)  # noqa: PERF401
-        sources.extend(new_sources)
-        kwargs["sources"] = sources
-
-        fam_id_idx = -1
-        for idx, source in enumerate(sources):
-            if source["source"] == "family":
-                fam_id_idx = idx
-                break
-
-        assert fam_id_idx >= 0, fam_id_idx
-
-        response = self.rest_client.post_query_variants(
-            kwargs, reduce_alleles=False,
+        yield from self.rest_client.post_query_variants(
+            kwargs,
         )
 
-        for source in sources:
-            if "format" in source:
-                del source["format"]
-
-        def get_source(col: dict[str, Any]) -> Any:
-            res = col["source"]
-            if "role" in col:
-                res = f"{res}.{col['role']}"
-            return res
-
-        for variant in response:
-            fam_id = variant[fam_id_idx][0]
-            family = self.families[fam_id]
-            fv = RemoteFamilyVariant(
-                variant, family, list(map(get_source, sources)))
-            # pylint: disable=protected-access
-            row_variant = response_transformer.build_variant_row(
-                self,
-                fv, sources,
-                person_set_collection=psc_query.psc_id if psc_query else None)
-
-            yield row_variant
+    def query_variants_download_wdae(
+        self, kwargs: dict[str, Any],
+        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
+        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        *,
+        max_variants_count: int | None = 10000,  # noqa: ARG002
+    ) -> Generator[Any | None, None, None]:
+        kwargs["datasetId"] = self.remote_study_id
+        if kwargs.get("allowed_studies") is not None:
+            del kwargs["allowed_studies"]
+        yield from self.rest_client.post_query_variants_download(
+            kwargs,
+        )
 
     def get_measures_json(
         self,

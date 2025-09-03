@@ -4,6 +4,11 @@ from genotype_browser import views
 
 urlpatterns = [
     re_path(
+        r"^/query-download/?",
+        views.GenotypeBrowserQueryDownloadView.as_view(),
+        name="genotype_browser_query",
+    ),
+    re_path(
         r"^/query/?",
         views.GenotypeBrowserQueryView.as_view(),
         name="genotype_browser_query",

@@ -16,13 +16,13 @@ def test_query_variants_wdae_remote_study_filters(
     assert isinstance(remote_study, RemoteWDAEStudy)
 
     query = {}
-    result = list(remote_study.query_variants_wdae(
-        query, [], t4c8_query_transformer, t4c8_response_transformer))
+    result = list(remote_study.query_variants_preview_wdae(
+        query, t4c8_query_transformer, t4c8_response_transformer))
     assert len(result) == 12
 
     query = {"study_filters": ["t4c8_study_1", "t4c8_study_2"]}
-    result = list(remote_study.query_variants_wdae(
-        query, [], t4c8_query_transformer, t4c8_response_transformer))
+    result = list(remote_study.query_variants_preview_wdae(
+        query, t4c8_query_transformer, t4c8_response_transformer))
     assert len(result) == 12
 
 

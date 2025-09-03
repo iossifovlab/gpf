@@ -140,7 +140,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         gene_score = cast(dict[str, Any] | None, query.get("geneScores", None))
         background_id = query.get("enrichmentBackgroundModel", None)
         counting_id = query.get("enrichmentCountingModel", None)
-        gene_set_id = cast(str, query.get("geneSet"))
+        gene_set_id = cast(str, query.get("geneSetDesc"))
 
         return {
             "desc": self.create_enrichment_description(

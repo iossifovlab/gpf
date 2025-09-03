@@ -21,8 +21,12 @@ def expand_gene_set(data: dict) -> dict:
 
         assert gene_sets_collection_id is not None
         gene_set = expand_gene_syms(data)
-        data["geneSymbols"] = list(gene_set["syms"])
-        data["geneSet"] = gene_set["desc"]
+        gene_symbols = set(
+            data.get("geneSymbols", []),
+        ).union(set(gene_set["syms"]))
+        data["geneSymbols"] = list(gene_symbols)
+        data["geneSetDesc"] = gene_set["desc"]
+
     return data
 
 

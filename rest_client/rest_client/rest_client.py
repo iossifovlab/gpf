@@ -748,11 +748,9 @@ class RESTClient:
         )
 
     def post_query_variants(
-        self, data: dict, *, reduce_alleles: bool = False,
-    ) -> Generator[Any, None, None]:
+        self, data: dict,
+    ) -> Iterator[str]:
         """Post query request for variants preview."""
-        assert data.get("download", False) is False
-        data["reduceAlleles"] = reduce_alleles
         response = self.session.post(
             f"{self.api_url}/genotype_browser/query",
             json=data,
@@ -763,16 +761,15 @@ class RESTClient:
 
     def post_query_variants_download(
         self, data: dict,
-    ) -> Generator[Any, None, None]:
+    ) -> Iterator[str]:
         """Post query request for variants download."""
-        data["download"] = True
         response = self.session.post(
-            f"{self.api_url}/genotype_browser/query",
+            f"{self.api_url}/genotype_browser/query-download",
             json=data,
             headers={"Content-Type": "application/json"},
             stream=True,
         )
-        return self._read_json_list_stream(response)
+        return response.iter_content(chunk_size=1024)
 
     def post_gene_view_summary_variants(
         self, data: dict,

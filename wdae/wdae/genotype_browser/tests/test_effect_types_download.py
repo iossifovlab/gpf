@@ -14,10 +14,9 @@ def test_effect_details_download(
     data = {
         "datasetId": "t4c8_dataset",
         "effectTypes": ["missense"],
-        "download": True,
     }
     response = admin_client.post(
-        "/api/v3/genotype_browser/query",
+        "/api/v3/genotype_browser/query-download",
         json.dumps(data),
         content_type="application/json",
     )
