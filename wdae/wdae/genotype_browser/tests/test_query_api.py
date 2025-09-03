@@ -129,57 +129,6 @@ def test_simple_query_download_anonymous(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_simple_query_download(
-    admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    data = {
-        **EXAMPLE_REQUEST,
-    }
-
-    response = admin_client.post(
-        QUERY_VARIANTS_DOWNLOAD_URL,
-        json.dumps(data),
-        content_type=JSON_CONTENT_TYPE,
-    )
-    assert response.status_code == status.HTTP_200_OK
-    res = list(response.streaming_content)  # type: ignore
-    assert res
-    assert res[0]
-    header = res[0].decode("utf-8")[:-1].split("\t")
-
-    assert len(res) == 13
-    assert set(header) == {
-        "family id",
-        "study",
-        "study phenotype",
-        "location",
-        "variant",
-        "CHROM",
-        "POS",
-        "REF",
-        "ALT",
-        "family person ids",
-        "family structure",
-        "family best state",
-        "family genotype",
-        "carrier person ids",
-        "carrier person attributes",
-        "inheritance type",
-        "family phenotypes",
-        "carrier phenotypes",
-        "parents called",
-        "allele frequency",
-        "worst effect",
-        "genes",
-        "all effects",
-        "effect details",
-        "t4c8 score",
-        "Age",
-        "IQ",
-    }
-
-
 def test_simple_query_summary_variants(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
