@@ -11,7 +11,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from utils.expand_gene_set import expand_gene_syms
+from utils.expand_gene_set import expand_gene_set
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
 from utils.streaming_response_util import iterator_to_json
@@ -135,10 +135,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        if "geneSet" in data:
-            gene_set = expand_gene_syms(data)
-            data["geneSymbols"] = list(gene_set["syms"])
-            del data["geneSet"]
+
+        data = expand_gene_set(data)
 
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
@@ -215,10 +213,7 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        if "geneSet" in data:
-            gene_set = expand_gene_syms(data)
-            data["geneSymbols"] = list(gene_set["syms"])
-            del data["geneSet"]
+        data = expand_gene_set(data)
 
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
