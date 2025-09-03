@@ -594,7 +594,6 @@ def test_full_variant_reports(
         common_report_url + "TEST_REMOTE_t4c8_study_1" + "/full")
 
     res_data = response_remote.json()
-    assert res_data == {}
     assert res_data[
         "families_report"][0]["counters"][0]["pedigree"][0] == [
             "f1.1", "mom1", "0", "0", "F", "mom",
