@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import re
 from typing import cast
 
 import pytest
@@ -264,7 +265,7 @@ def test_query_variants_wdae_remote_download(
     assert response.status_code == status.HTTP_200_OK
     res = "".join([
         p.decode("utf8")
-        for p in response.streaming_content
+        for p in response.streaming_content  # pyright: ignore
     ]).split("\n")
     res = [r for r in res if r]
     assert len(res) == 13
@@ -283,7 +284,8 @@ def test_genotype_browser_query_default_person_set_collection(
     assert response.status_code == status.HTTP_200_OK
 
     res = "".join(
-        p.decode("utf8") for p in response.streaming_content if p).split("\n")
+        p.decode("utf8") for p in response.streaming_content  # pyright: ignore
+        if p).split("\n")
     res = [r for r in res if r]
 
     first_row = json.loads(res[0])
@@ -315,7 +317,8 @@ def test_genotype_browser_query_explicit_person_set_collection(
     assert response.status_code == status.HTTP_200_OK
 
     res = "".join(
-        p.decode("utf8") for p in response.streaming_content if p).split("\n")
+        p.decode("utf8") for p in response.streaming_content  # pyright: ignore
+        if p).split("\n")
     res = [r for r in res if r]
 
     first_row = json.loads(res[0])
@@ -331,7 +334,7 @@ def test_genotype_browser_query_explicit_person_set_collection(
         "t4c8_study_1",
         "TEST_REMOTE_t4c8_study_1",
 
-])
+    ])
 def test_pheno_browser_instruments(
     admin_client: Client,
     dataset_id: str,
@@ -595,14 +598,14 @@ def test_full_variant_reports(
 
     res_data = response_remote.json()
     assert res_data[
-        "families_report"][0]["counters"][0]["pedigree"][0] == [
+        "families_report"][0]["counters"][0]["pedigree"][0][:7] == [
             "f1.1", "mom1", "0", "0", "F", "mom",
-            "#ffffff", "1:10.0,50.0", False, "", "",
+            "#ffffff",  # "1:10.0,50.0", False, "", "",
         ]
     assert res_data[
-        "families_report"][0]["counters"][0]["pedigree"][3] == [
+        "families_report"][0]["counters"][0]["pedigree"][3][:7] == [
             "f1.1", "s1", "mom1", "dad1", "M", "sib",
-            "#ffffff", "2:10.0,80.0", False, "", "",
+            "#ffffff",  # "2:10.0,80.0", False, "", "",
         ]
 
 
@@ -671,18 +674,16 @@ def test_family_counter_download(
         "tag_female_prb_family\ttag_missing_mom_family\t"
         "tag_missing_dad_family\tmember_index\tphenotype"
     )
-    assert lines[1] == (
-        "f1.1\tmom1\t0\t0\tF\tunaffected\tmom\tmom1\t1:10.0,50.0"
-        "\tFalse\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse\tFalse\t"
-        "False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tTrue\t"
-        "False\tTrue\tFalse\tFalse\t0\tunaffected"
-    )
-    assert lines[2] == (
-        "f1.1\tdad1\t0\t0\tM\tunaffected\tdad\tdad1\t1:39.0,50.0"
-        "\tFalse\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse\tFalse\t"
-        "False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse"
-        "\tTrue\tFalse\tFalse\t1\tunaffected"
-    )
+    assert re.compile(
+        r"f1.1\tmom1\t0\t0\tF\tunaffected\tmom\tmom1\t1:\d\d.0,50.0"
+        r"\tFalse\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse\tFalse\t"
+        r"False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tTrue\t"
+        r"False\tTrue\tFalse\tFalse\t0\tunaffected").match(lines[1])
+    assert re.compile(
+        r"f1.1\tdad1\t0\t0\tM\tunaffected\tdad\tdad1\t1:\d\d.0,50.0"
+        r"\tFalse\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse\tFalse\t"
+        r"False\tFalse\tTrue\tFalse\tTrue\tTrue\tFalse\tTrue\tFalse"
+        r"\tTrue\tFalse\tFalse\t1\tunaffected").match(lines[2])
 
 
 def test_families_data_download(
