@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from copy import copy
-from typing import Any, cast
+from typing import Any
 
 from dae.pedigrees.family import Family
 from dae.utils.variant_utils import str2fgt, str2mat
@@ -88,9 +88,10 @@ class RemoteAllele(SummaryAllele):
         return attr if attr != "-" else None
 
     @staticmethod
-    def create_reference_allele(
-        allele: RemoteAllele | RemoteFamilyAllele,  # type: ignore
-    ) -> RemoteAllele:
+    def create_reference_allele(  # type: ignore
+        allele: SummaryAllele,
+    ) -> SummaryAllele:
+        assert isinstance(allele, (RemoteAllele, RemoteFamilyAllele))
         new_attributes = copy(allele.attributes_list)
         new_attributes[allele.columns.index("allele_index")][0] = 0
         new_attributes[allele.columns.index("alternative")][0] = None
@@ -115,7 +116,10 @@ class RemoteFamilyAllele(FamilyAllele):
         best_state = str2mat(self._find_attribute("best_st"))
         genetic_model = self._find_attribute("genetic_model")
         super().__init__(
-            summary_allele, family, genotype, best_state, genetic_model,
+            summary_allele, family,
+            genotype=genotype,
+            best_state=best_state,
+            genetic_model=genetic_model,
         )
 
     def _find_attribute(self, source: str) -> Any:
@@ -142,13 +146,13 @@ class RemoteVariant(SummaryVariant):
         self.columns = columns or SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         allele_count = len(self.attributes_list[0])
-        remote_alleles = [
+        remote_alleles: list[SummaryAllele] = [
             RemoteAllele(self.attributes_list, idx, self.columns)
             for idx in range(allele_count)
         ]
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
-        super().__init__(cast(list[SummaryAllele], remote_alleles))
+        super().__init__(remote_alleles)
 
 
 class RemoteFamilyVariant(FamilyVariant):
