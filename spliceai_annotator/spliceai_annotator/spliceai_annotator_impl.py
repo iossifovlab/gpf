@@ -1,5 +1,4 @@
 import gc
-from contextlib import suppress
 from typing import cast
 
 import numpy as np
@@ -7,14 +6,8 @@ import tensorflow as tf
 from pkg_resources import resource_filename
 
 
-def spliceai_open() -> list:
+def spliceai_load_models() -> list:
     """Open SpliceAI annotator implementation."""
-    physical_devices = tf.config.list_physical_devices("GPU")
-    for device in physical_devices:
-        with suppress(Exception):
-            tf.config.experimental.set_memory_growth(
-                device, enable=True)
-
     model_paths = [
         f"models/spliceai{i}.h5" for i in range(1, 6)
     ]
@@ -38,3 +31,6 @@ def spliceai_predict(
         models[m].predict(x, verbose=0)
         for m in range(5)
     ], axis=0))
+
+
+SPLICEAI_MODELS = spliceai_load_models()

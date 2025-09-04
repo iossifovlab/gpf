@@ -10,8 +10,7 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - tensorflow=2.17
-  - cuda-toolkit=12.4
-  - pip:
-    - types-tensorflow
+  - tensorflow=2.18
+  # - pip:
+  #   - types-tensorflow
   
