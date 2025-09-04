@@ -73,6 +73,14 @@ class _ProcessingArgs:
     full_reannotation: bool
 
 
+@dataclass
+class _InfoField:
+    name: str
+    number: str | None
+    type: str | None
+    description: str | None
+
+
 class _VCFSource(Source):
     """Source for reading from VCF files."""
 
@@ -81,6 +89,15 @@ class _VCFSource(Source):
         self.vcf: VariantFile
         with VariantFile(self.path, "r") as infile:
             self.header = infile.header
+        self.info = {
+            k: _InfoField(
+                name=v.name,
+                number=v.number,
+                type=v.type,
+                description=v.description,
+            )
+            for k, v in self.header.info.items()
+        }
 
     def __enter__(self) -> _VCFSource:
         self.vcf = VariantFile(self.path, "r")
@@ -101,15 +118,29 @@ class _VCFSource(Source):
 
         return exc_type is None
 
-    @staticmethod
-    def _convert(variant: VariantRecord) -> AnnotationsWithSource:
+    def _convert_info(self, alt_idx: int, variant: VariantRecord) -> dict:
+        result = {}
+        for k in variant.info:
+            if self.info[k].number == "A":
+                result[k] = variant.info[k][alt_idx]
+            elif self.info[k].number == "1":
+                result[k] = variant.info[k]
+            elif self.info[k].number == ".":
+                result[k] = None
+            else:
+                result[k] = variant.info[k]
+        return result
+
+    def _convert(
+        self, variant: VariantRecord,
+    ) -> AnnotationsWithSource:
         annotations = [
             Annotation(
                 VCFAllele(variant.chrom,
                           variant.pos,
                           variant.ref,  # type: ignore
                           alt),
-                {k: v[idx] for k, v in variant.info.items()},
+                self._convert_info(idx, variant),
             )
             for idx, alt in enumerate(variant.alts)  # type: ignore
         ]
@@ -140,7 +171,7 @@ class _VCFSource(Source):
                 )
                 continue
 
-            yield _VCFSource._convert(vcf_var)
+            yield self._convert(vcf_var)
 
 
 class _VCFBatchSource(Source):
