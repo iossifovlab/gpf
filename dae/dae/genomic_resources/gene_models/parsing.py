@@ -82,7 +82,7 @@ def parse_default_gene_models_format(
 
         exons = []
         for start, end, frame in zip(exon_starts, exon_ends, exon_frames,
-                                        strict=True):
+                                     strict=True):
             exons.append(Exon(start=start, stop=end, frame=frame))
         attributes: dict = {}
         atts = line.get("atts")

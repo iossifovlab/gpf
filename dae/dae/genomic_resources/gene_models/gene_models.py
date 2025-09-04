@@ -62,7 +62,7 @@ class TranscriptModel:
         tr_id: str,
         tr_name: str,
         chrom: str,
-        strand: str,
+        strand: str, *,
         tx: tuple[int, int],  # pylint: disable=invalid-name
         cds: tuple[int, int],
         exons: list[Exon] | None = None,
@@ -573,12 +573,15 @@ class GeneModels(
 
     def load(self) -> GeneModels:
         """Load gene models."""
+        if self.is_loaded():
+            return self
         from .parsing import load_gene_models  # pylint: disable=C0415
         self.reset()
-        return load_gene_models(self)
+        load_gene_models(self)
+        return self
 
     def is_loaded(self) -> bool:
-        return len(self.transcript_models) > 0
+        return len(self.gene_models) > 0
 
 
 def join_gene_models(*gene_models: GeneModels) -> GeneModels:

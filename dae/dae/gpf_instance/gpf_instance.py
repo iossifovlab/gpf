@@ -183,6 +183,8 @@ class GPFInstance:
     def gene_models(self) -> GeneModels:
         """Return gene models used in the GPF instance."""
         if self._gene_models is not None:
+            if not self._gene_models.is_loaded():
+                self._gene_models.load()
             return self._gene_models
 
         # pylint: disable=import-outside-toplevel
