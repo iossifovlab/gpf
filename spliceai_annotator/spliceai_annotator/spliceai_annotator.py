@@ -378,7 +378,7 @@ models to predict splice site variant effects.
 
         # pylint: disable=import-outside-toplevel
         from . import spliceai_annotator_impl as impl
-        self._models = impl.spliceai_open()  # type: ignore
+        self._models = impl.SPLICEAI_MODELS
         return super().open()
 
     def _not_found(self) -> dict[str, Any]:
