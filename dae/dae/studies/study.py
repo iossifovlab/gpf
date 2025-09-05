@@ -156,7 +156,7 @@ class GenotypeData(CommonStudyMixin, ABC):
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
         if self._person_set_collections is None:
             self._person_set_collections = self._build_person_set_collections(
-                self.config, self.families,
+                self.config,
             )
         return self._person_set_collections
 
@@ -334,8 +334,8 @@ class GenotypeData(CommonStudyMixin, ABC):
 
     def _build_person_set_collections(
         self, study_config: dict[str, Any] | None,
-        families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
+        families = self.families
         if study_config is None:
             return {}
         if "person_set_collections" not in study_config:
@@ -590,7 +590,6 @@ class GenotypeDataGroup(GenotypeData):
             self._families = self.studies[0].families
             self._person_set_collections = self._build_person_set_collections(
                 self.config,
-                self._families,
             )
             return
 
@@ -620,7 +619,6 @@ class GenotypeDataGroup(GenotypeData):
 
         pscs = self._build_person_set_collections(
             self.config,
-            result,
         )
 
         self._person_set_collections = pscs
