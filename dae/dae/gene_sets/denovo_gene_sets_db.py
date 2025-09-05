@@ -46,18 +46,29 @@ class DenovoGeneSetsDb:
             self._load_cache()
         return self._gene_set_configs_cache
 
-    def update_cache(self, db_cache: dict[str, Any]) -> None:
-        """Load a dictionary of caches."""
-        for study_id, cache in db_cache.items():
+    def update_cache(self, denovo_gene_sets: dict[str, Any]) -> None:
+        """Load a dictionary of denovo gene sets."""
+        for study_id, dgs in denovo_gene_sets.items():
             study = self.gpf_instance.get_genotype_data(study_id)
             assert study is not None, study_id
 
-            dgsc = DenovoGeneSetHelpers.load_collection_from_dict(
-                study, cache)
-            if dgsc is None:
+            dgsc_config = parse_denovo_gene_sets_study_config(
+                study.config,
+                has_denovo=study.has_denovo,
+            )
+            if dgsc_config is None:
                 logger.info(
-                    "No denovo gene set collection for %s", study_id)
+                    "no denovo gene sets defined for %s", study.study_id)
                 continue
+
+            dgsc = DenovoGeneSetCollection(
+                study.study_id,
+                study.name,
+                dgsc_config,
+                None,  # type: ignore
+                cache=dgs["cache"],
+                gene_sets_types_legend=dgs["legend"],
+            )
 
             self._gene_set_configs_cache[study_id] = dgsc.config
             self._gene_set_collections_cache[study_id] = dgsc

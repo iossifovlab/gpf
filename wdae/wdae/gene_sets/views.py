@@ -63,9 +63,14 @@ class DenovoGeneSetsDb(QueryBaseView):
     def get(self, _request: Request) -> Response:
         """Build response to a get request."""
         result = {}
+        denovo_collections = \
+            self.gpf_instance.denovo_gene_sets_db._denovo_gene_set_collections  # noqa: SLF001
 
-        for study_id, collection in self.gpf_instance.denovo_gene_sets_db._denovo_gene_set_collections.items():  # noqa: E501, SLF001
-            result[study_id] = dict(collection.cache)
+        for study_id, collection in denovo_collections.items():
+            result[study_id] = {
+                "cache": dict(collection.cache),
+                "legend": collection.get_gene_sets_types_legend(),
+            }
 
         return Response(result, status=status.HTTP_200_OK)
 

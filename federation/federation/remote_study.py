@@ -4,7 +4,6 @@ from typing import Any, cast
 from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.family import Family, FamilyTag, Person
 from dae.person_sets import (
     PersonSetCollection,
     PSCQuery,
@@ -55,8 +54,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
         self.config = FrozenBox(config)
 
-        self._families: FamiliesData | None = None
-
         self._common_report: CommonReport | None = None
         self._remote_common_report = None
 
@@ -91,44 +88,11 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
     @property
     def families(self) -> FamiliesData:
-        if self._families is None:
-            self._families = self.build_families()
-        return self._families
-
-    def build_families(self) -> FamiliesData:
-        """Construct remote genotype data families."""
-        families = {}
-        families_details = self.rest_client.get_all_family_details(
-            self.remote_study_id,
-        )
-
-        result = FamiliesData()
-
-        for family in families_details:
-            family_id = family["family_id"]
-            person_jsons = family["members"]
-            family_members = []
-            for person_json in person_jsons:
-                person = Person(**person_json)
-                family_members.append(person)
-                result.persons_by_person_id[person.person_id].append(person)
-                result.persons[person.fpid] = person
-
-            family_obj = Family.from_persons(family_members)
-            for tag in family["tags"]:
-                family_obj.set_tag(FamilyTag.from_label(tag))
-            families[family_id] = family_obj
-
-        # Setting the families directly since we can assume that
-        # the remote has carried out all necessary transformations
-        result._families = families  # noqa: SLF001
-
-        return result
+        raise NotImplementedError
 
     # pylint: disable=arguments-renamed
     def _build_person_set_collections(  # type: ignore[override]
         self, pscs_config: dict[str, Any] | None,
-        _families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
         if pscs_config is None:
             return {}

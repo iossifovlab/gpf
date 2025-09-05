@@ -35,6 +35,9 @@ class DenovoGeneSetCollection:
         study_name: str,
         dgsc_config: DenovoGeneSetsConfig,
         pscs: dict[str, PersonSetCollection],
+        *,
+        cache: dict[str, Any] | None = None,
+        gene_sets_types_legend: dict[str, Any] | None = None,
     ) -> None:
         self.study_id = study_id
         self.study_name = study_name
@@ -47,9 +50,12 @@ class DenovoGeneSetCollection:
             self.config.gene_sets_ids
 
         self.pscs = pscs
-        self.cache: dict[str, Any] = self._build_empty_cache()
-        self._gene_sets_types_legend: \
-            dict[str, Sequence[Collection[str]]] | None = None
+        if cache is None:
+            cache = self._build_empty_cache()
+        self.cache: dict[str, Any] = cache
+        self._gene_sets_types_legend: dict[
+            str, Sequence[Collection[str]],
+        ] | None = gene_sets_types_legend
 
     def add_gene(
         self,

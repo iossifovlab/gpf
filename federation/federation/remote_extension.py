@@ -34,6 +34,15 @@ class GPFRemoteExtension(GPFExtensionBase):
 
         self.studies = {}
 
+        d_gs_db = self.instance.denovo_gene_sets_db
+        # Important - must initialize the db first by accessing these
+        # member variables, otherwise it will not load the local cache
+        # since it will be non-empty because of the remote denovo gene sets
+        # being loaded into the internal _collections and _configs
+        # variables
+        _ = d_gs_db._denovo_gene_set_collections  # noqa: SLF001
+        _ = d_gs_db._denovo_gene_set_configs  # noqa: SLF001
+
         for client in clients.values():
             studies = self.fetch_studies_from_client(client)
 
@@ -79,15 +88,6 @@ class GPFRemoteExtension(GPFExtensionBase):
                 )
                 gsc_id = gsc.collection_id
                 gs_db.gene_set_collections[gsc_id] = gsc
-
-            d_gs_db = self.instance.denovo_gene_sets_db
-            # Important - must initialize the db first by accessing these
-            # member variables, otherwise it will not load the local cache
-            # since it will be non-empty because of the remote denovo gene sets
-            # being loaded into the internal _collections and _configs
-            # variables
-            _ = d_gs_db._denovo_gene_set_collections  # noqa: SLF001
-            _ = d_gs_db._denovo_gene_set_configs  # noqa: SLF001
 
             remote_dgsdb_cache = {}
             for study_id, cache in \
