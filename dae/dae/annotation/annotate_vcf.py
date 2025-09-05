@@ -417,7 +417,7 @@ def _annotate_vcf(
                        attributes_to_delete),
         ])
     else:
-        source = _VCFBatchSource(args.input)
+        source = _VCFBatchSource(args.input, batch_size=args.batch_size)
         header = source.source.header.copy()
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
