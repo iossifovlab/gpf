@@ -696,7 +696,7 @@ models to predict splice site variant effects.
             [req.x_ref for req in reqs], axis=0)
         x_alt_batch = np.concatenate(
             [req.x_alt for req in reqs], axis=0)
-        logger.debug(
+        logger.info(
             "predicting a batch of request: %s; %s", len(reqs),
             x_alt_batch.shape,
         )
@@ -777,12 +777,12 @@ models to predict splice site variant effects.
                 continue
             for request in requests:
                 batches[request.x_alt.shape[1]].append(request)
-        logger.debug(
+        logger.info(
             "batching requests: %s", {k: len(v) for k, v in batches.items()},
         )
         batch_results = []
         for batch_index, batch_requests in enumerate(batches.values()):
-            logger.debug(
+            logger.info(
                 "processing batch %d/%d with %d requests",
                 batch_index + 1, len(batches), len(batch_requests),
             )
