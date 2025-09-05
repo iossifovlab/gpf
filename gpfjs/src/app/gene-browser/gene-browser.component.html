@@ -198,7 +198,7 @@
             <form
               id="download-family-form"
               (ngSubmit)="onSubmit($event)"
-              action="{{ configService.baseUrl }}genotype_browser/query"
+              action="{{ configService.baseUrl }}genotype_browser/query-download"
               method="post">
               <input name="queryData" type="hidden" />
               <button
