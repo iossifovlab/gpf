@@ -356,6 +356,10 @@ class WDAEAbstractStudy:
         return True
 
     @abstractmethod
+    def build_genotype_data_description(self) -> dict[str, Any]:
+        """Build single dataset details dictionary."""
+
+    @abstractmethod
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
@@ -537,13 +541,31 @@ class WDAEStudy(WDAEAbstractStudy):
         )
         return result
 
-    @staticmethod
-    def build_genotype_data_description(
-        gpf_instance: Any,
-        genotype_data: GenotypeData,
-        person_set_collection_configs: dict[str, Any] | None,
-    ) -> dict[str, Any]:
+    def build_genotype_data_description(self) -> dict[str, Any]:
         """Build and return genotype data group description."""
+
+        if not self.is_genotype:
+            return {
+                "id": self.phenotype_data.pheno_id,
+                "name": self.phenotype_data.name,
+                "genotype_browser": False,
+                "phenotype_browser": {"enabled": True},
+                "phenotype_tool": False,
+                "enrichment_tool": False,
+                "phenotype_data": self.phenotype_data.pheno_id,
+                "study_type": "Phenotype study",
+                "studies": [],
+                "has_present_in_child": False,
+                "has_present_in_parent": False,
+                "has_denovo": False,
+                "has_zygosity": False,
+                "has_transmitted": False,
+                "gene_browser": {"enabled": False},
+                "description_editable":
+                    self.phenotype_data.config["description_editable"],
+                "common_report": self.phenotype_data.config["common_report"],
+            }
+        genotype_data = self.genotype_data
         config = genotype_data.config.to_dict()
         keys = [
             "id",
@@ -654,7 +676,13 @@ class WDAEStudy(WDAEAbstractStudy):
             config["enrichment"]["enabled"] or result["has_denovo"]
         result["common_report"] = config["common_report"]
         result["common_report"].pop("file_path", None)
+
+        person_set_collection_configs = {
+            psc.id: psc.domain_json()
+            for psc in genotype_data.person_set_collections.values()
+        }
         result["person_set_collections"] = person_set_collection_configs
+
         result["name"] = result["name"] or result["id"]
 
         result["enrichment"] = config["enrichment"]
@@ -671,20 +699,11 @@ class WDAEStudy(WDAEAbstractStudy):
         result["study_names"] = None
         if result["studies"] is not None:
             logger.debug("found studies in %s", config["id"])
-            study_names = []
-            for study_id in result["studies"]:
-                wrapper = gpf_instance.get_wdae_wrapper(study_id)
-                if wrapper is None:
-                    logger.warning(
-                        "no wrapper found for study %s", study_id)
-                    continue
-                name = (
-                    wrapper.config.get("name")
-                    if wrapper.config.get("name") is not None
-                    else wrapper.config.get("id")
-                )
-                study_names.append(name)
-                result["study_names"] = study_names
+
+            result["study_names"] = [
+                child.name for child in self.children
+                if child.study_id != self.study_id
+            ]
 
         return result
 
