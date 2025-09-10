@@ -44,14 +44,11 @@ def test_make_config(t4c8_dataset: GenotypeData) -> None:
 
 def test_genotype_data_config_immutability(
     t4c8_wgpf_instance: WGPFInstance,
-    t4c8_dataset: GenotypeData,
 ) -> None:
-    description = WDAEStudy.build_genotype_data_description(
-        t4c8_wgpf_instance,
-        t4c8_dataset,
-        person_set_collection_configs=None,
-    )
+    wrapper = t4c8_wgpf_instance.get_wdae_wrapper("t4c8_dataset")
+    assert wrapper is not None
+    description = wrapper.build_genotype_data_description()
     assert description["common_report"].get("file_path") is None
     assert (
         "datasets/t4c8_dataset/common_report.json"
-    ) in t4c8_dataset.config["common_report"]["file_path"]
+    ) in wrapper.config["common_report"]["file_path"]
