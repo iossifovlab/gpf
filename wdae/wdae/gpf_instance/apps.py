@@ -1,5 +1,6 @@
 """Provides class for configuing WDAE Django application."""
 import logging
+import sys
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -15,8 +16,13 @@ class WDAEConfig(AppConfig):
     name = "gpf_instance"
 
     def ready(self) -> None:
+        super().ready()
+        is_runserver = any(arg.casefold() == "runserver" for arg in sys.argv)
+
+        if not is_runserver:
+            return
+
         logger.info("WDAEConfig application starting...")
-        AppConfig.ready(self)
 
         config_filepath = getattr(settings, "GPF_INSTANCE_CONFIG_PATH", None)
 
