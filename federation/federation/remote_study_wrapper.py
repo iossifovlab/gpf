@@ -113,6 +113,13 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
             self.rest_client.get_measures_list(self.remote_study_id),
         )
 
+    def build_genotype_data_description(self) -> dict[str, Any]:
+        details = self.rest_client.get_dataset(self.remote_study_id)
+        # Overwrite with prefixed versions
+        details["id"] = self.study_id
+        details["name"] = self.name
+        return details
+
     def _init_pheno(self, *_, **__) -> None:
         # This method is not necessary for remote studies, as the phenotype
         # data is already initialized in the constructor.

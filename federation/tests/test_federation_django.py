@@ -30,6 +30,18 @@ def test_studies(
     assert dataset_ids == expected_ids
 
 
+def test_get_remote_study(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response = admin_client.get("/api/v3/datasets/TEST_REMOTE_t4c8_dataset")
+
+    assert response is not None
+    assert response.status_code == 200
+
+    assert response.json()["data"]["id"] == "TEST_REMOTE_t4c8_dataset"
+
+
 def test_genomic_scores(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001

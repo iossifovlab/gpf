@@ -132,37 +132,7 @@ class DatasetView(QueryBaseView):
     def _collect_single_dataset(
         self, user: User, dataset: WDAEAbstractStudy,
     ) -> dict:
-        if dataset.is_genotype:
-            person_set_collection_configs = {
-                psc.id: psc.domain_json()
-                for psc in dataset.genotype_data.person_set_collections.values()
-            }
-            res = WDAEStudy.build_genotype_data_description(
-                self.gpf_instance,
-                dataset.genotype_data,
-                person_set_collection_configs,
-            )
-        else:
-            res = {
-                "id": dataset.phenotype_data.pheno_id,
-                "name": dataset.phenotype_data.name,
-                "genotype_browser": False,
-                "phenotype_browser": {"enabled": True},
-                "phenotype_tool": False,
-                "enrichment_tool": False,
-                "phenotype_data": dataset.phenotype_data.pheno_id,
-                "study_type": "Phenotype study",
-                "studies": [],
-                "has_present_in_child": False,
-                "has_present_in_parent": False,
-                "has_denovo": False,
-                "has_zygosity": False,
-                "has_transmitted": False,
-                "gene_browser": {"enabled": False},
-                "description_editable":
-                    dataset.phenotype_data.config["description_editable"],
-                "common_report": dataset.phenotype_data.config["common_report"],
-            }
+        res = dataset.build_genotype_data_description()
 
         allowed_datasets = self.get_permitted_datasets(user)
         res = augment_accessibility(res, allowed_datasets)
