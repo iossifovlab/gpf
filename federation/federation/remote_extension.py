@@ -93,6 +93,11 @@ class GPFRemoteExtension(GPFExtensionBase):
             for study_id, cache in \
                     client.get_denovo_gene_sets_db().items():
                 remote_id = prefix_remote_identifier(study_id, client)
+                cache["legend"]["datasetId"] = remote_id
+                cache["legend"]["datasetName"] = prefix_remote_name(
+                    cache["legend"]["datasetName"],
+                    client,
+                    )
                 if remote_id in available_studies_ids:
                     remote_dgsdb_cache[remote_id] = cache
             d_gs_db.update_cache(remote_dgsdb_cache)
