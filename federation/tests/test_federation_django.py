@@ -70,6 +70,28 @@ def test_gene_sets(
     assert returned_names == expected_names
 
 
+def test_denovo_gene_sets(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response = admin_client.get("/api/v3/gene_sets/denovo_gene_sets_types")
+
+    assert response
+    assert response.status_code == 200
+    assert len(response.data) == 8
+    dataset_ids = [dgs["datasetId"] for dgs in response.data]
+    assert set(dataset_ids) == {
+        "t4c8_dataset",
+        "t4c8_study_1",
+        "t4c8_study_2",
+        "t4c8_study_4",
+        "TEST_REMOTE_t4c8_dataset",
+        "TEST_REMOTE_t4c8_study_1",
+        "TEST_REMOTE_t4c8_study_2",
+        "TEST_REMOTE_t4c8_study_4",
+    }
+
+
 def test_measures_regressions(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
