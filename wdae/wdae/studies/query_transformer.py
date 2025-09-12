@@ -203,6 +203,7 @@ class QueryTransformer(QueryTransformerProtocol):
     @staticmethod
     def _present_in_child_to_roles(
         present_in_child: set[str],
+        zygosity: str | None = None,
     ) -> str | None:
         roles_query = []
 
@@ -215,17 +216,26 @@ class QueryTransformer(QueryTransformerProtocol):
         if "proband and sibling" in present_in_child:
             roles_query.append("prb and sib")
 
+        if len(roles_query) > 0 and zygosity is not None:
+            current_query = " or ".join(f"({r})" for r in roles_query)
+            roles_query = [
+                update_attribute_query_with_compounds(
+                    current_query, zygosity,
+                ).lstrip("(").rstrip(")"),
+            ]
+
         if "neither" in present_in_child:
             roles_query.append("not prb and not sib")
         if (len(roles_query) == 4) or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
-        return " or ".join(f"( {r} )" for r in roles_query)
+        return " or ".join(f"({r})" for r in roles_query)
 
     @staticmethod
     def _present_in_parent_to_roles(
         present_in_parent: set[str],
+        zygosity: str | None = None,
     ) -> str | None:
         roles_query = []
 
@@ -238,13 +248,21 @@ class QueryTransformer(QueryTransformerProtocol):
         if "mother and father" in present_in_parent:
             roles_query.append("mom and dad")
 
+        if len(roles_query) > 0 and zygosity is not None:
+            current_query = " or ".join(f"({r})" for r in roles_query)
+            roles_query = [
+                update_attribute_query_with_compounds(
+                    current_query, zygosity,
+                ).lstrip("(").rstrip(")"),
+            ]
+
         if "neither" in present_in_parent:
             roles_query.append("not mom and not dad")
         if (len(roles_query) == 4) or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
-        return " or ".join(f"( {r} )" for r in roles_query)
+        return " or ".join(f"({r})" for r in roles_query)
 
     def _transform_filters_to_ids(
         self, filters: list[dict],
@@ -383,35 +401,6 @@ class QueryTransformer(QueryTransformerProtocol):
 
     def _apply_zygosity(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         valid_zygosities = [v.name for v in Zygosity]
-        if "presentInChild" in kwargs and "zygosityInChild" in kwargs:
-            zygosity = kwargs.pop("zygosityInChild")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in child argument - not a string.",
-                )
-            if zygosity not in valid_zygosities:
-                raise ValueError(
-                    f"Invalid zygosity in child {zygosity}, "
-                    f"expected one of {valid_zygosities}",
-                )
-            kwargs["presentInChild"] = update_attribute_query_with_compounds(
-                kwargs["presentInChild"], zygosity,
-            )
-        if "presentInParent" in kwargs and "zygosityInParent" in kwargs:
-            zygosity = kwargs.pop("zygosityInParent")
-            if not isinstance(zygosity, str):
-                raise ValueError(
-                    "Invalid zygosity in parent argument - not a string.",
-                )
-            if zygosity not in valid_zygosities:
-                raise ValueError(
-                    f"Invalid zygosity in parent {zygosity}, "
-                    f"expected one of {valid_zygosities}",
-                )
-            kwargs["presentInParent"] = update_attribute_query_with_compounds(
-                kwargs["presentInParent"], zygosity,
-            )
-
         if "genders" in kwargs and "zygosityInSexes" in kwargs:
             zygosity = kwargs.pop("zygosityInSexes")
             if not isinstance(zygosity, str):
@@ -503,17 +492,21 @@ class QueryTransformer(QueryTransformerProtocol):
         rarity = None
         if "presentInChild" in kwargs:
             present_in_child = set(kwargs["presentInChild"])
+            zygosity = kwargs.pop("zygosityInChild", None)
 
             kwargs["presentInChild"] = self._present_in_child_to_roles(
                 present_in_child,
+                zygosity,
             )
 
         if "presentInParent" in kwargs:
             present_in_parent = \
                 set(kwargs["presentInParent"]["presentInParent"])
+            zygosity = kwargs.pop("zygosityInParent", None)
             rarity = kwargs["presentInParent"].get("rarity", None)
             kwargs["presentInParent"] = self._present_in_parent_to_roles(
                 present_in_parent,
+                zygosity,
             )
 
         if present_in_parent != {"neither"} and rarity is not None:

@@ -136,7 +136,7 @@ def test_attributes_query_roles() -> None:
          [Role.prb.value | Role.dad.value],
          [Role.prb.value, Role.sib.value,
           Role.prb.value | Role.sib.value | Role.mom.value],
-         "(( prb and not sib ) or ( sib and not prb ) or ( prb and sib )) "
+         "((prb and not sib) or (sib and not prb) or (prb and sib)) "
          "and (dad and not mom)"),
     ])
 def test_transform_present_in_child_and_present_in_parent_roles(
@@ -196,3 +196,77 @@ def test_transform_present_in_child_and_present_in_parent_inheritance(
     for value in rejected:
         assert not SqlQueryBuilder.check_inheritance_query_value(
             [inheritance_query], value)
+
+
+@pytest.mark.parametrize(
+    "present_in_parent,zygosity_in_parent,expected_query",
+    [
+        (
+            {"mother only", "neither"},
+            "homozygous",
+            "(mom~homozygous and not dad~homozygous) or (not mom and not dad)",
+        ),
+        (
+            {"father only", "neither"},
+            "homozygous",
+            "(dad~homozygous and not mom~homozygous) or (not mom and not dad)",
+        ),
+        (
+            {"mother and father", "neither"},
+            "homozygous",
+            "(mom~homozygous and dad~homozygous) or (not mom and not dad)",
+        ),
+        (
+            {"neither"},
+            "homozygous",
+            "not mom and not dad",
+        ),
+        (
+            {"father only", "mother only", "mother and father", "neither"},
+            "homozygous",
+            "(mom~homozygous and not dad~homozygous) or "
+            "(dad~homozygous and not mom~homozygous) or "
+            "(mom~homozygous and dad~homozygous) or "
+            "(not mom and not dad)",
+        ),
+        (
+            {"mother only", "neither"},
+            "heterozygous",
+            "(mom~heterozygous and not dad~heterozygous) or "
+            "(not mom and not dad)",
+        ),
+        (
+            {"father only", "neither"},
+            "heterozygous",
+            "(dad~heterozygous and not mom~heterozygous) or "
+            "(not mom and not dad)",
+        ),
+        (
+            {"mother and father", "neither"},
+            "heterozygous",
+            "(mom~heterozygous and dad~heterozygous) or (not mom and not dad)",
+        ),
+        (
+            {"neither"},
+            "heterozygous",
+            "not mom and not dad",
+        ),
+        (
+            {"father only", "mother only", "mother and father", "neither"},
+            "heterozygous",
+            "(mom~heterozygous and not dad~heterozygous) or "
+            "(dad~heterozygous and not mom~heterozygous) or "
+            "(mom~heterozygous and dad~heterozygous) or "
+            "(not mom and not dad)",
+        ),
+    ],
+)
+def test_transform_parent_zygosity_with_neither(
+    present_in_parent: set[str],
+    zygosity_in_parent: str | None,
+    expected_query: str,
+) -> None:
+    parents_query = QueryTransformer._present_in_parent_to_roles(
+        present_in_parent, zygosity_in_parent)
+
+    assert parents_query == expected_query
