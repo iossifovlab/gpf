@@ -185,13 +185,15 @@ def handle_default_args(args: dict[str, Any]) -> dict[str, Any]:
     """Handle default arguments for annotation command line tools."""
     if not os.path.exists(args["input"]):
         raise ValueError(f"{args['input']} does not exist!")
-    if args.get("work_dir") is None:
-        suffixes = Path(args["input"]).suffixes
-        work_dir = Path(args["input"])
-        for _ in suffixes:
-            work_dir = Path(work_dir.with_suffix(""))
+    output = build_output_path(args["input"], args.get("output"))
+    args["output"] = output
 
-        args["work_dir"] = str(f"{work_dir}_work")
+    if args.get("work_dir") is None:
+        path = Path(args["output"])
+        if path.suffix == ".gz":
+            path = path.with_suffix("")
+        path = path.with_suffix("")
+        args["work_dir"] = str(f"{path}_work")
 
     if not os.path.exists(args["work_dir"]):
         os.mkdir(args["work_dir"])
@@ -256,13 +258,14 @@ def build_output_path(raw_input_path: str, output_path: str | None) -> str:
     if output_path:
         return output_path.rstrip(".gz")
     # no output filename given, produce from input filename
-    input_path = Path(raw_input_path.rstrip(".gz"))
+    path = Path(raw_input_path.rstrip(".gz"))
     # backup suffixes
-    suffixes = input_path.suffixes
-    # remove suffixes to get to base stem of filename
-    while input_path.suffix:
-        input_path = input_path.with_suffix("")
+    suffixes = path.suffixes
+
+    path = Path(path.name)
     # append '_annotated' to filename stem
-    input_path = input_path.with_stem(f"{input_path.stem}_annotated")
+    path = path.with_stem(f"{path.stem}_annotated")
     # restore suffixes and return
-    return str(input_path.with_suffix("".join(suffixes)))
+    if not suffixes:
+        return str(path)
+    return str(path.with_suffix(suffixes[-1]))

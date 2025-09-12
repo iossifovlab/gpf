@@ -24,7 +24,6 @@ from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_utils import (
     add_common_annotation_arguments,
     add_input_files_to_task_graph,
-    build_output_path,
     cache_pipeline_resources,
     get_stuff_from_context,
     handle_default_args,
@@ -571,7 +570,7 @@ def cli(argv: list[str] | None = None) -> None:
         args["keep_parts"],
     )
 
-    output_path = build_output_path(args["input"], args["output"])
+    output_path = args["output"]
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
         _add_tasks_tabixed(
