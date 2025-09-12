@@ -132,9 +132,16 @@ class FileTaskCache(TaskCache):
 
         output_fn = self._get_flag_filename(task_node)
         with fsspec.open(output_fn, "rb") as cache_file:
-            res_record = cast(
-                CacheRecord,
-                pickle.load(cache_file))  # pyright: ignore
+            try:
+                res_record = cast(
+                    CacheRecord,
+                    pickle.load(cache_file))  # pyright: ignore
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "Cannot read status for task %s. Ignoring and continuing.",
+                    task_node,
+                )
+                res_record = CacheRecord(CacheRecordType.NEEDS_COMPUTE)
             task2record[task_node] = res_record
             return res_record
 
