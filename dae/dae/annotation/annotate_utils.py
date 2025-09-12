@@ -1,3 +1,4 @@
+import argparse
 import gzip
 import logging
 import os
@@ -111,6 +112,11 @@ def produce_tabix_index(filepath: str, args: dict | None = None) -> None:
         raise TypeError(
             "Could not generate tabix index: record"
             f" {type(record_to_annotatable)} is of unsupported type.")
+    logger.info(
+        "producing tabix index for '%s': "
+        "tabix_index(%s, seq_col=%s, start_col=%s, end_col=%s, "
+        "line_skip=%s, force=True)",
+        filepath, filepath, seq_col, start_col, end_col, line_skip)
     tabix_index(filepath,
                 seq_col=seq_col,
                 start_col=start_col,
@@ -175,18 +181,91 @@ def cache_pipeline_resources(
     cache_resources(grr, resource_ids)
 
 
+def handle_default_args(args: dict[str, Any]) -> dict[str, Any]:
+    """Handle default arguments for annotation command line tools."""
+    if not os.path.exists(args["input"]):
+        raise ValueError(f"{args['input']} does not exist!")
+    output = build_output_path(args["input"], args.get("output"))
+    args["output"] = output
+
+    if args.get("work_dir") is None:
+        path = Path(args["output"])
+        if path.suffix == ".gz":
+            path = path.with_suffix("")
+        path = path.with_suffix("")
+        args["work_dir"] = str(f"{path}_work")
+
+    if not os.path.exists(args["work_dir"]):
+        os.mkdir(args["work_dir"])
+
+    if args.get("task_status_dir") is None:
+        args["task_status_dir"] = os.path.join(
+            args["work_dir"], ".task-status")
+    if args.get("task_log_dir") is None:
+        args["task_log_dir"] = os.path.join(
+            args["work_dir"], ".task-log")
+
+    return args
+
+
+def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add common arguments to an annotation command line parser."""
+    parser.add_argument(
+        "input", default="-", nargs="?",
+        help="the input column file")
+    parser.add_argument(
+        "-r", "--region-size", default=300_000_000,
+        type=int, help="region size to parallelize by")
+    parser.add_argument(
+        "-w", "--work-dir",
+        help="Directory to store intermediate output files in",
+        default=None)
+    parser.add_argument(
+        "-o", "--output",
+        help="Filename of the output result",
+        default=None)
+    parser.add_argument(
+        "--reannotate", default=None,
+        help="Old pipeline config to reannotate over")
+    parser.add_argument(
+        "-i", "--full-reannotation",
+        help="Ignore any previous annotation and run "
+        " a full reannotation.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--keep-parts", "--keep-intermediate-files",
+        help="Keep intermediate files after annotatio.",
+        action="store_true",
+        default=True,
+    )
+    parser.add_argument(
+        "--no-keep-parts", "--no-keep-intermediate-files",
+        help="Remove intermediate files after annotatio.",
+        dest="keep_parts",
+        action="store_false",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=0,  # 0 = annotate iteratively, no batches
+        help="Annotate in batches of",
+    )
+
+
 def build_output_path(raw_input_path: str, output_path: str | None) -> str:
     """Build an output filepath for an annotation tool's output."""
     if output_path:
         return output_path.rstrip(".gz")
     # no output filename given, produce from input filename
-    input_path = Path(raw_input_path.rstrip(".gz"))
+    path = Path(raw_input_path.rstrip(".gz"))
     # backup suffixes
-    suffixes = input_path.suffixes
-    # remove suffixes to get to base stem of filename
-    while input_path.suffix:
-        input_path = input_path.with_suffix("")
+    suffixes = path.suffixes
+
+    path = Path(path.name)
     # append '_annotated' to filename stem
-    input_path = input_path.with_stem(f"{input_path.stem}_annotated")
+    path = path.with_stem(f"{path.stem}_annotated")
     # restore suffixes and return
-    return str(input_path.with_suffix("".join(suffixes)))
+    if not suffixes:
+        return str(path)
+    return str(path.with_suffix(suffixes[-1]))

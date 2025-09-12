@@ -208,7 +208,7 @@ models to predict splice site variant effects.
                 "Setting it to 0.", self._mask,
             )
             self._mask = 0
-        self._models = None
+        self._models: list | None = None
 
     def _attributes_definition(self) -> dict[str, _AttrConfig]:
         return {

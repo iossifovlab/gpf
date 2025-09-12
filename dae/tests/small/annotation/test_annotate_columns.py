@@ -441,6 +441,7 @@ def test_annotate_columns_multiple_chrom(
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
+            "--no-keep-parts",
         ]
     ])
 
@@ -496,6 +497,7 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
             "--allow-repeated-attributes",
+            "--no-keep-parts",
         ]
     ])
 
@@ -1007,3 +1009,41 @@ def test_cli_annotatables_that_need_ref_genome(
     ])
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_concatenate_empty_regions(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        #chrom   pos
+        chr1      3
+        chr1      4
+        chr1      53
+        chr1      54
+
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt.gz"
+    out_file = root_path / "out.txt.gz"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_tabix(in_file, in_content,
+                seq_col=0, start_col=1, end_col=1)
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--region-size", 5,
+            "-j", 1,
+        ]
+    ])
+
+    with gzip.open(str(out_file), "rt") as res:
+        out_file_content = res.readlines()
+        assert len(out_file_content) == 5

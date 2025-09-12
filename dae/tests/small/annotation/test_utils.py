@@ -21,35 +21,35 @@ def test_build_output_path_none_given_explicitly() -> None:
     assert build_output_path(
         "some/directory/input_file.csv",
         None,
-    ) == "some/directory/input_file_annotated.csv"
+    ) == "input_file_annotated.csv"
 
 
 def test_build_output_path_none_given_explicitly_remove_gz() -> None:
     assert build_output_path(
         "some/directory/input_file.csv.gz",
         None,
-    ) == "some/directory/input_file_annotated.csv"
+    ) == "input_file_annotated.csv"
 
 
 def test_build_output_path_none_given_explicitly_no_extension() -> None:
     assert build_output_path(
         "some/directory/input_file",
         None,
-    ) == "some/directory/input_file_annotated"
+    ) == "input_file_annotated"
 
 
 def test_build_output_path_none_given_explicitly_multiple_extensions() -> None:
     assert build_output_path(
         "some/directory/input_file.txt.csv",
         None,
-    ) == "some/directory/input_file_annotated.txt.csv"
+    ) == "input_file.txt_annotated.csv"
 
 
 def test_build_output_path_none_given_explicitly_hidden_file() -> None:
     assert build_output_path(
         "some/directory/.input_file.csv",
         None,
-    ) == "some/directory/.input_file_annotated.csv"
+    ) == ".input_file_annotated.csv"
 
 
 def test_stringify_string_notvcf() -> None:

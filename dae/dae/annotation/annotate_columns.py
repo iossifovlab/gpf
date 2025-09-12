@@ -17,10 +17,11 @@ from typing import Any, TextIO
 from pysam import TabixFile
 
 from dae.annotation.annotate_utils import (
+    add_common_annotation_arguments,
     add_input_files_to_task_graph,
-    build_output_path,
     cache_pipeline_resources,
     get_stuff_from_context,
+    handle_default_args,
     produce_partfile_paths,
     produce_regions,
     produce_tabix_index,
@@ -84,6 +85,7 @@ class _ProcessingArgs:
     allow_repeated_attributes: bool
     full_reannotation: bool
     columns_args: dict[str, str]
+    keep_parts: bool
 
 
 class _CSVSource(Source):
@@ -420,7 +422,11 @@ def _annotate_csv(
         processor.process_region(region)
 
 
-def _concat(partfile_paths: list[str], output_path: str) -> None:
+def _concat(
+    partfile_paths: list[str],
+    output_path: str,
+    keep_parts: bool,  # noqa: FBT001
+) -> None:
     """Concatenate multiple CSV files into a single CSV file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
@@ -429,18 +435,23 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
     with open(output_path, "w") as outfile:
         outfile.write(header)
         for path in partfile_paths:
-            # newline to separate from previous content
-            outfile.write("\n")
             # read partfile content
             partfile_content = Path(path).read_text().strip("\r\n")
             # remove header from content
             partfile_content = "\n".join(partfile_content.split("\n")[1:])
+
+            # if the partfile is empty, skip it
+            if not partfile_content:
+                continue
+            # newline to separate from previous content
+            outfile.write("\n")
             # write to output
             outfile.write(partfile_content)
         outfile.write("\n")
 
-    for partfile_path in partfile_paths:
-        os.remove(partfile_path)
+    if not keep_parts:
+        for partfile_path in partfile_paths:
+            os.remove(partfile_path)
 
 
 def _add_tasks_tabixed(
@@ -480,7 +491,7 @@ def _add_tasks_tabixed(
     concat_task = task_graph.create_task(
         "concat",
         _concat,
-        args=[file_paths, output_path],
+        args=[file_paths, output_path, args.keep_parts],
         deps=[annotation_sync])
 
     task_graph.create_task(
@@ -518,45 +529,17 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    add_common_annotation_arguments(parser)
     parser.add_argument(
-        "input", default="-", nargs="?",
-        help="the input column file")
-    parser.add_argument(
-        "-r", "--region-size", default=300_000_000,
-        type=int, help="region size to parallelize by")
-    parser.add_argument(
-        "-w", "--work-dir",
-        help="Directory to store intermediate output files in",
-        default="annotate_columns_output")
-    parser.add_argument(
-        "-o", "--output",
-        help="Filename of the output result",
-        default=None)
-    parser.add_argument(
-        "-in-sep", "--input-separator", default="\t",
+        "--input-separator", "--in-sep", default="\t",
         help="The column separator in the input")
     parser.add_argument(
-        "-out-sep", "--output-separator", default="\t",
+        "--output-separator", "--out-sep", default="\t",
         help="The column separator in the output")
-    parser.add_argument(
-        "--reannotate", default=None,
-        help="Old pipeline config to reannotate over")
-    parser.add_argument(
-        "-i", "--full-reannotation",
-        help="Ignore any previous annotation and run "
-        " a full reannotation.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=0,  # 0 = annotate iteratively, no batches
-        help="Annotate in batches of",
-    )
 
     CLIAnnotationContextProvider.add_argparser_arguments(parser)
     add_record_to_annotable_arguments(parser)
-    TaskGraphCli.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
     VerbosityConfiguration.set_arguments(parser)
     return parser
 
@@ -569,13 +552,7 @@ def cli(argv: list[str] | None = None) -> None:
     arg_parser = _build_argument_parser()
     args = vars(arg_parser.parse_args(argv))
     VerbosityConfiguration.set_verbosity(args["verbose"])
-
-    if not os.path.exists(args["input"]):
-        raise ValueError(f"{args['input']} does not exist!")
-    if not os.path.exists(args["work_dir"]):
-        os.mkdir(args["work_dir"])
-    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
-    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
+    args = handle_default_args(args)
 
     pipeline, context, grr = get_stuff_from_context(args)
     assert grr.definition is not None
@@ -598,9 +575,10 @@ def cli(argv: list[str] | None = None) -> None:
         {f"col_{col}": args[f"col_{col}"]
          for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
          for col in cols},
+        args["keep_parts"],
     )
 
-    output_path = build_output_path(args["input"], args["output"])
+    output_path = args["output"]
 
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
