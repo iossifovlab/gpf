@@ -73,6 +73,7 @@ class _ProcessingArgs:
     region_size: int
     allow_repeated_attributes: bool
     full_reannotation: bool
+    keep_parts: bool
 
 
 @dataclass
@@ -433,7 +434,11 @@ def _annotate_vcf(
         processor.process_region(region)
 
 
-def _concat(partfile_paths: list[str], output_path: str) -> None:
+def _concat(
+    partfile_paths: list[str],
+    output_path: str,
+    keep_parts: bool,  # noqa: FBT001
+) -> None:
     """Concatenate multiple VCF files into a single VCF file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
@@ -450,8 +455,9 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
     output_file.close()
     header_donor.close()
 
-    for partfile_path in partfile_paths:
-        os.remove(partfile_path)
+    if not keep_parts:
+        for partfile_path in partfile_paths:
+            os.remove(partfile_path)
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:
@@ -528,7 +534,7 @@ def _add_tasks_tabixed(
     concat_task = task_graph.create_task(
         "concat",
         _concat,
-        args=[file_paths, output_path],
+        args=[file_paths, output_path, args.keep_parts],
         deps=[annotation_sync],
     )
     task_graph.create_task(
@@ -562,6 +568,7 @@ def cli(argv: list[str] | None = None) -> None:
         args["region_size"],
         args["allow_repeated_attributes"],
         args["full_reannotation"],
+        args["keep_parts"],
     )
 
     output_path = build_output_path(args["input"], args["output"])

@@ -441,6 +441,7 @@ def test_annotate_columns_multiple_chrom(
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
+            "--no-keep-parts",
         ]
     ])
 
@@ -496,6 +497,7 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
             "--allow-repeated-attributes",
+            "--no-keep-parts",
         ]
     ])
 

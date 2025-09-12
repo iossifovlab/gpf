@@ -232,6 +232,18 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         action="store_true",
     )
     parser.add_argument(
+        "--keep-parts", "--keep-intermediate-files",
+        help="Keep intermediate files after annotatio.",
+        action="store_true",
+        default=True,
+    )
+    parser.add_argument(
+        "--no-keep-parts", "--no-keep-intermediate-files",
+        help="Remove intermediate files after annotatio.",
+        dest="keep_parts",
+        action="store_false",
+    )
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=0,  # 0 = annotate iteratively, no batches

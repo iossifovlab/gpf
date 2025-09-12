@@ -84,6 +84,7 @@ def test_annotate_vcf_simple(
         _ProcessingArgs(
             str(sample_vcf), "", str(work_dir), 0, 1,
             False, False,  # noqa: FBT003
+            False,  # noqa: FBT003 # keep_parts
         ),
     )
 
@@ -112,6 +113,7 @@ def test_annotate_vcf_simple_batch(
         _ProcessingArgs(
             str(sample_vcf), "", str(work_dir), 0, 1,
             False, False,  # noqa: FBT003
+            False,  # noqa: FBT003 # keep_parts
         ),
     )
 
@@ -278,6 +280,7 @@ def test_vcf_multiple_chroms(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
+            "--no-keep-parts",
         ]
     ])
 

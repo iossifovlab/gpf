@@ -86,6 +86,7 @@ class _ProcessingArgs:
     allow_repeated_attributes: bool
     full_reannotation: bool
     columns_args: dict[str, str]
+    keep_parts: bool
 
 
 class _CSVSource(Source):
@@ -422,7 +423,11 @@ def _annotate_csv(
         processor.process_region(region)
 
 
-def _concat(partfile_paths: list[str], output_path: str) -> None:
+def _concat(
+    partfile_paths: list[str],
+    output_path: str,
+    keep_parts: bool,  # noqa: FBT001
+) -> None:
     """Concatenate multiple CSV files into a single CSV file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
@@ -445,8 +450,9 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
             outfile.write(partfile_content)
         outfile.write("\n")
 
-    for partfile_path in partfile_paths:
-        os.remove(partfile_path)
+    if not keep_parts:
+        for partfile_path in partfile_paths:
+            os.remove(partfile_path)
 
 
 def _add_tasks_tabixed(
@@ -486,7 +492,7 @@ def _add_tasks_tabixed(
     concat_task = task_graph.create_task(
         "concat",
         _concat,
-        args=[file_paths, output_path],
+        args=[file_paths, output_path, args.keep_parts],
         deps=[annotation_sync])
 
     task_graph.create_task(
@@ -570,6 +576,7 @@ def cli(argv: list[str] | None = None) -> None:
         {f"col_{col}": args[f"col_{col}"]
          for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
          for col in cols},
+        args["keep_parts"],
     )
 
     output_path = build_output_path(args["input"], args["output"])
