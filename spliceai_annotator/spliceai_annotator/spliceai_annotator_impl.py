@@ -19,7 +19,6 @@ def spliceai_load_models() -> list:
 
 
 def spliceai_close() -> None:
-    tf.keras.backend.clear_session()
     gc.collect()
 
 
