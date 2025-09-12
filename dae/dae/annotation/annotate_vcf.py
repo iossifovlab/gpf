@@ -22,10 +22,12 @@ from pysam import (
 
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_utils import (
+    add_common_annotation_arguments,
     add_input_files_to_task_graph,
     build_output_path,
     cache_pipeline_resources,
     get_stuff_from_context,
+    handle_default_args,
     produce_partfile_paths,
     produce_regions,
     stringify,
@@ -458,38 +460,10 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         description="Annotate VCF",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
-        "input", default="-", nargs="?",
-        help="the input vcf file")
-    parser.add_argument(
-        "-r", "--region-size", default=300_000_000,
-        type=int, help="region size to parallelize by")
-    parser.add_argument(
-        "-w", "--work-dir",
-        help="Directory to store intermediate output files",
-        default="annotate_vcf_output")
-    parser.add_argument(
-        "-o", "--output",
-        help="Filename of the output VCF result",
-        default=None)
-    parser.add_argument(
-        "--reannotate", default=None,
-        help="Old pipeline config to reannotate over")
-    parser.add_argument(
-        "-i", "--full-reannotation",
-        help="Ignore any previous annotation and run "
-        " a full reannotation.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=0,  # 0 = annotate iteratively, no batches
-        help="Annotate in batches of",
-    )
+    add_common_annotation_arguments(parser)
 
     CLIAnnotationContextProvider.add_argparser_arguments(parser)
-    TaskGraphCli.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
     VerbosityConfiguration.set_arguments(parser)
     return parser
 
@@ -573,12 +547,7 @@ def cli(argv: list[str] | None = None) -> None:
     args = vars(arg_parser.parse_args(argv))
     VerbosityConfiguration.set_verbosity(args["verbose"])
 
-    if not os.path.exists(args["input"]):
-        raise ValueError(f"{args['input']} does not exist!")
-    if not os.path.exists(args["work_dir"]):
-        os.mkdir(args["work_dir"])
-    args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
-    args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
+    args = handle_default_args(args)
 
     pipeline, _, grr = get_stuff_from_context(args)
     assert grr.definition is not None
