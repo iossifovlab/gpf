@@ -111,6 +111,11 @@ def produce_tabix_index(filepath: str, args: dict | None = None) -> None:
         raise TypeError(
             "Could not generate tabix index: record"
             f" {type(record_to_annotatable)} is of unsupported type.")
+    logger.info(
+        "producing tabix index for '%s': "
+        "tabix_index(%s, seq_col=%s, start_col=%s, end_col=%s, "
+        "line_skip=%s, force=True)",
+        filepath, filepath, seq_col, start_col, end_col, line_skip)
     tabix_index(filepath,
                 seq_col=seq_col,
                 start_col=start_col,
