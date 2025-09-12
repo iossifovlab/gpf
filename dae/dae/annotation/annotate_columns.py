@@ -429,12 +429,16 @@ def _concat(partfile_paths: list[str], output_path: str) -> None:
     with open(output_path, "w") as outfile:
         outfile.write(header)
         for path in partfile_paths:
-            # newline to separate from previous content
-            outfile.write("\n")
             # read partfile content
             partfile_content = Path(path).read_text().strip("\r\n")
             # remove header from content
             partfile_content = "\n".join(partfile_content.split("\n")[1:])
+
+            # if the partfile is empty, skip it
+            if not partfile_content:
+                continue
+            # newline to separate from previous content
+            outfile.write("\n")
             # write to output
             outfile.write(partfile_content)
         outfile.write("\n")
