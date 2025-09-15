@@ -298,17 +298,32 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.vcfs: list[pysam.VariantFile] = []
         logger.debug("SingleVcfLoader input files: %s", self.filenames)
 
+        broken = []
         for file in self.filenames:
             # pylint: disable=no-member
             index_filename = fs_utils.tabix_index_filename(file)
             if index_filename is not None:
-                index_filename = fs_utils.sign(index_filename,
-                                               )
-            self.vcfs.append(
-                pysam.VariantFile(
-                    fs_utils.sign(file),
-                    index_filename=index_filename),
-            )
+                index_filename = fs_utils.sign(index_filename)
+            logger.debug(
+                "opening VCF file %s with index %s", file, index_filename)
+
+            try:
+                self.vcfs.append(
+                    pysam.VariantFile(
+                        fs_utils.sign(file),
+                        index_filename=index_filename),
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.error(
+                    "cannot open VCF file %s with index %s: %s",
+                    file, index_filename, exc)
+                broken.append((file, index_filename))
+                continue
+
+        if broken:
+            logger.error("broken files: %s", broken)
+            raise RuntimeError(
+                "cannot open some VCF files")
 
     def _build_vcf_iterators(
         self, region: Region | None,
