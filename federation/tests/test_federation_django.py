@@ -92,6 +92,30 @@ def test_denovo_gene_sets(
     }
 
 
+def test_dgs_gene_sets(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    query = {
+        "geneSetsCollection": "denovo",
+        "geneSetsTypes": [
+            {
+                "datasetId": "TEST_REMOTE_t4c8_study_1",
+                "collections": [
+                    {"personSetId": "phenotype", "types": ["autism"]},
+                ],
+            },
+        ],
+    }
+    response = admin_client.post(
+        "/api/v3/gene_sets/gene_sets",
+        data=json.dumps(query),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+
+
 def test_measures_regressions(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
