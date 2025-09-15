@@ -5,10 +5,12 @@ import textwrap
 
 import pysam
 import pytest
+import pytest_mock
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_vcf import (
     _annotate_vcf,
     _ProcessingArgs,
+    _VCFBatchSource,
     _VCFSource,
     _VCFWriter,
     cli,
@@ -98,6 +100,7 @@ def test_annotate_vcf_simple_batch(
     tmp_path: pathlib.Path,
     test_gpf_instance: GPFInstance,
     sample_vcf: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     out_path = tmp_path / "out.vcf"
     work_dir = tmp_path / "work_dir"
@@ -105,15 +108,22 @@ def test_annotate_vcf_simple_batch(
         {"position_score": "sample_score"},
     ]
 
+    spy = mocker.spy(_VCFBatchSource, "__init__")
+
     _annotate_vcf(
         str(out_path),
         pipeline_config,
         test_gpf_instance.grr.definition,  # type: ignore
         None,
         _ProcessingArgs(
-            str(sample_vcf), "", str(work_dir), 0, 1,
-            False, False,  # noqa: FBT003
-            False,  # noqa: FBT003 # keep_parts
+            input=str(sample_vcf),
+            reannotate="",
+            work_dir=str(work_dir),
+            batch_size=1,
+            region_size=3_000_000,
+            allow_repeated_attributes=False,
+            full_reannotation=False,
+            keep_parts=False,
         ),
     )
 
@@ -121,6 +131,10 @@ def test_annotate_vcf_simple_batch(
     with pysam.VariantFile(str(out_path)) as vcf_file:
         result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["0.1", "0.2", "0.3"]
+
+    # assert correct batch size was actually passed to the reader
+    assert len(spy.call_args.args) == 2
+    assert spy.call_args.kwargs["batch_size"] == 1
 
 
 def test_basic_vcf(

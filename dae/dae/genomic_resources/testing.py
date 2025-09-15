@@ -266,9 +266,9 @@ def setup_gene_models(
         config = textwrap.dedent(f"""
             type: gene_models
 
-            filename: { out_path.name }
+            filename: {out_path.name}
 
-            format: "{ fileformat }"
+            format: "{fileformat}"
         """)
     setup_directories(out_path.parent, {"genomic_resource.yaml": config})
 

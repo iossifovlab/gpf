@@ -187,11 +187,12 @@ def test_annotate_columns_basic_setup(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -223,11 +224,12 @@ def test_annotate_columns_batch_mode(
     )
 
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -270,10 +272,11 @@ def test_annotate_columns_produce_tabix_correctly_position(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=3)
@@ -309,10 +312,11 @@ def test_annotate_columns_produce_tabix_correctly_vcf_allele(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=3)
@@ -348,10 +352,11 @@ def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=5)
@@ -383,11 +388,12 @@ def test_annotate_columns_idempotence(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -427,11 +433,12 @@ def test_annotate_columns_multiple_chrom(
         "chr3\t44\t0.6\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
+    in_file = tmp_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    out_file = tmp_path / "out.txt.gz"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
     work_dir = tmp_path / "output"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
 
@@ -481,10 +488,10 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
         "chr3\t44\t0.6\t0.6\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
+    in_file = tmp_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    out_file = tmp_path / "out.txt.gz"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_duplicate.yaml"
     grr_file = root_path / "grr.yaml"
@@ -536,8 +543,8 @@ def test_annotate_columns_none_values(
         "chr1\t26\tC\tG\t\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.tsv"
-    out_file = root_path / "out.tsv"
+    in_file = tmp_path / "in.tsv"
+    out_file = tmp_path / "out.tsv"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_multiallelic.yaml"
     grr_file = root_path / "grr.yaml"
@@ -573,11 +580,12 @@ def test_annotate_columns_repeated_attributes(
         "chr1\t24\t0.2\t0.201\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation_repeated_attributes.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -610,11 +618,12 @@ def test_annotate_with_pipeline_from_grr(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     pipeline = "res_pipeline"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -644,11 +653,12 @@ def test_annotate_columns_autodetect_columns_with_underscore(
         "chr1\t24\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -676,11 +686,12 @@ def test_annotate_columns_float_precision(
         "chr4\t53\t0.123\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -710,11 +721,12 @@ def test_annotate_columns_internal_attributes(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation_internal_attributes.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -881,11 +893,12 @@ def test_cli_nonexistent_input_file(
     tmp_path: pathlib.Path,
 ) -> None:
     root_path = annotate_directory_fixture
-    in_file = root_path / "blabla_does_not_exist_input.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "blabla_does_not_exist_input.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     with pytest.raises(
         ValueError,
@@ -913,10 +926,11 @@ def test_cli_no_pipeline_in_context(
         chr1    24
     """)
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    grr_file = root_path / "grr.yaml"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
     work_dir = tmp_path / "work"
+
+    grr_file = root_path / "grr.yaml"
 
     setup_denovo(in_file, in_content)
 
@@ -950,11 +964,12 @@ def test_cli_renamed_columns(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -993,11 +1008,12 @@ def test_cli_annotatables_that_need_ref_genome(
         "chr2:34\tdel(3)\t0.35\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -1030,10 +1046,11 @@ def test_annotate_columns_concatenate_empty_regions(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=0, start_col=1, end_col=1)
@@ -1071,10 +1088,11 @@ def test_annotate_columns_region_boundary(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=0, start_col=1, end_col=1)
@@ -1109,11 +1127,12 @@ def test_annotate_columns_keep_parts(
     """)
 
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
+    in_file = tmp_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    out_file = tmp_path / "out.txt.gz"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
     work_dir = tmp_path / "output"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
 
@@ -1162,12 +1181,13 @@ def test_annotate_columns_logging_level(
         chr1    24
     """)
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file = root_path / "annotation.yaml"
-    grr_file = root_path / "grr.yaml"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
     work_dir = tmp_path / "work"
     log_file = tmp_path / "log.txt"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
 
     setup_denovo(in_file, in_content)
 
@@ -1204,11 +1224,12 @@ def test_annotate_columns_append_columns(
         "chr1\t24\t2.0\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 

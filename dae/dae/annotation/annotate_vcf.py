@@ -17,6 +17,7 @@ from pysam import (
     VariantFile,
     VariantHeader,
     VariantRecord,
+    tabix_compress,
     tabix_index,
 )
 
@@ -474,8 +475,12 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _make_vcf_tabix(filepath: str) -> None:
-    tabix_index(filepath, preset="vcf")
+def _tabix_index(filepath: str) -> None:
+    tabix_index(filepath, preset="vcf", force=True)
+
+
+def _tabix_compress(filepath: str) -> None:
+    tabix_compress(filepath, f"{filepath}.gz", force=True)
 
 
 def _add_tasks_plaintext(
@@ -537,11 +542,17 @@ def _add_tasks_tabixed(
         args=[file_paths, output_path, args.keep_parts],
         deps=[annotation_sync],
     )
-    task_graph.create_task(
-        "compress_and_tabix",
-        _make_vcf_tabix,
+    compress_task = task_graph.create_task(
+        "tabix_compress",
+        _tabix_compress,
         args=[output_path],
         deps=[concat_task])
+
+    task_graph.create_task(
+        "tabix_index",
+        _tabix_index,
+        args=[f"{output_path}.gz"],
+        deps=[compress_task])
 
 
 def cli(argv: list[str] | None = None) -> None:
