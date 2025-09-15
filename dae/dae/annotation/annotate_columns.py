@@ -151,8 +151,9 @@ class _CSVSource(Source):
             return self.source_file
         if region is None:
             return self.source_file.fetch()  # type: ignore
+        assert region.start is not None
         return self.source_file.fetch(  # type: ignore
-            region.chrom, region.start, region.stop)
+            region.chrom, region.start - 1, region.stop)
 
     def fetch(
         self, region: Region | None = None,

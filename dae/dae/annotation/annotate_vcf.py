@@ -154,8 +154,9 @@ class _VCFSource(Source):
         if region is None:
             in_file_iter = self.vcf.fetch()
         else:
+            assert region.start is not None
             in_file_iter = self.vcf.fetch(region.chrom,
-                                          region.start,
+                                          region.start - 1,
                                           region.stop)
 
         for vcf_var in in_file_iter:

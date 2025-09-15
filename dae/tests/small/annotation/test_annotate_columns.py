@@ -1047,3 +1047,44 @@ def test_annotate_columns_concatenate_empty_regions(
     with gzip.open(str(out_file), "rt") as res:
         out_file_content = res.readlines()
         assert len(out_file_content) == 5
+
+
+def test_annotate_columns_region_boundary(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        #chrom   pos
+        chr1      1
+        chr1      2
+        chr1      3
+        chr1      4
+        chr1      5
+        chr1      51
+        chr1      52
+
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt.gz"
+    out_file = root_path / "out.txt.gz"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_tabix(in_file, in_content,
+                seq_col=0, start_col=1, end_col=1)
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--region-size", 2,
+            "-j", 1,
+        ]
+    ])
+
+    with gzip.open(str(out_file), "rt") as res:
+        out_file_content = res.readlines()
+        assert len(out_file_content) == 8

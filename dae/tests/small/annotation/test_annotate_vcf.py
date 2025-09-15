@@ -137,7 +137,7 @@ def test_basic_vcf(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
@@ -181,7 +181,7 @@ def test_batch(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
@@ -219,7 +219,7 @@ def test_multiallelic_vcf(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_multiallelic.yaml"
     grr_file = root_path / "grr.yaml"
@@ -264,8 +264,8 @@ def test_vcf_multiple_chroms(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf.gz"
-    out_file = root_path / "out.vcf.gz"
-    out_file_tbi = root_path / "out.vcf.gz.tbi"
+    out_file = tmp_path / "out.vcf.gz"
+    out_file_tbi = tmp_path / "out.vcf.gz.tbi"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
@@ -312,7 +312,7 @@ def test_annotate_vcf_float_precision(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
@@ -350,7 +350,7 @@ def test_annotate_vcf_internal_attributes(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_internal_attributes.yaml"
     grr_file = root_path / "grr.yaml"
@@ -392,7 +392,7 @@ def test_annotate_vcf_forbidden_symbol_replacement(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_forbidden_symbols.yaml"
     grr_file = root_path / "grr.yaml"
@@ -431,7 +431,7 @@ def test_annotate_vcf_none_values(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_multiallelic.yaml"
     grr_file = root_path / "grr.yaml"
@@ -473,7 +473,7 @@ def test_vcf_description_with_quotes(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_quotes_in_description.yaml"
     grr_file = root_path / "grr.yaml"
@@ -512,7 +512,7 @@ def test_annotate_vcf_repeated_attributes(
     """)
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_repeated_attributes.yaml"
     grr_file = root_path / "grr.yaml"
@@ -589,7 +589,7 @@ def test_cli_nonexistent_input_file(
 ) -> None:
     root_path = annotate_directory_fixture
     in_file = root_path / "blabla_does_not_exist_input.vcf"
-    out_file = root_path / "out.vcf"
+    out_file = tmp_path / "out.vcf"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
@@ -658,3 +658,48 @@ def test_writer_does_not_write_empty_values_into_info(
 
     assert "score_1" not in variant.info
     assert "score_2" not in variant.info
+
+
+def test_vcf_region_boundary(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   1   .  C   A   .    .      .    GT     0/1 0/0 0/0
+        chr1   2   .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   3   .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   4   .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   5   .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   6   .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   7   .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf.gz"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation_quotes_in_description.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--region-size", "2",
+        ]
+    ])
+
+    variants = 0
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for _ in vcf_file.fetch():
+            variants += 1
+    assert variants == 7
