@@ -18,6 +18,7 @@ from dae.annotation.annotatable import (
 from dae.annotation.annotate_columns import (
     _CSVBatchSource,
     _CSVBatchWriter,
+    _CSVHeader,
     _CSVSource,
     _CSVWriter,
     cli,
@@ -846,7 +847,8 @@ def test_csv_source_tabixed_fetch_without_region(
 
 def test_csv_writer_bad_input(tmp_path: pathlib.Path) -> None:
     out_path = str(tmp_path / "data.csv")
-    header = ["chrom", "pos", "SCORE"]
+    header = _CSVHeader(
+        ["chrom", "pos"], ["SCORE"])
 
     writer = _CSVWriter(str(out_path), "\t", header)
     with pytest.raises(KeyError), writer:
@@ -860,7 +862,9 @@ def test_csv_writer_bad_input(tmp_path: pathlib.Path) -> None:
 
 def test_csv_batch_writer_bad_input(tmp_path: pathlib.Path) -> None:
     out_path = str(tmp_path / "data.csv")
-    header = ["chrom", "pos", "SCORE"]
+    header = _CSVHeader(
+        ["chrom", "pos"], ["SCORE"],
+    )
 
     writer = _CSVBatchWriter(str(out_path), "\t", header)
     with pytest.raises(KeyError), writer:
@@ -1183,3 +1187,40 @@ def test_annotate_columns_logging_level(
     ])
 
     assert handler.level == expected_level
+
+
+def test_annotate_columns_append_columns(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos  score
+        chr1    23   1.0
+        chr1    24   2.0
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\tscore\n"
+        "chr1\t23\t1.0\t0.1\n"
+        "chr1\t24\t2.0\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content

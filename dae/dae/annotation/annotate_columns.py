@@ -235,7 +235,7 @@ class _CSVWriter(Filter):
         self,
         path: str,
         separator: str,
-        header: list[str],
+        header: _CSVHeader,
     ) -> None:
         self.path = path
         self.separator = separator
@@ -244,7 +244,10 @@ class _CSVWriter(Filter):
 
     def __enter__(self) -> _CSVWriter:
         self.out_file = open(self.path, "w")
-        header_row = self.separator.join(self.header)
+        header_row = self.separator.join([
+            *self.header.input_header,
+            *self.header.annotation_header,
+        ])
         self.out_file.write(f"{header_row}\n")
         return self
 
@@ -265,14 +268,22 @@ class _CSVWriter(Filter):
 
     def filter(self, data: AnnotationsWithSource) -> None:
         context = data.annotations[0].context
-        result = {
-            col: context[col] if col in context else data.source[col]
-            for col in self.header
+        source = data.source
+        source_result = {
+            col: source[col]
+            for col in self.header.input_header
+        }
+        annotation_result = {
+            col: context[col]
+            for col in self.header.annotation_header
         }
         self.out_file.write(
-            self.separator.join(stringify(val) for val in result.values())
-            + "\n",
-        )
+            self.separator.join(
+                stringify(val)
+                for val in [
+                    *source_result.values(), *annotation_result.values()]))
+
+        self.out_file.write("\n")
 
 
 class _CSVBatchWriter(Filter):
@@ -282,7 +293,7 @@ class _CSVBatchWriter(Filter):
         self,
         path: str,
         separator: str,
-        header: list[str],
+        header: _CSVHeader,
     ) -> None:
         self.writer = _CSVWriter(path, separator, header)
 
@@ -310,17 +321,27 @@ class _CSVBatchWriter(Filter):
             self.writer.filter(record)
 
 
+@dataclass
+class _CSVHeader:
+    input_header: list[str]
+    annotation_header: list[str]
+
+
 def _build_new_header(
     input_header: list[str],
     annotation_attributes: list[AttributeInfo],
     attributes_to_delete: Sequence[str],
-) -> list[str]:
+) -> _CSVHeader:
     result = list(input_header)
     for attr_name in attributes_to_delete:
         result.remove(attr_name)
-    return result + [
+    annotation_header = [
         attr.name for attr in annotation_attributes if not attr.internal
     ]
+    return _CSVHeader(
+        result,
+        annotation_header,
+    )
 
 
 def _build_sequential(
