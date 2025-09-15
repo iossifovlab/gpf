@@ -237,7 +237,7 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         "--keep-parts", "--keep-intermediate-files",
         help="Keep intermediate files after annotatio.",
         action="store_true",
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "--no-keep-parts", "--no-keep-intermediate-files",

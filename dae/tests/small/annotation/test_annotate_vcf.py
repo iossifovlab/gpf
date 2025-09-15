@@ -280,7 +280,6 @@ def test_vcf_multiple_chroms(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "--no-keep-parts",
         ]
     ])
 
@@ -703,3 +702,55 @@ def test_vcf_region_boundary(
         for _ in vcf_file.fetch():
             variants += 1
     assert variants == 7
+
+
+def test_vcf_keep_parts(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        ##contig=<ID=chr2>
+        ##contig=<ID=chr3>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr2   33  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr2   34  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr3   43  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr3   44  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf.gz"
+    out_file_tbi = tmp_path / "out.vcf.gz.tbi"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--keep-parts",
+        ]
+    ])
+
+    assert os.path.exists(out_file)
+    assert os.path.exists(out_file_tbi)
+    assert set(os.listdir(work_dir)) == {
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
+        # part files must be kept
+        "in.vcf.gz_annotation_chr1_1_47",
+        "in.vcf.gz_annotation_chr2_1_47",
+        "in.vcf.gz_annotation_chr3_1_47",
+    }

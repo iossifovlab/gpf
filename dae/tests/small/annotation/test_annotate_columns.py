@@ -441,7 +441,6 @@ def test_annotate_columns_multiple_chrom(
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
-            "--no-keep-parts",
         ]
     ])
 
@@ -497,7 +496,6 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
             "--allow-repeated-attributes",
-            "--no-keep-parts",
         ]
     ])
 
@@ -1088,3 +1086,51 @@ def test_annotate_columns_region_boundary(
     with gzip.open(str(out_file), "rt") as res:
         out_file_content = res.readlines()
         assert len(out_file_content) == 8
+
+
+def test_annotate_columns_keep_parts(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+        chr2    33
+        chr2    34
+        chr3    43
+        chr3    44
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    in_file_gz = in_file.with_suffix(".txt.gz")
+    out_file = root_path / "out.txt.gz"
+    out_file_tbi = root_path / "out.txt.gz.tbi"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
+    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
+                      start_col=1, end_col=1)
+
+    cli([
+        str(a) for a in [
+            in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
+            "-o", out_file, "-j", 1,
+            "--keep-parts",
+        ]
+    ])
+
+    assert os.path.exists(out_file)
+    assert os.path.exists(out_file_tbi)
+    assert set(os.listdir(work_dir)) == {
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
+        # part files must be kept
+        "in.txt.gz_annotation_chr1_1_47",
+        "in.txt.gz_annotation_chr2_1_47",
+        "in.txt.gz_annotation_chr3_1_47",
+    }
