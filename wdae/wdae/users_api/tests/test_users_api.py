@@ -1,17 +1,19 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 import json
-from pprint import pprint
 
 import pytest
 from django.test.client import Client
-from rest_framework import status  # type: ignore
+from rest_framework import status
 from utils.email_regex import email_regex, is_email_valid
 from utils.password_requirements import is_password_valid
 
 from users_api.models import WdaeUser
 
 
-def test_invalid_reset_code(client: Client, researcher: WdaeUser) -> None:
+def test_invalid_reset_code(
+    client: Client,
+    researcher: WdaeUser,  # noqa: ARG001
+) -> None:
     url = "/api/v3/users/reset_password"
     session = client.session
     session.update({"reset_code": "asdasfasfgadg"})
@@ -42,7 +44,6 @@ def test_register_existing_user(client: Client, researcher: WdaeUser) -> None:
         "name": researcher.name,
         "email": researcher.email,
     }
-    pprint(data)
 
     response = client.post(
         url, json.dumps(data), content_type="application/json", format="json",
@@ -75,7 +76,7 @@ def test_email_validaiton() -> None:
 
 
 def test_password_validation() -> None:
-    generic_password = "esg09dusfd"
+    generic_password = "esg09dusfd"  # noqa:S105
 
     # Don't accept passwords shorter than 10 symbols
     for i in range(10):
@@ -90,37 +91,50 @@ def test_password_validation() -> None:
 
 
 @pytest.mark.parametrize(
-    "page,status_code,length,first_email,last_email",
+    "page,page_size,status_code,length,first_email,last_email",
     [
         (
-            1, status.HTTP_200_OK, 25,
+            1, None, status.HTTP_200_OK, 25,
             "admin@example.com", "user30@example.com",
         ),
         (
-            2, status.HTTP_200_OK, 25,
+            2, None, status.HTTP_200_OK, 25,
             "user31@example.com", "user53@example.com",
         ),
         (
-            3, status.HTTP_200_OK, 25,
+            3, None, status.HTTP_200_OK, 25,
             "user54@example.com", "user76@example.com",
         ),
         (
-            4, status.HTTP_200_OK, 25,
+            4, None, status.HTTP_200_OK, 25,
             "user77@example.com", "user99@example.com",
         ),
-        (5, status.HTTP_200_OK, 2, "user9@example.com", "user@example.com"),
-        (6, status.HTTP_204_NO_CONTENT, None, None, None),
+        (5, None, status.HTTP_200_OK, 2, "user9@example.com",
+         "user@example.com"),
+        (6, None, status.HTTP_204_NO_CONTENT, None, None, None),
+        (
+            1, 50, status.HTTP_200_OK, 50,
+            "admin@example.com", "user53@example.com",
+        ),
+        (
+            1, 100, status.HTTP_200_OK, 100,
+            "admin@example.com", "user99@example.com",
+        ),
     ],
 )
 def test_users_pagination(
     admin_client: Client,
-    hundred_users: list[WdaeUser],
-    page: int, status_code: int,
+    hundred_users: list[WdaeUser],  # noqa: ARG001
+    page: int,
+    page_size: int | None,
+    status_code: int,
     length: int,
     first_email: str | None,
     last_email: str | None,
 ) -> None:
     url = f"/api/v3/users?page={page}"
+    if page_size is not None:
+        url = f"{url}&page_size={page_size}"
     response = admin_client.get(url)
     assert response.status_code == status_code
 
@@ -139,7 +153,7 @@ def test_users_pagination(
 
 def test_users_search(
     admin_client: Client,
-    hundred_users: list[WdaeUser],
+    hundred_users: list[WdaeUser],  # noqa: ARG001
 ) -> None:
     url = "/api/v3/users?search=user9"
     response = admin_client.get(url)
@@ -159,7 +173,7 @@ def test_users_search(
 )
 def test_users_search_pagination(
     admin_client: Client,
-    hundred_users: list[WdaeUser],
+    hundred_users: list[WdaeUser],  # noqa: ARG001
     page: int,
     status_code: int,
     length: int | None,
