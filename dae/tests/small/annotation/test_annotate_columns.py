@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import gzip
+import logging
 import os
 import pathlib
 import textwrap
@@ -31,6 +32,7 @@ from dae.genomic_resources.genomic_context import (
     SimpleGenomicContext,
 )
 from dae.genomic_resources.testing import setup_tabix
+from dae.task_graph.logging import FsspecHandler
 from dae.testing import setup_denovo, setup_genome
 
 pytestmark = pytest.mark.usefixtures("clear_context")
@@ -1134,3 +1136,50 @@ def test_annotate_columns_keep_parts(
         "in.txt.gz_annotation_chr2_1_47",
         "in.txt.gz_annotation_chr3_1_47",
     }
+
+
+@pytest.mark.parametrize("verbosity, expected_level", [
+    ("", logging.WARNING),
+    ("-v", logging.INFO),
+    ("-vv", logging.DEBUG),
+    ("-vvv", logging.DEBUG),
+    ("-vvvv", logging.DEBUG),
+])
+def test_annotate_columns_logging_level(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+    verbosity: str,
+    expected_level: int,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = tmp_path / "work"
+    log_file = tmp_path / "log.txt"
+
+    setup_denovo(in_file, in_content)
+
+    handler = FsspecHandler(str(log_file))
+    mocker.patch(
+        "dae.task_graph.logging.FsspecHandler",
+        return_value=handler,
+    )
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            verbosity,
+        ] if a
+    ])
+
+    assert handler.level == expected_level
