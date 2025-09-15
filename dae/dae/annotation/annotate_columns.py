@@ -452,23 +452,19 @@ def _concat(
     """Concatenate multiple CSV files into a single CSV file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
-    header = Path(partfile_paths[0]).read_text().split("\n")[0]
+    with open(partfile_paths[0], "r") as partfile:
+        header = partfile.readline().strip()
 
     with open(output_path, "w") as outfile:
         outfile.write(header)
-        for path in partfile_paths:
-            # read partfile content
-            partfile_content = Path(path).read_text().strip("\r\n")
-            # remove header from content
-            partfile_content = "\n".join(partfile_content.split("\n")[1:])
 
-            # if the partfile is empty, skip it
-            if not partfile_content:
-                continue
-            # newline to separate from previous content
-            outfile.write("\n")
-            # write to output
-            outfile.write(partfile_content)
+        for path in partfile_paths:
+            with open(path, "r") as partfile:
+                partfile.readline()  # skip header
+                for line in partfile:
+                    outfile.write("\n")
+                    outfile.write(line.strip("\r\n"))
+
         outfile.write("\n")
 
     if not keep_parts:
