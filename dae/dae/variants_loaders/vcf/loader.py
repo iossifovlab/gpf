@@ -313,10 +313,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         fs_utils.sign(file),
                         index_filename=index_filename),
                 )
-            except Exception as exc:  # noqa: BLE001
-                logger.error(
-                    "cannot open VCF file %s with index %s: %s",
-                    file, index_filename, exc)
+            except Exception:
+                logger.exception(
+                    "cannot open VCF file %s with index %s",
+                    file, index_filename)
                 broken.append((file, index_filename))
                 continue
 
