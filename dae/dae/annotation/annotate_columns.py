@@ -14,7 +14,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, TextIO
 
-from pysam import TabixFile
+from pysam import TabixFile, tabix_compress, tabix_index
 
 from dae.annotation.annotate_utils import (
     add_common_annotation_arguments,
@@ -24,7 +24,6 @@ from dae.annotation.annotate_utils import (
     handle_default_args,
     produce_partfile_paths,
     produce_regions,
-    produce_tabix_index,
     stringify,
 )
 from dae.annotation.annotation_config import (
@@ -53,6 +52,11 @@ from dae.annotation.processing_pipeline import (
 )
 from dae.annotation.record_to_annotatable import (
     RECORD_TO_ANNOTATABLE_CONFIGURATION,
+    DaeAlleleRecordToAnnotatable,
+    RecordToCNVAllele,
+    RecordToPosition,
+    RecordToRegion,
+    RecordToVcfAllele,
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
@@ -151,8 +155,9 @@ class _CSVSource(Source):
             return self.source_file
         if region is None:
             return self.source_file.fetch()  # type: ignore
+        assert region.start is not None
         return self.source_file.fetch(  # type: ignore
-            region.chrom, region.start, region.stop)
+            region.chrom, region.start - 1, region.stop)
 
     def fetch(
         self, region: Region | None = None,
@@ -234,7 +239,7 @@ class _CSVWriter(Filter):
         self,
         path: str,
         separator: str,
-        header: list[str],
+        header: _CSVHeader,
     ) -> None:
         self.path = path
         self.separator = separator
@@ -243,7 +248,10 @@ class _CSVWriter(Filter):
 
     def __enter__(self) -> _CSVWriter:
         self.out_file = open(self.path, "w")
-        header_row = self.separator.join(self.header)
+        header_row = self.separator.join([
+            *self.header.input_header,
+            *self.header.annotation_header,
+        ])
         self.out_file.write(f"{header_row}\n")
         return self
 
@@ -264,14 +272,22 @@ class _CSVWriter(Filter):
 
     def filter(self, data: AnnotationsWithSource) -> None:
         context = data.annotations[0].context
-        result = {
-            col: context[col] if col in context else data.source[col]
-            for col in self.header
+        source = data.source
+        source_result = {
+            col: source[col]
+            for col in self.header.input_header
+        }
+        annotation_result = {
+            col: context[col]
+            for col in self.header.annotation_header
         }
         self.out_file.write(
-            self.separator.join(stringify(val) for val in result.values())
-            + "\n",
-        )
+            self.separator.join(
+                stringify(val)
+                for val in [
+                    *source_result.values(), *annotation_result.values()]))
+
+        self.out_file.write("\n")
 
 
 class _CSVBatchWriter(Filter):
@@ -281,7 +297,7 @@ class _CSVBatchWriter(Filter):
         self,
         path: str,
         separator: str,
-        header: list[str],
+        header: _CSVHeader,
     ) -> None:
         self.writer = _CSVWriter(path, separator, header)
 
@@ -309,17 +325,27 @@ class _CSVBatchWriter(Filter):
             self.writer.filter(record)
 
 
+@dataclass
+class _CSVHeader:
+    input_header: list[str]
+    annotation_header: list[str]
+
+
 def _build_new_header(
     input_header: list[str],
     annotation_attributes: list[AttributeInfo],
     attributes_to_delete: Sequence[str],
-) -> list[str]:
+) -> _CSVHeader:
     result = list(input_header)
     for attr_name in attributes_to_delete:
         result.remove(attr_name)
-    return result + [
+    annotation_header = [
         attr.name for attr in annotation_attributes if not attr.internal
     ]
+    return _CSVHeader(
+        result,
+        annotation_header,
+    )
 
 
 def _build_sequential(
@@ -430,28 +456,84 @@ def _concat(
     """Concatenate multiple CSV files into a single CSV file *in order*."""
     # Get any header from the partfiles, they should all be equal
     # and usable as a final output header
-    header = Path(partfile_paths[0]).read_text().split("\n")[0]
+    with open(partfile_paths[0], "r") as partfile:
+        header = partfile.readline().strip()
 
     with open(output_path, "w") as outfile:
         outfile.write(header)
-        for path in partfile_paths:
-            # read partfile content
-            partfile_content = Path(path).read_text().strip("\r\n")
-            # remove header from content
-            partfile_content = "\n".join(partfile_content.split("\n")[1:])
 
-            # if the partfile is empty, skip it
-            if not partfile_content:
-                continue
-            # newline to separate from previous content
-            outfile.write("\n")
-            # write to output
-            outfile.write(partfile_content)
+        for path in partfile_paths:
+            with open(path, "r") as partfile:
+                partfile.readline()  # skip header
+                for line in partfile:
+                    outfile.write("\n")
+                    outfile.write(line.strip("\r\n"))
+
         outfile.write("\n")
 
     if not keep_parts:
         for partfile_path in partfile_paths:
             os.remove(partfile_path)
+
+
+def _read_header(filepath: str, separator: str = "\t") -> list[str]:
+    """Extract header from columns file."""
+    if filepath.endswith(".gz"):
+        file = gzip.open(filepath, "rt")  # noqa: SIM115
+    else:
+        file = open(filepath, "r")  # noqa: SIM115
+    with file:
+        header = file.readline()
+    return [c.strip() for c in header.split(separator)]
+
+
+def _tabix_compress(filepath: str) -> None:
+    tabix_compress(filepath, f"{filepath}.gz", force=True)
+
+
+def _tabix_index(filepath: str, args: dict | None = None) -> None:
+    """Produce a tabix index file for the given variants file."""
+    header = _read_header(filepath)
+    line_skip = 0 if header[0].startswith("#") else 1
+    header = [c.strip("#") for c in header]
+    record_to_annotatable = build_record_to_annotatable(
+        args if args is not None else {},
+        set(header),
+    )
+    if isinstance(record_to_annotatable, (RecordToRegion,
+                                          RecordToCNVAllele)):
+        seq_col = header.index(record_to_annotatable.chrom_col)
+        start_col = header.index(record_to_annotatable.pos_beg_col)
+        end_col = header.index(record_to_annotatable.pos_end_col)
+    elif isinstance(record_to_annotatable, RecordToVcfAllele):
+        seq_col = header.index(record_to_annotatable.chrom_col)
+        start_col = header.index(record_to_annotatable.pos_col)
+        end_col = start_col
+    elif isinstance(
+            record_to_annotatable,
+            (RecordToPosition, DaeAlleleRecordToAnnotatable)):
+        seq_col = header.index(record_to_annotatable.chrom_column)
+        start_col = header.index(record_to_annotatable.pos_column)
+        end_col = start_col
+    else:
+        raise TypeError(
+            "Could not generate tabix index: record"
+            f" {type(record_to_annotatable)} is of unsupported type.")
+    logger.info(
+        "producing tabix index for '%s': "
+        "tabix_index(%s, seq_col=%s, start_col=%s, end_col=%s, "
+        "line_skip=%s, force=True)",
+        filepath, filepath, seq_col, start_col, end_col, line_skip)
+    try:
+        tabix_index(filepath,
+                    seq_col=seq_col,
+                    start_col=start_col,
+                    end_col=end_col,
+                    line_skip=line_skip,
+                    force=True)
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("failed to create tabix index for '%s'", filepath)
+        raise
 
 
 def _add_tasks_tabixed(
@@ -494,11 +576,17 @@ def _add_tasks_tabixed(
         args=[file_paths, output_path, args.keep_parts],
         deps=[annotation_sync])
 
-    task_graph.create_task(
-        "compress_and_tabix",
-        produce_tabix_index,
-        args=[output_path, args.columns_args],
+    compress_task = task_graph.create_task(
+        "tabix_compress",
+        _tabix_compress,
+        args=[output_path],
         deps=[concat_task])
+
+    task_graph.create_task(
+        "tabix_index",
+        _tabix_index,
+        args=[f"{output_path}.gz", args.columns_args],
+        deps=[compress_task])
 
 
 def _add_tasks_plaintext(

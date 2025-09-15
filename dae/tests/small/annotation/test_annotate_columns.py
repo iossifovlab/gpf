@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import gzip
+import logging
 import os
 import pathlib
 import textwrap
@@ -17,6 +18,7 @@ from dae.annotation.annotatable import (
 from dae.annotation.annotate_columns import (
     _CSVBatchSource,
     _CSVBatchWriter,
+    _CSVHeader,
     _CSVSource,
     _CSVWriter,
     cli,
@@ -31,6 +33,7 @@ from dae.genomic_resources.genomic_context import (
     SimpleGenomicContext,
 )
 from dae.genomic_resources.testing import setup_tabix
+from dae.task_graph.logging import FsspecHandler
 from dae.testing import setup_denovo, setup_genome
 
 pytestmark = pytest.mark.usefixtures("clear_context")
@@ -184,11 +187,12 @@ def test_annotate_columns_basic_setup(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -220,11 +224,12 @@ def test_annotate_columns_batch_mode(
     )
 
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -267,10 +272,11 @@ def test_annotate_columns_produce_tabix_correctly_position(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=3)
@@ -306,10 +312,11 @@ def test_annotate_columns_produce_tabix_correctly_vcf_allele(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=3)
@@ -345,10 +352,11 @@ def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=1, start_col=3, end_col=5)
@@ -380,11 +388,12 @@ def test_annotate_columns_idempotence(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -424,11 +433,12 @@ def test_annotate_columns_multiple_chrom(
         "chr3\t44\t0.6\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
+    in_file = tmp_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    out_file = tmp_path / "out.txt.gz"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
     work_dir = tmp_path / "output"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
 
@@ -441,7 +451,6 @@ def test_annotate_columns_multiple_chrom(
         str(a) for a in [
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
-            "--no-keep-parts",
         ]
     ])
 
@@ -479,10 +488,10 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
         "chr3\t44\t0.6\t0.6\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
+    in_file = tmp_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt.gz"
-    out_file_tbi = root_path / "out.txt.gz.tbi"
+    out_file = tmp_path / "out.txt.gz"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_duplicate.yaml"
     grr_file = root_path / "grr.yaml"
@@ -497,7 +506,6 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
             in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
             "-o", out_file, "-j", 1,
             "--allow-repeated-attributes",
-            "--no-keep-parts",
         ]
     ])
 
@@ -535,8 +543,8 @@ def test_annotate_columns_none_values(
         "chr1\t26\tC\tG\t\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.tsv"
-    out_file = root_path / "out.tsv"
+    in_file = tmp_path / "in.tsv"
+    out_file = tmp_path / "out.tsv"
     work_dir = tmp_path / "output"
     annotation_file = root_path / "annotation_multiallelic.yaml"
     grr_file = root_path / "grr.yaml"
@@ -572,11 +580,12 @@ def test_annotate_columns_repeated_attributes(
         "chr1\t24\t0.2\t0.201\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation_repeated_attributes.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -609,11 +618,12 @@ def test_annotate_with_pipeline_from_grr(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     pipeline = "res_pipeline"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -643,11 +653,12 @@ def test_annotate_columns_autodetect_columns_with_underscore(
         "chr1\t24\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -675,11 +686,12 @@ def test_annotate_columns_float_precision(
         "chr4\t53\t0.123\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -709,11 +721,12 @@ def test_annotate_columns_internal_attributes(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation_internal_attributes.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -846,7 +859,8 @@ def test_csv_source_tabixed_fetch_without_region(
 
 def test_csv_writer_bad_input(tmp_path: pathlib.Path) -> None:
     out_path = str(tmp_path / "data.csv")
-    header = ["chrom", "pos", "SCORE"]
+    header = _CSVHeader(
+        ["chrom", "pos"], ["SCORE"])
 
     writer = _CSVWriter(str(out_path), "\t", header)
     with pytest.raises(KeyError), writer:
@@ -860,7 +874,9 @@ def test_csv_writer_bad_input(tmp_path: pathlib.Path) -> None:
 
 def test_csv_batch_writer_bad_input(tmp_path: pathlib.Path) -> None:
     out_path = str(tmp_path / "data.csv")
-    header = ["chrom", "pos", "SCORE"]
+    header = _CSVHeader(
+        ["chrom", "pos"], ["SCORE"],
+    )
 
     writer = _CSVBatchWriter(str(out_path), "\t", header)
     with pytest.raises(KeyError), writer:
@@ -877,11 +893,12 @@ def test_cli_nonexistent_input_file(
     tmp_path: pathlib.Path,
 ) -> None:
     root_path = annotate_directory_fixture
-    in_file = root_path / "blabla_does_not_exist_input.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "blabla_does_not_exist_input.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     with pytest.raises(
         ValueError,
@@ -909,10 +926,11 @@ def test_cli_no_pipeline_in_context(
         chr1    24
     """)
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    grr_file = root_path / "grr.yaml"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
     work_dir = tmp_path / "work"
+
+    grr_file = root_path / "grr.yaml"
 
     setup_denovo(in_file, in_content)
 
@@ -946,11 +964,12 @@ def test_cli_renamed_columns(
         "chr1\t24\t0.2\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -989,11 +1008,12 @@ def test_cli_annotatables_that_need_ref_genome(
         "chr2:34\tdel(3)\t0.35\n"
     )
     root_path = annotate_directory_fixture
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
@@ -1026,10 +1046,11 @@ def test_annotate_columns_concatenate_empty_regions(
 
     root_path = annotate_directory_fixture
     in_file = tmp_path / "in.txt.gz"
-    out_file = root_path / "out.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
-    work_dir = tmp_path / "work"
 
     setup_tabix(in_file, in_content,
                 seq_col=0, start_col=1, end_col=1)
@@ -1047,3 +1068,180 @@ def test_annotate_columns_concatenate_empty_regions(
     with gzip.open(str(out_file), "rt") as res:
         out_file_content = res.readlines()
         assert len(out_file_content) == 5
+
+
+def test_annotate_columns_region_boundary(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        #chrom   pos
+        chr1      1
+        chr1      2
+        chr1      3
+        chr1      4
+        chr1      5
+        chr1      51
+        chr1      52
+
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_tabix(in_file, in_content,
+                seq_col=0, start_col=1, end_col=1)
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--region-size", 2,
+            "-j", 1,
+        ]
+    ])
+
+    with gzip.open(str(out_file), "rt") as res:
+        out_file_content = res.readlines()
+        assert len(out_file_content) == 8
+
+
+def test_annotate_columns_keep_parts(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+        chr2    33
+        chr2    34
+        chr3    43
+        chr3    44
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    in_file_gz = in_file.with_suffix(".txt.gz")
+    out_file = tmp_path / "out.txt.gz"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
+    work_dir = tmp_path / "output"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
+    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
+                      start_col=1, end_col=1)
+
+    cli([
+        str(a) for a in [
+            in_file_gz, annotation_file, "-w", work_dir, "--grr", grr_file,
+            "-o", out_file, "-j", 1,
+            "--keep-parts",
+        ]
+    ])
+
+    assert os.path.exists(out_file)
+    assert os.path.exists(out_file_tbi)
+    assert set(os.listdir(work_dir)) == {
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
+        # part files must be kept
+        "in.txt.gz_annotation_chr1_1_47",
+        "in.txt.gz_annotation_chr2_1_47",
+        "in.txt.gz_annotation_chr3_1_47",
+    }
+
+
+@pytest.mark.parametrize("verbosity, expected_level", [
+    ("", logging.WARNING),
+    ("-v", logging.INFO),
+    ("-vv", logging.DEBUG),
+    ("-vvv", logging.DEBUG),
+    ("-vvvv", logging.DEBUG),
+])
+def test_annotate_columns_logging_level(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+    verbosity: str,
+    expected_level: int,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+    log_file = tmp_path / "log.txt"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    handler = FsspecHandler(str(log_file))
+    mocker.patch(
+        "dae.task_graph.logging.FsspecHandler",
+        return_value=handler,
+    )
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            verbosity,
+        ] if a
+    ])
+
+    assert handler.level == expected_level
+
+
+def test_annotate_columns_append_columns(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos  score
+        chr1    23   1.0
+        chr1    24   2.0
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\tscore\n"
+        "chr1\t23\t1.0\t0.1\n"
+        "chr1\t24\t2.0\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content

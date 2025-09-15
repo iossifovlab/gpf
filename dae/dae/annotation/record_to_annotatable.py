@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import argparse
+import logging
 
 from dae.annotation.annotatable import (
     Annotatable,
@@ -13,6 +14,8 @@ from dae.annotation.annotatable import (
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.cnv_utils import cnv_variant_type, cshl2cnv_variant
 from dae.utils.dae_utils import cshl2vcf_variant, dae2vcf_variant
+
+logger = logging.getLogger(__name__)
 
 
 class RecordToAnnotable(abc.ABC):
@@ -174,6 +177,12 @@ def build_record_to_annotatable(
             [cn for cn in renamed_columns if cn not in available_columns],
         ) == 0
         if all_available:
+            logger.info(
+                "record to annotatable using %s(%s, ref_genome=%s)",
+                record_to_annotatable_class.__name__,
+                tuple(renamed_columns),
+                ref_genome.resource_id if ref_genome else None,
+            )
             return record_to_annotatable_class(
                 tuple(renamed_columns), ref_genome,
             )

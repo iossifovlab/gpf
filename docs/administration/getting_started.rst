@@ -47,7 +47,6 @@ Afterwards, install the `gpf_wdae` conda package:
         -c conda-forge \
         -c bioconda \
         -c iossifovlab \
-        -c defaults \
         gpf_wdae
 
 This command is going to install GPF and all of its dependencies.

@@ -62,7 +62,7 @@ def configure_task_logging(
 
     if verbosity == 1:
         loglevel = logging.INFO
-    elif verbosity == 2:
+    elif verbosity >= 2:
         loglevel = logging.DEBUG
     else:
         loglevel = logging.WARNING
