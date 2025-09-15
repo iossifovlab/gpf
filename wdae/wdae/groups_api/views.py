@@ -1,5 +1,5 @@
 import logging
-from typing import Type
+from typing import ClassVar
 
 from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
@@ -33,7 +33,7 @@ class GroupsViewSet(
     # pylint: disable=too-many-ancestors
     """Groups view set."""
 
-    authentication_classes = [
+    authentication_classes: ClassVar[list[type]] = [
         SessionAuthenticationWithoutCSRF, GPFOAuth2Authentication]
 
     serializer_class = GroupSerializer
@@ -42,9 +42,9 @@ class GroupsViewSet(
     search_fields = ("name",)
     lookup_field = "name"
 
-    def get_serializer_class(
+    def get_serializer_class(  # pyright: ignore
         self,
-    ) -> Type[GroupSerializer]:
+    ) -> type[GroupSerializer]:
         serializer_class = self.serializer_class
 
         if self.action in {"list", "retrieve"}:
@@ -52,9 +52,9 @@ class GroupsViewSet(
         elif self.action == "create":
             serializer_class = GroupCreateSerializer
 
-        return serializer_class
+        return serializer_class  # pyright: ignore
 
-    def get_queryset(self) -> QuerySet:
+    def get_queryset(self) -> QuerySet:  # pyright: ignore
         # Get groups that have users or datasets tagged with it
         return Group.objects.annotate(
             users_count=Count("user"), datasets_count=Count("dataset"),
@@ -73,11 +73,15 @@ def add_group_to_dataset(request: Request) -> Response:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
         return Response(status=status.HTTP_403_FORBIDDEN)
-    if not ("datasetId" in request.data and "groupName" in request.data):
+    if not (
+            "datasetId" in request.data and  # pyright: ignore
+            "groupName" in request.data):  # pyright: ignore
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    dataset = Dataset.objects.get(dataset_id=request.data["datasetId"])
-    group, _ = Group.objects.get_or_create(name=request.data["groupName"])
+    dataset = Dataset.objects.get(
+        dataset_id=request.data["datasetId"])  # pyright: ignore
+    group, _ = Group.objects.get_or_create(
+        name=request.data["groupName"])  # pyright: ignore
     dataset.groups.add(group)
     return Response(status=status.HTTP_200_OK)
 
@@ -92,11 +96,15 @@ def remove_group_from_dataset(request: Request) -> Response:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
         return Response(status=status.HTTP_403_FORBIDDEN)
-    if not ("datasetId" in request.data and "groupId" in request.data):
+    if not (
+            "datasetId" in request.data  # pyright: ignore
+            and "groupId" in request.data):  # pyright: ignore
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    dataset = Dataset.objects.get(dataset_id=request.data["datasetId"])
-    group = Group.objects.get(pk=request.data["groupId"])
+    dataset = Dataset.objects.get(
+        dataset_id=request.data["datasetId"])  # pyright: ignore
+    group = Group.objects.get(
+        pk=request.data["groupId"])  # pyright: ignore
     if group.name in dataset.default_groups:
         return Response(status=status.HTTP_403_FORBIDDEN)
     dataset.groups.remove(group)
@@ -111,11 +119,13 @@ def add_user_to_group(request: Request) -> Response:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
         return Response(status=status.HTTP_403_FORBIDDEN)
-    if not ("userEmail" in request.data and "groupName" in request.data):
+    if not (
+            "userEmail" in request.data  # pyright: ignore
+            and "groupName" in request.data):  # pyright: ignore
         return Response(status=status.HTTP_400_BAD_REQUEST)
     data = request.data
-    email = data["userEmail"]
-    group_name = data["groupName"]
+    email = data["userEmail"]  # pyright: ignore
+    group_name = data["groupName"]  # pyright: ignore
     user_model = get_user_model()
 
     if not user_model.objects.filter(email=email).exists():
@@ -125,7 +135,7 @@ def add_user_to_group(request: Request) -> Response:
 
     group, _ = Group.objects.get_or_create(name=group_name)
 
-    user.groups.add(group)
+    user.groups.add(group)  # pyright: ignore
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -137,11 +147,13 @@ def remove_user_from_group(request: Request) -> Response:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
         return Response(status=status.HTTP_403_FORBIDDEN)
-    if not ("userEmail" in request.data and "groupName" in request.data):
+    if not (
+            "userEmail" in request.data  # pyright: ignore
+            and "groupName" in request.data):  # pyright: ignore
         return Response(status=status.HTTP_400_BAD_REQUEST)
     data = request.data
-    email = data["userEmail"]
-    group_name = data["groupName"]
+    email = data["userEmail"]  # pyright: ignore
+    group_name = data["groupName"]  # pyright: ignore
     user_model = get_user_model()
 
     if not user_model.objects.filter(email=email).exists():
@@ -154,5 +166,5 @@ def remove_user_from_group(request: Request) -> Response:
         return Response(status=status.HTTP_404_NOT_FOUND)
     group = Group.objects.get(name=group_name)
 
-    user.groups.remove(group)
+    user.groups.remove(group)  # pyright: ignore
     return Response(status=status.HTTP_204_NO_CONTENT)

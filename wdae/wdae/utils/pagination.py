@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 class WdaePageNumberPagination(pagination.PageNumberPagination):
     """Custom pagination class that handles empty pages."""
 
+    page_size_query_param = "page_size"
+
     def paginate_queryset(
         self,
         queryset: Any,

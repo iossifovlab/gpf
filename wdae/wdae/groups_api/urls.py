@@ -17,4 +17,5 @@ urlpatterns = [
     re_path(r"^groups/revoke-permission/?$", remove_group_from_dataset),
     re_path(r"^groups/add-user/?$", add_user_to_group),
     re_path(r"^groups/remove-user/?$", remove_user_from_group),
-] + router.urls
+    *router.urls,
+]
