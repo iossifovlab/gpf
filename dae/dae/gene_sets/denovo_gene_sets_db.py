@@ -70,6 +70,10 @@ class DenovoGeneSetsDb:
                 gene_sets_types_legend=dgs["legend"],
             )
 
+            dgsc.cache = dgsc._convert_cache_innermost_types(  # noqa: SLF001
+                dgsc.cache, list, set,
+            )
+
             self._gene_set_configs_cache[study_id] = dgsc.config
             self._gene_set_collections_cache[study_id] = dgsc
 
