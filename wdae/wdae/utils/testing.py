@@ -235,7 +235,7 @@ f1.1     p1       dad1  mom1  2   2      prb  autism
 f1.1     s1       dad1  mom1  1   1      sib  unaffected
 f1.3     mom3     0     0     2   1      mom  unaffected
 f1.3     dad3     0     0     1   1      dad  unaffected
-f1.3     p3       dad3  mom3  2   2      prb  autism
+f1.3     p3       dad3  mom3  1   2      prb  autism
 f1.3     s3       dad3  mom3  2   1      sib  unaffected
         """)
     vcf_path1 = setup_vcf(
@@ -248,10 +248,10 @@ f1.3     s3       dad3  mom3  2   1      sib  unaffected
 ##contig=<ID=chr3>
 #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT mom1 dad1 p1  s1  mom3 dad3 p3  s3
 chr1   4   .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/0 0/1  0/2  0/2 0/0
-chr1   54  .  T   C    .    .      .    GT     0/1  0/1  0/1 0/1 0/0  0/0  0/1 0/1
+chr1   54  .  T   C    .    .      .    GT     0/1  1/1  1/1 0/1 0/0  0/0  0/1 0/1
 chr1   90  .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/2 0/1  0/2  0/1 0/2
 chr1   100 .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/0 0/2  0/0  0/0 0/0
-chr1   119 .  A   G,C  .    .      .    GT     0/0  0/0  0/2 0/2 0/1  0/2  0/1 0/2
+chr1   119 .  A   G,C  .    .      .    GT     0/0  0/0  0/2 0/2 0/1  2/2  1/1 0/2
 chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0/1
         """)  # noqa: E501
 
