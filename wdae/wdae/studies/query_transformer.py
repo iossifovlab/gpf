@@ -217,11 +217,10 @@ class QueryTransformer(QueryTransformerProtocol):
             roles_query.append("prb and sib")
 
         if len(roles_query) > 0 and zygosity is not None:
-            current_query = " or ".join(f"({r})" for r in roles_query)
             roles_query = [
                 update_attribute_query_with_compounds(
-                    current_query, zygosity,
-                ).lstrip("(").rstrip(")"),
+                    q, zygosity,
+                ) for q in roles_query
             ]
 
         if "neither" in present_in_child:
@@ -249,16 +248,18 @@ class QueryTransformer(QueryTransformerProtocol):
             roles_query.append("mom and dad")
 
         if len(roles_query) > 0 and zygosity is not None:
-            current_query = " or ".join(f"({r})" for r in roles_query)
             roles_query = [
                 update_attribute_query_with_compounds(
-                    current_query, zygosity,
-                ).lstrip("(").rstrip(")"),
+                    q, zygosity,
+                ) for q in roles_query
             ]
 
         if "neither" in present_in_parent:
             roles_query.append("not mom and not dad")
-        if (len(roles_query) == 4) or len(roles_query) == 0:
+        if (
+            (len(roles_query) == 4 and zygosity is None)
+            or len(roles_query) == 0
+        ):
             return None
         if len(roles_query) == 1:
             return roles_query[0]
@@ -401,22 +402,22 @@ class QueryTransformer(QueryTransformerProtocol):
 
     def _apply_zygosity(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         valid_zygosities = [v.name for v in Zygosity]
-        if "genders" in kwargs and "zygosityInSexes" in kwargs:
-            zygosity = kwargs.pop("zygosityInSexes")
+        if "genders" in kwargs and "zygosityInGenders" in kwargs:
+            zygosity = kwargs.pop("zygosityInGenders")
             if not isinstance(zygosity, str):
                 raise ValueError(
-                    "Invalid zygosity in sexes argument - not a string.",
+                    "Invalid zygosity in genders argument - not a string.",
                 )
             if zygosity not in valid_zygosities:
                 raise ValueError(
-                    f"Invalid zygosity in sexes {zygosity}, "
+                    f"Invalid zygosity in genders {zygosity}, "
                     f"expected one of {valid_zygosities}",
                 )
             kwargs["genders"] = update_attribute_query_with_compounds(
                 kwargs["genders"], zygosity,
             )
 
-        if "status" in kwargs and "zygosityInStatus" in kwargs:
+        if "affected_statuses" in kwargs and "zygosityInStatus" in kwargs:
             zygosity = kwargs.pop("zygosityInStatus")
             if not isinstance(zygosity, str):
                 raise ValueError(
@@ -430,9 +431,10 @@ class QueryTransformer(QueryTransformerProtocol):
                     f"Invalid zygosity in status {zygosity}, "
                     f"expected one of {valid_zygosities}",
                 )
-            kwargs["status"] = update_attribute_query_with_compounds(
-                kwargs["status"], zygosity,
-            )
+            kwargs["affected_statuses"] = \
+                update_attribute_query_with_compounds(
+                    kwargs["affected_statuses"], zygosity,
+                )
 
         return kwargs
 
@@ -658,7 +660,7 @@ class QueryTransformer(QueryTransformerProtocol):
 
         if "affectedStatus" in kwargs:
             statuses = kwargs.pop("affectedStatus")
-            kwargs["affected_status"] = [
+            kwargs["affected_statuses"] = [
                 status.lower() for status in statuses
             ]
 
