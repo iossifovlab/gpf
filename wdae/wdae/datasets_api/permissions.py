@@ -45,7 +45,7 @@ def get_permissions_etag(
 class IsDatasetAllowed(permissions.BasePermission):
     """Checks the permissions to a dataset."""
 
-    def has_permission(
+    def has_permission(  # pyright: ignore
         self, request: HttpRequest,
         view: Any,
     ) -> bool:
@@ -56,7 +56,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
         return self.has_object_permission(request, view, dataset_id)
 
-    def has_object_permission(
+    def has_object_permission(  # pyright: ignore
         self, request: HttpRequest, _view: Any, obj: str,
     ) -> bool:
         wgpf_instance = get_wgpf_instance()
@@ -366,11 +366,11 @@ def get_allowed_genotype_studies(
 
     for child in get_wdae_children(instance_id, dataset.dataset_id):
         if DatasetHierarchy.is_study(instance_id, child) and (
-                skip_check
-                or child.dataset_id in IsDatasetAllowed.permitted_datasets(
-                    user, instance_id,
-                )
-            ):
+                    skip_check
+                    or child.dataset_id in IsDatasetAllowed.permitted_datasets(
+                        user, instance_id,
+                    )
+                ):
             allowed_studies.add(child.dataset_id)
 
     return set(allowed_studies)

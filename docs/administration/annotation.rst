@@ -427,13 +427,70 @@ The SpliceAI annotator plugin is a wrapper around the
 `SpliceAI tool <https://www.cell.com/cell/fulltext/S0092-8674(18)31629-5>`_,
 which predicts the effect of variants on splicing.
 
+To install the SpliceAI annotator plugin, use the following command:
+
+.. code-block:: bash
+
+    mamba install \
+        -c conda-forge \
+        -c bioconda \
+        -c iossifovlab \
+        gpf_spliceai_annotator
+
 This annotator produces the following attributes:
+
+gene
+    Gene symbol
+
+transcript_ids
+    Comma separated list of transcript IDs
+
+
+DS_AG
+    Delta score for acceptor gain
+
+
+DS_AL
+    Delta score for acceptor loss
+
+DS_DG
+    Delta score for donor gain
+
+DS_DL
+    Delta score for donor loss
+
+DS_MAX
+    Maximum delta score
+
+DP_AG
+    Delta position for acceptor gain
+
+DP_AL
+    Delta position for acceptor loss
+
+DP_DG
+    Delta position for donor gain
+
+DP_DL
+    Delta position for donor loss
+
+ref_A_p
+    Reference acceptor probabilities
+
+ref_D_p
+    Reference donor probabilities
+
+alt_A_p
+    Alternative acceptor probabilities
+
+alt_D_p
+    Alternative donor probabilities
 
 delta_score
     SpliceAI variant annotation. These include delta scores (DS) and
     delta positions (DP) for acceptor gain (AG), acceptor loss (AL),
-    donor gain (DG), and donor loss (DL). 
-    
+    donor gain (DG), and donor loss (DL).
+
     Format: `ALLELE|SYMBOL|DS_AG|DS_AL|DS_DG|DS_DL|DP_AG|DP_AL|DP_DG|DP_DL`
 
 
@@ -444,7 +501,7 @@ To configure the SpliceAI annotator plugin, use the following syntax:
     - spliceai_annotator:
         genome: hg38/genomes/GRCh38-hg38
         gene_models: hg38/gene_models/refSeq_v20200330
-        distance: 500
+        distance: 50
         mask: false
 
 where:
