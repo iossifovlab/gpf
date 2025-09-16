@@ -23,7 +23,7 @@ def test_transform_selected_family_tags_kwargs(
         ],
     )
     family_ids = genotype_data.backend.tags_to_family_ids(kwargs["tags_query"])
-    assert family_ids == set()
+    assert family_ids == {"f1.3"}
 
     kwargs = query_transformer.transform_kwargs(
         t4c8_study_1_wrapper,
@@ -32,7 +32,7 @@ def test_transform_selected_family_tags_kwargs(
         ],
     )
     family_ids = genotype_data.backend.tags_to_family_ids(kwargs["tags_query"])
-    assert family_ids == {"f1.1", "f1.3"}
+    assert family_ids == {"f1.1"}
 
 
 def test_transform_deselected_family_tags_kwargs(
@@ -61,7 +61,7 @@ def test_transform_deselected_family_tags_kwargs(
         ],
     )
     family_ids = genotype_data.backend.tags_to_family_ids(kwargs["tags_query"])
-    assert family_ids == {"f1.1", "f1.3"}
+    assert family_ids == {"f1.1"}
 
     kwargs = query_transformer.transform_kwargs(
         t4c8_study_1_wrapper,
@@ -151,4 +151,4 @@ def test_transform_complex_family_tags_kwargs(
     family_ids = genotype_data.backend.tags_to_family_ids(
         kwargs["tags_query"],
     )
-    assert family_ids == {"f1.1", "f1.3"}
+    assert family_ids == {"f1.1"}

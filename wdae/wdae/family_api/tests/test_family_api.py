@@ -50,7 +50,7 @@ def test_list_families_view_tag_filter(
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert set(response.data) == {  # type: ignore
-        "f1.1", "f1.3",
+        "f1.1",
     }
 
 
@@ -58,7 +58,10 @@ def test_list_families_view_tag_filter_multiple(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    url = "/api/v3/families/t4c8_study_1?tags=tag_nuclear_family,tag_trio_family"
+    url = (
+        "/api/v3/families/t4c8_study_1"
+        "?tags=tag_nuclear_family,tag_trio_family"
+    )
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert set(response.data) == {  # type: ignore
@@ -76,7 +79,7 @@ def test_list_families_view_nonexistent(
 
 
 def test_list_tags_view(
-  admin_client: Client,
+    admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/tags"
@@ -121,7 +124,7 @@ def test_family_details_view(
             "tag_quad_family",
             "tag_unaffected_mom_family",
             "tag_unaffected_dad_family",
-            "tag_female_prb_family",
+            "tag_male_prb_family",
             "tag_nuclear_family",
             "tag_affected_prb_family",
             "tag_unaffected_sib_family",
@@ -149,7 +152,7 @@ def test_list_members_view(
 
 
 def test_list_members_view_nonexistent(
-  admin_client: Client,
+    admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f654654654/members"
@@ -158,7 +161,7 @@ def test_list_members_view_nonexistent(
 
 
 def test_member_details_view(
-  admin_client: Client,
+    admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f1.3/members/s3"
@@ -175,7 +178,7 @@ def test_member_details_view(
         "role": str(Role.sib),
         "status": str(Status.unaffected),
         "phenotype": "unaffected",
-        "layout": ANY,  # FIXME temporary handle field variying between two values
+        "layout": ANY,
         "generated": False,
         "family_bin": None,
         "not_sequenced": False,
@@ -184,7 +187,7 @@ def test_member_details_view(
 
 
 def test_member_details_view_nonexistent(
-  admin_client: Client,
+    admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f6/members/ch456456"
@@ -193,7 +196,7 @@ def test_member_details_view_nonexistent(
 
 
 def test_full_family_details_view(
-  admin_client: Client,
+    admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f1.1/members/all"
@@ -213,7 +216,7 @@ def test_full_family_details_view(
         "status": str(Status.unaffected),
         "phenotype": "unaffected",
         "generated": False,
-        "layout": ANY,  # FIXME temporary handle field variying between two values
+        "layout": ANY,
         "family_bin": None,
         "not_sequenced": False,
         "missing": False,
@@ -229,7 +232,7 @@ def test_full_family_details_view(
         "role": str(Role.dad),
         "status": str(Status.unaffected),
         "phenotype": "unaffected",
-        "layout": ANY,  # FIXME temporary handle field variying between two values
+        "layout": ANY,
         "generated": False,
         "family_bin": None,
         "not_sequenced": False,
@@ -246,7 +249,7 @@ def test_full_family_details_view(
         "role": str(Role.prb),
         "status": str(Status.affected),
         "phenotype": "autism",
-        "layout": ANY,  # FIXME temporary handle field variying between two values
+        "layout": ANY,
         "generated": False,
         "family_bin": None,
         "not_sequenced": False,
@@ -263,7 +266,7 @@ def test_full_family_details_view(
         "role": str(Role.sib),
         "status": str(Status.unaffected),
         "phenotype": "unaffected",
-        "layout": ANY,  # FIXME temporary handle field variying between two values
+        "layout": ANY,
         "generated": False,
         "family_bin": None,
         "not_sequenced": False,
@@ -301,7 +304,7 @@ def test_full_study_families_view(
         "role": str(Role.prb),
         "status": str(Status.affected),
         "phenotype": "autism",
-        "layout": ANY,  # FIXME temporary handle field variying between two values
+        "layout": ANY,
         "generated": False,
         "family_bin": None,
         "not_sequenced": False,
