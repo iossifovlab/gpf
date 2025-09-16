@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from typing import Any
+
 import pytest
 import pytest_mock
 from gpf_instance.gpf_instance import WGPFInstance
@@ -30,7 +32,7 @@ def test_query_all_variants(
     "inheritance_type,count",
     [
         ("unknown", 12),  # matches all variants
-        ("omission", 0),
+        ("omission", 1),
         ("denovo", 3),
         ("mendelian", 7),
     ],
@@ -112,7 +114,7 @@ def test_query_family_variants(
 @pytest.mark.parametrize(
     "sexes,count",
     [
-        (["M"], 10),
+        (["M"], 11),
         (["F"], 12),
         (["M", "F"], 12),
     ],
@@ -642,3 +644,213 @@ def test_nested_queries(
     ))
     assert vs is not None
     assert len(vs) > 0
+
+
+@pytest.mark.parametrize("psc,zygosity,expected", [
+    (
+        {
+            "id": "phenotype", "checkedValues": ["autism"],
+        },
+        "homozygous",
+        2,
+    ),
+    (
+        {
+            "id": "phenotype", "checkedValues": ["autism"],
+        },
+        "heterozygous",
+        7,
+    ),
+    (
+        {
+            "id": "phenotype", "checkedValues": ["autism"],
+        },
+        None,
+        9,
+    ),
+    (
+        {
+            "id": "phenotype", "checkedValues": ["unaffected"],
+        },
+        None,
+        12,
+    ),
+])
+def test_zygosity_status(
+    t4c8_study_1_wrapper: WDAEStudy,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+    psc: dict[str, Any],
+    zygosity: str | None,
+    expected: int,
+) -> None:
+    query: dict[str, Any] = {
+        "personSetCollection": psc,
+    }
+    if zygosity is not None:
+        query["zygosityInStatus"] = zygosity
+    variants = list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize("genders,zygosity,expected", [
+    (
+        ["male", "female"],
+        "homozygous",
+        2,
+    ),
+    (
+        ["male"],
+        "homozygous",
+        2,
+    ),
+    (
+        ["female"],
+        "homozygous",
+        1,
+    ),
+    (
+        ["male", "female"],
+        "heterozygous",
+        12,
+    ),
+    (
+        ["female"],
+        "heterozygous",
+        12,
+    ),
+    (
+        ["male"],
+        "heterozygous",
+        10,
+    ),
+    (
+        ["male", "female"],
+        None,
+        12,
+    ),
+])
+def test_zygosity_gender(
+    t4c8_study_1_wrapper: WDAEStudy,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+    genders: list[str],
+    zygosity: str | None,
+    expected: int,
+) -> None:
+    query: dict[str, Any] = {
+        "genders": genders,
+    }
+    if zygosity is not None:
+        query["zygosityInGenders"] = zygosity
+    variants = list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
+    "present_in_child,zygosity,expected", [
+        (
+            ["proband only"],
+            "homozygous",
+            2,
+        ),
+        (
+            ["proband and sibling"],
+            "homozygous",
+            0,
+        ),
+        (
+            ["sibling only"],
+            "homozygous",
+            0,
+        ),
+        (
+            ["proband only", "sibling only"],
+            "homozygous",
+            2,
+        ),
+        (
+            ["proband only", "proband and sibling"],
+            "homozygous",
+            2,
+        ),
+    ])
+def test_zygosity_roles_children(
+    t4c8_study_1_wrapper: WDAEStudy,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+    present_in_child: list[str] | None,
+    zygosity: str | None,
+    expected: int,
+) -> None:
+    query: dict[str, Any] = {
+        "presentInChild": present_in_child,
+    }
+    if zygosity is not None:
+        query["zygosityInChild"] = zygosity
+    variants = list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
+    "present_in_parent,zygosity,expected", [
+        (
+            ["father only"],
+            "homozygous",
+            2,
+        ),
+        (
+            ["mother and father"],
+            "homozygous",
+            0,
+        ),
+        (
+            ["mother only"],
+            "homozygous",
+            0,
+        ),
+        (
+            ["father only", "mother only"],
+            "homozygous",
+            2,
+        ),
+        (
+            ["father only", "mother and father"],
+            "homozygous",
+            2,
+        ),
+    ])
+def test_zygosity_roles_parents(
+    t4c8_study_1_wrapper: WDAEStudy,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+    present_in_parent: list[str] | None,
+    zygosity: str | None,
+    expected: int,
+) -> None:
+    query: dict[str, Any] = {
+        "presentInParent": {
+            "presentInParent": present_in_parent,
+        },
+        "rarity": {"ultraRare": False},
+    }
+    if zygosity is not None:
+        query["zygosityInParent"] = zygosity
+    variants = list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
+    assert len(variants) == expected

@@ -100,12 +100,12 @@ def phenotype_person_sets(t4c8_study_1: GenotypeData) -> PersonSetCollection:
         ("family_person_attributes", [
             "mom:F:unaffected;"
             "dad:M:unaffected;"
-            "prb:F:affected;"
+            "prb:M:affected;"
             "sib:F:unaffected"]),
         ("family_person_ids", ["mom3;dad3;p3;s3"]),
         ("carrier_person_ids", ["mom3;p3", "dad3;s3"]),
         ("carrier_person_attributes", [
-            "mom:F:unaffected;prb:F:affected",
+            "mom:F:unaffected;prb:M:affected",
             "dad:M:unaffected;sib:F:unaffected"]),
         ("genotype", ["0/1;0/2;0/1;0/2"]),
         ("best_st", ["1111/1010/0101"]),
