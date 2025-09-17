@@ -15,6 +15,7 @@ from types import TracebackType
 from typing import Any, cast
 
 import fsspec
+import psutil
 from dask.distributed import Client, Future
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
@@ -94,9 +95,19 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         task_logger.info("task <%s> started", task_id)
         start = time.time()
 
+        process = psutil.Process(os.getpid())
+        start_memory_mb = process.memory_info().rss / (1024 * 1024)
+        task_logger.info(
+            "worker process memory usage: %.2f MB", start_memory_mb)
+
         result = task_func(*args)
         elapsed = time.time() - start
         task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
+
+        finish_memory_mb = process.memory_info().rss / (1024 * 1024)
+        task_logger.info(
+            "worker process memory usage: %.2f MB; change: %+0.2f MB",
+            finish_memory_mb, finish_memory_mb - start_memory_mb)
 
         root_logger.removeHandler(handler)
         handler.close()

@@ -51,3 +51,4 @@ dependencies:
     - rstcheck
     - types-requests-oauthlib
     - types-requests
+    - types-psutil
