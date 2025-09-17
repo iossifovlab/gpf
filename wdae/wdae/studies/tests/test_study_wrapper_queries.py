@@ -854,3 +854,44 @@ def test_zygosity_roles_parents(
         t4c8_response_transformer,
     ))
     assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
+    "affected_status,expected", [
+        (
+            ["Affected only"],
+            0,
+        ),
+        (
+            ["Unaffected only"],
+            8,
+        ),
+        (
+            ["Affected and unaffected"],
+            9,
+        ),
+        (
+            ["Affected only", "Unaffected only"],
+            8,
+        ),
+        (
+            ["Affected only", "Unaffected only", "Affected and unaffected"],
+            12,
+        ),
+    ])
+def test_query_affected_status(
+    t4c8_study_1_wrapper: WDAEStudy,
+    t4c8_query_transformer: QueryTransformer,
+    t4c8_response_transformer: ResponseTransformer,
+    affected_status: list[str] | None,
+    expected: int,
+) -> None:
+    query: dict[str, Any] = {
+        "affectedStatus": affected_status,
+    }
+    variants = list(t4c8_study_1_wrapper.query_variants_wdae(
+        query, [{"source": "location"}],
+        t4c8_query_transformer,
+        t4c8_response_transformer,
+    ))
+    assert len(variants) == expected
