@@ -76,6 +76,21 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     ) -> Generator[list | None, None, None]:
         raise NotImplementedError
 
+    def handle_denovo_gene_sets(self, kwargs: dict[str, Any]) -> None:
+        """Dirty fix for remote denovo gene sets."""
+        if "geneSet" in kwargs:
+            gene_set = kwargs["geneSet"]
+            if gene_set["geneSetsCollection"] != "denovo":
+                return
+            for gst in gene_set["geneSetsTypes"]:
+                if not gst["datasetId"].startswith(
+                    self.rest_client.client_id,
+                ):
+                    raise ValueError(
+                        "Invalid denovo gene set for remote study")
+                gst["datasetId"] = gst["datasetId"].lstrip(
+                    f"{self.rest_client.client_id}_")
+
     def query_variants_preview_wdae(
         self, kwargs: dict[str, Any],
         query_transformer: QueryTransformerProtocol,  # noqa: ARG002
@@ -83,9 +98,11 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         *,
         max_variants_count: int | None = 10000,  # noqa: ARG002
     ) -> Generator[Any | None, None, None]:
+        self.handle_denovo_gene_sets(kwargs)
         kwargs["datasetId"] = self.remote_study_id
         if kwargs.get("allowed_studies") is not None:
             del kwargs["allowed_studies"]
+
         yield from self.rest_client.post_query_variants(
             kwargs,
         )
@@ -97,6 +114,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         *,
         max_variants_count: int | None = 10000,  # noqa: ARG002
     ) -> Generator[Any | None, None, None]:
+        self.handle_denovo_gene_sets(kwargs)
         kwargs["datasetId"] = self.remote_study_id
         if kwargs.get("allowed_studies") is not None:
             del kwargs["allowed_studies"]
