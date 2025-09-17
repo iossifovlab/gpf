@@ -265,6 +265,20 @@ class QueryTransformer(QueryTransformerProtocol):
             return roles_query[0]
         return " or ".join(f"({r})" for r in roles_query)
 
+    @staticmethod
+    def _affected_status_to_query(statuses: list[str]) -> str | None:
+        query_components = []
+        if "affected only" in statuses:
+            query_components.append("(affected and not unaffected)")
+        if "unaffected only" in statuses:
+            query_components.append("(unaffected and not affected)")
+        if "affected and unaffected" in statuses:
+            query_components.append("(affected and unaffected)")
+
+        if len(query_components) > 0:
+            return " or ".join(query_components)
+        return None
+
     def _transform_filters_to_ids(
         self, filters: list[dict],
         study_wrapper: WDAEAbstractStudy,
@@ -659,10 +673,15 @@ class QueryTransformer(QueryTransformerProtocol):
             kwargs["personIds"] = list(kwargs["personIds"])
 
         if "affectedStatus" in kwargs:
-            statuses = kwargs.pop("affectedStatus")
-            kwargs["affected_statuses"] = [
-                status.lower() for status in statuses
+            statuses = [
+                status.lower()
+                for status in kwargs.pop("affectedStatus")
             ]
+
+            status_query = self._affected_status_to_query(statuses)
+
+            if status_query is not None:
+                kwargs["affected_statuses"] = status_query
 
         if "summaryVariantIds" in kwargs:
             summary_variant_ids = kwargs.pop("summaryVariantIds")
