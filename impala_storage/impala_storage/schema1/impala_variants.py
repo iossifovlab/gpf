@@ -1,23 +1,19 @@
 import logging
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from contextlib import closing
 from typing import Any, ClassVar, cast
 
 import pandas as pd
 import pyarrow as pa
-from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.annotation.annotation_config import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.query_variants.attribute_queries import AttributeQueryNotSupported
 from dae.query_variants.base_query_variants import QueryVariants
-from dae.query_variants.query_runners import QueryResult
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
-from dae.variants.family_variant import FamilyVariant
-from dae.variants.variant import SummaryVariant
 from impala.util import as_pandas
 from sqlalchemy import pool
 
@@ -207,7 +203,7 @@ class ImpalaVariants(QueryVariants):
         assert self.schema is not None
 
         if affected_statuses is not None:
-            raise AttributeQueryNotSupported(
+            logger.warning(
                 "Schema1 does not support affected status queries",
             )
 
@@ -245,7 +241,7 @@ class ImpalaVariants(QueryVariants):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
-            affected_statuses=affected_statuses,
+            affected_statuses=None,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -275,7 +271,7 @@ class ImpalaVariants(QueryVariants):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
-            affected_statuses=affected_statuses,
+            affected_statuses=None,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -286,138 +282,6 @@ class ImpalaVariants(QueryVariants):
         runner.adapt(filter_func)
 
         return runner
-
-    # pylint: disable=unused-argument
-    def query_summary_variants(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> Generator[SummaryVariant, None, None]:
-        """Query summary variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        if not self.variants_table:
-            return
-
-        if limit is None:
-            limit = -1
-            request_limit = -1
-        else:
-            request_limit = 10 * limit
-
-        runner = self.build_summary_variants_query_runner(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=request_limit,
-        )
-        if runner is None:
-            return
-
-        assert runner is not None
-        result = QueryResult(runners=[runner], limit=limit)
-        logger.debug("starting result")
-        result.start()
-
-        seen = set()
-
-        with closing(result) as result:
-
-            for v in result:
-                if v is None:
-                    continue
-                if v.svuid in seen:
-                    continue
-                if v is None:
-                    continue
-                yield v
-                seen.add(v.svuid)
-
-    def query_variants(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        person_ids: list[str] | None = None,
-        person_set_collection: tuple | None = None,  # noqa: ARG002
-        inheritance: list[str] | None = None,
-        roles_in_parent: str | None = None,
-        roles_in_child: str | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        pedigree_fields: tuple[list[str], list[str]] | None = None,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> Generator[FamilyVariant, None, None]:
-        """Query family variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        if not self.variants_table:
-            return
-
-        if limit is None:
-            limit = -1
-            request_limit = -1
-        else:
-            request_limit = 10 * limit
-
-        runner = self.build_family_variants_query_runner(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles_in_parent=roles_in_parent,
-            roles_in_child=roles_in_child,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=request_limit,
-            pedigree_fields=pedigree_fields)
-        if runner is None:
-            return
-
-        assert runner is not None
-        result = QueryResult(runners=[runner], limit=limit)
-        logger.debug("starting result")
-
-        result.start()
-
-        with closing(result) as result:
-            seen = set()
-            for v in result:
-                if v is None:
-                    continue
-                if v.fvuid in seen:
-                    continue
-                yield v
-                seen.add(v.fvuid)
 
     def _fetch_pedigree(self) -> pd.DataFrame:
         with closing(self.connection()) as conn, \
