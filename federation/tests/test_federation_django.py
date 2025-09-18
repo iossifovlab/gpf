@@ -384,14 +384,14 @@ def test_query_variants_download(
         "family person ids": ["mom1;dad1;p1;s1", "mom3;dad3;p3;s3"],
         "family structure": [
             "mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:M:unaffected",
-            "mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:F:unaffected",
+            "mom:F:unaffected;dad:M:unaffected;prb:M:affected;sib:F:unaffected",
         ],
         "family best state": ["1122/1100", "1112/1000/0110"],
         "family genotype": ["0/1;0/1;0/0;0/0", "0/1;0/2;0/2;0/0"],
         "carrier person ids": ["mom1;dad1", "mom3; dad3;p3"],
         "carrier person attributes": [
             "mom:F:unaffected;dad:M:unaffected",
-            "mom:F:unaffected; dad:M:unaffected;prb:F:affected",
+            "mom:F:unaffected; dad:M:unaffected;prb:M:affected",
         ],
         "inheritance type": ["mendelian", "mendelian"],
         "family phenotypes": [
