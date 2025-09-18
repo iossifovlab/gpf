@@ -7,6 +7,37 @@ from dae.task_graph.graph import TaskGraph
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 
+def task_part(parts_sleep: str) -> None:
+    time.sleep(float(parts_sleep))
+
+
+def task_summary(summary_sleep: str) -> None:
+    time.sleep(float(summary_sleep))
+
+
+def task_part_b(parts_sleep: str) -> str:
+    time.sleep(float(parts_sleep))
+    return 1000 * "B"
+
+def task_summary_b(summary_sleep: str, *args: str) -> str:
+    time.sleep(float(summary_sleep))
+    if len(args) <= 5:
+        return "b".join(args)
+    return "c".join(args[:5])
+
+
+def task_part_c(parts_sleep: str, *_args: str) -> str:
+    time.sleep(float(parts_sleep))
+    return 1000 * "B"
+
+def task_summary_c(summary_sleep: str, *args: str) -> str:
+    time.sleep(float(summary_sleep))
+    if len(args) <= 5:
+        return "b".join(args)
+    return "c".join(args[:5])
+
+
+
 def _build_graph_a(graph_params: list[str] | None) -> TaskGraph:
     task_graph = TaskGraph()
 
@@ -24,16 +55,11 @@ def _build_graph_a(graph_params: list[str] | None) -> TaskGraph:
         f"{parts_sleep} seconds for each parts, and "
         f"{summary_sleep} secoconds for the summary")
 
-    def task_part() -> None:
-        time.sleep(float(parts_sleep))
-
-    def task_summary() -> None:
-        time.sleep(float(summary_sleep))
-
     parts = [task_graph.create_task(
-        f"part {p}", task_part, args=[], deps=[])
+        f"part {p}", task_part, args=[parts_sleep], deps=[])
         for p in range(int(num_of_parts))]
-    task_graph.create_task("summary", task_summary, args=[], deps=parts)
+    task_graph.create_task(
+        "summary", task_summary, args=[summary_sleep], deps=parts)
     return task_graph
 
 
@@ -55,18 +81,12 @@ def _build_graph_d(graph_params: list[str] | None) -> TaskGraph:
         f"{parts_sleep} seconds for each parts, and "
         f"{summary_sleep} secoconds for the summary")
 
-    def task_part() -> None:
-        time.sleep(float(parts_sleep))
-
-    def task_summary() -> None:
-        time.sleep(float(summary_sleep))
-
     for click in range(int(num_of_clicks)):
         parts = [task_graph.create_task(
-            f"part {click}:{p}", task_part, args=[], deps=[])
+            f"part {click}:{p}", task_part, args=[parts_sleep], deps=[])
             for p in range(int(num_of_parts))]
         task_graph.create_task(
-            f"summary {click}", task_summary, args=[], deps=parts)
+            f"summary {click}", task_summary, args=[summary_sleep], deps=parts)
     return task_graph
 
 
@@ -87,20 +107,11 @@ def _build_graph_b(graph_params: list[str] | None) -> TaskGraph:
         f"{parts_sleep} seconds for each parts, and "
         f"{summary_sleep} secoconds for the summary")
 
-    def task_part() -> str:
-        time.sleep(float(parts_sleep))
-        return 1000 * "B"
-
-    def task_summary(*args: str) -> str:
-        time.sleep(float(summary_sleep))
-        if len(args) <= 5:
-            return "b".join(args)
-        return "c".join(args[:5])
-
     parts = [task_graph.create_task(
-        f"part {p}", task_part, args=[], deps=[])
+        f"part {p}", task_part_b, args=[parts_sleep], deps=[])
         for p in range(int(num_of_parts))]
-    task_graph.create_task("summary", task_summary, args=[], deps=parts)
+    task_graph.create_task(
+        "summary", task_summary, args=[summary_sleep], deps=parts)
     return task_graph
 
 
@@ -121,22 +132,13 @@ def _build_graph_c(graph_params: list[str] | None) -> TaskGraph:
         f"{parts_sleep} seconds sleep for each parts, and "
         f"{summary_sleep} secoconds sleep for the summary")
 
-    def task_part(*_args: str) -> str:
-        time.sleep(float(parts_sleep))
-        return 1000 * "B"
-
-    def task_summary(*args: str) -> str:
-        time.sleep(float(summary_sleep))
-        if len(args) <= 5:
-            return "b".join(args)
-        return "c".join(args[:5])
-
     parts = [
-        task_graph.create_task(f"part {p}", task_part, args=[], deps=[])
+        task_graph.create_task(
+            f"part {p}", task_part_c, args=[parts_sleep], deps=[])
         for p in range(int(num_of_parts))
     ]
     summary = task_graph.create_task(
-        "summary", task_summary, args=[], deps=parts)
+        "summary", task_summary, args=[summary_sleep], deps=parts)
     parts2 = [
         task_graph.create_task(
             f"part2 {p}", task_part, args=[summary], deps=[summary])
