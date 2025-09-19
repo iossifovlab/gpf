@@ -118,3 +118,4 @@ Jenkinsfile.generated-stages.all
 ._.DS_Store
 projects
 dae-mypy.txt
+.task-progress

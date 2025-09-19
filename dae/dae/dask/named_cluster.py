@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any, cast
 
 import dask
+import dask.config
 from distributed.client import Client
 from distributed.deploy import Cluster  # pyright: ignore
 
@@ -24,6 +25,7 @@ def set_up_local_cluster(cluster_conf: dict[str, Any]) -> Cluster:
         kwargs["n_workers"] = number_of_workers
     if threads_per_worker is not None:
         kwargs["threads_per_worker"] = threads_per_worker
+    dask.config.set(scheduler="threads")
     return LocalCluster(**kwargs)
 
 

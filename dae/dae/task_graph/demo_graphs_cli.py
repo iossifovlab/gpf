@@ -2,7 +2,7 @@ import argparse
 import sys
 import time
 
-from dae.task_graph import TaskGraphCli
+from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -19,6 +19,7 @@ def task_part_b(parts_sleep: str) -> str:
     time.sleep(float(parts_sleep))
     return 1000 * "B"
 
+
 def task_summary_b(summary_sleep: str, *args: str) -> str:
     time.sleep(float(summary_sleep))
     if len(args) <= 5:
@@ -30,12 +31,12 @@ def task_part_c(parts_sleep: str, *_args: str) -> str:
     time.sleep(float(parts_sleep))
     return 1000 * "B"
 
+
 def task_summary_c(summary_sleep: str, *args: str) -> str:
     time.sleep(float(summary_sleep))
     if len(args) <= 5:
         return "b".join(args)
     return "c".join(args[:5])
-
 
 
 def _build_graph_a(graph_params: list[str] | None) -> TaskGraph:
