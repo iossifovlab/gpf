@@ -4,7 +4,6 @@ from collections.abc import Callable
 
 import pytest
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.query_variants.attribute_queries import AttributeQueryNotSupported
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
@@ -71,5 +70,26 @@ def test_query_by_affected_statues(
 def test_query_by_affected_statuses_does_not_work_schema1(
     imported_study: GenotypeData,
 ) -> None:
-    with pytest.raises(AttributeQueryNotSupported):
-        list(imported_study.query_variants(affected_statuses="affected"))
+    all_variants = list(imported_study.query_variants())
+    all_variants.sort()
+    affected_variants = list(imported_study.query_variants(
+        affected_statuses="affected",
+    ))
+    affected_variants.sort()
+
+    unaffected_variants = list(imported_study.query_variants(
+        affected_statuses="unaffected",
+    ))
+    unaffected_variants.sort()
+
+    assert len(all_variants) == len(affected_variants)
+    assert len(all_variants) == len(unaffected_variants)
+
+    assert all(
+        v1 == v2 for v1, v2
+        in zip(all_variants, affected_variants, strict=True)
+    )
+    assert all(
+        v1 == v2 for v1, v2
+        in zip(all_variants, unaffected_variants, strict=True)
+    )
