@@ -58,6 +58,10 @@ def test_spliceai_annotate_del_acceptor_too_long(
         "GTGAGGTGAGAGCACCGTTCGCCCTGCAGGTGGA",
         "C")
     mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
+    mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
     )
@@ -75,6 +79,10 @@ def test_spliceai_annotate_del_acceptor_long(
         "10", 94076,
         "CACTCGACGGCCAGGTATACGGTCATCAGTGGTCACCACCATAATGCAGAAAGAGCCAAGCGTCACAC",
         "C")
+    mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
     mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
@@ -95,6 +103,10 @@ def test_spliceai_annotate_del_acceptor_long_batch(
         "CACTCGACGGCCAGGTATACGGTCATCAGTGGTCACCACCATAATGCAGAAAGAGCCAAGCGTCACAC",
         "C")
     mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
+    mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
     )
@@ -109,6 +121,10 @@ def test_spliceai_annotate_ins_acceptor(
     spliceai_annotator: SpliceAIAnnotator,
     mocker: pytest_mock.MockerFixture,
 ) -> None:
+    mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
     mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
@@ -126,6 +142,10 @@ def test_spliceai_annotate_ins_acceptor_batch(
     spliceai_annotator: SpliceAIAnnotator,
     mocker: pytest_mock.MockerFixture,
 ) -> None:
+    mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
     mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
@@ -145,6 +165,10 @@ def test_spliceai_annotate_ins_acceptor_long(
 ) -> None:
     annotatable = VCFAllele("10", 94076, "C", 60 * "CA")
     mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
+    mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
     )
@@ -163,6 +187,10 @@ def test_spliceai_annotate_ins_acceptor_long_batch(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     annotatable = VCFAllele("10", 94076, "C", 60 * "CA")
+    mocker.patch.object(
+        spliceai_annotator, "_width",
+        new=10101,
+    )
     mocker.patch.object(
         spliceai_annotator, "_distance",
         new=50,
@@ -233,10 +261,11 @@ def test_spliceai_padding(
     #                  NNNN
     mocker.patch.object(
         spliceai_annotator, "_width",
-        return_value=21,
+        new=21,
     )
+
     annotatable = VCFAllele(chrom, pos, ref, alt)
-    width = spliceai_annotator._width()
+    width = spliceai_annotator._width
     assert width == 21
 
     seq = 5 * "ACGT" + "A"

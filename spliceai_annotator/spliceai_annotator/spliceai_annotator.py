@@ -6,6 +6,7 @@ import textwrap
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -401,6 +402,7 @@ models to predict splice site variant effects.
             "delta_score": None,
         }
 
+    @cached_property
     def _width(self) -> int:
         return 10000 + 2 * self._distance + 1
 
@@ -451,7 +453,7 @@ models to predict splice site variant effects.
         if not transcripts:
             return None
 
-        width = self._width()
+        width = self._width
         seq = self._ref_sequence(annotatable)
         if len(seq) != width:
             logger.warning(
@@ -596,7 +598,7 @@ models to predict splice site variant effects.
         }
 
     def _ref_sequence(self, annotatable: VCFAllele) -> str:
-        width = self._width()
+        width = self._width
         return self.genome.get_sequence(
             annotatable.chromosome,
             annotatable.pos - width // 2,
@@ -740,13 +742,13 @@ models to predict splice site variant effects.
     ) -> tuple[str, str]:
         assert isinstance(annotatable, VCFAllele)
         padding = (
-            max(self._width() // 2 + tx_region[0] - annotatable.pos, 0),
-            max(self._width() // 2 - tx_region[1] + annotatable.pos, 0))
+            max(self._width // 2 + tx_region[0] - annotatable.pos, 0),
+            max(self._width // 2 - tx_region[1] + annotatable.pos, 0))
         xref = "N" * padding[0] + \
-            seq[padding[0]:self._width() - padding[1]] + \
+            seq[padding[0]:self._width - padding[1]] + \
             "N" * padding[1]
-        xalt = xref[:self._width() // 2] + \
-            annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
+        xalt = xref[:self._width // 2] + \
+            annotatable.alt + xref[self._width // 2 + len(annotatable.ref):]
 
         if batch_mode and len(xref) > len(xalt):
             # deletions
