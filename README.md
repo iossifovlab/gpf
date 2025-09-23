@@ -48,7 +48,7 @@ If you want to work with GPF `federation` and `rest_client` modules you
 will need to install additional dependencies:
 
 ```bash
-mamba env update --name gpf --file ./federation/environment.yml
+mamba env update --name gpf --file ./federation/federation-environment.yml
 ```
 
 After that you will need to install both modules:
