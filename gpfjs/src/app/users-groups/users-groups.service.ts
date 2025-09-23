@@ -10,6 +10,7 @@ export class UsersGroupsService {
   private readonly groupsUrl = 'groups';
   private readonly groupGrantPermissionUrl = 'groups/grant-permission';
   private readonly groupRevokePermissionUrl = 'groups/revoke-permission';
+  private readonly pageSize = 25;
 
   public constructor(
     private http: HttpClient,
@@ -29,6 +30,8 @@ export class UsersGroupsService {
       const searchParams = new HttpParams().set('search', searchTerm);
       url += `&${searchParams.toString()}`;
     }
+
+    url += `&page_size=${this.pageSize}`;
 
     const options = { withCredentials: true };
 

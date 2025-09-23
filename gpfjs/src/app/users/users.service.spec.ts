@@ -281,7 +281,7 @@ describe('UsersService', () => {
     const getResult = service.getUsers(1, 'user1');
 
     expect(httpGetSpy).toHaveBeenCalledWith(
-      service['config'].baseUrl + service['usersUrl'] + '?page=1&search=user1',
+      service['config'].baseUrl + service['usersUrl'] + '?page=1&search=user1&page_size=25',
       { withCredentials: true }
     );
 
@@ -295,7 +295,7 @@ describe('UsersService', () => {
 
     const getResultEmpty = service.getUsers(1, 'user1');
     expect(httpGetSpy).toHaveBeenCalledWith(
-      service['config'].baseUrl + service['usersUrl'] + '?page=1&search=user1',
+      service['config'].baseUrl + service['usersUrl'] + '?page=1&search=user1&page_size=25',
       { withCredentials: true }
     );
 

@@ -13,6 +13,7 @@ export class DatasetsService {
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
   private readonly visibleDatasetsUrl = 'datasets/visible';
   private readonly descriptionUrl = 'datasets/description';
+  private readonly pageSize = 25;
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
@@ -59,6 +60,8 @@ export class DatasetsService {
       const searchParams = new HttpParams().set('search', searchTerm);
       url += `&${searchParams.toString()}`;
     }
+
+    url += `&page_size=${this.pageSize}`;
 
     const options = { withCredentials: true };
 

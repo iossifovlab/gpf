@@ -68,7 +68,7 @@ describe('UsersGroupsService', () => {
       ]),
       new UserGroup(2, 'group2', [], []),
     ];
-    const url = service['config'].baseUrl + service['groupsUrl'] + '?page=1&search=searchValue';
+    const url = service['config'].baseUrl + service['groupsUrl'] + '?page=1&search=searchValue&page_size=25';
 
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of(groupsMockObj));
@@ -83,7 +83,7 @@ describe('UsersGroupsService', () => {
   });
 
   it('should get invalid response when getting groups', async() => {
-    const url = service['config'].baseUrl + service['groupsUrl'] + '?page=1&search=searchValue';
+    const url = service['config'].baseUrl + service['groupsUrl'] + '?page=1&search=searchValue&page_size=25';
 
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of(null));

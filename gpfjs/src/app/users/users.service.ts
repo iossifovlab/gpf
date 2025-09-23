@@ -19,6 +19,7 @@ export class UsersService {
   private readonly userInfoUrl = 'users/get_user_info';
   private readonly resetPasswordUrl = 'users/forgotten_password';
   private readonly usersUrl = 'users';
+  private readonly pageSize = 25;
 
   private lastUserInfo: UserInfo = null;
 
@@ -159,6 +160,8 @@ export class UsersService {
       const searchParams = new HttpParams().set('search', searchTerm);
       url += `&${searchParams.toString()}`;
     }
+
+    url += `&page_size=${this.pageSize}`;
 
     const options = { withCredentials: true };
 
