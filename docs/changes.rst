@@ -1,6 +1,127 @@
 Release Notes
 =============
 
+
+* 2025.9.6
+    * Fixes in Impala Schema1 genotype storage handling of affected status
+      queries.
+    * Fixed handling of zygosity in roles and sexes queries.
+    * Fixed de Novo gene sets handling in GPF federation.
+    * Updated SpliceAI annotator plugin documentation.
+
+
+* 2025.9.5
+    * Fixed support for de Novo gene sets in GPF federation.
+    * Improved error reporting in VCF variants loader.
+
+
+* 2025.9.4
+    * Reorganization of intermediate files concatenation in annotate_columns
+      tool.
+    * Split tabix compres and tabix index into separate tasks in
+      annotate_columns and annotate_vcf tools.
+    * Keep existing columns in annotate_columns tool when appending new
+      columns.
+    * Fix region boundary handling in annotate_columns and annotate_vcf tools.
+    * Added support for page_size parameter in GPF user and access managements
+      APIs.
+    * Fixed handling of zygosity in present in child and present in parent
+      filters in genotype browser.
+
+
+
+* 2025.9.3
+    * Annotation tools improvements in handling working directories.
+    * Support for '--keep-parts/--no-keep-parts' in annotation tools for
+      for control over intermediate files.
+    * Fixes in handling of logging verbosity in TaskGraph executors.
+    * Fixes in handling of remote denovo gene sets in GPF federation.
+    * Fixes in handling of remote studdies description in GPF federation.
+    * Optimized remote studies handling of families by removing unnecessary
+      families data.
+
+
+* 2025.9.2
+    * Fixed handling of batch size in annotate_vcf tool.
+    * Improved VCF info field handling in annotate_vcf tool.
+    * Reorganization of SpliceAI models loading in SpliceAI annotator plugin.
+    * Improved packaging of GPF SpliceAI annotator plugin.
+    * Improved memory management for import genotypes tool.
+    * Fix handling of mypy py.typed in GPF wdae package.
+    * Improvements in GPF federation query processing.
+
+
+* 2025.9.1
+    * Reorganization of cached GRR resource locking.
+    * Improved resource management in variant loaders.
+    * Improvements in task forking in TaskGraph.
+    * Fixes in handling of remove alleles in federation variants processing.
+    * Fixes in genotype storage plugins.
+
+
+* 2025.9.0
+    * Major Django framework upgrade from 4.2.17 to 5.2.5
+    * Reorganization of Genotype Storage registry and queries.
+    * Improved support for phenotype browser support in GPF federation.
+    * Improved support for common reports in GPF federation.
+    * Improved GPF federation and REST client testing.
+    * Fixed support for summary variants queries and support for filtering by
+      summary variant IDs.
+    * Fixed resource management in processing annotation pipelines.
+    * Added support for task forking in TaskGraph.
+    * Extensive mypy and lint error cleanup across the codebase.
+    * Improvements in GPF SpliceAI annotator plugin resource management and
+      cleanup.
+    * Reorganization of phenotype registry studies loading.
+    * Support for parquet datasets in import projects input section.
+    * Fixed support for remote gene sets in enrichment tools.
+    * Fixed support for remote families download.
+    * Fixed support for remote measures variants queries.
+
+
+* 2025.8.1
+    * Improved batch support for INDELs in SpliceAI annotator plugin.
+    * GPF SpliceAI annotator plugin added to GPF releases.
+
+* 2025.8.0
+    * Reorganization of annotation tools and annotation infrastructure.
+    * Reorganization and improvements in GPF federation plugin testing.
+    * Improvements in federation Enrichment tool.
+    * Enhanced remote study wrapper with comprehensive unit testing.
+    * Added gene view support in GPF federation.
+    * Fixed remote configuration handling.
+    * Reorganization and improvements of GPF REST client library.
+    * Bumped DuckDb to version 1.3.2.
+    * Use DuckdDb for parquet files merging in Schema2 import tool.
+    * Fixed DuckDb S3 AWS support with proper secret clause handling.
+    * Reduced memory usage of ParquetLoader.
+    * Added support for manual cluster in Dask client configuration.
+    * Support for batch mode in SpliceAI annotator plugin.
+    * Bump version of Angular to v19.
+    * Improvments in phenotype tools user interface state handling.
+
+
+* 2025.7.1
+    * Fixes in federation enrichment tool.
+    * Extended unit testing of GPF federation plugin.
+    * Improvements in gpfjs handling of histogram validation.
+
+* 2025.7.0
+    * Reorganization of parquet processing and merging for better
+      maintainability and reduced memory footprint.
+    * Reorganization of enrichment tool for better support of federation of GPF
+      system.
+    * Improved support for remote genotype and phenotype studies in GPF
+      federation.
+    * Bumped version of Python to 3.12.
+    * Fixes in TaskGraph logging and progress management.
+    * Fixes in query variants download view.
+    * Fixed closing of DuckDb connections in phenotype browser.
+    * Improved query heuristics in SQL query builder.
+    * Extensive mypy and lint error cleanup across the codebase.
+    * Improvements in gpfjs handling of histogram validation.
+
+
 * 2025.6.4
     * Reorganization of variants processing in Schema2 import genotypes.
 
