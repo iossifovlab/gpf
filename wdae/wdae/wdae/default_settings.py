@@ -2,6 +2,7 @@
 
 import logging
 import os
+import sys
 from typing import ClassVar
 
 from gpf_instance.gpf_instance import get_wgpf_instance_path
@@ -227,7 +228,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": (
         "utils.pagination.WdaePageNumberPagination"
     ),
-    "PAGE_SIZE": 25,
+    "PAGE_SIZE": sys.maxsize,
 }
 
 DEFAULT_RENDERER_CLASSES = [

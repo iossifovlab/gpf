@@ -336,8 +336,10 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
         if isinstance(page, str):
             page = int(page)
 
-        page_start = (page - 1) * self.page_size
-        page_end = page * self.page_size
+        page_size = int(request.GET.get("page_size", self.page_size))
+
+        page_start = (page - 1) * page_size
+        page_end = page * page_size
         datasets = query.all().order_by("dataset_id")[page_start:page_end]
 
         dataset_details = []

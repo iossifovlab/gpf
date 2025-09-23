@@ -132,7 +132,7 @@ def test_users_pagination(
     first_email: str | None,
     last_email: str | None,
 ) -> None:
-    url = f"/api/v3/users?page={page}"
+    url = f"/api/v3/users?page={page}&page_size=25"
     if page_size is not None:
         url = f"{url}&page_size={page_size}"
     response = admin_client.get(url)
@@ -178,7 +178,7 @@ def test_users_search_pagination(
     status_code: int,
     length: int | None,
 ) -> None:
-    url = f"/api/v3/users?page={page}&search=user"
+    url = f"/api/v3/users?page={page}&page_size=25&search=user"
     response = admin_client.get(url)
     assert response.status_code == status_code
     if length is not None:

@@ -283,6 +283,26 @@ def test_datasets_permissions(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+def test_datasets_permissions_pagination(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = admin_client.get(
+        "/api/v3/datasets/permissions?page_size=3&page=1")
+
+    assert len(response.json()) == 3
+
+    response = admin_client.get(
+        "/api/v3/datasets/permissions?page_size=3&page=2")
+
+    assert len(response.json()) == 2
+
+    response = admin_client.get(
+        "/api/v3/datasets/permissions?page_size=3&page=3")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
 def test_datasets_permissions_single(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance

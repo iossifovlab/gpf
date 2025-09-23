@@ -387,11 +387,11 @@ def test_cant_revoke_default_permissions(
     ],
 )
 def test_groups_pagination(
-        admin_client: Client, hundred_groups: list[Group], page: int,
+        admin_client: Client, hundred_groups: list[Group], page: int,  # noqa: ARG001
         status_code: int, length: int | None,
         first_name: str | None, last_name: str | None,
 ) -> None:
-    url = f"/api/v3/groups?page={page}"
+    url = f"/api/v3/groups?page={page}&page_size=25"
     response = admin_client.get(url)
     assert response.status_code == status_code
     if response.status_code == status.HTTP_204_NO_CONTENT:
@@ -430,10 +430,10 @@ def test_groups_search(
 )
 def test_groups_search_pagination(
     admin_client: Client,
-    hundred_groups: list[Group],
+    hundred_groups: list[Group],  # noqa: ARG001
     page: int, status_code: int, length: int | None,
 ) -> None:
-    url = f"/api/v3/groups?page={page}&search=Group"
+    url = f"/api/v3/groups?page={page}&page_size=25&search=Group"
     response = admin_client.get(url)
     assert response.status_code == status_code
     if response.status_code == status.HTTP_204_NO_CONTENT:
@@ -468,7 +468,7 @@ def test_user_group_routes(admin_client: Client, user: WdaeUser) -> None:
 
 
 def test_group_retrieve(
-    admin_client: Client, hundred_groups: list[Group],
+    admin_client: Client, hundred_groups: list[Group],  # noqa: ARG001
 ) -> None:
     url = "/api/v3/groups/Group1"
     response = admin_client.get(url)
@@ -485,7 +485,7 @@ def test_group_retrieve(
 
 
 def test_group_retrieve_alphabetical_order(
-    admin_client: Client, hundred_groups: list[Group],
+    admin_client: Client, hundred_groups: list[Group],  # noqa: ARG001
 ) -> None:
     url = "/api/v3/groups/any_dataset"
     response = admin_client.get(url)
