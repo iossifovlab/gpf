@@ -441,11 +441,42 @@ def test_query_variants_wdae_remote_denovo_gene_sets(
         content_type="application/json",
     )
 
-    assert response.status_code == status.HTTP_200_OK  # type: ignore
+    assert response.status_code == status.HTTP_200_OK
     res = json.loads(
         "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore
 
     assert len(res) == 5
+
+
+def test_query_variants_wdae_remote_genomic_scores(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "genomicScores": [
+            {
+                "categoricalView": None,
+                "histogramType": "continuous",
+                "rangeEnd": 99,
+                "rangeStart": 0,
+                "score": "TEST_REMOTE_score_one",
+                "values": None,
+            },
+        ],
+    }
+
+    response = admin_client.post(
+        "/api/v3/genotype_browser/query",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    res = json.loads(
+        "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore
+
+    assert len(res) == 12
 
 
 def test_genotype_browser_query_default_person_set_collection(
