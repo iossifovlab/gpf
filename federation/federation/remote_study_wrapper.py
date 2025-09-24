@@ -91,8 +91,24 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
                 gst["datasetId"] = gst["datasetId"].lstrip(
                     f"{self.rest_client.client_id}_")
 
+    def handle_gene_sets(self, kwargs: dict[str, Any]) -> None:
+        """Dirty fix for gene sets."""
+        if "geneSet" in kwargs:
+            gene_set = kwargs["geneSet"]
+            if gene_set["geneSetsCollection"] == "denovo":
+                return
+
+            if not gene_set["geneSetsCollection"].startswith(
+                self.rest_client.client_id,
+            ):
+                raise ValueError(
+                    "Invalid denovo gene set for remote study")
+            gene_set["geneSetsCollection"] = \
+                gene_set["geneSetsCollection"].lstrip(
+                    f"{self.rest_client.client_id}_")
+
     def handle_genomic_scores(self, kwargs: dict[str, Any]) -> None:
-        """Dirty fix for remote denovo gene sets."""
+        """Dirty fix for remote genomic scores."""
         if "genomicScores" in kwargs:
             genomic_scores = kwargs["genomicScores"]
             for genomic_score in genomic_scores:
@@ -112,6 +128,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         max_variants_count: int | None = 10000,  # noqa: ARG002
     ) -> Generator[Any | None, None, None]:
         self.handle_denovo_gene_sets(kwargs)
+        self.handle_gene_sets(kwargs)
         self.handle_genomic_scores(kwargs)
 
         kwargs["datasetId"] = self.remote_study_id
@@ -130,6 +147,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         max_variants_count: int | None = 10000,  # noqa: ARG002
     ) -> Generator[Any | None, None, None]:
         self.handle_denovo_gene_sets(kwargs)
+        self.handle_gene_sets(kwargs)
         self.handle_genomic_scores(kwargs)
 
         kwargs["datasetId"] = self.remote_study_id
