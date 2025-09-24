@@ -91,7 +91,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             return []
         for gene_set_description in gene_set_descriptions:
             name = gene_set_description.get("name")
-            desc = gene_set_description.get("description", "")
+            desc = gene_set_description.get("desc", "")
             count = gene_set_description.get("count")
             if name is not None and count is not None:
                 gene_set = GeneSet(name, desc, [])

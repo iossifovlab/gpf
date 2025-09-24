@@ -56,18 +56,49 @@ def test_genomic_scores(
     assert returned_scores == expected_scores
 
 
-def test_gene_sets(
+def test_gene_sets_collections(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
-    expected_names = {"main", "denovo", "TEST_REMOTE_main"}
-
     response = admin_client.get("/api/v3/gene_sets/gene_sets_collections")
     assert response
     assert response.status_code == 200
 
-    returned_names = {item["name"] for item in response.json()}
-    assert returned_names == expected_names
+    gene_sets = list(response.json())
+    assert gene_sets[0]["name"] == "main"
+    assert gene_sets[1]["name"] == "denovo"
+    assert gene_sets[2]["name"] == "TEST_REMOTE_main"
+    assert gene_sets[0]["desc"] == "Main"
+    assert gene_sets[1]["desc"] == "Denovo"
+    assert gene_sets[2]["desc"] == "(TEST_REMOTE) Main"
+
+
+def test_gene_sets(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    response = admin_client.post(
+        "/api/v3/gene_sets/gene_sets",
+        data={
+            "geneSetsCollection": "TEST_REMOTE_main",
+            "limit": 100,
+            "geneSetsTypes": [],
+            "filter": "",
+        },
+    )
+    assert response
+    assert response.status_code == 200
+
+    gene_sets = list(response.json())
+    assert len(gene_sets) == 3
+    assert gene_sets[0]["name"] == "all_candidates"
+    assert gene_sets[0]["desc"] == "All Candidates"
+
+    assert gene_sets[1]["name"] == "c8_candidates"
+    assert gene_sets[1]["desc"] == "C8 Candidates"
+
+    assert gene_sets[2]["name"] == "t4_candidates"
+    assert gene_sets[2]["desc"] == "T4 Candidates"
 
 
 def test_denovo_gene_sets(
