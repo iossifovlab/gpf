@@ -4,6 +4,7 @@ import pathlib
 
 import pytest
 from dae.gene_sets.implementations.gene_sets_impl import GeneSetCollectionImpl
+from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
     GenomicResourceRepo,
 )
@@ -87,3 +88,40 @@ def test_compute_and_save_statistics(
         {"name": "test:01", "count": 1, "desc": "test_first"},
         {"name": "test:03", "count": 1, "desc": "test_third"},
     ]
+
+
+def test_resource_info(
+    tmp_path: pathlib.Path,
+    gene_sets_repo: GenomicResourceRepo,  # noqa: ARG001
+) -> None:
+    assert not (tmp_path / "test/index.html").exists()
+    assert not (tmp_path / "index.html").exists()
+
+    cli_manage([
+        "resource-info", "-R", str(tmp_path), "-r", "test", "-j", "1",
+    ])
+
+    assert (tmp_path / "test/index.html").exists()
+    assert (
+        tmp_path / "test/statistics/gene_sets_list_statistics.json").exists()
+
+
+def test_repo_info(
+    tmp_path: pathlib.Path,
+    gene_sets_repo: GenomicResourceRepo,  # noqa: ARG001
+) -> None:
+    assert not (tmp_path / "test/index.html").exists()
+    assert not (tmp_path / "index.html").exists()
+
+    cli_manage([
+        "repo-info", "-R", str(tmp_path), "-j", "1",
+    ])
+
+    assert (tmp_path / "index.html").exists()
+    assert (tmp_path / "test/index.html").exists()
+    assert (
+        tmp_path / "test/statistics/gene_sets_list_statistics.json").exists()
+
+    assert (tmp_path / "main/index.html").exists()
+    assert (
+        tmp_path / "main/statistics/gene_sets_list_statistics.json").exists()
