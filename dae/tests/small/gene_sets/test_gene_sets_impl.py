@@ -1,10 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from pathlib import Path
 
 import pytest
-from dae.gene_sets.gene_sets_db import (
-    build_gene_set_collection_from_resource_id,
-)
 from dae.gene_sets.implementations.gene_sets_impl import GeneSetCollectionImpl
 from dae.genomic_resources.repository import (
     GenomicResourceRepo,
@@ -17,29 +13,20 @@ from dae.task_graph.graph import TaskGraph
 
 
 @pytest.fixture
-def gene_sets_repo_fixture(
+def gene_sets_repo(
     grr_contents: dict,
     tmp_path_factory: pytest.TempPathFactory,
-) -> tuple[Path, GenomicResourceRepo]:
-    root_path = tmp_path_factory.mktemp("gene_sets_repo_tests")
+) -> GenomicResourceRepo:
+    root_path = tmp_path_factory.mktemp("test_gene_sets_impl")
     setup_directories(root_path, grr_contents)
-    return root_path, build_filesystem_test_repository(root_path)
-
-
-@pytest.fixture
-def gene_sets_repo_path(  # noqa: FURB118
-    gene_sets_repo_fixture: tuple[Path, GenomicResourceRepo],
-) -> Path:
-    return gene_sets_repo_fixture[0]
+    return build_filesystem_test_repository(root_path)
 
 
 def test_add_statistics_build_tasks(
-    gene_sets_repo_in_memory: GenomicResourceRepo,
+    gene_sets_repo: GenomicResourceRepo,
 ) -> None:
-    build_gene_set_collection_from_resource_id(
-        "test", gene_sets_repo_in_memory)
 
-    res = gene_sets_repo_in_memory.get_resource("test")
+    res = gene_sets_repo.get_resource("test")
     assert res is not None
 
     gene_sets_collection_impl = GeneSetCollectionImpl(res)
