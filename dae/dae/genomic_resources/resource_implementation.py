@@ -411,8 +411,7 @@ td {
 </html>
 """)  # noqa: E501
 
-STATISTICS_TEMPLATE = Template(
-"""
+STATISTICS_TEMPLATE = Template("""
 <html>
 <head>
 <style>

@@ -112,7 +112,7 @@ def grr_contents() -> dict[str, Any]:
     return {
         "main": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
-                type: gene_set
+                type: gene_set_collection
                 id: main
                 format: directory
                 directory: GeneSets
@@ -142,7 +142,7 @@ def grr_contents() -> dict[str, Any]:
         },
         "test_mapping": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
-                type: gene_set
+                type: gene_set_collection
                 id: test_mapping
                 format: map
                 filename: test-map.txt
@@ -162,7 +162,7 @@ def grr_contents() -> dict[str, Any]:
         },
         "test_gmt": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
-                type: gene_set
+                type: gene_set_collection
                 id: test_gmt
                 format: gmt
                 filename: test-gmt.gmt
@@ -177,7 +177,7 @@ def grr_contents() -> dict[str, Any]:
         },
         "test": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
-                type: gene_set
+                type: gene_set_collection
                 id: test_mapping
                 format: map
                 filename: test-map.txt

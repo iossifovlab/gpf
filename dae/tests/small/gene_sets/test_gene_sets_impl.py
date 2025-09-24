@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import json
 import pathlib
 
 import pytest
@@ -57,7 +58,32 @@ def test_compute_and_save_statistics(
     statistics_path = tmp_path / "test" / "statistics"
     assert not statistics_path.exists()
 
-    gene_sets_impl._calc_and_save_statistics()
+    gene_sets_impl._compute_and_save_all_statistics()
 
     assert (statistics_path / "gene_sets_per_gene_histogram.json").exists()
     assert (statistics_path / "genes_per_gene_set_histogram.json").exists()
+    assert (statistics_path / "gene_collection_count_statistics.json").exists()
+    assert (statistics_path / "gene_sets_list_statistics.json").exists()
+
+    result = json.loads((
+        statistics_path / "gene_collection_count_statistics.json").read_text())
+    assert result == {
+        "number_of_gene_sets": 3,
+        "number_of_unique_genes": 2,
+    }
+
+    result = json.loads((
+        statistics_path / "genes_per_gene_set_histogram.json").read_text())
+    assert result["values"] == {"1": 2, "2": 1}
+
+    result = json.loads((
+        statistics_path / "gene_sets_per_gene_histogram.json").read_text())
+    assert result["values"] == {"2": 2}
+
+    result = json.loads((
+        statistics_path / "gene_sets_list_statistics.json").read_text())
+    assert result == [
+        {"name": "test:02", "count": 2, "desc": "test_second"},
+        {"name": "test:01", "count": 1, "desc": "test_first"},
+        {"name": "test:03", "count": 1, "desc": "test_third"},
+    ]

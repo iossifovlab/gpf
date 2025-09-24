@@ -23,7 +23,6 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -274,23 +273,6 @@ class GeneSetCollection(
 
     def get_all_gene_sets(self) -> list[GeneSet]:
         return list(self.gene_sets.values())
-
-    def calc_info_hash(self) -> bytes:
-        return b"placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
-
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
-        return []
-
-    def get_genes_per_gene_set_hist_filename(self) -> str:
-        return "statistics/genes_per_gene_set_histogram.png"
-
-    def get_gene_sets_per_gene_hist_filename(self) -> str:
-        return "statistics/gene_sets_per_gene_histogram.png"
 
 
 class GeneSetsDb:
