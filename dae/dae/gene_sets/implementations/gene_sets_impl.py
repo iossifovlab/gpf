@@ -47,11 +47,9 @@ class GeneSetCollectionImpl(
     def get_template(self) -> Template:
         return Template(GENE_SETS_TEMPLATE)
 
-    @staticmethod
-    def _compute_gene_statistics(resource: GenomicResource) -> dict:
-        gene_set_collection = build_gene_set_collection_from_resource(resource)
+    def _compute_and_save_gene_statistics(self) -> dict:
 
-        all_gene_sets = gene_set_collection.get_all_gene_sets()
+        all_gene_sets = self.gene_set_collection.get_all_gene_sets()
         unique_genes = set()
         for gene_set in all_gene_sets:
             unique_genes.update(gene_set.syms)
@@ -61,8 +59,8 @@ class GeneSetCollectionImpl(
             "number_of_unique_genes": len(unique_genes),
         }
 
-        with resource.proto.open_raw_file(
-            resource,
+        with self.resource.proto.open_raw_file(
+            self.resource,
             "statistics/gene_collection_count_statistics.json",
             "wt",
         ) as statistics_file:
@@ -110,11 +108,12 @@ class GeneSetCollectionImpl(
         ]
 
     def _calc_and_save_statistics(self) -> None:
-        hist = self._calc_genes_per_gene_set_hist(self.resource)
+        self.gene_set_collection.load()
+        hist = self._calc_genes_per_gene_set_hist()
         self._save_genes_per_gene_set_hist(hist, self.resource)
-        hist = self._calc_gene_sets_per_gene_hist(self.resource)
+        hist = self._calc_gene_sets_per_gene_hist()
         self._save_gene_sets_per_gene_hist(hist, self.resource)
-        self._compute_gene_statistics(self.gene_set_collection.resource)
+        self._compute_and_save_gene_statistics()
 
     def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
@@ -122,11 +121,10 @@ class GeneSetCollectionImpl(
     def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_statistics_info(self)
 
-    @staticmethod
     def _calc_genes_per_gene_set_hist(
-        resource: GenomicResource,
+        self,
     ) -> NumberHistogram | CategoricalHistogram:
-        gene_set_collection = build_gene_set_collection_from_resource(resource)
+        gene_set_collection = self.gene_set_collection
 
         config = gene_set_collection.config
         genes_per_gene_set_schema = (
@@ -175,13 +173,10 @@ class GeneSetCollectionImpl(
 
         return histogram
 
-    @staticmethod
     def _calc_gene_sets_per_gene_hist(
-        resource: GenomicResource,
+        self,
     ) -> NumberHistogram | CategoricalHistogram:
-        gene_set_collection = build_gene_set_collection_from_resource(resource)
-
-        gs_config = gene_set_collection.config
+        gs_config = self.gene_set_collection.config
         gene_sets_per_gene_schema = (
             gs_config.histograms.get("gene_sets_per_gene")
             if gs_config and gs_config.histograms
@@ -198,7 +193,7 @@ class GeneSetCollectionImpl(
         if hist_config.get("type") == "number":
             view_range = []
             if hist_config.get("view_range") is None:
-                all_gene_sets = gene_set_collection.get_all_gene_sets()
+                all_gene_sets = self.gene_set_collection.get_all_gene_sets()
                 gene_counter = Counter(
                     gene for gs in all_gene_sets for gene in set(gs.syms)
                 )
@@ -224,7 +219,7 @@ class GeneSetCollectionImpl(
 
         gene_counter = Counter(
             gene
-            for gs in gene_set_collection.get_all_gene_sets()
+            for gs in self.gene_set_collection.get_all_gene_sets()
             for gene in set(gs.syms)
         )
 
