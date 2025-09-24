@@ -22,6 +22,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
     def __init__(
         self, collection_id: str, rest_client: RESTClient, desc: str, fmt: str,
     ):
+        # pylint: disable=super-init-not-called
         self.rest_client: RESTClient = rest_client
         self._remote_collection_id = collection_id
         self._remote_gene_sets_loaded = False
@@ -52,6 +53,11 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
         ]
 
         self._remote_gene_sets_loaded = True
+
+    def load(self) -> BaseGeneSetCollection:
+        """Load the gene sets from the resource."""
+        self._load_remote_gene_sets()
+        return self
 
     def get_gene_set(self, gene_set_id: str) -> GeneSet | None:
         self._load_remote_gene_sets()

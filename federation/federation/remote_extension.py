@@ -240,9 +240,8 @@ class GPFRemoteExtension(GPFExtensionBase):
                     phenotype_datas,
                 )
 
-                if set(
-                    child_studies.keys()).intersection(set(result.keys()),
-                ) != set():
+                if set(child_studies.keys()).intersection(
+                        set(result.keys())) != set():
                     raise ValueError(
                         "Tried to create an already created study!")
 

@@ -1,4 +1,5 @@
 """Classes for handling of gene sets."""
+from __future__ import annotations
 
 import abc
 import logging
@@ -127,14 +128,16 @@ class BaseGeneSetCollection(abc.ABC):
         self.gene_sets: dict[str, GeneSet] = {}
 
     @abc.abstractmethod
+    def load(self) -> BaseGeneSetCollection:
+        """Load the gene sets from the resource."""
+
+    @abc.abstractmethod
     def get_gene_set(self, gene_set_id: str) -> GeneSet | None:
         """Return the gene set if found; returns None if not found."""
-        raise NotImplementedError
 
     @abc.abstractmethod
     def get_all_gene_sets(self) -> list[GeneSet]:
         """Return list of all gene sets in the collection."""
-        raise NotImplementedError
 
 
 class GeneSetCollection(
@@ -163,7 +166,7 @@ class GeneSetCollection(
         self.web_label = self.config.web_label or ""
         self.web_format_str = self.config.web_format_str or ""
         logger.debug("loading %s: %s", self.collection_id, config)
-        self.gene_sets: dict[str, GeneSet] = self.load_gene_sets()
+        self.gene_sets: dict[str, GeneSet] = {}
 
         assert self.collection_id, self.gene_sets
 
@@ -197,6 +200,23 @@ class GeneSetCollection(
             raise ValueError("Invalid collection format type")
 
         return res
+
+    def is_loaded(self) -> bool:
+        """Check if the gene sets have been loaded."""
+        return bool(self.gene_sets)
+
+    def load(self) -> GeneSetCollection:
+        """Load the gene sets from the resource."""
+        if self.is_loaded():
+            logger.debug(
+                "gene sets already loaded from %s", self.collection_id)
+            return self
+        self.gene_sets = self.load_gene_sets()
+        logger.debug(
+            "loaded %d gene sets from %s",
+            len(self.gene_sets), self.collection_id,
+        )
+        return self
 
     def load_gene_sets(self) -> dict[str, GeneSet]:
         """Build a gene set collection from a given GenomicResource."""
@@ -281,7 +301,7 @@ class GeneSetsDb:
         gene_set_collections: Sequence[BaseGeneSetCollection],
     ) -> None:
         self.gene_set_collections: dict[str, BaseGeneSetCollection] = {
-            gsc.collection_id: gsc
+            gsc.collection_id: gsc.load()
             for gsc in gene_set_collections
         }
 
