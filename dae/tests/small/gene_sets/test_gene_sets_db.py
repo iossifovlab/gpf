@@ -14,6 +14,8 @@ def test_gene_set_collection_main(
 ) -> None:
     resource = gene_sets_repo_in_memory.get_resource("main")
     gsc = GeneSetCollection(resource)
+    gsc.load()
+
     gene_set = gsc.get_gene_set("main_candidates")
     assert gene_set is not None
     assert gene_set["name"] == "main_candidates"
@@ -43,7 +45,7 @@ def test_get_gene_set_collection_ids(gene_sets_db: GeneSetsDb) -> None:
 def test_get_gene_set_ids(gene_sets_db: GeneSetsDb) -> None:
     assert gene_sets_db.get_gene_set_ids("main") == {
         "main_candidates",
-         "alt_candidates",
+        "alt_candidates",
     }
 
 
@@ -206,6 +208,7 @@ def test_build_gene_set_collection_from_resource_id(
         "main",
         gene_sets_repo_in_memory,
     )
+    gsc.load()
     gene_set = gsc.get_gene_set("main_candidates")
     assert gene_set is not None
     assert gene_set["name"] == "main_candidates"

@@ -62,6 +62,7 @@ class GeneSetAnnotator(AnnotatorBase):
         self.gene_set_resource = gene_set_resource
         self.gene_set_collection = build_gene_set_collection_from_resource(
             self.gene_set_resource)
+        self.gene_set_collection.load()
 
         self.gene_sets = self.gene_set_collection.get_all_gene_sets()
 
