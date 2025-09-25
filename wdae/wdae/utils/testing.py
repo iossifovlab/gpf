@@ -216,6 +216,11 @@ def setup_t4c8_instance(
         assert study is not None, study_id
         DenovoGeneSetHelpers.build_collection(study)
 
+    pathlib.Path(
+      pathlib.Path(gpf_instance.dae_dir) / "studies"
+      / "t4c8_study_1" / "description.md",
+    ).write_text("T4C8 dataset description")
+
     gpf_instance.reload()
 
     return gpf_instance

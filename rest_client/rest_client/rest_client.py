@@ -557,6 +557,13 @@ class RESTClient:
         data = response.json()
         return cast(dict, data["data"])
 
+    def get_dataset_description(self, dataset_id: str) -> dict:
+        datasets_url = (
+            f"{self.base_url}/api/v3/datasets/description/{dataset_id}")
+        response = self.session.get(datasets_url)
+        data = response.json()
+        return cast(dict, data)
+
     def get_visible_datasets(self) -> list:
         datasets_url = f"{self.base_url}/api/v3/datasets/visible"
         response = self.session.get(datasets_url)

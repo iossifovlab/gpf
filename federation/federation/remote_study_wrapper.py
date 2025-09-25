@@ -42,6 +42,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
         self.query_transformer = None
         self.response_transformer = None
+        self._description = ""
 
         self.is_remote = True
 
@@ -59,7 +60,11 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
     @property
     def description(self) -> str | None:
-        return ""
+        if self._description == "":
+            self._description = self.rest_client.get_dataset_description(
+                self.remote_study_id,
+            )["description"]
+        return self._description
 
     @description.setter
     def description(self, input_text: str) -> None:  # noqa: ARG002
