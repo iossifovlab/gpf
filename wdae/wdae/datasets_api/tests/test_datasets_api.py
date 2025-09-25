@@ -178,7 +178,7 @@ def test_datasets_description_get(
     assert response.status_code == 200
 
     data = response.json()
-    assert data["description"] is None
+    assert data["description"] == "T4C8 dataset description"
 
 
 def test_datasets_description_post(
