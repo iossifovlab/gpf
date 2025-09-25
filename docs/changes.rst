@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+* 2025.9.7
+    * Revisited gene set collection resource implementation.
+    * Split creation and loading of gene set collections.
+    * New gene sets collection statistics computation for better handling of
+      GRR management workflows.
+    * Improved unit testing of gene sets collection resources.
+    * Fixed handling of gene scores in GPF federation.
+    * Fixed support for gene set in GPF federation.
+    * Fixed handling of gene sets descriptions in GPF federation.
+    * Improved handling of pagination in user management REST API.
+
 
 * 2025.9.6
     * Fixes in Impala Schema1 genotype storage handling of affected status
