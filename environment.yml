@@ -63,4 +63,5 @@ dependencies:
   - pyopenssl=24.2.1
   # pin the version of importlib_metadata due to issues with dask
   - importlib_metadata=8.6.1
+  - psutil
 
