@@ -91,13 +91,14 @@ def admin(
         is_active=True,
         is_superuser=True,
     )
+    new_user = cast(WdaeUser, new_user)  # type: ignore
     new_user.set_password("secret")
     new_user.save()
 
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
     new_user.groups.add(admin_group)
 
-    return cast(WdaeUser, new_user)  # type: ignore
+    return new_user
 
 
 @pytest.fixture
@@ -237,10 +238,12 @@ def user(
         is_active=True,
         is_superuser=False,
     )
+    new_user = cast(WdaeUser, new_user)  # type: ignore
     new_user.set_password("secret")
+    new_user.groups.add(Group.objects.create(name="user@example.com"))
     new_user.save()
 
-    return cast(WdaeUser, new_user)  # type: ignore
+    return new_user
 
 
 @pytest.fixture

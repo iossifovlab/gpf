@@ -437,9 +437,19 @@ def add_group_perm_to_user(group_name: str, user: User) -> None:
 
 def add_group_perm_to_dataset(group_name: str, dataset_id: str) -> None:
     # pylint: disable=no-member
+
     dataset, _created = Dataset.objects.get_or_create(dataset_id=dataset_id)
     group, _created = Group.objects.get_or_create(name=group_name)
     dataset.groups.add(group)
+
+
+def remove_group_perm_from_dataset(group_name: str, dataset_id: str) -> None:
+    # pylint: disable=no-member
+
+    dataset, _created = Dataset.objects.get_or_create(dataset_id=dataset_id)
+    group, _created = Group.objects.get_or_create(name=group_name)
+
+    dataset.groups.remove(group)
 
 
 def get_user_groups(user: User) -> set[str]:

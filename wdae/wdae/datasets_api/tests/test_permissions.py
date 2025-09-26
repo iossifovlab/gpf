@@ -16,6 +16,7 @@ from datasets_api.permissions import (
     add_group_perm_to_user,
     get_dataset_groups,
     get_user_groups,
+    remove_group_perm_from_dataset,
     user_has_permission,
 )
 
@@ -71,7 +72,8 @@ def test_datasets_studies_ids(omni_dataset: GenotypeData) -> None:
 
 
 def test_basic_rights(user: User, omni_dataset: GenotypeData) -> None:
-    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+    assert not user_has_permission(
+        "t4c8_instance", user, omni_dataset.study_id)
     add_group_perm_to_user(omni_dataset.study_id, user)
     assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
@@ -226,3 +228,23 @@ def test_any_user_with_anonymous(omni_dataset: GenotypeData) -> None:
     add_group_perm_to_dataset("any_user", "omni_dataset")
     assert user_has_permission("t4c8_instance", anonymous_user,
                                omni_dataset.study_id)
+
+
+def test_user_group_permissions(
+    user: User,
+    omni_dataset: GenotypeData,
+) -> None:
+    assert not user_has_permission(
+        "t4c8_instance", user, omni_dataset.study_id)
+
+    add_group_perm_to_dataset(
+        user.email, omni_dataset.study_id)
+
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+
+    remove_group_perm_from_dataset(
+        user.email, omni_dataset.study_id,
+    )
+
+    assert not user_has_permission(
+        "t4c8_instance", user, omni_dataset.study_id)

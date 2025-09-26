@@ -9,7 +9,7 @@ from groups_api.views import (
     remove_user_from_group,
 )
 
-router = SimpleRouter(trailing_slash=False)
+router = SimpleRouter(trailing_slash=False, use_regex_path=False)
 router.register(r"groups", GroupsViewSet, basename="groups")
 
 urlpatterns = [
