@@ -5,7 +5,12 @@ from gpf_instance.extension import GPFTool
 from pheno_tool_api.adapter import PhenoToolAdapterBase
 from studies.study_wrapper import WDAEAbstractStudy
 
-from federation.remote_study_wrapper import RemoteWDAEStudy
+from federation.remote_study_wrapper import (
+    RemoteWDAEStudy,
+    handle_denovo_gene_sets,
+    handle_gene_sets,
+    handle_genomic_scores,
+)
 from rest_client.rest_client import RESTClient
 
 
@@ -28,6 +33,10 @@ class RemotePhenoToolAdapter(PhenoToolAdapterBase):
     ) -> dict[str, Any]:
         # pylint: disable=W0613
         query_data["datasetId"] = self.dataset_id
+        handle_denovo_gene_sets(self.rest_client, query_data)
+        handle_gene_sets(self.rest_client, query_data)
+        handle_genomic_scores(self.rest_client, query_data)
+
         return self.rest_client.post_pheno_tool(query_data)  # type: ignore
 
     def produce_download_df(self, query_data: dict[str, Any]) -> pd.DataFrame:

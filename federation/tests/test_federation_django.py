@@ -230,6 +230,46 @@ def test_pheno_tool(
     assert synonymous["maleResults"]["negative"]["count"] == 0
 
 
+def test_pheno_tool_gene_sets(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    query = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "measureId": "i1.m1",
+        "normalizeBy": [],
+        "effectTypes": ["missense"],
+        "geneSet": {
+            "geneSetsCollection": "TEST_REMOTE_main",
+            "geneSet": "t4_candidates",
+            "geneSetsTypes": [],
+        },
+        "presentInParent": {"presentInParent": ["neither"]},
+    }
+
+    response = admin_client.post(
+        "/api/v3/pheno_tool",
+        data=json.dumps(query),
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+
+    results = response.json()["results"]
+    assert len(results) == 1
+
+    results_by_effect = {r["effect"]: r for r in results}
+
+    missense = results_by_effect["missense"]
+    assert missense["femaleResults"]["positive"]["count"] == 0
+    assert missense["femaleResults"]["negative"]["count"] == 2
+    assert missense["femaleResults"]["negative"]["deviation"] == \
+        pytest.approx(9.754590807579262, abs=1e-3)
+    assert missense["femaleResults"]["negative"]["mean"] == \
+        pytest.approx(103.67282485961914, abs=1e-3)
+    assert missense["maleResults"]["positive"]["count"] == 0
+    assert missense["maleResults"]["negative"]["count"] == 0
+
+
 def test_enrichment_models(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
