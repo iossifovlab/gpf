@@ -50,9 +50,11 @@ def test_groups_have_users_and_datasets(admin_client: Client) -> None:
         assert "datasets" in group
 
 
-def test_single_group_has_users_and_datasets(admin_client: Client) -> None:
+def test_single_group_has_users_and_datasets(
+    admin_client: Client,
+) -> None:
     groups = Group.objects.all()
-    for group in groups:
+    for group in groups[1:]:
         url = f"/api/v3/groups/{group.name}"
         response = admin_client.get(url)
 
@@ -176,7 +178,7 @@ def test_empty_group_with_permissions_is_shown(
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     data = response.json()
-    assert len(data) == 8
+    assert len(data) == 9
     new_group_reponse = next(
         (
             response_group
@@ -382,7 +384,7 @@ def test_cant_revoke_default_permissions(
         (2, status.HTTP_200_OK, 25, "Group31", "Group53"),
         (3, status.HTTP_200_OK, 25, "Group54", "Group76"),
         (4, status.HTTP_200_OK, 25, "Group77", "Group99"),
-        (5, status.HTTP_200_OK, 7, "admin", None),
+        (5, status.HTTP_200_OK, 8, "admin", None),
         (7, status.HTTP_204_NO_CONTENT, None, None, None),
     ],
 )

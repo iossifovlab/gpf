@@ -114,6 +114,24 @@ def test_get_a_group(
     assert group["name"] == group_name
 
 
+def test_get_a_user_group(
+    admin_client: RESTClient,
+) -> None:
+    """Test getting a group."""
+
+    datasets = admin_client.get_all_datasets()
+    assert len(datasets) > 0
+    dataset_id = datasets[0]["id"]
+
+    test_group_name = "user@testmail.com"
+
+    admin_client.grant_permission(dataset_id, test_group_name)
+
+    group = admin_client.get_group(test_group_name)
+
+    assert group["name"] == test_group_name
+
+
 def test_add_group_to_a_dataset(
     admin_client: RESTClient,
 ) -> None:
