@@ -295,11 +295,13 @@ class GenomicScore(ResourceConfigValidationMixin):
                         },
                         "y_log_scale": {
                             "type": "boolean",
-                            "dependencies": {"type": ["number", "categorical"]},
+                            "dependencies": {
+                                "type": ["number", "categorical"]},
                         },
                         "x_min_log": {
                             "type": "number",
-                            "dependencies": {"type": ["number", "categorical"]},
+                            "dependencies": {
+                                "type": ["number", "categorical"]},
                         },
                         "label_rotation": {
                             "type": "integer",
