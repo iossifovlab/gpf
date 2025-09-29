@@ -1327,6 +1327,69 @@ def test_histograms_beta(
     ]
 
 
+def test_histograms_beta_with_roles(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = admin_client.post("/api/v3/measures/histogram-beta", {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "measure": "i1.age",
+        "roles": ["prb", "sib"],
+    }, content_type="application/json")
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert result["measure"] == "i1.age"
+    assert result["description"] is None
+    assert result["histogram"]["min_value"] == pytest.approx(68, 0.1)
+    assert result["histogram"]["max_value"] == pytest.approx(171.75, 0.1)
+    assert result["histogram"]["config"] == {
+        "number_of_bins": 100,
+        "type": "number",
+        "view_range": {
+            "max": pytest.approx(171.75, 0.1),
+            "min": pytest.approx(68, 0.1),
+        },
+        "x_log_scale": False,
+        "x_min_log": None,
+        "y_log_scale": False,
+    }
+    assert result["histogram"]["out_of_range_bins"] == [0, 0]
+    assert result["histogram"]["bars"] == [
+        1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 0, 1, 1,
+    ]
+    assert result["histogram"]["bins"] == [
+        pytest.approx(68.00, 0.1),
+        pytest.approx(72.15, 0.1),
+        pytest.approx(76.30, 0.1),
+        pytest.approx(80.45, 0.1),
+        pytest.approx(84.60, 0.1),
+        pytest.approx(88.75, 0.1),
+        pytest.approx(92.90, 0.1),
+        pytest.approx(97.05, 0.1),
+        pytest.approx(101.20, 0.1),
+        pytest.approx(105.35, 0.1),
+        pytest.approx(109.50, 0.1),
+        pytest.approx(113.65, 0.1),
+        pytest.approx(117.80, 0.1),
+        pytest.approx(121.95, 0.1),
+        pytest.approx(126.10, 0.1),
+        pytest.approx(130.25, 0.1),
+        pytest.approx(134.40, 0.1),
+        pytest.approx(138.55, 0.1),
+        pytest.approx(142.70, 0.1),
+        pytest.approx(146.85, 0.1),
+        pytest.approx(151.00, 0.1),
+        pytest.approx(155.15, 0.1),
+        pytest.approx(159.30, 0.1),
+        pytest.approx(163.45, 0.1),
+        pytest.approx(167.60, 0.1),
+        pytest.approx(171.75, 0.1),
+    ]
+
+
 def test_regressions(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance

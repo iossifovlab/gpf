@@ -154,11 +154,17 @@ class RemotePhenotypeData(PhenotypeData):
             logger.warning("Unsupported argument used: person_ids")
         if family_ids is not None:
             logger.warning("Unsupported argument used: family_ids")
-        if roles is not None:
-            logger.warning("Unsupported argument used: roles")
+        if roles is None:
+            roles = []
 
-        return cast(dict[str, Any], self.rest_client.post_measures_values(
-            self._remote_pheno_id, measure_ids=measure_ids))
+        return cast(
+            dict[str, Any],
+            self.rest_client.post_measures_values(
+                self._remote_pheno_id,
+                measure_ids=measure_ids,
+                roles=[str(r) for r in roles],
+            ),
+        )
 
     def get_people_measure_values_df(
         self,
@@ -171,14 +177,15 @@ class RemotePhenotypeData(PhenotypeData):
             logger.warning("Unsupported argument used: person_ids")
         if family_ids is not None:
             logger.warning("Unsupported argument used: family_ids")
-        if roles is not None:
-            logger.warning("Unsupported argument used: roles")
+        roles_names = [str(r) for r in roles] if roles is not None else None
 
         return pd.DataFrame.from_dict(
             cast(
                 dict[str, Any],
-                    self.rest_client.post_measures_values(
-                    self._remote_pheno_id, measure_ids=measure_ids,
+                self.rest_client.post_measures_values(
+                    self._remote_pheno_id,
+                    measure_ids=measure_ids,
+                    roles=roles_names,
                 ),
             ),
         )

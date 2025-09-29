@@ -8,6 +8,7 @@ from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure
 from dae.pheno_tool.tool import PhenoResult
+from dae.variants.attributes import Role
 from datasets_api.permissions import (
     get_permissions_etag,
     user_has_permission,
@@ -191,17 +192,33 @@ class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
     """View for returning person phenotype data."""
 
     def post(self, request: Request) -> Response:
+        """Return people values."""
         data = request.data
-        dataset_id = data["datasetId"]
+        assert isinstance(data, dict)
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        measure_ids = [str(m) for m in data["measureIds"]]
+
+        person_ids = data.get("personIds", None)
+        if person_ids is not None:
+            person_ids = [str(p) for p in person_ids]
+
+        family_ids = data.get("familyIds", None)
+        if family_ids is not None:
+            family_ids = [str(f) for f in family_ids]
+
+        roles = data.get("roles", None)
+        if roles is not None:
+            roles = [Role.from_name(str(r)) for r in roles]
+
         res_df = dataset.phenotype_data.get_people_measure_values_df(
-            data["measureIds"],
-            data.get("personIds", None),
-            data.get("familyIds", None),
-            data.get("roles", None),
+            measure_ids,
+            person_ids,
+            family_ids,
+            roles,
         )
 
         result: list[dict[str, Any]] = cast(
