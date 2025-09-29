@@ -256,7 +256,7 @@ def handle_denovo_gene_sets(
             ):
                 raise ValueError(
                     "Invalid denovo gene set for remote study")
-            gst["datasetId"] = gst["datasetId"].lstrip(
+            gst["datasetId"] = gst["datasetId"].removeprefix(
                 f"{rest_client.client_id}_")
 
 
@@ -273,7 +273,7 @@ def handle_gene_sets(rest_client: RESTClient, kwargs: dict[str, Any]) -> None:
             raise ValueError(
                 "Invalid denovo gene set for remote study")
         gene_set["geneSetsCollection"] = \
-            gene_set["geneSetsCollection"].lstrip(
+            gene_set["geneSetsCollection"].removeprefix(
                 f"{rest_client.client_id}_")
 
 
@@ -290,5 +290,5 @@ def handle_genomic_scores(
             ):
                 raise ValueError(
                     "Invalid genomic score for remote study")
-            genomic_score["score"] = genomic_score["score"].lstrip(
+            genomic_score["score"] = genomic_score["score"].removeprefix(
                 f"{rest_client.client_id}_")
