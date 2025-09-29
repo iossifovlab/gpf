@@ -83,7 +83,13 @@ def draw_families_report(
     families_report = build_families_report(families)
     assert len(families_report.families_counters) == 1
 
-    family_counters = next(iter(families_report.families_counters.values()))
+    try:
+        family_counters = next(
+            iter(families_report.families_counters.values()))
+    except StopIteration:
+        logger.warning("no family counters found")
+        return
+
     logger.info("total number family types: %s", len(family_counters.counters))
 
     for family_counter in family_counters.counters.values():

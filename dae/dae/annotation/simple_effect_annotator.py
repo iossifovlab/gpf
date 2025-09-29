@@ -146,7 +146,7 @@ Simple effect annotator.
 
     def call_region(
         self, chrom: str, beg: int, end: int,
-        transcripts: list[TranscriptModel],
+        transcripts: list[TranscriptModel], *,
         func_name: str, classification: str,
     ) -> tuple[str, set[str]] | None:
         """Call a region with a specific classification."""
@@ -181,31 +181,39 @@ Simple effect annotator.
             if (beg <= stop and end >= start):
 
                 result = self.call_region(
-                    chrom, beg, end, tms, "CDS_regions", "coding")
+                    chrom, beg, end, tms,
+                    func_name="CDS_regions",
+                    classification="coding")
 
                 if not result:
                     result = self.call_region(
-                        chrom, beg, end, tms, "utr_regions", "peripheral")
+                        chrom, beg, end, tms,
+                        func_name="utr_regions",
+                        classification="peripheral")
                 else:
                     return result
 
                 if not result:
                     result = self.call_region(
-                        chrom, beg, end, tms, "cds_intron_regions",
-                        "inter-coding_intronic")
+                        chrom, beg, end, tms,
+                        func_name="cds_intron_regions",
+                        classification="inter-coding_intronic")
                 else:
                     return result
 
                 if not result:
                     result = self.call_region(
-                        chrom, beg, end, tms, "peripheral_regions",
-                        "peripheral")
+                        chrom, beg, end, tms,
+                        func_name="peripheral_regions",
+                        classification="peripheral")
                 else:
                     return result
 
                 if not result:
                     result = self.call_region(
-                        chrom, beg, end, tms, "noncoding_regions", "noncoding")
+                        chrom, beg, end, tms,
+                        func_name="noncoding_regions",
+                        classification="noncoding")
                 else:
                     return result
 
