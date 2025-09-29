@@ -474,6 +474,7 @@ class PreparePhenoBrowserBase:
         cache_dir: str,
     ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
         """Create images and regressions for a given measure."""
+        # pylint: disable=too-many-positional-arguments
         registry = PhenoRegistry(
             storage_registry,
             configurations_dir=pheno_dir,

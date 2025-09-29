@@ -3,11 +3,10 @@
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 import os
+import pathlib
 
 from .default_settings import *
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 DEBUG = True
 
@@ -26,20 +25,16 @@ CORS_ORIGIN_WHITELIST = [
     "http://127.0.0.1:8000",
 ]
 
-GPF_INSTANCE_CONFIG = GPFConfigParser.load_config_dict(
-    str(GPF_INSTANCE_CONFIG_PATH), dae_conf_schema,
-)
-
 CORS_ALLOW_CREDENTIALS = True
 
 OPEN_REGISTRATION = False
 
 ########################################################
 
-DEFAULT_WDAE_DIR = GPF_INSTANCE_CONFIG_PATH.parent / "wdae"
+DEFAULT_WDAE_DIR = pathlib.Path(os.environ["DAE_DB_DIR"]) / "wdae"
 DEFAULT_WDAE_DIR.mkdir(exist_ok=True)
 
-LOG_DIR = os.environ.get("WDAE_LOG_DIR", DEFAULT_WDAE_DIR)
+LOG_DIR = os.environ.get("WDAE_LOG_DIR", str(DEFAULT_WDAE_DIR))
 
 if not os.environ.get("WDAE_DB_HOST"):
     DATABASES = {

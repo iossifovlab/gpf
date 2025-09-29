@@ -144,7 +144,7 @@ class EnrichmentSingleResult:
         events: int,
         overlapped: int,
         expected: float,
-        pvalue: float,
+        pvalue: float, *,
         overlapped_genes: set[str] | None = None,
     ):
         self.name: str = name

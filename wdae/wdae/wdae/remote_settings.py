@@ -1,3 +1,4 @@
+# pylint: disable=wildcard-import,unused-wildcard-import
 # flake8: noqa
 from .default_settings import *
 

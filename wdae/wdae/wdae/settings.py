@@ -3,12 +3,11 @@
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 import os
+import pathlib
 
 from .default_settings import *
 
 from dae.pheno.pheno_data import get_pheno_browser_images_dir
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 DEBUG = True
 
@@ -27,11 +26,7 @@ CORS_ORIGIN_WHITELIST = [
     "http://127.0.0.1:8000",
 ]
 
-GPF_INSTANCE_CONFIG = GPFConfigParser.load_config_dict(
-    str(GPF_INSTANCE_CONFIG_PATH), dae_conf_schema,
-)
-
-PHENO_BROWSER_CACHE = get_pheno_browser_images_dir(GPF_INSTANCE_CONFIG)
+PHENO_BROWSER_CACHE = get_pheno_browser_images_dir()
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -47,7 +42,8 @@ OPEN_REGISTRATION = False
 
 ########################################################
 
-DEFAULT_WDAE_DIR = GPF_INSTANCE_CONFIG_PATH.parent / "wdae"
+DEFAULT_WDAE_DIR = pathlib.Path(
+    os.environ.get("DAE_DB_DIR", os.getcwd())) / "wdae"
 DEFAULT_WDAE_DIR.mkdir(exist_ok=True)
 
 LOG_DIR = os.environ.get("WDAE_LOG_DIR", str(DEFAULT_WDAE_DIR))

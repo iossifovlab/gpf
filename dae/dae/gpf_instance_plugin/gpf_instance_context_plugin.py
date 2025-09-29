@@ -76,6 +76,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
     @staticmethod
     def init(**kwargs: Any) -> GenomicContext | None:
         """Initialize the GPF instance genomic context."""
+        # pylint: disable=import-outside-toplevel
         from dae.gpf_instance.gpf_instance import GPFInstance
         gpf_instance = kwargs.get("gpf_instance")
         if gpf_instance is not None:

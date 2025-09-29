@@ -165,7 +165,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             overlapped_counts.rec,
             expected,
             pvalue,
-            overlapped_counts.rec_genes,
+            overlapped_genes=overlapped_counts.rec_genes,
         )
 
         return EnrichmentResult(

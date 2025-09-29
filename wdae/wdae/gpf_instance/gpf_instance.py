@@ -352,15 +352,6 @@ def get_wgpf_instance_path(
         dae_dir = pathlib.Path(config_filename).parent
         return dae_dir
 
-    from django.conf import settings  # pylint: disable=import-outside-toplevel
-    if getattr(settings, "GPF_INSTANCE_CONFIG", None):
-        config_filename = pathlib.Path(__file__).parent.joinpath(
-            getattr(settings, "GPF_INSTANCE_CONFIG", ""))
-
-        logger.error("GPF instance config: %s", config_filename)
-        dae_dir = pathlib.Path(config_filename).parent
-        return dae_dir
-
     if os.environ.get("DAE_DB_DIR"):
         dae_dir = pathlib.Path(os.environ["DAE_DB_DIR"])
         return pathlib.Path(dae_dir)
