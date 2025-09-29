@@ -66,6 +66,22 @@ class GeneSetAnnotator(AnnotatorBase):
         self.gene_set_collection = build_gene_set_collection_from_resource(
             self.gene_set_resource)
         self.gene_sets: list[GeneSet] | None = None
+        self.input_gene_list = input_gene_list
+
+        info.resources += [gene_set_resource]
+
+        info.documentation = (
+            "This gene set collection annotator uses the "
+            f"**{self.gene_set_collection.collection_id}** "
+            f"gene set collection."
+        )
+        source_type_desc = self._build_source_type_desc(info)
+
+        super().__init__(pipeline, info, source_type_desc)
+
+    def _build_source_type_desc(
+        self, info: AnnotatorInfo,
+    ) -> dict[str, tuple[str, str]]:
         gene_sets_list = self.gene_set_collection \
             .get_gene_sets_list_statistics()
         if gene_sets_list is None:
@@ -82,29 +98,36 @@ class GeneSetAnnotator(AnnotatorBase):
                     key=lambda gs: (-gs.count, gs.name),
                 )
             ]
-
-        info.resources += [gene_set_resource]
-        attrs = {
-            gs["name"]: ("bool", gs["desc"])
-            for gs in gene_sets_list[:10]
-        }
-        attrs["in_sets"] = (
+        in_sets_desc = (
             "object", (
-                "List of gene sets of the collection, "
-                "which have at least 1 gene from the input gene list"
-            ),
-        )
-        if not info.attributes:
+                "List of the gene sets of the collection, "
+                "which have at least one gene from the input gene "
+                "list"
+            ))
+        if info.attributes:
+            gene_sets_desc = {gs["name"]: gs["desc"] for gs in gene_sets_list}
+            source_type_desc = {}
+            for attr in info.attributes:
+                if attr.source == "in_sets":
+                    source_type_desc["in_sets"] = in_sets_desc
+                    continue
+                if attr.source not in gene_sets_desc:
+                    raise ValueError(
+                        f"The attribute {attr.source} is not found in the "
+                        f"gene set collection "
+                        f"{self.gene_set_collection.collection_id}.")
+                source_type_desc[attr.source] = (
+                    "bool", gene_sets_desc[attr.source])
+        else:
+            source_type_desc = {
+                gs["name"]: ("bool", gs["desc"])
+                for gs in gene_sets_list[:20]
+            }
+            source_type_desc["in_sets"] = in_sets_desc
             info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                *attrs.keys(),
+                *source_type_desc.keys(),
             ])
-
-        self.input_gene_list = input_gene_list
-        info.documentation = (
-            "This annotator uses the"
-            f"**{self.gene_set_collection.collection_id}**"
-        )
-        super().__init__(pipeline, info, attrs)
+        return source_type_desc
 
     @property
     def used_context_attributes(self) -> tuple[str, ...]:
