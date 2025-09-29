@@ -142,7 +142,26 @@ class GeneSetCollectionImpl(
         return b"placeholder"
 
     def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
+        manifest = self.resource.get_manifest()
+        result = {
+            "files_md5": {
+                fn: manifest[fn].md5
+                for fn in self.gene_set_collection.files
+            },
+        }
+        if self.gene_set_collection.config.histograms is not None:
+            hist_configs = self.gene_set_collection.config.histograms
+            if hist_configs.get("genes_per_gene_set") is not None:
+                result["genes_per_gene_set"] = (
+                    hist_configs["genes_per_gene_set"].model_dump(
+                        exclude_unset=True))
+            if hist_configs.get("gene_sets_per_gene") is not None:
+                result["gene_sets_per_gene"] = (
+                    hist_configs["gene_sets_per_gene"].model_dump(
+                        exclude_unset=True))
+
+        return json.dumps(
+            result, indent=2, sort_keys=True).encode()
 
     def _calc_genes_per_gene_set_hist(
         self,
