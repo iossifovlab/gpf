@@ -1,8 +1,7 @@
 import copy
 import json
 from collections import Counter
-from functools import lru_cache
-from typing import Any, cast
+from typing import Any
 
 from jinja2 import Template
 from markdown2 import markdown
@@ -97,7 +96,8 @@ class GeneSetCollectionImpl(
             info["meta"] = markdown(str(info["meta"]))
         info["impl"] = self
 
-        statistics = self.get_gene_collection_count_statistics()
+        statistics = self.gene_set_collection \
+            .get_gene_collection_count_statistics()
         if statistics is not None:
             info["number_of_gene_sets"] = (
                 statistics["number_of_gene_sets"]
@@ -142,25 +142,26 @@ class GeneSetCollectionImpl(
         return b"placeholder"
 
     def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
+        manifest = self.resource.get_manifest()
+        result = {
+            "files_md5": {
+                fn: manifest[fn].md5
+                for fn in self.gene_set_collection.files
+            },
+        }
+        if self.gene_set_collection.config.histograms is not None:
+            hist_configs = self.gene_set_collection.config.histograms
+            if hist_configs.get("genes_per_gene_set") is not None:
+                result["genes_per_gene_set"] = (
+                    hist_configs["genes_per_gene_set"].model_dump(
+                        exclude_unset=True))
+            if hist_configs.get("gene_sets_per_gene") is not None:
+                result["gene_sets_per_gene"] = (
+                    hist_configs["gene_sets_per_gene"].model_dump(
+                        exclude_unset=True))
 
-    def get_genes_per_gene_set_hist_filename(self) -> str:
-        return "statistics/genes_per_gene_set_histogram.png"
-
-    def get_gene_sets_per_gene_hist_filename(self) -> str:
-        return "statistics/gene_sets_per_gene_histogram.png"
-
-    def get_gene_sets_list_statistics(self) -> list[dict] | None:
-        """Get gene sets list statistics from the resource."""
-        try:
-            with self.resource.proto.open_raw_file(
-                self.resource,
-                "statistics/gene_sets_list_statistics.json",
-                "rt",
-            ) as statistics_file:
-                return cast(list, json.load(statistics_file))
-        except FileNotFoundError:
-            return []
+        return json.dumps(
+            result, indent=2, sort_keys=True).encode()
 
     def _calc_genes_per_gene_set_hist(
         self,
@@ -284,7 +285,8 @@ class GeneSetCollectionImpl(
 
         plot_histogram(
             self.resource,
-            self.get_genes_per_gene_set_hist_filename(),
+            self.gene_set_collection
+            .get_genes_per_gene_set_hist_image_filename(),
             histogram,
             "gene count per gene set",
             "count of gene sets",
@@ -306,25 +308,13 @@ class GeneSetCollectionImpl(
 
         plot_histogram(
             self.resource,
-            self.get_gene_sets_per_gene_hist_filename(),
+            self.gene_set_collection
+            .get_gene_sets_per_gene_hist_image_filename(),
             histogram,
             "number of gene sets the gene is present in",
             "number of genes",
         )
         return histogram
-
-    @lru_cache(maxsize=64)
-    def get_gene_collection_count_statistics(self) -> dict | None:
-        """Get gene collection count statistics from the resource."""
-        try:
-            with self.resource.proto.open_raw_file(
-                self.resource,
-                "statistics/gene_collection_count_statistics.json",
-                "rt",
-            ) as statistics_file:
-                return cast(dict, json.load(statistics_file))
-        except FileNotFoundError:
-            return None
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -377,7 +367,7 @@ GENE_SETS_TEMPLATE = """
 {% endblock %}
 
 {% block content %}
-{% set impl = data.impl %}
+{% set gsc = data.impl.gene_set_collection %}
 <hr>
 <h2>Gene set ID: {{ data["id"] }}</h2>
 <h3>Statistics:</h3>
@@ -387,7 +377,7 @@ GENE_SETS_TEMPLATE = """
     <div style="display: flex; flex-direction: column; align-items: center;">
         <span>Count of genes per gene set</span>
         <div class="histogram">
-            <img src="{{ impl.get_genes_per_gene_set_hist_filename() }}"
+            <img src="{{ gsc.get_genes_per_gene_set_hist_image_filename() }}"
                 style="width: 300px; cursor: pointer;"
                 alt={{ data["id"] }}
                 title="genes-per-gene-set"
@@ -397,7 +387,7 @@ GENE_SETS_TEMPLATE = """
     <div style="display: flex; flex-direction: column; align-items: center; padding-left: 38px;">
         <span>Count of gene sets per gene</span>
         <div class="histogram">
-            <img src="{{ impl.get_gene_sets_per_gene_hist_filename() }}"
+            <img src="{{ gsc.get_gene_sets_per_gene_hist_image_filename() }}"
                 style="width: 300px; cursor: pointer;"
                 alt={{ data["id"] }}
                 title="gene-sets-per-gene"
@@ -409,7 +399,7 @@ GENE_SETS_TEMPLATE = """
     <div class="modal-content"
         style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
         <span class="close">&times;</span>
-        <img src="{{ impl.get_genes_per_gene_set_hist_filename() }}"
+        <img src="{{ gsc.get_genes_per_gene_set_hist_image_filename() }}"
             alt="genes per gene set histogram"
             title="genes-per-gene-set">
     </div>
@@ -418,7 +408,7 @@ GENE_SETS_TEMPLATE = """
     <div class="modal-content"
         style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
         <span class="close">&times;</span>
-        <img src="{{ impl.get_gene_sets_per_gene_hist_filename() }}"
+        <img src="{{ gsc.get_gene_sets_per_gene_hist_image_filename() }}"
             alt="genes per gene set histogram"
             title="gene-sets-per-gene">
     </div>
@@ -432,7 +422,7 @@ GENE_SETS_TEMPLATE = """
                 <th>Description</th>
             </tr>
         </thead>
-        {%- for gs in impl.get_gene_sets_list_statistics() -%}
+        {%- for gs in gsc.get_gene_sets_list_statistics() -%}
             <tr>
                 <td>{{ gs["name"] }}</td>
                 <td>{{ gs["count"] }}</td>

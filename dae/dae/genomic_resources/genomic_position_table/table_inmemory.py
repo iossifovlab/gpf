@@ -36,7 +36,8 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             data,
             self.chrom_key,
             self.pos_begin_key, self.pos_end_key,
-            self.ref_key, self.alt_key,
+            ref_key=self.ref_key,
+            alt_key=self.alt_key,
         )
 
     def open(self) -> "InmemoryGenomicPositionTable":
@@ -101,7 +102,8 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
     def _transform_result(self, line: Line, chrom: str) -> Line:
         assert self.chrom_key is not None
         assert self.header is not None
-        new_data = list(line._data)  # pylint: disable=protected-access  # noqa: SLF001
+        # pylint: disable=protected-access
+        new_data = list(line._data)  # noqa: SLF001
         chrom_idx = get_idx(self.chrom_key, self.header)
         new_data[chrom_idx] = chrom
         return self._make_line(tuple(new_data))

@@ -125,3 +125,12 @@ def test_repo_info(
     assert (tmp_path / "main/index.html").exists()
     assert (
         tmp_path / "main/statistics/gene_sets_list_statistics.json").exists()
+
+
+def test_gene_set_collection_statistics_hash(
+    gene_sets_impl: GeneSetCollectionImpl,
+) -> None:
+    result = json.loads(gene_sets_impl.calc_statistics_hash().decode())
+    assert "files_md5" in result
+    assert "genes_per_gene_set" in result
+    assert "gene_sets_per_gene" in result

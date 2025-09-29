@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import abc
+import json
 import logging
 import os
 from collections.abc import Sequence
 from functools import cached_property
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -16,6 +17,10 @@ from dae.gene_sets.gene_term import (
     read_mapping_file,
 )
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.histogram import (
+    Histogram,
+    load_histogram,
+)
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
@@ -273,6 +278,50 @@ class GeneSetCollection(
 
     def get_all_gene_sets(self) -> list[GeneSet]:
         return list(self.gene_sets.values())
+
+    def get_genes_per_gene_set_hist_image_filename(self) -> str:
+        return "statistics/genes_per_gene_set_histogram.png"
+
+    def get_genes_per_gene_set_hist_filename(self) -> str:
+        return "statistics/genes_per_gene_set_histogram.json"
+
+    def get_genes_per_gene_set_hist(self) -> Histogram | None:
+        hist_filename = self.get_genes_per_gene_set_hist_filename()
+        return load_histogram(self.resource, hist_filename)
+
+    def get_gene_sets_per_gene_hist_image_filename(self) -> str:
+        return "statistics/gene_sets_per_gene_histogram.png"
+
+    def get_gene_sets_per_gene_hist_filename(self) -> str:
+        return "statistics/gene_sets_per_gene_histogram.json"
+
+    def get_gene_sets_per_gene_hist(self) -> Histogram | None:
+        hist_filename = self.get_gene_sets_per_gene_hist_filename()
+        return load_histogram(self.resource, hist_filename)
+
+    def get_gene_sets_list_statistics(self) -> list[dict] | None:
+        """Get gene sets list statistics from the resource."""
+        try:
+            with self.resource.proto.open_raw_file(
+                self.resource,
+                "statistics/gene_sets_list_statistics.json",
+                "rt",
+            ) as statistics_file:
+                return cast(list, json.load(statistics_file))
+        except FileNotFoundError:
+            return None
+
+    def get_gene_collection_count_statistics(self) -> dict | None:
+        """Get gene collection count statistics from the resource."""
+        try:
+            with self.resource.proto.open_raw_file(
+                self.resource,
+                "statistics/gene_collection_count_statistics.json",
+                "rt",
+            ) as statistics_file:
+                return cast(dict, json.load(statistics_file))
+        except FileNotFoundError:
+            return None
 
 
 class GeneSetsDb:

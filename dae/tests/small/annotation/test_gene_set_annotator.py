@@ -1,9 +1,12 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 
 import textwrap
 
 import pytest
 from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotation_config import (
+    AnnotationConfigurationError,
+)
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.gene_set_annotator import GeneSetAnnotator
@@ -81,6 +84,7 @@ def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
     )
 
     annotatable = VCFAllele("1", 1, "A", "G")
+    annotator.open()
 
     result = annotator.annotate(annotatable, {"gene_list": ["g1"]})
     assert result == {
@@ -130,7 +134,6 @@ def test_gene_score_annotator_used_context_attributes(
     ("set_2", "bar", 20, "C", "G", False),
 ])
 def test_gene_set_annotator_in_pipeline(
-    # tmp_path_factory: pytest.TempPathFactory,
     test_grr: GenomicResourceRepo,
     set_id: str,
     chrom: str,
@@ -150,6 +153,66 @@ def test_gene_set_annotator_in_pipeline(
         """),
         test_grr)
 
-    allele = VCFAllele(chrom, pos, ref, alt)
-    result = pipeline.annotate(allele)
-    assert result[set_id] is expected
+    with pipeline as pipeline:
+        allele = VCFAllele(chrom, pos, ref, alt)
+        result = pipeline.annotate(allele)
+        assert result[set_id] is expected
+
+
+def test_gene_set_annotator_broken_configuration(
+    test_grr: GenomicResourceRepo,
+) -> None:
+    with pytest.raises(AnnotationConfigurationError):
+        load_pipeline_from_yaml(textwrap.dedent(
+            """
+            - effect_annotator:
+                genome: foobar_genome
+                gene_models: foobar_genes
+            - gene_set_annotator:
+                resource_id: foobar_gene_set_collection
+                input_gene_list: gene_list
+                attributes:
+                - ala_bala
+            """),
+            test_grr)
+
+
+@pytest.mark.parametrize("set_config,set_id, chrom,pos,ref,alt, expected", [
+    ("set_1", "set_0", "foo", 10, "A", "C", None),
+    ("set_0", "set_0", "foo", 10, "A", "C", True),
+    ("set_2", "set_0", "foo", 10, "A", "C", None),
+    ("set_0", "set_0", "bar", 15, "A", "C", True),
+    ("set_1", "set_0", "bar", 15, "A", "C", None),
+    ("set_2", "set_0", "bar", 15, "A", "C", None),
+    ("set_0", "set_0", "foo", 20, "C", "G", False),
+    ("set_1", "set_0", "foo", 20, "C", "G", None),
+    ("set_2", "set_0", "foo", 20, "C", "G", None),
+    ("set_1", "set_1", "foo", 10, "C", "G", True),
+])
+def test_gene_set_annotator_in_pipeline_with_configuration(
+    test_grr: GenomicResourceRepo,
+    set_config: str,
+    set_id: str,
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    expected: bool,  # noqa: FBT001
+) -> None:
+    pipeline = load_pipeline_from_yaml(textwrap.dedent(
+        f"""
+        - effect_annotator:
+            genome: foobar_genome
+            gene_models: foobar_genes
+        - gene_set_annotator:
+            resource_id: foobar_gene_set_collection
+            input_gene_list: gene_list
+            attributes:
+            - {set_config}
+        """),
+        test_grr)
+
+    with pipeline as pipeline:
+        allele = VCFAllele(chrom, pos, ref, alt)
+        result = pipeline.annotate(allele)
+        assert result.get(set_id) is expected

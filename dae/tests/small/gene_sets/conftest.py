@@ -183,6 +183,13 @@ def grr_contents() -> dict[str, Any]:
                 filename: test-map.txt
                 web_label: Test mapping
                 web_format_str: "key| (|count|)"
+                histograms:
+                  genes_per_gene_set:
+                    type: categorical
+                    natural_order: True
+                  gene_sets_per_gene:
+                    type: categorical
+                    natural_order: True
             """),
             "test-map.txt": convert_to_tab_separated("""
                 #geneNS tsym

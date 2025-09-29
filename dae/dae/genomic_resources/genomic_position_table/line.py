@@ -45,7 +45,7 @@ class Line:
         raw_line: tuple,
         chrom_key: int = 0,
         pos_begin_key: int = 1,
-        pos_end_key: int = 2,
+        pos_end_key: int = 2, *,
         ref_key: int | None = None,
         alt_key: int | None = None,
     ):
