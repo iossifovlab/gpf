@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 
 import textwrap
 
@@ -81,6 +81,7 @@ def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
     )
 
     annotatable = VCFAllele("1", 1, "A", "G")
+    annotator.open()
 
     result = annotator.annotate(annotatable, {"gene_list": ["g1"]})
     assert result == {
@@ -150,6 +151,7 @@ def test_gene_set_annotator_in_pipeline(
         """),
         test_grr)
 
-    allele = VCFAllele(chrom, pos, ref, alt)
-    result = pipeline.annotate(allele)
-    assert result[set_id] is expected
+    with pipeline as pipeline:
+        allele = VCFAllele(chrom, pos, ref, alt)
+        result = pipeline.annotate(allele)
+        assert result[set_id] is expected
