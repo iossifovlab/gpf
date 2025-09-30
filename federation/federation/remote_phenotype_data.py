@@ -179,16 +179,12 @@ class RemotePhenotypeData(PhenotypeData):
             logger.warning("Unsupported argument used: family_ids")
         roles_names = [str(r) for r in roles] if roles is not None else None
 
-        return pd.DataFrame.from_dict(
-            cast(
-                dict[str, Any],
-                self.rest_client.post_measures_values(
-                    self._remote_pheno_id,
-                    measure_ids=measure_ids,
-                    roles=roles_names,
-                ),
-            ),
+        measure_values = self.rest_client.post_measures_values(
+            self._remote_pheno_id,
+            measure_ids=measure_ids,
+            roles=roles_names,
         )
+        return pd.read_json(measure_values, orient="split")
 
     def get_person_roles(self) -> list[str]:
         return self.rest_client.get_pheno_roles(self._remote_pheno_id)

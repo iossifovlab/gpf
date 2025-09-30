@@ -213,23 +213,18 @@ class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
         roles = data.get("roles", None)
         if roles is not None:
             roles = [Role.from_name(str(r)) for r in roles]
-
-        res_df = dataset.phenotype_data.get_people_measure_values_df(
+        df = dataset.phenotype_data.get_people_measure_values_df(
             measure_ids,
             person_ids,
             family_ids,
             roles,
         )
 
-        result: list[dict[str, Any]] = cast(
-            list[dict[str, Any]], res_df.to_dict("records"))
+        df["status"] = df["status"].apply(str)
+        df["role"] = df["role"].apply(str)
+        df["sex"] = df["sex"].apply(str)
 
-        for v in result:
-            v["status"] = str(v["status"])
-            v["role"] = str(v["role"])
-            v["sex"] = str(v["sex"])
-
-        return Response(result)
+        return Response(df.to_json(orient="split"))
 
 
 class PhenoToolMeasure(QueryBaseView, DatasetAccessRightsView):
