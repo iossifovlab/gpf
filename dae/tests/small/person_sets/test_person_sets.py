@@ -7,6 +7,7 @@ import pytest
 import toml
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
+from dae.genomic_resources.testing import setup_pedigree
 from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
@@ -16,7 +17,6 @@ from dae.person_sets import (
     PersonSetCollectionConfig,
     parse_person_set_collections_study_config,
 )
-from dae.testing import setup_pedigree
 
 
 def get_person_set_collections_config(

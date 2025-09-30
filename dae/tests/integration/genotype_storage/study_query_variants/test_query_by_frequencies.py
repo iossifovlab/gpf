@@ -3,16 +3,18 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.studies.study import GenotypeData
-from dae.testing import (
-    denovo_study,
+from dae.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
     setup_vcf,
+)
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
+from dae.testing.alla_import import alla_gpf
+from dae.testing.import_helpers import (
+    denovo_study,
     vcf_study,
 )
-from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")

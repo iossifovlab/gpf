@@ -13,10 +13,10 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import (
     build_filesystem_test_resource,
     setup_directories,
+    setup_genome,
 )
 from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import setup_genome
 from dae.utils.variant_utils import best2gt, mat2str
 from dae.variants.attributes import GeneticModel
 from dae.variants.family_variant import (

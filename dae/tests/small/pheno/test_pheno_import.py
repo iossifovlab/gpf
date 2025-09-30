@@ -8,6 +8,7 @@ import duckdb
 import pytest
 from dae.genomic_resources.testing import (
     setup_directories,
+    setup_pedigree,
 )
 from dae.pheno.common import (
     DestinationConfig,
@@ -23,9 +24,6 @@ from dae.pheno.pheno_import import (
     import_pheno_data,
     load_measure_descriptions,
     main,
-)
-from dae.testing import (
-    setup_pedigree,
 )
 from sqlglot.expressions import table_
 

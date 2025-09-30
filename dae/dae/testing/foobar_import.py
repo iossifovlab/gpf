@@ -6,9 +6,13 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.genomic_resources.testing import (
+    setup_gene_models,
+    setup_genome,
+)
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing import setup_gene_models, setup_genome, setup_gpf_instance
+from dae.testing.setup_helpers import setup_gpf_instance
 
 # this content follows the 'refflat' gene model format
 GMM_CONTENT = """

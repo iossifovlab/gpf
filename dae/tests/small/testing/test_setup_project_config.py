@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 import yaml
-from dae.testing import acgt_gpf
+from dae.testing.acgt_import import acgt_gpf
 from dae.testing.import_helpers import (
     StudyInputLayout,
     setup_import_project_config,

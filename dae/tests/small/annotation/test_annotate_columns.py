@@ -32,9 +32,12 @@ from dae.genomic_resources.genomic_context import (
     GenomicContext,
     SimpleGenomicContext,
 )
-from dae.genomic_resources.testing import setup_tabix
+from dae.genomic_resources.testing import (
+    setup_denovo,
+    setup_genome,
+    setup_tabix,
+)
 from dae.task_graph.logging import FsspecHandler
-from dae.testing import setup_denovo, setup_genome
 
 pytestmark = pytest.mark.usefixtures("clear_context")
 

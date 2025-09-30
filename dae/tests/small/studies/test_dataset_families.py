@@ -3,14 +3,16 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.studies.study import GenotypeDataGroup
-from dae.testing import (
-    denovo_study,
-    setup_dataset,
+from dae.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+from dae.studies.study import GenotypeDataGroup
 from dae.testing.acgt_import import acgt_gpf
+from dae.testing.import_helpers import (
+    denovo_study,
+    setup_dataset,
+)
 
 
 @pytest.fixture

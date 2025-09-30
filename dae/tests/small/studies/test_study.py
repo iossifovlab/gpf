@@ -1,8 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+from dae.genomic_resources.testing import (
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
+from dae.testing.import_helpers import vcf_study
 
 
 @pytest.fixture(scope="module")

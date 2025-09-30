@@ -3,13 +3,15 @@ import textwrap
 
 import pytest
 import yaml
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeData
-from dae.testing import (
-    alla_gpf,
-    denovo_study,
+from dae.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
+from dae.testing.alla_import import alla_gpf
+from dae.testing.import_helpers import (
+    denovo_study,
     study_update,
 )
 

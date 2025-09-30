@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
-from typing import Callable, ContextManager
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 
 import pytest
 import pytest_mock
@@ -9,7 +10,11 @@ import requests
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.testing import setup_directories, setup_empty_gene_models, setup_genome
+from dae.genomic_resources.testing import (
+    setup_directories,
+    setup_empty_gene_models,
+    setup_genome,
+)
 from gpf_instance.gpf_instance import WGPFInstance
 
 from wdae_tests.integration.testing import LiveServer, setup_wgpf_instance
@@ -39,20 +44,19 @@ def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         "directory": str(root_path / "alla_gpf"),
     })
 
-    gpf = setup_wgpf_instance(
+    return setup_wgpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=local_repo,
     )
-    return gpf
 
 
 def test_eager_loading(
     mocker: pytest_mock.MockerFixture,
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
 ) -> None:
 
     mocker.patch.object(
@@ -80,7 +84,7 @@ def test_no_eager_loading(
     mocker: pytest_mock.MockerFixture,
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
 ) -> None:
 
     mocker.patch.object(
@@ -105,10 +109,10 @@ def test_no_eager_loading(
 
 
 def test_example_request(
-    mocker: pytest_mock.MockerFixture,
+    mocker: pytest_mock.MockerFixture,  # noqa: ARG001
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
 ) -> None:
 
     with wdae_django_server(

@@ -6,11 +6,11 @@ import sys
 import textwrap
 
 import pytest
+from dae.genomic_resources.testing import setup_directories
 from dae.parquet.partition_descriptor import (
     Partition,
     PartitionDescriptor,
 )
-from dae.testing import setup_directories
 from dae.utils.regions import Region
 
 

@@ -2,12 +2,12 @@
 
 import numpy as np
 import pytest
-from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import (
+from dae.genomic_resources.testing import (
     setup_genome,
     setup_pedigree,
     setup_vcf,
 )
+from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 

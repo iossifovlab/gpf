@@ -5,9 +5,9 @@ import textwrap
 
 import pytest
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.testing import convert_to_tab_separated
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import convert_to_tab_separated
 from dae.variants.attributes import Role, Sex
 from dae.variants.core import Allele
 from dae.variants_loaders.raw.flexible_variant_loader import (

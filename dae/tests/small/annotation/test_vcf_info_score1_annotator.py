@@ -6,7 +6,7 @@ from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
-from dae.testing import setup_directories, setup_vcf
+from dae.genomic_resources.testing import setup_directories, setup_vcf
 
 
 @pytest.fixture

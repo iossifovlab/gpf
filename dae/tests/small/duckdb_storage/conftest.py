@@ -11,6 +11,8 @@ from dae.genomic_resources.testing import (
     build_s3_test_bucket,
     build_s3_test_filesystem,
     s3_test_server_endpoint,
+    setup_pedigree,
+    setup_vcf,
 )
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
@@ -19,8 +21,8 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.testing.import_helpers import vcf_study
 from dae.utils import fs_utils
 
 

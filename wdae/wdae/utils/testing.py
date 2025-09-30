@@ -11,18 +11,17 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.genomic_resources.testing import (
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.build_pheno_browser import main as build_browser
 from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
-from dae.testing import (
-    setup_directories,
-    setup_gpf_instance,
-    setup_pedigree,
-    setup_vcf,
-    vcf_study,
-)
-from dae.testing.import_helpers import setup_dataset_config
+from dae.testing.import_helpers import setup_dataset_config, vcf_study
+from dae.testing.setup_helpers import setup_gpf_instance
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from gpf_instance.gpf_instance import WGPFInstance
 

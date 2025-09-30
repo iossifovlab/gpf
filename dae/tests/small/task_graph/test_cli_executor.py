@@ -6,8 +6,8 @@ import textwrap
 import dae.dask.named_cluster
 import dask.distributed
 import pytest
+from dae.genomic_resources.testing import setup_directories
 from dae.task_graph import TaskGraphCli
-from dae.testing import setup_directories
 from pytest_mock import MockerFixture
 
 

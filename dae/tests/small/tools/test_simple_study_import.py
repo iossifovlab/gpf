@@ -5,15 +5,15 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.import_tools.import_tools import ImportProject
-from dae.testing import (
+from dae.genomic_resources.testing import (
     setup_dae_transmitted,
     setup_denovo,
     setup_directories,
     setup_pedigree,
     setup_vcf,
 )
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.import_tools.import_tools import ImportProject
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
 

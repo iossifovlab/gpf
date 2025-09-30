@@ -3,13 +3,13 @@ import pathlib
 import textwrap
 
 import pytest
+from dae.genomic_resources.testing import setup_pedigree
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
     parse_person_set_collection_config,
 )
-from dae.testing import setup_pedigree
 
 
 @pytest.fixture

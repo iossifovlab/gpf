@@ -12,17 +12,16 @@ import pytest
 import pytest_mock
 from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
-from dae.gpf_instance import GPFInstance
-from dae.parquet.schema2.annotate_schema2_parquet import cli, produce_regions
-from dae.parquet.schema2.loader import ParquetLoader
-from dae.testing import (
-    denovo_study,
+from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
     setup_pedigree,
     setup_vcf,
-    vcf_study,
 )
+from dae.gpf_instance import GPFInstance
+from dae.parquet.schema2.annotate_schema2_parquet import cli, produce_regions
+from dae.parquet.schema2.loader import ParquetLoader
+from dae.testing.import_helpers import denovo_study, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 

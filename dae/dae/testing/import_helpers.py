@@ -10,11 +10,11 @@ import yaml
 from box import Box
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
+from dae.genomic_resources.testing import setup_directories
 from dae.gpf_instance import GPFInstance
 from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
 from dae.studies.study import GenotypeData, GenotypeDataGroup
-from dae.testing import setup_directories
 from dae.utils.dict_utils import recursive_dict_update
 
 

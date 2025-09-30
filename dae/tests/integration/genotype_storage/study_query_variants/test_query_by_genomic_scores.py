@@ -16,8 +16,8 @@ from dae.genomic_resources.testing import (
 )
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.testing import vcf_study
 from dae.testing.alla_import import alla_gpf
+from dae.testing.import_helpers import vcf_study
 
 
 @pytest.fixture(scope="module")

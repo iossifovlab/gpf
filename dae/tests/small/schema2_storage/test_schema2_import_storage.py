@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pyarrow.parquet as pq
 import pytest
+from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from dae.testing import acgt_gpf, setup_pedigree, setup_vcf
+from dae.testing.acgt_import import acgt_gpf
 from dae.testing.import_helpers import vcf_study
 
 

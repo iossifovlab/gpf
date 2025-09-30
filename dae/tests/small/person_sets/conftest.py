@@ -4,13 +4,13 @@ import textwrap
 
 import pytest
 import yaml
+from dae.genomic_resources.testing import setup_pedigree
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
     PersonSetCollection,
     parse_person_set_collection_config,
 )
-from dae.testing import setup_pedigree
 
 
 @pytest.fixture
