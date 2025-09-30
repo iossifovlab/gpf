@@ -12,8 +12,10 @@ from dae.annotation.annotation_pipeline import (
     AnnotatorInfo,
     AttributeInfo,
 )
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.testing import convert_to_tab_separated, setup_directories
 
 

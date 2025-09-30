@@ -3,7 +3,7 @@ from collections.abc import Callable, Iterable
 from typing import Any
 
 from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status

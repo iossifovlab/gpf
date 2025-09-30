@@ -4,7 +4,7 @@ from typing import Any, cast
 
 import pandas as pd
 import yaml
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.variants.attributes import Role, Sex, Status

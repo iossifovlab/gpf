@@ -7,9 +7,11 @@ from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.score_annotator import AlleleScoreAnnotator
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
 )
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,

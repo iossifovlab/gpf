@@ -2,7 +2,7 @@
 import pathlib
 from typing import Any
 
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
 )

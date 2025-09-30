@@ -6,7 +6,7 @@ from dae.effect_annotation.annotator import (
     EffectAnnotator,
     Variant,
 )
-from dae.genomic_resources.gene_models import Exon, TranscriptModel
+from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
 
 from .mocks import TranscriptModelMock
 

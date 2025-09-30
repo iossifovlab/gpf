@@ -10,7 +10,11 @@ import pandas as pd
 from box import Box
 
 from dae.pheno.browser import PhenoBrowser
-from dae.pheno.common import MeasureType
+from dae.pheno.common import (
+    IMPORT_METADATA_TABLE,
+    ImportManifest,
+    MeasureType,
+)
 from dae.pheno.graphs import (
     draw_categorical_violin_distribution,
     draw_linregres,
@@ -23,10 +27,14 @@ from dae.pheno.pheno_data import (
     PhenotypeGroup,
     PhenotypeStudy,
 )
-from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorageRegistry
-from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
+from dae.task_graph.cache import (
+    TaskCache,
+)
+from dae.task_graph.cli_tools import (
+    TaskGraphCli,
+)
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
 from dae.variants.attributes import Role

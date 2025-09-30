@@ -3,7 +3,6 @@ from collections.abc import Callable
 from importlib.metadata import EntryPoint, entry_points
 
 from .repository import GenomicResource
-from .repository_factory import build_genomic_resource_repository
 from .resource_implementation import GenomicResourceImplementation
 
 _FOUND_RESOURCE_IMPLEMENTATIONS: dict[str, EntryPoint] = {}
@@ -14,8 +13,6 @@ _REGISTERED_RESOURCE_IMPLEMENTATIONS: dict[
 
 
 __all__ = [
-    "GenomicResource",
-    "build_genomic_resource_repository",
     "get_resource_implementation_builder",
 ]
 

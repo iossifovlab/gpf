@@ -2,7 +2,7 @@
 import argparse
 from typing import cast
 
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
 )
 from dae.genomic_resources.genomic_context_cli import (

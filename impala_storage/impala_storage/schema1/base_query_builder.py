@@ -5,7 +5,7 @@ from typing import Any
 
 import dae.utils.regions
 from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_function,

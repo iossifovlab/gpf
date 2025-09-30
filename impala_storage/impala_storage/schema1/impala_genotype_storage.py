@@ -9,7 +9,7 @@ import toml
 from box import Box
 from cerberus import Validator
 from dae.configuration.utils import validate_path
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor

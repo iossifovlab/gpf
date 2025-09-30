@@ -6,7 +6,7 @@ import pytest
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbStorage,
 )
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,

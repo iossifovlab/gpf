@@ -3,11 +3,13 @@ import pathlib
 import textwrap
 
 from dae.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.build_pheno_browser import main as build_browser

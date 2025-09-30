@@ -4,7 +4,7 @@ from typing import Any, ClassVar, cast
 import gcsfs
 import pyarrow.parquet as pq
 from cerberus import Validator
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor

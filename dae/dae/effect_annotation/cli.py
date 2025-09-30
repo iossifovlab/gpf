@@ -7,8 +7,7 @@ from typing import ClassVar
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
-from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     build_gene_models_from_file,
     build_gene_models_from_resource,
@@ -23,6 +22,9 @@ from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)

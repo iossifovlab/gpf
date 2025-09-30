@@ -4,7 +4,7 @@ from typing import Any
 
 import pandas as pd
 
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader

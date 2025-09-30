@@ -13,7 +13,7 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
 )
 from dae.annotation.annotator_base import AnnotatorBase
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     TranscriptModel,
     build_gene_models_from_resource,

@@ -4,9 +4,8 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     build_gene_models_from_resource_id,
 )
@@ -17,6 +16,9 @@ from dae.genomic_resources.reference_genome import (
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
 )
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,

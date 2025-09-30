@@ -2,8 +2,7 @@
 
 import pytest
 from dae.effect_annotation.annotator import EffectAnnotator
-from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
 )
@@ -12,6 +11,9 @@ from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 
 
 @pytest.fixture(scope="module")
@@ -1314,7 +1316,6 @@ def test_chr20_44518889_ins_var(
     assert effects_sorted[0].effect == "frame-shift"
     assert effects_sorted[0].prot_pos == 248
     assert effects_sorted[0].prot_length == 261
-    # assert effects_sorted[0].aa_change is None
 
     assert effects_sorted[1].gene == "NEURL2"
     assert effects_sorted[1].transcript_id == "NM_080749_1"
@@ -1322,7 +1323,6 @@ def test_chr20_44518889_ins_var(
     assert effects_sorted[1].effect == "frame-shift"
     assert effects_sorted[1].prot_pos == 248
     assert effects_sorted[1].prot_length == 285
-    # assert effects_sorted[1].aa_change is None
 
 
 def test_chr9_139839774_ins_var(
@@ -1363,7 +1363,6 @@ def test_chr1_17313765_ins_var(
     assert effects_sorted[0].effect == "frame-shift"
     assert effects_sorted[0].prot_pos == 948
     assert effects_sorted[0].prot_length == 1175
-    # assert effects_sorted[0].aa_change is None
 
     assert effects_sorted[1].gene == "ATP13A2"
     assert effects_sorted[1].transcript_id == "NM_001141974_1"
@@ -1371,7 +1370,6 @@ def test_chr1_17313765_ins_var(
     assert effects_sorted[1].effect == "frame-shift"
     assert effects_sorted[1].prot_pos == 909
     assert effects_sorted[1].prot_length == 1158
-    # assert effects_sorted[1].aa_change is None
 
     assert effects_sorted[2].gene == "ATP13A2"
     assert effects_sorted[2].transcript_id == "NM_022089_1"
@@ -1379,7 +1377,6 @@ def test_chr1_17313765_ins_var(
     assert effects_sorted[2].effect == "frame-shift"
     assert effects_sorted[2].prot_pos == 953
     assert effects_sorted[2].prot_length == 1180
-    # assert effects_sorted[2].aa_change is None
 
 
 def test_chr13_45911524_ins_var(
@@ -1422,7 +1419,6 @@ def test_chr1_906785_ins_var(
     assert effects_sorted[0].effect == "frame-shift"
     assert effects_sorted[0].prot_pos == 276
     assert effects_sorted[0].prot_length == 576
-    # assert effects_sorted[0].aa_change is None
 
     assert effects_sorted[1].gene == "PLEKHN1"
     assert effects_sorted[1].transcript_id == "NM_032129_1"
@@ -1430,7 +1426,6 @@ def test_chr1_906785_ins_var(
     assert effects_sorted[1].effect == "frame-shift"
     assert effects_sorted[1].prot_pos == 264
     assert effects_sorted[1].prot_length == 611
-    # assert effects_sorted[1].aa_change is None
 
 
 def test_chr1_45446840_ins_var(

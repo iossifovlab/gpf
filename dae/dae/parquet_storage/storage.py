@@ -9,7 +9,7 @@ from dae.configuration.utils import validate_path
 from dae.duckdb_storage.duckdb_import_storage import (
     DuckDbLegacyImportStorage,
 )
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
 )

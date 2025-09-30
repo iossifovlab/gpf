@@ -8,7 +8,6 @@ from contextlib import AbstractContextManager
 from typing import Any, cast
 
 import pytest
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cached_repository import (
     CachingProtocol,
     GenomicResourceCachedRepo,
@@ -19,6 +18,9 @@ from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceProtocolRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
 )
 from dae.genomic_resources.testing import (
     build_inmemory_test_repository,

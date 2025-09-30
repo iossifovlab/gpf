@@ -27,7 +27,7 @@ from dae.duckdb_storage.duckdb_storage_helpers import (
     create_study_parquet_tables_layout,
     get_study_config_tables,
 )
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.utils import fs_utils

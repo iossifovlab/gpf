@@ -28,7 +28,10 @@ from dae.gene_sets.gene_sets_db import (
     GeneSetsDb,
     build_gene_set_collection_from_resource,
 )
-from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
+from dae.genomic_resources.gene_models.gene_models import (
+    GeneModels,
+    TranscriptModel,
+)
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_scores.scores import GenomicScoresRegistry
@@ -154,7 +157,9 @@ class GPFInstance:
             return self._grr
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources import build_genomic_resource_repository
+        from dae.genomic_resources.repository_factory import (
+            build_genomic_resource_repository,
+        )
         if self.dae_config.grr:
             self._grr = build_genomic_resource_repository(
                 self.dae_config.grr.to_dict())
@@ -188,7 +193,7 @@ class GPFInstance:
             return self._gene_models
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources.gene_models import (
+        from dae.genomic_resources.gene_models.gene_models import (
             build_gene_models_from_resource,
         )
 

@@ -7,7 +7,9 @@ import pysam
 import pytest
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
-from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import (
     convert_to_tab_separated,

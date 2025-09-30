@@ -1,7 +1,7 @@
-# pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
-from typing import cast
+# pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613,R0917
+from typing import ClassVar, cast
 
-from dae.genomic_resources.gene_models import Exon
+from dae.genomic_resources.gene_models.gene_models import Exon
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.regions import Region
 
@@ -13,7 +13,7 @@ class TranscriptModelMock:
         cds_start: int, cds_end: int,
         exons: list[Exon],
         coding: list[Exon] | None = None,
-        is_coding: bool = True,
+        is_coding: bool = True,  # noqa: FBT001,FBT002
     ):
         self.strand = strand
         self.cds = [cds_start, cds_end]
@@ -50,8 +50,8 @@ class ReferenceGenomeMock:
 
 class CodeMock:
     # pylint: disable=too-few-public-methods
-    startCodons = ["ABC", "DEF"]
-    CodonsAaKeys: dict = {}
+    startCodons: ClassVar[list[str]] = ["ABC", "DEF"]
+    CodonsAaKeys: ClassVar[dict] = {}
 
 
 class AnnotatorMock:

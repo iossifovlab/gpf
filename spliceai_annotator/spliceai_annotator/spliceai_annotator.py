@@ -25,7 +25,7 @@ from dae.genomic_resources.aggregators import (
     Aggregator,
     build_aggregator,
 )
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
 )
