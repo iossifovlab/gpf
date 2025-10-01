@@ -372,6 +372,36 @@ def test_pheno_tool_genomic_scores(
     assert missense["maleResults"]["negative"]["count"] == 0
 
 
+def test_pheno_tool_download(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    download_url = "/api/v3/pheno_tool/download"
+    response = cast(StreamingHttpResponse, admin_client.post(
+        download_url,
+        json.dumps({
+            "queryData": json.dumps({
+                "datasetId": "TEST_REMOTE_t4c8_study_1",
+                "measureId": "i1.m1",
+                "normalizeBy": [],
+                "effectTypes": ["missense", "frame-shift", "synonymous"],
+                "presentInParent": {"presentInParent": ["neither"]},
+            }),
+        }),
+        content_type="application/json",
+    ))
+
+    assert response.status_code == 200
+
+    rows = b"".join(map(bytes, response)).decode("utf-8").rstrip().split("\n")
+
+    assert rows == [
+        "person_id,family_id,status,sex,i1.m1,missense,frame-shift,synonymous",
+        "p1,f1.1,affected,F,110.71113,1.0,0,0.0",
+        "p3,f1.3,affected,F,96.63452,0.0,0,1.0",
+    ]
+
+
 def test_enrichment_models(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001

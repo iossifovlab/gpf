@@ -1,12 +1,16 @@
 from abc import abstractmethod
 from collections import Counter
+from collections.abc import Generator
+from io import StringIO
 from typing import Any, cast
 
-import pandas as pd
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
 from gpf_instance.extension import GPFTool
+from studies.query_transformer import (
+    QueryTransformer,
+)
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
 
@@ -25,11 +29,12 @@ class PhenoToolAdapterBase(GPFTool):
         raise NotImplementedError
 
     @abstractmethod
-    def produce_download_df(
+    def produce_download(
         self,
         query_data: dict[str, Any],
-    ) -> pd.DataFrame:
-        """Produce dataframe for pheno tool download."""
+        query_transformer: QueryTransformer,
+    ) -> Generator[str, None, None]:
+        """Produce columns for download."""
         raise NotImplementedError
 
 
@@ -54,10 +59,34 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
             return PhenoToolAdapter(study)
         raise ValueError(f"Study {study.study_id} does not support pheno tool")
 
-    def produce_download_df(
+    def produce_download(
         self,
         query_data: dict[str, Any],
-    ) -> pd.DataFrame:
+        query_transformer: QueryTransformer,
+    ) -> Generator[str, None, None]:
+        yield ""
+
+        query_data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
+            query_data["effectTypes"],
+        )
+
+        query_data["phenoFilterFamilyIds"] = None
+        if query_data.get("familyFilters") is not None:
+            query_data["phenoFilterFamilyIds"] = list(
+                query_transformer  # noqa: SLF001
+                ._transform_filters_to_ids(
+                    query_data["familyFilters"],
+                    self.study,
+                ),
+            )
+        if query_data.get("familyPhenoFilters") is not None:
+            query_data["phenoFilterFamilyIds"] = list(
+                query_transformer  # noqa: SLF001
+                ._transform_pheno_filters_to_ids(
+                    query_data["familyPhenoFilters"],
+                    self.study,
+                ),
+            )
 
         effect_groups = list(query_data["effectTypes"])
         effect_types = EffectTypesMixin.build_effect_types(
@@ -106,7 +135,17 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         result_df[measure_id] = \
             result_df[measure_id].round(decimals=5)
 
-        return result_df
+        columns = [
+            col
+            for col in result_df.columns.tolist()
+            if col not in {"normalized", "role"}
+        ]
+
+        csv_buffer = StringIO()
+        result_df.to_csv(csv_buffer, index=False, columns=columns)
+        csv_buffer.seek(0)
+
+        yield from csv_buffer.readlines()
 
     def get_result_by_sex(
         self, result: dict[str, PhenoResult],

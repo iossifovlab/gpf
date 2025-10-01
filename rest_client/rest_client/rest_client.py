@@ -1222,6 +1222,22 @@ class RESTClient:
 
         return response.json()
 
+    def post_pheno_tool_download(
+        self, query: dict,
+        chunk_size: int = 512,
+    ) -> Iterator[Any]:
+        """Perform a pheno tool query to the GPF API."""
+        url = f"{self.base_url}/api/v3/pheno_tool/download"
+        response = self.session.post(
+            url,
+            json={"queryData": json.dumps(query)},
+            headers={"Content-Type": "application/json"},
+            stream=True,
+        )
+        if response.status_code != 200:
+            raise OSError(f"Query failed: {response.text}")
+        return response.iter_content(chunk_size=chunk_size)
+
     def get_gene_set_collections(self) -> Any:
         """Get gene set collections."""
         response = self.session.get(

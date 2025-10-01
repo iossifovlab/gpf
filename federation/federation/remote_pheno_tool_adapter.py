@@ -1,8 +1,11 @@
+from collections.abc import Generator
 from typing import Any
 
-import pandas as pd
 from gpf_instance.extension import GPFTool
 from pheno_tool_api.adapter import PhenoToolAdapterBase
+from studies.query_transformer import (
+    QueryTransformer,
+)
 from studies.study_wrapper import WDAEAbstractStudy
 
 from federation.remote_study_wrapper import (
@@ -39,5 +42,15 @@ class RemotePhenoToolAdapter(PhenoToolAdapterBase):
 
         return self.rest_client.post_pheno_tool(query_data)  # type: ignore
 
-    def produce_download_df(self, query_data: dict[str, Any]) -> pd.DataFrame:
-        raise NotImplementedError
+    def produce_download(
+        self,
+        query_data: dict[str, Any],
+        query_transformer: QueryTransformer,  # noqa: ARG002
+    ) -> Generator[str, None, None]:
+        """Produce columns for download."""
+        query_data["datasetId"] = self.dataset_id
+        handle_denovo_gene_sets(self.rest_client, query_data)
+        handle_gene_sets(self.rest_client, query_data)
+        handle_genomic_scores(self.rest_client, query_data)
+
+        yield from self.rest_client.post_pheno_tool_download(query_data)  # type: ignore
