@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+* 2025.10.0
+    * Fix gene set collection files property.
+    * Fix GPF federation unit test.
+
+
+* 2025.10.0
+    * Fix gene set collection resourcse statistics hash.
+    * Fix gene set annotator documentation.
+    * Improved unit testing of gene set collection resources.
+    * Continued improvements in GPF federation capabilities.
+    * Improved handling of batches in SpliceAI annotator plugin.
+
 * 2025.9.7
     * Revisited gene set collection resource implementation.
     * Split creation and loading of gene set collections.
