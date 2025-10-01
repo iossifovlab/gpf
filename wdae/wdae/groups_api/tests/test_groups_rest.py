@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 import json
 from typing import cast
 
@@ -125,7 +125,7 @@ def test_admin_can_rename_groups(
 
     url = f"/api/v3/groups/{group.name}"
 
-    data = {"id": group.id, "name": test_name}
+    data = {"id": group.id, "name": test_name}  # pyright: ignore
 
     response = admin_client.put(
         url, json.dumps(data), content_type="application/json", format="json",
@@ -162,7 +162,7 @@ def test_no_empty_groups_are_accessible(admin_client: Client) -> None:
     assert response.status_code is status.HTTP_200_OK
     assert len(response.json()) == groups_count
 
-    url = f"/api/v3/groups/{new_group.id}"
+    url = f"/api/v3/groups/{new_group.id}"  # pyright: ignore
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_404_NOT_FOUND
 
@@ -317,7 +317,9 @@ def test_revoke_permission_for_group(
     group, wdae_user = group_with_user
     user = cast(User, wdae_user)
 
-    data = {"datasetId": dataset.dataset_id, "groupId": group.id}
+    data = {
+        "datasetId": dataset.dataset_id,
+        "groupId": group.id}  # pyright: ignore
 
     dataset.groups.add(group)
 
@@ -339,7 +341,9 @@ def test_not_admin_cant_revoke_permissions(
     group, wdae_user = group_with_user
     user = cast(User, wdae_user)
 
-    data = {"datasetId": dataset.dataset_id, "groupId": group.id}
+    data = {
+        "datasetId": dataset.dataset_id,
+        "groupId": group.id}  # pyright: ignore
     dataset.groups.add(group)
 
     assert user_has_permission("t4c8_instance", user, dataset.dataset_id)
@@ -364,7 +368,9 @@ def test_cant_revoke_default_permissions(
 
     for group_name in dataset.default_groups:
         group = Group.objects.get(name=group_name)
-        data = {"datasetId": dataset.dataset_id, "groupId": group.id}
+        data = {
+            "datasetId": dataset.dataset_id,
+            "groupId": group.id}  # pyright: ignore
 
         response = user_client.post(
             url,
@@ -389,9 +395,10 @@ def test_cant_revoke_default_permissions(
     ],
 )
 def test_groups_pagination(
-        admin_client: Client, hundred_groups: list[Group], page: int,  # noqa: ARG001
-        status_code: int, length: int | None,
-        first_name: str | None, last_name: str | None,
+    admin_client: Client,
+    hundred_groups: list[Group], page: int,  # noqa: ARG001
+    status_code: int, length: int | None,
+    first_name: str | None, last_name: str | None,
 ) -> None:
     url = f"/api/v3/groups?page={page}&page_size=25"
     response = admin_client.get(url)
@@ -413,7 +420,7 @@ def test_groups_pagination(
 
 
 def test_groups_search(
-    admin_client: Client, hundred_groups: list[Group],
+    admin_client: Client, hundred_groups: list[Group],  # noqa: ARG001
 ) -> None:
     url = "/api/v3/groups?search=Group1"
     response = admin_client.get(url)

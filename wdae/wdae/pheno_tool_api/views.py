@@ -103,7 +103,8 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
 
     def post(self, request: Request) -> Response | StreamingHttpResponse:
         """Pheno tool download."""
-        data = expand_gene_set(parse_query_params(request.data))
+        data = expand_gene_set(
+            parse_query_params(request.data))  # pyright: ignore
 
         if not user_has_permission(
             self.instance_id, request.user, data["datasetId"],
@@ -178,9 +179,11 @@ class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
 
 
 class PhenoToolMeasure(QueryBaseView, DatasetAccessRightsView):
+    """View for returning single measure info."""
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
+        """Get measure info."""
         params = request.GET
         dataset_id = params.get("datasetId", None)
         if not dataset_id:
@@ -204,9 +207,11 @@ class PhenoToolMeasure(QueryBaseView, DatasetAccessRightsView):
 
 
 class PhenoToolMeasures(QueryBaseView, DatasetAccessRightsView):
+    """View for returning multiple measures info."""
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
+        """Get measures info."""
         params = request.GET
         dataset_id = params.get("datasetId", None)
         if not dataset_id:
@@ -233,6 +238,7 @@ class PhenoToolMeasures(QueryBaseView, DatasetAccessRightsView):
 
 
 class PhenoToolInstruments(QueryBaseView, DatasetAccessRightsView):
+    """View for returning instruments and their measures."""
 
     def measure_to_json(self, measure: Measure) -> dict:
         return {
@@ -253,6 +259,7 @@ class PhenoToolInstruments(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
+        """Get instruments and their measures."""
         params = request.GET
         dataset_id = params.get("datasetId", None)
         if not dataset_id:

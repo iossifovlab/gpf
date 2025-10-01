@@ -43,15 +43,16 @@ class DatasetSerializer(serializers.BaseSerializer):
 
         return instance
 
-    def to_internal_value(self, data: Any) -> Any:
+    def to_internal_value(self, data: Any) -> Any:  # noqa: ARG002
         """Do nothing, method is for DB objects only."""
         return
 
-    def create(self, validated_data: Any) -> Any:
+    def create(self, validated_data: Any) -> Any:  # noqa: ARG002
         """Do nothing, method is for DB objects only."""
         return
 
-    def update(self, instance: Any, validated_data: Any) -> Any:
+    def update(
+            self, instance: Any, validated_data: Any) -> Any:  # noqa: ARG002
         """Do nothing, method is for DB objects only."""
         return
 
@@ -84,7 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
             "id", "email", "name",
             "hasPassword", "groups", "allowedDatasets")
 
-    def run_validation(self, data: dict) -> Any:  # type: ignore
+    def run_validation(self, data: dict) -> Any:  # pyright: ignore
         # pylint: disable=signature-differs
         """Normalize email before validation."""
         email = data.get("email")
@@ -98,7 +99,7 @@ class UserSerializer(serializers.ModelSerializer):
         """Validate that no unknown fields are given."""
 
         unknown_keys = set(
-            self.initial_data.keys()  # pyright: ignore
+            self.initial_data.keys(),  # pyright: ignore
         ) - set(self.fields.keys())
 
         if unknown_keys:
@@ -117,15 +118,16 @@ class UserSerializer(serializers.ModelSerializer):
     @staticmethod
     def _update_groups(user: WdaeUser, new_groups: Iterable[Group]) -> None:
         with transaction.atomic():
-            to_remove = set()
-            to_remove.update(group.id for group in user.groups.all())
+            to_remove: set[int] = set()
+            to_remove.update(
+                group.id for group in user.groups.all())  # pyright: ignore
 
             to_add = set()
             for group in new_groups:
-                if group.id in to_remove:
-                    to_remove.remove(group.id)
+                if group.id in to_remove:  # pyright: ignore
+                    to_remove.remove(group.id)  # pyright: ignore
                 else:
-                    to_add.add(group.id)
+                    to_add.add(group.id)  # pyright: ignore
 
             user.groups.add(*to_add)
             user.groups.remove(*to_remove)
@@ -167,6 +169,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserWithoutEmailSerializer(UserSerializer):
-    class Meta:  # pylint: disable=too-few-public-methods
+    class Meta:  # pyright: ignore
+        # pylint: disable=too-few-public-methods
         model = get_user_model()
         fields = tuple(x for x in UserSerializer.Meta.fields if x != "email")

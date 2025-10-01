@@ -593,6 +593,7 @@ def test_query_present_in_parent_and_present_in_child_and_phenotypes(
     phenotypes: list[str],
     count: int,
 ) -> None:
+    # pylint: disable=too-many-positional-arguments
     study_wrapper = t4c8_study_1_wrapper
     query = {
         "presentInParent": {
