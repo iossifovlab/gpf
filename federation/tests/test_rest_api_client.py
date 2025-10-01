@@ -107,7 +107,7 @@ def test_post_measure_values(rest_client: RESTClient) -> None:
         "t4c8_study_1", "i1.m1", None, None, None)
 
     assert measure_values is not None
-    assert isinstance(measure_values, list)
+    assert isinstance(measure_values, str)
 
 
 def test_get_measures_download(rest_client: RESTClient) -> None:
