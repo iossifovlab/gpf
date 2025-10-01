@@ -185,7 +185,7 @@ class GeneSetCollection(
             assert filename is not None
             res.add(filename)
             names_filename = filename[:-4] + "names.txt"
-            if self.resource.file_exists(names_filename):
+            if names_filename in self.resource.get_manifest():
                 res.add(names_filename)
         elif collection_format == "gmt":
             filename = self.config.filename
