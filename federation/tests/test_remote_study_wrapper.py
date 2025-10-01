@@ -1,5 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from federation.remote_study_wrapper import RemoteWDAEStudy
+from federation.remote_study_wrapper import (
+    RemoteWDAEStudy,
+    handle_denovo_gene_sets,
+    handle_gene_sets,
+    handle_genomic_scores,
+)
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
@@ -93,3 +98,110 @@ def test_query_gene_view_summary_variants_allowed_studies_and_study_filters(
         t4c8_query_transformer, **filters)
     result = list(gen)
     assert len(result) == 3
+
+
+def test_handling_of_denovo_gene_sets(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> None:
+    query = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "geneSet": {
+            "geneSet": "Missense",
+            "geneSetsCollection": "denovo",
+            "geneSetsTypes": [{
+                "datasetId": "TEST_REMOTE_t4c8_study_1",
+                "collections":  [
+                    {"personSetId": "phenotype", "types": ["autism"]},
+                ],
+            }],
+        },
+    }
+
+    remote_study = t4c8_wgpf_instance.get_wdae_wrapper(
+        "TEST_REMOTE_t4c8_dataset")
+    assert remote_study is not None
+    assert isinstance(remote_study, RemoteWDAEStudy)
+
+    handle_denovo_gene_sets(remote_study.rest_client, query)
+    assert query is not None
+    assert query == {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "geneSet": {
+            "geneSet": "Missense",
+            "geneSetsCollection": "denovo",
+            "geneSetsTypes": [{
+                "datasetId": "t4c8_study_1",  # Removed prefix
+                "collections":  [
+                    {"personSetId": "phenotype", "types": ["autism"]},
+                ],
+            }],
+        },
+    }
+
+
+def test_handling_of_gene_sets(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> None:
+    query = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "geneSet": {
+            "geneSetsCollection": "TEST_REMOTE_main",
+            "geneSet": "t4_candidates",
+            "geneSetsTypes": [],
+        },
+    }
+
+    remote_study = t4c8_wgpf_instance.get_wdae_wrapper(
+        "TEST_REMOTE_t4c8_dataset")
+    assert remote_study is not None
+    assert isinstance(remote_study, RemoteWDAEStudy)
+
+    handle_gene_sets(remote_study.rest_client, query)
+    assert query is not None
+    assert query == {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "geneSet": {
+            "geneSetsCollection": "main",  # Removed prefix
+            "geneSet": "t4_candidates",
+            "geneSetsTypes": [],
+        },
+    }
+
+
+def test_handling_of_genomic_scores(
+    t4c8_wgpf_instance: WGPFInstance,
+) -> None:
+    query = {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "genomicScores": [
+            {
+                "categoricalView": None,
+                "histogramType": "continuous",
+                "rangeEnd": 99,
+                "rangeStart": 50,
+                "score": "TEST_REMOTE_score_one",
+                "values": None,
+            },
+        ],
+    }
+
+    remote_study = t4c8_wgpf_instance.get_wdae_wrapper(
+        "TEST_REMOTE_t4c8_dataset")
+    assert remote_study is not None
+    assert isinstance(remote_study, RemoteWDAEStudy)
+
+    handle_genomic_scores(remote_study.rest_client, query)
+    assert query is not None
+    assert query == {
+        "datasetId": "TEST_REMOTE_t4c8_study_1",
+        "genomicScores": [
+            {
+                "categoricalView": None,
+                "histogramType": "continuous",
+                "rangeEnd": 99,
+                "rangeStart": 50,
+                "score": "score_one",
+                "values": None,
+            },
+        ],
+    }
