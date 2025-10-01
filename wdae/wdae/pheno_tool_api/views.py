@@ -1,10 +1,7 @@
 import logging
 import math
-from collections.abc import Generator
-from io import StringIO
 from typing import Any, cast
 
-from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure
 from dae.pheno_tool.tool import PhenoResult
@@ -104,28 +101,6 @@ class PhenoToolView(QueryBaseView):
 class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
     """Pheno tool download view."""
 
-    def generate_columns(
-            self,
-            query_data: dict[str, Any],
-            adapter: PhenoToolAdapter,
-    ) -> Generator[str, None, None]:
-        """Pheno tool download generator function."""
-        # Return a response instantly and make download more responsive
-        yield ""
-        result_df = adapter.produce_download_df(query_data)
-
-        columns = [
-            col
-            for col in result_df.columns.tolist()
-            if col not in {"normalized", "role"}
-        ]
-
-        csv_buffer = StringIO()
-        result_df.to_csv(csv_buffer, index=False, columns=columns)
-        csv_buffer.seek(0)
-
-        yield from csv_buffer.readlines()
-
     def post(self, request: Request) -> Response | StreamingHttpResponse:
         """Pheno tool download."""
         data = expand_gene_set(parse_query_params(request.data))
@@ -141,28 +116,6 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
         if study_wrapper.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
-            data["effectTypes"],
-        )
-
-        data["phenoFilterFamilyIds"] = None
-        if data.get("familyFilters") is not None:
-            data["phenoFilterFamilyIds"] = list(
-                self.query_transformer  # noqa: SLF001
-                ._transform_filters_to_ids(
-                    data["familyFilters"],
-                    study_wrapper,
-                ),
-            )
-        if data.get("familyPhenoFilters") is not None:
-            data["phenoFilterFamilyIds"] = list(
-                self.query_transformer  # noqa: SLF001
-                ._transform_pheno_filters_to_ids(
-                    data["familyPhenoFilters"],
-                    study_wrapper,
-                ),
-            )
-
         adapter = cast(
             PhenoToolAdapter,
             self.gpf_instance.get_pheno_tool_adapter(
@@ -175,10 +128,7 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         response = StreamingHttpResponse(
-            self.generate_columns(
-                data,
-                adapter,
-            ),
+            adapter.produce_download(data, self.query_transformer),
             content_type="text/csv",
         )
         response[
