@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-* 2025.10.0
+* 2025.10.1
     * Fix gene set collection files property.
     * Fix GPF federation unit test.
 
