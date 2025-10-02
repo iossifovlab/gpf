@@ -3,10 +3,14 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
+from dae.genomic_resources.testing import (
+    setup_denovo,
+    setup_pedigree,
+)
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.testing import cnv_study, setup_denovo, setup_pedigree
 from dae.testing.alla_import import alla_gpf
+from dae.testing.import_helpers import cnv_study
 from dae.utils.regions import Region
 
 

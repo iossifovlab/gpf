@@ -17,7 +17,7 @@ from sqlglot.expressions import (
 )
 from sqlglot.schema import Schema, ensure_schema
 
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
 )

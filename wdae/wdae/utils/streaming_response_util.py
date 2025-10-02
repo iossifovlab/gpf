@@ -1,23 +1,29 @@
+from __future__ import annotations
+
 import json
 import logging
+from collections.abc import Generator
+from typing import Any
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
-def convert(obj):
-    if isinstance(obj, np.int64):
+def convert(obj: Any) -> int | float:
+    if isinstance(obj, np.integer):
         return int(obj)
-    if isinstance(obj, np.float32):
+    if isinstance(obj, np.floating):
         return float(obj)
     raise TypeError(
         f"Unserializable object {obj} of type {type(obj)}",
     )
 
 
-def iterator_to_json(variants):
-
+def iterator_to_json(
+    variants: Generator[list[Any] | None, None, None],
+) -> Generator[str, None, None]:
+    """Convert an iterator of dictionaries to a JSON array string generator."""
     try:
         yield "["
         curr = next(variants)
@@ -41,7 +47,7 @@ def iterator_to_json(variants):
     except GeneratorExit:
         logger.info("iterator_to_json generator closed")
     except BaseException:
-        logger.exception("unexpected exception", exc_info=True)
+        logger.exception("unexpected exception")
     finally:
         variants.close()
         yield "]"

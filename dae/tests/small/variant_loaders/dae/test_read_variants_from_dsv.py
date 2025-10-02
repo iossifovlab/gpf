@@ -7,9 +7,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.testing import setup_denovo, setup_pedigree
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import alla_gpf, setup_denovo, setup_pedigree
+from dae.testing.alla_import import alla_gpf
 from dae.utils.variant_utils import GenotypeType, mat2str
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant

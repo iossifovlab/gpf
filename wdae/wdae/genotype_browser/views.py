@@ -116,8 +116,8 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             scores = cast(list[dict[str, Any]], data["genomicScores"])
             for score in scores:
                 if score.get("rangeStart") is None \
-                    and score.get("rangeEnd") is None \
-                    and score.get("values") is None:
+                        and score.get("rangeEnd") is None \
+                        and score.get("values") is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
         max_variants: int | None = None
@@ -148,6 +148,7 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             self.response_transformer,
             max_variants_count=max_variants,
         )
+
         response = StreamingHttpResponse(
             iterator_to_json(result),
             status=status.HTTP_200_OK,
@@ -191,8 +192,8 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
             scores = cast(list[dict[str, Any]], data["genomicScores"])
             for score in scores:
                 if score.get("rangeStart") is None \
-                    and score.get("rangeEnd") is None \
-                    and score.get("values") is None:
+                        and score.get("rangeEnd") is None \
+                        and score.get("values") is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if "maxVariantsCount" in data:

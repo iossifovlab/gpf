@@ -65,8 +65,10 @@ def test_create_federation_credentials_with_authorized_user(
         .filter(name="name1") \
         .exists() is True
 
+    data = credentials_res.json()
     credentials = base64.b64encode(
-        f"{credentials_res.data['client_id']}:{credentials_res.data['client_secret']}".encode(),  # type: ignore
+        f"{data['client_id']}:"  # pyright: ignore
+        f"{data['client_secret']}".encode(),  # pyright: ignore
     )
 
     token_res = user_client.post(
@@ -74,7 +76,7 @@ def test_create_federation_credentials_with_authorized_user(
         headers={
             "Authorization":
             f"Basic "
-            f"{credentials.decode()}",  # type: ignore
+            f"{credentials.decode()}",
         },
         data="grant_type=client_credentials",
         content_type="application/x-www-form-urlencoded",

@@ -2,8 +2,11 @@
 import textwrap
 
 import pytest
+from dae.genomic_resources.testing import (
+    convert_to_tab_separated,
+    setup_directories,
+)
 from dae.import_tools.import_tools import ImportProject
-from dae.testing import convert_to_tab_separated, setup_directories
 
 # this content follows the 'refflat' gene model format
 GMM_CONTENT = """
@@ -108,6 +111,5 @@ def simple_project(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
             """),
         },
     })
-    project = ImportProject.build_from_file(
+    return ImportProject.build_from_file(
         root_path / "project" / "project.yaml")
-    return project

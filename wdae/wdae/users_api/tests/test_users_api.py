@@ -4,7 +4,7 @@ import json
 import pytest
 from django.test.client import Client
 from rest_framework import status
-from utils.email_regex import email_regex, is_email_valid
+from utils.email_regex import EMAIL_REGEX, is_email_valid
 from utils.password_requirements import is_password_valid
 
 from users_api.models import WdaeUser
@@ -52,11 +52,11 @@ def test_register_existing_user(client: Client, researcher: WdaeUser) -> None:
 
 
 def test_email_regex_is_posix_compliant() -> None:
-    assert r"+?" not in email_regex
-    assert r"*?" not in email_regex
-    assert r"(?:" not in email_regex
-    assert r"\w" not in email_regex
-    assert r"\d" not in email_regex
+    assert r"+?" not in EMAIL_REGEX
+    assert r"*?" not in EMAIL_REGEX
+    assert r"(?:" not in EMAIL_REGEX
+    assert r"\w" not in EMAIL_REGEX
+    assert r"\d" not in EMAIL_REGEX
 
 
 def test_email_validaiton() -> None:

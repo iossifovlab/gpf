@@ -1,6 +1,7 @@
 import json
+from typing import cast
 
 
-def parse_query_params(data):
+def parse_query_params(data: dict) -> dict:
     res = {str(k): str(v) for k, v in list(data.items())}
-    return json.loads(res["queryData"])
+    return cast(dict, json.loads(res["queryData"]))

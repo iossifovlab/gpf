@@ -4,10 +4,14 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
+from dae.genomic_resources.testing import (
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.testing.import_helpers import vcf_study
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyAllele
 

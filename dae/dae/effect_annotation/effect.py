@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from typing import Any, ClassVar
 
 from dae.effect_annotation.annotation_request import AnnotationRequest
-from dae.genomic_resources.gene_models import TranscriptModel
+from dae.genomic_resources.gene_models.gene_models import TranscriptModel
 
 
 class AnnotationEffect:  # pylint: disable=too-many-instance-attributes

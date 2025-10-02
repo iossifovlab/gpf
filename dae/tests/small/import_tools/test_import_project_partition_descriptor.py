@@ -2,8 +2,9 @@
 import pathlib
 import textwrap
 
+from dae.genomic_resources.testing import setup_directories
 from dae.import_tools.import_tools import ImportProject
-from dae.testing import foobar_gpf, setup_directories
+from dae.testing.foobar_import import foobar_gpf
 
 
 def test_import_project_parse_no_region_bins(tmp_path: pathlib.Path) -> None:

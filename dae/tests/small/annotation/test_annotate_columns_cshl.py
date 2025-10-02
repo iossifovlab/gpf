@@ -4,7 +4,7 @@ import textwrap
 
 import pytest
 from dae.annotation.annotate_columns import cli as cli_columns
-from dae.testing import (
+from dae.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_denovo,
     setup_directories,

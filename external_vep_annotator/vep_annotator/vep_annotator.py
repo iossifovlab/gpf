@@ -18,8 +18,10 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.docker_annotator import DockerAnnotator
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     build_gene_models_from_resource,
+)
+from dae.genomic_resources.gene_models.serialization import (
     gene_models_to_gtf,
 )
 from dae.genomic_resources.repository import GenomicResource

@@ -1,11 +1,11 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 import pathlib
 
 import pytest
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.testing import setup_denovo, setup_pedigree
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import setup_denovo, setup_pedigree
 from dae.variants_loaders.dae.loader import DenovoLoader
 
 

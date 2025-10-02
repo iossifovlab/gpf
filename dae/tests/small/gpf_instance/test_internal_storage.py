@@ -5,14 +5,15 @@ import pytest
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.testing import (
+from dae.genomic_resources.testing import (
     setup_directories,
     setup_empty_gene_models,
     setup_genome,
-    setup_gpf_instance,
+    setup_pedigree,
+    setup_vcf,
 )
 from dae.testing.import_helpers import vcf_study
+from dae.testing.setup_helpers import setup_gpf_instance
 
 
 def test_internal_genotype_storage(

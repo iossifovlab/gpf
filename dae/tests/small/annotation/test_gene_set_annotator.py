@@ -14,7 +14,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.testing import setup_directories
+from dae.genomic_resources.testing import setup_directories
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
 

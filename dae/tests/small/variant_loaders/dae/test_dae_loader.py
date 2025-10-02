@@ -8,7 +8,7 @@ from dae.genomic_resources.testing import setup_dae_transmitted
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.testing import build_families_data
-from dae.testing import foobar_gpf
+from dae.testing.foobar_import import foobar_gpf
 from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader

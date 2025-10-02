@@ -12,7 +12,7 @@ import yaml
 from jinja2 import Template
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     TranscriptModel,
     build_gene_models_from_resource,
 )

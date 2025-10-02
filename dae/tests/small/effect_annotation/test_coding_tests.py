@@ -8,13 +8,16 @@ from dae.effect_annotation.annotator import (
     Variant,
 )
 from dae.effect_annotation.effect_checkers.coding import CodingEffectChecker
-from dae.genomic_resources.gene_models import Exon, TranscriptModel
+from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
 
 from .mocks import TranscriptModelMock
 
 
 @pytest.fixture(scope="session")
-def transcript_model(exons: list[Exon], coding: list[Exon]) -> TranscriptModel:
+def transcript_model(
+    exons: list[Exon],  # noqa: ARG001
+    coding: list[Exon],
+) -> TranscriptModel:
     return cast(
         TranscriptModel,
         TranscriptModelMock("+", 1, 2000, coding, is_coding=False),

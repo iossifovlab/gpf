@@ -4,8 +4,8 @@ import textwrap
 
 import pytest
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.testing import convert_to_tab_separated
 from dae.pedigrees.families_data import FamiliesData
-from dae.testing import convert_to_tab_separated
 from dae.utils.variant_utils import mat2str
 from dae.variants.core import Allele
 from dae.variants_loaders.cnv.flexible_cnv_loader import flexible_cnv_loader

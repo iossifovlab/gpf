@@ -5,9 +5,9 @@ from collections.abc import Callable
 
 import pytest
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.testing import convert_to_tab_separated
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import convert_to_tab_separated
 from dae.variants_loaders.cnv.flexible_cnv_loader import (
     _configure_cnv_best_state,
     _configure_cnv_location,

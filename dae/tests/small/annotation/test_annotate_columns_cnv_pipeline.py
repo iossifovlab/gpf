@@ -9,7 +9,10 @@ from dae.annotation.annotate_columns import cli as cli_columns
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.testing import convert_to_tab_separated, setup_directories
+from dae.genomic_resources.testing import (
+    convert_to_tab_separated,
+    setup_directories,
+)
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
 pytestmark = pytest.mark.usefixtures("clear_context")

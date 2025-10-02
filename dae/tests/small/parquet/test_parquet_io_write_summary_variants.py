@@ -6,12 +6,16 @@ import pytest
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbStorage,
 )
+from dae.genomic_resources.testing import (
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 from dae.utils.regions import Region
 

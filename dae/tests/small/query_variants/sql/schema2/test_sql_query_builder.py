@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData

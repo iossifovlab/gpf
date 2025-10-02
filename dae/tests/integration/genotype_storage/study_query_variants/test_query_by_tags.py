@@ -3,11 +3,15 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
+from dae.genomic_resources.testing import (
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
+from dae.testing.import_helpers import vcf_study
 
 
 @pytest.fixture(scope="module")

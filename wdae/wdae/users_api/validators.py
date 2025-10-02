@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 from django.contrib.auth.models import Group
 from rest_framework import serializers
@@ -13,7 +13,7 @@ class SomeSuperuserLeftValidator:
         self.is_update = False
         self.user_instance = None
 
-    def __call__(self, value: List[Any | Group]) -> None:
+    def __call__(self, value: list[Any | Group]) -> None:
         if not self.is_update:
             return
 
@@ -24,7 +24,7 @@ class SomeSuperuserLeftValidator:
         except Group.DoesNotExist:
             return
 
-        superusers = superuser_group.user_set.all()  # type: ignore
+        superusers = superuser_group.user_set.all()  # pyright: ignore
         assert self.user_instance is not None
 
         if (

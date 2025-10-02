@@ -5,7 +5,7 @@ import logging
 
 from dae.effect_annotation.gene_codes import NuclearCode
 from dae.effect_annotation.variant import Variant
-from dae.genomic_resources.gene_models import TranscriptModel
+from dae.genomic_resources.gene_models.gene_models import TranscriptModel
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.regions import BedRegion
 

@@ -5,8 +5,6 @@
 import os
 
 from gpf_instance.gpf_instance import get_wgpf_instance_path
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from .default_settings import *
 
@@ -36,11 +34,7 @@ CORS_ALLOW_CREDENTIALS = True
 OPEN_REGISTRATION = False
 DISABLE_PERMISSIONS = True
 
-GPF_INSTANCE_CONFIG = GPFConfigParser.load_config_dict(
-    str(GPF_INSTANCE_CONFIG_PATH), dae_conf_schema,
-)
-
-PHENO_BROWSER_CACHE = get_pheno_browser_images_dir(GPF_INSTANCE_CONFIG)
+PHENO_BROWSER_CACHE = get_pheno_browser_images_dir()
 
 STUDIES_EAGER_LOADING = True
 

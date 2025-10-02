@@ -1,20 +1,22 @@
 import json
+from typing import Any
 
 
-def find_dataset_id_in_dict(dictionary):
-    dataset_id = dictionary.get("dataset_id", None)
+def find_dataset_id_in_dict(dictionary: dict) -> str | None:
+    """Find dataset_id in a dictionary."""
+    dataset_id = dictionary.get("dataset_id")
     if dataset_id is None:
-        dataset_id = dictionary.get("datasetId", None)
+        dataset_id = dictionary.get("datasetId")
     if dataset_id is None:
-        dataset_id = dictionary.get("study_id", None)
+        dataset_id = dictionary.get("study_id")
     if dataset_id is None:
-        dataset_id = dictionary.get("studyId", None)
+        dataset_id = dictionary.get("studyId")
     if dataset_id is None:
-        dataset_id = dictionary.get("common_report_id", None)
+        dataset_id = dictionary.get("common_report_id")
     if dataset_id is None:
-        dataset_id = dictionary.get("commonReportId", None)
+        dataset_id = dictionary.get("commonReportId")
     if dataset_id is None:
-        query_data = dictionary.get("queryData", None)
+        query_data = dictionary.get("queryData")
         if query_data:
             if isinstance(query_data, str):
                 query_data = json.loads(query_data)
@@ -22,7 +24,8 @@ def find_dataset_id_in_dict(dictionary):
     return dataset_id
 
 
-def find_dataset_id_in_request(request):
+def find_dataset_id_in_request(request: Any) -> str | None:
+    """Find dataset_id in a DRF request."""
     dataset_id = find_dataset_id_in_dict(request.query_params)
     if dataset_id is None:
         dataset_id = find_dataset_id_in_dict(request.data)

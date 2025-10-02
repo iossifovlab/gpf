@@ -6,11 +6,11 @@ from collections.abc import Callable
 import pytest
 from dae.annotation.annotate_doc import cli
 from dae.genomic_resources.genomic_context import GenomicContext
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing import (
+from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.t4c8_import import t4c8_gpf
 
 

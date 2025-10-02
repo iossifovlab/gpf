@@ -11,14 +11,12 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import (
     build_filesystem_test_resource,
     setup_directories,
-)
-from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import (
     setup_genome,
     setup_pedigree,
     setup_vcf,
 )
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.regions import Region
 from dae.variants.attributes import GeneticModel
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader

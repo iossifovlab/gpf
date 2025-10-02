@@ -28,18 +28,16 @@ from dae.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
     setup_directories,
+    setup_empty_gene_models,
+    setup_genome,
     setup_pedigree,
     setup_vcf,
 )
 from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.studies.study import GenotypeData
-from dae.testing import (
-    setup_empty_gene_models,
-    setup_genome,
-    setup_gpf_instance,
-)
 from dae.testing.import_helpers import vcf_study
+from dae.testing.setup_helpers import setup_gpf_instance
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant

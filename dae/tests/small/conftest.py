@@ -4,9 +4,8 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     build_gene_models_from_resource_id,
 )
@@ -18,24 +17,24 @@ from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     convert_to_tab_separated,
     setup_directories,
     setup_genome,
     setup_gzip,
+    setup_pedigree,
+    setup_vcf,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
-from dae.testing import (
-    setup_gpf_instance,
-    setup_pedigree,
-    setup_vcf,
-    vcf_study,
-)
-from dae.testing.import_helpers import setup_dataset_config
+from dae.testing.import_helpers import setup_dataset_config, vcf_study
+from dae.testing.setup_helpers import setup_gpf_instance
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from dae.tools.generate_denovo_gene_sets import (
     main as generate_denovo_gene_sets,

@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.effect_annotation.annotator import EffectAnnotator
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
 
@@ -76,8 +76,8 @@ def test_chr2_32853362_ins_var(
     assert effects_sorted[1].transcript_id == "NM_020732_1"
     assert effects_sorted[1].strand == "+"
     assert effects_sorted[1].effect == "nonsense"
-    assert effects_sorted[1].prot_pos, 1
-    assert effects_sorted[1].prot_length, 843
+    assert effects_sorted[1].prot_pos == 1818
+    assert effects_sorted[1].prot_length == 2249
     assert effects_sorted[1].aa_change == "HisTrp->GlnEnd"
 
 

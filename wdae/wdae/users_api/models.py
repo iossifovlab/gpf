@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import timedelta
 from functools import wraps
-from typing import Any, Callable, Type, cast
+from typing import Any, ClassVar, cast
 
 from datasets_api.permissions import get_directly_allowed_genotype_data
 from django.contrib.auth import get_user_model
@@ -61,8 +62,7 @@ class WdaeUserManager(BaseUserManager):
         self, email: str, password: str | None = None,
         **kwargs: Any,
     ) -> WdaeUser:
-        user = self._create_user(email, password, **kwargs)
-        return user
+        return self._create_user(email, password, **kwargs)
 
     def create_superuser(
         self, email: str, password: str,
@@ -91,7 +91,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     date_joined: models.DateTimeField = models.DateTimeField(null=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name"]
+    REQUIRED_FIELDS: ClassVar[list[str]] = ["name"]
 
     SUPERUSER_GROUP = "admin"
     UMLIMITED_DOWNLOAD_GROUP = "unlimited"
@@ -145,9 +145,11 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         super().set_unusable_password()
 
         if self.is_active:
-            self.is_active = False
+            self.is_active = False  # pyright: ignore
 
-    def reset_password(self, by_admin: bool = False) -> None:
+    def reset_password(
+        self, by_admin: bool = False,  # noqa: FBT001,FBT002
+    ) -> None:
         verif_code = ResetPasswordCode.create(self)
         send_reset_email(self, verif_code, by_admin)
 
@@ -260,7 +262,7 @@ class GpUserState(models.Model):
 class SetPasswordCode(BaseVerificationCode):
     """Base class for temporary paths for verifying user without login."""
 
-    class Meta:  # pylint: disable=too-few-public-methods
+    class Meta:  # pylint: disable=too-few-public-methods  # pyright: ignore
         db_table = "set_password_verification_codes"
 
     def validate(self) -> bool:
@@ -270,7 +272,7 @@ class SetPasswordCode(BaseVerificationCode):
 class ResetPasswordCode(BaseVerificationCode):
     """Class used for verification of password resets."""
 
-    class Meta:  # pylint: disable=too-few-public-methods
+    class Meta:  # pylint: disable=too-few-public-methods  # pyright: ignore
         db_table = "reset_password_verification_codes"
 
     def validate(self) -> bool:
@@ -278,9 +280,7 @@ class ResetPasswordCode(BaseVerificationCode):
         from django.conf import settings
         max_delta = timedelta(
             hours=getattr(settings, "RESET_PASSWORD_TIMEOUT_HOURS", 24))
-        if timezone.now() - self.created_at > max_delta:
-            return False
-        return True
+        return not timezone.now() - self.created_at > max_delta
 
 
 class AuthenticationLog(models.Model):
@@ -357,7 +357,9 @@ class AuthenticationLog(models.Model):
             ).total_seconds())
 
     @staticmethod
-    def log_authentication_attempt(email: str, failed: bool) -> None:
+    def log_authentication_attempt(
+        email: str, failed: bool,  # noqa: FBT001
+    ) -> None:
         """Log an attempt for authentication."""
         last_login = AuthenticationLog.get_last_login_for(email)
 
@@ -376,7 +378,7 @@ class AuthenticationLog(models.Model):
 
 
 def staff_update(
-    sender: Any, **kwargs: Any,  # pylint: disable=unused-argument
+    sender: Any, **kwargs: Any,  # noqa: ARG001
 ) -> None:
     """Update if user is part of staff when SUPERUSER_GROUP is added/rmed."""
     for key in ["action", "instance", "reverse"]:
@@ -401,7 +403,7 @@ def staff_update(
 
 
 def group_post_delete(
-    sender: Type[Group], **kwargs: Any,  # pylint: disable=unused-argument
+    sender: type[Group], **kwargs: Any,  # noqa: ARG001
 ) -> None:
     """Automatically remove staff privileges of SUPERUSER_GROUP users.
 
@@ -418,14 +420,15 @@ def group_post_delete(
 
     with transaction.atomic():
         # pylint: disable=protected-access
-        for user in WdaeUser.objects.filter(pk__in=group._user_ids).all():
+        for user in WdaeUser.objects.filter(
+                pk__in=group._user_ids).all():  # noqa: SLF001
             user.is_staff = False
             user.save()
 
 
 # a hack to save the users the group had, used in the post_delete signal
 def group_pre_delete(
-    sender: Type[Group], **kwargs: Any,  # pylint: disable=unused-argument
+    sender: type[Group], **kwargs: Any,  # noqa: ARG001
 ) -> None:
     """Attach user-ids when a group is being deleted.
 
@@ -438,7 +441,7 @@ def group_pre_delete(
     group = kwargs["instance"]
     if group.name == WdaeUser.SUPERUSER_GROUP:
         # pylint: disable=protected-access
-        group._user_ids = [u.pk for u in group.user_set.all()]
+        group._user_ids = [u.pk for u in group.user_set.all()]  # noqa: SLF001
 
 
 m2m_changed.connect(
@@ -512,13 +515,13 @@ def send_reset_inactive_acc_email(user: WdaeUser) -> None:
 
 def send_reset_email(
     user: WdaeUser, verif_path: BaseVerificationCode,
-    by_admin: bool = False,
+    by_admin: bool = False,  # noqa: FBT001,FBT002
 ) -> None:
     """Return dict with subject and message of the email."""
     # pylint: disable=import-outside-toplevel
     from django.conf import settings
     email = _create_reset_mail(
-        settings.EMAIL_VERIFICATION_ENDPOINT,  # type: ignore
+        settings.EMAIL_VERIFICATION_ENDPOINT,
         settings.EMAIL_VERIFICATION_RESET_PATH,
         str(verif_path.path),
         by_admin,
@@ -548,7 +551,8 @@ def _create_verif_email(
 
 
 def _create_reset_mail(
-    endpoint: str, path: str, verification_path: str, by_admin: bool = False,
+    endpoint: str, path: str, verification_path: str,
+    by_admin: bool = False,  # noqa: FBT001,FBT002
 ) -> dict[str, str]:
     message = (
         "Hello. You have requested to reset your password for "

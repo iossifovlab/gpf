@@ -866,7 +866,8 @@ class WDAEStudy(WDAEAbstractStudy):
         *,
         max_variants_count: int | None = 10000,
     ) -> Generator[list | None, None, None]:
-        cols = self.genotype_data.config["genotype_browser"]["download_columns"]
+        cols = self.genotype_data.config[
+            "genotype_browser"]["download_columns"]
         sources = WDAEStudy.get_columns_as_sources(
             self.genotype_data.config, cols,
         )
@@ -883,7 +884,9 @@ class WDAEStudy(WDAEAbstractStudy):
         columns = [s.get("name", s["source"]) for s in sources]
 
         yield from map(
-            join_line, itertools.chain([columns], filter(None, result)))  # pyright: ignore
+            join_line,
+            itertools.chain(
+                [columns], filter(None, result)))  # pyright: ignore
 
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,

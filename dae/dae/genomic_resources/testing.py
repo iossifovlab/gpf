@@ -22,7 +22,7 @@ from dae.genomic_resources.fsspec_protocol import (
     build_fsspec_protocol,
     build_inmemory_protocol,
 )
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import (
     GenomicResource,
@@ -273,7 +273,9 @@ def setup_gene_models(
     setup_directories(out_path.parent, {"genomic_resource.yaml": config})
 
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.gene_models import build_gene_models_from_file
+    from dae.genomic_resources.gene_models.gene_models import (
+        build_gene_models_from_file,
+    )
     gene_models = build_gene_models_from_file(
         str(out_path), file_format=fileformat)
     gene_models.load()

@@ -4,18 +4,20 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeData
-from dae.testing import (
-    denovo_study,
+from dae.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
     setup_vcf,
-    t4c8_gpf,
+)
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
+from dae.testing.import_helpers import (
+    StudyInputLayout,
+    denovo_study,
     vcf_study,
 )
-from dae.testing.import_helpers import StudyInputLayout
+from dae.testing.t4c8_import import t4c8_gpf
 
 
 @pytest.fixture

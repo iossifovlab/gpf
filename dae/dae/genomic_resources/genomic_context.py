@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from importlib.metadata import entry_points
 from typing import Any
 
-from dae.genomic_resources.gene_models import (
+from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
 )
 from dae.genomic_resources.reference_genome import (

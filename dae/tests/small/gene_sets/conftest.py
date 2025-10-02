@@ -18,11 +18,13 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
+    setup_denovo,
+    setup_pedigree,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-from dae.testing import denovo_study, setup_denovo, setup_pedigree
 from dae.testing.foobar_import import foobar_gpf
+from dae.testing.import_helpers import denovo_study
 
 
 def fixtures_dir() -> str:

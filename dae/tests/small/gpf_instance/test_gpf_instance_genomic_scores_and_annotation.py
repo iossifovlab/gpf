@@ -3,11 +3,11 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing import (
+from dae.genomic_resources.testing import (
     setup_directories,
-    setup_gpf_instance,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.testing.setup_helpers import setup_gpf_instance
 
 
 @pytest.fixture

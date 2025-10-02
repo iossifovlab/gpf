@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 from typing import cast
 
 import pytest
@@ -7,7 +7,7 @@ from dae.effect_annotation.annotator import (
     EffectAnnotator,
     Variant,
 )
-from dae.genomic_resources.gene_models import Exon, TranscriptModel
+from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
 
 from .mocks import TranscriptModelMock
 

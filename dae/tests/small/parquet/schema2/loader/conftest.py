@@ -2,9 +2,13 @@
 import pathlib
 
 import pytest
+from dae.genomic_resources.testing import (
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.gpf_instance import GPFInstance
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
+from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 

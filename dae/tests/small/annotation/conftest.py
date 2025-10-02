@@ -14,8 +14,11 @@ from dae.genomic_resources.genomic_context import (
     _REGISTERED_CONTEXT_PROVIDERS,
     _REGISTERED_CONTEXTS,
 )
-from dae.genomic_resources.testing import setup_genome
-from dae.testing import setup_denovo, setup_directories
+from dae.genomic_resources.testing import (
+    setup_denovo,
+    setup_directories,
+    setup_genome,
+)
 
 
 class DummyAnnotator(Annotator):

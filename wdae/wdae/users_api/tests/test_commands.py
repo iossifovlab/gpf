@@ -1,8 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,missing-class-docstring
 import tempfile
+from typing import cast
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import AbstractUser, Group
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -13,11 +14,12 @@ class UsersApiCommandsTests(TestCase):
     def test_users_export(self) -> None:
         # pylint: disable=invalid-name
         User = get_user_model()
-        new_user = User.objects.create_user(
+        new_user = User.objects.create_user(  # pyright: ignore
             "john@test.abv", name="user john",
         )
-        new_admin_user = User.objects.create_user(
-            "shefa@test.abv", name="shf", password="verysecret",
+        new_admin_user = User.objects.create_user(  # pyright: ignore
+            "shefa@test.abv", name="shf",
+            password="verysecret",  # noqa
         )
         new_group = Group.objects.create(name="testgroup")
         new_user.groups.add(new_group)
@@ -25,8 +27,9 @@ class UsersApiCommandsTests(TestCase):
         new_admin_user.groups.add(Group.objects.create(name="admin"))
 
         groups_str = ":".join(
-            ExportUsersBase().get_visible_groups(new_admin_user),
-        )
+            ExportUsersBase().get_visible_groups(
+                cast(AbstractUser, new_admin_user),
+            ))
 
         expected_output = (
             "Email,Name,Groups,Password"
@@ -36,7 +39,7 @@ class UsersApiCommandsTests(TestCase):
         )
         with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
             call_command("users_export", file=temp.name)
-            self.assertEqual(temp.read(), expected_output)
+            assert temp.read() == expected_output
 
     def test_users_restore(self) -> None:
         # pylint: disable=invalid-name
@@ -55,19 +58,9 @@ class UsersApiCommandsTests(TestCase):
 
             assert second_user is not None
 
-            self.assertEqual(len(User.objects.all()), 2)
-            self.assertEqual(
-                second_user.email, "shefa@test.abv",
-            )
-            self.assertEqual(
-                second_user.name, "shf",
-            )
-            self.assertEqual(
-                second_user.is_active, True,
-            )
-            self.assertEqual(
-                second_user.is_staff, True,
-            )
-            self.assertEqual(
-                len(second_user.groups.all()), 2,
-            )
+            assert len(User.objects.all()) == 2
+            assert second_user.email == "shefa@test.abv"  # pyright: ignore
+            assert second_user.name == "shf"  # pyright: ignore
+            assert second_user.is_active is True
+            assert second_user.is_staff is True  # pyright: ignore
+            assert len(second_user.groups.all()) == 2  # pyright: ignore

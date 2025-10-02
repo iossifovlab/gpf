@@ -3,9 +3,9 @@ import pathlib
 import textwrap
 
 import pytest
+from dae.genomic_resources.testing import setup_pedigree
 from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import setup_pedigree
 from dae.variants.attributes import Sex, Status
 
 
@@ -190,11 +190,11 @@ f1        f1.s4     f1.dad  f1.mom  0    0       sib  True          True
 def test_generated_and_missing_persons(
     ped_gen_and_not_sequenced: FamiliesData,
 ) -> None:
-    p_s3 = ped_gen_and_not_sequenced.persons[("f1", "f1.s3")]
+    p_s3 = ped_gen_and_not_sequenced.persons["f1", "f1.s3"]
     assert p_s3.missing
     assert not p_s3.generated
 
-    p_s4 = ped_gen_and_not_sequenced.persons[("f1", "f1.s4")]
+    p_s4 = ped_gen_and_not_sequenced.persons["f1", "f1.s4"]
     assert p_s4.missing
     assert p_s4.generated
 
@@ -210,11 +210,11 @@ def test_combine_families_generated_and_missing(
         forced=False,
     )
 
-    p_s3 = new_families.persons[("f1", "f1.s3")]
+    p_s3 = new_families.persons["f1", "f1.s3"]
     assert p_s3.missing
     assert not p_s3.generated
 
-    p_s4 = new_families.persons[("f1", "f1.s4")]
+    p_s4 = new_families.persons["f1", "f1.s4"]
     assert p_s4.missing
     assert p_s4.generated
 
@@ -239,21 +239,6 @@ def test_combine_families_creates_copy(
     print(ped_a["f1"].persons["f1.dad"]._attributes)
 
     tag_families_data(new_families)
-
-    # assert new_families["f1"].persons["f1.dad"].get_attr(
-    #     "tag_family_type"
-    # ) is not None
-    # assert len(ped_a["f1"].tags.intersection(["tag_family_type"])) == 0
-    # assert len(ped_f["f2"].tags.intersection(["tag_family_type"])) == 0
-    # assert len(ped_g["f1"].tags.intersection(["tag_family_type"])) == 0
-    # assert ped_a["f1"].persons["f1.dad"] \
-    #     .get_attr("tag_family_type") is None
-    # assert ped_f["f2"].persons["f2.dad"] \
-    #     .get_attr("tag_family_type") is None
-    # assert ped_g["f1"].persons["f1.dad"] \
-    #     .get_attr("tag_family_type") is None
-    # assert ped_g["f3"].persons["f3.dad"] \
-    #     .get_attr("tag_family_type") is None
 
 
 @pytest.fixture
@@ -280,13 +265,13 @@ def test_combine_missing(
         ped_f1_all,
         forced=True,
     )
-    person = combined1.persons[("f1", "f1.s3")]
+    person = combined1.persons["f1", "f1.s3"]
     assert not person.missing
     assert not person.generated
     assert person.sex == Sex.male
     assert person.status == Status.unaffected
 
-    person = combined1.persons[("f1", "f1.s4")]
+    person = combined1.persons["f1", "f1.s4"]
     assert not person.missing
     assert not person.generated
     assert person.sex == Sex.female
@@ -298,13 +283,13 @@ def test_combine_missing(
         forced=True,
     )
 
-    person = combined2.persons[("f1", "f1.s3")]
+    person = combined2.persons["f1", "f1.s3"]
     assert not person.missing
     assert not person.generated
     assert person.sex == Sex.male
     assert person.status == Status.unaffected
 
-    person = combined2.persons[("f1", "f1.s4")]
+    person = combined2.persons["f1", "f1.s4"]
     assert not person.missing
     assert not person.generated
     assert person.sex == Sex.female

@@ -2,7 +2,7 @@
 import pathlib
 
 import pytest_mock
-from dae.testing import setup_directories
+from dae.genomic_resources.testing import setup_directories
 from dae.utils.fs_utils import find_directory_with_a_file
 
 

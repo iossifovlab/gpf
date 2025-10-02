@@ -21,7 +21,7 @@ from django.conf import settings
 from django.core.management import execute_from_command_line
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae import __version__  # type: ignore
+from dae import __version__  # type: ignore  # pylint: disable=C0412
 
 logger = logging.getLogger("wgpf")
 

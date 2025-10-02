@@ -2,8 +2,13 @@
 
 
 import pytest
+from dae.genomic_resources.testing import (
+    setup_denovo,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.import_tools.import_tools import ImportProject
-from dae.testing import acgt_gpf, setup_denovo, setup_pedigree, setup_vcf
+from dae.testing.acgt_import import acgt_gpf
 from dae.testing.import_helpers import StudyInputLayout, setup_import_project
 
 
@@ -37,13 +42,11 @@ def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
           chr2   11   A    G    p1
         """,
     )
-    project = setup_import_project(
+    return setup_import_project(
         root_path / "project",
         StudyInputLayout(
             "mixed", ped_path, [vcf_path], [denovo_path], [], []),
         gpf_instance)
-
-    return project
 
 
 def test_import_project_chromosomes_simple(

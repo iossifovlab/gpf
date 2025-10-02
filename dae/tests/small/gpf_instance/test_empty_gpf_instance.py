@@ -3,12 +3,12 @@ import pytest
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing import (
+from dae.genomic_resources.testing import (
     setup_empty_gene_models,
     setup_genome,
-    setup_gpf_instance,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.testing.setup_helpers import setup_gpf_instance
 
 
 @pytest.fixture

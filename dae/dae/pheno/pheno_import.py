@@ -508,26 +508,9 @@ def import_pheno_data(  # pylint: disable=R0912
 
     connection.close()
 
-    regressions = None
-    regression_config = None
     overrides = config.study_config
     if overrides is not None:
-        regression_config = overrides.regressions
-        if regression_config is not None:
-            if isinstance(regression_config, str):
-                reg_file = Path(config.input_dir, regression_config)
-                with reg_file.open("r") as file:
-                    regs = yaml.safe_load(file)
-                if not isinstance(regs, dict):
-                    raise TypeError(
-                        "Invalid regressions file, should be a dictionary",
-                    )
-                regressions = {
-                    reg_id: RegressionMeasure.model_validate(reg)
-                    for reg_id, reg in regs["regression"].items()
-                }
-            else:
-                regressions = regression_config
+        regressions = _build_regression_config(config, overrides)
         overrides.regressions = regressions
 
     output_config = generate_phenotype_data_config(
@@ -555,6 +538,29 @@ def import_pheno_data(  # pylint: disable=R0912
                 "Tried to copy pheno data to where it already is %s",
                 str(data_copy_destination),
             )
+
+
+def _build_regression_config(
+    config: PhenoImportConfig, overrides: StudyConfig,
+) -> dict | None:
+    regressions = None
+    regression_config = overrides.regressions
+    if regression_config is not None:
+        if isinstance(regression_config, str):
+            reg_file = Path(config.input_dir, regression_config)
+            with reg_file.open("r") as file:
+                regs = yaml.safe_load(file)
+            if not isinstance(regs, dict):
+                raise TypeError(
+                        "Invalid regressions file, should be a dictionary",
+                    )
+            regressions = {
+                    reg_id: RegressionMeasure.model_validate(reg)
+                    for reg_id, reg in regs["regression"].items()
+                }
+        else:
+            regressions = regression_config
+    return regressions
 
 
 def handle_measure_inference_tasks(
@@ -1490,10 +1496,3 @@ def write_reports_to_parquet(
     writer.write_table(table)
 
     return output_file
-
-
-if __name__ == "__main__":
-    logger.warning(
-        "%s tool is deprecated! Use import_phenotypes.", sys.argv[0])
-
-    main(sys.argv[1:])

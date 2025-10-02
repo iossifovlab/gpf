@@ -20,7 +20,7 @@ from dae.duckdb_storage.duckdb2_variants import (
     DuckDbConnectionFactory,
 )
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor

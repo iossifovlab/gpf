@@ -4,10 +4,14 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
+from dae.genomic_resources.testing import (
+    setup_denovo,
+    setup_pedigree,
+)
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.testing import denovo_study, setup_denovo, setup_pedigree
 from dae.testing.foobar_import import foobar_gpf
+from dae.testing.import_helpers import denovo_study
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele
 

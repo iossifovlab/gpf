@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from typing import Any, cast
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status, views
@@ -21,10 +22,12 @@ class QueryStateSaveView(views.APIView):
                 serializer.error_messages, status=status.HTTP_400_BAD_REQUEST,
             )
 
+        data = cast(dict[str, Any], serializer.data)
+        # pylint: disable=unsubscriptable-object
         query_state = QueryState.objects.create(
-            data=json.dumps(serializer.data["data"]),
-            page=serializer.data["page"],
-            origin=serializer.data["origin"],
+            data=json.dumps(data["data"]),
+            page=data["page"],
+            origin=data["origin"],
             timestamp=date.today(),
         )
 

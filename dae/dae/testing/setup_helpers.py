@@ -1,7 +1,9 @@
 import pathlib
 import textwrap
 
-from dae.genomic_resources.gene_models import build_gene_models_from_resource
+from dae.genomic_resources.gene_models.gene_models import (
+    build_gene_models_from_resource,
+)
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )

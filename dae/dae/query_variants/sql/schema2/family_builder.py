@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.sql.schema2.base_query_builder import (
     BaseQueryBuilder,
