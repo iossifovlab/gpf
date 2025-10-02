@@ -188,7 +188,7 @@ class GenotypeStorageRegistry:
 
     def query_variants(
         self, study_kwargs: list[tuple[str, dict[str, Any]]],
-        limit: int | None = 10000,
+        limit: int | None = None,
     ) -> Iterable[FamilyVariant]:
         """Query variants for the given of study ids and kwargs."""
         if not len(study_kwargs) > 0:
@@ -240,7 +240,7 @@ class GenotypeStorageRegistry:
 
     def query_summary_variants(
         self, study_ids: list[str], kwargs: dict[str, Any],
-        limit: int | None = 10000,
+        limit: int | None = None,
     ) -> Iterable[SummaryVariant]:
         """Query summary variants for the given of study ids and kwargs."""
         runners = []

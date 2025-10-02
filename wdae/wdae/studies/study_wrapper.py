@@ -366,7 +366,7 @@ class WDAEAbstractStudy:
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
@@ -377,7 +377,7 @@ class WDAEAbstractStudy:
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming as preview."""
 
@@ -387,7 +387,7 @@ class WDAEAbstractStudy:
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming as download."""
 
@@ -743,7 +743,7 @@ class WDAEStudy(WDAEAbstractStudy):
         self, kwargs: dict[str, Any],
         query_transformer: QueryTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
         max_variants_message: bool = False,  # noqa: ARG002
     ) -> Iterator[FamilyVariant]:
         """Query for raw family variants from registry."""
@@ -804,7 +804,7 @@ class WDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
@@ -844,7 +844,7 @@ class WDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
     ) -> Generator[list | None, None, None]:
         cols = self.genotype_data.config["genotype_browser"]["preview_columns"]
         sources = WDAEStudy.get_columns_as_sources(
@@ -864,7 +864,7 @@ class WDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
     ) -> Generator[list | None, None, None]:
         cols = self.genotype_data.config[
             "genotype_browser"]["download_columns"]

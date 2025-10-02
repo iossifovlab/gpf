@@ -76,7 +76,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,
         response_transformer: ResponseTransformerProtocol,
         *,
-        max_variants_count: int | None = 10000,
+        max_variants_count: int | None = None,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         raise NotImplementedError
@@ -86,7 +86,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,  # noqa: ARG002
         response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
         *,
-        max_variants_count: int | None = 10000,  # noqa: ARG002
+        max_variants_count: int | None = None,  # noqa: ARG002
     ) -> Generator[Any | None, None, None]:
         handle_denovo_gene_sets(self.rest_client, kwargs)
         handle_gene_sets(self.rest_client, kwargs)
@@ -105,7 +105,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,  # noqa: ARG002
         response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
         *,
-        max_variants_count: int | None = 10000,  # noqa: ARG002
+        max_variants_count: int | None = None,  # noqa: ARG002
     ) -> Generator[Any | None, None, None]:
         handle_denovo_gene_sets(self.rest_client, kwargs)
         handle_gene_sets(self.rest_client, kwargs)

@@ -162,6 +162,7 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
     """Genotype browser queries view."""
 
     MAX_SHOWN_VARIANTS = 1000
+    DOWNLOAD_LIMIT = 10_000
 
     @request_logging(logger)
     def post(
@@ -199,7 +200,7 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
         if "maxVariantsCount" in data:
             max_variants = cast(int, data["maxVariantsCount"])
         else:
-            max_variants = 10000
+            max_variants = self.DOWNLOAD_LIMIT
             if not user.is_anonymous and \
                     (user.is_staff or user.has_unlimited_download):
                 max_variants = None
