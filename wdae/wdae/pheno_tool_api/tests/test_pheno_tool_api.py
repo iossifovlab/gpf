@@ -3,9 +3,14 @@ import copy
 import json
 
 import pytest
+import pytest_mock
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+from studies.study_wrapper import WDAEStudy
 
 TOOL_URL = "/api/v3/pheno_tool"
 TOOL_DOWNLOAD_URL = "/api/v3/pheno_tool/download"
@@ -346,3 +351,31 @@ def test_pheno_tool_download_valid_request(
         b"p1,f1.1,affected,F,110.71113,166.33975,1e-05,1.0\n",
         b"p3,f1.3,affected,F,96.63452,68.00149,1e-05,0.0\n",
     ]
+
+
+def test_pheno_tool_view_query_no_limit(
+    mocker: pytest_mock.MockerFixture,
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+) -> None:
+    wdae_spy = mocker.spy(WDAEStudy, "query_variants_raw")
+    dae_spy = mocker.spy(GenotypeStorageRegistry, "query_variants")
+
+    query = copy.deepcopy(QUERY)
+    query["effectTypes"] = ["missense"]
+
+    response = admin_client.post(
+        TOOL_URL,
+        json.dumps(query),
+        format="json",
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    assert wdae_spy.called
+    assert wdae_spy.call_count == 1
+    assert wdae_spy.call_args.kwargs["max_variants_count"] is None
+
+    assert dae_spy.called
+    assert dae_spy.call_count == 1
+    assert dae_spy.call_args.kwargs["limit"] is None
