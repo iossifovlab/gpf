@@ -242,6 +242,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         assert self.study.response_transformer is not None
         variants = self.study.query_variants_raw(
             query_data, self.study.query_transformer,
+            max_variants_count=None,
         )
 
         people_variants = self.helper.genotype_data_variants(
