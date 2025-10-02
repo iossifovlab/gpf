@@ -1,4 +1,5 @@
 import argparse
+import random
 import sys
 import time
 
@@ -7,33 +8,38 @@ from dae.task_graph.graph import TaskGraph
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 
-def task_part(parts_sleep: str) -> None:
-    time.sleep(float(parts_sleep))
+def timeout(seconds: str) -> float:
+    t = float(seconds)
+    return max(random.gauss(t, 0.7 * t), 0.1)
 
 
-def task_summary(summary_sleep: str) -> None:
-    time.sleep(float(summary_sleep))
+def task_part(seconds: str) -> None:
+    time.sleep(timeout(seconds))
 
 
-def task_part_b(parts_sleep: str) -> str:
-    time.sleep(float(parts_sleep))
+def task_summary(seconds: str) -> None:
+    time.sleep(timeout(seconds))
+
+
+def task_part_b(seconds: str) -> str:
+    time.sleep(timeout(seconds))
     return 1000 * "B"
 
 
-def task_summary_b(summary_sleep: str, *args: str) -> str:
-    time.sleep(float(summary_sleep))
+def task_summary_b(seconds: str, *args: str) -> str:
+    time.sleep(timeout(seconds))
     if len(args) <= 5:
         return "b".join(args)
     return "c".join(args[:5])
 
 
-def task_part_c(parts_sleep: str, *_args: str) -> str:
-    time.sleep(float(parts_sleep))
+def task_part_c(seconds: str, *_args: str) -> str:
+    time.sleep(timeout(seconds))
     return 1000 * "B"
 
 
-def task_summary_c(summary_sleep: str, *args: str) -> str:
-    time.sleep(float(summary_sleep))
+def task_summary_c(seconds: str, *args: str) -> str:
+    time.sleep(timeout(seconds))
     if len(args) <= 5:
         return "b".join(args)
     return "c".join(args[:5])
@@ -169,6 +175,8 @@ def build_demo_graph(graph_type: str,
 
 def main(argv: list[str] | None = None) -> None:
     """Entry point for the demo script."""
+    random.seed(42)
+
     parser = argparse.ArgumentParser(description="test_basic")
 
     parser.add_argument("graph", type=str, help="Demo graph",
