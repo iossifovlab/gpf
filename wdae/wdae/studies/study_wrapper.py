@@ -784,7 +784,7 @@ class WDAEStudy(WDAEAbstractStudy):
             self.name)
         try:
             variants = enumerate(filter(None, self.registry.query_variants(
-                children_kwargs, limit,
+                children_kwargs, limit=limit,
             )))
 
             for idx, variant in variants:

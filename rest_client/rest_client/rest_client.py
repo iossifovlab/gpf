@@ -82,7 +82,7 @@ class GPFClientSession(Protocol):
 class GPFAnonymousSession(GPFClientSession):
     """GPF anonymous REST client."""
 
-    DEFAULT_TIMEOUT = (10, 100)
+    DEFAULT_TIMEOUT = (10, 300)
 
     def __init__(
         self, base_url: str,
@@ -684,6 +684,7 @@ class RESTClient:
             json=query,
             headers={"Content-Type": "application/json"},
             stream=True,
+            timeout=(10, 600),
         )
         if response.status_code != 200:
             raise OSError(f"Query failed: {response.text}")
