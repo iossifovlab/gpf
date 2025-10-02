@@ -560,7 +560,8 @@ def test_calc_empty_variants(t4c8_study_1_pheno: PhenotypeStudy) -> None:
 
     # pylint: disable=unbalanced-dict-unpacking
     res_m, res_f = \
-        pheno_tool.calc("i1.m1", variants, sex_split=True).values()  # type: ignore
+        pheno_tool.calc(
+            "i1.m1", variants, sex_split=True).values()  # type: ignore
     assert isinstance(res_m, PhenoResult)
     assert isinstance(res_f, PhenoResult)
 
