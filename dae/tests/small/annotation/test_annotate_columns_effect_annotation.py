@@ -82,3 +82,53 @@ def test_annotate_columns_cli_gene_models(
     ])
 
     assert (tmp_path / "work" / "out.txt").exists()
+
+
+def test_annotate_columns_cli_reference_genome(
+    tmp_path: pathlib.Path,
+    grr_fixture: GenomicResourceRepo,  # noqa: ARG001
+    columns_fixture: pathlib.Path,  # noqa: ARG001
+) -> None:
+    setup_directories(
+        tmp_path / "work" / "pipeline.yaml",
+        textwrap.dedent("""
+            - effect_annotator:
+                gene_models: t4c8_genes
+            """))
+
+    cli_columns([
+        "--grr-directory", str(tmp_path / "grr"),
+        "-j", "1",
+        "-f",
+        "-R", "t4c8_genome",
+        "-o", str(tmp_path / "work" / "out.txt"),
+        str(tmp_path / "work" / "columns.txt"),
+        str(tmp_path / "work" / "pipeline.yaml"),
+    ])
+
+    assert (tmp_path / "work" / "out.txt").exists()
+
+
+def test_annotate_columns_cli_gene_models_and_reference_genome(
+    tmp_path: pathlib.Path,
+    grr_fixture: GenomicResourceRepo,  # noqa: ARG001
+    columns_fixture: pathlib.Path,  # noqa: ARG001
+) -> None:
+    setup_directories(
+        tmp_path / "work" / "pipeline.yaml",
+        textwrap.dedent("""
+            - effect_annotator
+            """))
+
+    cli_columns([
+        "--grr-directory", str(tmp_path / "grr"),
+        "-j", "1",
+        "-f",
+        "-G", "t4c8_genes",
+        "-R", "t4c8_genome",
+        "-o", str(tmp_path / "work" / "out.txt"),
+        str(tmp_path / "work" / "columns.txt"),
+        str(tmp_path / "work" / "pipeline.yaml"),
+    ])
+
+    assert (tmp_path / "work" / "out.txt").exists()
