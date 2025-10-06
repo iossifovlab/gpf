@@ -44,7 +44,6 @@ from dae.annotation.annotation_factory import (
 from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
-from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.processing_pipeline import (
     Annotation,
     AnnotationPipelineAnnotatablesBatchFilter,
@@ -468,10 +467,6 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     add_common_annotation_arguments(parser)
-
-    CLIAnnotationContextProvider.add_argparser_arguments(parser)
-    TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
-    VerbosityConfiguration.set_arguments(parser)
     return parser
 
 

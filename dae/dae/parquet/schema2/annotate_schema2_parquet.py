@@ -33,6 +33,9 @@ from dae.annotation.genomic_context import (
     CLIAnnotationContextProvider,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
+from dae.genomic_resources.genomic_context_cli import (
+    CLIGenomicContextProvider,
+)
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
@@ -376,6 +379,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         help="Annotate in batches of",
     )
 
+    CLIGenomicContextProvider.add_argparser_arguments(parser)
     CLIAnnotationContextProvider.add_argparser_arguments(parser)
     TaskGraphCli.add_arguments(parser)
     VerbosityConfiguration.set_arguments(parser)

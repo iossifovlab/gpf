@@ -39,9 +39,6 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.genomic_context import (
-    CLIAnnotationContextProvider,
-)
 from dae.annotation.processing_pipeline import (
     Annotation,
     AnnotationPipelineAnnotatablesBatchFilter,
@@ -75,21 +72,6 @@ from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 
 logger = logging.getLogger("annotate_columns")
-
-
-@dataclass
-class _ProcessingArgs:
-    input: str
-    reannotate: str | None
-    work_dir: str
-    batch_size: int
-    region_size: int
-    input_separator: str
-    output_separator: str
-    allow_repeated_attributes: bool
-    full_reannotation: bool
-    columns_args: dict[str, str]
-    keep_parts: bool
 
 
 class _CSVSource(Source):
@@ -349,17 +331,17 @@ def _build_new_header(
 
 
 def _build_sequential(
-    args: _ProcessingArgs,
+    args: dict[str, Any],
     output_path: str,
     pipeline: AnnotationPipeline,
     reference_genome: ReferenceGenome | None,
     attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVSource(
-        args.input,
+        args["input"],
         reference_genome,
-        args.columns_args,
-        args.input_separator,
+        args["columns_args"],
+        args["input_separator"],
     )
     filters: list[Filter] = []
     new_header = _build_new_header(
@@ -367,24 +349,24 @@ def _build_sequential(
     filters.extend([
         DeleteAttributesFromAWSFilter(attributes_to_delete),
         AnnotationPipelineAnnotatablesFilter(pipeline),
-        _CSVWriter(output_path, args.output_separator, new_header),
+        _CSVWriter(output_path, args["output_separator"], new_header),
     ])
     return PipelineProcessor(source, filters)
 
 
 def _build_batched(
-    args: _ProcessingArgs,
+    args: dict[str, Any],
     output_path: str,
     pipeline: AnnotationPipeline,
     reference_genome: ReferenceGenome | None,
     attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVBatchSource(
-        args.input,
+        args["input"],
         reference_genome,
-        args.columns_args,
-        args.input_separator,
-        args.batch_size,
+        args["columns_args"],
+        args["input_separator"],
+        args["batch_size"],
     )
     filters: list[Filter] = []
     new_header = _build_new_header(
@@ -392,7 +374,7 @@ def _build_batched(
     filters.extend([
         DeleteAttributesFromAWSBatchFilter(attributes_to_delete),
         AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-        _CSVBatchWriter(output_path, args.output_separator, new_header),
+        _CSVBatchWriter(output_path, args["output_separator"], new_header),
     ])
     return PipelineProcessor(source, filters)
 
@@ -403,15 +385,15 @@ def _annotate_csv(
     grr_definition: dict,
     reference_genome_resource_id: str | None,
     region: Region | None,
-    args: _ProcessingArgs,
+    args: dict[str, Any],
 ) -> None:
     """Annotate a CSV file using a processing pipeline."""
 
     grr = build_genomic_resource_repository(definition=grr_definition)
 
     pipeline_previous = None
-    if args.reannotate:
-        pipeline_previous = load_pipeline_from_file(args.reannotate, grr)
+    if args["reannotate"]:
+        pipeline_previous = load_pipeline_from_file(args["reannotate"], grr)
 
     ref_genome = None
     if reference_genome_resource_id is not None:
@@ -420,8 +402,8 @@ def _annotate_csv(
 
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
-        allow_repeated_attributes=args.allow_repeated_attributes,
-        work_dir=Path(args.work_dir),
+        allow_repeated_attributes=args["allow_repeated_attributes"],
+        work_dir=Path(args["work_dir"]),
     )
 
     attributes_to_delete = []
@@ -429,11 +411,11 @@ def _annotate_csv(
     if pipeline_previous:
         pipeline = ReannotationPipeline(
             pipeline, pipeline_previous,
-            full_reannotation=args.full_reannotation)
+            full_reannotation=args["full_reannotation"])
         attributes_to_delete = pipeline.deleted_attributes
 
     build_processor = _build_sequential \
-        if args.batch_size <= 0 \
+        if args["batch_size"] <= 0 \
         else _build_batched
 
     processor = build_processor(
@@ -537,16 +519,17 @@ def _tabix_index(filepath: str, args: dict | None = None) -> None:
 
 
 def _add_tasks_tabixed(
-    args: _ProcessingArgs,
+    args: dict[str, Any],
     task_graph: TaskGraph,
     output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
 ) -> None:
-    with closing(TabixFile(args.input)) as pysam_file:
-        regions = produce_regions(pysam_file, args.region_size)
-    file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
+    with closing(TabixFile(args["input"])) as pysam_file:
+        regions = produce_regions(pysam_file, args["region_size"])
+    file_paths = produce_partfile_paths(
+        args["input"], regions, args["work_dir"])
 
     annotation_tasks = []
     for region, path in zip(regions, file_paths, strict=True):
@@ -573,7 +556,7 @@ def _add_tasks_tabixed(
     concat_task = task_graph.create_task(
         "concat",
         _concat,
-        args=[file_paths, output_path, args.keep_parts],
+        args=[file_paths, output_path, args["keep_parts"]],
         deps=[annotation_sync])
 
     compress_task = task_graph.create_task(
@@ -585,12 +568,12 @@ def _add_tasks_tabixed(
     task_graph.create_task(
         "tabix_index",
         _tabix_index,
-        args=[f"{output_path}.gz", args.columns_args],
+        args=[f"{output_path}.gz", args["columns_args"]],
         deps=[compress_task])
 
 
 def _add_tasks_plaintext(
-    args: _ProcessingArgs,
+    args: dict[str, Any],
     task_graph: TaskGraph,
     output_path: str,
     pipeline_config: RawPipelineConfig,
@@ -617,7 +600,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    add_common_annotation_arguments(parser)
+    add_record_to_annotable_arguments(parser)
     parser.add_argument(
         "--input-separator", "--in-sep", default="\t",
         help="The column separator in the input")
@@ -625,10 +608,8 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         "--output-separator", "--out-sep", default="\t",
         help="The column separator in the output")
 
-    CLIAnnotationContextProvider.add_argparser_arguments(parser)
-    add_record_to_annotable_arguments(parser)
-    TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
-    VerbosityConfiguration.set_arguments(parser)
+    add_common_annotation_arguments(parser)
+
     return parser
 
 
@@ -639,6 +620,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     arg_parser = _build_argument_parser()
     args = vars(arg_parser.parse_args(argv))
+
     VerbosityConfiguration.set_verbosity(args["verbose"])
     args = handle_default_args(args)
 
@@ -650,28 +632,18 @@ def cli(argv: list[str] | None = None) -> None:
 
     cache_pipeline_resources(grr, pipeline)
 
-    processing_args = _ProcessingArgs(
-        args["input"],
-        args["reannotate"],
-        args["work_dir"],
-        args["batch_size"],
-        args["region_size"],
-        args["input_separator"],
-        args["output_separator"],
-        args["allow_repeated_attributes"],
-        args["full_reannotation"],
-        {f"col_{col}": args[f"col_{col}"]
-         for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
-         for col in cols},
-        args["keep_parts"],
-    )
+    args["columns_args"] = {
+        f"col_{col}": args[f"col_{col}"]
+        for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
+        for col in cols
+    }
 
     output_path = args["output"]
 
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
         _add_tasks_tabixed(
-            processing_args,
+            args,
             task_graph,
             output_path,
             pipeline.raw,
@@ -680,7 +652,7 @@ def cli(argv: list[str] | None = None) -> None:
         )
     else:
         _add_tasks_plaintext(
-            processing_args,
+            args,
             task_graph,
             output_path,
             pipeline.raw,
