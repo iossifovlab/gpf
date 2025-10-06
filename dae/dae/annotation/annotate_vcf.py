@@ -25,8 +25,10 @@ from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_utils import (
     add_common_annotation_arguments,
     add_input_files_to_task_graph,
+    build_cli_genomic_context,
     cache_pipeline_resources,
-    get_stuff_from_context,
+    get_grr_from_context,
+    get_pipeline_from_context,
     handle_default_args,
     produce_partfile_paths,
     produce_regions,
@@ -61,18 +63,6 @@ from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_vcf")
-
-
-@dataclass
-class _ProcessingArgs:
-    input: str
-    reannotate: str | None
-    work_dir: str
-    batch_size: int
-    region_size: int
-    allow_repeated_attributes: bool
-    full_reannotation: bool
-    keep_parts: bool
 
 
 @dataclass
@@ -377,20 +367,20 @@ def _annotate_vcf(
     pipeline_config: RawAnnotatorsConfig,
     grr_definition: dict,
     region: Region | None,
-    args: _ProcessingArgs,
+    args: dict[str, Any],
 ) -> None:
     """Annotate a VCF file using a processing pipeline."""
-
+    build_cli_genomic_context(args)
     grr = build_genomic_resource_repository(definition=grr_definition)
 
     pipeline_previous = None
-    if args.reannotate:
-        pipeline_previous = load_pipeline_from_file(args.reannotate, grr)
+    if args["reannotate"]:
+        pipeline_previous = load_pipeline_from_file(args["reannotate"], grr)
 
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
-        allow_repeated_attributes=args.allow_repeated_attributes,
-        work_dir=Path(args.work_dir),
+        allow_repeated_attributes=args["allow_repeated_attributes"],
+        work_dir=Path(args["work_dir"]),
     )
 
     attributes_to_delete = []
@@ -398,7 +388,7 @@ def _annotate_vcf(
     if pipeline_previous:
         pipeline = ReannotationPipeline(
             pipeline, pipeline_previous,
-            full_reannotation=args.full_reannotation)
+            full_reannotation=args["full_reannotation"])
         attributes_to_delete = pipeline.deleted_attributes
 
     annotation_attributes = [
@@ -409,8 +399,8 @@ def _annotate_vcf(
     source: Source
     filters: list[Filter] = []
 
-    if args.batch_size <= 0:
-        source = _VCFSource(args.input)
+    if args["batch_size"] <= 0:
+        source = _VCFSource(args["input"])
         header = source.header.copy()
         filters.extend([
             AnnotationPipelineAnnotatablesFilter(pipeline),
@@ -420,7 +410,7 @@ def _annotate_vcf(
                        attributes_to_delete),
         ])
     else:
-        source = _VCFBatchSource(args.input, batch_size=args.batch_size)
+        source = _VCFBatchSource(args["input"], batch_size=args["batch_size"])
         header = source.source.header.copy()
         filters.extend([
             AnnotationPipelineAnnotatablesBatchFilter(pipeline),
@@ -479,7 +469,7 @@ def _tabix_compress(filepath: str) -> None:
 
 
 def _add_tasks_plaintext(
-    args: _ProcessingArgs,
+    args: dict[str, Any],
     task_graph: TaskGraph,
     output_path: str,
     pipeline_config: RawPipelineConfig,
@@ -500,16 +490,16 @@ def _add_tasks_plaintext(
 
 
 def _add_tasks_tabixed(
-    args: _ProcessingArgs,
+    args: dict[str, Any],
     task_graph: TaskGraph,
     output_path: str,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
 ) -> None:
-    with closing(TabixFile(args.input)) as pysam_file:
-        regions = produce_regions(pysam_file, args.region_size)
+    with closing(TabixFile(args["input"])) as pysam_file:
+        regions = produce_regions(pysam_file, args["region_size"])
     file_paths = produce_partfile_paths(
-        args.input, regions, args.work_dir)
+        args["input"], regions, args["work_dir"])
 
     annotation_tasks = []
     for (region, file_path) in zip(regions, file_paths, strict=True):
@@ -534,7 +524,7 @@ def _add_tasks_tabixed(
     concat_task = task_graph.create_task(
         "concat",
         _concat,
-        args=[file_paths, output_path, args.keep_parts],
+        args=[file_paths, output_path, args["keep_parts"]],
         deps=[annotation_sync],
     )
     compress_task = task_graph.create_task(
@@ -561,27 +551,18 @@ def cli(argv: list[str] | None = None) -> None:
 
     args = handle_default_args(args)
 
-    pipeline, _, grr = get_stuff_from_context(args)
+    context = build_cli_genomic_context(args)
+    pipeline = get_pipeline_from_context(context)
+    grr = get_grr_from_context(context)
     assert grr.definition is not None
 
     cache_pipeline_resources(grr, pipeline)
-
-    processing_args = _ProcessingArgs(
-        args["input"],
-        args["reannotate"],
-        args["work_dir"],
-        args["batch_size"],
-        args["region_size"],
-        args["allow_repeated_attributes"],
-        args["full_reannotation"],
-        args["keep_parts"],
-    )
 
     output_path = args["output"]
     task_graph = TaskGraph()
     if tabix_index_filename(args["input"]):
         _add_tasks_tabixed(
-            processing_args,
+            args,
             task_graph,
             output_path,
             pipeline.raw,
@@ -589,7 +570,7 @@ def cli(argv: list[str] | None = None) -> None:
         )
     else:
         _add_tasks_plaintext(
-            processing_args,
+            args,
             task_graph,
             output_path,
             pipeline.raw,

@@ -15,8 +15,10 @@ import yaml
 
 from dae.annotation.annotate_utils import (
     add_input_files_to_task_graph,
+    build_cli_genomic_context,
     cache_pipeline_resources,
-    get_stuff_from_context,
+    get_grr_from_context,
+    get_pipeline_from_context,
 )
 from dae.annotation.annotation_config import (
     RawPipelineConfig,
@@ -514,7 +516,9 @@ def cli(raw_args: list[str] | None = None) -> None:
         _print_meta(ParquetLoader.load_from_dir(input_dir))
         return
 
-    pipeline, _, grr = get_stuff_from_context(args)
+    context = build_cli_genomic_context(args)
+    pipeline = get_pipeline_from_context(context)
+    grr = get_grr_from_context(context)
     assert grr.definition is not None
 
     if args["dry_run"]:

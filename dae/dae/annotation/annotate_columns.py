@@ -19,8 +19,10 @@ from pysam import TabixFile, tabix_compress, tabix_index
 from dae.annotation.annotate_utils import (
     add_common_annotation_arguments,
     add_input_files_to_task_graph,
+    build_cli_genomic_context,
     cache_pipeline_resources,
-    get_stuff_from_context,
+    get_grr_from_context,
+    get_pipeline_from_context,
     handle_default_args,
     produce_partfile_paths,
     produce_regions,
@@ -389,6 +391,7 @@ def _annotate_csv(
 ) -> None:
     """Annotate a CSV file using a processing pipeline."""
 
+    build_cli_genomic_context(args)
     grr = build_genomic_resource_repository(definition=grr_definition)
 
     pipeline_previous = None
@@ -624,7 +627,9 @@ def cli(argv: list[str] | None = None) -> None:
     VerbosityConfiguration.set_verbosity(args["verbose"])
     args = handle_default_args(args)
 
-    pipeline, context, grr = get_stuff_from_context(args)
+    context = build_cli_genomic_context(args)
+    pipeline = get_pipeline_from_context(context)
+    grr = get_grr_from_context(context)
     assert grr.definition is not None
 
     ref_genome = context.get_reference_genome()

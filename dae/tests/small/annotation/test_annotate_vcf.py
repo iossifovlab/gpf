@@ -9,7 +9,6 @@ import pytest_mock
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotate_vcf import (
     _annotate_vcf,
-    _ProcessingArgs,
     _VCFBatchSource,
     _VCFSource,
     _VCFWriter,
@@ -83,11 +82,16 @@ def test_annotate_vcf_simple(
         pipeline_config,
         test_gpf_instance.grr.definition,  # type: ignore
         None,
-        _ProcessingArgs(
-            str(sample_vcf), "", str(work_dir), 0, 1,
-            False, False,  # noqa: FBT003
-            False,  # noqa: FBT003 # keep_parts
-        ),
+        {
+            "input": str(sample_vcf),
+            "reannotate": "",
+            "work_dir": str(work_dir),
+            "batch_size": 0,
+            "region_size": 1,
+            "allow_repeated_attributes": False,
+            "full_reannotation": False,
+            "keep_parts": False,
+        },
     )
 
     # pylint: disable=no-member
@@ -115,16 +119,16 @@ def test_annotate_vcf_simple_batch(
         pipeline_config,
         test_gpf_instance.grr.definition,  # type: ignore
         None,
-        _ProcessingArgs(
-            input=str(sample_vcf),
-            reannotate="",
-            work_dir=str(work_dir),
-            batch_size=1,
-            region_size=3_000_000,
-            allow_repeated_attributes=False,
-            full_reannotation=False,
-            keep_parts=False,
-        ),
+        {
+            "input": str(sample_vcf),
+            "reannotate": "",
+            "work_dir": str(work_dir),
+            "batch_size": 1,
+            "region_size": 3_000_000,
+            "allow_repeated_attributes": False,
+            "full_reannotation": False,
+            "keep_parts": False,
+        },
     )
 
     # pylint: disable=no-member
