@@ -216,6 +216,7 @@ def context_providers_init(**kwargs: Any) -> None:
             _REGISTERED_CONTEXT_PROVIDERS,
             key=lambda g: (- g.get_context_provider_priority(),
                            g.get_context_provider_type())):
+
         context = provider.init(**kwargs)
         if context is None:
             logger.info(

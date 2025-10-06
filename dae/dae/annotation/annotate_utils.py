@@ -19,13 +19,18 @@ from dae.genomic_resources.genomic_context import (
     get_genomic_context,
     register_context_provider,
 )
+from dae.genomic_resources.genomic_context_cli import (
+    CLIGenomicContextProvider,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.regions import (
     Region,
     get_chromosome_length_tabix,
     split_into_regions,
 )
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}"
 
@@ -77,25 +82,30 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     return str(value)
 
 
-def get_stuff_from_context(
+def build_cli_genomic_context(
     cli_args: dict[str, Any],
-) -> tuple[AnnotationPipeline, GenomicContext, GenomicResourceRepo]:
+) -> GenomicContext:
     """Helper method to collect necessary objects from the genomic context."""
+    register_context_provider(CLIGenomicContextProvider())
     register_context_provider(CLIAnnotationContextProvider())
     context_providers_init(**cli_args)
-    registered_context = get_genomic_context()
-    # Maybe add a method to build a pipeline from a genomic context
-    # the pipeline arguments are registered as a context above, where
-    # the pipeline is also written into the context, only to be accessed
-    # 3 lines down
-    pipeline = get_context_pipeline(registered_context)
+    return get_genomic_context()
+
+
+def get_pipeline_from_context(context: GenomicContext) -> AnnotationPipeline:
+    """Get the annotation pipeline from the genomic context."""
+    pipeline = get_context_pipeline(context)
     if pipeline is None:
         raise ValueError("no valid annotation pipeline configured")
-    context = pipeline.build_pipeline_genomic_context()
+    return pipeline
+
+
+def get_grr_from_context(context: GenomicContext) -> GenomicResourceRepo:
+    """Get the genomic resource repository from the genomic context."""
     grr = context.get_genomic_resources_repository()
     if grr is None:
         raise ValueError("no valid GRR configured")
-    return pipeline, context, grr
+    return grr
 
 
 def add_input_files_to_task_graph(args: dict, task_graph: TaskGraph) -> None:
@@ -190,6 +200,11 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         default=0,  # 0 = annotate iteratively, no batches
         help="Annotate in batches of",
     )
+
+    CLIGenomicContextProvider.add_argparser_arguments(parser)
+    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
+    VerbosityConfiguration.set_arguments(parser)
 
 
 def build_output_path(raw_input_path: str, output_path: str | None) -> str:
