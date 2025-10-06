@@ -98,6 +98,7 @@ def setup_client_from_config(
 ) -> tuple[Client, dict[str, Any]]:
     """Create a dask client from the provided config."""
     logger.info("CLUSTER CONFIG: %s", cluster_config)
+    _adjust_default_distributed_config()
     cluster_type = cluster_config["type"]
     if cluster_type == "manual":
         return set_up_manual_client(cluster_config), cluster_config
@@ -131,6 +132,22 @@ def setup_client_from_config(
 
     client = Client(cluster)
     return client, cluster_config
+
+
+def _adjust_default_distributed_config() -> None:
+    """Adjust some default distributed config values if they are not set."""
+    config = dask.config.get(
+        "distributed.scheduler.unknown-task-duration")
+
+    if config == "500ms":  # default value
+        dask.config.config[
+            "distributed"]["scheduler"]["unknown-task-duration"] = "10 minutes"
+
+    config = dask.config.get(
+        "distributed.worker.memory.pause")
+    if config == 0.80:  # default value
+        dask.config.config[
+            "distributed"]["worker"]["memory"]["pause"] = False
 
 
 def setup_client(
