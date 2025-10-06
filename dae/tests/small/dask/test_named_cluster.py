@@ -194,3 +194,21 @@ def test_setup_manual_client(mocker: pytest_mock.MockerFixture) -> None:
     assert mocked_client.call_args.kwargs == {
         "address": "tcp://localhost:8786",
     }
+
+
+def test_adjust_default_distributed_config(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dask.distributed.LocalCluster", autospec=True)
+    mocker.patch(
+        "dae.dask.named_cluster.Client",
+        autospec=True)
+
+    client, _ = setup_client(number_of_workers=4)
+    assert client
+
+    assert config.get(
+        "distributed.scheduler.unknown-task-duration") == "10 minutes"
+    assert config.get(
+        "distributed.worker.memory.pause") is False
