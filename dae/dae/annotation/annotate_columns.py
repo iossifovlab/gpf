@@ -608,12 +608,18 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         "--input-separator", "--in-sep", default="\t",
         help="The column separator in the input")
     parser.add_argument(
-        "--output-separator", "--out-sep", default="\t",
+        "--output-separator", "--out-sep", default=None,
         help="The column separator in the output")
 
     add_common_annotation_arguments(parser)
 
     return parser
+
+
+def _adjust_default_output_separator(args: dict[str, Any]) -> dict[str, Any]:
+    if args["output_separator"] is None:
+        args["output_separator"] = args["input_separator"]
+    return args
 
 
 def cli(argv: list[str] | None = None) -> None:
@@ -626,6 +632,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     VerbosityConfiguration.set_verbosity(args["verbose"])
     args = handle_default_args(args)
+    args = _adjust_default_output_separator(args)
 
     context = build_cli_genomic_context(args)
     pipeline = get_pipeline_from_context(context)

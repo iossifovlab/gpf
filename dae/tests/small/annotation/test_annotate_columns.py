@@ -34,6 +34,7 @@ from dae.genomic_resources.genomic_context import (
 )
 from dae.genomic_resources.testing import (
     setup_denovo,
+    setup_directories,
     setup_genome,
     setup_tabix,
 )
@@ -1244,6 +1245,95 @@ def test_annotate_columns_append_columns(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+@pytest.mark.parametrize("sep", [",", ";", "\t"])
+def test_annotate_columns_adjust_output_separator(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    sep: str,
+) -> None:
+    in_content = (
+        f"chrom{sep}pos{sep}score\n"
+        f"chr1{sep}23{sep}1.0\n"
+        f"chr1{sep}24{sep}2.0\n"
+    )
+    out_expected_content = (
+        f"chrom{sep}pos{sep}score{sep}score\n"
+        f"chr1{sep}23{sep}1.0{sep}0.1\n"
+        f"chr1{sep}24{sep}2.0{sep}0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_directories(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--in-sep", sep,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+@pytest.mark.parametrize(
+    "isep,osep", [
+        (",", ";"),
+        ("\t", ","),
+        (",", "\t"),
+    ])
+def test_annotate_columns_output_separator(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    isep: str,
+    osep: str,
+) -> None:
+    in_content = (
+        f"chrom{isep}pos{isep}score\n"
+        f"chr1{isep}23{isep}1.0\n"
+        f"chr1{isep}24{isep}2.0\n"
+    )
+    out_expected_content = (
+        f"chrom{osep}pos{osep}score{osep}score\n"
+        f"chr1{osep}23{osep}1.0{osep}0.1\n"
+        f"chr1{osep}24{osep}2.0{osep}0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_directories(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--in-sep", isep,
+            "--out-sep", osep,
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
