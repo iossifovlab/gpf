@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+* 2025.10.2
+    * Reorganization and fixes in genomic context for annotation CLI tools.
+    * Setting Dask scheduler default values for more adequate processing of
+      annotation tasks.
+    * Improved demo_graphs_cli tool for better testing of TaskGraph
+      executors.
+    * Fixed handling of variant queries in phenotype tool.
+    * Fixed variant queries defaults in genotype studies and genotype storages.
+
 * 2025.10.1
     * Fix gene set collection files property.
     * Fix GPF federation unit test.
