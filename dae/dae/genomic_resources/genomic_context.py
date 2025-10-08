@@ -1,3 +1,45 @@
+"""
+Genomic context provides a way to collect various genomic resources from
+various sources and make them available through a single interface.
+
+Example usage of genomic context in a tool with command line interface:
+
+.. code-block:: python
+
+    import argparse
+    import sys
+
+    from dae.genomic_resources.genomic_context import (
+        context_providers_add_argparser_arguments,
+        context_providers_init,
+        get_genomic_context,
+    )
+
+
+    parser = argparse.ArgumentParser()
+    context_providers_add_argparser_arguments(parser)
+
+    args = parser.parse_args(sys.argv[1:])
+    context_providers_init(**vars(args))
+    genomic_context = get_genomic_context()
+
+If you don't need command line arguments you can do:
+
+.. code-block:: python
+
+    context_providers_init()
+    genomic_context = get_genomic_context()
+
+When you need a CLI with all defaults and without modifying the argument
+parser you can do:
+
+.. code-block:: python
+
+    context_providers_init_with_argparser(toolname: str)
+    genomic_context = get_genomic_context()
+
+
+"""
 from __future__ import annotations
 
 import argparse
@@ -263,6 +305,7 @@ def _load_context_provider_plugins() -> None:
     for plugin in discovered_plugins:
         factory = plugin.load()
         provider = factory()
+        assert isinstance(provider, GenomicContextProvider)
         register_context_provider(provider)
     _CONTEXT_PLUGINS_LOADED = True
 
