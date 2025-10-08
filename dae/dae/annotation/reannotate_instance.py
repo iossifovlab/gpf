@@ -62,7 +62,7 @@ class ReannotateInstanceTool:
                  " without carrying out the reannotation.",
         )
         parser.add_argument(
-            "-i", "--full-reannotation",
+            "--full-reannotation", "--fr",
             help="Ignore any previous annotation and run "
                  " a full reannotation.",
             action="store_true",

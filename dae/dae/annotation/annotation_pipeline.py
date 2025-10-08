@@ -16,24 +16,12 @@ from dae.annotation.annotation_config import (
     AttributeInfo,
     RawPipelineConfig,
 )
-from dae.genomic_resources.genomic_context import (
-    GenomicContext,
-    PriorityGenomicContext,
-    SimpleGenomicContext,
-    get_genomic_context,
-)
-from dae.genomic_resources.reference_genome import (
-    build_reference_genome_from_resource,
-)
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
 )
 
 logger = logging.getLogger(__name__)
-GC_GRR_KEY = "genomic_resources_repository"
-GC_REFERENCE_GENOME_KEY = "reference_genome"
-GC_GENE_MODELS_KEY = "gene_models"
 
 _AnnotationDependencyGraph = dict[
     AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]],
@@ -180,21 +168,6 @@ class AnnotationPipeline:
         self.preamble: AnnotationPreamble | None = None
         self.raw: RawPipelineConfig = []
         self._is_open = False
-
-    def build_pipeline_genomic_context(self) -> GenomicContext:
-        """Create a genomic context from the pipeline parameters."""
-        registered_context = get_genomic_context()
-        genome = None
-        if self.preamble is not None:
-            genome_res = self.preamble.input_reference_genome_res
-            if genome_res is not None:
-                genome = build_reference_genome_from_resource(genome_res)
-        pipeline_context = SimpleGenomicContext({
-            GC_GRR_KEY: self.repository,
-            GC_REFERENCE_GENOME_KEY: genome,
-        }, ("pipeline_context",))
-
-        return PriorityGenomicContext([pipeline_context, registered_context])
 
     def get_info(self) -> list[AnnotatorInfo]:
         return [annotator.get_info() for annotator in self.annotators]

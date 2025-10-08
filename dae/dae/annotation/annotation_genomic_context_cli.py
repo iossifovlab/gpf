@@ -7,13 +7,12 @@ from typing import Any
 
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.genomic_context import (
+from dae.genomic_resources.genomic_context_base import (
     GC_ANNOTATION_PIPELINE_KEY,
     GC_GRR_KEY,
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
-    get_genomic_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,7 +49,10 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
     @staticmethod
     def init(**kwargs: Any) -> GenomicContext | None:
         """Build a CLI genomic context."""
-
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources.genomic_context import (
+            get_genomic_context,
+        )
         context_objects = {}
 
         if kwargs.get("pipeline") is None \
@@ -63,21 +65,22 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
         assert grr is not None
 
         pipeline_path = pathlib.Path(kwargs["pipeline"])
-        pipeline_resource = grr.find_resource(kwargs["pipeline"])
 
         if pipeline_path.exists():
             raw_pipeline = pipeline_path.read_text()
-        elif pipeline_resource is not None:
-            if pipeline_resource.get_type() != "annotation_pipeline":
-                raise TypeError(
-                    "Expected an annotation_pipeline resource.")
-            raw_pipeline = pipeline_resource.get_file_content(
-                pipeline_resource.get_config()["filename"])
         else:
-            raise ValueError(
-                f"The provided argument for an annotation"
-                f" pipeline ('{kwargs['pipeline']}') is neither a valid"
-                f" filepath, nor a valid GRR resource ID.")
+            pipeline_resource = grr.get_resource(kwargs["pipeline"])
+            if pipeline_resource is not None:
+                if pipeline_resource.get_type() != "annotation_pipeline":
+                    raise TypeError(
+                        "Expected an annotation_pipeline resource.")
+                raw_pipeline = pipeline_resource.get_file_content(
+                    pipeline_resource.get_config()["filename"])
+            else:
+                raise ValueError(
+                    f"The provided argument for an annotation"
+                    f" pipeline ('{kwargs['pipeline']}') is neither a valid"
+                    f" filepath, nor a valid GRR resource ID.")
 
         work_dir = None
         if kwargs.get("work_dir"):

@@ -9,7 +9,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 from markdown2 import markdown
 
-from dae.annotation.genomic_context import (
+from dae.annotation.annotation_genomic_context_cli import (
     CLIAnnotationContextProvider,
     get_context_pipeline,
 )

@@ -7,9 +7,11 @@ from typing import Any, cast
 import pytest
 import pytest_mock
 from dae.genomic_resources.genomic_context import (
-    GenomicContext,
     get_genomic_context,
     register_context,
+)
+from dae.genomic_resources.genomic_context_base import (
+    GenomicContext,
 )
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,

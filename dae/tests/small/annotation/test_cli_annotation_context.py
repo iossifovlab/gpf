@@ -3,7 +3,9 @@ import argparse
 from typing import cast
 
 import pytest_mock
-from dae.annotation.genomic_context import CLIAnnotationContextProvider
+from dae.annotation.annotation_genomic_context_cli import (
+    CLIAnnotationContextProvider,
+)
 from dae.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,

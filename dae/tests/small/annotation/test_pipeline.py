@@ -16,9 +16,11 @@ from dae.annotation.annotation_pipeline import (
     InputAnnotableAnnotatorDecorator,
 )
 from dae.genomic_resources.genomic_context import (
+    get_genomic_context,
+)
+from dae.genomic_resources.genomic_context_base import (
     GenomicContext,
     SimpleGenomicContext,
-    get_genomic_context,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
@@ -187,33 +189,3 @@ def test_pipeline_repeated_attributes_allowed(
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
     assert result == {"s1_A0_score_one": 0.1, "s1_A0_dup_score_one": 0.123}
-
-
-def test_annotation_pipeline_context(
-    context_fixture: GenomicContext,
-    test_grr: GenomicResourceRepo,
-) -> None:
-    pipeline_config = textwrap.dedent("""
-        preamble:
-          summary: asdf
-          description: lorem ipsum
-          input_reference_genome: t4c8_genome
-          metadata:
-              foo: bar
-              subdata:
-                  a: b
-        annotators:
-          - position_score: score_one
-    """)
-
-    pipeline = load_pipeline_from_yaml(pipeline_config, test_grr)
-    context = pipeline.build_pipeline_genomic_context()
-
-    assert context_fixture.get_genomic_resources_repository() is None
-    pipeline_grr = context.get_genomic_resources_repository()
-    assert pipeline_grr is not None
-    assert pipeline_grr.get_resource("t4c8_genome") is not None
-
-    pipeline_genome = context.get_reference_genome()
-    assert pipeline_genome is not None
-    assert pipeline_genome.resource_id == "t4c8_genome"

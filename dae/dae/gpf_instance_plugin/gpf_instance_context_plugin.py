@@ -2,11 +2,9 @@ import argparse
 import logging
 from typing import Any
 
-from dae.genomic_resources.genomic_context import (
+from dae.genomic_resources.genomic_context_base import (
     GC_ANNOTATION_PIPELINE_KEY,
     GC_GENE_MODELS_KEY,
-    GC_GENOTYPE_STORAGES_KEY,
-    GC_GPF_INSTANCE_KEY,
     GC_GRR_KEY,
     GC_REFERENCE_GENOME_KEY,
     GenomicContext,
@@ -14,6 +12,8 @@ from dae.genomic_resources.genomic_context import (
 )
 
 logger = logging.getLogger(__name__)
+GC_GPF_INSTANCE_KEY = "gpf_instance"
+GC_GENOTYPE_STORAGES_KEY = "genotype_storages"
 
 
 class GPFInstanceGenomicContext(GenomicContext):
@@ -70,7 +70,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
-            "-i", "--instance", default=None,
+            "-i", "--instance", "--gpf-instance", default=None,
             help="The path to the GPF instance configuration file.")
 
     @staticmethod

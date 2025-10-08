@@ -12,11 +12,10 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 
-from .genomic_context import (
+from .genomic_context_base import (
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
-    get_genomic_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,6 +63,11 @@ class CLIGenomicContextProvider(GenomicContextProvider):
 
     @staticmethod
     def init(**kwargs: Any) -> GenomicContext | None:
+        # pylint: disable=import-outside-toplevel
+        from .genomic_context import (
+            get_genomic_context,
+        )
+
         context_objects: dict[str, Any] = {}
         grr = None
         if kwargs.get("grr_filename") is None \

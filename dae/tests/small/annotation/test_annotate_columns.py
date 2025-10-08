@@ -28,7 +28,7 @@ from dae.annotation.processing_pipeline import (
     AnnotationsWithSource,
 )
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
-from dae.genomic_resources.genomic_context import (
+from dae.genomic_resources.genomic_context_base import (
     GenomicContext,
     SimpleGenomicContext,
 )
@@ -943,13 +943,11 @@ def test_cli_no_pipeline_in_context(
         match="no valid annotation pipeline configured",
     ):
         cli([
-            str(a) for a in [
-                in_file,
-                "--grr", grr_file,
-                "-o", out_file,
-                "-w", work_dir,
-                "-j", 1,
-            ]
+            str(in_file),
+            "--grr", str(grr_file),
+            "-o", str(out_file),
+            "-w", str(work_dir),
+            "-j", "1",
         ])
 
 
