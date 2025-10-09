@@ -80,14 +80,16 @@ def t4c8_grr(
 def t4c8_gpf(
     root_path: pathlib.Path,
     storage: GenotypeStorage | None = None,
+    grr: GenomicResourceRepo | None = None,
 ) -> GPFInstance:
-    local_repo = t4c8_grr(root_path)
+    if grr is None:
+        grr = t4c8_grr(root_path)
 
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
-        grr=local_repo)
+        grr=grr)
 
     if storage:
         gpf_instance\

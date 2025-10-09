@@ -8,8 +8,8 @@ import os
 import pathlib
 import shutil
 import sys
-from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 import yaml
 
@@ -31,12 +31,9 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
 )
-from dae.annotation.genomic_context import (
-    CLIAnnotationContextProvider,
-)
 from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.genomic_resources.genomic_context_cli import (
-    CLIGenomicContextProvider,
+from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
 )
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -73,15 +70,6 @@ from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region, split_into_regions
 
 logger = logging.getLogger("parquet_schema2_annotation")
-
-
-@dataclass
-class _ProcessingArgs:
-    work_dir: str
-    batch_size: int
-    region_size: int
-    allow_repeated_attributes: bool
-    full_reannotation: bool
 
 
 def backup_schema2_study(directory: str) -> Schema2DatasetLayout:
@@ -152,7 +140,7 @@ def produce_schema2_annotation_tasks(  # pylint:disable=R0917
     raw_pipeline: RawPipelineConfig,
     grr: GenomicResourceRepo,
     target_region: str | None,
-    args: _ProcessingArgs,
+    args: dict[str, Any],
 ) -> list[Task]:
     """Produce TaskGraph tasks for Parquet file annotation."""
 
@@ -166,7 +154,7 @@ def produce_schema2_annotation_tasks(  # pylint:disable=R0917
     for contig in contigs:
         contig_lens[contig] = genome.get_chrom_length(contig)
 
-    regions = produce_regions(target_region, args.region_size, contig_lens)
+    regions = produce_regions(target_region, args["region_size"], contig_lens)
     tasks = []
     for idx, region in enumerate(regions):
         tasks.append(task_graph.create_task(
@@ -272,7 +260,7 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     output_dir: str,
     bucket_idx: int,
     region: Region,
-    args: _ProcessingArgs,
+    args: dict[str, Any],
 ) -> None:
     """Process a Parquet dataset for annotation."""
     loader = ParquetLoader(input_layout)
@@ -280,8 +268,8 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
 
     pipeline = build_annotation_pipeline(
         pipeline_config, grr,
-        allow_repeated_attributes=args.allow_repeated_attributes,
-        work_dir=pathlib.Path(args.work_dir),
+        allow_repeated_attributes=args["allow_repeated_attributes"],
+        work_dir=pathlib.Path(args["work_dir"]),
     )
 
     pipeline_config_old = loader.meta["annotation_pipeline"] \
@@ -296,7 +284,7 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     if pipeline_previous:
         pipeline = ReannotationPipeline(
             pipeline, pipeline_previous,
-            full_reannotation=args.full_reannotation)
+            full_reannotation=args["full_reannotation"])
         attributes_to_delete = pipeline.deleted_attributes
 
     annotation_attributes = [
@@ -314,7 +302,7 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
     source: Source
     filters: list[Filter] = []
 
-    if args.batch_size <= 0:
+    if args["batch_size"] <= 0:
         source = Schema2SummaryVariantsSource(loader)
         filters.extend([
             DeleteAttributesFromVariantFilter(attributes_to_delete),
@@ -339,6 +327,8 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         description="Annotate Schema2 Parquet",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    VerbosityConfiguration.set_arguments(parser)
+
     parser.add_argument(
         "input", default="-", nargs="?",
         help="the directory containing Parquet files")
@@ -354,7 +344,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         help="Directory to store intermediate output files in",
         default="annotate_schema2_output")
     parser.add_argument(
-        "-i", "--full-reannotation",
+        "--full-reannotation", "--fr",
         help="Ignore any previous annotation and run "
         " a full reannotation.",
         action="store_true")
@@ -381,10 +371,10 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         help="Annotate in batches of",
     )
 
-    CLIGenomicContextProvider.add_argparser_arguments(parser)
-    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(parser)
+
     TaskGraphCli.add_arguments(parser)
-    VerbosityConfiguration.set_arguments(parser)
+
     return parser
 
 
@@ -476,7 +466,7 @@ def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     pipeline: AnnotationPipeline,
     grr: GenomicResourceRepo,
     region: str | None,
-    args: _ProcessingArgs,
+    args: dict[str, Any],
 ) -> None:
     annotation_tasks = produce_schema2_annotation_tasks(
         task_graph,
@@ -509,7 +499,6 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     arg_parser = _build_argument_parser()
     args = vars(arg_parser.parse_args(raw_args))
-
     input_dir = os.path.abspath(args["input"])
 
     if args["meta"]:
@@ -546,14 +535,6 @@ def cli(raw_args: list[str] | None = None) -> None:
     if not args["in_place"]:
         symlink_pedigree_and_family_variants(loader.layout, output_layout)
 
-    processing_args = _ProcessingArgs(
-        args["work_dir"],
-        args["batch_size"],
-        args["region_size"],
-        args["allow_repeated_attributes"],
-        args["full_reannotation"],
-    )
-
     task_graph = TaskGraph()
     _add_tasks_to_graph(
         task_graph,
@@ -562,7 +543,7 @@ def cli(raw_args: list[str] | None = None) -> None:
         pipeline,
         grr,
         args["region"],
-        processing_args,
+        args,
     )
 
     if len(task_graph.tasks) > 0:

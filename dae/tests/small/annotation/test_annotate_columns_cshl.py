@@ -11,7 +11,7 @@ from dae.genomic_resources.testing import (
     setup_genome,
 )
 
-pytestmark = pytest.mark.usefixtures("clear_context")
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 def get_file_content_as_string(file: str) -> str:

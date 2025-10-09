@@ -7,8 +7,7 @@ from typing import Any
 
 import yaml
 
-from dae.genomic_resources.genomic_context import (
-    GC_GENOTYPE_STORAGES_KEY,
+from dae.genomic_resources.genomic_context_base import (
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
@@ -18,14 +17,14 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 
 logger = logging.getLogger(__name__)
+GC_GENOTYPE_STORAGES_KEY = "genotype_storages"
 
 
 class CLIGenotypeStorageContextProvider(GenomicContextProvider):
     """Defines annotation pipeline genomics context provider."""
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
@@ -34,8 +33,10 @@ class CLIGenotypeStorageContextProvider(GenomicContextProvider):
             default=None,
             help="genotype storages configuration file")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(
+        self,
+        **kwargs: Any,
+    ) -> GenomicContext | None:
         """Build a CLI genotype storages genomic context."""
 
         context_objects = {}
@@ -50,7 +51,7 @@ class CLIGenotypeStorageContextProvider(GenomicContextProvider):
             registry.register_storage_config(storage_configs)
             context_objects[GC_GENOTYPE_STORAGES_KEY] = registry
             return SimpleGenomicContext(
-                context_objects, source=("genotype_storages_context",))
+                context_objects, source="CLIGenotypeStorageContextProvider")
         return None
 
 

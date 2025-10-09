@@ -12,11 +12,10 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 
-from .genomic_context import (
+from .genomic_context_base import (
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
-    get_genomic_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,12 +33,11 @@ class CLIGenomicContextProvider(GenomicContextProvider):
         """Initialize the CLI genomic context provider."""
         super().__init__(
             "cli_genomic_context_provider",
-            100,
+            900,
         )
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
@@ -62,8 +60,12 @@ class CLIGenomicContextProvider(GenomicContextProvider):
                  " is absent the gene models from the current genomic "
                  "context will be used.")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(self, **kwargs: Any) -> GenomicContext | None:
+        # pylint: disable=import-outside-toplevel
+        from .genomic_context import (
+            get_genomic_context,
+        )
+
         context_objects: dict[str, Any] = {}
         grr = None
         if kwargs.get("grr_filename") is None \
@@ -76,7 +78,8 @@ class CLIGenomicContextProvider(GenomicContextProvider):
                 "command line.", kwargs["grr_filename"])
             grr = build_genomic_resource_repository(
                 file_name=kwargs["grr_filename"])
-        elif kwargs.get("grr_directory") is not None:
+        else:
+            assert kwargs.get("grr_directory") is not None
             logger.info(
                 "Using local GRR directory "
                 "%s as requested on the "
@@ -116,4 +119,4 @@ class CLIGenomicContextProvider(GenomicContextProvider):
             context_objects[GC_GENE_MODELS_KEY] = gene_models
 
         return SimpleGenomicContext(
-            context_objects, source=("CLIGenomicContext", ))
+            context_objects, source="CLIGenomicContextProvider")

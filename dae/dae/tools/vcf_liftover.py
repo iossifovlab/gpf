@@ -7,15 +7,14 @@ from pathlib import Path
 
 import pysam
 
-from dae.annotation.genomic_context import CLIAnnotationContextProvider
 from dae.annotation.liftover_annotator import (
     basic_liftover_variant,
     bcf_liftover_variant,
 )
 from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
-    register_context_provider,
 )
 from dae.genomic_resources.liftover_chain import (
     LiftoverChain,
@@ -37,7 +36,7 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="liftover VCF variants")
 
-    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(parser)
     VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
@@ -120,7 +119,6 @@ def main(
     args = parser.parse_args(argv)
 
     VerbosityConfiguration.set(args)
-    register_context_provider(CLIAnnotationContextProvider())
     context_providers_init(**vars(args))
 
     if grr is None:

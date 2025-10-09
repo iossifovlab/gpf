@@ -2,11 +2,9 @@ import argparse
 import logging
 from typing import Any
 
-from dae.genomic_resources.genomic_context import (
+from dae.genomic_resources.genomic_context_base import (
     GC_ANNOTATION_PIPELINE_KEY,
     GC_GENE_MODELS_KEY,
-    GC_GENOTYPE_STORAGES_KEY,
-    GC_GPF_INSTANCE_KEY,
     GC_GRR_KEY,
     GC_REFERENCE_GENOME_KEY,
     GenomicContext,
@@ -14,6 +12,8 @@ from dae.genomic_resources.genomic_context import (
 )
 
 logger = logging.getLogger(__name__)
+GC_GPF_INSTANCE_KEY = "gpf_instance"
+GC_GENOTYPE_STORAGES_KEY = "genotype_storages"
 
 
 class GPFInstanceGenomicContext(GenomicContext):
@@ -52,8 +52,8 @@ class GPFInstanceGenomicContext(GenomicContext):
             GC_GPF_INSTANCE_KEY,
         }
 
-    def get_source(self) -> tuple[str, ...]:
-        return ("gpf_instance", self.gpf_instance.dae_dir)
+    def get_source(self) -> str:
+        return f"GPFInstanceGenomicContext({self.gpf_instance.dae_dir})"
 
 
 class GPFInstanceContextProvider(GenomicContextProvider):
@@ -62,19 +62,17 @@ class GPFInstanceContextProvider(GenomicContextProvider):
     def __init__(self) -> None:
         super().__init__(
             "GPFInstanceProvider",
-            200)
+            2000)
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
-            "-i", "--instance", default=None,
+            "-i", "--instance", "--gpf-instance", default=None,
             help="The path to the GPF instance configuration file.")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(self, **kwargs: Any) -> GenomicContext | None:
         """Initialize the GPF instance genomic context."""
         # pylint: disable=import-outside-toplevel
         from dae.gpf_instance.gpf_instance import GPFInstance

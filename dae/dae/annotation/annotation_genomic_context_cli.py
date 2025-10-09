@@ -7,13 +7,12 @@ from typing import Any
 
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.genomic_context import (
+from dae.genomic_resources.genomic_context_base import (
     GC_ANNOTATION_PIPELINE_KEY,
     GC_GRR_KEY,
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
-    get_genomic_context,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,12 +27,11 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
         """Initialize the CLI pipeline genomic context provider."""
         super().__init__(
             "cli_pipeline_context_provider",
-            80,
+            800,
         )
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
@@ -47,10 +45,12 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             help="Rename repeated attributes instead of raising"
             " an error.")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(self, **kwargs: Any) -> GenomicContext | None:
         """Build a CLI genomic context."""
-
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources.genomic_context import (
+            get_genomic_context,
+        )
         context_objects = {}
 
         if kwargs.get("pipeline") is None \
@@ -60,24 +60,29 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             "Using the annotation pipeline from the file %s.",
             kwargs["pipeline"])
         grr = get_genomic_context().get_context_object(GC_GRR_KEY)
-        assert grr is not None
+        if grr is None:
+            logger.warning(
+                "No GRR in the current genomic context, "
+                "cannot load the annotation pipeline.")
+            return None
 
         pipeline_path = pathlib.Path(kwargs["pipeline"])
-        pipeline_resource = grr.find_resource(kwargs["pipeline"])
 
         if pipeline_path.exists():
             raw_pipeline = pipeline_path.read_text()
-        elif pipeline_resource is not None:
-            if pipeline_resource.get_type() != "annotation_pipeline":
-                raise TypeError(
-                    "Expected an annotation_pipeline resource.")
-            raw_pipeline = pipeline_resource.get_file_content(
-                pipeline_resource.get_config()["filename"])
         else:
-            raise ValueError(
-                f"The provided argument for an annotation"
-                f" pipeline ('{kwargs['pipeline']}') is neither a valid"
-                f" filepath, nor a valid GRR resource ID.")
+            pipeline_resource = grr.find_resource(kwargs["pipeline"])
+            if pipeline_resource is not None:
+                if pipeline_resource.get_type() != "annotation_pipeline":
+                    raise TypeError(
+                        "Expected an annotation_pipeline resource.")
+                raw_pipeline = pipeline_resource.get_file_content(
+                    pipeline_resource.get_config()["filename"])
+            else:
+                raise ValueError(
+                    f"The provided argument for an annotation"
+                    f" pipeline ('{kwargs['pipeline']}') is neither a valid"
+                    f" filepath, nor a valid GRR resource ID.")
 
         work_dir = None
         if kwargs.get("work_dir"):
@@ -90,7 +95,7 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             work_dir=work_dir)
         context_objects[GC_ANNOTATION_PIPELINE_KEY] = pipeline
         return SimpleGenomicContext(
-            context_objects, source=("annotation_pipeline_cli",))
+            context_objects, source="CLIAnnotationContextProvider")
 
 
 def get_context_pipeline(
@@ -103,5 +108,5 @@ def get_context_pipeline(
     if not isinstance(pipeline, AnnotationPipeline):
         raise TypeError(
             f"The annotation pipeline from the genomic "
-            f" context is not an AnnotationPipeline: {type(pipeline)}")
+            f"context is not an AnnotationPipeline: {type(pipeline)}")
     return pipeline

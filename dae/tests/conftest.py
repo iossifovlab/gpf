@@ -7,9 +7,11 @@ from typing import Any, cast
 import pytest
 import pytest_mock
 from dae.genomic_resources.genomic_context import (
-    GenomicContext,
     get_genomic_context,
     register_context,
+)
+from dae.genomic_resources.genomic_context_base import (
+    GenomicContext,
 )
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
@@ -350,3 +352,21 @@ def gpf_instance_genomic_context_fixture(
         return context
 
     return builder
+
+
+@pytest.fixture(autouse=True)
+def clean_genomic_context(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [])
+
+
+@pytest.fixture
+def clean_genomic_context_providers(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        [])

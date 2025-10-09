@@ -3,17 +3,12 @@
 import os
 import pathlib
 import textwrap
-from collections.abc import Generator
 from typing import Any
 
 import pytest
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import Annotator
-from dae.genomic_resources.genomic_context import (
-    _REGISTERED_CONTEXT_PROVIDERS,
-    _REGISTERED_CONTEXTS,
-)
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
@@ -62,15 +57,6 @@ class DummyAnnotator(Annotator):
 
 def relative_to_this_test_folder(path: str) -> str:
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
-
-
-@pytest.fixture
-def clear_context() -> Generator[None, None, None]:
-    # No setup
-    yield
-    # Teardown - clear genomic contexts
-    _REGISTERED_CONTEXT_PROVIDERS.clear()
-    _REGISTERED_CONTEXTS.clear()
 
 
 @pytest.fixture(scope="session")

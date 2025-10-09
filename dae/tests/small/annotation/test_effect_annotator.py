@@ -8,7 +8,9 @@ import pytest_mock
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.effect_annotation.effect import AnnotationEffect
-from dae.genomic_resources.genomic_context import SimpleGenomicContext
+from dae.genomic_resources.genomic_context_base import (
+    SimpleGenomicContext,
+)
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource_id,
 )
@@ -135,9 +137,9 @@ def test_effect_annotator_implicit_genome_from_context(
 
     genome = build_reference_genome_from_resource_id(genome_id, grr)
     context = SimpleGenomicContext(
-        context_objects={"reference_genome": genome}, source=())
+        context_objects={"reference_genome": genome}, source="test_context")
     mocker.patch(
-        "dae.annotation.effect_annotator.get_genomic_context",
+        "dae.annotation.utils.get_genomic_context",
     ).return_value = context
 
     annotation_pipeline = load_pipeline_from_yaml(config, grr)
@@ -197,17 +199,11 @@ def test_effect_annotator_gene_lists(
     config = textwrap.dedent(f"""
         - effect_annotator:
             gene_models: {gene_models}
+            genome: {genome_id}
             attributes:
               - gene_list
               - {target_gene_list}_gene_list
         """)
-
-    genome = build_reference_genome_from_resource_id(genome_id, grr)
-    context = SimpleGenomicContext(
-        context_objects={"reference_genome": genome}, source=())
-    mocker.patch(
-        "dae.annotation.effect_annotator.get_genomic_context",
-    ).return_value = context
 
     annotation_pipeline = load_pipeline_from_yaml(config, grr)
 

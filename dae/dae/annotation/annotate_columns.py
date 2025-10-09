@@ -636,6 +636,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     context = build_cli_genomic_context(args)
     pipeline = get_pipeline_from_context(context)
+
     grr = get_grr_from_context(context)
     assert grr.definition is not None
 

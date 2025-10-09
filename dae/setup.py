@@ -35,6 +35,8 @@ setuptools.setup(
     [dae.genomic_resources.plugins]
     default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider
     gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider
+    cli_genomic_context=dae.genomic_resources.genomic_context_cli:CLIGenomicContextProvider
+    annotation_pipeline_cli=dae.annotation.annotation_genomic_context_cli:CLIAnnotationContextProvider
 
     [dae.genomic_resources.implementations]
     gene_set_collection=dae.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource

@@ -7,20 +7,18 @@ from typing import Any
 import numpy as np
 from pysam import TabixFile
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.genomic_context import (
-    CLIAnnotationContextProvider,
+from dae.annotation.annotation_genomic_context_cli import (
     get_context_pipeline,
 )
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import (
-    GenomicContext,
+    context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
-    register_context_provider,
 )
-from dae.genomic_resources.genomic_context_cli import (
-    CLIGenomicContextProvider,
+from dae.genomic_resources.genomic_context_base import (
+    GenomicContext,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.task_graph import TaskGraphCli
@@ -86,8 +84,6 @@ def build_cli_genomic_context(
     cli_args: dict[str, Any],
 ) -> GenomicContext:
     """Helper method to collect necessary objects from the genomic context."""
-    register_context_provider(CLIGenomicContextProvider())
-    register_context_provider(CLIAnnotationContextProvider())
     context_providers_init(**cli_args)
     return get_genomic_context()
 
@@ -177,7 +173,7 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         "--reannotate", default=None,
         help="Old pipeline config to reannotate over")
     parser.add_argument(
-        "-i", "--full-reannotation",
+        "--full-reannotation", "--fr",
         help="Ignore any previous annotation and run "
         " a full reannotation.",
         action="store_true",
@@ -201,8 +197,7 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         help="Annotate in batches of",
     )
 
-    CLIGenomicContextProvider.add_argparser_arguments(parser)
-    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(parser)
     TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
     VerbosityConfiguration.set_arguments(parser)
 

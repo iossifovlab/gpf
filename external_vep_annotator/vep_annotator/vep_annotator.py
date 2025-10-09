@@ -17,6 +17,10 @@ from dae.annotation.annotation_pipeline import (
     AnnotatorInfo,
 )
 from dae.annotation.docker_annotator import DockerAnnotator
+from dae.annotation.utils import (
+    find_annotator_gene_models,
+    find_annotator_reference_genome,
+)
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.gene_models.gene_models import (
     build_gene_models_from_resource,
@@ -330,7 +334,7 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
 
         return contexts
 
-    def run(self, **kwargs):
+    def run(self, **kwargs: Any) -> None:
         args = [
             "vep",
             "-i", str(Path("/work", kwargs["input_file_name"])),
@@ -368,44 +372,19 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             pipeline.repository, str(self.work_dir / "grr_cache"),
         )
         self.genome_filename = None
-        self.gtf_path = None
-        self.gtf_path_gz = None
-        self.gene_models_resource = None
-        self.genome_resource = None
+        self.gtf_path: Path | None = None
+        self.gtf_path_gz: Path | None = None
+        self.gene_models_resource: GenomicResource | None = None
+        self.genome_resource: GenomicResource | None = None
 
         self.annotator_attributes = effect_attributes
 
-        pipeline_context = pipeline.build_pipeline_genomic_context()
+        gene_models = find_annotator_gene_models(info, self.cache_repo)
+        genome = find_annotator_reference_genome(
+            info, gene_models, pipeline, self.cache_repo)
 
-        gene_models_id: str | None = info.parameters.get("gene_models")
-        if gene_models_id is not None:
-            self.gene_models_resource = self.cache_repo.get_resource(
-                gene_models_id,
-            )
-        else:
-            gene_models = pipeline_context.get_gene_models()
-            if gene_models is None:
-                raise ValueError(
-                    f"No gene models found for {info.annotator_id}",
-                )
-            self.gene_models_resource = gene_models.resource
-        genome_id: str | None = info.parameters.get("genome")
-
-        gene_model_genome_id = self.gene_models_resource.get_labels().get(
-            "reference_genome",
-        )
-        if genome_id is not None:
-            self.genome_resource = self.cache_repo.get_resource(genome_id)
-        elif gene_model_genome_id is not None:
-            self.genome_resource = self.cache_repo.get_resource(
-                gene_model_genome_id)
-        else:
-            genome = pipeline_context.get_reference_genome()
-            if genome is None:
-                raise ValueError(
-                    f"No reference genome found for {info.annotator_id}",
-                )
-            self.genome_resource = genome.resource
+        self.gene_models_resource = gene_models.resource
+        self.genome_resource = genome.resource
 
         info.resources.append(self.gene_models_resource)
         info.resources.append(self.genome_resource)
@@ -485,7 +464,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
         return contexts
 
-    def run(self, **kwargs):
+    def run(self, **kwargs: Any) -> None:
         assert self.genome_resource is not None
         args = [
             "vep",

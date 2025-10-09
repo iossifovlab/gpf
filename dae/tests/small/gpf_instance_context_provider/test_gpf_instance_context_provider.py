@@ -18,7 +18,7 @@ def test_gpf_instance_genomic_context_plugin(
     context_fixture: GenomicContext,
 ) -> None:
     source = context_fixture.get_source()
-    assert source[0] == "gpf_instance"
+    assert source.startswith("GPFInstanceGenomicContext(")
 
 
 def test_gpf_instance_context_reference_genome(

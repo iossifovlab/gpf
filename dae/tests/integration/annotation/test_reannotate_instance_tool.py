@@ -2,8 +2,8 @@
 import pathlib
 import textwrap
 
-from dae.annotation.reannotate_instance import cli
 from dae.gpf_instance import GPFInstance
+from dae.tools.reannotate_instance import cli
 
 from tests.integration.annotation.conftest import t4c8_study
 
@@ -25,14 +25,15 @@ def test_reannotate_instance_tool(
     assert not any(v.has_attribute("score_two") for v in vs)
 
     # Add default annotation config with different score resource
-    pathlib.Path(t4c8_instance.dae_dir, "annotation.yaml").write_text(
+    instance_path = pathlib.Path(t4c8_instance.dae_dir)
+    (instance_path / "annotation.yaml").write_text(
         textwrap.dedent(
             """- position_score:
                     resource_id: two
             """),
     )
 
-    with open(f"{t4c8_instance.dae_dir}/gpf_instance.yaml", "a") as f:
+    with open(instance_path / "gpf_instance.yaml", "a") as f:
         f.write(
             textwrap.dedent(
                 """
@@ -42,21 +43,16 @@ def test_reannotate_instance_tool(
             ),
         )
 
-    new_instance = GPFInstance.build(
-        f"{t4c8_instance.dae_dir}/gpf_instance.yaml",
-        grr=t4c8_instance.grr,
-    )
-
     # Run the reannotate instance tool
-    cli(
-        ["-j", "1",  # Single job to avoid using multiprocessing
-         "--work-dir", str(tmp_path)],
-        new_instance,
-    )
-    new_instance.reload()
+    cli([
+        "-j", "1",  # Single job to avoid using multiprocessing
+        "--work-dir", str(tmp_path),
+        "-i", str(instance_path / "gpf_instance.yaml"),
+    ])
+    t4c8_instance.reload()
 
     # Annotations should be updated
-    study = new_instance.get_genotype_data("study")
+    study = t4c8_instance.get_genotype_data("study")
     vs = list(study.query_variants())
 
     assert all(v.has_attribute("score_two") for v in vs)

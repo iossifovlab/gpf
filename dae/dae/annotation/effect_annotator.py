@@ -12,20 +12,15 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
 )
 from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.utils import (
+    find_annotator_gene_models,
+    find_annotator_reference_genome,
+)
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import (
     AlleleEffects,
     AnnotationEffect,
     EffectTypesMixin,
-)
-from dae.genomic_resources.gene_models.gene_models import (
-    GeneModels,
-    build_gene_models_from_resource,
-)
-from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.reference_genome import (
-    ReferenceGenome,
-    build_reference_genome_from_resource_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,37 +35,10 @@ class EffectAnnotatorAdapter(AnnotatorBase):
     """Adapts effect annotator to be used in annotation infrastructure."""
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
-        gene_models_resource_id = info.parameters.get("gene_models")
-        if gene_models_resource_id is None:
-            gene_models = get_genomic_context().get_gene_models()
-            if gene_models is None:
-                raise ValueError(f"Can't create {info.type}: "
-                                 "gene model resource are missing in config "
-                                 "and context")
-        else:
-            resource = pipeline.repository.get_resource(
-                gene_models_resource_id)
-            gene_models = build_gene_models_from_resource(resource)
-        assert isinstance(gene_models, GeneModels)
-
-        genome_resource_id = info.parameters.get("genome") or \
-            gene_models.reference_genome_id or \
-            (pipeline.preamble.input_reference_genome
-             if pipeline.preamble is not None else None)
-        if genome_resource_id is None:
-            genome = get_genomic_context().get_reference_genome()
-            if genome is None:
-                raise ValueError(
-                    f"The {info} has no reference genome"
-                    " specified and no genome was found"
-                    " in the gene models' configuration,"
-                    " the context or the annotation config's"
-                    " preamble.")
-        else:
-            genome = build_reference_genome_from_resource_id(
-                genome_resource_id, pipeline.repository)
-        assert isinstance(genome, ReferenceGenome)
-
+        gene_models = find_annotator_gene_models(
+            info, pipeline.repository)
+        genome = find_annotator_reference_genome(
+            info, gene_models, pipeline, pipeline.repository)
 
         info.documentation += textwrap.dedent("""
 

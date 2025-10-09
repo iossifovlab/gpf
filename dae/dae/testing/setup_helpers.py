@@ -14,22 +14,32 @@ from dae.gpf_instance import GPFInstance
 
 def setup_gpf_instance(
     out_path: pathlib.Path,
+    grr: GenomicResourceRepo | None = None,
     reference_genome_id: str | None = None,
     gene_models_id: str | None = None,
-    grr: GenomicResourceRepo | None = None,
 ) -> GPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
     if not (out_path / "gpf_instance.yaml").exists():
+        content = textwrap.dedent(f"""
+            instance_id: "test_instance"
+            reference_genome:
+                resource_id: {reference_genome_id}
+            gene_models:
+                resource_id: {gene_models_id}
+        """)
+        if grr is not None and grr.definition is not None:
+            grr_definition = grr.definition
+            assert grr_definition is not None
+            content += textwrap.dedent(f"""
+                grr:
+                    type: {grr.definition['type']}
+                    id: {grr.definition['id']}
+                    directory: {grr.definition['directory']}
+            """)
         setup_directories(
             out_path, {
-            "gpf_instance.yaml": textwrap.dedent(f"""
-                instance_id: "test_instance"
-                reference_genome:
-                  resource_id: {reference_genome_id}
-                gene_models:
-                  resource_id: {gene_models_id}
-            """),
-        },
+                "gpf_instance.yaml": content,
+            },
         )
     # pylint: disable=import-outside-toplevel
     reference_genome = None
