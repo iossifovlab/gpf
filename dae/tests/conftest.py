@@ -361,3 +361,12 @@ def clean_genomic_context(
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
         [])
+
+
+@pytest.fixture
+def clean_genomic_context_providers(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        [])

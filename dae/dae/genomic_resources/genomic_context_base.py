@@ -118,9 +118,6 @@ class SimpleGenomicContext(GenomicContext):
     def get_source(self) -> tuple[str, ...]:
         return self._source
 
-    def get_all_context_objects(self) -> dict[str, Any]:
-        return self._context
-
 
 class PriorityGenomicContext(GenomicContext):
     """Defines a priority genomic context."""
