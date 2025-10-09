@@ -60,14 +60,18 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             "Using the annotation pipeline from the file %s.",
             kwargs["pipeline"])
         grr = get_genomic_context().get_context_object(GC_GRR_KEY)
-        assert grr is not None
+        if grr is None:
+            logger.warning(
+                "No GRR in the current genomic context, "
+                "cannot load the annotation pipeline.")
+            return None
 
         pipeline_path = pathlib.Path(kwargs["pipeline"])
 
         if pipeline_path.exists():
             raw_pipeline = pipeline_path.read_text()
         else:
-            pipeline_resource = grr.get_resource(kwargs["pipeline"])
+            pipeline_resource = grr.find_resource(kwargs["pipeline"])
             if pipeline_resource is not None:
                 if pipeline_resource.get_type() != "annotation_pipeline":
                     raise TypeError(
@@ -104,5 +108,5 @@ def get_context_pipeline(
     if not isinstance(pipeline, AnnotationPipeline):
         raise TypeError(
             f"The annotation pipeline from the genomic "
-            f" context is not an AnnotationPipeline: {type(pipeline)}")
+            f"context is not an AnnotationPipeline: {type(pipeline)}")
     return pipeline
