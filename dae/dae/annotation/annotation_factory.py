@@ -20,6 +20,7 @@ from dae.annotation.annotation_pipeline import (
     ValueTransformAnnotatorDecorator,
 )
 from dae.genomic_resources.repository import (
+    GenomicResource,
     GenomicResourceRepo,
 )
 
@@ -121,6 +122,24 @@ def load_pipeline_from_yaml(
         allow_repeated_attributes=allow_repeated_attributes,
         work_dir=work_dir,
     )
+
+
+def load_pipeline_from_grr(
+    grr: GenomicResourceRepo,
+    resource: GenomicResource,
+) -> AnnotationPipeline:
+    """Load a pipeline from a grr and a resource."""
+    if resource.get_type() != "annotation_pipeline":
+        logger.error(
+            "trying to open a resource %s of type "
+            "%s as reference genome",
+            resource.resource_id, resource.get_type())
+        raise ValueError(f"wrong resource type: {resource.resource_id}")
+
+    raw: str = resource.get_file_content(
+        resource.get_config()["filename"])
+
+    return load_pipeline_from_yaml(raw, grr)
 
 
 def build_annotation_pipeline(
