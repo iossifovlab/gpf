@@ -1,6 +1,6 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+import pathlib
 
-import pytest
 from dae.gpf_instance import GPFInstance
 from dae.testing.setup_helpers import setup_gpf_instance
 
@@ -19,10 +19,12 @@ def test_init(t4c8_instance: GPFInstance) -> None:
     assert t4c8_instance.denovo_gene_sets_db is not None
 
 
-def test_dae_config(tmp_path_factory: pytest.TempPathFactory) -> None:
-    root_path = tmp_path_factory.mktemp("sample_t4c8_instance_for_test")
-    instance = setup_gpf_instance(root_path)
-    assert instance.dae_config.conf_dir == str(root_path)
+def test_dae_config(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> None:
+    instance = setup_gpf_instance(tmp_path, grr=t4c8_instance.grr)
+    assert instance.dae_config.conf_dir == str(tmp_path)
 
 
 def test_variants_db(t4c8_instance: GPFInstance) -> None:

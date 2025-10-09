@@ -64,9 +64,8 @@ class GPFInstanceContextProvider(GenomicContextProvider):
             "GPFInstanceProvider",
             2000)
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(

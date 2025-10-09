@@ -68,9 +68,8 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
             "DefaultGRRProvider",
             10_000)
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         # No arguments needed for default GRR context provider
         pass

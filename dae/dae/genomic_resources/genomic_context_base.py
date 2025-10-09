@@ -74,7 +74,7 @@ class GenomicContext(ABC):
         """Return a tuple of strings that identifies the genomic context."""
 
 
-class GenomicContextProvider:
+class GenomicContextProvider(ABC):
     """Abstract base class for genomic contexts provider."""
 
     def __init__(self, provider_type: str, provider_priority: int) -> None:
@@ -88,12 +88,11 @@ class GenomicContextProvider:
     def get_context_provider_type(self) -> str:
         return self._provider_type
 
-    @staticmethod
+    @abstractmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
-        raise NotImplementedError
 
     @abstractmethod
     def init(self, **kwargs: Any) -> GenomicContext | None:

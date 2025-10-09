@@ -354,7 +354,7 @@ def gpf_instance_genomic_context_fixture(
     return builder
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clean_genomic_context(
     mocker: pytest_mock.MockerFixture,
 ) -> None:

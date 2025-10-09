@@ -3,20 +3,24 @@ import pathlib
 import textwrap
 
 import pytest
+from dae.genomic_resources.repository import (
+    GenomicResourceRepo,
+)
 from dae.genomic_resources.testing import (
-    setup_denovo,
+    convert_to_tab_separated,
     setup_directories,
     setup_pedigree,
     setup_vcf,
 )
 from dae.gpf_instance import GPFInstance
 from dae.testing.import_helpers import vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
+from dae.testing.t4c8_import import t4c8_gpf, t4c8_grr
 
 
 @pytest.fixture
-def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
-    root_path = tmp_path
+def grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
+    root_path = tmp_path / "t4c8_grr"
+
     setup_directories(
         root_path,
         {
@@ -35,6 +39,15 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                           type: float
                           name: score
                 """),
+                "data.txt": convert_to_tab_separated("""
+                    chrom  pos_begin  score
+                    chr1   4          0.01
+                    chr1   54         0.02
+                    chr1   90         0.03
+                    chr1   100        0.04
+                    chr1   119        0.05
+                    chr1   122        0.06
+                """),
             },
             "two": {
                 "genomic_resource.yaml": textwrap.dedent("""
@@ -46,30 +59,29 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                           type: float
                           name: score
                 """),
+                "data.txt": convert_to_tab_separated("""
+                    chrom  pos_begin  score
+                    chr1   4          0.11
+                    chr1   54         0.12
+                    chr1   90         0.13
+                    chr1   100        0.14
+                    chr1   119        0.15
+                    chr1   122        0.16
+                """),
             },
         },
     )
-    one_content = textwrap.dedent("""
-        chrom  pos_begin  score
-        chr1   4          0.01
-        chr1   54         0.02
-        chr1   90         0.03
-        chr1   100        0.04
-        chr1   119        0.05
-        chr1   122        0.06
-    """)
-    two_content = textwrap.dedent("""
-        chrom  pos_begin  score
-        chr1   4          0.11
-        chr1   54         0.12
-        chr1   90         0.13
-        chr1   100        0.14
-        chr1   119        0.15
-        chr1   122        0.16
-    """)
-    setup_denovo(root_path / "one" / "data.txt", one_content)
-    setup_denovo(root_path / "two" / "data.txt", two_content)
-    return t4c8_gpf(root_path)
+    return t4c8_grr(root_path)
+
+
+@pytest.fixture
+def t4c8_instance(
+    tmp_path: pathlib.Path,
+    grr_fixture: GenomicResourceRepo,
+) -> GPFInstance:
+    root_path = tmp_path / "t4c8_instance"
+
+    return t4c8_gpf(root_path, grr=grr_fixture)
 
 
 def t4c8_study(instance: GPFInstance) -> str:

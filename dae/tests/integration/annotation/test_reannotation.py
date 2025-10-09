@@ -13,7 +13,6 @@ def test_sj_index_is_preserved(
     tmp_path: pathlib.Path,
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
-    grr_file = str(root_path / "grr.yaml")
     output_dir = str(tmp_path / "out")
     work_dir = str(tmp_path / "work")
 
@@ -29,7 +28,6 @@ def test_sj_index_is_preserved(
         study_path, str(new_annotation),
         "-o", output_dir,
         "-w", work_dir,
-        "--grr", grr_file,
         "-j", "1",
         "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
     ])

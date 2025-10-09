@@ -8,7 +8,6 @@ import sys
 from typing import cast
 
 import django
-from dae.annotation.reannotate_instance import ReannotateInstanceTool
 from dae.pheno.build_pheno_browser import main as build_pheno_browser
 from dae.tools.generate_common_report import (
     main as generate_common_report,
@@ -16,6 +15,7 @@ from dae.tools.generate_common_report import (
 from dae.tools.generate_denovo_gene_sets import (
     main as generate_denovo_gene_sets,
 )
+from dae.tools.reannotate_instance import ReannotateInstanceTool
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from django.conf import settings
 from django.core.management import execute_from_command_line
@@ -139,7 +139,8 @@ def _run_run_command(
     shutil.rmtree(work_dir, ignore_errors=True)
 
     reannotation_tool = ReannotateInstanceTool(
-        ["--work-dir", work_dir], wgpf_instance)
+        ["--work-dir", work_dir],
+        gpf_instance=wgpf_instance)
     reannotation_tool.run()
 
     generate_denovo_gene_sets(
@@ -196,9 +197,11 @@ def cli(argv: list[str] | None = None) -> None:
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.wgpf_settings")
     if args.verbose == 1:
-        settings.LOGGING["handlers"]["console"]["level"] = logging.INFO  # type: ignore
+        settings.LOGGING[
+            "handlers"]["console"]["level"] = logging.INFO  # type: ignore
     elif args.verbose >= 2:
-        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG  # type: ignore
+        settings.LOGGING[
+            "handlers"]["console"]["level"] = logging.DEBUG  # type: ignore
     logging.config.dictConfig(settings.LOGGING)
 
     django.setup()

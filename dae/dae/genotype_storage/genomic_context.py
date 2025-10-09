@@ -23,9 +23,8 @@ GC_GENOTYPE_STORAGES_KEY = "genotype_storages"
 class CLIGenotypeStorageContextProvider(GenomicContextProvider):
     """Defines annotation pipeline genomics context provider."""
 
-    @staticmethod
     def add_argparser_arguments(
-        parser: argparse.ArgumentParser,
+        self, parser: argparse.ArgumentParser,
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(

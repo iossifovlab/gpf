@@ -13,8 +13,10 @@ from dae.duckdb_storage.duckdb_genotype_storage import (
 from dae.duckdb_storage.duckdb_storage_helpers import (
     PARQUET_SCAN,
 )
-from dae.genomic_resources.genomic_context_cli import (
-    CLIGenomicContextProvider,
+from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
+    context_providers_init,
+    get_genomic_context,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet_storage.storage import ParquetLoaderVariants
@@ -31,15 +33,22 @@ class ReannotateInstanceTool:
 
     def __init__(
         self,
-        raw_args: list[str] | None = None,
+        raw_args: list[str] | None = None, *,
         gpf_instance: GPFInstance | None = None,
     ) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
         parser = self.get_argument_parser()
         self.args = parser.parse_args(raw_args)
+        context_providers_init(**vars(self.args), gpf_instance=gpf_instance)
+
+        self.genomic_context = get_genomic_context()
+        self.gpf_instance = cast(
+            GPFInstance,
+            self.genomic_context.get_context_object("gpf_instance"))
+        if not isinstance(self.gpf_instance, GPFInstance):
+            raise TypeError("No valid GPF instance configured!")
         VerbosityConfiguration.set(self.args)
-        self.gpf_instance = gpf_instance
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
@@ -61,19 +70,16 @@ class ReannotateInstanceTool:
             help="Output which studies will be reannotated"
                  " without carrying out the reannotation.",
         )
+
+        context_providers_add_argparser_arguments(parser)
+
         parser.add_argument(
             "--full-reannotation", "--fr",
             help="Ignore any previous annotation and run "
                  " a full reannotation.",
             action="store_true",
         )
-        parser.add_argument(
-            "-ar", "--allow-repeated-attributes", default=False,
-            action="store_true",
-            help="Rename repeated attributes instead of raising"
-            " an error.")
 
-        CLIGenomicContextProvider.add_argparser_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
@@ -207,10 +213,7 @@ class ReannotateInstanceTool:
 
 def cli(
     raw_args: list[str] | None = None,
-    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Entry point method for instance reannotation tool."""
-    if gpf_instance is None:
-        gpf_instance = GPFInstance.build()
-    tool = ReannotateInstanceTool(raw_args, gpf_instance)
+    tool = ReannotateInstanceTool(raw_args)
     tool.run()
