@@ -78,7 +78,8 @@ class CLIGenomicContextProvider(GenomicContextProvider):
                 "command line.", kwargs["grr_filename"])
             grr = build_genomic_resource_repository(
                 file_name=kwargs["grr_filename"])
-        elif kwargs.get("grr_directory") is not None:
+        else:
+            assert kwargs.get("grr_directory") is not None
             logger.info(
                 "Using local GRR directory "
                 "%s as requested on the "

@@ -70,6 +70,25 @@ def pipeline_resource(
     return "pipeline_resource"
 
 
+@pytest.fixture
+def wrong_pipeline_resource(
+    grr_dirname: str,
+) -> str:
+    root_path = pathlib.Path(grr_dirname)
+    setup_directories(
+        root_path / "wrong_pipeline_resource", {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: annotation_pIpEline
+                filename: pipeline.yaml
+            """),
+            "pipeline.yaml": textwrap.dedent("""
+                - effect_annotator
+            """),
+        },
+    )
+    return "wrong_pipeline_resource"
+
+
 def test_cli_genomic_context_provider_reference_genome(
     tmp_path: pathlib.Path,
     grr_dirname: str,
@@ -208,6 +227,32 @@ def test_cli_genomic_context_provider_pipeline_resource(
     assert context.get_context_keys() == {
         "annotation_pipeline", "reference_genome", "gene_models",
         "genomic_resources_repository"}
+
+
+def test_cli_genomic_context_provider_wrong_pipeline_resource(
+    grr_dirname: str,
+    context_providers: None,  # noqa:ARG001
+    wrong_pipeline_resource: str,
+) -> None:
+    # Given
+    parser = argparse.ArgumentParser(
+        description="Test CLI genomic context",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    context_providers_add_argparser_arguments(parser)
+    argv = [
+        "--grr-directory", grr_dirname,
+        "--ref", "t4c8_genome",
+        "-G", "t4c8_genes",
+        wrong_pipeline_resource,
+    ]
+
+    # When
+    args = parser.parse_args(argv)
+    with pytest.raises(
+            TypeError,
+            match=r"Expected an annotation_pipeline resource."):
+        context_providers_init(**vars(args))
 
 
 def test_cli_genomic_context_provider_bad_pipeline(
