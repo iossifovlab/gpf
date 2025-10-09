@@ -137,7 +137,7 @@ def test_effect_annotator_implicit_genome_from_context(
 
     genome = build_reference_genome_from_resource_id(genome_id, grr)
     context = SimpleGenomicContext(
-        context_objects={"reference_genome": genome}, source=())
+        context_objects={"reference_genome": genome}, source="test_context")
     mocker.patch(
         "dae.annotation.utils.get_genomic_context",
     ).return_value = context

@@ -84,7 +84,7 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
             {
                 "genomic_resources_repository": grr,
             },
-            ("default_genomic_resources_repository", grr.repo_id),
+            source=f"DefaultRepositoryContextProvider({grr.repo_id})",
         )
 
 

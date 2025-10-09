@@ -113,7 +113,7 @@ def context_fixture(
     })
     test_context = SimpleGenomicContext(
         {},
-        ("test_context",),
+        source="test_context",
     )
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",

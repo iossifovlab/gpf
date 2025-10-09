@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 
 import pathlib
 import textwrap
@@ -203,7 +203,7 @@ def test_normalize_allele_annotator_implicit_genome_from_context(
 
     genome = build_reference_genome_from_resource_id(genome_id, grr)
     context = SimpleGenomicContext(
-        context_objects={"reference_genome": genome}, source=())
+        context_objects={"reference_genome": genome}, source="test_context")
     mocker.patch(
         "dae.annotation.normalize_allele_annotator.get_genomic_context",
     ).return_value = context

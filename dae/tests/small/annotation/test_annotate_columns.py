@@ -95,7 +95,7 @@ def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
         """,
     )
     return SimpleGenomicContext(
-        {"reference_genome": genome}, ("test", "gc_fixture"))
+        {"reference_genome": genome}, source="test_gc_fixture")
 
 
 @pytest.mark.parametrize(

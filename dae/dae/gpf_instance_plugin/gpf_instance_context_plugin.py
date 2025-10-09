@@ -52,8 +52,8 @@ class GPFInstanceGenomicContext(GenomicContext):
             GC_GPF_INSTANCE_KEY,
         }
 
-    def get_source(self) -> tuple[str, ...]:
-        return ("gpf_instance", self.gpf_instance.dae_dir)
+    def get_source(self) -> str:
+        return f"GPFInstanceGenomicContext({self.gpf_instance.dae_dir})"
 
 
 class GPFInstanceContextProvider(GenomicContextProvider):

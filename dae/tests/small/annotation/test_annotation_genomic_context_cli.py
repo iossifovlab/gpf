@@ -283,9 +283,40 @@ def test_cli_genomic_context_provider_bad_pipeline(
 def test_cli_get_context_bad_pipeline() -> None:
     register_context(SimpleGenomicContext({
         "annotation_pipeline": "blabla",
-    }, source=("test", )))
+    }, source="test"))
 
     with pytest.raises(
             TypeError,
             match=r"The annotation pipeline from the genomic context"):
         get_context_pipeline(get_genomic_context())
+
+
+def test_cli_genomic_context_provider_sources(
+    grr_dirname: str,
+    context_providers: None,  # noqa:ARG001
+    pipeline_resource: str,
+) -> None:
+    # Given
+    parser = argparse.ArgumentParser(
+        description="Test CLI genomic context",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    context_providers_add_argparser_arguments(parser)
+    argv = [
+        "--grr-directory", grr_dirname,
+        "--ref", "t4c8_genome",
+        "-G", "t4c8_genes",
+        pipeline_resource,
+    ]
+
+    # When
+    args = parser.parse_args(argv)
+    context_providers_init(**vars(args))
+    context = get_genomic_context()
+
+    # Then
+    assert context is not None
+
+    assert context.get_source() == (
+        "PriorityGenomicContext("
+        "CLIAnnotationContextProvider|CLIGenomicContextProvider)")

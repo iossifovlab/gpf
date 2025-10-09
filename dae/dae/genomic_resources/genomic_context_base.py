@@ -70,7 +70,7 @@ class GenomicContext(ABC):
         """Return set of all keys that could be found in the context."""
 
     @abstractmethod
-    def get_source(self) -> tuple[str, ...]:
+    def get_source(self) -> str:
         """Return a tuple of strings that identifies the genomic context."""
 
 
@@ -104,7 +104,7 @@ class SimpleGenomicContext(GenomicContext):
 
     def __init__(
         self, context_objects: dict[str, Any],
-        source: tuple[str, ...],
+        source: str,
     ):
         self._context: dict[str, Any] = context_objects
         self._source = source
@@ -115,7 +115,7 @@ class SimpleGenomicContext(GenomicContext):
     def get_context_keys(self) -> set[str]:
         return set(self._context.keys())
 
-    def get_source(self) -> tuple[str, ...]:
+    def get_source(self) -> str:
         return self._source
 
 
@@ -147,7 +147,7 @@ class PriorityGenomicContext(GenomicContext):
             result = result.union(context.get_context_keys())
         return result
 
-    def get_source(self) -> tuple[str, ...]:
-        result = ["PriorityGenomicContext"]
-        result.extend([str(context.get_source()) for context in self.contexts])
-        return tuple(result)
+    def get_source(self) -> str:
+        result = []
+        result = [str(context.get_source()) for context in self.contexts]
+        return f"PriorityGenomicContext({'|'.join(result)})"

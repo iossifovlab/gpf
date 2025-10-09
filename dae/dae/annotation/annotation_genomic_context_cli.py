@@ -95,7 +95,7 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             work_dir=work_dir)
         context_objects[GC_ANNOTATION_PIPELINE_KEY] = pipeline
         return SimpleGenomicContext(
-            context_objects, source=("annotation_pipeline_cli",))
+            context_objects, source="CLIAnnotationContextProvider")
 
 
 def get_context_pipeline(

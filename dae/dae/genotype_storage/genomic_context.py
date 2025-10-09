@@ -51,7 +51,7 @@ class CLIGenotypeStorageContextProvider(GenomicContextProvider):
             registry.register_storage_config(storage_configs)
             context_objects[GC_GENOTYPE_STORAGES_KEY] = registry
             return SimpleGenomicContext(
-                context_objects, source=("genotype_storages_context",))
+                context_objects, source="CLIGenotypeStorageContextProvider")
         return None
 
 

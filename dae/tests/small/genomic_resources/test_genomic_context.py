@@ -32,7 +32,7 @@ def test_get_reference_genome_ok(
         context_objects={
             "reference_genome": genome,
         },
-        source=("genome_context", ))
+        source="test_genome_context")
 
     # When
     genome = context.get_reference_genome()
@@ -48,7 +48,7 @@ def test_get_reference_genome_missing() -> None:
     context = SimpleGenomicContext(
         context_objects={
         },
-        source=("empty_context", ))
+        source="test_empty_context")
 
     # When
     genome = context.get_reference_genome()
@@ -62,7 +62,7 @@ def test_get_reference_genome_bad() -> None:
         context_objects={
             "reference_genome": "bla",
         },
-        source=("bad_genome_context", ))
+        source="bad_genome_context")
 
     with pytest.raises(
             ValueError,
@@ -83,7 +83,7 @@ def test_get_gene_models_ok(
         context_objects={
             "gene_models": gene_models,
         },
-        source=("gene_models", ))
+        source="gene_models")
 
     gene_models = context.get_gene_models()
     assert gene_models is not None
@@ -96,7 +96,7 @@ def test_get_gene_models_missing() -> None:
     context = SimpleGenomicContext(
         context_objects={
         },
-        source=("empty_context", ))
+        source="empty_context")
     genes = context.get_gene_models()
     assert genes is None
 
@@ -106,7 +106,7 @@ def test_get_gene_models_bad() -> None:
         context_objects={
             "gene_models": "bla",
         },
-        source=("bad_genes_context", ))
+        source="bad_genes_context")
 
     with pytest.raises(
             ValueError,
@@ -121,7 +121,7 @@ def test_get_grr_ok(t4c8_grr: GenomicResourceRepo) -> None:
         context_objects={
             "genomic_resources_repository": t4c8_grr,
         },
-        source=("grr_context", ))
+        source="grr_context")
 
     # When
     grr = context.get_genomic_resources_repository()
@@ -136,7 +136,7 @@ def test_get_grr_missing() -> None:
     context = SimpleGenomicContext(
         context_objects={
         },
-        source=("empty_context", ))
+        source="empty_context")
 
     # When
     grr = context.get_genomic_resources_repository()
@@ -150,7 +150,7 @@ def test_get_grr_bad() -> None:
         context_objects={
             "genomic_resources_repository": "bla",
         },
-        source=("bad_grr_context", ))
+        source="bad_grr_context")
 
     with pytest.raises(
             ValueError,
@@ -170,7 +170,7 @@ def contexts(
         context_objects={
             "gene_models": gene_models1,
         },
-        source=("gene_models1", ))
+        source="gene_models1")
     gene_models2 = build_gene_models_from_resource(
         t4c8_grr.get_resource(
             "2/t4c8_genes")).load()
@@ -179,7 +179,7 @@ def contexts(
         context_objects={
             "gene_models": gene_models2,
         },
-        source=("gene_models2", ))
+        source="gene_models2")
     return context1, context2
 
 

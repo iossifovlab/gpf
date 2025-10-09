@@ -119,4 +119,4 @@ class CLIGenomicContextProvider(GenomicContextProvider):
             context_objects[GC_GENE_MODELS_KEY] = gene_models
 
         return SimpleGenomicContext(
-            context_objects, source=("CLIGenomicContext", ))
+            context_objects, source="CLIGenomicContextProvider")
