@@ -27,7 +27,7 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
         """Initialize the CLI pipeline genomic context provider."""
         super().__init__(
             "cli_pipeline_context_provider",
-            80,
+            800,
         )
 
     @staticmethod
@@ -46,8 +46,7 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             help="Rename repeated attributes instead of raising"
             " an error.")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(self, **kwargs: Any) -> GenomicContext | None:
         """Build a CLI genomic context."""
         # pylint: disable=import-outside-toplevel
         from dae.genomic_resources.genomic_context import (

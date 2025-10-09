@@ -62,7 +62,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
     def __init__(self) -> None:
         super().__init__(
             "GPFInstanceProvider",
-            200)
+            2000)
 
     @staticmethod
     def add_argparser_arguments(
@@ -73,8 +73,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
             "-i", "--instance", "--gpf-instance", default=None,
             help="The path to the GPF instance configuration file.")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(self, **kwargs: Any) -> GenomicContext | None:
         """Initialize the GPF instance genomic context."""
         # pylint: disable=import-outside-toplevel
         from dae.gpf_instance.gpf_instance import GPFInstance

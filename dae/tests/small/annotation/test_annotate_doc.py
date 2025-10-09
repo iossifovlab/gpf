@@ -1,17 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import pathlib
 import textwrap
-from collections.abc import Callable
 
 import pytest
 from dae.annotation.annotate_doc import cli
-from dae.genomic_resources.genomic_context import GenomicContext
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.t4c8_import import t4c8_gpf
+
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 @pytest.fixture
@@ -66,17 +67,16 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
 def test_annotate_doc(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     pipeline_config = str(root_path / "pipeline_config.yaml")
     output_file = tmp_path / "output.html"
 
-    gpf_instance_genomic_context_fixture(t4c8_instance)
-
     cli([
         pipeline_config,
         "-o", str(output_file),
+        "-i", os.path.join(t4c8_instance.dae_dir, "gpf_instance.yaml"),
+        "-g", str(root_path / "grr.yaml"),
     ])
 
     output_template = pathlib.Path(output_file).read_text()

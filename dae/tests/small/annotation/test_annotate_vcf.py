@@ -24,6 +24,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.acgt_import import acgt_gpf
 from dae.utils.regions import Region
 
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
+
 
 @pytest.fixture
 def test_gpf_instance(tmp_path: pathlib.Path) -> GPFInstance:

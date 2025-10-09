@@ -6,11 +6,9 @@ import os
 import sys
 
 from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
-)
-from dae.genomic_resources.genomic_context_cli import (
-    CLIGenomicContextProvider,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
@@ -73,7 +71,7 @@ def main(argv: list[str] | None = None) -> None:
     VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
     VcfLoader.cli_arguments(parser, options_only=True)
-    CLIGenomicContextProvider.add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(parser)
 
     parser.add_argument(
         "-o",

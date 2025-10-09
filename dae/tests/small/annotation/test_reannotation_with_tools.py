@@ -23,6 +23,8 @@ import dae.annotation.annotate_columns
 import dae.annotation.annotate_vcf
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
+
 
 @pytest.fixture
 def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:

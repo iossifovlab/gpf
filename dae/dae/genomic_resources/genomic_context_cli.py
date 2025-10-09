@@ -33,7 +33,7 @@ class CLIGenomicContextProvider(GenomicContextProvider):
         """Initialize the CLI genomic context provider."""
         super().__init__(
             "cli_genomic_context_provider",
-            100,
+            900,
         )
 
     @staticmethod
@@ -61,8 +61,7 @@ class CLIGenomicContextProvider(GenomicContextProvider):
                  " is absent the gene models from the current genomic "
                  "context will be used.")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(self, **kwargs: Any) -> GenomicContext | None:
         # pylint: disable=import-outside-toplevel
         from .genomic_context import (
             get_genomic_context,

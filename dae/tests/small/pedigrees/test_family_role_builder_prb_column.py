@@ -8,6 +8,8 @@ from dae.genomic_resources.testing import setup_pedigree
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
 
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
+
 
 @pytest.fixture
 def pedigree_path(tmp_path: pathlib.Path) -> pathlib.Path:

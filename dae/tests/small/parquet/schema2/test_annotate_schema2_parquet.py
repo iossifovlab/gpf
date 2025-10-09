@@ -10,6 +10,9 @@ import dae.parquet.schema2.annotate_schema2_parquet
 import pytest
 import pytest_mock
 from dae.annotation.score_annotator import PositionScoreAnnotator
+from dae.genomic_resources.genomic_context import (
+    clear_registered_contexts,
+)
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
@@ -21,6 +24,8 @@ from dae.parquet.schema2.annotate_schema2_parquet import cli, produce_regions
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.testing.import_helpers import denovo_study, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 @pytest.fixture
@@ -638,6 +643,7 @@ def test_reannotate_in_place_increment_backup_filenames(
     times = 5
 
     for _ in range(times):
+        clear_registered_contexts()
         cli([
             study, annotation_file_new,
             "-w", work_dir,
@@ -702,6 +708,7 @@ def test_output_argument_behaviour(
     with pytest.raises(ValueError, match="No output path was provided!"):
         cli(cli_args)
 
+    clear_registered_contexts()
     cli([*cli_args, "-o", output_dir, "--force"])
     vs = list(ParquetLoader.load_from_dir(output_dir).fetch_summary_variants())
     assert len(vs) == 6
@@ -799,6 +806,7 @@ def test_data_removal_func_preserves_other_files(
         "some_random_file.txt", "some_random_dir",  # new stuff
     }
 
+    clear_registered_contexts()
     cli([*cli_args, "--force"])
 
     assert some_file.exists()
@@ -832,6 +840,7 @@ def test_full_reannotation_flag(
     mocker.spy(PositionScoreAnnotator, "annotate")
 
     out_path_2 = str(tmp_path / "out2")
+    clear_registered_contexts()
     cli([out_path,
          str(root_path / "new_annotation.yaml"),
          "--grr", grr_file,

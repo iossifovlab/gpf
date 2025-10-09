@@ -352,3 +352,12 @@ def gpf_instance_genomic_context_fixture(
         return context
 
     return builder
+
+
+@pytest.fixture
+def clean_genomic_context(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [])

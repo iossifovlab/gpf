@@ -40,7 +40,7 @@ from dae.genomic_resources.testing import (
 )
 from dae.task_graph.logging import FsspecHandler
 
-pytestmark = pytest.mark.usefixtures("clear_context")
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 @pytest.mark.parametrize(

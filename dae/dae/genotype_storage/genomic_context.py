@@ -34,8 +34,10 @@ class CLIGenotypeStorageContextProvider(GenomicContextProvider):
             default=None,
             help="genotype storages configuration file")
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    def init(
+        self,
+        **kwargs: Any,
+    ) -> GenomicContext | None:
         """Build a CLI genotype storages genomic context."""
 
         context_objects = {}

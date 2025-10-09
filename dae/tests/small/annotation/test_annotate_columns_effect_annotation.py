@@ -14,6 +14,8 @@ from dae.testing.t4c8_import import (
     t4c8_grr,
 )
 
+pytestmark = pytest.mark.usefixtures("clean_genomic_context")
+
 
 @pytest.fixture
 def grr_fixture(tmp_path: pathlib.Path) -> pathlib.Path:

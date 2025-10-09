@@ -10,13 +10,12 @@ from jinja2 import Environment, PackageLoader
 from markdown2 import markdown
 
 from dae.annotation.annotation_genomic_context_cli import (
-    CLIAnnotationContextProvider,
     get_context_pipeline,
 )
 from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
-    register_context_provider,
 )
 from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.genomic_resources.repository import GenomicResource
@@ -44,11 +43,10 @@ def cli(raw_args: list[str] | None = None) -> None:
         raw_args = sys.argv[1:]
 
     parser = configure_argument_parser()
-    CLIAnnotationContextProvider.add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(parser)
 
     args = parser.parse_args(raw_args)
     VerbosityConfiguration.set(args)
-    register_context_provider(CLIAnnotationContextProvider())
     context_providers_init(**vars(args))
 
     context = get_genomic_context()

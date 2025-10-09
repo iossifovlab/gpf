@@ -95,10 +95,9 @@ class GenomicContextProvider:
         """Add command line arguments to the argument parser."""
         raise NotImplementedError
 
-    @staticmethod
-    def init(**kwargs: Any) -> GenomicContext | None:
+    @abstractmethod
+    def init(self, **kwargs: Any) -> GenomicContext | None:
         """Build the genomic context based on the provided arguments."""
-        raise NotImplementedError
 
 
 class SimpleGenomicContext(GenomicContext):

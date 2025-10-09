@@ -75,9 +75,9 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
         # No arguments needed for default GRR context provider
         pass
 
-    @staticmethod
     def init(
-        **kwargs: Any,  # noqa: ARG004
+        self,
+        **kwargs: Any,  # noqa: ARG002
     ) -> GenomicContext:
         grr = build_genomic_resource_repository()
 
@@ -89,7 +89,6 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
         )
 
 
-_CONTEXT_PLUGINS_LOADED = False
 _REGISTERED_CONTEXT_PROVIDERS: list[GenomicContextProvider] = []
 _REGISTERED_CONTEXTS: list[GenomicContext] = []
 
@@ -108,6 +107,11 @@ def register_context_provider(
 
 def context_providers_init(**kwargs: Any) -> None:
     """Initialize all registered genomic context providers."""
+    if _REGISTERED_CONTEXTS:
+        logger.debug(
+            "Genomic context providers already initialized, skipping.")
+        return
+
     for provider in sorted(
             _REGISTERED_CONTEXT_PROVIDERS,
             key=lambda g: (- g.get_context_provider_priority(),
@@ -121,6 +125,11 @@ def context_providers_init(**kwargs: Any) -> None:
             )
             continue
         register_context(context)
+
+
+def clear_registered_contexts() -> None:
+    """Clear all registered genomic contexts."""
+    _REGISTERED_CONTEXTS.clear()
 
 
 def context_providers_add_argparser_arguments(
