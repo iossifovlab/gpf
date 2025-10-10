@@ -62,7 +62,14 @@ logger = logging.getLogger(__name__)
 
 
 class DefaultRepositoryContextProvider(GenomicContextProvider):
-    """Genomic context provider for default GRR."""
+    """Provide access to the default genomic resources repository.
+
+    The default repository is resolved via
+    :func:`build_genomic_resource_repository` using the environment
+    configuration.  The resulting context exposes a single key,
+    ``"genomic_resources_repository"``, which can be consumed by other code
+    participating in the context chain.
+    """
 
     def __init__(self) -> None:
         super().__init__(
@@ -72,13 +79,33 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
     ) -> None:
-        # No arguments needed for default GRR context provider
-        pass
+        """Declare command line arguments for this provider.
+
+        The default repository provider is fully configuration driven and has
+        nothing to expose on the CLI, so the method intentionally leaves the
+        *parser* untouched.  The override exists to make the behaviour explicit
+        in the generated documentation.
+        """
 
     def init(
         self,
         **kwargs: Any,  # noqa: ARG002
     ) -> GenomicContext:
+        """Instantiate a context backed by the default repository.
+
+        Parameters
+        ----------
+        **kwargs
+            Accepted for interface compatibility; the provider ignores runtime
+            keyword arguments because everything is derived from the global
+            configuration.
+
+        Returns
+        -------
+        GenomicContext
+            A context exposing a single ``genomic_resources_repository`` entry
+            pointing at the default repository instance.
+        """
         grr = build_genomic_resource_repository()
 
         return SimpleGenomicContext(
@@ -96,7 +123,15 @@ _REGISTERED_CONTEXTS: list[GenomicContext] = []
 def register_context_provider(
     context_provider: GenomicContextProvider,
 ) -> None:
-    """Register genomic context provider."""
+    """Register *context_provider* so it participates in initialization.
+
+    Parameters
+    ----------
+    context_provider
+        The provider implementation that should be considered when contexts
+        are assembled.  Providers are stored in registration order and later
+        sorted by their priority before initialization.
+    """
     logger.debug(
         "Registering the %s "
         "genomic context generator with priority %s",
@@ -106,7 +141,17 @@ def register_context_provider(
 
 
 def context_providers_init(**kwargs: Any) -> None:
-    """Initialize all registered genomic context providers."""
+    """Materialize contexts from every registered provider.
+
+    The function walks all registered providers in priority order and asks
+    each of them to initialise a :class:`GenomicContext`.  The resulting
+    contexts are stored for later retrieval via :func:`get_genomic_context`.
+
+    Parameters
+    ----------
+    **kwargs
+        Keyword arguments forwarded to every provider's ``init`` method.
+    """
     if _REGISTERED_CONTEXTS:
         logger.debug(
             "Genomic context providers already initialized, skipping.")
@@ -130,10 +175,18 @@ def context_providers_init(**kwargs: Any) -> None:
 def context_providers_init_with_argparser(
     toolname: str = "GenomicTool",
 ) -> None:
-    """Initialize genomic context providers with default arguments.
+    """Initialise providers using arguments parsed from ``sys.argv``.
 
-    This is a convenience function for tools that do not need to modify
-    the argument parser and want to use only context providers arguments.
+    Parameters
+    ----------
+    toolname
+        The program name presented to :class:`argparse.ArgumentParser`.
+
+    Notes
+    -----
+    This helper is useful for simple tools that do not customise their
+    argument parser but still want to expose the command line options defined
+    by registered context providers.
     """
     parser = argparse.ArgumentParser(prog=toolname)
     context_providers_add_argparser_arguments(parser)
@@ -142,14 +195,21 @@ def context_providers_init_with_argparser(
 
 
 def clear_registered_contexts() -> None:
-    """Clear all registered genomic contexts."""
+    """Forget all contexts created by :func:`context_providers_init`."""
     _REGISTERED_CONTEXTS.clear()
 
 
 def context_providers_add_argparser_arguments(
     parser: argparse.ArgumentParser,
 ) -> None:
-    """Add command line arguments for all registered context providers."""
+    """Delegate command line argument registration to each provider.
+
+    Parameters
+    ----------
+    parser
+        The parser that should receive additional arguments from every
+        registered provider.
+    """
     for provider in sorted(
             _REGISTERED_CONTEXT_PROVIDERS,
             key=lambda g: (- g.get_context_provider_priority(),
@@ -158,6 +218,14 @@ def context_providers_add_argparser_arguments(
 
 
 def register_context(context: GenomicContext) -> None:
+    """Record *context* so it participates in future lookups.
+
+    Parameters
+    ----------
+    context
+        The context instance to be considered when
+        :func:`get_genomic_context` is invoked.
+    """
     logger.debug(
         "registering the %s "
         "genomic context",
@@ -166,12 +234,18 @@ def register_context(context: GenomicContext) -> None:
 
 
 def get_genomic_context() -> GenomicContext:
-    """Collect all registered context and returns a priority context."""
+    """Return a priority context that merges every registered context."""
     contexts = _REGISTERED_CONTEXTS[:]
     return PriorityGenomicContext(contexts)
 
 
 def _load_genomic_context_provider_plugins() -> None:
+    """Discover context providers published via ``entry_points``.
+
+    The function is executed at import time so the default providers become
+    available automatically.  Every entry point is expected to expose a
+    callable returning a :class:`GenomicContextProvider` instance.
+    """
     # pylint: disable=import-outside-toplevel
     from importlib.metadata import entry_points
 
