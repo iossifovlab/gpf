@@ -96,6 +96,8 @@ class GeneScoreAnnotator(Annotator):
 
             if aggregator_type == "dict":
                 aggregator_doc = f"{aggregator_doc} [default]"
+                attribute_config.type = "object"
+
             attribute_config._documentation = (  # noqa: SLF001
                 f"{attribute_config.documentation}\n\n"
                 f"{aggregator_doc}"
