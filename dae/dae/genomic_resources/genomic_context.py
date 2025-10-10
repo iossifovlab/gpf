@@ -2,6 +2,16 @@
 Genomic context provides a way to collect various genomic resources from
 various sources and make them available through a single interface.
 
+The module follows a registry-based approach.  Providers register themselves
+and are later consulted (in priority order) to build individual
+:class:`~dae.genomic_resources.genomic_context_base.GenomicContext`
+instances.  Every created context is combined into a
+:class:`PriorityGenomicContext`, offering a single access point for
+resources such as genomic resource repositories, reference genomes,
+gene models, annotation pipelines, etc. Providers can be registered
+programmatically via :func:`register_context_provider` or discovered
+automatically through entry points.
+
 Example usage of genomic context in a tool with command line interface:
 
 .. code-block:: python
@@ -35,7 +45,7 @@ parser you can do:
 
 .. code-block:: python
 
-    context_providers_init_with_argparser(toolname: str)
+    context_providers_init_with_argparser("GenomicTool")
     genomic_context = get_genomic_context()
 
 
@@ -91,7 +101,7 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
         self,
         **kwargs: Any,  # noqa: ARG002
     ) -> GenomicContext:
-        """Instantiate a context backed by the default repository.
+        """Instantiate a context backed by the default GRR.
 
         Parameters
         ----------
@@ -117,7 +127,9 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
 
 
 _REGISTERED_CONTEXT_PROVIDERS: list[GenomicContextProvider] = []
+"""Collection of provider instances awaiting initialisation."""
 _REGISTERED_CONTEXTS: list[GenomicContext] = []
+"""Contexts produced during :func:`context_providers_init`."""
 
 
 def register_context_provider(
@@ -146,6 +158,12 @@ def context_providers_init(**kwargs: Any) -> None:
     The function walks all registered providers in priority order and asks
     each of them to initialise a :class:`GenomicContext`.  The resulting
     contexts are stored for later retrieval via :func:`get_genomic_context`.
+
+    Notes
+    -----
+    Providers are invoked at most once per process.  Subsequent calls are
+    ignored until :func:`clear_registered_contexts` is executed, which is
+    especially helpful in unit tests.
 
     Parameters
     ----------
@@ -195,7 +213,11 @@ def context_providers_init_with_argparser(
 
 
 def clear_registered_contexts() -> None:
-    """Forget all contexts created by :func:`context_providers_init`."""
+    """Forget all contexts created by :func:`context_providers_init`.
+
+    This function exists primarily for testing scenarios where the global
+    registry should be reset between test cases.
+    """
     _REGISTERED_CONTEXTS.clear()
 
 
@@ -234,7 +256,12 @@ def register_context(context: GenomicContext) -> None:
 
 
 def get_genomic_context() -> GenomicContext:
-    """Return a priority context that merges every registered context."""
+    """Return a priority context that merges every registered context.
+
+    The returned :class:`PriorityGenomicContext` respects the registration
+    order, giving precedence to contexts added most recently when multiple
+    contexts expose the same key.
+    """
     contexts = _REGISTERED_CONTEXTS[:]
     return PriorityGenomicContext(contexts)
 
@@ -245,6 +272,12 @@ def _load_genomic_context_provider_plugins() -> None:
     The function is executed at import time so the default providers become
     available automatically.  Every entry point is expected to expose a
     callable returning a :class:`GenomicContextProvider` instance.
+
+    Notes
+    -----
+    Third-party packages can contribute providers by declaring the
+    ``dae.genomic_resources.plugins`` entry-point group in their project
+    metadata (for example, ``pyproject.toml``).
     """
     # pylint: disable=import-outside-toplevel
     from importlib.metadata import entry_points

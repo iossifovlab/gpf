@@ -5,10 +5,12 @@ from dae.genomic_resources.gene_models.gene_models import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import (
-    PriorityGenomicContext,
-    SimpleGenomicContext,
     get_genomic_context,
     register_context,
+)
+from dae.genomic_resources.genomic_context_base import (
+    PriorityGenomicContext,
+    SimpleGenomicContext,
 )
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
