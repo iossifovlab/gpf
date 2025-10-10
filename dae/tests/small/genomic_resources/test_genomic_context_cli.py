@@ -1,15 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import argparse
 import pathlib
+import sys
 from typing import cast
 
 import pytest
+import pytest_mock
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
 )
 from dae.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
+    context_providers_init_with_argparser,
     get_genomic_context,
     register_context_provider,
 )
@@ -274,6 +277,36 @@ def test_cli_genomic_context_providers_grr_definition(
     # When
     args = parser.parse_args(argv)
     context_providers_init(**vars(args))
+    context = get_genomic_context()
+
+    # Then
+    assert context is not None
+
+    assert context.get_context_keys() == {
+        "genomic_resources_repository"}
+
+    grr = context.get_genomic_resources_repository()
+    assert grr is not None
+    assert isinstance(grr, GenomicResourceRepo)
+
+
+def test_cli_genomic_context_providers_init_with_argparser(
+    t4c8_grr: GenomicResourceRepo,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # Given
+    (tmp_path / "grr_config.yaml").write_text(
+        f"""{t4c8_grr.definition}""")
+
+    register_context_provider(CLIGenomicContextProvider())
+    mocker.patch.object(sys, "argv", new=[
+        "test_tool",
+        "-g", str(tmp_path / "grr_config.yaml"),
+    ])
+
+    # When
+    context_providers_init_with_argparser("test_tool")
     context = get_genomic_context()
 
     # Then

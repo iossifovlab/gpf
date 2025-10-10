@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sys
 from typing import Any
 
 from dae.genomic_resources.repository_factory import (
@@ -124,6 +125,20 @@ def context_providers_init(**kwargs: Any) -> None:
             )
             continue
         register_context(context)
+
+
+def context_providers_init_with_argparser(
+    toolname: str = "GenomicTool",
+) -> None:
+    """Initialize genomic context providers with default arguments.
+
+    This is a convenience function for tools that do not need to modify
+    the argument parser and want to use only context providers arguments.
+    """
+    parser = argparse.ArgumentParser(prog=toolname)
+    context_providers_add_argparser_arguments(parser)
+    args = parser.parse_args(sys.argv[1:])
+    context_providers_init(**vars(args))
 
 
 def clear_registered_contexts() -> None:
