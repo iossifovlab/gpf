@@ -1,3 +1,13 @@
+"""Command-line helpers for configuring genomic resource contexts.
+
+This module exposes :class:`CLIGenomicContextProvider`, a concrete
+implementation of
+:class:`~dae.genomic_resources.genomic_context_base.GenomicContextProvider`
+that resolves genomic resources based on command-line arguments.  Tools can
+register the provider to let their users supply a genomic resources
+repository, reference genome, and gene models at runtime.
+"""
+
 import argparse
 import logging
 from typing import Any
@@ -13,33 +23,46 @@ from dae.genomic_resources.repository_factory import (
 )
 
 from .genomic_context_base import (
+    GC_GENE_MODELS_KEY,
+    GC_GRR_KEY,
+    GC_REFERENCE_GENOME_KEY,
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
 )
 
 logger = logging.getLogger(__name__)
-GC_GRR_KEY = "genomic_resources_repository"
-GC_REFERENCE_GENOME_KEY = "reference_genome"
-GC_GENE_MODELS_KEY = "gene_models"
 
 
 class CLIGenomicContextProvider(GenomicContextProvider):
-    """Genomic context provider for CLI."""
+    """Resolve genomic resources from command-line arguments.
+
+    The provider allows CLI tools to override the default genomic resources
+    repository, reference genome, and gene models.  When invoked without any
+    overrides, it falls back to the previously initialised genomic context so
+    that defaults from ``gpf_instance`` or other providers remain available.
+    """
 
     def __init__(
             self,
     ) -> None:
-        """Initialize the CLI genomic context provider."""
+        """Initialise the provider with its identifier and priority."""
         super().__init__(
-            "cli_genomic_context_provider",
+            "CLIGenomicContextProvider",
             900,
         )
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
     ) -> None:
-        """Add command line arguments to the argument parser."""
+        """Expose CLI options that control genomic resource resolution.
+
+        Parameters
+        ----------
+        parser
+            The argument parser that should receive the provider specific
+            options.
+        """
         parser.add_argument(
             "-g", "--grr-filename", "--grr", default=None,
             help="The GRR configuration file. If the argument is absent, "
@@ -61,6 +84,21 @@ class CLIGenomicContextProvider(GenomicContextProvider):
                  "context will be used.")
 
     def init(self, **kwargs: Any) -> GenomicContext | None:
+        """Create a :class:`SimpleGenomicContext` based on CLI arguments.
+
+        Parameters
+        ----------
+        **kwargs
+            Arguments produced from the command-line parser.  The provider
+            recognises ``grr_filename``, ``grr_directory``,
+            ``reference_genome_resource_id``, and ``gene_models_resource_id``.
+
+        Returns
+        -------
+        GenomicContext | None
+            A context containing the resolved objects, or ``None`` if the
+            genomic resources repository could not be determined.
+        """
         # pylint: disable=import-outside-toplevel
         from .genomic_context import (
             get_genomic_context,

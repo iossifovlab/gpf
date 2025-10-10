@@ -1,3 +1,12 @@
+"""Command line helpers for constructing annotation pipelines.
+
+The utilities in this module complement the generic genomic context
+providers by supplying annotation pipeline objects.  They enable CLI tools to
+load pipeline definitions from the file system or from genomic resource
+repositories, and to make the resulting :class:`AnnotationPipeline`
+instances available through the shared genomic context mechanism.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -19,21 +28,34 @@ logger = logging.getLogger(__name__)
 
 
 class CLIAnnotationContextProvider(GenomicContextProvider):
-    """Defines annotation pipeline genomics context provider."""
+    """Expose annotation pipeline configuration through CLI options.
+
+    The provider allows users to point to an annotation pipeline definition
+    (either as a file path or a genomic resource identifier) and optionally
+    tweak pipeline behaviour via command-line flags.  When invoked without a
+    ``pipeline`` argument the provider abstains from creating a context so
+    that other providers can supply their default pipelines.
+    """
 
     def __init__(
             self,
     ) -> None:
-        """Initialize the CLI pipeline genomic context provider."""
+        """Initialise the provider with its public identifier and priority."""
         super().__init__(
-            "cli_pipeline_context_provider",
+            "CLIAnnotationContextProvider",
             800,
         )
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
     ) -> None:
-        """Add command line arguments to the argument parser."""
+        """Register arguments that describe the annotation pipeline source.
+
+        Parameters
+        ----------
+        parser
+            The parser that should receive the provider specific CLI options.
+        """
         parser.add_argument(
             "pipeline", default="context", nargs="?",
             help="The pipeline definition file. By default, or if "
@@ -46,7 +68,22 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             " an error.")
 
     def init(self, **kwargs: Any) -> GenomicContext | None:
-        """Build a CLI genomic context."""
+        """Materialise a genomic context containing an annotation pipeline.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments parsed from the command line.  The provider
+            looks at ``pipeline``, ``allow_repeated_attributes``, and
+            ``work_dir``.
+
+        Returns
+        -------
+        GenomicContext | None
+            A context containing the annotation pipeline, or ``None`` when no
+            pipeline could be created (for example when the ``pipeline``
+            argument is omitted).
+        """
         # pylint: disable=import-outside-toplevel
         from dae.genomic_resources.genomic_context import (
             get_genomic_context,
@@ -101,7 +138,25 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
 def get_context_pipeline(
     context: GenomicContext,
 ) -> AnnotationPipeline | None:
-    """Construct an annotation pipeline."""
+    """Extract a validated :class:`AnnotationPipeline` from *context*.
+
+    Parameters
+    ----------
+    context
+        The genomic context from which to retrieve the pipeline object.
+
+    Returns
+    -------
+    AnnotationPipeline | None
+        The pipeline instance or ``None`` when the context does not expose a
+        pipeline.
+
+    Raises
+    ------
+    TypeError
+        If the context entry is present but does not contain the expected
+        :class:`AnnotationPipeline` type.
+    """
     pipeline = context.get_context_object(GC_ANNOTATION_PIPELINE_KEY)
     if pipeline is None:
         return None
