@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_simple_effect_annotator(
-    pipeline: AnnotationPipeline, info: AnnotatorInfo
+    pipeline: AnnotationPipeline, info: AnnotatorInfo,
 ) -> Annotator:
     return SimpleEffectAnnotator(pipeline, info)
 
@@ -42,10 +42,10 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 raise ValueError(
                     f"Can't create {info.type}: "
                     "gene model resource are missing in config "
-                    "and context"
-                )
+                    "and context")
         else:
-            resource = pipeline.repository.get_resource(gene_models_resrouce_id)
+            resource = pipeline.repository.get_resource(
+                gene_models_resrouce_id)
             gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
 
@@ -56,14 +56,12 @@ Simple effect annotator.
 
 <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#simple-effect-annotator" target="_blank">More info</a>
 
-"""
-        )  # noqa
+""")  # noqa
 
         info.resources.append(gene_models.resource)
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                ["effect", "genes"]
-            )
+                ["effect", "genes"])
         super().__init__(
             pipeline,
             info,
@@ -89,8 +87,7 @@ Simple effect annotator.
             return self._empty_result()
 
         effect, gene_list = self.run_annotate(
-            annotatable.chrom, annotatable.position, annotatable.end_position
-        )
+            annotatable.chrom, annotatable.position, annotatable.end_position)
         genes = ",".join(gene_list)
 
         return {
@@ -133,13 +130,15 @@ Simple effect annotator.
 
         if transcript.cds[0] > transcript.tx[0]:
             region.append(
-                Region(transcript.chrom, transcript.tx[0], transcript.cds[0] - 1)
-            )
+                Region(
+                    transcript.chrom,
+                    transcript.tx[0], transcript.cds[0] - 1))
 
         if transcript.cds[1] < transcript.tx[1]:
             region.append(
-                Region(transcript.chrom, transcript.cds[1] + 1, transcript.tx[1])
-            )
+                Region(
+                    transcript.chrom,
+                    transcript.cds[1] + 1, transcript.tx[1]))
 
         return region
 
@@ -149,7 +148,10 @@ Simple effect annotator.
         if transcript.is_coding():
             return region
 
-        region.append(Region(transcript.chrom, transcript.tx[0], transcript.tx[1]))
+        region.append(
+            Region(
+                transcript.chrom,
+                transcript.tx[0], transcript.tx[1]))
         return region
 
     def call_region(
