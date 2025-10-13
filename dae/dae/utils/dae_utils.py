@@ -10,13 +10,14 @@ DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 
 def dae2vcf_variant(
-    chrom: str, position: int, variant: str, genome: ReferenceGenome,
+    chrom: str, position: int, variant: str, genome: ReferenceGenome | None,
 ) -> tuple[int, str, str]:
     """Convert a given CSHL-style variant to the VCF format."""
     match = SUB_COMPLEX_RE.match(variant)
     if match:
         return position, match.group(2), match.group(3)
-
+    if genome is None:
+        raise ValueError("genome is required for ins/del variants")
     match = INS_RE.match(variant)
     if match:
         alt_suffix = match.group(1)
@@ -36,7 +37,7 @@ def dae2vcf_variant(
 
 
 def cshl2vcf_variant(
-    location: str, variant: str, genome: ReferenceGenome,
+    location: str, variant: str, genome: ReferenceGenome | None,
 ) -> tuple[str, int, str, str]:
     chrom, position = location.split(":")
     return chrom, *dae2vcf_variant(chrom, int(position), variant, genome)

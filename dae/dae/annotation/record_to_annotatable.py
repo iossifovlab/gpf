@@ -114,8 +114,6 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
                 chrom, pos_begin, pos_end,
                 CNVAllele.Type.from_string(cnv_type))
 
-        if self.ref_genome is None:
-            raise ValueError("unable to build without a referrence genome")
         return VCFAllele(*cshl2vcf_variant(
             record[self.location_col],
             record[self.variant_col],

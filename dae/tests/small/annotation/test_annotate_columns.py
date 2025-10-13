@@ -75,10 +75,27 @@ def test_default_columns(
     ],
 )
 def test_cshl_variants_without_context(
-        record: dict[str, str], expected: Annotatable) -> None:  # noqa: ARG001
-    with pytest.raises(ValueError):  # noqa: PT011
-        build_record_to_annotatable(
+    record: dict[str, str], expected: Annotatable,
+) -> None:
+    allele = build_record_to_annotatable(
             {}, set(record.keys())).build(record)
+    assert str(allele) == str(expected)
+
+
+@pytest.mark.parametrize(
+    "record", [
+        {"location": "chr1:13", "variant": "ins(TT)"},
+        {"location": "chr1:13", "variant": "del(2)"},
+    ],
+)
+def test_cshl_variants_without_context_indels(
+    record: dict[str, str],
+) -> None:
+    with pytest.raises(
+            ValueError, match="genome is required for ins/del variants"):
+
+        build_record_to_annotatable(
+                {}, set(record.keys())).build(record)
 
 
 @pytest.fixture
