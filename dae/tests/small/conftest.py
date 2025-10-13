@@ -7,6 +7,8 @@ import pytest
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
+)
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource_id,
 )
 from dae.genomic_resources.reference_genome import (

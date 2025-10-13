@@ -15,7 +15,7 @@ from dae.configuration.gpf_config_parser import (
     GPFConfigParser,
 )
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo

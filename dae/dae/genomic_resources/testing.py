@@ -273,7 +273,7 @@ def setup_gene_models(
     setup_directories(out_path.parent, {"genomic_resource.yaml": config})
 
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.gene_models.gene_models import (
+    from dae.genomic_resources.gene_models.gene_models_factory import (
         build_gene_models_from_file,
     )
     gene_models = build_gene_models_from_file(

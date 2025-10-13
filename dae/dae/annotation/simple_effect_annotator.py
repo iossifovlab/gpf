@@ -16,6 +16,8 @@ from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     TranscriptModel,
+)
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import get_genomic_context

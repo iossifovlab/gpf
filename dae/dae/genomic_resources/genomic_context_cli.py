@@ -12,7 +12,7 @@ import argparse
 import logging
 from typing import Any
 
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.reference_genome import (

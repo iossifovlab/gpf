@@ -8,6 +8,8 @@ from dae.genomic_resources.gene_models.gene_models import (
     Exon,
     GeneModels,
     TranscriptModel,
+)
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
     build_gene_models_from_resource,
 )

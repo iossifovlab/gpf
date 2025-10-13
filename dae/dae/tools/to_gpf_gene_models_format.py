@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
 )
 from dae.genomic_resources.gene_models.serialization import (
