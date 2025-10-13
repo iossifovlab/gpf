@@ -24,8 +24,9 @@ from dae.utils.regions import Region
 logger = logging.getLogger(__name__)
 
 
-def build_simple_effect_annotator(pipeline: AnnotationPipeline,
-                                  info: AnnotatorInfo) -> Annotator:
+def build_simple_effect_annotator(
+    pipeline: AnnotationPipeline, info: AnnotatorInfo
+) -> Annotator:
     return SimpleEffectAnnotator(pipeline, info)
 
 
@@ -38,32 +39,40 @@ class SimpleEffectAnnotator(AnnotatorBase):
         if gene_models_resrouce_id is None:
             gene_models = get_genomic_context().get_gene_models()
             if gene_models is None:
-                raise ValueError(f"Can't create {info.type}: "
-                                 "gene model resource are missing in config "
-                                 "and context")
+                raise ValueError(
+                    f"Can't create {info.type}: "
+                    "gene model resource are missing in config "
+                    "and context"
+                )
         else:
-            resource = pipeline.repository.get_resource(
-                gene_models_resrouce_id)
+            resource = pipeline.repository.get_resource(gene_models_resrouce_id)
             gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
 
-        info.documentation += textwrap.dedent("""
+        info.documentation += textwrap.dedent(
+            """
 
 Simple effect annotator.
 
 <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#simple-effect-annotator" target="_blank">More info</a>
 
-""")  # noqa
+"""
+        )  # noqa
 
         info.resources.append(gene_models.resource)
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                ["effect", "genes"])
-        super().__init__(pipeline, info, {
-            "effect": ("str", "The worst effect."),
-            "genes": ("str", "The affected genes."),
-            "gene_list": ("objects", "List of all genes."),
-        })
+                ["effect", "genes"]
+            )
+        super().__init__(
+            pipeline,
+            info,
+            {
+                "effect": ("str", "The worst effect."),
+                "genes": ("str", "The affected genes."),
+                "gene_list": ("objects", "List of all genes."),
+            },
+        )
 
         self.gene_models = gene_models
 
@@ -72,16 +81,16 @@ Simple effect annotator.
         return super().open()
 
     def _do_annotate(
-        self, annotatable: Annotatable,
+        self,
+        annotatable: Annotatable,
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()
 
         effect, gene_list = self.run_annotate(
-            annotatable.chrom,
-            annotatable.position,
-            annotatable.end_position)
+            annotatable.chrom, annotatable.position, annotatable.end_position
+        )
         genes = ",".join(gene_list)
 
         return {
@@ -91,7 +100,8 @@ Simple effect annotator.
         }
 
     def cds_intron_regions(
-        self, transcript: TranscriptModel,
+        self,
+        transcript: TranscriptModel,
     ) -> list[Region]:
         """Return whether region is CDS intron."""
         region: list[Region] = []
@@ -123,13 +133,13 @@ Simple effect annotator.
 
         if transcript.cds[0] > transcript.tx[0]:
             region.append(
-                Region(transcript.chrom, transcript.tx[0],
-                       transcript.cds[0] - 1))
+                Region(transcript.chrom, transcript.tx[0], transcript.cds[0] - 1)
+            )
 
         if transcript.cds[1] < transcript.tx[1]:
             region.append(
-                Region(transcript.chrom, transcript.cds[1] + 1,
-                       transcript.tx[1]))
+                Region(transcript.chrom, transcript.cds[1] + 1, transcript.tx[1])
+            )
 
         return region
 
@@ -139,15 +149,18 @@ Simple effect annotator.
         if transcript.is_coding():
             return region
 
-        region.append(
-            Region(transcript.chrom, transcript.tx[0],
-                   transcript.tx[1]))
+        region.append(Region(transcript.chrom, transcript.tx[0], transcript.tx[1]))
         return region
 
     def call_region(
-        self, chrom: str, beg: int, end: int,
-        transcripts: list[TranscriptModel], *,
-        func_name: str, classification: str,
+        self,
+        chrom: str,
+        beg: int,
+        end: int,
+        transcripts: list[TranscriptModel],
+        *,
+        func_name: str,
+        classification: str,
     ) -> tuple[str, set[str]] | None:
         """Call a region with a specific classification."""
         genes = set()
@@ -171,50 +184,72 @@ Simple effect annotator.
         return None
 
     def run_annotate(
-        self, chrom: str, beg: int, end: int,
+        self,
+        chrom: str,
+        beg: int,
+        end: int,
     ) -> tuple[str, set[str]]:
         """Return classification with a set of affected genes."""
         assert self.gene_models.utr_models is not None
         assert self.gene_models.utr_models[chrom] is not None
 
-        for (start, stop), tms in self.gene_models.utr_models[chrom].items():
-            if (beg <= stop and end >= start):
+        tms = self.gene_models.gene_models_by_location(chrom, beg, end)
 
-                result = self.call_region(
-                    chrom, beg, end, tms,
-                    func_name="CDS_regions",
-                    classification="coding")
+        result = self.call_region(
+            chrom,
+            beg,
+            end,
+            tms,
+            func_name="CDS_regions",
+            classification="coding",
+        )
 
-                if not result:
-                    result = self.call_region(
-                        chrom, beg, end, tms,
-                        func_name="utr_regions",
-                        classification="peripheral")
-                else:
-                    return result
+        if result:
+            return result
 
-                if not result:
-                    result = self.call_region(
-                        chrom, beg, end, tms,
-                        func_name="cds_intron_regions",
-                        classification="inter-coding_intronic")
-                else:
-                    return result
+        result = self.call_region(
+            chrom,
+            beg,
+            end,
+            tms,
+            func_name="utr_regions",
+            classification="peripheral",
+        )
 
-                if not result:
-                    result = self.call_region(
-                        chrom, beg, end, tms,
-                        func_name="peripheral_regions",
-                        classification="peripheral")
-                else:
-                    return result
+        if result:
+            return result
+        result = self.call_region(
+            chrom,
+            beg,
+            end,
+            tms,
+            func_name="cds_intron_regions",
+            classification="inter-coding_intronic",
+        )
 
-                if not result:
-                    result = self.call_region(
-                        chrom, beg, end, tms,
-                        func_name="noncoding_regions",
-                        classification="noncoding")
-                else:
-                    return result
+        if result:
+            return result
+
+        result = self.call_region(
+            chrom,
+            beg,
+            end,
+            tms,
+            func_name="peripheral_regions",
+            classification="peripheral",
+        )
+
+        if result:
+            return result
+        result = self.call_region(
+            chrom,
+            beg,
+            end,
+            tms,
+            func_name="noncoding_regions",
+            classification="noncoding",
+        )
+        if result:
+            return result
 
         return "intergenic", set()
