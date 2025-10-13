@@ -173,11 +173,6 @@ class EffectAnnotator:
             variant.chromosome,
             max(variant.position - self.promoter_len, 1),
             variant.ref_position_last + self.promoter_len)
-        tms1 = self.gene_models.gene_models_by_location1(
-            variant.chromosome,
-            max(variant.position - self.promoter_len, 1),
-            variant.ref_position_last + self.promoter_len)
-        assert len(tms) == len(tms1)
 
         for transcript_model in tms:
             effect = self.get_effect_for_transcript(

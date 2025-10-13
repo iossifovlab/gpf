@@ -8,6 +8,10 @@ from collections.abc import Callable
 from typing import IO, Any, cast
 
 import pandas as pd
+from intervaltree import (  # type: ignore
+    Interval,
+    IntervalTree,
+)
 
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.genomic_resources.repository import (
@@ -455,7 +459,7 @@ class GeneModels(
         self._utr_models: dict[
                 str, dict[tuple[int, int], list[TranscriptModel]]] = \
             defaultdict(lambda: defaultdict(list))
-        self._tx_index: dict[str, list[TranscriptModel]] = defaultdict(list)
+        self._tx_index: dict[str, IntervalTree] = defaultdict(IntervalTree)
         self.transcript_models: dict[str, Any] = {}
         self.alternative_names: dict[str, Any] = {}
 
@@ -480,7 +484,7 @@ class GeneModels(
 
     def _add_to_utr_index(self, tm: TranscriptModel) -> None:
         self._utr_models[tm.chrom][tm.tx].append(tm)
-        self._tx_index[tm.chrom].append(tm)
+        self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
 
     def add_transcript_model(self, transcript_model: TranscriptModel) -> None:
         """Add a transcript model to the gene models."""
@@ -499,8 +503,6 @@ class GeneModels(
         for transcript in self.transcript_models.values():
             self.gene_models[transcript.gene].append(transcript)
             self._add_to_utr_index(transcript)
-        for tms in self._tx_index.values():
-            tms.sort(key=lambda tm: (tm.tx[0], tm.tx[1], tm.tr_id))
 
     def gene_names(self) -> list[str]:
         if self.gene_models is None:
@@ -552,31 +554,6 @@ class GeneModels(
 
         return result
 
-    @staticmethod
-    def _search_tx(
-        tms: list[TranscriptModel],
-        pos_start: int, pos_end: int,
-    ) -> int:
-        low = 0
-        high = len(tms) - 1
-        mid = 0
-
-        while low <= high:
-            mid = (high + low) // 2
-            if tms[mid].tx[1] < pos_start:
-                low = mid + 1
-
-            elif tms[mid].tx[0] > pos_end:
-                high = mid - 1
-
-            else:
-                while mid > 0 and (tms[mid - 1].tx[0] <= pos_end
-                                   and tms[mid - 1].tx[1] >= pos_start):
-                    mid -= 1
-                return mid
-
-        return -1
-
     def gene_models_by_location(
         self, chrom: str, pos_begin: int, pos_end: int | None = None,
     ) -> list[TranscriptModel]:
@@ -597,18 +574,10 @@ class GeneModels(
             pos_end = pos_begin
         if pos_end < pos_begin:
             pos_begin, pos_end = pos_end, pos_begin
-        idx = self._search_tx(self._tx_index[chrom], pos_begin, pos_end)
-        if idx == -1:
-            return []
-        tms = self._tx_index[chrom]
+        tms_interval = self._tx_index[chrom]
+        result = tms_interval.overlap(pos_begin, pos_end + 1)
 
-        result: list[TranscriptModel] = []
-        while pos_begin <= tms[idx].tx[1] and pos_end >= tms[idx].tx[0]:
-            result.append(tms[idx])
-            idx += 1
-            if idx >= len(tms):
-                break
-        return result
+        return [r.data for r in result]
 
     def relabel_chromosomes(
         self, relabel: dict[str, str] | None = None,

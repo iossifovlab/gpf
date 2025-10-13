@@ -118,6 +118,8 @@ def test_no_start_var(
     )
 
     assert len(effects) == 7
+    effects.sort(key=lambda e: e.transcript_id or "")
+
     for effect in effects:
         assert effect.gene == "METTL23"
         assert effect.strand == "+"
@@ -183,6 +185,7 @@ def test_frame_shift_var(
     )
 
     assert len(effects) == 5
+    effects.sort(key=lambda e: e.transcript_id or "")
     print(effects)
 
     effect = effects.pop(0)
@@ -332,6 +335,7 @@ def test_splice_site_var(
     )
 
     assert len(effects) == 4
+    effects.sort(key=lambda e: e.transcript_id or "")
 
     effect = effects[0]
     assert effect.gene == "SERBP1"
