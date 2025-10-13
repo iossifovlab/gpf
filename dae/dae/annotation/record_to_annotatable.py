@@ -102,8 +102,6 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
         self.location_col, self.variant_col = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
-        if self.ref_genome is None:
-            raise ValueError("unable to build without a referrence genome")
         variant = record[self.variant_col]
         cnv_type = cnv_variant_type(variant)
         if cnv_type is not None:
@@ -116,7 +114,8 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
                 chrom, pos_begin, pos_end,
                 CNVAllele.Type.from_string(cnv_type))
 
-        assert self.ref_genome is not None
+        if self.ref_genome is None:
+            raise ValueError("unable to build without a referrence genome")
         return VCFAllele(*cshl2vcf_variant(
             record[self.location_col],
             record[self.variant_col],
