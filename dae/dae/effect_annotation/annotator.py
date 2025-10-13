@@ -124,6 +124,7 @@ class EffectAnnotator:
         effect_type: str = "unknown",
     ) -> list[AnnotationEffect]:
         """Annotate a region or position."""
+
         assert self.gene_models is not None
         if not self.gene_models.is_loaded():
             raise ValueError("gene models are not loaded")
@@ -151,6 +152,7 @@ class EffectAnnotator:
 
         if not self.gene_models.is_loaded():
             raise ValueError("gene models are not loaded")
+
         if variant.variant_type in {
                 Annotatable.Type.LARGE_DUPLICATION,
                 Annotatable.Type.LARGE_DELETION}:
@@ -171,6 +173,12 @@ class EffectAnnotator:
             variant.chromosome,
             max(variant.position - self.promoter_len, 1),
             variant.ref_position_last + self.promoter_len)
+        tms1 = self.gene_models.gene_models_by_location1(
+            variant.chromosome,
+            max(variant.position - self.promoter_len, 1),
+            variant.ref_position_last + self.promoter_len)
+        assert len(tms) == len(tms1)
+
         for transcript_model in tms:
             effect = self.get_effect_for_transcript(
                 variant, transcript_model)

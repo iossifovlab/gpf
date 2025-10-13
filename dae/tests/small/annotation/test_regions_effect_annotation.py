@@ -55,24 +55,24 @@ def fixture_repo(
 
 
 @pytest.mark.parametrize(
-    "annotatable, gene_list, effect_type, length, txs", [
+    "annotatable, expected_gene_list, effect_type, length, txs", [
         (Region("chr1", 1, 19), ["g1"], "unknown", 19,
-         {"g1": ["tx1", "tx2"]}),
+         {"g1": ["tx2", "tx1"]}),
         (Region("chr1", 1, 29), ["g1", "g2"], "unknown", 29,
-         {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
+         {"g1": ["tx2", "tx1"], "g2": ["tx3"]}),
         (Position("chr1", 10), ["g1"], "unknown", 1,
          {"g1": ["tx1"]}),
         (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DELETION),
          ["g1", "g2"], "CNV-", 29,
-         {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
+         {"g1": ["tx2", "tx1"], "g2": ["tx3"]}),
         (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DUPLICATION),
          ["g1", "g2"], "CNV+", 29,
-         {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
+         {"g1": ["tx2", "tx1"], "g2": ["tx3"]}),
     ],
 )
 def test_effect_annotator(
         annotatable: Annotatable,
-        gene_list: list[str],
+        expected_gene_list: list[str],
         effect_type: str, length: int,
         txs: dict[str, list[str]],
         fixture_repo: GenomicResourceProtocolRepo,
@@ -93,10 +93,11 @@ def test_effect_annotator(
 
     print(annotatable, result)
     assert result is not None
-    assert sorted(result["gene_list"]) == gene_list
+    gene_list = sorted(result["gene_list"])
+    assert gene_list == expected_gene_list
     assert result["worst_effect"] == effect_type
     assert result["gene_effects"] == "|".join([
-        f"{g}:{effect_type}" for g in gene_list])
+        f"{g}:{effect_type}" for g in expected_gene_list])
     assert result["effect_details"] == "|".join([
         f"{t}:{g}:{effect_type}:{length}"
         for g, ts in txs.items()

@@ -2,6 +2,7 @@
 import pytest
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
+    TranscriptModel,
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.testing import (
@@ -239,3 +240,65 @@ def test_gene_models_by_location_return_transcript_details(
         # Verify the position 50 is within the transcript range
         assert tm.tx[0] <= 50 <= tm.tx[1]
         assert tm.chrom == "1"
+
+
+@pytest.fixture
+def tms_fixture() -> list[TranscriptModel]:
+    return [
+        TranscriptModel(
+            "a1", "a", "a", "1", "+", tx=(10, 100), cds=(12, 95), exons=[],
+        ),
+        TranscriptModel(
+            "c1", "c", "c", "2", "+", tx=(50, 200), cds=(60, 180), exons=[],
+        ),
+        TranscriptModel(
+            "b1", "b", "b", "1", "-", tx=(150, 250), cds=(160, 240), exons=[],
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "pos_start, pos_end, expected_index",
+    [
+        (50, 50, 0),
+        (10, 10, 0),
+        (1, 9, -1),
+        (1, 101, 0),
+
+    ],
+)
+def test_search_tx(
+    tms_fixture: list[TranscriptModel],
+    pos_start: int,
+    pos_end: int,
+    expected_index: int,
+) -> None:
+
+    res = GeneModels._search_tx(tms_fixture, pos_start, pos_end)
+    assert res == expected_index
+
+
+@pytest.fixture
+def tms_fixture1() -> list[TranscriptModel]:
+    return [
+        TranscriptModel(
+            "aa1", "aa", "aa", "1", "-", tx=(1000, 2000),
+            cds=(1060, 1960), exons=[],
+        ),
+        TranscriptModel(
+            "bb1", "bb", "bb", "1", "-", tx=(1050, 1150),
+            cds=(1060, 1140), exons=[],
+        ),
+        TranscriptModel(
+            "cc1", "cc", "cc", "1", "-", tx=(1850, 1950),
+            cds=(1860, 1940), exons=[],
+        ),
+    ]
+
+
+def test_search_tx1(
+    tms_fixture1: list[TranscriptModel],
+) -> None:
+
+    res = GeneModels._search_tx(tms_fixture1, 1100, 1900)
+    assert res == 0
