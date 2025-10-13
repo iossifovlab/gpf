@@ -434,6 +434,7 @@ class GeneModels(
     """Provides class for gene models."""
 
     def __init__(self, resource: GenomicResource):
+        self._is_loaded = False
         if resource.get_type() != "gene_models":
             raise ValueError(
                 f"wrong type of resource passed: {resource.get_type()}")
@@ -451,7 +452,7 @@ class GeneModels(
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
         self.chrom_gene_models: \
             dict[tuple[str, str], list[TranscriptModel]] = defaultdict(list)
-        self.utr_models: dict[
+        self._utr_models: dict[
                 str, dict[tuple[int, int], list[TranscriptModel]]] = \
             defaultdict(lambda: defaultdict(list))
         self.transcript_models: dict[str, Any] = {}
@@ -467,12 +468,17 @@ class GeneModels(
         self.reset()
 
     def reset(self) -> None:
+        """Reset gene models."""
+        self._is_loaded = False
         self.alternative_names = {}
 
-        self.utr_models = defaultdict(lambda: defaultdict(list))
+        self._utr_models = defaultdict(lambda: defaultdict(list))
         self.transcript_models = {}
         self.gene_models = defaultdict(list)
         self.chrom_gene_models = defaultdict(list)
+
+    def _add_to_utr_index(self, tm: TranscriptModel) -> None:
+        self._utr_models[tm.chrom][tm.tx].append(tm)
 
     def add_transcript_model(self, transcript_model: TranscriptModel) -> None:
         """Add a transcript model to the gene models."""
@@ -484,15 +490,14 @@ class GeneModels(
             transcript_model.chrom, transcript_model.gene,
         ].append(transcript_model)
 
-        self.utr_models[transcript_model.chrom][transcript_model.tx]\
-            .append(transcript_model)
+        self._add_to_utr_index(transcript_model)
 
     def update_indexes(self) -> None:
         self.gene_models = defaultdict(list)
-        self.utr_models = defaultdict(lambda: defaultdict(list))
+        self._utr_models = defaultdict(lambda: defaultdict(list))
         for transcript in self.transcript_models.values():
             self.gene_models[transcript.gene].append(transcript)
-            self.utr_models[transcript.chrom][transcript.tx].append(transcript)
+            self._add_to_utr_index(transcript)
 
     def gene_names(self) -> list[str]:
         if self.gene_models is None:
@@ -506,6 +511,9 @@ class GeneModels(
         self, name: str,
     ) -> list[TranscriptModel] | None:
         return self.gene_models.get(name, None)
+
+    def has_chromosome(self, chrom: str) -> bool:
+        return chrom in self._utr_models
 
     def gene_models_by_location(
         self, chrom: str, pos1: int,
@@ -527,17 +535,17 @@ class GeneModels(
 
         if pos2 is None:
             key: tuple[int, int]
-            for key in self.utr_models[chrom]:
+            for key in self._utr_models[chrom]:
                 if key[0] <= pos1 <= key[1]:
-                    result.extend(self.utr_models[chrom][key])
+                    result.extend(self._utr_models[chrom][key])
 
         else:
             if pos2 < pos1:
                 pos1, pos2 = pos2, pos1
 
-            for key in self.utr_models[chrom]:
+            for key in self._utr_models[chrom]:
                 if pos1 <= key[0] <= pos2 or key[0] <= pos1 <= key[1]:
-                    result.extend(self.utr_models[chrom][key])
+                    result.extend(self._utr_models[chrom][key])
 
         return result
 
@@ -554,9 +562,9 @@ class GeneModels(
                     line.strip("\n\r").split()[:2]for line in infile
                 )
 
-        self.utr_models = {
+        self._utr_models = {
             relabel[chrom]: v
-            for chrom, v in self.utr_models.items()
+            for chrom, v in self._utr_models.items()
             if chrom in relabel
         }
 
@@ -584,10 +592,13 @@ class GeneModels(
             return self
         self.reset()
         load_gene_models(self)
+        self.update_indexes()
+        self._is_loaded = True
         return self
 
     def is_loaded(self) -> bool:
-        return len(self.gene_models) > 0
+        """Check if gene models are loaded."""
+        return self._is_loaded
 
 
 def join_gene_models(*gene_models: GeneModels) -> GeneModels:
@@ -596,8 +607,7 @@ def join_gene_models(*gene_models: GeneModels) -> GeneModels:
         raise ValueError("The function needs at least 2 arguments!")
 
     gm = GeneModels(gene_models[0].resource)
-    gm.utr_models = {}
-    gm.gene_models = {}
+    gm.reset()
 
     gm.transcript_models = gene_models[0].transcript_models.copy()
 
@@ -791,7 +801,6 @@ def parse_default_gene_models_format(
         )
         gene_models.add_transcript_model(transcript_model)
 
-    gene_models.update_indexes()
     if nrows is not None:
         return True
 

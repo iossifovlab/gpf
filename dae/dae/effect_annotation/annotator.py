@@ -8,7 +8,6 @@ from dae.genomic_resources.gene_models.gene_models import (
     TranscriptModel,
 )
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.utils.regions import Region
 
 from .annotation_request import (
     AnnotationRequest,
@@ -105,8 +104,8 @@ class EffectAnnotator:
     ) -> list[AnnotationEffect]:
         """Annotate a CNV variant."""
         assert self.gene_models is not None
-        if self.gene_models.utr_models is None:
-            raise ValueError("bad gene models")
+        if not self.gene_models.is_loaded():
+            raise ValueError("gene models are not loaded")
 
         if variant_type == Annotatable.Type.LARGE_DUPLICATION:
             effect_type = "CNV+"
@@ -126,20 +125,18 @@ class EffectAnnotator:
     ) -> list[AnnotationEffect]:
         """Annotate a region or position."""
         assert self.gene_models is not None
-        if self.gene_models.utr_models is None:
-            raise ValueError("bad gene models")
-        region = Region(chrom, pos_start, pos_end)
+        if not self.gene_models.is_loaded():
+            raise ValueError("gene models are not loaded")
         effects = []
         length = pos_end - pos_start + 1
-        for (start, stop), tms in \
-                self.gene_models.utr_models[chrom].items():
-            if region.intersection(
-                    Region(chrom, start, stop)):
-                for transcript_model in tms:
-                    effect = EffectFactory.create_effect_with_tm(
-                        effect_type, transcript_model)
-                    effect.length = length
-                    effects.append(effect)
+        tms = self.gene_models.gene_models_by_location(
+            chrom, pos_start, pos_end)
+        assert all((pos_start <= t.tx[1] and pos_end >= t.tx[0]) for t in tms)
+        for transcript_model in tms:
+            effect = EffectFactory.create_effect_with_tm(
+                effect_type, transcript_model)
+            effect.length = length
+            effects.append(effect)
 
         if len(effects) == 0:
             effect = EffectFactory.create_effect(effect_type)
@@ -152,8 +149,8 @@ class EffectAnnotator:
         """Annotate effects for a variant."""
         assert self.gene_models is not None
 
-        if self.gene_models.utr_models is None:
-            raise ValueError("bad gene models")
+        if not self.gene_models.is_loaded():
+            raise ValueError("gene models are not loaded")
         if variant.variant_type in {
                 Annotatable.Type.LARGE_DUPLICATION,
                 Annotatable.Type.LARGE_DELETION}:
@@ -165,23 +162,21 @@ class EffectAnnotator:
                 variant.variant_type)
 
         effects = []
-        if variant.chromosome not in self.gene_models.utr_models:
+        if not self.gene_models.has_chromosome(variant.chromosome):
             effects.append(EffectFactory.create_effect("intergenic"))
             return effects
 
         assert variant.ref_position_last is not None
-        for key in self.gene_models.utr_models[variant.chromosome]:
-            if (
-                variant.position <= key[1] + self.promoter_len
-                and variant.ref_position_last >= key[0] - self.promoter_len
-            ):
-                for transcript_model in self.gene_models\
-                        .utr_models[variant.chromosome][key]:
-                    effect = self.get_effect_for_transcript(
-                        variant, transcript_model)
+        tms = self.gene_models.gene_models_by_location(
+            variant.chromosome,
+            max(variant.position - self.promoter_len, 1),
+            variant.ref_position_last + self.promoter_len)
+        for transcript_model in tms:
+            effect = self.get_effect_for_transcript(
+                variant, transcript_model)
 
-                    if effect is not None:
-                        effects.append(effect)
+            if effect is not None:
+                effects.append(effect)
 
         if len(effects) == 0:
             effects.append(EffectFactory.create_effect("intergenic"))
