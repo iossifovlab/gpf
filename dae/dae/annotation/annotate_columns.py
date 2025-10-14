@@ -151,12 +151,14 @@ class _CSVSource(Source):
             self.columns_args, set(self.header),
             ref_genome=self.ref_genome)
         errors = []
-
+        reg_start = region.start if region and region.start is not None else 1
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(self.input_separator)
                 record = dict(zip(self.header, columns, strict=True))
                 annotatable = record_to_annotatable.build(record)
+                if annotatable.position < reg_start:
+                    continue
                 yield AnnotationsWithSource(
                     record, [Annotation(annotatable, dict(record))],
                 )
@@ -165,6 +167,8 @@ class _CSVSource(Source):
                     "unexpected input data format at line %s: %s",
                     lnum, line)
                 errors.append((lnum, line, str(ex)))
+                if len(errors) >= 10:
+                    break
 
         if len(errors) > 0:
             for lnum, line, error in errors:

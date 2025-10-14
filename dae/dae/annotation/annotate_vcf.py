@@ -143,13 +143,17 @@ class _VCFSource(Source):
     ) -> Iterable[AnnotationsWithSource]:
         if region is None:
             in_file_iter = self.vcf.fetch()
+            reg_start = 1
         else:
             assert region.start is not None
             in_file_iter = self.vcf.fetch(region.chrom,
                                           region.start - 1,
                                           region.stop)
+            reg_start = region.start
 
         for vcf_var in in_file_iter:
+            if vcf_var.pos < reg_start:
+                continue
             if vcf_var.ref is None:
                 logger.warning(
                     "vcf variant without reference: %s %s",
