@@ -59,7 +59,6 @@ from dae.annotation.record_to_annotatable import (
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
-from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
@@ -67,11 +66,12 @@ from dae.genomic_resources.reference_genome import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.task_graph import TaskGraphCli
+from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph, sync_tasks
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_columns")
 
@@ -151,12 +151,14 @@ class _CSVSource(Source):
             self.columns_args, set(self.header),
             ref_genome=self.ref_genome)
         errors = []
-
+        reg_start = region.start if region and region.start is not None else 1
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(self.input_separator)
                 record = dict(zip(self.header, columns, strict=True))
                 annotatable = record_to_annotatable.build(record)
+                if annotatable.position < reg_start:
+                    continue
                 yield AnnotationsWithSource(
                     record, [Annotation(annotatable, dict(record))],
                 )
@@ -165,6 +167,8 @@ class _CSVSource(Source):
                     "unexpected input data format at line %s: %s",
                     lnum, line)
                 errors.append((lnum, line, str(ex)))
+                if len(errors) >= 10:
+                    break
 
         if len(errors) > 0:
             for lnum, line, error in errors:
@@ -652,9 +656,10 @@ def cli(argv: list[str] | None = None) -> None:
     }
 
     output_path = args["output"]
+    region_size = args["region_size"]
 
     task_graph = TaskGraph()
-    if tabix_index_filename(args["input"]):
+    if tabix_index_filename(args["input"]) and region_size > 0:
         _add_tasks_tabixed(
             args,
             task_graph,

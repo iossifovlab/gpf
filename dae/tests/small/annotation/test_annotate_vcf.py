@@ -7,13 +7,15 @@ import pysam
 import pytest
 import pytest_mock
 from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotate_utils import (
+    produce_partfile_paths,
+)
 from dae.annotation.annotate_vcf import (
     _annotate_vcf,
     _VCFBatchSource,
     _VCFSource,
     _VCFWriter,
     cli,
-    produce_partfile_paths,
 )
 from dae.annotation.annotation_config import AttributeInfo
 from dae.genomic_resources.testing import (
@@ -774,3 +776,48 @@ def test_vcf_keep_parts(
         "in.vcf.gz_annotation_chr2_1_47",
         "in.vcf.gz_annotation_chr3_1_47",
     }
+
+
+def test_vcf_cross_region_boundary(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF    ALT  QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   1   .  CAAAA  C    .    .      .    GT     0/1 0/0 0/0
+        chr1   2   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   3   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   4   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   5   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   6   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   7   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf.gz"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation_quotes_in_description.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--region-size", "2",
+        ]
+    ])
+
+    variants = 0
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for _ in vcf_file.fetch():
+            variants += 1
+    assert variants == 7

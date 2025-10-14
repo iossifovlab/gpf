@@ -48,8 +48,7 @@ def gene_models_to_gtf(
 
     record_buffer: list[GTFRecord] = []
 
-    for (chrom, gene_name), transcripts in \
-            gene_models.chrom_gene_models.items():
+    for (chrom, gene_name), transcripts in gene_models.chrom_gene_models():
         t = transcripts[0]
         start = min(t.tx[0] for t in transcripts)
         stop = max(t.tx[1] for t in transcripts)
@@ -85,7 +84,7 @@ f"""##description: GTF format dump for gene models "{gene_models.resource.resour
 ##format: gtf
 ##date: {datetime.today().strftime('%Y-%m-%d')}
 {joined_records}
-""")  # noqa: E501
+""")  # noqa
 
 
 def build_gtf_record(
@@ -140,9 +139,9 @@ def collect_cds_regions(
         bases_to_write = min(start_bases_remaining, cds_len)
 
         codon_start = cds.start if not reverse \
-                      else cds.stop - (bases_to_write - 1)
+            else cds.stop - (bases_to_write - 1)
         codon_stop = codon_start + (bases_to_write - 1) if not reverse \
-                     else cds.stop
+            else cds.stop
         start_codons.append(BedRegion(cds.chrom, codon_start, codon_stop))
 
         if cds_len - bases_to_write > 0:
@@ -156,9 +155,9 @@ def collect_cds_regions(
         bases_to_write = min(stop_bases_remaining, cds_len)
 
         codon_start = cds.stop - (bases_to_write - 1) if not reverse \
-                      else cds.start
+            else cds.start
         codon_stop = cds.stop if not reverse \
-                     else codon_start + (bases_to_write - 1)
+            else codon_start + (bases_to_write - 1)
         stop_codons.append(BedRegion(cds.chrom, codon_start, codon_stop))
 
         if cds_len - bases_to_write > 0:

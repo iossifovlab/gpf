@@ -118,6 +118,8 @@ def test_no_start_var(
     )
 
     assert len(effects) == 7
+    effects.sort(key=lambda e: e.transcript_id or "")
+
     for effect in effects:
         assert effect.gene == "METTL23"
         assert effect.strand == "+"
@@ -183,6 +185,7 @@ def test_frame_shift_var(
     )
 
     assert len(effects) == 5
+    effects.sort(key=lambda e: e.transcript_id or "")
     print(effects)
 
     effect = effects.pop(0)
@@ -279,6 +282,7 @@ def test_nonsense_var(
         variant="sub(C->T)",
     )
 
+    effects.sort(key=lambda e: e.transcript_id or "")
     assert len(effects) == 4
     print(effects)
 
@@ -293,15 +297,6 @@ def test_nonsense_var(
 
     effect = effects[1]
     assert effect.gene == "NFIA"
-    assert effect.transcript_id == "NM_005595_1"
-    assert effect.strand == "+"
-    assert effect.effect == "nonsense"
-    assert effect.prot_pos == 38
-    assert effect.prot_length == 498
-    assert effect.aa_change == "Arg->End"
-
-    effect = effects[2]
-    assert effect.gene == "NFIA"
     assert effect.transcript_id == "NM_001145511_1"
     assert effect.strand == "+"
     assert effect.effect == "nonsense"
@@ -309,13 +304,22 @@ def test_nonsense_var(
     assert effect.prot_length == 501
     assert effect.aa_change == "Arg->End"
 
-    effect = effects[3]
+    effect = effects[2]
     assert effect.gene == "NFIA"
     assert effect.transcript_id == "NM_001145512_1"
     assert effect.strand == "+"
     assert effect.effect == "nonsense"
     assert effect.prot_pos == 83
     assert effect.prot_length == 554
+    assert effect.aa_change == "Arg->End"
+
+    effect = effects[3]
+    assert effect.gene == "NFIA"
+    assert effect.transcript_id == "NM_005595_1"
+    assert effect.strand == "+"
+    assert effect.effect == "nonsense"
+    assert effect.prot_pos == 38
+    assert effect.prot_length == 498
     assert effect.aa_change == "Arg->End"
 
 
@@ -331,6 +335,7 @@ def test_splice_site_var(
     )
 
     assert len(effects) == 4
+    effects.sort(key=lambda e: e.transcript_id or "")
 
     effect = effects[0]
     assert effect.gene == "SERBP1"
@@ -465,6 +470,7 @@ def test_3_utr_var(
     )
 
     assert len(effects) == 2
+    effects.sort(key=lambda e: e.transcript_id or "")
 
     assert effects[0].gene == "KNCN"
     assert effects[0].transcript_id == "NM_001097611_1"

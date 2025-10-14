@@ -195,9 +195,7 @@ Annotator to identify the effect of the variant on protein coding.
         else:
             raise ValueError(f"unexpected annotatable: {type(annotatable)}")
 
-        gene_list = list(set(
-            AnnotationEffect.gene_effects(effects)[0],
-        ))
+        gene_list = AnnotationEffect.genes(effects)
 
         full_desc = AnnotationEffect.effects_description(effects)
         result = {

@@ -16,6 +16,8 @@ from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     TranscriptModel,
+)
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import get_genomic_context
@@ -192,10 +194,10 @@ Simple effect annotator.
         end: int,
     ) -> tuple[str, set[str]]:
         """Return classification with a set of affected genes."""
-        assert self.gene_models.utr_models is not None
-        assert self.gene_models.utr_models[chrom] is not None
+        assert self.gene_models.is_loaded()
 
         tms = self.gene_models.gene_models_by_location(chrom, beg, end)
+        assert all((beg <= t.tx[1] and end >= t.tx[0]) for t in tms)
 
         result = self.call_region(
             chrom,

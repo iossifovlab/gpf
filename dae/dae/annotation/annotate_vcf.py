@@ -55,7 +55,7 @@ from dae.annotation.processing_pipeline import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.task_graph import TaskGraphCli
+from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph, sync_tasks
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
@@ -143,13 +143,17 @@ class _VCFSource(Source):
     ) -> Iterable[AnnotationsWithSource]:
         if region is None:
             in_file_iter = self.vcf.fetch()
+            reg_start = 1
         else:
             assert region.start is not None
             in_file_iter = self.vcf.fetch(region.chrom,
                                           region.start - 1,
                                           region.stop)
+            reg_start = region.start
 
         for vcf_var in in_file_iter:
+            if vcf_var.pos < reg_start:
+                continue
             if vcf_var.ref is None:
                 logger.warning(
                     "vcf variant without reference: %s %s",
@@ -559,8 +563,10 @@ def cli(argv: list[str] | None = None) -> None:
     cache_pipeline_resources(grr, pipeline)
 
     output_path = args["output"]
+    region_size = args["region_size"]
+
     task_graph = TaskGraph()
-    if tabix_index_filename(args["input"]):
+    if tabix_index_filename(args["input"]) and region_size > 0:
         _add_tasks_tabixed(
             args,
             task_graph,

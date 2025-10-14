@@ -14,6 +14,8 @@ from jinja2 import Template
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.gene_models.gene_models import (
     TranscriptModel,
+)
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.resource_implementation import (

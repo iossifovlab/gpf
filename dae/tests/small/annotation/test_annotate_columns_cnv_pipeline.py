@@ -248,8 +248,8 @@ def test_bad_cnv_effect_annotation(
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
-    assert list(df.gene_effects.values) == ["None:CNV+"]
-    assert list(df.gene_list.values) == ["['None']"]
+    assert list(df.gene_effects.values) == ["intergenic:CNV+"]
+    assert list(df.gene_list.values) == ["[]"]
 
 
 @pytest.mark.parametrize(

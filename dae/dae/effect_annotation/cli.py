@@ -9,12 +9,16 @@ from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
+)
+from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import (
-    GenomicContext,
     get_genomic_context,
+)
+from dae.genomic_resources.genomic_context_base import (
+    GenomicContext,
 )
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,

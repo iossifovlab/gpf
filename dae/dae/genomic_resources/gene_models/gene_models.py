@@ -4,18 +4,17 @@ from __future__ import annotations
 import copy
 import logging
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import IO, Any, cast
 
 import pandas as pd
+from intervaltree import (  # type: ignore
+    Interval,
+    IntervalTree,
+)
 
-from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.genomic_resources.repository import (
     GenomicResource,
-    GenomicResourceRepo,
-)
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
 )
 from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
@@ -434,6 +433,7 @@ class GeneModels(
     """Provides class for gene models."""
 
     def __init__(self, resource: GenomicResource):
+        self._is_loaded = False
         if resource.get_type() != "gene_models":
             raise ValueError(
                 f"wrong type of resource passed: {resource.get_type()}")
@@ -449,11 +449,7 @@ class GeneModels(
             else None
 
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
-        self.chrom_gene_models: \
-            dict[tuple[str, str], list[TranscriptModel]] = defaultdict(list)
-        self.utr_models: dict[
-                str, dict[tuple[int, int], list[TranscriptModel]]] = \
-            defaultdict(lambda: defaultdict(list))
+        self._tx_index: dict[str, IntervalTree] = defaultdict(IntervalTree)
         self.transcript_models: dict[str, Any] = {}
         self.alternative_names: dict[str, Any] = {}
 
@@ -464,35 +460,44 @@ class GeneModels(
         return self.resource.resource_id
 
     def close(self) -> None:
-        self.reset()
+        pass
 
     def reset(self) -> None:
+        """Reset gene models."""
+        self._is_loaded = False
         self.alternative_names = {}
 
-        self.utr_models = defaultdict(lambda: defaultdict(list))
         self.transcript_models = {}
         self.gene_models = defaultdict(list)
-        self.chrom_gene_models = defaultdict(list)
+        self._tx_index = defaultdict(IntervalTree)
+
+    def _add_to_utr_index(self, tm: TranscriptModel) -> None:
+        self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
 
     def add_transcript_model(self, transcript_model: TranscriptModel) -> None:
         """Add a transcript model to the gene models."""
         assert transcript_model.tr_id not in self.transcript_models
-
         self.transcript_models[transcript_model.tr_id] = transcript_model
-        self.gene_models[transcript_model.gene].append(transcript_model)
-        self.chrom_gene_models[
-            transcript_model.chrom, transcript_model.gene,
-        ].append(transcript_model)
 
-        self.utr_models[transcript_model.chrom][transcript_model.tx]\
-            .append(transcript_model)
+    def chrom_gene_models(self) -> Generator[
+            tuple[tuple[str, str], list[TranscriptModel]], None, None]:
+        """Generate chromosome and gene name keys with transcript models."""
+        for chrom, interval_tree in self._tx_index.items():
+            gene_models: dict[
+                tuple[str, str], list[TranscriptModel]] = defaultdict(list)
+            for interval in interval_tree:
+                tm = cast(TranscriptModel, interval.data)
+                assert chrom == tm.chrom
+                gene_models[tm.chrom, tm.gene].append(tm)
+            yield from gene_models.items()
 
     def update_indexes(self) -> None:
+        """Update internal indexes."""
         self.gene_models = defaultdict(list)
-        self.utr_models = defaultdict(lambda: defaultdict(list))
+        self._tx_index = defaultdict(IntervalTree)
         for transcript in self.transcript_models.values():
             self.gene_models[transcript.gene].append(transcript)
-            self.utr_models[transcript.chrom][transcript.tx].append(transcript)
+            self._add_to_utr_index(transcript)
 
     def gene_names(self) -> list[str]:
         if self.gene_models is None:
@@ -507,39 +512,33 @@ class GeneModels(
     ) -> list[TranscriptModel] | None:
         return self.gene_models.get(name, None)
 
+    def has_chromosome(self, chrom: str) -> bool:
+        return chrom in self._tx_index
+
     def gene_models_by_location(
-        self, chrom: str, pos1: int,
-        pos2: int | None = None,
+        self, chrom: str, pos_begin: int, pos_end: int | None = None,
     ) -> list[TranscriptModel]:
-        """Retrieve TranscriptModel objects based on genomic position(s).
+        """Retrieve TranscriptModel objects based on a single genomic position.
 
         Args:
             chrom (str): The chromosome name.
-            pos1 (int): The starting genomic position.
-            pos2 (Optional[int]): The ending genomic position. If not provided,
-                only models that contain pos1 will be returned.
+            pos (int): The genomic position.
 
         Returns:
             list[TranscriptModel]: A list of TranscriptModel objects that
-                match the given location criteria.
+                contain the given position.
         """
-        result = []
+        if chrom not in self._tx_index:
+            return []
 
-        if pos2 is None:
-            key: tuple[int, int]
-            for key in self.utr_models[chrom]:
-                if key[0] <= pos1 <= key[1]:
-                    result.extend(self.utr_models[chrom][key])
+        if pos_end is None:
+            pos_end = pos_begin
+        if pos_end < pos_begin:
+            pos_begin, pos_end = pos_end, pos_begin
+        tms_interval = self._tx_index[chrom]
+        result = tms_interval.overlap(pos_begin, pos_end + 1)
 
-        else:
-            if pos2 < pos1:
-                pos1, pos2 = pos2, pos1
-
-            for key in self.utr_models[chrom]:
-                if pos1 <= key[0] <= pos2 or key[0] <= pos1 <= key[1]:
-                    result.extend(self.utr_models[chrom][key])
-
-        return result
+        return [r.data for r in result]
 
     def relabel_chromosomes(
         self, relabel: dict[str, str] | None = None,
@@ -554,12 +553,6 @@ class GeneModels(
                     line.strip("\n\r").split()[:2]for line in infile
                 )
 
-        self.utr_models = {
-            relabel[chrom]: v
-            for chrom, v in self.utr_models.items()
-            if chrom in relabel
-        }
-
         self.transcript_models = {
             tid: tm
             for tid, tm in self.transcript_models.items()
@@ -568,6 +561,8 @@ class GeneModels(
 
         for transcript_model in self.transcript_models.values():
             transcript_model.chrom = relabel[transcript_model.chrom]
+
+        self.update_indexes()
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -584,10 +579,13 @@ class GeneModels(
             return self
         self.reset()
         load_gene_models(self)
+        self.update_indexes()
+        self._is_loaded = True
         return self
 
     def is_loaded(self) -> bool:
-        return len(self.gene_models) > 0
+        """Check if gene models are loaded."""
+        return self._is_loaded
 
 
 def join_gene_models(*gene_models: GeneModels) -> GeneModels:
@@ -596,8 +594,7 @@ def join_gene_models(*gene_models: GeneModels) -> GeneModels:
         raise ValueError("The function needs at least 2 arguments!")
 
     gm = GeneModels(gene_models[0].resource)
-    gm.utr_models = {}
-    gm.gene_models = {}
+    gm.reset()
 
     gm.transcript_models = gene_models[0].transcript_models.copy()
 
@@ -607,49 +604,6 @@ def join_gene_models(*gene_models: GeneModels) -> GeneModels:
     gm.update_indexes()
 
     return gm
-
-
-def build_gene_models_from_file(
-    file_name: str,
-    file_format: str | None = None,
-    gene_mapping_file_name: str | None = None,
-) -> GeneModels:
-    """Load gene models from local filesystem."""
-    config = {
-        "type": "gene_models",
-        "filename": file_name,
-    }
-    if file_format:
-        config["format"] = file_format
-    if gene_mapping_file_name:
-        config["gene_mapping"] = gene_mapping_file_name
-
-    res = build_local_resource(".", config)
-    return build_gene_models_from_resource(res)
-
-
-def build_gene_models_from_resource(
-    resource: GenomicResource | None,
-) -> GeneModels:
-    """Load gene models from a genomic resource."""
-    if resource is None:
-        raise ValueError(f"missing resource {resource}")
-
-    if resource.get_type() != "gene_models":
-        logger.error(
-            "trying to open a resource %s of type "
-            "%s as gene models", resource.resource_id, resource.get_type())
-        raise ValueError(f"wrong resource type: {resource.resource_id}")
-
-    return GeneModels(resource)
-
-
-def build_gene_models_from_resource_id(
-    resource_id: str, grr: GenomicResourceRepo | None = None,
-) -> GeneModels:
-    if grr is None:
-        grr = build_genomic_resource_repository()
-    return build_gene_models_from_resource(grr.get_resource(resource_id))
 
 
 def create_regions_from_genes(
@@ -791,7 +745,6 @@ def parse_default_gene_models_format(
         )
         gene_models.add_transcript_model(transcript_model)
 
-    gene_models.update_indexes()
     if nrows is not None:
         return True
 
