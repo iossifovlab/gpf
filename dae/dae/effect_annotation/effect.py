@@ -168,6 +168,25 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         return sorted_effects[0].effect
 
     @classmethod
+    def genes(cls, effects: list[AnnotationEffect]) -> list[str]:
+        """Build list of genes that are affected."""
+        sorted_effects = cls.sort_effects(effects)
+
+        result = []
+
+        for _severity, severity_effects in itertools.groupby(
+            sorted_effects, cls.effect_severity,
+        ):
+            for gene, _gene_effects in itertools.groupby(
+                severity_effects, lambda e: e.gene,
+            ):
+                if gene is None:
+                    continue
+                result.append(gene)
+
+        return list(set(result))
+
+    @classmethod
     def gene_effects(cls, effects: list[AnnotationEffect]) -> list[list[str]]:
         """Build parallel lists of genes and effects in that genes.
 
@@ -181,13 +200,15 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             return [["no-mutation"], ["no-mutation"]]
 
         result = []
+
         for _severity, severity_effects in itertools.groupby(
             sorted_effects, cls.effect_severity,
         ):
             for gene, gene_effects in itertools.groupby(
                 severity_effects, lambda e: e.gene,
             ):
-                result.append((gene, next(gene_effects).effect))
+                result.append(
+                    (gene or "intergenic", next(gene_effects).effect))
 
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
 
@@ -220,8 +241,8 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         gene_effects = []
         details = []
         for effect in effects:
-            transcripts.append(effect.transcript_id)
-            genes.append(effect.gene)
+            transcripts.append(effect.transcript_id or "intergenic")
+            genes.append(effect.gene or "intergenic")
             gene_effects.append(effect.effect)
             details.append(effect.create_effect_details())
         return (transcripts, genes, gene_effects, details)  # type: ignore

@@ -136,6 +136,7 @@ def test_effect_annotator_region_length_cutoff(
     print(annotatable, result)
     assert result is not None
     assert result["worst_effect"] == effect_type
-    assert result["gene_effects"] == f"None:{effect_type}"
-    assert result["effect_details"] == f"None:None:{effect_type}:{length}"
+    assert result["gene_effects"] == f"intergenic:{effect_type}"
+    assert result["effect_details"] == \
+        f"intergenic:intergenic:{effect_type}:{length}"
     assert result.get("gene_list") == []
