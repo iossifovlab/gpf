@@ -460,7 +460,7 @@ class GeneModels(
         return self.resource.resource_id
 
     def close(self) -> None:
-        self.reset()
+        pass
 
     def reset(self) -> None:
         """Reset gene models."""
