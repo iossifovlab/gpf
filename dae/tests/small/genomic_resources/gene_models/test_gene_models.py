@@ -618,13 +618,13 @@ def test_relabel_chromosomes(fixture_dirname: Callable) -> None:
     transcript_id = "ENST00000332235.7"
 
     assert gene_model.transcript_models[transcript_id].chrom == "chr19"
-    assert "chr19" in gene_model._utr_models
+    assert gene_model.has_chromosome("chr19")
 
     gene_model.relabel_chromosomes(relabel={"chr19": "19"})
 
     assert gene_model.transcript_models[transcript_id].chrom == "19"
-    assert "chr19" not in gene_model._utr_models
-    assert "19" in gene_model._utr_models
+    assert gene_model.has_chromosome("19")
+    assert not gene_model.has_chromosome("chr19")
 
 
 def test_relabel_chromosomes_from_mapfile(fixture_dirname: Callable) -> None:
@@ -634,7 +634,7 @@ def test_relabel_chromosomes_from_mapfile(fixture_dirname: Callable) -> None:
 
     transcript_id = "ENST00000332235.7"
     assert gene_model.transcript_models[transcript_id].chrom == "chr19"
-    assert "chr19" in gene_model._utr_models
+    assert gene_model.has_chromosome("chr19")
 
     with tempfile.NamedTemporaryFile("w+", delete=False) as tmp:
         tmp.write("chr19 19")
@@ -643,8 +643,8 @@ def test_relabel_chromosomes_from_mapfile(fixture_dirname: Callable) -> None:
     gene_model.relabel_chromosomes(map_file=tmp_path)
 
     assert gene_model.transcript_models[transcript_id].chrom == "19"
-    assert "chr19" not in gene_model._utr_models
-    assert "19" in gene_model._utr_models
+    assert not gene_model.has_chromosome("chr19")
+    assert gene_model.has_chromosome("19")
 
 
 def test_is_loaded(fixture_dirname: Callable) -> None:

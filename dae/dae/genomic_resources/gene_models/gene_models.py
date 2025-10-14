@@ -4,7 +4,7 @@ from __future__ import annotations
 import copy
 import logging
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import IO, Any, cast
 
 import pandas as pd
@@ -449,11 +449,6 @@ class GeneModels(
             else None
 
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
-        self.chrom_gene_models: \
-            dict[tuple[str, str], list[TranscriptModel]] = defaultdict(list)
-        self._utr_models: dict[
-                str, dict[tuple[int, int], list[TranscriptModel]]] = \
-            defaultdict(lambda: defaultdict(list))
         self._tx_index: dict[str, IntervalTree] = defaultdict(IntervalTree)
         self.transcript_models: dict[str, Any] = {}
         self.alternative_names: dict[str, Any] = {}
@@ -472,29 +467,34 @@ class GeneModels(
         self._is_loaded = False
         self.alternative_names = {}
 
-        self._utr_models = defaultdict(lambda: defaultdict(list))
         self.transcript_models = {}
         self.gene_models = defaultdict(list)
-        self.chrom_gene_models = defaultdict(list)
+        self._tx_index = defaultdict(IntervalTree)
 
     def _add_to_utr_index(self, tm: TranscriptModel) -> None:
-        self._utr_models[tm.chrom][tm.tx].append(tm)
         self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
 
     def add_transcript_model(self, transcript_model: TranscriptModel) -> None:
         """Add a transcript model to the gene models."""
         assert transcript_model.tr_id not in self.transcript_models
-
         self.transcript_models[transcript_model.tr_id] = transcript_model
-        self.gene_models[transcript_model.gene].append(transcript_model)
-        self.chrom_gene_models[
-            transcript_model.chrom, transcript_model.gene,
-        ].append(transcript_model)
+
+    def chrom_gene_models(self) -> Generator[
+            tuple[tuple[str, str], list[TranscriptModel]], None, None]:
+        """Generate chromosome and gene name keys with transcript models."""
+        for chrom, interval_tree in self._tx_index.items():
+            gene_models: dict[
+                tuple[str, str], list[TranscriptModel]] = defaultdict(list)
+            for interval in interval_tree:
+                tm = cast(TranscriptModel, interval.data)
+                assert chrom == tm.chrom
+                gene_models[tm.chrom, tm.gene].append(tm)
+            yield from gene_models.items()
 
     def update_indexes(self) -> None:
         """Update internal indexes."""
         self.gene_models = defaultdict(list)
-        self._utr_models = defaultdict(lambda: defaultdict(list))
+        self._tx_index = defaultdict(IntervalTree)
         for transcript in self.transcript_models.values():
             self.gene_models[transcript.gene].append(transcript)
             self._add_to_utr_index(transcript)
@@ -513,41 +513,7 @@ class GeneModels(
         return self.gene_models.get(name, None)
 
     def has_chromosome(self, chrom: str) -> bool:
-        return chrom in self._utr_models
-
-    def gene_models_by_location1(
-        self, chrom: str, pos1: int,
-        pos2: int | None = None,
-    ) -> list[TranscriptModel]:
-        """Retrieve TranscriptModel objects based on genomic position(s).
-
-        Args:
-            chrom (str): The chromosome name.
-            pos1 (int): The starting genomic position.
-            pos2 (Optional[int]): The ending genomic position. If not provided,
-                only models that contain pos1 will be returned.
-
-        Returns:
-            list[TranscriptModel]: A list of TranscriptModel objects that
-                match the given location criteria.
-        """
-        result = []
-
-        if pos2 is None:
-            key: tuple[int, int]
-            for key in self._utr_models[chrom]:
-                if key[0] <= pos1 <= key[1]:
-                    result.extend(self._utr_models[chrom][key])
-
-        else:
-            if pos2 < pos1:
-                pos1, pos2 = pos2, pos1
-
-            for key in self._utr_models[chrom]:
-                if pos1 <= key[0] <= pos2 or key[0] <= pos1 <= key[1]:
-                    result.extend(self._utr_models[chrom][key])
-
-        return result
+        return chrom in self._tx_index
 
     def gene_models_by_location(
         self, chrom: str, pos_begin: int, pos_end: int | None = None,
@@ -587,12 +553,6 @@ class GeneModels(
                     line.strip("\n\r").split()[:2]for line in infile
                 )
 
-        self._utr_models = {
-            relabel[chrom]: v
-            for chrom, v in self._utr_models.items()
-            if chrom in relabel
-        }
-
         self.transcript_models = {
             tid: tm
             for tid, tm in self.transcript_models.items()
@@ -601,6 +561,8 @@ class GeneModels(
 
         for transcript_model in self.transcript_models.values():
             transcript_model.chrom = relabel[transcript_model.chrom]
+
+        self.update_indexes()
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
