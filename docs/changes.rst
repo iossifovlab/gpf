@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+* 2025.10.3
+    * Switched to using interval trees in GeneModels.gene_models_by_location
+      method for better performance.
+    * GeneModles factory functions are accessible from the gene_models package.
+    * Effect annotation for regions and CNVs is ajdusted.
+    * Fixed handling of variants that cross region boundary in annotate_columns 
+      and annotate_vcf tools.
+    * Fixed and cleaned up SimpleEffectAnnotator.
+    * Allowed parsing of CNV variants files without reference genome in
+      annotate_columns tools.
+    * Fixed support for CSHL variant format in annotate_columns tool.
+    * Fixes and improvements in genomic context providers.
+
 * 2025.10.2
     * Reorganization and fixes in genomic context for annotation CLI tools.
     * Setting Dask scheduler default values for more adequate processing of
