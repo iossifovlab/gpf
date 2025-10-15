@@ -13,6 +13,8 @@ Release Notes
       annotate_columns tools.
     * Fixed support for CSHL variant format in annotate_columns tool.
     * Fixes and improvements in genomic context providers.
+    * Support for disabling parallelization in annotate_columns and
+      annotate_vcf tools.
 
 * 2025.10.2
     * Reorganization and fixes in genomic context for annotation CLI tools.
