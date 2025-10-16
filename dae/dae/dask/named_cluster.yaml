@@ -23,18 +23,15 @@ dae_named_cluster:
       # constructor. Some usefull params are given, but the LocalCluster 
       # documentation provides the complete description.
       # params:
-      #  threads_per_worker: 1
       #   dashboard_address: :8898
     - name: local
       type: local
       params:
         memory_limit: 10GB
-        threads_per_worker: 1
     - name: local_large
       type: local
       params:
         memory_limit: 16GB
-        threads_per_worker: 1
     - name: sge_small
       type: sge
       number_of_workers: 10
