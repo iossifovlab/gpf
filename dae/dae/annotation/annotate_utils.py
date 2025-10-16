@@ -160,7 +160,8 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         help="the input column file")
     parser.add_argument(
         "-r", "--region-size", default=300_000_000,
-        type=int, help="region size to parallelize by")
+        type=int, help="region size to parallelize by; zero or negative "
+        "values disable parallelization")
     parser.add_argument(
         "-w", "--work-dir",
         help="Directory to store intermediate output files in",

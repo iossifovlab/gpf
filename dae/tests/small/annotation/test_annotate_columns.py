@@ -5,6 +5,7 @@ import os
 import pathlib
 import textwrap
 
+import dae.annotation.annotate_columns
 import pysam
 import pytest
 import pytest_mock
@@ -1392,3 +1393,44 @@ def test_annotate_columns_cross_region_boundary(
     with gzip.open(str(out_file), "rt") as res:
         out_file_content = res.readlines()
         assert len(out_file_content) == 6
+
+
+def test_annotate_columns_no_regions(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    in_content = textwrap.dedent("""
+        #chrom    pos   pos_end
+        chr1      21    25
+        chr1      22    26
+        chr1      23    27
+        chr1      24    28
+        chr1      25    29
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_tabix(in_file, in_content,
+                seq_col=0, start_col=1, end_col=2)
+
+    spy = mocker.spy(
+        dae.annotation.annotate_columns, "_annotate_csv")
+
+    cli([
+        str(a) for a in [
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--region-size", 0,
+            "-j", 1,
+        ]
+    ])
+
+    assert spy.call_count == 1
