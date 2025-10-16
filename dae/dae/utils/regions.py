@@ -106,7 +106,7 @@ def split_into_regions(
 
 def get_chromosome_length_tabix(
     tabix_file: pysam.TabixFile | pysam.VariantFile, chrom: str,
-    step: int = 100_000_000, precision: int = 5_000_000,
+    step: int = 50_000_000, precision: int = 500_000,
 ) -> int | None:
     """
     Return the length of a chromosome (or contig).
@@ -137,6 +137,7 @@ def get_chromosome_length_tabix(
                     raise ValueError  # noqa: TRY301
                 right = pos
                 pos = pos // 2
+
         # Second we use binary search to narrow the region until we find the
         # index of the last element (in left) and the length (in right)
         while (right - left) > precision:

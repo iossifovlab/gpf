@@ -3,6 +3,7 @@ import os
 import pathlib
 import textwrap
 
+import dae.annotation.annotate_vcf
 import pysam
 import pytest
 import pytest_mock
@@ -821,3 +822,46 @@ def test_vcf_cross_region_boundary(
         for _ in vcf_file.fetch():
             variants += 1
     assert variants == 7
+
+
+def test_annotate_vcf_no_regions(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF    ALT  QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   1   .  CAAAA  C    .    .      .    GT     0/1 0/0 0/0
+        chr1   2   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   3   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   4   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   5   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   6   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+        chr1   7   .  CAAAA  C    .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf.gz"
+    work_dir = tmp_path / "output"
+    annotation_file = root_path / "annotation_quotes_in_description.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    spy = mocker.spy(dae.annotation.annotate_vcf, "_annotate_vcf")
+    cli([
+        str(a) for a in [
+            in_file,
+            annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--region-size", "0",
+        ]
+    ])
+
+    assert spy.call_count == 1
