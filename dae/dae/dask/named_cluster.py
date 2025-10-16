@@ -20,7 +20,7 @@ def set_up_local_cluster(cluster_conf: dict[str, Any]) -> Cluster:
 
     kwargs = copy.copy(cluster_conf)
     number_of_workers = kwargs.pop("number_of_workers", None)
-    threads_per_worker = kwargs.pop("threads_per_worker", None)
+    threads_per_worker = 1
     if number_of_workers is not None:
         kwargs["n_workers"] = number_of_workers
     if threads_per_worker is not None:
@@ -136,18 +136,15 @@ def setup_client_from_config(
 
 def _adjust_default_distributed_config() -> None:
     """Adjust some default distributed config values if they are not set."""
-    config = dask.config.get(
-        "distributed.scheduler.unknown-task-duration")
+    task_duration = dask.config.get(
+        "dae_named_cluster.distributed.scheduler.unknown-task-duration")
+    dask.config.config[
+        "distributed"]["scheduler"]["unknown-task-duration"] = task_duration
 
-    if config == "500ms":  # default value
-        dask.config.config[
-            "distributed"]["scheduler"]["unknown-task-duration"] = "10 minutes"
-
-    config = dask.config.get(
-        "distributed.worker.memory.pause")
-    if config == 0.80:  # default value
-        dask.config.config[
-            "distributed"]["worker"]["memory"]["pause"] = False
+    memory_pause = dask.config.get(
+        "dae_named_cluster.distributed.worker.memory.pause")
+    dask.config.config[
+        "distributed"]["worker"]["memory"]["pause"] = memory_pause
 
 
 def setup_client(

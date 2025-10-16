@@ -12,6 +12,16 @@ from dask import config
 @pytest.fixture
 def named_cluster_config() -> dict[str, Any]:
     return {
+        "distributed": {
+            "scheduler": {
+                "unknown-task-duration": "5m",
+            },
+            "worker": {
+                "memory": {
+                    "pause": 0.99,
+                },
+            },
+        },
         "default": "local",
         "clusters": [{
             "name": "local",
@@ -44,7 +54,7 @@ def test_default(
     assert mocked_local.call_count == 1
     assert mocked_local.call_args.kwargs == {
         "memory_limit": "4GB",
-        "threads_per_worker": 2,
+        "threads_per_worker": 1,
     }
 
 
@@ -94,7 +104,7 @@ def test_default_with_number_of_workers_config(
 
     assert mocked_local.call_count == 1
     assert mocked_local.call_args.kwargs == {
-        "memory_limit": "4GB", "threads_per_worker": 2}
+        "memory_limit": "4GB", "threads_per_worker": 1}
 
     assert mocked_local.return_value.scale.call_count == 1
     assert mocked_local.return_value.scale.call_args.kwargs["n"] == expected_n
@@ -116,7 +126,7 @@ def test_config_access(
     assert mocked_local.call_count == 1
     assert mocked_local.call_args.kwargs == {
         "memory_limit": "4GB",
-        "threads_per_worker": 2,
+        "threads_per_worker": 1,
     }
 
 
@@ -209,6 +219,6 @@ def test_adjust_default_distributed_config(
     assert client
 
     assert config.get(
-        "distributed.scheduler.unknown-task-duration") == "10 minutes"
+        "distributed.scheduler.unknown-task-duration") == "10m"
     assert config.get(
         "distributed.worker.memory.pause") is False
