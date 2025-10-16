@@ -21,6 +21,12 @@ def set_up_local_cluster(cluster_conf: dict[str, Any]) -> Cluster:
     kwargs = copy.copy(cluster_conf)
     number_of_workers = kwargs.pop("number_of_workers", None)
     threads_per_worker = kwargs.pop("threads_per_worker", None)
+    if threads_per_worker is not None:
+        logger.warning(
+            "The 'threads_per_worker' key in the dae_named_cluster config is "
+            "not supported. We support only one thread per worker.")
+    threads_per_worker = 1
+
     if number_of_workers is not None:
         kwargs["n_workers"] = number_of_workers
     if threads_per_worker is not None:
@@ -106,13 +112,20 @@ def setup_client_from_config(
     cluster_params = cluster_config.get("params", {})
     cluster_params["number_of_workers"] = number_of_workers
 
+    threads_per_worker = cluster_params.get("threads_per_worker")
+    if threads_per_worker is not None and threads_per_worker != 1:
+        logger.warning(
+            "The 'threads_per_worker' key in the named cluster config is "
+            "not supported. We support only one thread per worker.")
+        cluster_params["threads_per_worker"] = 1
+
     cluster = _CLUSTER_TYPES[cluster_type](cluster_params)
 
     number_of_threads_config = cluster_config.get("number_of_threads")
     if number_of_threads_config is not None:
         logger.warning(
-            "The 'number_of_threads' key in the cluster config is deprecated. "
-            "Use 'number_of_workers' instead.")
+            "The 'number_of_threads' key in the named cluster config is "
+            "deprecated. Use 'number_of_workers' instead.")
 
     number_of_workers_config = cluster_config.get(
         "number_of_workers", number_of_threads_config)
@@ -136,18 +149,15 @@ def setup_client_from_config(
 
 def _adjust_default_distributed_config() -> None:
     """Adjust some default distributed config values if they are not set."""
-    config = dask.config.get(
-        "distributed.scheduler.unknown-task-duration")
+    task_duration = dask.config.get(
+        "dae_named_cluster.distributed.scheduler.unknown-task-duration")
+    dask.config.config[
+        "distributed"]["scheduler"]["unknown-task-duration"] = task_duration
 
-    if config == "500ms":  # default value
-        dask.config.config[
-            "distributed"]["scheduler"]["unknown-task-duration"] = "10 minutes"
-
-    config = dask.config.get(
-        "distributed.worker.memory.pause")
-    if config == 0.80:  # default value
-        dask.config.config[
-            "distributed"]["worker"]["memory"]["pause"] = False
+    memory_pause = dask.config.get(
+        "dae_named_cluster.distributed.worker.memory.pause")
+    dask.config.config[
+        "distributed"]["worker"]["memory"]["pause"] = memory_pause
 
 
 def setup_client(

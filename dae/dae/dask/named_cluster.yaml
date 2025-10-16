@@ -1,11 +1,17 @@
 dae_named_cluster:
+  distributed:
+    scheduler:
+      unknown-task-duration: 10m
+    worker:
+      memory:
+        pause: false
+
   default: local
   clusters:
     - name: local_small
       type: local
       params:
         memory_limit: 4GB
-        threads_per_worker: 1
       # By default, the local cluster will allocate by default as many threads 
       # as the number of cores on the host, spread accross several workers each
       # with cerain number of threads.  See the documentation of LocalCluster
@@ -17,18 +23,15 @@ dae_named_cluster:
       # constructor. Some usefull params are given, but the LocalCluster 
       # documentation provides the complete description.
       # params:
-      #  threads_per_worker: 1
       #   dashboard_address: :8898
     - name: local
       type: local
       params:
         memory_limit: 10GB
-        threads_per_worker: 1
     - name: local_large
       type: local
       params:
         memory_limit: 16GB
-        threads_per_worker: 1
     - name: sge_small
       type: sge
       number_of_workers: 10

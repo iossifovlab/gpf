@@ -14,5 +14,11 @@ def reconfigure() -> None:
 
     dask.config.update_defaults(defaults)  # pyright: ignore
 
+    distributed_config = {}
+    distributed_config["distributed"] = defaults.get(
+        "dae_named_cluster", {}).get(
+        "distributed", {})
+    dask.config.update_defaults(distributed_config)  # pyright: ignore
+
 
 reconfigure()
