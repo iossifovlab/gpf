@@ -99,8 +99,7 @@ def get_section_lines(lines, section_name):
 
     def limited_strip(line):
         line = line.replace(base_whitespace_length * " ", "", 1)
-        line = line.rstrip()
-        return line
+        return line.rstrip()
 
     output = map(limited_strip, lines[start:end])
     output = map(DOC_SECTIONS_PARSERS[section_name], output)
@@ -245,10 +244,10 @@ def parse_http_docstring(docstring):
             out_lines = get_section_lines(lines, section)
             section_lines[section] = out_lines
         except ValueError as err:
-            logger.error("Failed to parse section %s!", section)
+            logger.exception("Failed to parse section %s!", section)
             logger.exception(err)
         except Exception as err:
-            logger.error("Failed to parse section %s!", section)
+            logger.exception("Failed to parse section %s!", section)
             logger.exception(err)
 
     output = {"summary": summary}
@@ -277,7 +276,7 @@ def collect_http_method_docstrings(method_node, method_name=None):
 
         return output
     except Exception as err:
-        logger.error("Failed to parse method %s!", method_node.name)
+        logger.exception("Failed to parse method %s!", method_node.name)
         logger.exception(err)
         return None
 
@@ -411,7 +410,7 @@ def main(argv=None):
             logger.info("Collecting docstrings from %s", api_name)
             documentation = collect_docstrings(view_dir)
         except Exception as err:
-            logger.error("Failed to collect docstrings from %s", api_name)
+            logger.exception("Failed to collect docstrings from %s", api_name)
             logger.exception(err)
         else:
             documentation_dict[api_name] = documentation

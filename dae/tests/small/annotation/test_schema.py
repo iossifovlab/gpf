@@ -8,7 +8,7 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 
 @pytest.fixture
 def genomic_resources_repo() -> GenomicResourceRepo:
-    repo = build_inmemory_test_repository({
+    return build_inmemory_test_repository({
         "position_score1": {
             "genomic_resource.yaml":
             """\
@@ -78,8 +78,6 @@ def genomic_resources_repo() -> GenomicResourceRepo:
             """,
         },
     })
-
-    return repo
 
 
 def test_annotation_pipeline_schema_basics(

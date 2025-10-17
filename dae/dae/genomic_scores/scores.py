@@ -6,7 +6,10 @@ from typing import Any, cast
 
 from jinja2 import Template
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline, AttributeInfo
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    AttributeInfo,
+)
 from dae.annotation.score_annotator import GenomicScoreAnnotatorBase
 from dae.genomic_resources.genomic_scores import (
     GenomicScore,
@@ -251,8 +254,7 @@ class GenomicScoresRegistry:
         if score_id not in self.scores:
             raise KeyError
 
-        res = self.scores[score_id]
-        return res
+        return self.scores[score_id]
 
     def __contains__(self, score_id: str) -> bool:
         return score_id in self.scores

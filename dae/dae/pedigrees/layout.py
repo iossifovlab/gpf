@@ -202,9 +202,8 @@ class Layout:
     @staticmethod
     def _handle_broken_family_connections(family: Family) -> Layout:
         # pylint: disable=protected-access
-        individuals = []
-        for person in family.full_members:
-            individuals.append(Individual(member=person))
+        individuals = [
+            Individual(member=person) for person in family.full_members]
 
         layout = Layout()
         layout._individuals_by_rank = [individuals]
@@ -243,7 +242,8 @@ class Layout:
 
     @staticmethod
     def from_family(
-        family: Family, add_missing_members: bool = True,
+        family: Family, *,
+        add_missing_members: bool = True,
     ) -> list[Layout]:
         """Generate layout for each connected component of a family."""
         family_connections = FamilyConnections.from_family(
@@ -267,7 +267,6 @@ class Layout:
             ]
             fam = Family.from_persons(members)
             fc = FamilyConnections.from_family(fam)
-            # assert fc.is_connected(), fam.family_id
             layouts.append(Layout._build_family_layout(fam, fc))
 
         x_offset = 0.0
@@ -389,34 +388,23 @@ class Layout:
 
     def _optimize_drawing(self, max_iter: int = 100) -> None:
         # for level in self._individuals_by_rank:
-        #     print(level)
         moved_individuals = -1
         counter = 1
 
         while moved_individuals and counter < max_iter:
-            # print
-            # print("new iter")
             moved_individuals = 0
             if counter % 6 < 3:
                 moved_individuals += self._align_parents_of_children()
-                # print(moved_individuals, "aligned parents of children")
                 moved_individuals += self._align_children_of_parents()
-                # print(moved_individuals, "aligned children of parents")
                 moved_individuals += self._align_multiple_mates()
             else:
                 moved_individuals += self._align_children_of_parents()
-                # print(moved_individuals, "aligned children of parents")
                 moved_individuals += self._align_parents_of_children()
-                # print(moved_individuals, "aligned parents of children")
                 moved_individuals += self._align_multiple_mates()
 
-            # moved_individuals += self._set_mates_equally_apart()
-            # print(moved_individuals, "set mates equally apart")
             moved_individuals += self._move_overlaps()
-            # print(moved_individuals, "moved overlapping individuals")
 
             counter += 1
-        # print(("done", counter))
         self._align_left()
 
     def _create_positioned_individuals(self) -> None:
@@ -783,12 +771,11 @@ class Layout:
         for individual in individuals:
             individual.x += offset
 
-        # print("moving with", offset)
-
         other_moved = 0
         if to_move != set():
             other_moved = self._move(
-                list(to_move), to_move_offset, already_moved | set(individuals),
+                list(to_move), to_move_offset,
+                already_moved | set(individuals),
             )
 
         return len(individuals) + other_moved
@@ -877,7 +864,6 @@ class Layout:
             sorted_intervals = sorted(
                 rank_to_individuals[key], key=lambda x: (x.left, x.right),
             )
-            # print(list(map(lambda x: x.vertex, sorted_intervals)))
             result.append([x.vertex for x in sorted_intervals])
 
         return cast(list[list[Individual]], result)
