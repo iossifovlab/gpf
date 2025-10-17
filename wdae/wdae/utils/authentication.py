@@ -1,6 +1,6 @@
 """Module containing a custom OAuth2 authentication class."""
 
-from typing import Callable
+from collections.abc import Callable
 
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse

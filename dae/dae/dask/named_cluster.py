@@ -4,7 +4,6 @@ import os
 from collections.abc import Callable
 from typing import Any, cast
 
-import dask
 import dask.config
 from distributed.client import Client
 from distributed.deploy import Cluster  # pyright: ignore

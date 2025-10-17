@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Type, cast
+from typing import cast
 
 from django.contrib.auth.models import Group
 from django.test.client import Client
@@ -57,7 +57,7 @@ def test_unauthenticated_cant_get_all_users(db: None, client: Client) -> None:
 
 
 def test_admin_can_create_new_users(
-    admin_client: Client, user_model: Type[WdaeUser],
+    admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {
@@ -73,7 +73,7 @@ def test_admin_can_create_new_users(
 
 
 def test_new_user_name_can_be_blank(
-    admin_client: Client, user_model: Type[WdaeUser],
+    admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {"email": "new@new.com", "name": ""}
@@ -87,7 +87,7 @@ def test_new_user_name_can_be_blank(
 
 
 def test_admin_can_create_new_user_with_groups(
-    admin_client: Client, user_model: Type[WdaeUser], empty_group: Group,
+    admin_client: Client, user_model: type[WdaeUser], empty_group: Group,
 ) -> None:
     url = "/api/v3/users"
     data = {"email": "new@new.com", "groups": [empty_group.name]}
@@ -285,7 +285,7 @@ def test_single_admin_cant_remove_superuser_group_from_self(
 
 
 def test_two_admins_can_not_remove_superuser_group_from_self(
-    admin: WdaeUser, admin_client: Client, user_model: Type[WdaeUser],
+    admin: WdaeUser, admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     other_superuser = user_model.objects.create_superuser(
         "other_admin@test.com", "supersecret",
@@ -314,7 +314,7 @@ def test_two_admins_can_not_remove_superuser_group_from_self(
 
 
 def test_two_admins_can_remove_superuser_group_from_other(
-    admin: WdaeUser, admin_client: Client, user_model: Type[WdaeUser],
+    admin: WdaeUser, admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     other_superuser = user_model.objects.create_superuser(
         "other_admin@test.com", "supersecret",
@@ -342,7 +342,7 @@ def test_two_admins_can_remove_superuser_group_from_other(
 
 
 def test_admin_can_delete_user(
-    admin_client: Client, user_model: Type[WdaeUser],
+    admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     user = user_model.objects.create(email="test@test.com")
     user_id = user.pk
@@ -396,7 +396,7 @@ def test_resetting_user_password_does_not_deauthenticates_them(
 
 
 def test_searching_by_email_finds_only_single_user(
-    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
+    admin_client: Client, active_user: WdaeUser, user_model: type[WdaeUser],
 ) -> None:
     assert user_model.objects.count() > 1
 
@@ -438,7 +438,7 @@ def test_searching_by_email(
 
 
 def test_user_create_email_case_insensitive(
-    admin_client: Client, user_model: Type[WdaeUser],
+    admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {
@@ -457,7 +457,7 @@ def test_user_create_email_case_insensitive(
 
 
 def test_user_create_email_case_insensitive_with_groups(
-    admin_client: Client, user_model: Type[WdaeUser],
+    admin_client: Client, user_model: type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {
@@ -476,7 +476,7 @@ def test_user_create_email_case_insensitive_with_groups(
 
 
 def test_user_create_update_case_sensitive_groups(
-        admin_client: Client, user_model: Type[WdaeUser]) -> None:
+        admin_client: Client, user_model: type[WdaeUser]) -> None:
 
     url = "/api/v3/users"
 
@@ -525,7 +525,7 @@ def test_user_create_update_case_sensitive_groups(
 
 
 def test_admin_cannot_delete_own_user(
-    admin_client: Client, admin: WdaeUser, user_model: Type[WdaeUser],
+    admin_client: Client, admin: WdaeUser, user_model: type[WdaeUser],
 ) -> None:
     url = f"/api/v3/users/{admin.id}"
     response = admin_client.delete(url)
@@ -534,7 +534,7 @@ def test_admin_cannot_delete_own_user(
 
 
 def test_admin_can_password_reset(
-    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
+    admin_client: Client, active_user: WdaeUser, user_model: type[WdaeUser],
 ) -> None:
 
     url = f"/api/v3/users/{active_user.id}/password_reset"
@@ -545,7 +545,7 @@ def test_admin_can_password_reset(
 
 
 def test_non_admin_can_not_password_reset(
-    user_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
+    user_client: Client, active_user: WdaeUser, user_model: type[WdaeUser],
 ) -> None:
 
     url = f"/api/v3/users/{active_user.id}/password_reset"
@@ -556,7 +556,7 @@ def test_non_admin_can_not_password_reset(
 
 
 def test_admin_password_reset_of_nonexiting_user_fails(
-    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
+    admin_client: Client, active_user: WdaeUser, user_model: type[WdaeUser],
 ) -> None:
 
     url = "/api/v3/users/0/password_reset"
