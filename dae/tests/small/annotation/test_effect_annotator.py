@@ -224,3 +224,37 @@ def test_effect_annotator_gene_lists(
         annotatable = VCFAllele("chr1", 1, "A", "T")
         result = annotator.annotate(annotatable, annotate_context)
         assert result[f"{target_gene_list}_gene_list"] == expected_gene_list
+
+
+@pytest.mark.parametrize(
+    "attribute, expected", [
+        ("worst_effect", False),
+        ("gene_effects", False),
+        ("worst_effect_genes", False),
+        ("worst_effect_gene_list", True),
+    ],
+)
+def test_effect_annotator_attributes(
+    grr: GenomicResourceRepo,
+    attribute: str,
+    expected: bool,  # noqa: FBT001
+) -> None:
+    genome = "t4c8_genome"
+    gene_models = "t4c8_genes"
+    config = textwrap.dedent(f"""
+        - effect_annotator:
+            genome: {genome}
+            gene_models: {gene_models}
+            attributes:
+              - {attribute}
+        """)
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
+
+    with annotation_pipeline.open() as pipeline:
+        annotator = pipeline.annotators[0]
+
+        assert len(annotator.attributes) == 1
+        attr = annotator.attributes[0]
+        assert attr.name == attribute
+        assert attr.internal == expected

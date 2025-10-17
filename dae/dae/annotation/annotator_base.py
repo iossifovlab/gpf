@@ -4,6 +4,10 @@ from __future__ import annotations
 import abc
 import os
 from collections.abc import Sequence
+from dataclasses import (
+    dataclass,
+    field,
+)
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
@@ -13,21 +17,53 @@ from dae.annotation.annotation_config import AnnotatorInfo
 from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
 
 
+@dataclass
+class AttributeDesc:
+    """Holds default attribute configuration for annotators."""
+
+    name: str
+    type: str
+    description: str
+    default: bool = True
+    internal: bool = False
+    params: dict[str, Any] = field(default_factory=dict)
+
+
 class AnnotatorBase(Annotator):
     """Base implementation of the `Annotator` class."""
 
-    def __init__(self, pipeline: AnnotationPipeline | None,
-                 info: AnnotatorInfo,
-                 source_type_desc: dict[str, tuple[str, str]]):
+    def __init__(
+        self, pipeline: AnnotationPipeline | None,
+        info: AnnotatorInfo,
+        source_type_desc: dict[str, tuple[str, str] | AttributeDesc],
+    ):
+        self.attribute_definitions = {}
+        for name, attr_desc in source_type_desc.items():
+            if isinstance(attr_desc, tuple):
+                self.attribute_definitions[name] = AttributeDesc(
+                    name=name,
+                    type=attr_desc[0],
+                    description=attr_desc[1],
+                )
+            elif isinstance(attr_desc, AttributeDesc):
+                self.attribute_definitions[name] = attr_desc
+            else:
+                raise TypeError(
+                    f"Invalid attribute description for source '{name}'"
+                    f" in annotator {info.type}")
+
         for attribute_config in info.attributes:
             if attribute_config.source not in source_type_desc:
                 raise ValueError(
                     f"The attribute source '{attribute_config.source}'"
                     " is not supported for the annotator"
                     f" {info.type}")
-            att_type, att_desc = source_type_desc[attribute_config.source]
-            attribute_config.type = att_type
-            attribute_config.description = att_desc
+            attr_desc = self.attribute_definitions[attribute_config.source]
+            attribute_config.type = attr_desc.type
+            attribute_config.description = attr_desc.description
+            if attribute_config.internal is None:
+                attribute_config.internal = attr_desc.internal
+
         self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
         super().__init__(pipeline, info)
 
