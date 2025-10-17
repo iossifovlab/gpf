@@ -295,10 +295,17 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
                 if gene_effect[1] == effect_type
             ]
         else:
-            raise ValueError(
-                f"{effect_type} does not match any effect type or group",
-            )
+            return [[], [effect_type]]
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
+
+    @classmethod
+    def filter_genes(
+        cls, effects: list[AnnotationEffect],
+        effect_type: str,
+    ) -> list[str]:
+        """Filter genes by effect type or group."""
+        gene_effects = cls.filter_gene_effects(effects, effect_type)
+        return list(set(gene_effects[0]))
 
     @classmethod
     def effects_description(

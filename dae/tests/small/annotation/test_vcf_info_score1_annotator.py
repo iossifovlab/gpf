@@ -82,7 +82,7 @@ def test_vcf_info_config_annotation(
     assert len(pipeline.get_attributes()) == 1
     att = pipeline.get_attributes()[0]
 
-    assert (att.name, att.source, att.internal) == ("score1_c", "C", False)
+    assert (att.name, att.source, att.internal) == ("score1_c", "C", None)
 
 
 @pytest.mark.parametrize("vcf_allele,expected", [

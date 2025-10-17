@@ -80,7 +80,7 @@ class AttributeInfo:
     """Defines annotation attribute configuration."""
 
     def __init__(self, name: str, source: str, *,
-                 internal: bool,
+                 internal: bool | None,
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  _type: str = "str", description: str = "",
                  documentation: str | None = None):
@@ -97,7 +97,7 @@ class AttributeInfo:
 
     name: str
     source: str
-    internal: bool
+    internal: bool | None
     parameters: ParamsUsageMonitor
     type: str = "str"           # str, int, float, annotatable, or object
     description: str = ""       # interpreted as md
@@ -417,7 +417,10 @@ class AnnotationConfigParser:
 
         name = name or source
         source = source or name
-        internal = bool(attribute_config.get("internal", False))
+
+        internal = attribute_config.get("internal")
+        if internal is not None:
+            internal = bool(internal)
 
         assert source is not None
         if not isinstance(name, str):

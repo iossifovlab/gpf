@@ -168,6 +168,7 @@ def build_annotation_pipeline(
                 else:
                     params._data["work_dir"] = Path("./work")  # noqa: SLF001
             params._used_keys.add("work_dir")  # noqa: SLF001
+
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
