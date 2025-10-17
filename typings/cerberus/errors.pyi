@@ -53,111 +53,97 @@ class ValidationError:
     """A simple class to store and query basic error information."""
     def __init__(self, document_path, schema_path, code, rule, constraint, value, info) -> None:
         ...
-    
+
     def __eq__(self, other) -> bool:
         """Assumes the errors relate to the same document and schema."""
-        ...
-    
+
     def __hash__(self) -> int:
         """Expects that all other properties are transitively determined."""
-        ...
-    
+
     def __lt__(self, other) -> bool:
         ...
-    
-    def __repr__(self): # -> str:
+
+    def __repr__(self):  # -> str:
         ...
-    
+
     @property
-    def child_errors(self): # -> None:
+    def child_errors(self):  # -> None:
         """
         A list that contains the individual errors of a bulk validation error.
         """
-        ...
-    
+
     @property
-    def definitions_errors(self): # -> defaultdict[Any, list[Any]] | None:
-        """
+    def definitions_errors(self):  # -> defaultdict[Any, list[Any]] | None:
+        r"""
         Dictionary with errors of an \*of-rule mapped to the index of the definition it
         occurred in. Returns :obj:`None` if not applicable.
         """
-        ...
-    
+
     @property
-    def field(self): # -> None:
+    def field(self):  # -> None:
         """Field of the contextual mapping, possibly :obj:`None`."""
-        ...
-    
+
     @property
-    def is_group_error(self): # -> bool:
+    def is_group_error(self):  # -> bool:
         """``True`` for errors of bulk validations."""
-        ...
-    
+
     @property
-    def is_logic_error(self): # -> bool:
-        """
+    def is_logic_error(self):  # -> bool:
+        r"""
         ``True`` for validation errors against different schemas with \*of-rules.
         """
-        ...
-    
-    @property
-    def is_normalization_error(self): # -> bool:
-        """``True`` for normalization errors."""
-        ...
-    
 
+    @property
+    def is_normalization_error(self):  # -> bool:
+        """``True`` for normalization errors."""
 
 class ErrorList(list):
     """
     A list for :class:`~cerberus.errors.ValidationError` instances that can be queried
     with the ``in`` keyword for a particular :class:`~cerberus.errors.ErrorDefinition`.
     """
-    def __contains__(self, error_definition): # -> bool:
+    def __contains__(self, error_definition):  # -> bool:
         ...
-    
-
 
 class ErrorTreeNode(MutableMapping):
     __slots__ = ...
     def __init__(self, path, parent_node) -> None:
         ...
-    
-    def __contains__(self, item): # -> bool:
+
+    def __contains__(self, item):  # -> bool:
         ...
-    
-    def __delitem__(self, key): # -> None:
+
+    def __delitem__(self, key):  # -> None:
         ...
-    
-    def __iter__(self): # -> Iterator[Any]:
+
+    def __iter__(self):  # -> Iterator[Any]:
         ...
-    
-    def __getitem__(self, item): # -> None:
+
+    def __getitem__(self, item):  # -> None:
         ...
-    
-    def __len__(self): # -> int:
+
+    def __len__(self):  # -> int:
         ...
-    
-    def __repr__(self): # -> str:
+
+    def __repr__(self):  # -> str:
         ...
-    
-    def __setitem__(self, key, value): # -> None:
+
+    def __setitem__(self, key, value):  # -> None:
         ...
-    
+
     def __str__(self) -> str:
         ...
-    
+
     @property
-    def depth(self): # -> int:
+    def depth(self):  # -> int:
         ...
-    
+
     @property
     def tree_type(self):
         ...
-    
-    def add(self, error): # -> None:
-        ...
-    
 
+    def add(self, error):  # -> None:
+        ...
 
 class ErrorTree(ErrorTreeNode):
     """
@@ -166,34 +152,29 @@ class ErrorTree(ErrorTreeNode):
     """
     def __init__(self, errors=...) -> None:
         ...
-    
-    def add(self, error): # -> None:
+
+    def add(self, error):  # -> None:
         """
         Add an error to the tree.
 
         :param error: :class:`~cerberus.errors.ValidationError`
         """
-        ...
-    
-    def fetch_errors_from(self, path): # -> ErrorList:
+
+    def fetch_errors_from(self, path):  # -> ErrorList:
         """
         Returns all errors for a particular path.
 
         :param path: :class:`tuple` of :term:`hashable` s.
         :rtype: :class:`~cerberus.errors.ErrorList`
         """
-        ...
-    
-    def fetch_node_from(self, path): # -> Self | None:
+
+    def fetch_node_from(self, path):  # -> Self | None:
         """
         Returns a node for a path.
 
         :param path: Tuple of :term:`hashable` s.
         :rtype: :class:`~cerberus.errors.ErrorTreeNode` or :obj:`None`
         """
-        ...
-    
-
 
 class DocumentErrorTree(ErrorTree):
     """
@@ -202,7 +183,6 @@ class DocumentErrorTree(ErrorTree):
     """
     tree_type = ...
 
-
 class SchemaErrorTree(ErrorTree):
     """
     Implements a dict-like class to query errors by indexes following the structure of
@@ -210,14 +190,12 @@ class SchemaErrorTree(ErrorTree):
     """
     tree_type = ...
 
-
 class BaseErrorHandler:
     """Base class for all error handlers.
     Subclasses are identified as error-handlers with an instance-test."""
     def __init__(self, *args, **kwargs) -> None:
         """Optionally initialize a new instance."""
-        ...
-    
+
     def __call__(self, errors):
         """
         Returns errors in a handler-specific format.
@@ -227,12 +205,10 @@ class BaseErrorHandler:
                       :class:`~cerberus.errors.ValidationError` instances or a
                       :class:`~cerberus.Validator` instance
         """
-        ...
-    
+
     def __iter__(self):
         """Be a superhero and implement an iterator over errors."""
-        ...
-    
+
     def add(self, error):
         """
         Add an error to the errors' container object of a handler.
@@ -240,9 +216,8 @@ class BaseErrorHandler:
         :param error: The error to add.
         :type error: :class:`~cerberus.errors.ValidationError`
         """
-        ...
-    
-    def emit(self, error): # -> None:
+
+    def emit(self, error):  # -> None:
         """
         Optionally emits an error in the handler's format to a stream. Or light a LED,
         or even shut down a power plant.
@@ -250,18 +225,16 @@ class BaseErrorHandler:
         :param error: The error to emit.
         :type error: :class:`~cerberus.errors.ValidationError`
         """
-        ...
-    
-    def end(self, validator): # -> None:
+
+    def end(self, validator):  # -> None:
         """
         Gets called when a validation ends.
 
         :param validator: The calling validator.
         :type validator: :class:`~cerberus.Validator`
         """
-        ...
-    
-    def extend(self, errors): # -> None:
+
+    def extend(self, errors):  # -> None:
         """
         Adds all errors to the handler's container object.
 
@@ -269,27 +242,21 @@ class BaseErrorHandler:
         :type errors: :term:`iterable` of
                       :class:`~cerberus.errors.ValidationError` instances
         """
-        ...
-    
-    def start(self, validator): # -> None:
+
+    def start(self, validator):  # -> None:
         """
         Gets called when a validation starts.
 
         :param validator: The calling validator.
         :type validator: :class:`~cerberus.Validator`
         """
-        ...
-    
-
 
 class ToyErrorHandler(BaseErrorHandler):
     def __call__(self, *args, **kwargs):
         ...
-    
-    def clear(self): # -> None:
-        ...
-    
 
+    def clear(self):  # -> None:
+        ...
 
 def encode_unicode(f):
     """Cerberus error messages expect regular binary strings.
@@ -298,7 +265,6 @@ def encode_unicode(f):
     This decorator ensures that if legacy Python is used unicode
     strings are encoded before passing to a function.
     """
-    ...
 
 class BasicErrorHandler(BaseErrorHandler):
     """
@@ -308,30 +274,26 @@ class BasicErrorHandler(BaseErrorHandler):
     messages = ...
     def __init__(self, tree=...) -> None:
         ...
-    
-    def __call__(self, errors): # -> dict[Any, Any]:
+
+    def __call__(self, errors):  # -> dict[Any, Any]:
         ...
-    
+
     def __str__(self) -> str:
         ...
-    
-    @property
-    def pretty_tree(self): # -> dict[Any, Any]:
-        ...
-    
-    @encode_unicode
-    def add(self, error): # -> None:
-        ...
-    
-    def clear(self): # -> None:
-        ...
-    
-    def start(self, validator): # -> None:
-        ...
-    
 
+    @property
+    def pretty_tree(self):  # -> dict[Any, Any]:
+        ...
+
+    @encode_unicode
+    def add(self, error):  # -> None:
+        ...
+
+    def clear(self):  # -> None:
+        ...
+
+    def start(self, validator):  # -> None:
+        ...
 
 class SchemaErrorHandler(BasicErrorHandler):
     messages = ...
-
-

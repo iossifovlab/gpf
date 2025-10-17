@@ -2,7 +2,6 @@
 import json
 import re
 from datetime import timedelta
-from typing import Tuple
 
 from django.test.client import Client
 from django.utils import timezone
@@ -166,7 +165,7 @@ def test_email_auth_unsuccessful(
 
 def test_failed_auth_attempts(
     db: None, user: WdaeUser, client: Client,  # noqa: ARG001
-    tokens: Tuple[AccessToken, AccessToken],  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if the user is allowed four failed
     # login attempts before being locked out.

@@ -139,8 +139,8 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         if not self.study.has_pheno_data:
             raise KeyError
 
-        search_term = data.get("search_term", None)
-        instrument = data.get("instrument", None)
+        search_term = data.get("search_term")
+        instrument = data.get("instrument")
 
         if (instrument is not None
                 and instrument != ""
@@ -213,8 +213,8 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         if not self.study.has_pheno_data:
             raise KeyError
 
-        search_term = data.get("search_term", None)
-        instrument = data.get("instrument", None)
+        search_term = data.get("search_term")
+        instrument = data.get("instrument")
 
         if (instrument is not None
                 and instrument != ""
@@ -231,8 +231,8 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         if not self.study or not self.study.has_pheno_data:
             raise KeyError
 
-        search_term = data.get("search_term", None)
-        instrument = data.get("instrument", None)
+        search_term = data.get("search_term")
+        instrument = data.get("instrument")
 
         if (instrument is not None
                 and instrument != ""

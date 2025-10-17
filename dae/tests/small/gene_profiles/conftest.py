@@ -147,12 +147,14 @@ def gp_gpf_instance(
 
     return gpf_instance
 
+
 @pytest.fixture
 def gpdb_write(
         tmp_path: pathlib.Path,
         gp_config: Box) -> GeneProfileDBWriter:
     gpdb_filename = str(tmp_path / "gpdb")
     return GeneProfileDBWriter(gp_config, gpdb_filename)
+
 
 @pytest.fixture
 def local_gpf_instance(

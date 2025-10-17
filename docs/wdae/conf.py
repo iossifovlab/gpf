@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: skip-file
 # type: ignore
 # wdae documentation build configuration file, created by
@@ -24,7 +23,9 @@
 # Enabling Django
 import os
 import sys
+
 import django
+
 sys.path.insert(0, os.path.abspath(".."))
 os.environ["DJANGO_SETTINGS_MODULE"] = "wdae.settings"
 django.setup()

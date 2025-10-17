@@ -7,6 +7,7 @@ from sqlglot import expressions
 def to_duckdb_transpile(query: Any) -> str:
     return sqlglot.transpile(query.sql(), read="duckdb")[0]
 
+
 def glot_and(left_expr: Any, right_expr: Any) -> Any:
     return left_expr.and_(right_expr)
 

@@ -15,7 +15,6 @@ def main(
     argv: list[str] | None = None,
 ) -> None:
     """Simple gpdb converter from sqlite to duckdb."""
-    # flake8: noqa: C901
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Gene profiles database converter from sqlite to duckdb"
     parser = argparse.ArgumentParser(description=description)

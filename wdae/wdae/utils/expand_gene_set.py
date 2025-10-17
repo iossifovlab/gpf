@@ -13,8 +13,8 @@ def expand_gene_set(data: dict) -> dict:
         query = data.get("geneSet")
         if query is None:
             query = {}
-        gene_sets_collection = query.get("geneSetsCollection", None)
-        gene_set = query.get("geneSet", None)
+        gene_sets_collection = query.get("geneSetsCollection")
+        gene_set = query.get("geneSet")
 
         if gene_sets_collection is not None or gene_set is not None:
             gene_sets_collection_id = gene_sets_collection
@@ -36,8 +36,8 @@ def expand_gene_syms(data: dict) -> dict:
     query = data.get("geneSet")
     if query is None:
         query = {}
-    gene_sets_collection = query.get("geneSetsCollection", None)
-    gene_set = query.get("geneSet", None)
+    gene_sets_collection = query.get("geneSetsCollection")
+    gene_set = query.get("geneSet")
 
     denovo_gene_sets_types = get_denovo_gene_set_spec(
         query.get("geneSetsTypes", []),

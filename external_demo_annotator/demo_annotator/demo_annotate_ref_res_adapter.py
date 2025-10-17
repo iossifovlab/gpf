@@ -17,8 +17,6 @@ from dae.annotation.annotation_pipeline import (
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 
-# ruff: noqa: S607
-
 
 class DemoAnnotateGenomeAdapter(AnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""

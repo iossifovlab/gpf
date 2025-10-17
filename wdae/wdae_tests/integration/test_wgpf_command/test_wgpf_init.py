@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
-from typing import Callable, ContextManager
+from collections.abc import Callable
+from typing import ContextManager
 
 import pytest
 from gpf_instance.gpf_instance import WGPFInstance

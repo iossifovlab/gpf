@@ -3,7 +3,7 @@ import pytest
 from gpf_instance.gpf_instance import WGPFInstance
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_get_gene_gene_scores_db(t4c8_wgpf_instance: WGPFInstance) -> None:
     gene_scores_db = t4c8_wgpf_instance.gene_scores_db
 

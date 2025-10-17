@@ -52,7 +52,7 @@ def test_parse_person_set_collection_config_toml(
     assert len(psc_config.domain) == 1
     assert psc_config.domain[0].id == "unaffected"
     assert psc_config.domain[0].name == "Unaffected"
-    assert psc_config.domain[0].values == ("unaffected",)  # noqa: PD011
+    assert psc_config.domain[0].values == ("unaffected",)
 
 
 @pytest.mark.parametrize("to_delete, match_message", [

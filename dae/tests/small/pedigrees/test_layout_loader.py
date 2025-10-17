@@ -1,15 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import List
 
 from dae.pedigrees.family import Family
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 
 
 def assert_positions(
-    expected: List[List[IndividualWithCoordinates]],
-    resulted: List[List[IndividualWithCoordinates]],
+    expected: list[list[IndividualWithCoordinates]],
+    resulted: list[list[IndividualWithCoordinates]],
 ) -> None:
-    for expected_level, resulted_level in zip(expected, resulted):
+    for expected_level, resulted_level in zip(expected, resulted, strict=False):
         expected_level.sort(
             key=lambda layout:
             layout.individual.member.person_id,  # type: ignore
@@ -20,7 +19,7 @@ def assert_positions(
         )
 
         for expected_layout, resulted_layout in zip(
-            expected_level, resulted_level,
+            expected_level, resulted_level, strict=False,
         ):
             assert str(expected_layout) == str(resulted_layout)
 

@@ -136,7 +136,7 @@ def test_aggregate_attributes(vep_annotator: VEPCacheAnnotator) -> None:
     assert contexts[0]["sample2"] == "4;5;6"
 
 
-@pytest.mark.skip()  # FIXME
+@pytest.mark.skip  # FIXME
 def test_read_output(
     vep_annotator: VEPCacheAnnotator, vep_fixtures: Path,
 ) -> None:

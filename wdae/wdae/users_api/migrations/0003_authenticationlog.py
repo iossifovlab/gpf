@@ -6,20 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users_api', '0002_auto_20190424_0751'),
+        ("users_api", "0002_auto_20190424_0751"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AuthenticationLog',
+            name="AuthenticationLog",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(max_length=254)),
-                ('time', models.DateTimeField()),
-                ('failed_attempt', models.IntegerField()),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("email", models.EmailField(max_length=254)),
+                ("time", models.DateTimeField()),
+                ("failed_attempt", models.IntegerField()),
             ],
             options={
-                'db_table': 'authentication_log',
+                "db_table": "authentication_log",
             },
         ),
     ]

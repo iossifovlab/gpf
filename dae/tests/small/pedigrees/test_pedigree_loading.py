@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from collections.abc import Callable
 from io import StringIO
-from typing import Callable
 
 import numpy as np
 import pandas as pd
