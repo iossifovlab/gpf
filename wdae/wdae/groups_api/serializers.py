@@ -15,8 +15,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
     def create(self, validated_data: dict[str, str]) -> Group:
-        group = Group.objects.create(name=validated_data["name"])
-        return group
+        return Group.objects.create(name=validated_data["name"])
 
 
 class GroupSerializer(serializers.ModelSerializer):

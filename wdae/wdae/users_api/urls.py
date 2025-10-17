@@ -33,4 +33,5 @@ urlpatterns = [
         views.FederationCredentials.as_view(),
         name="federation_credentials",
     ),
-] + router.urls
+    *router.urls,
+]

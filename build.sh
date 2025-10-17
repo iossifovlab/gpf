@@ -186,7 +186,12 @@ EOT
       /opt/conda/bin/conda run --no-capture-output -n gpf \
         ruff check --exclude impala_storage \
         --exclude impala2_storage \
+        --exclude typings \
+        --exclude migrations \
+        --exclude docs \
+        --exclude wdae_tests \
         --exclude versioneer.py \
+        --exclude _version.py \
         --exit-zero \
         --output-format=pylint \
         --output-file=/wd/results/ruff_report . || true'
