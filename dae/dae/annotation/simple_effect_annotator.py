@@ -2,6 +2,7 @@ import logging
 import textwrap
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable
@@ -33,6 +34,13 @@ def build_simple_effect_annotator(
     pipeline: AnnotationPipeline, info: AnnotatorInfo,
 ) -> Annotator:
     return SimpleEffectAnnotator(pipeline, info)
+
+
+@dataclass(eq=True, frozen=True, repr=True, unsafe_hash=True)
+class SimpleEffect:
+    effect_type: str
+    transcript_id: str
+    gene: str
 
 
 class SimpleEffectAnnotator(AnnotatorBase):
@@ -101,7 +109,13 @@ class SimpleEffectAnnotator(AnnotatorBase):
             ),
             "gene_effects": AttributeDesc(
                 name="gene_effects", type="str",
-                description="Comma separated list of gene:effect pairs.",
+                description="list of gene:effect pairs.",
+                internal=False,
+                default=False,
+            ),
+            "effect_details": AttributeDesc(
+                name="effect_details", type="str",
+                description="list of transcript:gene:effect tuples.",
                 internal=False,
                 default=False,
             ),
@@ -162,16 +176,23 @@ Simple effect annotator.
         gene_effects: list[tuple[str, str]] = []
         worst_effect = None
         worst_effect_gene_list: list[str] = []
-        for effect in self.effect_types():
-            genes = annotation.get(effect)
-            if genes is not None:
+        details: list[str] = []
+        for effect_type in self.effect_types():
+            simple_effects = annotation.get(effect_type)
+            if simple_effects is not None:
+                genes = {se.gene for se in simple_effects}
                 if worst_effect is None:
-                    worst_effect = effect
+                    worst_effect = effect_type
                     worst_effect_gene_list = sorted(genes)
-                result[effect + "_gene_list"] = sorted(genes)
-                result[effect + "_genes"] = ",".join(sorted(genes))
+                result[effect_type + "_gene_list"] = sorted(genes)
+                result[effect_type + "_genes"] = ",".join(sorted(genes))
                 gene_list = gene_list | genes
-                gene_effects.extend((gene, effect) for gene in sorted(genes))
+                gene_effects.extend(
+                    (gene, effect_type) for gene in sorted(genes))
+                details.extend(
+                    f"{se.transcript_id}:{se.gene}:{se.effect_type}"
+                    for se in sorted(
+                        simple_effects, key=lambda x: (x.transcript_id)))
         result["gene_list"] = sorted(gene_list)
         result["genes"] = ",".join(sorted(gene_list))
         result["worst_effect"] = worst_effect
@@ -179,6 +200,7 @@ Simple effect annotator.
         result["worst_effect_gene_list"] = worst_effect_gene_list
         result["gene_effects"] = "|".join(
             f"{gene}:{effect}" for gene, effect in gene_effects)
+        result["effect_details"] = "|".join(details)
         for attr in self.get_info().attributes:
             if attr.source not in result:
                 result[attr.source] = None
@@ -251,26 +273,21 @@ Simple effect annotator.
         chrom: str,
         beg: int,
         end: int,
-        transcripts: list[TranscriptModel],
+        tx: TranscriptModel,
         *,
         func_name: str,
         classification: str,
-    ) -> tuple[str, set[str]] | None:
+    ) -> SimpleEffect | None:
         """Call a region with a specific classification."""
-        genes = set()
-        for transcript in transcripts:
-            if transcript.gene in genes:
-                continue
+        regions = getattr(self, func_name)(tx)
 
-            regions = getattr(self, func_name)(transcript)
-
-            for region in regions:
-                assert region.chrom == chrom
-                if region.stop >= beg and region.start <= end:
-                    genes.add(transcript.gene)
-                    break
-        if genes:
-            return classification, genes
+        for region in regions:
+            assert region.chrom == chrom
+            if region.stop >= beg and region.start <= end:
+                return SimpleEffect(
+                    effect_type=classification,
+                    transcript_id=tx.tr_id,
+                    gene=tx.gene)
         return None
 
     def run_annotate(
@@ -278,71 +295,91 @@ Simple effect annotator.
         chrom: str,
         beg: int,
         end: int,
-    ) -> dict[str, set[str]]:
+    ) -> dict[str, set[SimpleEffect]]:
         """Return classification with a set of affected genes."""
         assert self.gene_models.is_loaded()
 
         tms = self.gene_models.gene_models_by_location(chrom, beg, end)
+        if len(tms) == 0:
+            return {"intergenic": set()}
+
         assert all((beg <= t.tx[1] and end >= t.tx[0]) for t in tms)
 
-        result: dict[str, set[str]] = defaultdict(set)
+        result: dict[str, set[SimpleEffect]] = defaultdict(set)
+        for tx in tms:
+            effect = self.call_region(
+                chrom,
+                beg,
+                end,
+                tx,
+                func_name="cds_regions",
+                classification="coding",
+            )
+            if effect:
+                result[effect.effect_type].add(effect)
+                continue
 
-        call: tuple[str, set[str]] | None = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="cds_regions",
-            classification="coding",
-        )
-        if call:
-            result[call[0]] = result[call[0]] | call[1]
+            effect = self.call_region(
+                chrom,
+                beg,
+                end,
+                tx,
+                func_name="cds_intron_regions",
+                classification="intercoding_intronic",
+            )
+            if effect:
+                result[effect.effect_type].add(effect)
+                continue
 
-        call = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="cds_intron_regions",
-            classification="intercoding_intronic",
-        )
-        if call:
-            result[call[0]] = result[call[0]] | call[1]
+            effect = self.call_region(
+                chrom,
+                beg,
+                end,
+                tx,
+                func_name="utr_regions",
+                classification="peripheral",
+            )
+            if effect:
+                result[effect.effect_type].add(effect)
+                continue
 
-        call = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="utr_regions",
-            classification="peripheral",
-        )
-        if call:
-            result[call[0]] = result[call[0]] | call[1]
+            effect = self.call_region(
+                chrom,
+                beg,
+                end,
+                tx,
+                func_name="utr_regions",
+                classification="peripheral",
+            )
+            if effect:
+                result[effect.effect_type].add(effect)
+                continue
 
-        call = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="peripheral_regions",
-            classification="peripheral",
-        )
-        if call:
-            result[call[0]] = result[call[0]] | call[1]
+            effect = self.call_region(
+                chrom,
+                beg,
+                end,
+                tx,
+                func_name="peripheral_regions",
+                classification="peripheral",
+            )
+            if effect:
+                result[effect.effect_type].add(effect)
+                continue
 
-        call = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="noncoding_regions",
-            classification="noncoding",
-        )
-        if call:
-            result[call[0]] = result[call[0]] | call[1]
+            effect = self.call_region(
+                chrom,
+                beg,
+                end,
+                tx,
+                func_name="noncoding_regions",
+                classification="noncoding",
+            )
+            if effect:
+                result[effect.effect_type].add(effect)
+                continue
 
-        if not result:
-            result["intergenic"] = set()
+            if not result:
+                result["intergenic"] = set()
 
         return dict(result)
