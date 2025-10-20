@@ -802,23 +802,6 @@ class EffectTypesMixin:
         return etl
 
     @classmethod
-    def build_effect_types_naming(
-        cls, effect_types: str | Iterable[str], *,
-        safe: bool = True,
-    ) -> list[str]:
-        """Build list of effect types appropriate for the UI."""
-        if isinstance(effect_types, str):
-            effect_types = effect_types.split(",")
-        assert isinstance(effect_types, list)
-        if safe:
-            assert all(
-                et in cls.EFFECT_TYPES
-                or et in cls.EFFECT_TYPES_MAPPING
-                for et in effect_types
-            )
-        return [cls.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types]
-
-    @classmethod
     def get_effect_types(
         cls, *, safe: bool = True, **kwargs: Any,
     ) -> list[str] | None:

@@ -383,9 +383,11 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             raise ValueError(
                 f"unexpected dask executor return None: {task_node}, {args}, "
                 f"{deps}, {params}")
+        assert future is not None
+
         self._task2future[task_node] = future
         self._future_key2task[str(future.key)] = task_node
-        return future
+        return cast(Future, future)
 
     def _get_future_or_result(self, task: Task) -> Any:
         future = self._task2future.get(task)
