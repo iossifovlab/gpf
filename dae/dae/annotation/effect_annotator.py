@@ -4,7 +4,6 @@ from typing import Any
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
     AnnotatorInfo,
 )
 from dae.annotation.annotation_pipeline import (
@@ -51,15 +50,7 @@ Annotator to identify the effect of the variant on protein coding.
 
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "worst_effect",
-                "effect_details",
-                "gene_effects",
-                {"name": "gene_list", "internal": True},
-            ])
-
-        super().__init__(pipeline, info, self._default_attributes())
+        super().__init__(pipeline, info, self._attributes_descriptions())
 
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes
@@ -76,7 +67,8 @@ Annotator to identify the effect of the variant on protein coding.
         )
 
     @staticmethod
-    def _default_attributes() -> dict[str, tuple[str, str] | AttributeDesc]:
+    def _attributes_descriptions() -> dict[
+            str, tuple[str, str] | AttributeDesc]:
         effect_gene_lists = {}
         effect_genes = {}
         for group in [
@@ -178,7 +170,8 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
-            "lgd_gene_list": [],
+            "worst_effect_gene_list": [],
+            "worst_effect_genes": "",
         })
         return attributes
 
@@ -200,7 +193,8 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
-            "lgd_gene_list": [],
+            "worst_effect_gene_list": [],
+            "worst_effect_genes": "",
         })
         return attributes
 
@@ -266,7 +260,7 @@ Annotator to identify the effect of the variant on protein coding.
             "worst_effect_genes": ",".join(worst_effect_genes),
         }
         for attr in self.attributes:
-            attr_desc = self.attribute_definitions[attr.source]
+            attr_desc = self.attribute_descriptions[attr.source]
             effect_type = attr_desc.params.get("effect_type")
             if effect_type is not None:
                 result[attr.name] = AnnotationEffect.filter_genes(

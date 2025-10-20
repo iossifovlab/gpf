@@ -178,7 +178,8 @@ class DeleteAttributesFromAWSFilter(Filter):
 
     def filter(self, data: AnnotationsWithSource) -> AnnotationsWithSource:
         for attr in self.to_remove:
-            del data.source[attr]
+            if attr in data.source:
+                del data.source[attr]
         return data
 
 
