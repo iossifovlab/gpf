@@ -236,7 +236,7 @@ class GenotypeStorageRegistry:
             pass
         finally:
             elapsed = time.time() - started
-            print(elapsed)
+            logger.debug("query variants elapsed: %.3f", elapsed)
 
     def query_summary_variants(
         self, study_ids: list[str], kwargs: dict[str, Any],

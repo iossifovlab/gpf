@@ -203,7 +203,6 @@ class MedianAggregator(Aggregator):
 
     def get_final(self) -> Any:
         self.values.sort()
-        print(self.values)
         if len(self.values) % 2 == 1:
             return self.values[math.floor(len(self.values) / 2)]
 
