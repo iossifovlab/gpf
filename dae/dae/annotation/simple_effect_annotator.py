@@ -1,5 +1,6 @@
 import logging
 import textwrap
+from collections import defaultdict
 from collections.abc import Sequence
 from typing import Any
 
@@ -38,26 +39,73 @@ class SimpleEffectAnnotator(AnnotatorBase):
     """Simple effect annotator class."""
 
     @staticmethod
-    def _attributes_descriptions() -> dict[str, AttributeDesc]:
+    def effect_types() -> list[str]:
+        return [
+            "coding",
+            "intercoding_intronic",
+            "peripheral",
+            "noncoding",
+            "intergenic",
+        ]
+
+    @staticmethod
+    def _attribute_descriptors() -> dict[str, AttributeDesc]:
+        gene_lists = {}
+        for effect in SimpleEffectAnnotator.effect_types()[:-1]:
+            gene_lists[f"{effect}_gene_list"] = AttributeDesc(
+                    name=f"{effect}_gene_list", type="objects",
+                    description=f"list of genes with {effect} effect.",
+                    internal=False,
+                    default=False,
+                    params={"effect_type": effect},
+                )
+            gene_lists[f"{effect}_genes"] = AttributeDesc(
+                    name=f"{effect}_genes", type="str",
+                    description=f"comma separated list of genes with "
+                    f"{effect} effect.",
+                    internal=False,
+                    default=False,
+                    params={"effect_type": effect},
+                )
+
         return {
-            "effect": AttributeDesc(
-                name="effect", type="str",
+            "worst_effect": AttributeDesc(
+                name="worst_effect", type="str",
                 description="The worst effect.",
                 internal=False,
                 default=True,
             ),
-            "genes": AttributeDesc(
-                name="genes", type="str",
-                description="The affected genes.",
+            "worst_effect_genes": AttributeDesc(
+                name="worst_effect_genes", type="str",
+                description="comma separated list of genes with worst effect.",
                 internal=False,
                 default=True,
             ),
+            "worst_effect_gene_list": AttributeDesc(
+                name="worst_effect_gene_list", type="objects",
+                description="list of genes with worst effect.",
+                internal=False,
+                default=False,
+            ),
             "gene_list": AttributeDesc(
                 name="gene_list", type="objects",
-                description="List of all genes.",
+                description="List of all affected genes.",
                 internal=True,
                 default=False,
             ),
+            "genes": AttributeDesc(
+                name="genes", type="str",
+                description="Comma separated list of all affected genes.",
+                internal=False,
+                default=False,
+            ),
+            "gene_effects": AttributeDesc(
+                name="gene_effects", type="str",
+                description="Comma separated list of gene:effect pairs.",
+                internal=False,
+                default=False,
+            ),
+            **gene_lists,
         }
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
@@ -89,7 +137,7 @@ Simple effect annotator.
         super().__init__(
             pipeline,
             info,
-            self._attributes_descriptions(),
+            self._attribute_descriptors(),
         )
 
         self.gene_models = gene_models
@@ -106,30 +154,51 @@ Simple effect annotator.
         if annotatable is None:
             return self._empty_result()
 
-        effect, gene_list = self.run_annotate(
+        annotation = self.run_annotate(
             annotatable.chrom, annotatable.position, annotatable.end_position)
-        genes = ",".join(gene_list)
 
-        return {
-            "effect": effect,
-            "genes": genes,
-            "gene_list": gene_list,
-        }
+        result: dict[str, Any] = {}
+        gene_list: set[str] = set()
+        gene_effects: list[tuple[str, str]] = []
+        worst_effect = None
+        worst_effect_gene_list: list[str] = []
+        for effect in self.effect_types():
+            genes = annotation.get(effect)
+            if genes is not None:
+                if worst_effect is None:
+                    worst_effect = effect
+                    worst_effect_gene_list = sorted(genes)
+                result[effect + "_gene_list"] = sorted(genes)
+                result[effect + "_genes"] = ",".join(sorted(genes))
+                gene_list = gene_list | genes
+                gene_effects.extend((gene, effect) for gene in sorted(genes))
+        result["gene_list"] = sorted(gene_list)
+        result["genes"] = ",".join(sorted(gene_list))
+        result["worst_effect"] = worst_effect
+        result["worst_effect_genes"] = ",".join(worst_effect_gene_list)
+        result["worst_effect_gene_list"] = worst_effect_gene_list
+        result["gene_effects"] = "|".join(
+            f"{gene}:{effect}" for gene, effect in gene_effects)
+        for attr in self.get_info().attributes:
+            if attr.source not in result:
+                result[attr.source] = None
+        return result
 
     def cds_intron_regions(
         self,
         transcript: TranscriptModel,
     ) -> list[Region]:
         """Return whether region is CDS intron."""
-        region: list[Region] = []
+        regions: list[Region] = []
+
         if not transcript.is_coding():
-            return region
+            return regions
         for index in range(len(transcript.exons) - 1):
             beg = transcript.exons[index].stop + 1
-            end = transcript.exons[index + 1].start + 1
+            end = transcript.exons[index + 1].start - 1
             if beg > transcript.cds[0] and end < transcript.cds[1]:
-                region.append(Region(transcript.chrom, beg, end))
-        return region
+                regions.append(Region(transcript.chrom, beg, end))
+        return regions
 
     def utr_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
         """Return whether the region is classified as UTR."""
@@ -210,14 +279,16 @@ Simple effect annotator.
         chrom: str,
         beg: int,
         end: int,
-    ) -> tuple[str, set[str]]:
+    ) -> dict[str, set[str]]:
         """Return classification with a set of affected genes."""
         assert self.gene_models.is_loaded()
 
         tms = self.gene_models.gene_models_by_location(chrom, beg, end)
         assert all((beg <= t.tx[1] and end >= t.tx[0]) for t in tms)
 
-        result = self.call_region(
+        result: dict[str, set[str]] = defaultdict(set)
+
+        call: tuple[str, set[str]] | None = self.call_region(
             chrom,
             beg,
             end,
@@ -225,11 +296,10 @@ Simple effect annotator.
             func_name="CDS_regions",
             classification="coding",
         )
+        if call:
+            result[call[0]] = result[call[0]] | call[1]
 
-        if result:
-            return result
-
-        result = self.call_region(
+        call = self.call_region(
             chrom,
             beg,
             end,
@@ -237,22 +307,21 @@ Simple effect annotator.
             func_name="utr_regions",
             classification="peripheral",
         )
+        if call:
+            result[call[0]] = result[call[0]] | call[1]
 
-        if result:
-            return result
-        result = self.call_region(
+        call = self.call_region(
             chrom,
             beg,
             end,
             tms,
             func_name="cds_intron_regions",
-            classification="inter-coding_intronic",
+            classification="intercoding_intronic",
         )
+        if call:
+            result[call[0]] = result[call[0]] | call[1]
 
-        if result:
-            return result
-
-        result = self.call_region(
+        call = self.call_region(
             chrom,
             beg,
             end,
@@ -260,10 +329,10 @@ Simple effect annotator.
             func_name="peripheral_regions",
             classification="peripheral",
         )
+        if call:
+            result[call[0]] = result[call[0]] | call[1]
 
-        if result:
-            return result
-        result = self.call_region(
+        call = self.call_region(
             chrom,
             beg,
             end,
@@ -271,7 +340,10 @@ Simple effect annotator.
             func_name="noncoding_regions",
             classification="noncoding",
         )
-        if result:
-            return result
+        if call:
+            result[call[0]] = result[call[0]] | call[1]
 
-        return "intergenic", set()
+        if not result:
+            result["intergenic"] = set()
+
+        return dict(result)

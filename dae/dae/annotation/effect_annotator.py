@@ -142,6 +142,11 @@ Annotator to identify the effect of the variant on protein coding.
                 "object", "List of all genes",
                 internal=True,
                 default=True),
+            "genes": AttributeDesc(
+                "genes",
+                "str", "Comma separated list of all affected genes.",
+                internal=False,
+                default=False),
             **effect_gene_lists,
             **effect_genes,
         }
@@ -169,6 +174,7 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
+            "genes": "",
             "worst_effect_gene_list": [],
             "worst_effect_genes": "",
         })
@@ -192,6 +198,7 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
+            "genes": "",
             "worst_effect_gene_list": [],
             "worst_effect_genes": "",
         })
@@ -255,6 +262,7 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects(effects),
             "gene_list": gene_list,
+            "genes": ",".join(gene_list),
             "worst_effect_gene_list": worst_effect_genes,
             "worst_effect_genes": ",".join(worst_effect_genes),
         }
