@@ -50,10 +50,19 @@ class SimpleEffectAnnotator(AnnotatorBase):
     def effect_types() -> list[str]:
         return [
             "coding",
-            "intercoding_intronic",
+            "inter-coding_intronic",
             "peripheral",
             "noncoding",
             "intergenic",
+        ]
+
+    @staticmethod
+    def _classification() -> list[tuple[str, str]]:
+        return [
+            ("coding", "cds_regions"),
+            ("inter-coding_intronic", "cds_intron_regions"),
+            ("peripheral", "peripheral_regions"),
+            ("noncoding", "noncoding_regions"),
         ]
 
     @staticmethod
@@ -242,6 +251,9 @@ Simple effect annotator.
         if not transcript.is_coding():
             return region
 
+        regions = transcript.utr5_regions()
+        regions.extend(transcript.utr3_regions())
+
         if transcript.cds[0] > transcript.tx[0]:
             region.append(
                 Region(
@@ -307,79 +319,17 @@ Simple effect annotator.
 
         result: dict[str, set[SimpleEffect]] = defaultdict(set)
         for tx in tms:
-            effect = self.call_region(
-                chrom,
-                beg,
-                end,
-                tx,
-                func_name="cds_regions",
-                classification="coding",
-            )
-            if effect:
-                result[effect.effect_type].add(effect)
-                continue
-
-            effect = self.call_region(
-                chrom,
-                beg,
-                end,
-                tx,
-                func_name="cds_intron_regions",
-                classification="intercoding_intronic",
-            )
-            if effect:
-                result[effect.effect_type].add(effect)
-                continue
-
-            effect = self.call_region(
-                chrom,
-                beg,
-                end,
-                tx,
-                func_name="utr_regions",
-                classification="peripheral",
-            )
-            if effect:
-                result[effect.effect_type].add(effect)
-                continue
-
-            effect = self.call_region(
-                chrom,
-                beg,
-                end,
-                tx,
-                func_name="utr_regions",
-                classification="peripheral",
-            )
-            if effect:
-                result[effect.effect_type].add(effect)
-                continue
-
-            effect = self.call_region(
-                chrom,
-                beg,
-                end,
-                tx,
-                func_name="peripheral_regions",
-                classification="peripheral",
-            )
-            if effect:
-                result[effect.effect_type].add(effect)
-                continue
-
-            effect = self.call_region(
-                chrom,
-                beg,
-                end,
-                tx,
-                func_name="noncoding_regions",
-                classification="noncoding",
-            )
-            if effect:
-                result[effect.effect_type].add(effect)
-                continue
-
-            if not result:
-                result["intergenic"] = set()
+            for effect_type, func_name in self._classification():
+                effect = self.call_region(
+                    chrom,
+                    beg,
+                    end,
+                    tx,
+                    func_name=func_name,
+                    classification=effect_type,
+                )
+                if effect:
+                    result[effect.effect_type].add(effect)
+                    break
 
         return dict(result)

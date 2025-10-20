@@ -40,7 +40,7 @@ def grr() -> GenomicResourceProtocolRepo:
 
 @pytest.mark.parametrize("annotatable, effect, genes", [
     (Position("foo", 2), "intergenic", ""),
-    (Position("foo", 7), "intercoding_intronic", "g1"),
+    (Position("foo", 7), "inter-coding_intronic", "g1"),
     (Position("foo", 14), "coding", "g1"),
     (Position("bar", 16), "peripheral", "g2"),
     (Region("bar", 14, 20), "coding", "g2"),
@@ -76,8 +76,8 @@ def test_basic(
     ("foo", 72, 72, {"peripheral": {"g6"}}),
     ("foo", 55, 55, {"peripheral": {"g6"}}),
     ("foo", 56, 56, {"coding": {"g6"}}),
-    ("foo", 62, 62, {"intercoding_intronic": {"g6"}}),
-    ("foo", 65, 65, {"intercoding_intronic": {"g6"}}),
+    ("foo", 62, 62, {"inter-coding_intronic": {"g6"}}),
+    ("foo", 65, 65, {"inter-coding_intronic": {"g6"}}),
     ("foo", 66, 66, {"coding": {"g6"}}),
 ])
 def test_run_annotate(
@@ -107,8 +107,8 @@ def test_run_annotate(
 @pytest.mark.parametrize(
     "annotatable, worst_effect, worst_genes, genes,gene_effects", [
         (Position("foo", 2), "intergenic", "", "", ""),
-        (Position("foo", 7), "intercoding_intronic", "g1", "g1",
-         "g1:intercoding_intronic|g1:peripheral"),
+        (Position("foo", 7), "inter-coding_intronic", "g1", "g1",
+         "g1:inter-coding_intronic|g1:peripheral"),
         (Position("foo", 14), "coding", "g1", "g1", "g1:coding"),
         (Region("foo", 2, 14), "coding", "g1", "g1", "g1:coding"),
     ],
@@ -136,8 +136,8 @@ def test_full_annotation(
                 - coding_genes
                 - peripheral_gene_list
                 - peripheral_genes
-                - intercoding_intronic_gene_list
-                - intercoding_intronic_genes
+                - inter-coding_intronic_gene_list
+                - inter-coding_intronic_genes
             """),
         grr)
 
@@ -176,9 +176,9 @@ def grr2() -> GenomicResourceProtocolRepo:
          "coding", "g1", "g1", "g1:coding|g1:peripheral",
          "tx1_1:g1:coding|tx2_1:g1:peripheral"),
         (Region("foo", 45, 46),
-         "intercoding_intronic", "g1", "g1",
-         "g1:intercoding_intronic|g1:peripheral",
-         "tx1_1:g1:intercoding_intronic|tx2_1:g1:peripheral"),
+         "inter-coding_intronic", "g1", "g1",
+         "g1:inter-coding_intronic|g1:peripheral",
+         "tx1_1:g1:inter-coding_intronic|tx2_1:g1:peripheral"),
     ],
 )
 def test_full_annotation2(
@@ -206,8 +206,8 @@ def test_full_annotation2(
                 - coding_genes
                 - peripheral_gene_list
                 - peripheral_genes
-                - intercoding_intronic_gene_list
-                - intercoding_intronic_genes
+                - inter-coding_intronic_gene_list
+                - inter-coding_intronic_genes
             """),
         grr2)
 
