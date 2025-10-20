@@ -200,16 +200,19 @@ Simple effect annotator.
                 regions.append(Region(transcript.chrom, beg, end))
         return regions
 
+    def cds_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
+        """Return whether the region is classified as coding."""
+        return transcript.cds_regions()
+
     def utr_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
         """Return whether the region is classified as UTR."""
         region: list[Region] = []
         if not transcript.is_coding():
             return region
 
-        utr5_regions = transcript.utr5_regions()
-        utr3_regions = transcript.utr3_regions()
-        utr3_regions.extend(utr3_regions)
-        return utr5_regions
+        regions = transcript.utr5_regions()
+        regions.extend(transcript.utr3_regions())
+        return regions
 
     def peripheral_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is peripheral."""
@@ -259,11 +262,7 @@ Simple effect annotator.
             if transcript.gene in genes:
                 continue
 
-            regions = []
-            if func_name == "CDS_regions":
-                regions = transcript.cds_regions()
-            else:
-                regions = getattr(self, func_name)(transcript)
+            regions = getattr(self, func_name)(transcript)
 
             for region in regions:
                 assert region.chrom == chrom
@@ -293,19 +292,8 @@ Simple effect annotator.
             beg,
             end,
             tms,
-            func_name="CDS_regions",
+            func_name="cds_regions",
             classification="coding",
-        )
-        if call:
-            result[call[0]] = result[call[0]] | call[1]
-
-        call = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="utr_regions",
-            classification="peripheral",
         )
         if call:
             result[call[0]] = result[call[0]] | call[1]
@@ -317,6 +305,17 @@ Simple effect annotator.
             tms,
             func_name="cds_intron_regions",
             classification="intercoding_intronic",
+        )
+        if call:
+            result[call[0]] = result[call[0]] | call[1]
+
+        call = self.call_region(
+            chrom,
+            beg,
+            end,
+            tms,
+            func_name="utr_regions",
+            classification="peripheral",
         )
         if call:
             result[call[0]] = result[call[0]] | call[1]
