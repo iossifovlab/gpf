@@ -80,7 +80,8 @@ def test_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
 def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
     resource = test_grr.get_resource("foobar_gene_set_collection")
     annotator = GeneSetAnnotator(
-        None, AnnotatorInfo("gosho", [], {}), resource, "gene_list",
+        None, AnnotatorInfo("gosho", [], {"work_dir": "some/dir"}),
+        resource, "gene_list",
     )
 
     annotatable = VCFAllele("1", 1, "A", "G")
@@ -116,7 +117,8 @@ def test_gene_score_annotator_used_context_attributes(
 ) -> None:
     resource = test_grr.get_resource("foobar_gene_set_collection")
     annotator = GeneSetAnnotator(
-        None, AnnotatorInfo("gosho", [], {}), resource, "gene_list",
+        None, AnnotatorInfo("gosho", [], {"work_dir": "some/dir"}),
+        resource, "gene_list",
     )
 
     assert annotator.used_context_attributes == ("gene_list",)

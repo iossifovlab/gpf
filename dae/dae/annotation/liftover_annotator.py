@@ -81,7 +81,7 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
     """Liftovver annotator class."""
 
     def __init__(
-        self, pipeline: AnnotationPipeline | None,
+        self, pipeline: AnnotationPipeline,
         info: AnnotatorInfo,
         chain: LiftoverChain,
         source_genome: ReferenceGenome,
