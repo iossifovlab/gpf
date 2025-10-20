@@ -10,7 +10,10 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.gene_sets.gene_sets_db import (
     GeneSet,
     build_gene_set_collection_from_resource,
@@ -75,13 +78,11 @@ class GeneSetAnnotator(AnnotatorBase):
             f"**{self.gene_set_collection.collection_id}** "
             f"gene set collection."
         )
-        source_type_desc = self._build_source_type_desc(info)
+        super().__init__(pipeline, info, self._build_attribute_desc(info))
 
-        super().__init__(pipeline, info, source_type_desc)
-
-    def _build_source_type_desc(
+    def _build_attribute_desc(
         self, info: AnnotatorInfo,
-    ) -> dict[str, tuple[str, str]]:
+    ) -> dict[str, AttributeDesc]:
         gene_sets_list = self.gene_set_collection \
             .get_gene_sets_list_statistics()
         if gene_sets_list is None:
@@ -98,15 +99,15 @@ class GeneSetAnnotator(AnnotatorBase):
                     key=lambda gs: (-gs.count, gs.name),
                 )
             ]
-        in_sets_desc = (
-            "object", (
+        in_sets_desc = AttributeDesc(
+            name="in_sets", type="object", description=(
                 "List of the gene sets of the collection, "
                 "which have at least one gene from the input gene "
                 "list"
             ))
         if info.attributes:
             gene_sets_desc = {gs["name"]: gs["desc"] for gs in gene_sets_list}
-            source_type_desc = {}
+            source_type_desc: dict[str, AttributeDesc] = {}
             for attr in info.attributes:
                 if attr.source == "in_sets":
                     source_type_desc["in_sets"] = in_sets_desc
@@ -116,11 +117,17 @@ class GeneSetAnnotator(AnnotatorBase):
                         f"The attribute {attr.source} is not found in the "
                         f"gene set collection "
                         f"{self.gene_set_collection.collection_id}.")
-                source_type_desc[attr.source] = (
-                    "bool", gene_sets_desc[attr.source])
+                source_type_desc[attr.source] = AttributeDesc(
+                    name=attr.source,
+                    type="bool",
+                    description=gene_sets_desc[attr.source])
         else:
             source_type_desc = {
-                gs["name"]: ("bool", gs["desc"])
+                gs["name"]: AttributeDesc(
+                    name=gs["name"],
+                    type="bool",
+                    description=gs["desc"],
+                )
                 for gs in gene_sets_list[:20]
             }
             source_type_desc["in_sets"] = in_sets_desc

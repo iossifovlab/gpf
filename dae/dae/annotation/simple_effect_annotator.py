@@ -5,14 +5,16 @@ from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
     AnnotatorInfo,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     TranscriptModel,
@@ -34,6 +36,29 @@ def build_simple_effect_annotator(
 
 class SimpleEffectAnnotator(AnnotatorBase):
     """Simple effect annotator class."""
+
+    @staticmethod
+    def _attributes_descriptions() -> dict[str, AttributeDesc]:
+        return {
+            "effect": AttributeDesc(
+                name="effect", type="str",
+                description="The worst effect.",
+                internal=False,
+                default=True,
+            ),
+            "genes": AttributeDesc(
+                name="genes", type="str",
+                description="The affected genes.",
+                internal=False,
+                default=True,
+            ),
+            "gene_list": AttributeDesc(
+                name="gene_list", type="objects",
+                description="List of all genes.",
+                internal=True,
+                default=False,
+            ),
+        }
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
@@ -61,17 +86,10 @@ Simple effect annotator.
 """)  # noqa
 
         info.resources.append(gene_models.resource)
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                ["effect", "genes"])
         super().__init__(
             pipeline,
             info,
-            {
-                "effect": ("str", "The worst effect."),
-                "genes": ("str", "The affected genes."),
-                "gene_list": ("objects", "List of all genes."),
-            },
+            self._attributes_descriptions(),
         )
 
         self.gene_models = gene_models

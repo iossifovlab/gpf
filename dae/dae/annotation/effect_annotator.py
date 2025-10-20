@@ -67,8 +67,7 @@ Annotator to identify the effect of the variant on protein coding.
         )
 
     @staticmethod
-    def _attributes_descriptions() -> dict[
-            str, tuple[str, str] | AttributeDesc]:
+    def _attributes_descriptions() -> dict[str, AttributeDesc]:
         effect_gene_lists = {}
         effect_genes = {}
         for group in [

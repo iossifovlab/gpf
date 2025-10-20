@@ -38,7 +38,7 @@ class AnnotatorBase(Annotator):
     def __init__(
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
-        attribute_descriptions: dict[str, tuple[str, str] | AttributeDesc],
+        attribute_descriptions: dict[str, AttributeDesc],
     ):
         self.attribute_descriptions = {}
         for name, attr_desc in attribute_descriptions.items():
