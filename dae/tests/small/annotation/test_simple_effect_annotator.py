@@ -33,6 +33,7 @@ def grr() -> GenomicResourceProtocolRepo:
                 g5        tx5  foo   -      25      35    27       35     1         27         35
                 g6        tx6  foo   -      50      80    55       71     2         55,65      61,71
                 g2        tx3  bar   -      3       20    3        15     1         3          17
+                g7        tx7  baz   +      10      20    10       10     1         10         20
                 """)  # noqa
         },
     })
@@ -104,6 +105,28 @@ def test_run_annotate(
             for c, effects in result.items()} == expected
 
 
+def test_run_annotate_noncoding_effect(
+    grr: GenomicResourceRepo,
+) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - simple_effect_annotator:
+                gene_models: gene_models
+            """),
+        grr)
+
+    with pipeline.open() as opened_pipeline:
+        sea = opened_pipeline.annotators[0]
+        assert isinstance(sea, SimpleEffectAnnotator)
+
+        result = sea.run_annotate("baz", 12, 12)
+        assert set(result) == {"noncoding"}
+        noncoding_effects = result["noncoding"]
+        assert {effect.gene for effect in noncoding_effects} == {"g7"}
+        assert all(effect.effect_type == "noncoding"
+                   for effect in noncoding_effects)
+
+
 @pytest.mark.parametrize(
     "annotatable, worst_effect, worst_genes, genes,gene_effects", [
         (Position("foo", 2), "intergenic", "", "", ""),
@@ -146,6 +169,23 @@ def test_full_annotation(
     assert atts["worst_effect_genes"] == worst_genes
     assert atts["genes"] == genes
     assert atts["gene_effects"] == gene_effects
+
+
+def test_simple_effect_annotator_handles_none_annotatable(
+    grr: GenomicResourceRepo,
+) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - simple_effect_annotator:
+                gene_models: gene_models
+            """),
+        grr)
+
+    result = pipeline.annotate(None)
+    assert result == {
+        "worst_effect": None,
+        "worst_effect_genes": None,
+    }
 
 
 @pytest.fixture(scope="module")
@@ -217,3 +257,18 @@ def test_full_annotation2(
     assert atts["genes"] == genes
     assert atts["gene_effects"] == gene_effects
     assert atts["effect_details"] == effect_details
+
+
+def test_simple_effect_annotator_requires_gene_models_resource(
+) -> None:
+    empty_repo = build_inmemory_test_repository({})
+    with pytest.raises(
+        ValueError,
+        match="gene model resource are missing in config and context",
+    ):
+        load_pipeline_from_yaml(
+            textwrap.dedent("""
+                - simple_effect_annotator: {}
+                """),
+            empty_repo,
+        )
