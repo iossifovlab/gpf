@@ -169,16 +169,13 @@ Simple effect annotator.
                 continue
 
             validate_aggregator(gene_list_aggregator)
+            assert isinstance(gene_list_aggregator, str)
             attr_desc = self.attribute_descriptions[attr.source]
             if attr_desc.type != "object" \
                     or not attr_desc.params.get("gene_list"):
                 raise ValueError(
                     f"Attribute {attr.source} is not a gene list attribute "
                     f"but gene_list_aggregator is specified.")
-            if not isinstance(gene_list_aggregator, str):
-                raise TypeError(
-                    f"Gene list aggregator for {attr.source} attributes "
-                    "must be a string.")
             self.gene_list_aggregators[attr.name] = build_aggregator(
                 gene_list_aggregator)
 

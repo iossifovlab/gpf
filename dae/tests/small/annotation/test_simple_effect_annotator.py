@@ -3,6 +3,9 @@ import textwrap
 
 import pytest
 from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
+from dae.annotation.annotation_config import (
+    AnnotationConfigurationError,
+)
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.simple_effect_annotator import (
     SimpleEffect,
@@ -403,3 +406,43 @@ def test_gene_list_aggregator(
     assert atts["worst_effect_genes"] == worst_effect_genes
     assert atts["genes"] == genes
     assert atts["coding_genes"] == coding_genes
+
+
+def test_gene_list_aggregator_wrong_attribute(
+    grr2: GenomicResourceRepo,
+) -> None:
+    with pytest.raises(
+        AnnotationConfigurationError,
+        match=r"The A0 annotator configuration is incorrect"
+        r".*Attribute worst_effect_genes is not a gene list attribute",
+    ):
+        load_pipeline_from_yaml(
+            textwrap.dedent("""
+                - simple_effect_annotator:
+                    gene_models: gene_models
+                    attributes:
+                    - source: worst_effect_genes
+                      name: wrong_attribute
+                      gene_list_aggregator: join(|)
+                """),
+            grr2)
+
+
+def test_gene_list_aggregator_wrong_aggregator(
+    grr2: GenomicResourceRepo,
+) -> None:
+    with pytest.raises(
+        AnnotationConfigurationError,
+        match=r"The A0 annotator configuration is incorrect"
+        r".*Incorrect aggregator 'True'",
+    ):
+        load_pipeline_from_yaml(
+            textwrap.dedent("""
+                - simple_effect_annotator:
+                    gene_models: gene_models
+                    attributes:
+                    - source: worst_effect_gene_list
+                      name: wrong_aggregator
+                      gene_list_aggregator: true
+                """),
+            grr2)
