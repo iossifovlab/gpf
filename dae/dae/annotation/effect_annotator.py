@@ -24,6 +24,11 @@ from dae.effect_annotation.effect import (
     AnnotationEffect,
     EffectTypesMixin,
 )
+from dae.genomic_resources.aggregators import (
+    Aggregator,
+    build_aggregator,
+    validate_aggregator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +65,24 @@ Annotator to identify the effect of the variant on protein coding.
         self._promoter_len = info.parameters.get("promoter_len", 0)
         self._region_length_cutoff = info.parameters.get(
             "region_length_cutoff", 15_000_000)
+
+        self.gene_list_aggregators: dict[str, Aggregator] = {}
+        for attr in info.attributes:
+            gene_list_aggregator = attr.parameters.get("gene_list_aggregator")
+            if gene_list_aggregator is None:
+                continue
+
+            validate_aggregator(gene_list_aggregator)
+            assert isinstance(gene_list_aggregator, str)
+            attr_desc = self.attribute_descriptions[attr.source]
+            if attr_desc.type != "object" \
+                    or not attr_desc.params.get("gene_list"):
+                raise ValueError(
+                    f"Attribute {attr.source} is not a gene list attribute "
+                    f"but gene_list_aggregator is specified.")
+            self.gene_list_aggregators[attr.name] = build_aggregator(
+                gene_list_aggregator)
+
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
@@ -81,6 +104,7 @@ Annotator to identify the effect of the variant on protein coding.
                 default=False,
                 params={
                     "effect_type": group,
+                    "gene_list": True,
                 },
             )
             effect_genes[f"{group}_genes"] = AttributeDesc(
@@ -100,6 +124,7 @@ Annotator to identify the effect of the variant on protein coding.
             default=False,
             params={
                 "effect_type": "LGDs",
+                "gene_list": True,
             },
         )
         return {
@@ -112,7 +137,10 @@ Annotator to identify the effect of the variant on protein coding.
                 "worst_effect_genes",
                 "str", "comma separated list of genes with worst effect.",
                 internal=False,
-                default=True),
+                default=True,
+                params={
+                    "gene_list": True,
+                }),
             "worst_effect_gene_list": AttributeDesc(
                 "worst_effect_gene_list",
                 "object", "list of genes with worst effect.",
@@ -141,7 +169,10 @@ Annotator to identify the effect of the variant on protein coding.
                 "gene_list",
                 "object", "List of all genes",
                 internal=True,
-                default=True),
+                default=True,
+                params={
+                    "gene_list": True,
+                }),
             "genes": AttributeDesc(
                 "genes",
                 "str", "Comma separated list of all affected genes.",
@@ -209,8 +240,6 @@ Annotator to identify the effect of the variant on protein coding.
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         result: dict = {}
-        if annotatable is None:
-            return self._not_found(result)
 
         length = len(annotatable)
         if isinstance(annotatable, VCFAllele):
@@ -270,6 +299,27 @@ Annotator to identify the effect of the variant on protein coding.
             attr_desc = self.attribute_descriptions[attr.source]
             effect_type = attr_desc.params.get("effect_type")
             if effect_type is not None:
-                result[attr.name] = AnnotationEffect.filter_genes(
-                    effects, effect_type)
+                genes = sorted(
+                    AnnotationEffect.filter_genes(effects, effect_type))
+                if attr_desc.params.get("gene_list"):
+                    result[attr.source] = genes
+                else:
+                    result[attr.source] = ",".join(genes)
+        return result
+
+    def annotate(
+        self, annotatable: Annotatable | None, context: dict[str, Any],
+    ) -> dict[str, Any]:
+        if annotatable is None:
+            return self._empty_result()
+        source_values = self._do_annotate(annotatable, context)
+        result: dict[str, Any] = {}
+        for attr in self.get_info().attributes:
+            if attr.name not in self.gene_list_aggregators:
+                result[attr.name] = source_values[attr.source]
+                continue
+            aggregator = self.gene_list_aggregators[attr.name]
+            result[attr.name] = aggregator.aggregate(
+                source_values[attr.source])
+
         return result
