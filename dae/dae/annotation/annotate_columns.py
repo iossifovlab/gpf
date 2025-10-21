@@ -479,6 +479,7 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
 
 def _tabix_compress(filepath: str) -> None:
     tabix_compress(filepath, f"{filepath}.gz", force=True)
+    os.remove(filepath)
 
 
 def _tabix_index(filepath: str, args: dict | None = None) -> None:

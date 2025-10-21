@@ -313,6 +313,7 @@ def test_annotate_columns_produce_tabix_correctly_position(
     ])
 
     assert len(list(pysam.TabixFile(str(out_file)).fetch())) == 2
+    assert not (tmp_path / "out.txt").exists()
 
 
 def test_annotate_columns_produce_tabix_correctly_vcf_allele(
@@ -353,6 +354,7 @@ def test_annotate_columns_produce_tabix_correctly_vcf_allele(
     ])
 
     assert len(list(pysam.TabixFile(str(out_file)).fetch())) == 2
+    assert not (tmp_path / "out.txt").exists()
 
 
 def test_annotate_columns_produce_tabix_correctly_region_or_cnv_annotatable(
