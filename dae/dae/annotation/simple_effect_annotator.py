@@ -17,6 +17,11 @@ from dae.annotation.annotator_base import (
     AnnotatorBase,
     AttributeDesc,
 )
+from dae.genomic_resources.aggregators import (
+    Aggregator,
+    build_aggregator,
+    validate_aggregator,
+)
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     TranscriptModel,
@@ -61,11 +66,11 @@ class SimpleEffectAnnotator(AnnotatorBase):
         gene_lists = {}
         for effect in SimpleEffectAnnotator.effect_types()[:-1]:
             gene_lists[f"{effect}_gene_list"] = AttributeDesc(
-                    name=f"{effect}_gene_list", type="objects",
+                    name=f"{effect}_gene_list", type="object",
                     description=f"list of genes with {effect} effect.",
                     internal=False,
                     default=False,
-                    params={"effect_type": effect},
+                    params={"effect_type": effect, "gene_list": True},
                 )
             gene_lists[f"{effect}_genes"] = AttributeDesc(
                     name=f"{effect}_genes", type="str",
@@ -90,16 +95,18 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 default=True,
             ),
             "worst_effect_gene_list": AttributeDesc(
-                name="worst_effect_gene_list", type="objects",
+                name="worst_effect_gene_list", type="object",
                 description="list of genes with worst effect.",
                 internal=False,
                 default=False,
+                params={"gene_list": True},
             ),
             "gene_list": AttributeDesc(
-                name="gene_list", type="objects",
+                name="gene_list", type="object",
                 description="List of all affected genes.",
                 internal=True,
                 default=False,
+                params={"gene_list": True},
             ),
             "genes": AttributeDesc(
                 name="genes", type="str",
@@ -155,6 +162,25 @@ Simple effect annotator.
         )
 
         self.gene_models = gene_models
+        self.gene_list_aggregators: dict[str, Aggregator] = {}
+        for attr in info.attributes:
+            gene_list_aggregator = attr.parameters.get("gene_list_aggregator")
+            if gene_list_aggregator is None:
+                continue
+
+            validate_aggregator(gene_list_aggregator)
+            attr_desc = self.attribute_descriptions[attr.source]
+            if attr_desc.type != "object" \
+                    or not attr_desc.params.get("gene_list"):
+                raise ValueError(
+                    f"Attribute {attr.source} is not a gene list attribute "
+                    f"but gene_list_aggregator is specified.")
+            if not isinstance(gene_list_aggregator, str):
+                raise TypeError(
+                    f"Gene list aggregator for {attr.source} attributes "
+                    "must be a string.")
+            self.gene_list_aggregators[attr.name] = build_aggregator(
+                gene_list_aggregator)
 
     def open(self) -> Annotator:
         self.gene_models.load()
@@ -203,6 +229,23 @@ Simple effect annotator.
         for attr in self.get_info().attributes:
             if attr.source not in result:
                 result[attr.source] = None
+        return result
+
+    def annotate(
+        self, annotatable: Annotatable | None, context: dict[str, Any],
+    ) -> dict[str, Any]:
+        if annotatable is None:
+            return self._empty_result()
+        source_values = self._do_annotate(annotatable, context)
+        result: dict[str, Any] = {}
+        for attr in self.get_info().attributes:
+            if attr.name not in self.gene_list_aggregators:
+                result[attr.name] = source_values[attr.source]
+                continue
+            aggregator = self.gene_list_aggregators[attr.name]
+            result[attr.name] = aggregator.aggregate(
+                source_values[attr.source])
+
         return result
 
     def cds_intron_regions(

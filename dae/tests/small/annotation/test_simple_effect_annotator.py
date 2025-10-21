@@ -359,3 +359,47 @@ def test_run_annotate2(
 
     result = sea.run_annotate(chrom, beg, end)
     assert result == expected_effects
+
+
+@pytest.mark.parametrize(
+    "annotatable,worst_effect,worst_effect_genes,genes,coding_genes", [
+        (Region("foo", 13, 52),
+         "coding", "g1", "g1", "g1"),
+        (Region("foo", 13, 3000),
+         "coding", "g1|g3", "g1|g3|g4", "g1|g3"),
+    ],
+)
+def test_gene_list_aggregator(
+    annotatable: Annotatable,
+    worst_effect: str,
+    worst_effect_genes: str,
+    genes: str,
+    coding_genes: str,
+    grr2: GenomicResourceRepo,
+) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - simple_effect_annotator:
+                gene_models: gene_models
+                attributes:
+                - worst_effect
+                - worst_effect_gene_list
+                - source: worst_effect_gene_list
+                  name: worst_effect_genes
+                  gene_list_aggregator: join(|)
+                - gene_list
+                - source: gene_list
+                  name: genes
+                  gene_list_aggregator: join(|)
+                - coding_gene_list
+                - source: coding_gene_list
+                  name: coding_genes
+                  gene_list_aggregator: join(|)
+            """),
+        grr2)
+
+    atts = pipeline.annotate(annotatable)
+    assert atts["worst_effect"] == worst_effect
+    assert atts["worst_effect_genes"] == worst_effect_genes
+    assert atts["genes"] == genes
+    assert atts["coding_genes"] == coding_genes
