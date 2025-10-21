@@ -12,7 +12,6 @@ from typing import Any
 import numpy as np
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
     AnnotatorInfo,
     AttributeInfo,
 )
@@ -20,7 +19,10 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.genomic_resources.aggregators import (
     Aggregator,
     build_aggregator,
@@ -170,21 +172,9 @@ models to predict splice site variant effects.
 
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "gene",
-                "transcript_ids",
-                "DS_AG",
-                "DS_AL",
-                "DS_DG",
-                "DS_DL",
-                "DS_MAX",
-            ])
 
-        super().__init__(pipeline, info, {
-            name: (attr.value_type, attr.description)
-            for name, attr in self._attributes_definition().items()
-        })
+        super().__init__(pipeline, info, self._attribute_descs())
+
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes
         ]
@@ -223,102 +213,132 @@ models to predict splice site variant effects.
             self._max_insertion_length = self.DEFAULT_MAX_INSERTION_LENGTH
         self._models: list | None = None
 
-    def _attributes_definition(self) -> dict[str, _AttrConfig]:
+    def _attribute_descs(self) -> dict[str, AttributeDesc]:
         return {
-            "gene": _AttrConfig(
-                "gene",
-                "str",
-                "Gene symbol",
-                "join(,)",
+            "gene": AttributeDesc(
+                name="gene",
+                type="str",
+                description="Gene symbol",
+                params={"aggregator": "join(,)"},
+                default=True,
+                internal=False,
             ),
-            "transcript_ids": _AttrConfig(
-                "transcript_ids",
-                "str",
-                "Transcript IDs",
-                "join(,)",
+            "transcript_ids": AttributeDesc(
+                name="transcript_ids",
+                type="str",
+                description="Transcript IDs",
+                params={"aggregator": "join(,)"},
+                default=True,
+                internal=False,
             ),
-            "DS_AG": _AttrConfig(
-                "DS_AG",
-                "float",
-                "Delta score for acceptor gain",
-                "max",
+            "DS_AG": AttributeDesc(
+                name="DS_AG",
+                type="float",
+                description="Delta score for acceptor gain",
+                params={"aggregator": "max"},
+                default=True,
+                internal=False,
             ),
-            "DS_AL": _AttrConfig(
-                "DS_AL",
-                "float",
-                "Delta score for acceptor loss",
-                "max",
+            "DS_AL": AttributeDesc(
+                name="DS_AL",
+                type="float",
+                description="Delta score for acceptor loss",
+                params={"aggregator": "max"},
+                default=True,
+                internal=False,
             ),
-            "DS_DG": _AttrConfig(
-                "DS_DG",
-                "float",
-                "Delta score for donor gain",
-                "max",
+            "DS_DG": AttributeDesc(
+                name="DS_DG",
+                type="float",
+                description="Delta score for donor gain",
+                params={"aggregator": "max"},
+                default=True,
+                internal=False,
             ),
-            "DS_DL": _AttrConfig(
-                "DS_DL",
-                "float",
-                "Delta score for donor loss",
-                "max",
+            "DS_DL": AttributeDesc(
+                name="DS_DL",
+                type="float",
+                description="Delta score for donor loss",
+                params={"aggregator": "max"},
+                default=True,
+                internal=False,
             ),
-            "DS_MAX": _AttrConfig(
-                "DS_MAX",
-                "float",
-                "Maximum delta score",
-                "max",
+            "DS_MAX": AttributeDesc(
+                name="DS_MAX",
+                type="float",
+                description="Maximum delta score",
+                params={"aggregator": "max"},
+                default=True,
+                internal=False,
             ),
-            "DP_AG": _AttrConfig(
-                "DP_AG",
-                "int",
-                "Delta position for acceptor gain",
-                "join(;)",
+            "DP_AG": AttributeDesc(
+                name="DP_AG",
+                type="int",
+                description="Delta position for acceptor gain",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=False,
             ),
-            "DP_AL": _AttrConfig(
-                "DP_AL",
-                "int",
-                "Delta position for acceptor loss",
-                "join(;)",
+            "DP_AL": AttributeDesc(
+                name="DP_AL",
+                type="int",
+                description="Delta position for acceptor loss",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=False,
             ),
-            "DP_DG": _AttrConfig(
-                "DP_DG",
-                "int",
-                "Delta position for donor gain",
-                "join(;)",
+            "DP_DG": AttributeDesc(
+                name="DP_DG",
+                type="int",
+                description="Delta position for donor gain",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=False,
             ),
-            "DP_DL": _AttrConfig(
-                "DP_DL",
-                "int",
-                "Delta position for donor loss",
-                "join(;)",
+            "DP_DL": AttributeDesc(
+                name="DP_DL",
+                type="int",
+                description="Delta position for donor loss",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=False,
             ),
-            "ref_A_p": _AttrConfig(
-                "ref_A_p",
-                "str",
-                "Reference acceptor probabilities",
-                "join(;)",
+            "ref_A_p": AttributeDesc(
+                name="ref_A_p",
+                type="str",
+                description="Reference acceptor probabilities",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=True,
             ),
-            "ref_D_p": _AttrConfig(
-                "ref_D_p",
-                "str",
-                "Reference donor probabilities",
-                "join(;)",
+            "ref_D_p": AttributeDesc(
+                name="ref_D_p",
+                type="str",
+                description="Reference donor probabilities",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=True,
             ),
-            "alt_A_p": _AttrConfig(
-                "alt_A_p",
-                "str",
-                "Alternative acceptor probabilities",
-                "join(;)",
+            "alt_A_p": AttributeDesc(
+                name="alt_A_p",
+                type="str",
+                description="Alternative acceptor probabilities",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=True,
             ),
-            "alt_D_p": _AttrConfig(
-                "alt_D_p",
-                "str",
-                "Alternative donor probabilities",
-                "join(;)",
+            "alt_D_p": AttributeDesc(
+                name="alt_D_p",
+                type="str",
+                description="Alternative donor probabilities",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=True,
             ),
-            "delta_score": _AttrConfig(
-                "delta_score",
-                "str",
-                "Delta score calculated using SpliceAI models."
+            "delta_score": AttributeDesc(
+                name="delta_score",
+                type="str",
+                description="Delta score calculated using SpliceAI models."
                 "These include delta scores (DS) and "
                 "delta positions (DP) for acceptor gain (AG), "
                 "acceptor loss (AL), "
@@ -327,7 +347,9 @@ models to predict splice site variant effects.
                 "ALLELE|SYMBOL|DS\\_AG|DS\\_AL|DS\\_DG|DS\\_DL|"
                 "DP\\_AG|DP\\_AL|DP\\_DG|DP\\_DL"
                 "</em>",
-                "join(;)",
+                params={"aggregator": "join(;)"},
+                default=False,
+                internal=False,
             ),
         }
 
@@ -338,14 +360,14 @@ models to predict splice site variant effects.
         """Collect attributes configuration."""
         result = []
         for attr in attributes:
-            if attr.source not in self._attributes_definition():
+            if attr.source not in self._attribute_descs():
                 logger.error(
                     "Attribute %s is not supported by SpliceAI annotator",
                     attr.source,
                 )
                 continue
 
-            attr_config = self._attributes_definition()[attr.source]
+            attr_config = self._attribute_descs()[attr.source]
             aggregator = attr.parameters.get("aggregator")
             if aggregator is not None:
                 documenation = (
@@ -353,7 +375,7 @@ models to predict splice site variant effects.
                     f"Aggregator: {aggregator}"
                 )
             else:
-                aggregator = attr_config.aggregator
+                aggregator = attr_config.params["aggregator"]
                 documenation = (
                     f"{attr_config.description}\n\n"
                     f"Aggregator (<em>default</em>): {aggregator}"

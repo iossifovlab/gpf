@@ -242,7 +242,7 @@ def pedigree_test(fixture_dirname: Callable) -> FamiliesData:
 
 
 @pytest.fixture(scope="session")
-def fam1(pedigree_test: FamiliesData) -> Family:  # noqa: FURB118
+def fam1(pedigree_test: FamiliesData) -> Family:
     return pedigree_test["fam1"]
 
 

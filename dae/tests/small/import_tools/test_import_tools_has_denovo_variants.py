@@ -14,7 +14,6 @@ def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
 
 
 def test_import_project_denovo_loader(
-        tmp_path: pathlib.Path,
         gpf_fixture: GPFInstance) -> None:
 
     import_config: dict[str, Any] = {
@@ -39,8 +38,7 @@ def test_import_project_denovo_loader(
 ])
 def test_import_project_vcf_loader_denovo_mode(
         denovo_mode: str,
-        has_denovo: bool,
-        tmp_path: pathlib.Path,
+        has_denovo: bool,  # noqa: FBT001
         gpf_fixture: GPFInstance) -> None:
 
     import_config: dict[str, Any] = {
@@ -66,7 +64,6 @@ def test_import_project_vcf_loader_denovo_mode(
 ])
 def test_import_project_mixed_denovo_and_vcf_loader_denovo_mode(
         denovo_mode: str,
-        tmp_path: pathlib.Path,
         gpf_fixture: GPFInstance) -> None:
 
     import_config: dict[str, Any] = {

@@ -3,69 +3,72 @@ from __future__ import annotations
 import csv
 import os
 import subprocess
-from pathlib import Path
+from collections.abc import Sequence
 from typing import Any, TextIO
 
 import fsspec
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     AnnotatorInfo,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-
-# ruff: noqa: S607
 
 
 class DemoAnnotateGenomeAdapter(AnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
-        self, pipeline: AnnotationPipeline | None,
+        self, pipeline: AnnotationPipeline,
         info: AnnotatorInfo,
     ):
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "ref_sequence",
-            ])
-        self.work_dir: Path = info.parameters.get("work_dir")
+        super().__init__(
+            pipeline, info, {
+                "ref_sequence": AttributeDesc(
+                    name="ref_sequence",
+                    type="object",
+                    description="Sequence in the reference genome",
+                    internal=False,
+                    default=True,
+                ),
+            },
+        )
         self.cache_repo = GenomicResourceCachedRepo(
-            pipeline.repository, self.work_dir / "grr_cache",
+            pipeline.repository, str(self.work_dir / "grr_cache"),
         )
         genome_id = info.parameters.get("reference_genome")
+        if genome_id is None:
+            raise ValueError(
+                f"The {info} annotator needs a 'reference_genome' parameter.",
+            )
         self.genome_resource = self.cache_repo.get_resource(genome_id)
 
         self.genome_filename = \
             self.genome_resource.get_config()["filename"]
 
-        super().__init__(
-            pipeline, info, {
-                "ref_sequence": ("object", "Sequence in the reference"
-                                           "genome"),
-            },
-        )
-
     def _do_annotate(
-        self, _annotatable: Annotatable | None,
-        _context: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
             "External annotator supports only batch mode",
         )
 
     def annotate(
-        self, _annotatable: Annotatable | None,
-        _context: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
             "External annotator supports only batch mode",
         )
 
     def prepare_input(
-        self, file: TextIO, annotatables: list[Annotatable | None],
+        self, file: TextIO, annotatables: Sequence[Annotatable | None],
     ) -> None:
         writer = csv.writer(file, delimiter="\t")
         for annotatable in annotatables:
@@ -83,7 +86,7 @@ class DemoAnnotateGenomeAdapter(AnnotatorBase):
             contexts[idx]["ref_sequence"] = row[-1]
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable | None],
+        self, annotatables: Sequence[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:

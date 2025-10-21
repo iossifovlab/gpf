@@ -17,6 +17,9 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
+from dae.annotation.annotator_base import (
+    AttributeDesc,
+)
 from dae.annotation.docker_annotator import DockerAnnotator
 
 # ruff: noqa: S607
@@ -38,11 +41,12 @@ class DemoAnnotatorAdapter(DockerAnnotator):
         )
         self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
 
-    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
+    def _attribute_type_descs(self) -> dict[str, AttributeDesc]:
         return {
-            "annotatable_length": (
-                "int",
-                "Positional length of the annotatable",
+            "annotatable_length": AttributeDesc(
+                name="annotatable_length",
+                type="int",
+                description="Positional length of the annotatable",
             ),
         }
 
@@ -109,7 +113,7 @@ class DemoAnnotatorAdapter(DockerAnnotator):
             self.read_output(out_file, contexts)
         return contexts
 
-    def run(self, **kwargs):
+    def run(self, **kwargs: Any) -> None:
         args = [
             "annotate_length",
             str(Path("/work", kwargs["input_filename"])),
@@ -138,13 +142,15 @@ class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
             stdout=subprocess.PIPE,
             text=True,
         ) as proc:
-            writer = csv.writer(proc.stdin, delimiter="\t")
+            writer = csv.writer(
+                proc.stdin, delimiter="\t")  # type: ignore
             reader = csv.reader(
-                proc.stdout, delimiter="\t",
-            )
+                proc.stdout, delimiter="\t")  # type: ignore
             poll = select.poll()
-            poll.register(proc.stdin, select.POLLOUT)
-            poll.register(proc.stdout, select.POLLIN | select.POLLPRI)
+            poll.register(
+                proc.stdin, select.POLLOUT)  # type: ignore
+            poll.register(
+                proc.stdout, select.POLLIN | select.POLLPRI)  # type: ignore
             annotatable_idx = 0
             read_idx = 0
             done = False
@@ -159,22 +165,22 @@ class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
                         writer.writerow([repr(annotatable)])
                         annotatable_idx += 1
                         if annotatable_idx == len(annotatables):
-                            poll.unregister(proc.stdin)
-                            proc.stdin.close()
+                            poll.unregister(proc.stdin)  # type: ignore
+                            proc.stdin.close()  # type: ignore
 
                     elif state & select.POLLIN or state & select.POLLPRI:
                         row = next(reader)
                         contexts[read_idx]["annotatable_length"] = int(row[-1])
                         read_idx += 1
                         if read_idx == len(annotatables):
-                            poll.unregister(proc.stdout)
+                            poll.unregister(proc.stdout)  # type: ignore
                             done = True
                     elif state & select.POLLHUP:
                         for row in reader:
                             contexts[read_idx]["annotatable_length"] = \
                                 int(row[-1])
                             read_idx += 1
-                        poll.unregister(proc.stdout)
+                        poll.unregister(proc.stdout)  # type: ignore
                         done = True
             proc.wait()
 

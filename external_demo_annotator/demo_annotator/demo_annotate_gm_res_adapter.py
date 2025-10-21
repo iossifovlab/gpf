@@ -4,18 +4,19 @@ import csv
 import os
 import subprocess
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any, TextIO
 
 import fsspec
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     AnnotatorInfo,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 
 
@@ -23,18 +24,29 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
-        self, pipeline: AnnotationPipeline | None,
+        self, pipeline: AnnotationPipeline,
         info: AnnotatorInfo,
     ):
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "gene_symbols",
-            ])
-        self.work_dir: Path = info.parameters.get("work_dir")
+        super().__init__(
+            pipeline, info, {
+                "gene_symbols": AttributeDesc(
+                    name="gene_symbols",
+                    type="object",
+                    description="Gene symbols overlapping with the "
+                    "annotatable",
+                    internal=False,
+                    default=True,
+                ),
+            },
+        )
         self.cache_repo = GenomicResourceCachedRepo(
-            pipeline.repository, self.work_dir / "grr_cache",
+            pipeline.repository, str(self.work_dir / "grr_cache"),
         )
         gene_models_id = info.parameters.get("gene_models")
+        if gene_models_id is None:
+            raise ValueError(
+                f"The {info} annotator needs a 'gene_models' parameter.",
+            )
         self.gene_models_resource = self.cache_repo.get_resource(
             gene_models_id,
         )
@@ -43,13 +55,6 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
             self.gene_models_resource.get_config()["filename"]
         self.gene_model_format = \
             self.gene_models_resource.get_config()["format"]
-
-        super().__init__(
-            pipeline, info, {
-                "gene_symbols": ("object", "Gene symbols overlapping"
-                                           "with the annotatable"),
-            },
-        )
 
     def _do_annotate(
         self,

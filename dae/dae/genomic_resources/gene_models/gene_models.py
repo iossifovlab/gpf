@@ -188,7 +188,7 @@ class TranscriptModel:
                 )
 
         else:
-            while self.exons[k].stop < self.cds[1]:
+            while self.exons[k].stop < self.cds[1] and k < len(self.exons):
                 k += 1
             if self.exons[k].stop == self.cds[1]:
                 k += 1

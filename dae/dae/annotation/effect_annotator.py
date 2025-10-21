@@ -4,14 +4,16 @@ from typing import Any
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
     AnnotatorInfo,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.annotation.utils import (
     find_annotator_gene_models,
     find_annotator_reference_genome,
@@ -21,6 +23,11 @@ from dae.effect_annotation.effect import (
     AlleleEffects,
     AnnotationEffect,
     EffectTypesMixin,
+)
+from dae.genomic_resources.aggregators import (
+    Aggregator,
+    build_aggregator,
+    validate_aggregator,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,43 +55,7 @@ Annotator to identify the effect of the variant on protein coding.
 
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "worst_effect",
-                "effect_details",
-                "gene_effects",
-                {"name": "gene_list", "internal": True},
-            ])
-
-        self.effect_types_gene_lists = {}
-        for group in EffectTypesMixin.EFFECT_GROUPS:
-            self.effect_types_gene_lists[f"{group}_gene_list"] = (
-                "object",
-                f"List of all {group} genes",
-            )
-        for effect_type in EffectTypesMixin.EFFECT_TYPES:
-            self.effect_types_gene_lists[f"{effect_type}_gene_list"] = (
-                "object",
-                f"List of all {effect_type} genes",
-            )
-        self.effect_types_gene_lists["LGD_gene_list"] = (
-            "object",
-            "List of all LGD genes (deprecated, use LGDs_gene_list)",
-        )
-        super().__init__(pipeline, info, {
-            "worst_effect": ("str", "Worst effect accross all transcripts."),
-            "gene_effects": ("str", "Effects types for genes. Format: "
-                                    "`<gene_1>:<effect_1>|...` A gene can "
-                                    "be repeated."),
-            "effect_details": ("str", "Effect details for each affected "
-                                      "transcript. Format: `< transcript 1 >:"
-                                      "<gene 1>:<effect 1>:<details 1>|...`"),
-            "allele_effects": ("object", "The a list of a python objects with "
-                                         "details of the effects for each "
-                                         "affected transcript."),
-            "gene_list": ("object", "List of all genes"),
-            **self.effect_types_gene_lists,
-        })
+        super().__init__(pipeline, info, self._attributes_descriptions())
 
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes
@@ -94,11 +65,122 @@ Annotator to identify the effect of the variant on protein coding.
         self._promoter_len = info.parameters.get("promoter_len", 0)
         self._region_length_cutoff = info.parameters.get(
             "region_length_cutoff", 15_000_000)
+
+        self.gene_list_aggregators: dict[str, Aggregator] = {}
+        for attr in info.attributes:
+            gene_list_aggregator = attr.parameters.get("gene_list_aggregator")
+            if gene_list_aggregator is None:
+                continue
+
+            validate_aggregator(gene_list_aggregator)
+            assert isinstance(gene_list_aggregator, str)
+            attr_desc = self.attribute_descriptions[attr.source]
+            if attr_desc.type != "object" \
+                    or not attr_desc.params.get("gene_list"):
+                raise ValueError(
+                    f"Attribute {attr.source} is not a gene list attribute "
+                    f"but gene_list_aggregator is specified.")
+            self.gene_list_aggregators[attr.name] = build_aggregator(
+                gene_list_aggregator)
+
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
             promoter_len=self._promoter_len,
         )
+
+    @staticmethod
+    def _attributes_descriptions() -> dict[str, AttributeDesc]:
+        effect_gene_lists = {}
+        effect_genes = {}
+        for group in [
+                *EffectTypesMixin.EFFECT_GROUPS,
+                *EffectTypesMixin.EFFECT_TYPES]:
+            effect_gene_lists[f"{group}_gene_list"] = AttributeDesc(
+                f"{group}_gene_list",
+                "object",
+                f"List of all {group} genes",
+                internal=True,
+                default=False,
+                params={
+                    "effect_type": group,
+                    "gene_list": True,
+                },
+            )
+            effect_genes[f"{group}_genes"] = AttributeDesc(
+                f"{group}_genes",
+                "str", f"Comma separated list of {group} genes",
+                internal=False,
+                default=False,
+                params={
+                    "effect_type": group,
+                },
+            )
+        effect_gene_lists["LGD_gene_list"] = AttributeDesc(
+            "LGD_gene_list",
+            "object",
+            "List of all LGD genes (deprecated, use LGDs_gene_list)",
+            internal=True,
+            default=False,
+            params={
+                "effect_type": "LGDs",
+                "gene_list": True,
+            },
+        )
+        return {
+            "worst_effect": AttributeDesc(
+                "worst_effect",
+                "str", "Worst effect accross all transcripts.",
+                default=True,
+                internal=False),
+            "worst_effect_genes": AttributeDesc(
+                "worst_effect_genes",
+                "str", "comma separated list of genes with worst effect.",
+                internal=False,
+                default=True,
+                params={
+                    "gene_list": True,
+                }),
+            "worst_effect_gene_list": AttributeDesc(
+                "worst_effect_gene_list",
+                "object", "list of genes with worst effect.",
+                internal=True,
+                default=False),
+            "gene_effects": AttributeDesc(
+                "gene_effects",
+                "str", "`<gene_1>:<effect_1>|...` A gene can be repeated.",
+                internal=False,
+                default=True),
+            "effect_details": AttributeDesc(
+                "effect_details",
+                "str", "Effect details for each affected "
+                "transcript. Format: `< transcript 1 >:"
+                "<gene 1>:<effect 1>:<details 1>|...`",
+                internal=False,
+                default=True),
+            "allele_effects": AttributeDesc(
+                "allele_effects",
+                "object", "The a list of a python objects with "
+                "details of the effects for each "
+                "affected transcript.",
+                internal=True,
+                default=False),
+            "gene_list": AttributeDesc(
+                "gene_list",
+                "object", "List of all genes",
+                internal=True,
+                default=True,
+                params={
+                    "gene_list": True,
+                }),
+            "genes": AttributeDesc(
+                "genes",
+                "str", "Comma separated list of all affected genes.",
+                internal=False,
+                default=False),
+            **effect_gene_lists,
+            **effect_genes,
+        }
 
     def close(self) -> None:
         self.genome.close()
@@ -123,7 +205,9 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
-            "lgd_gene_list": [],
+            "genes": "",
+            "worst_effect_gene_list": [],
+            "worst_effect_genes": "",
         })
         return attributes
 
@@ -145,7 +229,9 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
-            "lgd_gene_list": [],
+            "genes": "",
+            "worst_effect_gene_list": [],
+            "worst_effect_genes": "",
         })
         return attributes
 
@@ -154,8 +240,6 @@ Annotator to identify the effect of the variant on protein coding.
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         result: dict = {}
-        if annotatable is None:
-            return self._not_found(result)
 
         length = len(annotatable)
         if isinstance(annotatable, VCFAllele):
@@ -198,20 +282,44 @@ Annotator to identify the effect of the variant on protein coding.
         gene_list = AnnotationEffect.genes(effects)
 
         full_desc = AnnotationEffect.effects_description(effects)
+        worst_effect = full_desc[0]
+        worst_effect_genes = AnnotationEffect.filter_genes(
+            effects, worst_effect)
         result = {
             "worst_effect": full_desc[0],
             "gene_effects": full_desc[1],
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects(effects),
             "gene_list": gene_list,
+            "genes": ",".join(gene_list),
+            "worst_effect_gene_list": worst_effect_genes,
+            "worst_effect_genes": ",".join(worst_effect_genes),
         }
-        for effect_gene_list in self.effect_types_gene_lists:
-            if effect_gene_list in self.used_attributes:
-                effect_type = effect_gene_list.split("_")[0]
-                if effect_type == "LGD":
-                    effect_type = "LGDs"
-                result[effect_gene_list] = \
-                    AnnotationEffect.filter_gene_effects(
-                        effects, effect_type)[0]
+        for attr in self.attributes:
+            attr_desc = self.attribute_descriptions[attr.source]
+            effect_type = attr_desc.params.get("effect_type")
+            if effect_type is not None:
+                genes = sorted(
+                    AnnotationEffect.filter_genes(effects, effect_type))
+                if attr_desc.params.get("gene_list"):
+                    result[attr.source] = genes
+                else:
+                    result[attr.source] = ",".join(genes)
+        return result
+
+    def annotate(
+        self, annotatable: Annotatable | None, context: dict[str, Any],
+    ) -> dict[str, Any]:
+        if annotatable is None:
+            return self._empty_result()
+        source_values = self._do_annotate(annotatable, context)
+        result: dict[str, Any] = {}
+        for attr in self.get_info().attributes:
+            if attr.name not in self.gene_list_aggregators:
+                result[attr.name] = source_values[attr.source]
+                continue
+            aggregator = self.gene_list_aggregators[attr.name]
+            result[attr.name] = aggregator.aggregate(
+                source_values[attr.source])
 
         return result

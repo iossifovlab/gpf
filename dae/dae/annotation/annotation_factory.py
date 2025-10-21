@@ -168,6 +168,7 @@ def build_annotation_pipeline(
                 else:
                     params._data["work_dir"] = Path("./work")  # noqa: SLF001
             params._used_keys.add("work_dir")  # noqa: SLF001
+
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
@@ -247,7 +248,7 @@ def check_for_unused_parameters(info: AnnotatorInfo) -> None:
     """Check annotator configuration for unused parameters."""
     unused_annotator_parameters = info.parameters.get_unused_keys()
     if unused_annotator_parameters:
-        raise ValueError("The are unused annotator parameters: "
+        raise ValueError("There are unused annotator parameters: "
                          f"{unused_annotator_parameters}")
 
     for att in info.attributes:

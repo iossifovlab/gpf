@@ -4,7 +4,7 @@ import logging
 import textwrap
 from typing import Any, Protocol
 
-from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotation_config import AnnotatorInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
@@ -24,7 +24,10 @@ from dae.genomic_resources.variant_utils import (
 from dae.utils.variant_utils import reverse_complement
 
 from .annotatable import Annotatable, CNVAllele, Position, Region, VCFAllele
-from .annotator_base import AnnotatorBase
+from .annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +81,7 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
     """Liftovver annotator class."""
 
     def __init__(
-        self, pipeline: AnnotationPipeline | None,
+        self, pipeline: AnnotationPipeline,
         info: AnnotatorInfo,
         chain: LiftoverChain,
         source_genome: ReferenceGenome,
@@ -94,15 +97,14 @@ Annotator to lift over a variant from one reference genome to another.
 """)  # noqa
         info.resources += [
             chain.resource, source_genome.resource, target_genome.resource]
-        if not info.attributes:
-            info.attributes = [AttributeInfo(
-                "liftover_annotatable",
-                "liftover_annotatable",
-                internal=True,
-                parameters={},
-            )]
         super().__init__(pipeline, info, {
-            "liftover_annotatable": ("annotatable", "Lifted over allele."),
+            "liftover_annotatable": AttributeDesc(
+                name="liftover_annotatable",
+                type="object",
+                description="The lifted over annotatable",
+                internal=True,
+                default=True,
+            ),
         })
         self.chain = chain
         self.source_genome = source_genome

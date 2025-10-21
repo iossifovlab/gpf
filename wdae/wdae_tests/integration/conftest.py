@@ -4,8 +4,8 @@ import contextlib
 import os
 import pathlib
 import sys
-from collections.abc import Generator
-from typing import Any, Callable, ContextManager
+from collections.abc import Callable, Generator
+from typing import Any, ContextManager
 
 import pytest
 import pytest_mock

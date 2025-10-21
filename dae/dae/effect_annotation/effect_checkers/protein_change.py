@@ -16,7 +16,7 @@ class ProteinChangeEffectChecker(EffectChecker):
         if "End" in aaalt and "End" not in aaref:
             return "nonsense"
 
-        for ref, alt in zip(aaref, aaalt):
+        for ref, alt in zip(aaref, aaalt, strict=False):
             if ref == "?" or alt == "?":
                 return "coding_unknown"
             if ref != alt:

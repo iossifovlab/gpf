@@ -1,11 +1,14 @@
+from typing import ClassVar
+
+
 class NuclearCode:
     """Defines codon to amino acid translation codes."""
 
     # pylint: disable=too-few-public-methods
-    stopCodons = ["TAG", "TAA", "TGA"]
-    startCodons = ["ATG"]
+    stopCodons: ClassVar[list[str]] = ["TAG", "TAA", "TGA"]
+    startCodons: ClassVar[list[str]] = ["ATG"]
 
-    CodonsAa = {
+    CodonsAa: ClassVar[dict[str, list[str]]] = {
         "Gly": ["GGG", "GGA", "GGT", "GGC"],
         "Glu": ["GAG", "GAA"],
         "Asp": ["GAT", "GAC"],
@@ -29,4 +32,4 @@ class NuclearCode:
         "Pro": ["CCG", "CCA", "CCT", "CCC"],
     }
 
-    CodonsAaKeys = list(CodonsAa.keys())
+    CodonsAaKeys: ClassVar[list[str]] = list(CodonsAa.keys())

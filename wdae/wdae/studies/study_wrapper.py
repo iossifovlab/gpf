@@ -618,7 +618,8 @@ class WDAEStudy(WDAEAbstractStudy):
         if result["phenotype_data"] is not None \
             and config["genotype_browser"].get(
                 "has_family_structure_filter", None) is None \
-            and result["genotype_browser_config"]["has_family_pheno_filters"] \
+            and result["genotype_browser_config"] is not None and \
+                result["genotype_browser_config"]["has_family_pheno_filters"] \
                 is None:
             result["genotype_browser_config"][
                 "has_family_pheno_filters"] = True
@@ -626,7 +627,8 @@ class WDAEStudy(WDAEAbstractStudy):
         if result["phenotype_data"] is not None \
             and config["genotype_browser"].get(
                 "has_person_structure_filter", None) is None \
-            and result["genotype_browser_config"]["has_person_pheno_filters"] \
+            and result["genotype_browser_config"] is not None and \
+                result["genotype_browser_config"]["has_person_pheno_filters"] \
                 is None:
             result["genotype_browser_config"][
                 "has_person_pheno_filters"] = True
@@ -669,13 +671,16 @@ class WDAEStudy(WDAEAbstractStudy):
                     )
                 else:
                     raise KeyError(f"No such column {column} configured!")
+
+        assert result["genotype_browser_config"] is not None
         result["genotype_browser_config"]["table_columns"] = table_columns
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = \
             config["enrichment"]["enabled"] or result["has_denovo"]
         result["common_report"] = config["common_report"]
-        result["common_report"].pop("file_path", None)
+        if result["common_report"] is not None:
+            result["common_report"].pop("file_path", None)
 
         person_set_collection_configs = {
             psc.id: psc.domain_json()
@@ -686,7 +691,8 @@ class WDAEStudy(WDAEAbstractStudy):
         result["name"] = result["name"] or result["id"]
 
         result["enrichment"] = config["enrichment"]
-        if "background" in result["enrichment"]:
+        if result["enrichment"] is not None \
+                and "background" in result["enrichment"]:
             if "coding_len_background_model" in \
                     result["enrichment"]["background"]:
                 result["enrichment"]["background"][

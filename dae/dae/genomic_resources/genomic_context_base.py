@@ -390,11 +390,11 @@ class PriorityGenomicContext(GenomicContext):
     def __init__(self, contexts: Iterable[GenomicContext]):
         self.contexts = contexts
         if self.contexts:
-            logger.info("Using the following genomic context:")
+            logger.debug("Using the following genomic context:")
             for context in self.contexts:
-                logger.info("\t%s", context.get_source())
+                logger.debug("\t%s", context.get_source())
         else:
-            logger.info("No genomic contexts are available.")
+            logger.debug("No genomic contexts are available.")
 
     def get_context_object(self, key: str) -> Any | None:
         """Retrieve a resource using priority-based fallback.

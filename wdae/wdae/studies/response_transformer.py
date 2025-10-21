@@ -161,7 +161,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         "carrier_phenotypes":
         lambda v, phenotype_person_sets:
         [
-            ":".join([  # type: ignore
+            ":".join([
                 phenotype_person_sets.get_person_set_of_person(mid).name
                 for mid in filter(None, aa.variant_in_members_fpid)])
             for aa in v.alt_alleles
@@ -379,7 +379,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
 
             except (
                 AttributeError, KeyError, IndexError, AssertionError,
-                Exception,
+                Exception,  # noqa: BLE001
             ):
                 if isinstance(v, FamilyVariant):
                     logger.info(

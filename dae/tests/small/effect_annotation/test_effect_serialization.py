@@ -2,18 +2,20 @@
 
 from dae.effect_annotation.effect import AlleleEffects, EffectTranscript
 
-EFFECT_DATA_1 = "splice-site!" \
-    "NUDT4:splice-site|" \
-    "NUDT4B:splice-site|" \
-    "NUDT4:splice-site|" \
-    "NUDT4P2:non-coding-intron!" \
-    "NM_001301022:NUDT4:splice-site:63/129|" \
-    "NM_001301023:NUDT4:splice-site:62/128|" \
-    "NM_001301024:NUDT4:splice-site:62/128|" \
-    "NM_001355407:NUDT4B:splice-site:115/181|" \
-    "NM_019094:NUDT4:splice-site:114/180|" \
-    "NM_199040:NUDT4:splice-site:115/181|" \
+EFFECT_DATA_1 = (
+    "splice-site!"
+    "NUDT4:splice-site|"
+    "NUDT4B:splice-site|"
+    "NUDT4:splice-site|"
+    "NUDT4P2:non-coding-intron!"
+    "NM_001301022:NUDT4:splice-site:63/129|"
+    "NM_001301023:NUDT4:splice-site:62/128|"
+    "NM_001301024:NUDT4:splice-site:62/128|"
+    "NM_001355407:NUDT4B:splice-site:115/181|"
+    "NM_019094:NUDT4:splice-site:114/180|"
+    "NM_199040:NUDT4:splice-site:115/181|"
     "NR_104005:NUDT4P2:non-coding-intron:None/None[None]"
+)
 
 
 EFFECT_TRANSCRIPT_DATA_1 = "NM_031857:PCDHA9:3'UTR:1480"

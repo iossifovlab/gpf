@@ -3,6 +3,7 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     setup_directories,
 )
@@ -12,7 +13,8 @@ from dae.testing.setup_helpers import setup_gpf_instance
 
 @pytest.fixture
 def gpf_fixture(
-    t4c8_grr, tmp_path_factory: pytest.TempPathFactory,
+    t4c8_grr: GenomicResourceRepo,
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Callable:
     def builder(instance_config: dict) -> GPFInstance:
         root_path = tmp_path_factory.mktemp("genomic_scores_db")

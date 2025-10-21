@@ -4,7 +4,7 @@
 # pylint: disable=wildcard-import,unused-wildcard-import
 # type: ignore
 
-from wdae.test_settings import *
+from wdae.test_settings import *  # pyright: ignore
 
 DATABASES = {
     "default": {

@@ -279,7 +279,8 @@ class _VCFWriter(Filter):
         buffers: list[list] = [[] for _ in attributes]
 
         for col in attributes_to_delete:
-            del vcf_var.info[col]
+            if col in vcf_var.info:
+                del vcf_var.info[col]
 
         for annotation in allele_annotations:
             for buff, attribute in zip(buffers, attributes, strict=True):

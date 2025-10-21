@@ -5,7 +5,7 @@ import docker
 
 from dae.annotation.annotation_config import AnnotatorInfo
 from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import AnnotatorBase, AttributeDesc
 
 
 class DockerAnnotator(AnnotatorBase):
@@ -21,9 +21,7 @@ class DockerAnnotator(AnnotatorBase):
         overridable methods to customize how the docker client,
         images and containers are managed.
         """
-        attribute_type_descs: dict[str, tuple[str, str]] = \
-            self._attribute_type_descs()
-        super().__init__(pipeline, info, attribute_type_descs)
+        super().__init__(pipeline, info, self._attribute_type_descs())
         self.client = self._create_client()
 
     @staticmethod
@@ -55,5 +53,5 @@ class DockerAnnotator(AnnotatorBase):
         return super().open()
 
     @abstractmethod
-    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
+    def _attribute_type_descs(self) -> dict[str, AttributeDesc]:
         raise NotImplementedError

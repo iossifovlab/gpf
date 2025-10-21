@@ -224,3 +224,93 @@ def test_effect_annotator_gene_lists(
         annotatable = VCFAllele("chr1", 1, "A", "T")
         result = annotator.annotate(annotatable, annotate_context)
         assert result[f"{target_gene_list}_gene_list"] == expected_gene_list
+
+
+@pytest.mark.parametrize(
+    "attribute, expected", [
+        ("worst_effect", False),
+        ("gene_effects", False),
+        ("worst_effect_genes", False),
+        ("worst_effect_gene_list", True),
+    ],
+)
+def test_effect_annotator_attributes(
+    grr: GenomicResourceRepo,
+    attribute: str,
+    expected: bool,  # noqa: FBT001
+) -> None:
+    genome = "t4c8_genome"
+    gene_models = "t4c8_genes"
+    config = textwrap.dedent(f"""
+        - effect_annotator:
+            genome: {genome}
+            gene_models: {gene_models}
+            attributes:
+              - {attribute}
+        """)
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
+
+    with annotation_pipeline.open() as pipeline:
+        annotator = pipeline.annotators[0]
+
+        assert len(annotator.attributes) == 1
+        attr = annotator.attributes[0]
+        assert attr.name == attribute
+        assert attr.internal == expected
+
+
+@pytest.mark.parametrize(
+    "effects, target_effect, expected_target_genes", [
+        (["CNV+", "frame-shift"], "CNV", ["gene1"]),
+        (["frame-shift", "CNV+"], "CNV", ["gene2"]),
+        (["CNV-", "CNV+"], "CNV", ["gene1", "gene2"]),
+        (["CNV-", "CNV+"], "CNV+", ["gene2"]),
+        (["frame-shift", "nonsense"], "LGDs", ["gene1", "gene2"]),
+    ],
+)
+def test_effect_annotator_gene_lists_aggregator(
+    mocker: pytest_mock.MockerFixture,
+    grr: GenomicResourceRepo,
+    effects: list[str],
+    target_effect: str,
+    expected_target_genes: list[str],
+) -> None:
+    genome_id = "t4c8_genome_implicit_B"
+    gene_models = "t4c8_genes_ALT"
+    config = textwrap.dedent(f"""
+        - effect_annotator:
+            gene_models: {gene_models}
+            genome: {genome_id}
+            attributes:
+              - source: gene_list
+                name: genes
+                gene_list_aggregator: join(|)
+              - source: {target_effect}_gene_list
+                name: {target_effect}_genes
+                gene_list_aggregator: join(|)
+        """)
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
+
+    annotation_effects = [
+        AnnotationEffect(effect) for effect in effects
+    ]
+
+    for idx, eff in enumerate(annotation_effects, start=1):
+        eff.gene = f"gene{idx}"
+
+    with annotation_pipeline.open() as pipeline:
+        annotate_context: dict[str, Any] = {}
+        annotator = pipeline.annotators[0]
+        mocker.patch.object(
+            annotator.effect_annotator, "annotate_allele",  # type: ignore
+            return_value=annotation_effects,
+        )
+        annotatable = VCFAllele("chr1", 1, "A", "T")
+        result = annotator.annotate(annotatable, annotate_context)
+        assert result[
+            f"{target_effect}_genes"] == "|".join(expected_target_genes)
+        assert result["genes"] == "|".join([
+            f"gene{idx}" for idx in range(1, len(effects) + 1)
+        ])

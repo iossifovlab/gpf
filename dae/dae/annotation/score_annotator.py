@@ -143,8 +143,9 @@ class GenomicScoreAnnotatorBase(Annotator):
         aggregator_doc = self._build_score_aggregator_documentation(
             attribute_info, aggregator, attribute_conf_agg)
 
-        attribute_info._documentation = \
-            f"{attribute_info.documentation}\n\n{aggregator_doc}"  # noqa: SLF001
+        attribute_info._documentation = (  # noqa: SLF001
+            f"{attribute_info.documentation}"
+            f"\n\n{aggregator_doc}")
 
     @abc.abstractmethod
     def build_score_aggregator_documentation(
@@ -357,7 +358,7 @@ variant frequencies, etc.
             return self._empty_result()
 
         if self.allele_score.substitutions_mode() and \
-                    annotatable.type == Annotatable.Type.SUBSTITUTION:
+                annotatable.type == Annotatable.Type.SUBSTITUTION:
             assert isinstance(annotatable, VCFAllele)
             scores = self._fetch_substitution_scores(annotatable)
         elif self.allele_score.alleles_mode() and \

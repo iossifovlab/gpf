@@ -4,31 +4,85 @@ from __future__ import annotations
 import abc
 import os
 from collections.abc import Sequence
+from dataclasses import (
+    dataclass,
+    field,
+)
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import AnnotatorInfo
+from dae.annotation.annotation_config import (
+    AnnotatorInfo,
+    AttributeInfo,
+)
 from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
+
+
+@dataclass
+class AttributeDesc:
+    """Holds default attribute configuration for annotators."""
+
+    name: str
+    type: str
+    description: str
+    default: bool = True
+    internal: bool = False
+    params: dict[str, Any] = field(default_factory=dict)
 
 
 class AnnotatorBase(Annotator):
     """Base implementation of the `Annotator` class."""
 
-    def __init__(self, pipeline: AnnotationPipeline | None,
-                 info: AnnotatorInfo,
-                 source_type_desc: dict[str, tuple[str, str]]):
+    def __init__(
+        self, pipeline: AnnotationPipeline | None,
+        info: AnnotatorInfo,
+        attribute_descriptions: dict[str, AttributeDesc],
+    ):
+        self.attribute_descriptions = {}
+        for name, attr_desc in attribute_descriptions.items():
+            if isinstance(attr_desc, tuple):
+                self.attribute_descriptions[name] = AttributeDesc(
+                    name=name,
+                    type=attr_desc[0],
+                    description=attr_desc[1],
+                )
+            elif isinstance(attr_desc, AttributeDesc):
+                self.attribute_descriptions[name] = attr_desc
+            else:
+                raise TypeError(
+                    f"Invalid attribute description for source '{name}'"
+                    f" in annotator {info.type}")
+        if not info.attributes:
+            for attr_desc in self.attribute_descriptions.values():
+                if attr_desc.default:
+                    attr = AttributeInfo(
+                        name=attr_desc.name,
+                        source=attr_desc.name,
+                        internal=attr_desc.internal,
+                        parameters={},
+                        _type=attr_desc.type,
+                        description=attr_desc.description,
+                    )
+                    info.attributes.append(attr)
+
         for attribute_config in info.attributes:
-            if attribute_config.source not in source_type_desc:
+            if attribute_config.source not in attribute_descriptions:
                 raise ValueError(
                     f"The attribute source '{attribute_config.source}'"
                     " is not supported for the annotator"
                     f" {info.type}")
-            att_type, att_desc = source_type_desc[attribute_config.source]
-            attribute_config.type = att_type
-            attribute_config.description = att_desc
-        self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
+            attr_desc = self.attribute_descriptions[attribute_config.source]
+            attribute_config.type = attr_desc.type
+            attribute_config.description = attr_desc.description
+            if attribute_config.internal is None:
+                attribute_config.internal = attr_desc.internal
+
+        if info.parameters.get("work_dir") is None:
+            raise ValueError(
+                f"Missing a 'work_dir' parameter in annotator {info}.")
+        self.work_dir: Path = cast(Path, info.parameters["work_dir"])
         super().__init__(pipeline, info)
 
     def open(self) -> Annotator:
@@ -52,8 +106,10 @@ class AnnotatorBase(Annotator):
         if annotatable is None:
             return self._empty_result()
         source_values = self._do_annotate(annotatable, context)
-        return {attribute_config.name: source_values[attribute_config.source]
-                for attribute_config in self._info.attributes}
+        return {
+            attribute_config.name: source_values[attribute_config.source]
+            for attribute_config in self._info.attributes
+        }
 
     def _do_batch_annotate(
         self,

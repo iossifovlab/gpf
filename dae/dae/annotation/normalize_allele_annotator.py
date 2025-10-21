@@ -3,12 +3,15 @@ import logging
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotation_config import AnnotatorInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
@@ -45,15 +48,14 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
         assert isinstance(genome, ReferenceGenome)
 
         info.resources += [genome.resource]
-        if not info.attributes:
-            info.attributes = [
-                AttributeInfo(
-                    "normalized_allele",
-                    "normalized_allele",
-                    internal=True,
-                    parameters={})]
         super().__init__(pipeline, info, {
-            "normalized_allele": ("annotatable", "Normalized allele."),
+            "normalized_allele": AttributeDesc(
+                name="normalized_allele",
+                type="annotatable",
+                description="Normalized allele.",
+                internal=True,
+                default=True,
+            ),
         })
 
         self.genome = genome

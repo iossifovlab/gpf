@@ -205,7 +205,7 @@ def test_annotate_columns_reannotation(
         "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
-        "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
+        "chrom", "pos", "score", "worst_effect", "gene_score1",
     ]
     in_file = tmp_path / "in.txt"
     out_file = tmp_path / "out.txt"
@@ -247,7 +247,7 @@ def test_annotate_columns_reannotation_internal(
         "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
-        "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
+        "chrom", "pos", "score", "worst_effect", "gene_score1",
     ]
     in_file = tmp_path / "in.txt"
     out_file = tmp_path / "out.txt"
@@ -291,7 +291,7 @@ def test_annotate_columns_reannotation_batched(
         "chr1\t26\t0.1\tbla\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
-        "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1",
+        "chrom", "pos", "score", "worst_effect", "gene_score1",
     ]
     in_file = tmp_path / "in.txt"
     out_path = tmp_path / "out.txt"

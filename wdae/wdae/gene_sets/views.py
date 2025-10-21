@@ -63,8 +63,8 @@ class DenovoGeneSetsDb(QueryBaseView):
     def get(self, _request: Request) -> Response:
         """Build response to a get request."""
         result = {}
-        denovo_collections = \
-            self.gpf_instance.denovo_gene_sets_db._denovo_gene_set_collections  # noqa: SLF001
+        denovo_collections = self.gpf_instance \
+            .denovo_gene_sets_db._denovo_gene_set_collections  # noqa: SLF001
 
         for study_id, collection in denovo_collections.items():
             result[study_id] = {
@@ -106,10 +106,11 @@ class GeneSetsView(QueryBaseView):
         if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.denovo_gene_sets_db.has_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            gene_sets = self.gpf_instance.denovo_gene_sets_db.get_all_gene_sets(
-                gene_sets_types,
-                gene_sets_collection_id,
-            )
+            gene_sets = self.gpf_instance \
+                .denovo_gene_sets_db.get_all_gene_sets(
+                    gene_sets_types,
+                    gene_sets_collection_id,
+                )
         else:
             if not self.gpf_instance.gene_sets_db.has_gene_set_collection(
                 gene_sets_collection_id,
@@ -125,7 +126,7 @@ class GeneSetsView(QueryBaseView):
         response = gene_sets[:]
         if "filter" in data:
             query = data["filter"].lower()
-            response = [
+            response = [  # type: ignore
                 r
                 for r in response
                 if query in r["name"].lower() or query in r["desc"].lower()

@@ -1,21 +1,20 @@
 #!/usr/bin/env python
-import sys
-import os
 import argparse
-import logging
 import ast
+import logging
+import os
+import pathlib
 import re
-
+import sys
 from glob import glob
 
 from jinja2 import Template
-
 
 logger = logging.getLogger("api_docs_generator")
 
 HTTP_METHODS = [
     "get", "post", "put", "patch", "delete",
-    "head", "options", "trace"
+    "head", "options", "trace",
 ]
 
 
@@ -100,8 +99,7 @@ def get_section_lines(lines, section_name):
 
     def limited_strip(line):
         line = line.replace(base_whitespace_length * " ", "", 1)
-        line = line.rstrip()
-        return line
+        return line.rstrip()
 
     output = map(limited_strip, lines[start:end])
     output = map(DOC_SECTIONS_PARSERS[section_name], output)
@@ -218,7 +216,7 @@ def iter_routes(url_tree):
         view_source = get_view_source(pattern)
         if view_source is None:
             raise ValueError(
-                f"Couldn't parse urlpatterns in urls.py for {regex}"
+                f"Couldn't parse urlpatterns in urls.py for {regex}",
             )
         yield (regex, view_source)
 
@@ -246,10 +244,10 @@ def parse_http_docstring(docstring):
             out_lines = get_section_lines(lines, section)
             section_lines[section] = out_lines
         except ValueError as err:
-            logger.error("Failed to parse section %s!", section)
+            logger.exception("Failed to parse section %s!", section)
             logger.exception(err)
         except Exception as err:
-            logger.error("Failed to parse section %s!", section)
+            logger.exception("Failed to parse section %s!", section)
             logger.exception(err)
 
     output = {"summary": summary}
@@ -278,7 +276,7 @@ def collect_http_method_docstrings(method_node, method_name=None):
 
         return output
     except Exception as err:
-        logger.error("Failed to parse method %s!", method_node.name)
+        logger.exception("Failed to parse method %s!", method_node.name)
         logger.exception(err)
         return None
 
@@ -305,13 +303,13 @@ def get_route_documentation(regex, views_tree, view_source):
         return output
 
     logger.info(
-        "Failed to find view class %s, searching for function", view_source
+        "Failed to find view class %s, searching for function", view_source,
     )
     view_function = find_view_function(views_tree, view_source)
     if view_function is None:
         raise ValueError(f"Could not find {view_source}")
     logger.info(
-        "Found function %s", view_source
+        "Found function %s", view_source,
     )
 
     api_decorator = find_api_view_decorator(view_function)
@@ -322,7 +320,7 @@ def get_route_documentation(regex, views_tree, view_source):
     for method in api_decorator.args[0].elts:
         method_name = method.n
         route_documentation = collect_http_method_docstrings(
-            view_function, method_name
+            view_function, method_name,
         )
         output.append(route_documentation)
     return output
@@ -331,12 +329,10 @@ def get_route_documentation(regex, views_tree, view_source):
 def collect_docstrings(route):
     """Collect view docstrings from a given route."""
     urls_filepath = os.path.join(route, "urls.py")
-    with open(urls_filepath) as file:
-        url_tree = ast.parse(file.read())
+    url_tree = pathlib.Path(urls_filepath).read_text()
 
     views_filepath = os.path.join(route, "views.py")
-    with open(views_filepath) as file:
-        views_tree = ast.parse(file.read())
+    views_tree = pathlib.Path(views_filepath).read_text()
 
     module_docstring = ast.get_docstring(views_tree)
 
@@ -345,12 +341,12 @@ def collect_docstrings(route):
     output = {
         "api_name": transform_api_name(os.path.basename(route)),
         "api_module_documentation": module_docstring,
-        "api_routes": api_routes
+        "api_routes": api_routes,
     }
 
     for regex, view_source in iter_routes(url_tree):
         api_routes.extend(get_route_documentation(
-            regex, views_tree, view_source
+            regex, views_tree, view_source,
         ))
 
     return output
@@ -363,16 +359,16 @@ def main(argv=None):
     parser.add_argument("--verbose", "-V", "-v", action="count", default=0)
     parser.add_argument(
         "--root_dir", type=str, default=None,
-        help="Root directory containing all routes"
+        help="Root directory containing all routes",
     )
     parser.add_argument(
         "--output_dir", type=str, default=None,
-        help="Directory to write results in"
+        help="Directory to write results in",
     )
 
     parser.add_argument(
         "routes", type=str, nargs="*", default=None,
-        help="routes to document (only module folder, eg. users_api)"
+        help="routes to document (only module folder, eg. users_api)",
     )
 
     args = parser.parse_args(argv)
@@ -414,7 +410,7 @@ def main(argv=None):
             logger.info("Collecting docstrings from %s", api_name)
             documentation = collect_docstrings(view_dir)
         except Exception as err:
-            logger.error("Failed to collect docstrings from %s", api_name)
+            logger.exception("Failed to collect docstrings from %s", api_name)
             logger.exception(err)
         else:
             documentation_dict[api_name] = documentation
@@ -430,8 +426,7 @@ def main(argv=None):
         out_path = os.path.join(output_dir, f"{api_name}.rst")
         logger.info("Writing documentation for %s to %s", api_name, out_path)
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        with open(out_path, "w") as outfile:
-            outfile.write(API_DOCUMENTATION_TEMPLATE.render(doc_dict))
+        pathlib.Path(out_path).write_text(API_DOCUMENTATION_TEMPLATE.render(doc_dict))
 
 
 API_DOCUMENTATION_TEMPLATE = Template(
@@ -499,7 +494,7 @@ API_DOCUMENTATION_TEMPLATE = Template(
   {%- endif %}
 
 {%- endfor %}
-"""
+""",
 )
 
 

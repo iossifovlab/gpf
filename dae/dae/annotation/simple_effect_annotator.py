@@ -1,18 +1,27 @@
 import logging
 import textwrap
+from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
     AnnotatorInfo,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import (
+    AnnotatorBase,
+    AttributeDesc,
+)
+from dae.genomic_resources.aggregators import (
+    Aggregator,
+    build_aggregator,
+    validate_aggregator,
+)
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     TranscriptModel,
@@ -32,8 +41,93 @@ def build_simple_effect_annotator(
     return SimpleEffectAnnotator(pipeline, info)
 
 
+@dataclass(eq=True, frozen=True, repr=True, unsafe_hash=True)
+class SimpleEffect:
+    effect_type: str
+    transcript_id: str
+    gene: str
+
+
 class SimpleEffectAnnotator(AnnotatorBase):
     """Simple effect annotator class."""
+
+    @staticmethod
+    def effect_types() -> list[str]:
+        return [
+            "coding",
+            "inter-coding_intronic",
+            "peripheral",
+            "noncoding",
+            "intergenic",
+        ]
+
+    @staticmethod
+    def _attribute_descriptors() -> dict[str, AttributeDesc]:
+        gene_lists = {}
+        for effect in SimpleEffectAnnotator.effect_types()[:-1]:
+            gene_lists[f"{effect}_gene_list"] = AttributeDesc(
+                    name=f"{effect}_gene_list", type="object",
+                    description=f"list of genes with {effect} effect.",
+                    internal=False,
+                    default=False,
+                    params={"effect_type": effect, "gene_list": True},
+                )
+            gene_lists[f"{effect}_genes"] = AttributeDesc(
+                    name=f"{effect}_genes", type="str",
+                    description=f"comma separated list of genes with "
+                    f"{effect} effect.",
+                    internal=False,
+                    default=False,
+                    params={"effect_type": effect},
+                )
+
+        return {
+            "worst_effect": AttributeDesc(
+                name="worst_effect", type="str",
+                description="The worst effect.",
+                internal=False,
+                default=True,
+            ),
+            "worst_effect_genes": AttributeDesc(
+                name="worst_effect_genes", type="str",
+                description="comma separated list of genes with worst effect.",
+                internal=False,
+                default=True,
+            ),
+            "worst_effect_gene_list": AttributeDesc(
+                name="worst_effect_gene_list", type="object",
+                description="list of genes with worst effect.",
+                internal=False,
+                default=False,
+                params={"gene_list": True},
+            ),
+            "gene_list": AttributeDesc(
+                name="gene_list", type="object",
+                description="List of all affected genes.",
+                internal=True,
+                default=False,
+                params={"gene_list": True},
+            ),
+            "genes": AttributeDesc(
+                name="genes", type="str",
+                description="Comma separated list of all affected genes.",
+                internal=False,
+                default=False,
+            ),
+            "gene_effects": AttributeDesc(
+                name="gene_effects", type="str",
+                description="list of gene:effect pairs.",
+                internal=False,
+                default=False,
+            ),
+            "effect_details": AttributeDesc(
+                name="effect_details", type="str",
+                description="list of transcript:gene:effect tuples.",
+                internal=False,
+                default=False,
+            ),
+            **gene_lists,
+        }
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
@@ -61,20 +155,29 @@ Simple effect annotator.
 """)  # noqa
 
         info.resources.append(gene_models.resource)
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                ["effect", "genes"])
         super().__init__(
             pipeline,
             info,
-            {
-                "effect": ("str", "The worst effect."),
-                "genes": ("str", "The affected genes."),
-                "gene_list": ("objects", "List of all genes."),
-            },
+            self._attribute_descriptors(),
         )
 
         self.gene_models = gene_models
+        self.gene_list_aggregators: dict[str, Aggregator] = {}
+        for attr in info.attributes:
+            gene_list_aggregator = attr.parameters.get("gene_list_aggregator")
+            if gene_list_aggregator is None:
+                continue
+
+            validate_aggregator(gene_list_aggregator)
+            assert isinstance(gene_list_aggregator, str)
+            attr_desc = self.attribute_descriptions[attr.source]
+            if attr_desc.type != "object" \
+                    or not attr_desc.params.get("gene_list"):
+                raise ValueError(
+                    f"Attribute {attr.source} is not a gene list attribute "
+                    f"but gene_list_aggregator is specified.")
+            self.gene_list_aggregators[attr.name] = build_aggregator(
+                gene_list_aggregator)
 
     def open(self) -> Annotator:
         self.gene_models.load()
@@ -85,50 +188,91 @@ Simple effect annotator.
         annotatable: Annotatable,
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
+        assert annotatable is not None
+
+        annotation = self.run_annotate(
+            annotatable.chrom, annotatable.position, annotatable.end_position)
+
+        result: dict[str, Any] = {}
+        gene_list: set[str] = set()
+        gene_effects: list[tuple[str, str]] = []
+        worst_effect = None
+        worst_effect_gene_list: list[str] = []
+        details: list[str] = []
+        for effect_type in self.effect_types():
+            simple_effects = annotation.get(effect_type)
+            if simple_effects is not None:
+                genes = {se.gene for se in simple_effects}
+                if worst_effect is None:
+                    worst_effect = effect_type
+                    worst_effect_gene_list = sorted(genes)
+                result[effect_type + "_gene_list"] = sorted(genes)
+                result[effect_type + "_genes"] = ",".join(sorted(genes))
+                gene_list = gene_list | genes
+                gene_effects.extend(
+                    (gene, effect_type) for gene in sorted(genes))
+                details.extend(
+                    f"{se.transcript_id}:{se.gene}:{se.effect_type}"
+                    for se in sorted(
+                        simple_effects, key=lambda x: (x.transcript_id)))
+        result["gene_list"] = sorted(gene_list)
+        result["genes"] = ",".join(sorted(gene_list))
+        result["worst_effect"] = worst_effect
+        result["worst_effect_genes"] = ",".join(worst_effect_gene_list)
+        result["worst_effect_gene_list"] = worst_effect_gene_list
+        result["gene_effects"] = "|".join(
+            f"{gene}:{effect}" for gene, effect in gene_effects)
+        result["effect_details"] = "|".join(details)
+        for attr in self.get_info().attributes:
+            if attr.source not in result:
+                result[attr.source] = None
+        return result
+
+    def annotate(
+        self, annotatable: Annotatable | None, context: dict[str, Any],
+    ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()
+        source_values = self._do_annotate(annotatable, context)
+        result: dict[str, Any] = {}
+        for attr in self.get_info().attributes:
+            if attr.name not in self.gene_list_aggregators:
+                result[attr.name] = source_values[attr.source]
+                continue
+            aggregator = self.gene_list_aggregators[attr.name]
+            result[attr.name] = aggregator.aggregate(
+                source_values[attr.source])
 
-        effect, gene_list = self.run_annotate(
-            annotatable.chrom, annotatable.position, annotatable.end_position)
-        genes = ",".join(gene_list)
-
-        return {
-            "effect": effect,
-            "genes": genes,
-            "gene_list": gene_list,
-        }
+        return result
 
     def cds_intron_regions(
         self,
         transcript: TranscriptModel,
     ) -> list[Region]:
         """Return whether region is CDS intron."""
-        region: list[Region] = []
+        regions: list[Region] = []
+
         if not transcript.is_coding():
-            return region
+            return regions
         for index in range(len(transcript.exons) - 1):
             beg = transcript.exons[index].stop + 1
-            end = transcript.exons[index + 1].start + 1
+            end = transcript.exons[index + 1].start - 1
             if beg > transcript.cds[0] and end < transcript.cds[1]:
-                region.append(Region(transcript.chrom, beg, end))
-        return region
+                regions.append(Region(transcript.chrom, beg, end))
+        return regions
 
-    def utr_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
-        """Return whether the region is classified as UTR."""
-        region: list[Region] = []
-        if not transcript.is_coding():
-            return region
-
-        utr5_regions = transcript.utr5_regions()
-        utr3_regions = transcript.utr3_regions()
-        utr3_regions.extend(utr3_regions)
-        return utr5_regions
+    def cds_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
+        """Return whether the region is classified as coding."""
+        return transcript.cds_regions()
 
     def peripheral_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is peripheral."""
         region: list[Region] = []
         if not transcript.is_coding():
             return region
+
+        regions = transcript.utr5_regions()
+        regions.extend(transcript.utr3_regions())
 
         if transcript.cds[0] > transcript.tx[0]:
             region.append(
@@ -146,114 +290,72 @@ Simple effect annotator.
 
     def noncoding_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is noncoding."""
-        region: list[Region] = []
         if transcript.is_coding():
-            return region
-
-        region.append(
+            return []
+        return [
             Region(
                 transcript.chrom,
-                transcript.tx[0], transcript.tx[1]))
-        return region
+                transcript.tx[0], transcript.tx[1])]
 
     def call_region(
         self,
         chrom: str,
         beg: int,
         end: int,
-        transcripts: list[TranscriptModel],
+        tx: TranscriptModel,
         *,
         func_name: str,
         classification: str,
-    ) -> tuple[str, set[str]] | None:
+    ) -> SimpleEffect | None:
         """Call a region with a specific classification."""
-        genes = set()
-        for transcript in transcripts:
-            if transcript.gene in genes:
-                continue
+        regions = getattr(self, func_name)(tx)
 
-            regions = []
-            if func_name == "CDS_regions":
-                regions = transcript.cds_regions()
-            else:
-                regions = getattr(self, func_name)(transcript)
-
-            for region in regions:
-                assert region.chrom == chrom
-                if region.stop >= beg and region.start <= end:
-                    genes.add(transcript.gene)
-                    break
-        if genes:
-            return classification, genes
+        for region in regions:
+            assert region.chrom == chrom
+            if region.stop >= beg and region.start <= end:
+                return SimpleEffect(
+                    effect_type=classification,
+                    transcript_id=tx.tr_id,
+                    gene=tx.gene)
         return None
+
+    @staticmethod
+    def _classification() -> list[tuple[str, str]]:
+        return [
+            ("coding", "cds_regions"),
+            ("inter-coding_intronic", "cds_intron_regions"),
+            ("peripheral", "peripheral_regions"),
+            ("noncoding", "noncoding_regions"),
+        ]
 
     def run_annotate(
         self,
         chrom: str,
         beg: int,
         end: int,
-    ) -> tuple[str, set[str]]:
+    ) -> dict[str, set[SimpleEffect]]:
         """Return classification with a set of affected genes."""
         assert self.gene_models.is_loaded()
 
         tms = self.gene_models.gene_models_by_location(chrom, beg, end)
+        if len(tms) == 0:
+            return {"intergenic": set()}
+
         assert all((beg <= t.tx[1] and end >= t.tx[0]) for t in tms)
 
-        result = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="CDS_regions",
-            classification="coding",
-        )
+        result: dict[str, set[SimpleEffect]] = defaultdict(set)
+        for tx in tms:
+            for effect_type, func_name in self._classification():
+                effect = self.call_region(
+                    chrom,
+                    beg,
+                    end,
+                    tx,
+                    func_name=func_name,
+                    classification=effect_type,
+                )
+                if effect:
+                    result[effect.effect_type].add(effect)
+                    break
 
-        if result:
-            return result
-
-        result = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="utr_regions",
-            classification="peripheral",
-        )
-
-        if result:
-            return result
-        result = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="cds_intron_regions",
-            classification="inter-coding_intronic",
-        )
-
-        if result:
-            return result
-
-        result = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="peripheral_regions",
-            classification="peripheral",
-        )
-
-        if result:
-            return result
-        result = self.call_region(
-            chrom,
-            beg,
-            end,
-            tms,
-            func_name="noncoding_regions",
-            classification="noncoding",
-        )
-        if result:
-            return result
-
-        return "intergenic", set()
+        return dict(result)

@@ -7,19 +7,16 @@ from cerberus.platform import MutableMapping
 class _Abort(Exception):
     ...
 
-
 class SchemaError(Exception):
     """
     Raised when the validation schema is missing, has the wrong format or contains
     errors."""
-    ...
-
 
 class DefinitionSchema(MutableMapping):
     """A dict-subclass for caching of validated schemas."""
-    def __new__(cls, *args, **kwargs): # -> Self:
+    def __new__(cls, *args, **kwargs):  # -> Self:
         ...
-    
+
     def __init__(self, validator, schema) -> None:
         """
         :param validator: An instance of Validator-(sub-)class that uses this
@@ -27,49 +24,48 @@ class DefinitionSchema(MutableMapping):
         :param schema: A definition-schema as ``dict``. Defaults to an empty
                        one.
         """
+
+    def __delitem__(self, key):  # -> None:
         ...
-    
-    def __delitem__(self, key): # -> None:
-        ...
-    
+
     def __getitem__(self, item):
         ...
-    
+
     def __iter__(self):
         ...
-    
-    def __len__(self): # -> int:
+
+    def __len__(self):  # -> int:
         ...
-    
-    def __repr__(self): # -> str:
+
+    def __repr__(self):  # -> str:
         ...
-    
-    def __setitem__(self, key, value): # -> None:
+
+    def __setitem__(self, key, value):  # -> None:
         ...
-    
+
     def __str__(self) -> str:
         ...
-    
-    def copy(self): # -> Self:
+
+    def copy(self):  # -> Self:
         ...
-    
+
     @classmethod
     def expand(cls, schema):
         ...
-    
+
     def get(self, item, default=...):
         ...
-    
+
     def items(self):
         ...
-    
-    def update(self, schema): # -> None:
+
+    def update(self, schema):  # -> None:
         ...
-    
-    def regenerate_validation_schema(self): # -> None:
+
+    def regenerate_validation_schema(self):  # -> None:
         ...
-    
-    def validate(self, schema=...): # -> None:
+
+    def validate(self, schema=...):  # -> None:
         """
         Validates a schema that defines rules against supported rules.
 
@@ -78,27 +74,20 @@ class DefinitionSchema(MutableMapping):
                        Raises a :class:`~cerberus.base.SchemaError` when an invalid
                        schema is encountered.
         """
-        ...
-    
-
 
 class UnvalidatedSchema(DefinitionSchema):
     def __init__(self, schema=...) -> None:
         ...
-    
-    def validate(self, schema): # -> None:
-        ...
-    
-    def copy(self): # -> Self:
-        ...
-    
 
+    def validate(self, schema):  # -> None:
+        ...
+
+    def copy(self):  # -> Self:
+        ...
 
 class SchemaValidationSchema(UnvalidatedSchema):
     def __init__(self, validator) -> None:
         ...
-    
-
 
 class SchemaValidatorMixin:
     """
@@ -107,28 +96,22 @@ class SchemaValidatorMixin:
     """
     def __init__(self, *args, **kwargs) -> None:
         ...
-    
+
     @property
     def known_rules_set_refs(self):
         """The encountered references to rules set registry items."""
-        ...
-    
+
     @property
     def known_schema_refs(self):
         """The encountered references to schema registry items."""
-        ...
-    
+
     @property
     def target_schema(self):
         """The schema that is being validated."""
-        ...
-    
+
     @property
     def target_validator(self):
         """The validator whose schema is being validated."""
-        ...
-    
-
 
 class Registry:
     """
@@ -140,8 +123,8 @@ class Registry:
     """
     def __init__(self, definitions=...) -> None:
         ...
-    
-    def add(self, name, definition): # -> None:
+
+    def add(self, name, definition):  # -> None:
         """
         Register a definition to the registry. Existing definitions are replaced
         silently.
@@ -152,19 +135,16 @@ class Registry:
         :param definition: The definition.
         :type definition: any :term:`mapping`
         """
-        ...
-    
-    def all(self): # -> dict[Any, Any]:
+
+    def all(self):  # -> dict[Any, Any]:
         """
         Returns a :class:`dict` with all registered definitions mapped to their name.
         """
-        ...
-    
-    def clear(self): # -> None:
+
+    def clear(self):  # -> None:
         """Purge all definitions in the registry."""
-        ...
-    
-    def extend(self, definitions): # -> None:
+
+    def extend(self, definitions):  # -> None:
         """
         Add several definitions at once. Existing definitions are
         replaced silently.
@@ -173,9 +153,8 @@ class Registry:
         :type definitions: a :term:`mapping` or an :term:`iterable` with
                            two-value :class:`tuple` s
         """
-        ...
-    
-    def get(self, name, default=...): # -> None:
+
+    def get(self, name, default=...):  # -> None:
         """
         Retrieve a definition from the registry.
 
@@ -183,24 +162,17 @@ class Registry:
         :type name: :class:`str`
         :param default: Return value if the reference isn't registered.
         """
-        ...
-    
-    def remove(self, *names): # -> None:
+
+    def remove(self, *names):  # -> None:
         """
         Unregister definitions from the registry.
 
         :param names: The names of the definitions that are to be
                       unregistered.
         """
-        ...
-    
-
 
 class SchemaRegistry(Registry):
     ...
 
-
 class RulesSetRegistry(Registry):
     ...
-
-

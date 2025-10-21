@@ -326,7 +326,8 @@ def _build_new_header(
 ) -> _CSVHeader:
     result = list(input_header)
     for attr_name in attributes_to_delete:
-        result.remove(attr_name)
+        if attr_name in result:
+            result.remove(attr_name)
     annotation_header = [
         attr.name for attr in annotation_attributes if not attr.internal
     ]

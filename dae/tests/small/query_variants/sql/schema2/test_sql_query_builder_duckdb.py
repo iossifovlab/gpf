@@ -24,8 +24,8 @@ def t4c8_storage_registry(
         DuckDb2Variants,
         t4c8_study_1.backend,
     )
-    duckdb_variants.query_builder\
-        .GENE_REGIONS_HEURISTIC_EXTEND = 0  # type: ignore
+    duckdb_variants\
+        .query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0  # pyright: ignore
     return cast(GenotypeStorageRegistry, t4c8_instance.genotype_storages)
 
 
