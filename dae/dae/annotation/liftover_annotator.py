@@ -100,7 +100,7 @@ Annotator to lift over a variant from one reference genome to another.
         super().__init__(pipeline, info, {
             "liftover_annotatable": AttributeDesc(
                 name="liftover_annotatable",
-                type="object",
+                type="annotatable",
                 description="The lifted over annotatable",
                 internal=True,
                 default=True,
