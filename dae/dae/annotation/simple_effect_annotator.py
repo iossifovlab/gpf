@@ -57,15 +57,6 @@ class SimpleEffectAnnotator(AnnotatorBase):
         ]
 
     @staticmethod
-    def _classification() -> list[tuple[str, str]]:
-        return [
-            ("coding", "cds_regions"),
-            ("inter-coding_intronic", "cds_intron_regions"),
-            ("peripheral", "peripheral_regions"),
-            ("noncoding", "noncoding_regions"),
-        ]
-
-    @staticmethod
     def _attribute_descriptors() -> dict[str, AttributeDesc]:
         gene_lists = {}
         for effect in SimpleEffectAnnotator.effect_types()[:-1]:
@@ -174,8 +165,7 @@ Simple effect annotator.
         annotatable: Annotatable,
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
-        if annotatable is None:
-            return self._empty_result()
+        assert annotatable is not None
 
         annotation = self.run_annotate(
             annotatable.chrom, annotatable.position, annotatable.end_position)
@@ -235,16 +225,6 @@ Simple effect annotator.
         """Return whether the region is classified as coding."""
         return transcript.cds_regions()
 
-    def utr_regions(self, transcript: TranscriptModel) -> Sequence[Region]:
-        """Return whether the region is classified as UTR."""
-        region: list[Region] = []
-        if not transcript.is_coding():
-            return region
-
-        regions = transcript.utr5_regions()
-        regions.extend(transcript.utr3_regions())
-        return regions
-
     def peripheral_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is peripheral."""
         region: list[Region] = []
@@ -301,6 +281,15 @@ Simple effect annotator.
                     transcript_id=tx.tr_id,
                     gene=tx.gene)
         return None
+
+    @staticmethod
+    def _classification() -> list[tuple[str, str]]:
+        return [
+            ("coding", "cds_regions"),
+            ("inter-coding_intronic", "cds_intron_regions"),
+            ("peripheral", "peripheral_regions"),
+            ("noncoding", "noncoding_regions"),
+        ]
 
     def run_annotate(
         self,
