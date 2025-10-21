@@ -7,6 +7,7 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
+import pytest_mock
 from dae.genomic_resources.gene_models.gene_models import (
     Exon,
     GeneModels,
@@ -41,8 +42,21 @@ def fixture_dirname() -> Callable:
 
 
 @pytest.fixture
+def clean_gene_models_cache(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dae.genomic_resources.gene_models."
+        "gene_models_factory._INMEMORY_CACHE",
+        {})
+
+
+@pytest.fixture
 def t4c8_gene_models(tmp_path: pathlib.Path) -> GeneModels:
     return t4c8_genes(tmp_path / "gene_models")
+
+
+pytestmark = pytest.mark.usefixtures("clean_gene_models_cache")
 
 
 def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
