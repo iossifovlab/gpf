@@ -4,7 +4,10 @@ import textwrap
 import pytest
 from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.simple_effect_annotator import SimpleEffectAnnotator
+from dae.annotation.simple_effect_annotator import (
+    SimpleEffect,
+    SimpleEffectAnnotator,
+)
 from dae.genomic_resources.repository import (
     GenomicResourceProtocolRepo,
     GenomicResourceRepo,
@@ -48,6 +51,8 @@ def grr() -> GenomicResourceProtocolRepo:
     (Region("bar", 14, 20), "coding", "g2"),
     (Region("bar", 16, 20), "peripheral", "g2"),
     (VCFAllele("bar", 16, "AACC", "A"), "peripheral", "g2"),
+    (None, None, None),
+    (Region("foo", 2000, 2014), "intergenic", ""),
 ])
 def test_basic(
     annotatable: Annotatable,
@@ -298,7 +303,7 @@ def test_simple_effect_annotator_requires_gene_models_resource(
         ("tx4_1", "noncoding_regions", [BedRegion("foo", 203, 292)]),
     ],
 )
-def test_call_regions(
+def test_regions(
     tx_id: str,
     func_name: str,
     expected_regions: list[BedRegion],
@@ -318,3 +323,39 @@ def test_call_regions(
 
     regions = getattr(sea, func_name)(tx)
     assert regions == expected_regions
+
+
+@pytest.mark.parametrize(
+    "chrom,beg,end,expected_effects", [
+        ("foo", 13, 52,
+         {"coding": {
+             SimpleEffect("coding", "tx1_1", "g1"),
+             SimpleEffect("coding", "tx2_1", "g1")}}),
+        ("foo", 13, 3000,
+         {
+            "coding": {
+                SimpleEffect("coding", "tx1_1", "g1"),
+                SimpleEffect("coding", "tx2_1", "g1"),
+                SimpleEffect("coding", "tx3_1", "g3")},
+            "noncoding": {
+                SimpleEffect("noncoding", "tx4_1", "g4")}}),
+    ],
+)
+def test_run_annotate2(
+    chrom: str,
+    beg: int,
+    end: int,
+    expected_effects: dict[str, set[SimpleEffect]],
+    grr2: GenomicResourceRepo,
+) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - simple_effect_annotator:
+                gene_models: gene_models
+            """),
+        grr2).open()
+    sea = pipeline.annotators[0]
+    assert isinstance(sea, SimpleEffectAnnotator)
+
+    result = sea.run_annotate(chrom, beg, end)
+    assert result == expected_effects
