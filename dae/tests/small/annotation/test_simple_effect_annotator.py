@@ -13,6 +13,7 @@ from dae.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
 )
+from dae.utils.regions import Region as BedRegion
 
 
 @pytest.fixture(scope="module")
@@ -202,6 +203,8 @@ def grr2() -> GenomicResourceProtocolRepo:
                 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds 
                 g1        tx1  foo   +      2       92    12       82     2         12,52      42,82
                 g1        tx2  foo   +      2       72    12       42     1         12         42
+                g3        tx3  foo   +      102     192   112      142    2         112,152    142,182
+                g4        tx4  foo   +      202     292   202      202    2         212,252    242,282
                 """)  # noqa
         },
     })
@@ -272,3 +275,46 @@ def test_simple_effect_annotator_requires_gene_models_resource(
                 """),
             empty_repo,
         )
+
+
+@pytest.mark.parametrize(
+    "tx_id,func_name,expected_regions", [
+        ("tx1_1", "cds_intron_regions", [BedRegion("foo", 43, 52)]),
+        ("tx2_1", "cds_intron_regions", []),
+        ("tx3_1", "cds_intron_regions", []),
+        ("tx4_1", "cds_intron_regions", []),
+        ("tx1_1", "peripheral_regions", [
+            BedRegion("foo", 3, 12), BedRegion("foo", 83, 92)]),
+        ("tx2_1", "peripheral_regions", [
+            BedRegion("foo", 3, 12), BedRegion("foo", 43, 72),
+        ]),
+        ("tx3_1", "peripheral_regions", [
+            BedRegion("foo", 103, 112), BedRegion("foo", 143, 192),
+        ]),
+        ("tx4_1", "peripheral_regions", []),
+        ("tx1_1", "noncoding_regions", []),
+        ("tx2_1", "noncoding_regions", []),
+        ("tx3_1", "noncoding_regions", []),
+        ("tx4_1", "noncoding_regions", [BedRegion("foo", 203, 292)]),
+    ],
+)
+def test_call_regions(
+    tx_id: str,
+    func_name: str,
+    expected_regions: list[BedRegion],
+    grr2: GenomicResourceRepo,
+) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - simple_effect_annotator:
+                gene_models: gene_models
+            """),
+        grr2).open()
+    sea = pipeline.annotators[0]
+    assert isinstance(sea, SimpleEffectAnnotator)
+
+    gm = sea.gene_models
+    tx = gm.transcript_models[tx_id]
+
+    regions = getattr(sea, func_name)(tx)
+    assert regions == expected_regions

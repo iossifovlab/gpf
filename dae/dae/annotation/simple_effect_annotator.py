@@ -250,15 +250,12 @@ Simple effect annotator.
 
     def noncoding_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is noncoding."""
-        region: list[Region] = []
         if transcript.is_coding():
-            return region
-
-        region.append(
+            return []
+        return [
             Region(
                 transcript.chrom,
-                transcript.tx[0], transcript.tx[1]))
-        return region
+                transcript.tx[0], transcript.tx[1])]
 
     def call_region(
         self,
