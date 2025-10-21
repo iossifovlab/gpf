@@ -203,10 +203,15 @@ class AnnotationConfigParser:
                 and fnmatch.fnmatch(resource.get_id(), wildcard)
                 and AnnotationConfigParser.match_labels_query(
                    labels_query, resource.get_labels()))
-
-        return [resource.get_id()
-                for resource in grr.get_all_resources()
-                if match(resource)]
+        selected_resources: set[str] = set()
+        result: list[str] = []
+        for resource in grr.get_all_resources():
+            if resource.get_id() in selected_resources:
+                continue
+            if match(resource):
+                selected_resources.add(resource.resource_id)
+                result.append(resource.resource_id)
+        return result
 
     @staticmethod
     def has_wildcard(string: str) -> bool:

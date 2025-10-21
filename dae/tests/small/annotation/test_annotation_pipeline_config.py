@@ -30,9 +30,67 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
             "grr.yaml": textwrap.dedent(f"""
                 id: reannotation_repo
                 type: dir
-                directory: "{root_path}/grr"
+                directory: "{root_path}/grr1"
             """),
-            "grr": {
+            "grr_group.yaml": textwrap.dedent(f"""
+                id: group_repo
+                type: group
+                children:
+                - type: dir
+                  directory: "{root_path}/grr1"
+                - type: dir
+                  directory: "{root_path}/grr2"
+            """),
+            "grr2": {
+                "dummy_genome": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: reference_genome
+                        filename: genome.fa
+                    """),
+                    "genome.fa": """blabla""",
+                },
+                "score_one": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.txt
+                        scores:
+                        - id: score
+                          type: float
+                          name: s1
+                        meta:
+                            labels:
+                                foo: ALPHA
+                                bar: GAMMA
+                                baz: sub_one
+                    """),
+                    "data.txt": convert_to_tab_separated("""
+                        chrom  pos_begin  s1
+                        foo    1          0.1
+                    """),
+                },
+                "score_two": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.txt
+                        scores:
+                        - id: score
+                          type: float
+                          name: s2
+                        meta:
+                            labels:
+                                foo: BETA
+                                bar: GAMMA
+                                baz: sub_two
+                    """),
+                    "data.txt": convert_to_tab_separated("""
+                        chrom  pos_begin  s2
+                        foo    1          0.2
+                    """),
+                },
+            },
+            "grr1": {
                 "dummy_genome": {
                     "genomic_resource.yaml": textwrap.dedent("""
                         type: reference_genome
@@ -170,7 +228,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
         },
     )
     return build_genomic_resource_repository(file_name=str(
-        root_path / "grr.yaml",
+        root_path / "grr_group.yaml",
     ))
 
 

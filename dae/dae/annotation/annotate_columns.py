@@ -16,6 +16,7 @@ from typing import Any, TextIO
 
 from pysam import TabixFile, tabix_compress, tabix_index
 
+from dae import __version__  # type: ignore
 from dae.annotation.annotate_utils import (
     add_common_annotation_arguments,
     add_input_files_to_task_graph,
@@ -479,6 +480,7 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
 
 def _tabix_compress(filepath: str) -> None:
     tabix_compress(filepath, f"{filepath}.gz", force=True)
+    os.remove(filepath)
 
 
 def _tabix_index(filepath: str, args: dict | None = None) -> None:
@@ -634,6 +636,10 @@ def cli(argv: list[str] | None = None) -> None:
 
     arg_parser = _build_argument_parser()
     args = vars(arg_parser.parse_args(argv))
+
+    if args.get("version"):
+        print(f"GPF version {__version__}")
+        sys.exit(0)
 
     VerbosityConfiguration.set_verbosity(args["verbose"])
     args = handle_default_args(args)

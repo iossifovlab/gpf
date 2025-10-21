@@ -865,3 +865,15 @@ def test_annotate_vcf_no_regions(
     ])
 
     assert spy.call_count == 1
+
+
+def test_annotate_vcf_version_report(
+    capsys: pytest.CaptureFixture,
+) -> None:
+    capsys.readouterr()
+
+    with pytest.raises(SystemExit):
+        cli(["--version"])
+
+    out, _err = capsys.readouterr()
+    assert out.startswith("GPF version")

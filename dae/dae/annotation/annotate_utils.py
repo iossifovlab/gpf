@@ -159,6 +159,9 @@ def add_common_annotation_arguments(parser: argparse.ArgumentParser) -> None:
         "input", default="-", nargs="?",
         help="the input column file")
     parser.add_argument(
+        "--version", default=False,
+        action="store_true", help="Show the GPF version and exit")
+    parser.add_argument(
         "-r", "--region-size", default=300_000_000,
         type=int, help="region size to parallelize by; zero or negative "
         "values disable parallelization")
