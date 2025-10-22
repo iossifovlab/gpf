@@ -61,6 +61,7 @@ SCORE_TYPE_PARSERS = {
     "str": str,
     "float": float,
     "int": int,
+    "bool": bool,
 }
 
 
