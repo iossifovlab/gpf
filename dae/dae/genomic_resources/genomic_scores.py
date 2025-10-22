@@ -61,6 +61,7 @@ SCORE_TYPE_PARSERS = {
     "str": str,
     "float": float,
     "int": int,
+    "bool": bool,
 }
 
 
@@ -436,7 +437,8 @@ class GenomicScore(ResourceConfigValidationMixin):
     def _parse_vcf_scoredefs(
         self,
         vcf_header_info: dict[str, Any] | None,
-        config_scoredefs: dict[str, _ScoreDef] | None,
+        config_scoredefs: dict[str, _ScoreDef] | None, *,
+        merge: bool = False,
     ) -> dict[str, _ScoreDef]:
         def converter(val: Any) -> Any:
             try:
@@ -486,6 +488,13 @@ class GenomicScore(ResourceConfigValidationMixin):
             vcf_scoredef.na_values = config_scoredef.na_values
             vcf_scoredef.hist_conf = config_scoredef.hist_conf
             scoredefs[score] = vcf_scoredef
+
+        if merge:
+            for score, vcf_scoredef in vcf_scoredefs.items():
+                if score in scoredefs:
+                    continue
+                scoredefs[score] = vcf_scoredef
+
         return scoredefs
 
     def _validate_scoredefs(self) -> None:
@@ -528,8 +537,12 @@ class GenomicScore(ResourceConfigValidationMixin):
             config_scoredefs = self._parse_scoredef_config(self.config)
 
         if isinstance(self.table, VCFGenomicPositionTable):
+            merge = bool(self.config.get("merge_vcf_scores", False))
+
             return self._parse_vcf_scoredefs(
-                cast(dict[str, Any], self.table.header), config_scoredefs)
+                cast(dict[str, Any], self.table.header),
+                config_scoredefs,
+                merge=merge)
 
         if config_scoredefs is None:
             raise ValueError("No scores configured and not using a VCF")
@@ -975,6 +988,10 @@ class AlleleScore(GenomicScore):
         schema["allele_score_mode"] = {
             "type": "string",
             "allowed": ["substitutions", "alleles"],
+        }
+        schema["merge_vcf_scores"] = {
+            "type": "boolean",
+            "default": False,
         }
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {

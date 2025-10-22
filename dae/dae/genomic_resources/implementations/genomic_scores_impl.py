@@ -528,7 +528,9 @@ class GenomicScoreImplementation(
                     "type": score_def.value_type,
                     "name": score_def.col_name,
                     "index": score_def.col_index,
-                    "na_values": str(sorted(score_def.na_values)),
+                    "na_values": str(sorted(score_def.na_values))
+                    if score_def.na_values else "",
+                    "desc": score_def.desc,
                 }
                 for score_def in self.score.score_definitions.values()],
         }, indent=2).encode()
