@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+* 2025.10.4
+    * Improved description of annotator attributes to describe default and
+      internal attributes.
+    * Expanded SimpleEffectAnnotator to support gene lists and to report
+      worst effect genes, gene effects and effect details.
+    * Expanded EffectAnnotator support for gene lists.
+    * Added support for gene list aggregators in EffectAnnotator and
+      SimpleEffectAnnotator
+    * The annotate_columns tool removes the intermidiary text file after
+      tabix compression.
+    * Fixes in handling of wildcard resources in annotation pipeline.
+    * In-memory caching of loaded gene models.
+    * Tuning configuration of Dask scheduler in named cluster.
+    * annoate_columns and annotate_vcf tools support for reporting GPF version.
+    * Expanded tests for gene models.
+
 * 2025.10.3
     * Switched to using interval trees in GeneModels.gene_models_by_location
       method for better performance.
