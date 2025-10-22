@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+import json
 import pathlib
 import textwrap
 from typing import cast
@@ -355,3 +356,134 @@ def test_add_histogram_tasks_skip_null_histograms_and_link_minmax() -> None:
 
     assert save_task.func is GenomicScoreImplementation._save_histograms
     assert merge_task in save_task.deps
+
+
+def test_calc_statistics_hash_includes_expected_fields() -> None:
+    res = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: value
+                  name: value
+                  type: float
+                  histogram:
+                    type: number
+                    view_range:
+                        min: 0.0
+                        max: 1.0
+                - id: label
+                  name: label
+                  type: str
+        """,
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos_begin value label
+            1     10        0.1   A
+            """,
+        ),
+    })
+
+    impl = build_score_implementation_from_resource(res)
+
+    blob = impl.calc_statistics_hash()
+    payload = json.loads(blob.decode())
+
+    # Table config and files md5 present
+    assert payload["config"]["table"]["config"]["filename"] == "data.mem"
+    files_md5 = payload["config"]["table"]["files_md5"]
+    assert "data.mem" in files_md5
+    assert isinstance(files_md5["data.mem"], str)
+    assert len(files_md5["data.mem"]) > 0
+
+    # Score configuration mirrors resource definitions
+    score_ids = {s["id"] for s in payload["score_config"]}
+    assert score_ids == {"value", "label"}
+
+
+def test_calc_statistics_hash_changes_when_file_changes() -> None:
+    res1 = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: value
+                  name: value
+                  type: float
+        """,
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos_begin value
+            1     10        0.1
+            """,
+        ),
+    })
+    res2 = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: value
+                  name: value
+                  type: float
+        """,
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos_begin value
+            1     10        0.2
+            """,
+        ),
+    })
+
+    impl1 = build_score_implementation_from_resource(res1)
+    impl2 = build_score_implementation_from_resource(res2)
+
+    h1 = impl1.calc_statistics_hash()
+    h2 = impl2.calc_statistics_hash()
+
+    assert h1 != h2
+
+
+def test_calc_statistics_hash_deterministic_for_same_content() -> None:
+    res_a = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: value
+                  name: value
+                  type: float
+        """,
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos_begin value
+            1     10        0.1
+            """,
+        ),
+    })
+    res_b = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: value
+                  name: value
+                  type: float
+        """,
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos_begin value
+            1     10        0.1
+            """,
+        ),
+    })
+
+    impl_a = build_score_implementation_from_resource(res_a)
+    impl_b = build_score_implementation_from_resource(res_b)
+
+    assert impl_a.calc_statistics_hash() == impl_b.calc_statistics_hash()
