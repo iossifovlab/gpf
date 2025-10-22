@@ -1,9 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
-from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import AlleleScore, AlleleScoreQuery
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
 from dae.genomic_resources.testing import build_inmemory_test_resource
 
 
