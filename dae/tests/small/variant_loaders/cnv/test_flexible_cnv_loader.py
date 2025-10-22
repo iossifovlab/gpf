@@ -220,6 +220,5 @@ def test_flexible_cnv_variants_bad_configs(
                 content,
                 families,
                 acgt_genome_19,
-acgt_genome_19=[],
                 **params),  # type: ignore
         )

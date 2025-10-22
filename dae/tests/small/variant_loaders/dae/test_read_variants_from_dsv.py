@@ -430,8 +430,7 @@ f3       3     1    A   T   0/1
         denovo_genotype="genotype",
     )
 
-    expected_df = pd.DataFrame(
-    {
+    expected_df = pd.DataFrame({
         "chrom": ["1", "2", "2", "3"],
         "position": [1, 1, 5, 1],
         "reference": ["A", "A", "A", "A"],
@@ -446,8 +445,7 @@ f3       3     1    A   T   0/1
         "best_state": [
             None, None, None, None,
         ],
-    },
-)
+    })
 
     assert compare_variant_dfs(res_df, expected_df)
 
