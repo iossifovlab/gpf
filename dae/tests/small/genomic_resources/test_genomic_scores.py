@@ -105,6 +105,84 @@ def test_default_annotation_pre_normalize_validates() -> None:
     assert res.get_type() == "position_score"
 
 
+def test_default_annotation_auto_includes_all_scores() -> None:
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: score1
+                  type: float
+                  name: score1
+                - id: score2
+                  type: float
+                  name: score2
+        """,
+        "data.mem": """
+            chrom  pos_begin  score1  score2
+            1      10         0.1     0.2
+        """,
+    })
+
+    score = build_score_from_resource(res)
+    score.open()
+
+    attributes = score.get_default_annotation_attributes()
+    assert attributes == [
+        {"source": "score1", "name": "score1"},
+        {"source": "score2", "name": "score2"},
+    ]
+
+    assert score.get_default_annotation_attribute("score1") == "score1"
+    assert score.get_default_annotation_attribute("score2") == "score2"
+    assert score.get_default_annotation_attribute("missing") is None
+
+
+def test_default_annotation_custom_names() -> None:
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: score1
+                  type: float
+                  name: score1
+                - id: score2
+                  type: float
+                  name: score2
+            default_annotation:
+                - source: score1
+                  name: primary_score
+                - source: score1
+                  name: secondary_score
+                - source: score2
+        """,
+        "data.mem": """
+            chrom  pos_begin  score1  score2
+            1      10         0.1     0.2
+        """,
+    })
+
+    score = build_score_from_resource(res)
+    score.open()
+
+    attributes = score.get_default_annotation_attributes()
+    assert attributes == [
+        {"source": "score1", "name": "primary_score"},
+        {"source": "score1", "name": "secondary_score"},
+        {"source": "score2"},
+    ]
+
+    assert (
+        score.get_default_annotation_attribute("score1")
+        == "primary_score,secondary_score"
+    )
+    assert score.get_default_annotation_attribute("score2") == "score2"
+    assert score.get_default_annotation_attribute("score3") is None
+
+
 def test_vcf_tables_autogenerate_scoredefs(vcf_score: AlleleScore) -> None:
     assert isinstance(vcf_score.table, VCFGenomicPositionTable)
     assert set(vcf_score.score_definitions.keys()) == {"A", "B", "C", "D"}
