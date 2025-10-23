@@ -47,7 +47,6 @@ pipeline {
                 flake8(pattern: 'test-results/ruff_report', reportEncoding: 'UTF-8', id: 'ruff', name: 'Ruff'),
                 myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
                 myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
-                pyLint(pattern: 'test-results/pyright_report', reportEncoding: 'UTF-8', id: 'pyright', name: 'Pyright'),
 
                 pyLint(pattern: 'test-results/mypy_dae_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-dae-pylint', name: 'MyPy - dae (converted to PyLint)'),
                 pyLint(pattern: 'test-results/mypy_wdae_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-wdae-pylint', name: 'MyPy - wdae (converted to PyLint)'),
