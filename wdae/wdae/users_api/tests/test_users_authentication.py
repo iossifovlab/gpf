@@ -269,7 +269,7 @@ def test_successful_auth_resets_lockouts(
 
     lockout_email(client, data["username"])
     expire_email_lockout(data["username"])
-    data["password"] = "secret"
+    data["password"] = "secret"  # noqa: S105
 
     response = client.post(
         url, json.dumps(data),
@@ -277,7 +277,7 @@ def test_successful_auth_resets_lockouts(
     )
     assert response.status_code == status.HTTP_302_FOUND
 
-    data["password"] = "wrongpasswordagain"
+    data["password"] = "wrongpasswordagain"  # noqa: S105
     response = client.post(
         url, json.dumps(data),
         content_type="application/json", format="json",
@@ -332,7 +332,7 @@ def test_password_reset_resets_lockouts(
     assert response.status_code == status.HTTP_302_FOUND
 
     # See that the lockouts have been reset
-    data["password"] = "wrongpasswordagain"
+    data["password"] = "wrongpasswordagain"  # noqa: S105
     response = client.post(
         url, json.dumps(data),
         content_type="application/json", format="json",
@@ -341,7 +341,7 @@ def test_password_reset_resets_lockouts(
     assert response.content.find(b"Invalid login credentials") != -1
 
     # Try properly logging in
-    data["password"] = "samplenewpassword"
+    data["password"] = "samplenewpassword"  # noqa: S105
     response = client.post(
         url, json.dumps(data),
         content_type="application/json", format="json",
@@ -375,7 +375,7 @@ def test_authentication_logging(
     assert abs(login_time - expected_time) <= timedelta(seconds=5)
     assert last_login.failed_attempt == 0
 
-    data["password"] = "wrongpassword"
+    data["password"] = "wrongpassword"  # noqa: S105
 
     response = client.post(
         url, json.dumps(data),

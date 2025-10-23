@@ -25,7 +25,7 @@ class ListFamiliesView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            # TODO Currently this route does not support pheno-only studies
+            # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         families = dataset.genotype_data.families
@@ -61,7 +61,9 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: str, family_id: str,
+        self, request: Request,  # noqa: ARG002
+        dataset_id: str,
+        family_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to a get request for the details of a specific family."""
@@ -77,7 +79,7 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            # TODO Currently this route does not support pheno-only studies
+            # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         families = dataset.genotype_data.families
@@ -96,7 +98,7 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
 class TagsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, request: Request) -> Response:
+    def get(self, request: Request) -> Response:  # noqa: ARG002
         # pylint: disable=unused-argument
         return Response(
             list(FamilyTag.all_labels()),
@@ -109,7 +111,9 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: str, family_id: str,
+        self, request: Request,  # noqa: ARG002
+        dataset_id: str,
+        family_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to get family members."""
@@ -125,7 +129,7 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            # TODO Currently this route does not support pheno-only studies
+            # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         families = dataset.genotype_data.families
@@ -146,7 +150,7 @@ class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: str,
+        self, request: Request, dataset_id: str,  # noqa: ARG002
         family_id: str, member_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
@@ -166,7 +170,7 @@ class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            # TODO Currently this route does not support pheno-only studies
+            # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         families = dataset.genotype_data.families
@@ -192,7 +196,9 @@ class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: str, family_id: str,
+        self, request: Request,  # noqa: ARG002
+        dataset_id: str,
+        family_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to get request for details of all members of a family."""
@@ -208,7 +214,7 @@ class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            # TODO Currently this route does not support pheno-only studies
+            # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         families = dataset.genotype_data.families
@@ -233,7 +239,10 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
     """List of all family details."""
 
     @method_decorator(etag(get_permissions_etag))
-    def get(self, request: Request, dataset_id: str) -> Response:
+    def get(
+        self, request: Request,  # noqa: ARG002
+        dataset_id: str,
+    ) -> Response:
         # pylint: disable=unused-argument
         """Response to get request for all families details in a dataset."""
         if dataset_id is None:
@@ -245,7 +254,7 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if dataset.is_phenotype:
-            # TODO Currently this route does not support pheno-only studies
+            # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         families = dataset.genotype_data.families
