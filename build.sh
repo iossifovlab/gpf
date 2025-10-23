@@ -204,14 +204,6 @@ EOT
       pylint dae/dae  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_report || true'
 
-    # pyright
-    build_run_detached bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-          pyright dae wdae gcp_storage external_demo_annotator external_vep_annotator \
-          --outputjson \
-          > /wd/results/pyright_report_raw.json || true'
-
     # mypy
     build_run_detached bash -c '
       cd /wd/;
@@ -262,11 +254,6 @@ EOT
 
     build_run bash -c '
       cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_report_raw.json > results/pyright_report || true'
-
-    build_run bash -c '
-      cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_mypy_output.py \
           results/mypy_dae_report > results/mypy_dae_pylint_report || true'
 
@@ -279,7 +266,6 @@ EOT
         ./results/mypy_dae_pylint_report \
         ./results/mypy_wdae_report \
         ./results/mypy_wdae_pylint_report \
-        ./results/pyright_report \
         ./results/ruff_report \
         ./results/pylint_report \
         ./test-results/
@@ -520,7 +506,6 @@ EOT
           --exclude .DS_Store \
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
-          --exclude pyrightconfig.json \
           --exclude pylintrc \
           --transform "s,^,gpf/," \
           dae/ wdae/ \
