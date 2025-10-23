@@ -3,7 +3,7 @@ from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
 from dae.annotation.annotator_base import AnnotatorBase
 
 
@@ -49,3 +49,9 @@ class ChromosomeAnnotator(AnnotatorBase):
             new_chrom = new_annotatable.chrom.removeprefix(self.del_prefix)
             new_annotatable._chrom = new_chrom  # noqa: SLF001
         return {"renamed_chromosome": new_annotatable}
+
+
+def build_chromosome_annotator(
+    pipeline: AnnotationPipeline, info: AnnotatorInfo,
+) -> Annotator:
+    return ChromosomeAnnotator(pipeline, info)
