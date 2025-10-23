@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 import os
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import (
     dataclass,
     field,
@@ -38,7 +38,7 @@ class AnnotatorBase(Annotator):
     def __init__(
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
-        attribute_descriptions: dict[str, AttributeDesc | tuple],
+        attribute_descriptions: Mapping[str, AttributeDesc | tuple],
     ):
         self.attribute_descriptions = {}
         for name, attr_desc in attribute_descriptions.items():

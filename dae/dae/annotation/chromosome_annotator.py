@@ -39,7 +39,7 @@ class ChromosomeAnnotator(AnnotatorBase):
     def _do_annotate(
         self,
         annotatable: Annotatable,
-        _context: dict[str, Any],
+        context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         new_annotatable = deepcopy(annotatable)
         if self.add_prefix:
