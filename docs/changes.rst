@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+* 2025.10.5
+    * Added support for merging score definitions in VCF based allele scores.
+    * Expanded test coverage for genomic scores and genomic scores
+      implementation classes.
+
 * 2025.10.4
     * Improved description of annotator attributes to describe default and
       internal attributes.
