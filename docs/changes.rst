@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+* 2025.10.7
+    * Bumped version to enable Google Analytics in production.
+
+* 2025.10.6
+    * Clean up typing and linting errors.
+
 * 2025.10.5
     * Added support for merging score definitions in VCF based allele scores.
     * Expanded test coverage for genomic scores and genomic scores
