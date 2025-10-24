@@ -56,7 +56,7 @@ def merge_parquets(
             con.execute("SET memory_limit = '768MB';")
             con.execute("SET threads = 1;")
             con.execute(f"SET temp_directory = '{out_file}.tmp';")
-            con.from_parquet(in_files).to_parquet(  # type: ignore
+            con.from_parquet(in_files).to_parquet(
                 out_file,
                 row_group_size=row_group_size,
                 overwrite=True,

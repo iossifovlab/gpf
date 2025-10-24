@@ -116,8 +116,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         # Support legacy dbs by conditionally using newer columns
         with self.connection.cursor() as cursor:
-            columns = cursor.execute("DESCRIBE measure").fetchall()
-            column_names = [col[0] for col in columns]
+            column_descs = cursor.execute("DESCRIBE measure").fetchall()
+            column_names = [col[0] for col in column_descs]
 
             if "histogram_config" in column_names:
                 hist_config_column = column(
