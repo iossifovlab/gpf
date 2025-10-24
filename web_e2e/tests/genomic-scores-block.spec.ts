@@ -99,7 +99,8 @@ test.describe('Genomic scores tests', () => {
     const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
     ' the concept specified by disease identifiers in CLNDISDB';
 
-    const dbSNP = 'dbSNP_RS - dbSNP ID (i.e. rs number)';
+    const mpc = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
+    'A deleteriousness prediction score for missense variants';
 
     const gnomad_genomes = 'gnomad_4_1_genomes_af_percent - Alternate allele frequency as percent';
 
@@ -107,7 +108,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${clndn}") span`).click();
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${dbSNP}") span`).click();
+    await page.locator(`mat-option:has-text("${mpc}") span`).click();
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${gnomad_genomes}") span`).click();
@@ -118,11 +119,11 @@ test.describe('Genomic scores tests', () => {
     await page.locator('gpf-remove-button').nth(2).click();
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(2);
     await expect(page.locator('gpf-genomic-scores').nth(0)).toContainText(gnomad_genomes);
-    await expect(page.locator('gpf-genomic-scores').nth(1)).toContainText(dbSNP);
+    await expect(page.locator('gpf-genomic-scores').nth(1)).toContainText(mpc);
 
     await page.locator('gpf-remove-button').nth(0).click();
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(1);
-    await expect(page.locator('gpf-genomic-scores').nth(0)).toContainText(dbSNP);
+    await expect(page.locator('gpf-genomic-scores').nth(0)).toContainText(mpc);
 
     await page.locator('gpf-remove-button').nth(0).click();
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(0);
@@ -132,20 +133,21 @@ test.describe('Genomic scores tests', () => {
     const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
     ' the concept specified by disease identifiers in CLNDISDB';
 
-    const dbSNP = 'dbSNP_RS - dbSNP ID (i.e. rs number)';
-
-    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await expect(page.locator('mat-option')).toHaveCount(6);
-    await page.locator(`mat-option:has-text("${clndn}") span`).click();
+    const mpc = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
+    'A deleteriousness prediction score for missense variants';
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await expect(page.locator('mat-option')).toHaveCount(5);
-    await expect(page.locator(`mat-option:has-text("${clndn}")`)).not.toBeVisible();
-    await page.locator(`mat-option:has-text("${dbSNP}") span`).click();
+    await page.locator(`mat-option:has-text("${clndn}") span`).click();
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await expect(page.locator('mat-option')).toHaveCount(4);
-    await expect(page.locator(`mat-option:has-text("${dbSNP}")`)).not.toBeVisible();
+    await expect(page.locator(`mat-option:has-text("${clndn}")`)).not.toBeVisible();
+    await page.locator(`mat-option:has-text("${mpc}") span`).click();
+
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
+    await expect(page.locator('mat-option')).toHaveCount(3);
+    await expect(page.locator(`mat-option:has-text("${mpc}")`)).not.toBeVisible();
   });
 
   test('should check if error message is shown when too many categorical values are selected', async({ page }) => {
@@ -246,39 +248,40 @@ test.describe('Genomic scores tests', () => {
   });
 
   test('should check genomic scores order and dropdown content', async({ page }) => {
-    const dbSNP = 'dbSNP_RS - dbSNP ID (i.e. rs number)';
+    const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
+    ' the concept specified by disease identifiers in CLNDISDB';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${dbSNP}") span`).click();
+    await page.locator(`mat-option:has-text("${clndn}") span`).click();
 
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(1);
-    await expect(page.locator('gpf-genomic-scores .title-wrapper')).toHaveText(dbSNP);
+    await expect(page.locator('gpf-genomic-scores .title-wrapper')).toHaveText(clndn);
 
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await expect(page.locator(`mat-option:has-text("${dbSNP}")`)).not.toBeVisible();
+    await expect(page.locator(`mat-option:has-text("${clndn}")`)).not.toBeVisible();
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(2);
     await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(0)).toHaveText(clinsig);
-    await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(1)).toHaveText(dbSNP);
+    await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(1)).toHaveText(clndn);
 
     const gnomadGenomes = 'gnomad_4_1_genomes_af_percent - Alternate allele frequency as percent';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await expect(page.locator(`mat-option:has-text("${dbSNP}")`)).not.toBeVisible();
+    await expect(page.locator(`mat-option:has-text("${clndn}")`)).not.toBeVisible();
     await expect(page.locator(`mat-option:has-text("${clinsig}")`)).not.toBeVisible();
     await page.locator(`mat-option:has-text("${gnomadGenomes}") span`).click();
 
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(3);
     await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(0)).toHaveText(gnomadGenomes);
     await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(1)).toHaveText(clinsig);
-    await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(2)).toHaveText(dbSNP);
+    await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(2)).toHaveText(clndn);
   });
 
   test('should remove genomic score from scores list and check dropdown content', async({ page }) => {
-    const dbSNP = 'dbSNP_RS - dbSNP ID (i.e. rs number)';
+    const exomeGnomadScore = 'gnomad_4_1_exomes_af_percent - Alternate allele frequency as percent';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${dbSNP}") span`).click();
+    await page.locator(`mat-option:has-text("${exomeGnomadScore}") span`).click();
 
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
@@ -294,7 +297,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator('#remove-button').nth(1).click();
     await expect(page.locator('gpf-genomic-scores')).toHaveCount(2);
     await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(0)).toHaveText(gnomadGenomes);
-    await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(1)).toHaveText(dbSNP);
+    await expect(page.locator('gpf-genomic-scores .title-wrapper').nth(1)).toHaveText(exomeGnomadScore);
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await expect(page.locator(`mat-option:has-text("${clinsig}") span`)).toBeVisible();
   });
