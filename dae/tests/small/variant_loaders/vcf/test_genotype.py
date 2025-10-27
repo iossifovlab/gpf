@@ -21,7 +21,7 @@ def study_loader(
     genome = setup_genome(
         root_path / "genome" / "chr.fa",
         f"""
-        >chr1
+        >chrA
         {100 * "A"}
         """)
 

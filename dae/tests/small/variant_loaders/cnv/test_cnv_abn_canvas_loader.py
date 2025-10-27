@@ -39,6 +39,17 @@ def canvas_cnv() -> TextIO:
     )))
 
 
+@pytest.fixture
+def canvas_cnv_nochr() -> TextIO:
+    return io.StringIO(convert_to_tab_separated(textwrap.dedent(
+        """
+        study_id family_id person_id location   variant
+        st1      f1        p1        1:10-50    LOSS
+        st1      f2        p2        2:10-50    GAIN
+        """,
+    )))
+
+
 @pytest.mark.parametrize(
     "transmission_type,expected_inheritance", [
         ("transmitted", Inheritance.unknown),
@@ -110,15 +121,12 @@ def test_cnv_loader_expected_variant_type(
 
 @pytest.mark.parametrize(
     "add_chrom_prefix,region,expected", [
-        (None, "chr1", 1),
-        (None, "chr2", 1),
-        (None, "chr3", 0),
-        ("chr", "1", 0),
-        ("chr", "2", 0),
+        ("chr", "chr1", 1),
+        ("chr", "chr2", 1),
     ],
 )
 def test_cnv_loader_regions(
-    abn_families: FamiliesData, canvas_cnv: TextIO,
+    abn_families: FamiliesData, canvas_cnv_nochr: TextIO,
     acgt_genome_38: ReferenceGenome,
     add_chrom_prefix: str | None,
     region: str,
@@ -126,7 +134,7 @@ def test_cnv_loader_regions(
 ) -> None:
 
     loader = CNVLoader(
-        abn_families, [canvas_cnv], genome=acgt_genome_38,
+        abn_families, [canvas_cnv_nochr], genome=acgt_genome_38,
         params={
             "cnv_person_id": "person_id",
             "cnv_location": "location",
@@ -148,23 +156,20 @@ def test_cnv_loader_regions(
 
 @pytest.mark.parametrize(
     "add_chrom_prefix,region,expected", [
-        (None, "chr1", 1),
-        (None, "chr2", 1),
-        (None, "chr3", 0),
-        ("chr", "chr1", 0),
-        ("chr", "chr2", 0),
+        ("chr", "chr1", 1),
+        ("chr", "chr2", 1),
     ],
 )
 def test_cnv_loader_constructor_regions(
     abn_families: FamiliesData,
-    canvas_cnv: TextIO,
+    canvas_cnv_nochr: TextIO,
     acgt_genome_38: ReferenceGenome,
     add_chrom_prefix: str | None,
     region: str, expected: int,
 ) -> None:
 
     loader = CNVLoader(
-        abn_families, [canvas_cnv], genome=acgt_genome_38,
+        abn_families, [canvas_cnv_nochr], genome=acgt_genome_38,
         regions=[Region.from_str(region)],
         params={
             "cnv_person_id": "person_id",

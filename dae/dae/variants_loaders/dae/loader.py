@@ -111,9 +111,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def _init_chromosomes(self) -> None:
         self._chromosomes = list(self.denovo_df.chrom.unique())
-        self._chromosomes = [
-            self._adjust_chrom_prefix(chrom) for chrom in self._chromosomes
-        ]
 
         all_chromosomes = self.genome.chromosomes
         if all(chrom in set(all_chromosomes) for chrom in self._chromosomes):
@@ -130,7 +127,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             return True
         isin = [
             r.isin(
-                self._adjust_chrom_prefix(summary_variant.chrom),
+                summary_variant.chrom,
                 summary_variant.position,
             )
             if r is not None
@@ -680,7 +677,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             extra_attributes_df = raw_df[extra_attributes_cols]
             denovo_df = denovo_df.join(extra_attributes_df)
-
+        denovo_df.chrom = denovo_df.chrom.apply(self._adjust_chrom_prefix)
         return (denovo_df, extra_attributes_cols.tolist())
 
     def flexible_denovo_load(
