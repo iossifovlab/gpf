@@ -511,14 +511,25 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
-            ref_alt_tuples = [
-                dae2vcf_variant(
-                    self._adjust_chrom_prefix(variant_tuple[0]),
+            ref_alt_tuples = []
+            for variant_tuple in zip(
+                    chrom_col, pos_col, variant_col, strict=True):
+                chrom = self._adjust_chrom_prefix(variant_tuple[0])
+                if chrom not in self.genome.chromosomes:
+                    logger.warning(
+                        "chromosome %s not found in the reference genome %s; "
+                        "skipping variant %s",
+                        chrom, self.genome.resource.resource_id,
+                        (chrom, variant_tuple[1], variant_tuple[2]))
+                    continue
+
+                res = dae2vcf_variant(
+                    chrom,
                     variant_tuple[1], variant_tuple[2],
                     genome,
-                ) for variant_tuple in zip(
-                    chrom_col, pos_col, variant_col, strict=True)
-            ]
+                )
+                ref_alt_tuples.append(res)
+            
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples, strict=True)
 
         else:
@@ -902,11 +913,19 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     def _summary_variant_from_dae_record(
         self, summary_index: int, rec: dict[str, Any],
-    ) -> SummaryVariant:
+    ) -> SummaryVariant | None:
         rec["cshl_position"] = int(rec["cshl_position"])
-        chrom = rec["chrom"]
+        chrom = self._adjust_chrom_prefix(rec["chrom"])
+        if chrom not in self.genome.chromosomes:
+            logger.warning(
+                "chromosome %s not found in the reference genome %s; "
+                "skipping variant %s",
+                chrom, self.genome.resource.resource_id,
+                (chrom, rec["cshl_position"], rec["cshl_variant"]))
+            return None
+
         position, reference, alternative = dae2vcf_variant(
-            self._adjust_chrom_prefix(chrom),
+            chrom,
             rec["cshl_position"],
             rec["cshl_variant"],
             self.genome,
@@ -1048,6 +1067,9 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                             summary_variant = \
                                 self._summary_variant_from_dae_record(
                                     summary_index, rec)
+                            if summary_variant is None:
+                                continue
+                            assert summary_variant is not None
 
                             family_data = rec["familyData"]
                             if family_data == "TOOMANY":

@@ -30,7 +30,7 @@ def dae2vcf_variant(
         reference = genome.get_sequence(
             chrom, position - 1, position + count - 1,
         )
-        assert len(reference) == count + 1, reference
+        assert len(reference) == count + 1, (reference, chrom, position, count)
         return position - 1, reference, reference[0]
 
     raise NotImplementedError("weird variant: " + variant)

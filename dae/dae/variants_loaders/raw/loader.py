@@ -620,6 +620,13 @@ class VariantsGenotypesLoader(VariantsLoader):
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
             chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
+            if chrom not in self.genome.chromosomes:
+                logger.warning(
+                    "chromosome %s not found in the reference genome %s; "
+                    "skipping variant %s",
+                    chrom, self.genome.resource.resource_id,
+                    summary_variant)
+                continue
             # pylint: disable=protected-access
             summary_variant._chromosome = chrom  # noqa: SLF001
             for summary_allele in summary_variant.alleles:
