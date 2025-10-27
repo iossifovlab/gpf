@@ -38,12 +38,12 @@ def imported_dataset(
         """
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chrA>
+        ##contig=<ID=chr1>
         #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
-        chrA   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
-        chrA   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
-        chrA   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/0 0/0 0/0
-        chrA   4   .  A   T    .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0
+        chr1   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
+        chr1   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
+        chr1   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/0 0/0 0/0
+        chr1   4   .  A   T    .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0
         """)
     study1 = vcf_study(
         root_path,
@@ -66,12 +66,12 @@ def imported_dataset(
         """
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chrA>
+        ##contig=<ID=chr1>
         #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
-        chrA   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
-        chrA   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
-        chrA   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/0 0/0 0/0
-        chrA   4   .  A   T    .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0
+        chr1   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
+        chr1   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
+        chr1   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/0 0/0 0/0
+        chr1   4   .  A   T    .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0
         """)
 
     study2 = vcf_study(
@@ -86,10 +86,10 @@ def imported_dataset(
 
 
 @pytest.mark.parametrize("region,family_variants_count", [
-    (Region("chrA", 1, 1), 4),
-    (Region("chrA", 2, 2), 2),
-    (Region("chrA", 3, 3), 2),
-    (Region("chrA", 4, 4), 4),
+    (Region("chr1", 1, 1), 4),
+    (Region("chr1", 2, 2), 2),
+    (Region("chr1", 3, 3), 2),
+    (Region("chr1", 4, 4), 4),
 ])
 def test_summary_variants_family_variants_count_single_allele(
     region: Region, family_variants_count: int, imported_dataset: GenotypeData,

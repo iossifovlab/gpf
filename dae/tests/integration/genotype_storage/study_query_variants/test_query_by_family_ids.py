@@ -40,8 +40,8 @@ def imported_study(
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   G     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
-chrA   2   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1 0/0  1/1
+chr1   1   .  A   G     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
+chr1   2   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1 0/0  1/1
         """)
 
     return vcf_study(
@@ -53,16 +53,16 @@ chrA   2   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1 0/0  1/1
 @pytest.mark.parametrize(
     "region,family_ids,count",
     [
-        (Region("chrA", 1, 1), ["f1"], 1),
-        (Region("chrA", 1, 1), ["f2"], 1),
-        (Region("chrA", 1, 1), ["f1", "f2"], 2),
-        (Region("chrA", 1, 1), [], 0),
-        (Region("chrA", 1, 1), None, 2),
-        (Region("chrA", 1, 2), ["f1"], 2),
-        (Region("chrA", 1, 2), ["f2"], 2),
-        (Region("chrA", 1, 2), ["f1", "f2"], 4),
-        (Region("chrA", 1, 2), [], 0),
-        (Region("chrA", 1, 2), None, 4),
+        (Region("chr1", 1, 1), ["f1"], 1),
+        (Region("chr1", 1, 1), ["f2"], 1),
+        (Region("chr1", 1, 1), ["f1", "f2"], 2),
+        (Region("chr1", 1, 1), [], 0),
+        (Region("chr1", 1, 1), None, 2),
+        (Region("chr1", 1, 2), ["f1"], 2),
+        (Region("chr1", 1, 2), ["f2"], 2),
+        (Region("chr1", 1, 2), ["f1", "f2"], 4),
+        (Region("chr1", 1, 2), [], 0),
+        (Region("chr1", 1, 2), None, 4),
     ],
 )
 def test_query_by_family_ids(

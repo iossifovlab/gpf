@@ -40,14 +40,14 @@ f2       ch2      dad2  mom2  2    2     prb
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mis1 dad1 ch1 mis2 dad2 ch2 mom2
-chrA   1   .  A   G   .    .      .    GT     0/0  0/0  ./0 0/0  0/0  0/0 0/0
-chrA   2   .  A   G   .    .      .    GT     0/0  0/0  1/0 0/0  0/0  0/0 0/0
-chrA   3   .  A   G,C .    .      .    GT     0/0  0/1  1/0 0/0  0/0  0/0 0/0
-chrA   4   .  A   G,C .    .      .    GT     0/0  1/1  1/1 0/0  0/0  0/0 0/0
-chrA   5   .  A   G,C .    .      .    GT     0/0  2/1  2/1 0/0  0/0  0/0 0/0
-chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
+chr1   1   .  A   G   .    .      .    GT     0/0  0/0  ./0 0/0  0/0  0/0 0/0
+chr1   2   .  A   G   .    .      .    GT     0/0  0/0  1/0 0/0  0/0  0/0 0/0
+chr1   3   .  A   G,C .    .      .    GT     0/0  0/1  1/0 0/0  0/0  0/0 0/0
+chr1   4   .  A   G,C .    .      .    GT     0/0  1/1  1/1 0/0  0/0  0/0 0/0
+chr1   5   .  A   G,C .    .      .    GT     0/0  2/1  2/1 0/0  0/0  0/0 0/0
+chr1   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
         """)
 
     return vcf_study(
@@ -74,12 +74,12 @@ chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
 @pytest.mark.parametrize(
     "region,inheritance",
     [
-        (Region("chrA", 1, 1), Inheritance.unknown),
-        (Region("chrA", 2, 2), Inheritance.unknown),
-        (Region("chrA", 3, 3), Inheritance.unknown),
-        (Region("chrA", 4, 4), Inheritance.unknown),
-        (Region("chrA", 5, 5), Inheritance.unknown),
-        (Region("chrA", 6, 6), Inheritance.unknown),
+        (Region("chr1", 1, 1), Inheritance.unknown),
+        (Region("chr1", 2, 2), Inheritance.unknown),
+        (Region("chr1", 3, 3), Inheritance.unknown),
+        (Region("chr1", 4, 4), Inheritance.unknown),
+        (Region("chr1", 5, 5), Inheritance.unknown),
+        (Region("chr1", 6, 6), Inheritance.unknown),
     ],
 )
 def test_inheritance_nontrio(

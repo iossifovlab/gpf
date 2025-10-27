@@ -21,7 +21,7 @@ def study_loader(
     genome = setup_genome(
         root_path / "genome" / "chr.fa",
         f"""
-        >chrA
+        >chr1
         {100 * "A"}
         """)
 
@@ -42,10 +42,10 @@ f        ch3      dad   mom   2   1      sib
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO  FORMAT mom dad ch1 ch2 ch3 gma gpa
-chrA   2   .  A   G,C   .    .      .     GT     0/2 0/0 0/0 0/0 0/0 0/0 0/0
-chrA   10  .  A   GC,CC,CT,CC . .   .     GT     2/3 2/2 2/2 2/2 2/2 2/2 2/2
+chr1   2   .  A   G,C   .    .      .     GT     0/2 0/0 0/0 0/0 0/0 0/0 0/0
+chr1   10  .  A   GC,CC,CT,CC . .   .     GT     2/3 2/2 2/2 2/2 2/2 2/2 2/2
         """)
 
     families = FamiliesLoader(ped_path).load()
@@ -57,7 +57,7 @@ chrA   10  .  A   GC,CC,CT,CC . .   .     GT     2/3 2/2 2/2 2/2 2/2 2/2 2/2
 
 
 def test_11540_gt(study_loader: VcfLoader) -> None:
-    study_loader.reset_regions([Region("chrA", 2, 2)])
+    study_loader.reset_regions([Region("chr1", 2, 2)])
     all_variants = list(study_loader.full_variants_iterator())
     assert len(all_variants) == 1
     _sv, fvs = all_variants[0]
@@ -112,7 +112,7 @@ def test_11540_gt(study_loader: VcfLoader) -> None:
 
 
 def test_11540_family_alleles(study_loader: VcfLoader) -> None:
-    study_loader.reset_regions([Region("chrA", 2, 2)])
+    study_loader.reset_regions([Region("chr1", 2, 2)])
     all_variants = list(study_loader.full_variants_iterator())
     assert len(all_variants) == 1
     _sv, fvs = all_variants[0]
@@ -131,7 +131,7 @@ def test_11540_family_alleles(study_loader: VcfLoader) -> None:
 
 
 def test_11548_gt(study_loader: VcfLoader) -> None:
-    study_loader.reset_regions([Region("chrA", 10, 10)])
+    study_loader.reset_regions([Region("chr1", 10, 10)])
     all_variants = list(study_loader.full_variants_iterator())
     assert len(all_variants) == 1
     _sv, fvs = all_variants[0]

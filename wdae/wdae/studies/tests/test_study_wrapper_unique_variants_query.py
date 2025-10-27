@@ -62,10 +62,10 @@ f2       ch2      dad2  mom2  2   2      prb
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/0
-chrA   2   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/1
+chr1   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/0
+chr1   2   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/1
         """)
 
     ped_path2 = setup_pedigree(
@@ -84,10 +84,10 @@ f2       ch2      dad2  mom2  2   2      prb
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/0  0/0 0/0
-chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
+chr1   1   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/0  0/0 0/0
+chr1   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
         """)
 
     study1 = vcf_study(
@@ -145,9 +145,9 @@ def test_unique_family_variants(
 @pytest.mark.parametrize(
     "summary_variant_ids, count",
     [
-        (["chrA:1:sub(A->C)"], 3),
-        (["chrA:1:sub(A->G)"], 2),
-        (["chrA:2:sub(A->C)"], 4),
+        (["chr1:1:sub(A->C)"], 3),
+        (["chr1:1:sub(A->G)"], 2),
+        (["chr1:2:sub(A->C)"], 4),
     ],
 )
 def test_summary_variant_ids(

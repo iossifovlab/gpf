@@ -65,9 +65,9 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         """
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chrA>
+        ##contig=<ID=chr1>
         #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT m1  d1  p1
-        chrA   1   .  A   T    .    .      .    GT     0/1 0/0 0/1
+        chr1   1   .  A   T    .    .      .    GT     0/1 0/0 0/1
         """)
 
     vcf_study(

@@ -38,10 +38,10 @@ def imported_study(
         root_path / "cnv_data" / "in.tsv",
         """
 family_id location    variant  best_state
-f1        chrA:1-20   CNV+     2||2||2||3
-f1        chrA:31-50  CNV-     2||2||2||1
-f2        chrA:51-70  CNV+     2||2||3
-f2        chrA:81-100 CNV-     2||2||1
+f1        chr1:1-20   CNV+     2||2||2||3
+f1        chr1:31-50  CNV-     2||2||2||1
+f2        chr1:51-70  CNV+     2||2||3
+f2        chr1:81-100 CNV-     2||2||1
         """)
 
     return cnv_study(
@@ -80,7 +80,7 @@ def test_query_cnv_variants(
         variant_type: str | None,
         count: int) -> None:
     if pos_begin is not None and pos_end is not None:
-        regions = [Region("chrA", pos_begin, pos_end)]
+        regions = [Region("chr1", pos_begin, pos_end)]
     else:
         regions = None
     vs = list(imported_study.query_variants(

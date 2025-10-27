@@ -43,10 +43,10 @@ f2       ch2      dad2  mom2  2   2      prb
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
-chrA   2   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/1
+chr1   1   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
+chr1   2   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/1
         """)
 
     ped_path2 = setup_pedigree(
@@ -65,10 +65,10 @@ f2       ch2      dad2  mom2  2   2      prb
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
-chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
+chr1   1   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
+chr1   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
         """)
 
     study1 = vcf_study(

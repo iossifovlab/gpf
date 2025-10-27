@@ -36,16 +36,16 @@ def imported_study(
         """
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chrA>
+        ##contig=<ID=chr1>
         #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT m1  d1  p1  s1
-        chrA   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0
-        chrA   2   .  A   T    .    .      .    GT     0/0 0/0 0/1 0/0
-        chrA   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/1
-        chrA   4   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/1
-        chrA   5   .  A   T,G  .    .      .    GT     1/0 2/0 2/0 0/0
-        chrA   6   .  A   T,G  .    .      .    GT     0/0 2/0 1/0 0/0
-        chrA   7   .  A   T,G  .    .      .    GT     1/0 0/0 1/2 0/0
-        chrA   8   .  A   T,G  .    .      .    GT     0/0 0/0 1/2 0/0
+        chr1   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0
+        chr1   2   .  A   T    .    .      .    GT     0/0 0/0 0/1 0/0
+        chr1   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/1
+        chr1   4   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/1
+        chr1   5   .  A   T,G  .    .      .    GT     1/0 2/0 2/0 0/0
+        chr1   6   .  A   T,G  .    .      .    GT     0/0 2/0 1/0 0/0
+        chr1   7   .  A   T,G  .    .      .    GT     1/0 0/0 1/2 0/0
+        chr1   8   .  A   T,G  .    .      .    GT     0/0 0/0 1/2 0/0
         """)
 
     return vcf_study(
@@ -55,10 +55,10 @@ def imported_study(
 
 
 @pytest.mark.parametrize("region,seen_as_denovo", [
-    (Region("chrA", 1, 1), False),
-    (Region("chrA", 2, 2), True),
-    (Region("chrA", 3, 3), False),
-    (Region("chrA", 4, 4), True),
+    (Region("chr1", 1, 1), False),
+    (Region("chr1", 2, 2), True),
+    (Region("chr1", 3, 3), False),
+    (Region("chr1", 4, 4), True),
 ])
 def test_summary_variants_seen_as_denovo_single_allele(
     region: Region,
@@ -76,10 +76,10 @@ def test_summary_variants_seen_as_denovo_single_allele(
 @pytest.mark.gs_inmemory
 @pytest.mark.gs_impala2
 @pytest.mark.parametrize("region,seen_as_denovo", [
-    (Region("chrA", 5, 5), [False, False]),
-    (Region("chrA", 6, 6), [True, False]),
-    (Region("chrA", 7, 7), [False, True]),
-    (Region("chrA", 8, 8), [True, True]),
+    (Region("chr1", 5, 5), [False, False]),
+    (Region("chr1", 6, 6), [True, False]),
+    (Region("chr1", 7, 7), [False, True]),
+    (Region("chr1", 8, 8), [True, True]),
 ])
 def test_summary_variants_seen_as_denovo_multi_allele(
         region: Region, seen_as_denovo: list[bool],

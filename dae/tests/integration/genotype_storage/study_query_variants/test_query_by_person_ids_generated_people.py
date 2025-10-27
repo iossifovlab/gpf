@@ -40,9 +40,9 @@ f2       dad2     0     0     1    -     dad             false
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT prb1 unknown1 mom2 dad2 prb2
-chrA   1   .  A   C,G .    .      .    GT     0/1  0/0      0/0  0/0  0/1
+chr1   1   .  A   C,G .    .      .    GT     0/1  0/0      0/0  0/0  0/1
         """)
 
     return vcf_study(
@@ -82,7 +82,7 @@ def test_query_by_person_ids_generated_people(
     person_ids: list[str] | None,
     count: int,
 ) -> None:
-    region = Region("chrA", begin, end)
+    region = Region("chr1", begin, end)
     vs = list(imported_study.query_variants(
         regions=[region],
         person_ids=person_ids,

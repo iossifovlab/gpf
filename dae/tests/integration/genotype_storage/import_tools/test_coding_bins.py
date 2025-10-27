@@ -45,7 +45,7 @@ def vcf_import_data(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
 chr1   12  .  T   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
 chr1   20  .  G   A   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1

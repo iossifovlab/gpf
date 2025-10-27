@@ -35,14 +35,14 @@ def imported_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom dad ch
-chrA   1   .  A   C     .    .      .    GT     0/0 0/1 0/1
-chrA   2   .  A   C     .    .      .    GT     0/1 0/1 0/1
-chrA   3   .  A   AA    .    .      .    GT     0/0 0/1 0/1
-chrA   4   .  AA  A     .    .      .    GT     0/0 0/1 0/1
-chrA   5   .  AAA CCC   .    .      .    GT     0/0 0/1 0/1
-chrA   6   .  AA  AC    .    .      .    GT     0/0 0/1 0/1
+chr1   1   .  A   C     .    .      .    GT     0/0 0/1 0/1
+chr1   2   .  A   C     .    .      .    GT     0/1 0/1 0/1
+chr1   3   .  A   AA    .    .      .    GT     0/0 0/1 0/1
+chr1   4   .  AA  A     .    .      .    GT     0/0 0/1 0/1
+chr1   5   .  AAA CCC   .    .      .    GT     0/0 0/1 0/1
+chr1   6   .  AA  AC    .    .      .    GT     0/0 0/1 0/1
         """)
 
     return vcf_study(
@@ -93,7 +93,7 @@ def test_query_by_variant_type(
     variant_type: str | None,
     count: int,
 ) -> None:
-    region = Region("chrA", begin, end)
+    region = Region("chr1", begin, end)
     vs = list(imported_study.query_variants(
         regions=[region],
         variant_type=variant_type))

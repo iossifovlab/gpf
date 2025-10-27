@@ -45,13 +45,13 @@ f        ch3      dad   mom   2   1      sib
 ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
 ##contig=<ID=1>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT gma gpa mom dad ch1 ch2 ch3
-chrA   1   .  A   T   .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/0 0/0
-chrA   2   .  A   T   .    .      .    GT     0/1 0/0 0/0 0/0 0/0 0/0 0/0
-chrA   3   .  A   T   .    .      .    GT     0/1 0/0 1/0 0/0 0/0 0/0 0/0
-chrA   4   .  A   T   .    .      .    GT     0/1 0/0 1/0 0/0 0/1 0/0 0/0
-chrA   5   .  A   T   .    .      .    GT     0/1 0/0 1/0 0/0 0/1 0/0 1/1
-chrA   6   .  A   T   .    .      .    GT     0/0 0/0 1/0 0/0 0/1 0/0 1/1
-chrA   7   .  A   T   .    .      .    GT     1/1 0/0 0/0 0/0 0/1 0/0 1/1
+chr1   1   .  A   T   .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/0 0/0
+chr1   2   .  A   T   .    .      .    GT     0/1 0/0 0/0 0/0 0/0 0/0 0/0
+chr1   3   .  A   T   .    .      .    GT     0/1 0/0 1/0 0/0 0/0 0/0 0/0
+chr1   4   .  A   T   .    .      .    GT     0/1 0/0 1/0 0/0 0/1 0/0 0/0
+chr1   5   .  A   T   .    .      .    GT     0/1 0/0 1/0 0/0 0/1 0/0 1/1
+chr1   6   .  A   T   .    .      .    GT     0/0 0/0 1/0 0/0 0/1 0/0 1/1
+chr1   7   .  A   T   .    .      .    GT     1/1 0/0 0/0 0/0 0/1 0/0 1/1
         """)
 
     return vcf_study(
@@ -100,9 +100,9 @@ def test_inheritance_query_multi(
 @pytest.mark.parametrize(
     "region,count,inheritance",
     [
-        (Region("chrA", 3, 5), 3, "mendelian"),
-        (Region("chrA", 6, 6), 1, "denovo"),
-        (Region("chrA", 7, 7), 1, "omission"),
+        (Region("chr1", 3, 5), 3, "mendelian"),
+        (Region("chr1", 6, 6), 1, "denovo"),
+        (Region("chr1", 7, 7), 1, "omission"),
     ],
 )
 def test_inheritance_multi_full(
