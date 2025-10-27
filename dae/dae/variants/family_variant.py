@@ -140,6 +140,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     def chrom(self) -> str:
         return self.summary_allele.chromosome
 
+    @chrom.setter
+    def chrom(self, chrom: str) -> None:
+        self.summary_allele.chrom = chrom
+
     @property
     def position(self) -> int:
         return self.summary_allele.position
@@ -653,6 +657,10 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def chrom(self) -> str:
         return self.summary_variant.chromosome
+
+    @chrom.setter
+    def chrom(self, chrom: str) -> None:
+        self.summary_variant.chrom = chrom
 
     @property
     def position(self) -> int:

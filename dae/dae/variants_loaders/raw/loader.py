@@ -620,7 +620,6 @@ class VariantsGenotypesLoader(VariantsLoader):
     ) -> FullVariantsIterator:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
-            # chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
             chrom = summary_variant.chrom
             if chrom not in self.genome.chromosomes:
                 logger.warning(

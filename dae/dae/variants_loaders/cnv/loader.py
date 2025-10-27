@@ -359,7 +359,6 @@ class CNVLoader(VariantsGenotypesLoader):
                     summary_rec)
                 continue
 
-
             svar = SummaryVariantFactory.summary_variant_from_records(
                 [summary_rec, alt_rec], self.transmission_type,
             )

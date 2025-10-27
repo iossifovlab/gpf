@@ -554,7 +554,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         transmission_type=self.transmission_type)
                 chrom = self._adjust_chrom_prefix(
                     current_summary_variant.chromosome)
-                
+
                 all_genotypes, vcf_iterator_idexes_to_advance = \
                     self._collect_all_genotypes(
                         current_vcf_variant,
