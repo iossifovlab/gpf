@@ -518,6 +518,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         "skipping variant %s",
                         chrom, self.genome.resource.resource_id,
                         (chrom, variant_tuple[1], variant_tuple[2]))
+                    ref_alt_tuples.append((np.nan, np.nan, np.nan))
                     continue
 
                 res = dae2vcf_variant(
@@ -525,8 +526,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                     variant_tuple[1], variant_tuple[2],
                     genome,
                 )
-                ref_alt_tuples.append(res)
-            
+                ref_alt_tuples.append(res)  # type: ignore
+
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples, strict=True)
 
         else:
@@ -565,7 +566,6 @@ class DenovoLoader(VariantsGenotypesLoader):
                         "person_id": raw_df.loc[:, denovo_person_id],
                     },
                 )
-
                 grouped = temp_df.groupby([
                     "chrom", "pos", "ref", "alt", "person_id"])
 
@@ -678,6 +678,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             extra_attributes_df = raw_df[extra_attributes_cols]
             denovo_df = denovo_df.join(extra_attributes_df)
         denovo_df.chrom = denovo_df.chrom.apply(self._adjust_chrom_prefix)
+        denovo_df = denovo_df.dropna(axis=0, how="any", subset=[
+            "position", "reference", "alternative"])
         return (denovo_df, extra_attributes_cols.tolist())
 
     def flexible_denovo_load(
