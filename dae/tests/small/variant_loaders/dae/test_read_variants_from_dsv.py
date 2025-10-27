@@ -493,9 +493,9 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
 @pytest.mark.parametrize("variants,params", [
     (textwrap.dedent("""
         familyId location variant   bestState
-        f1       chrA:1   sub(A->G) 2||2||1||2||1/0||0||1||0||1
-        f2       chrA:2   sub(A->G) 2||2||2||1/0||0||0||1
-        f3       chrA:3   sub(A->G) 1/1
+        f1       chr1:1   sub(A->G) 2||2||1||2||1/0||0||1||0||1
+        f2       chr1:2   sub(A->G) 2||2||2||1/0||0||0||1
+        f3       chr1:3   sub(A->G) 1/1
         """), {
         "denovo_location": "location",
         "denovo_variant": "variant",
@@ -504,9 +504,9 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     }),
     (textwrap.dedent("""
         familyId chrom pos ref alt bestState
-        f1       chrA  1   A   G   2||2||1||2||1/0||0||1||0||1
-        f2       chrA  2   A   G   2||2||2||1/0||0||0||1
-        f3       chrA  3   A   G   1/1
+        f1       chr1  1   A   G   2||2||1||2||1/0||0||1||0||1
+        f2       chr1  2   A   G   2||2||2||1/0||0||0||1
+        f3       chr1  3   A   G   1/1
         """), {
         "denovo_chrom": "chrom",
         "denovo_pos": "pos",
@@ -517,9 +517,9 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     }),
     (textwrap.dedent("""
         familyId location variant   bestState
-        f1       chrA:1   sub(A->G) 22121/00101
-        f2       chrA:2   sub(A->G) 2221/0001
-        f3       chrA:3   sub(A->G) 1/1
+        f1       chr1:1   sub(A->G) 22121/00101
+        f2       chr1:2   sub(A->G) 2221/0001
+        f3       chr1:3   sub(A->G) 1/1
         """), {
         "denovo_location": "location",
         "denovo_variant": "variant",
@@ -528,9 +528,9 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     }),
     (textwrap.dedent("""
         familyId chrom pos ref alt bestState
-        f1       chrA  1   A   G   22121/00101
-        f2       chrA  2   A   G   2221/0001
-        f3       chrA  3   A   G   1/1
+        f1       chr1  1   A   G   22121/00101
+        f2       chr1  2   A   G   2221/0001
+        f3       chr1  3   A   G   1/1
         """), {
         "denovo_chrom": "chrom",
         "denovo_pos": "pos",
@@ -541,9 +541,9 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     }),
     (textwrap.dedent("""
         familyId chrom pos ref alt personId
-        f1       chrA  1   A   G   f1.s1,f1.s2
-        f2       chrA  2   A   G   f2.s1
-        f3       chrA  3   A   G   f3.p1
+        f1       chr1  1   A   G   f1.s1,f1.s2
+        f2       chr1  2   A   G   f2.s1
+        f3       chr1  3   A   G   f3.p1
         """), {
         "denovo_chrom": "chrom",
         "denovo_pos": "pos",
@@ -554,9 +554,9 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     }),
     (textwrap.dedent("""
         familyId chrom pos ref alt personId
-        f1       chrA  1   A   G   f1.s1;f1.s2
-        f2       chrA  2   A   G   f2.s1
-        f3       chrA  3   A   G   f3.p1
+        f1       chr1  1   A   G   f1.s1;f1.s2
+        f2       chr1  2   A   G   f2.s1
+        f3       chr1  3   A   G   f3.p1
         """), {
         "denovo_chrom": "chrom",
         "denovo_pos": "pos",

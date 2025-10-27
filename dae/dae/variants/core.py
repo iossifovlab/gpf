@@ -178,6 +178,10 @@ class Allele:
     def chrom(self) -> str:
         return self._chrom
 
+    @chrom.setter
+    def chrom(self, chrom: str) -> None:
+        self._chrom = chrom
+
     @property
     def position(self) -> int:
         return self._pos

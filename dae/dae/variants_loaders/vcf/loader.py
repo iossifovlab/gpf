@@ -552,11 +552,24 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     SummaryVariantFactory.summary_variant_from_vcf(
                         current_vcf_variant, summary_index,
                         transmission_type=self.transmission_type)
+                chrom = self._adjust_chrom_prefix(
+                    current_summary_variant.chromosome)
 
                 all_genotypes, vcf_iterator_idexes_to_advance = \
                     self._collect_all_genotypes(
                         current_vcf_variant,
                         vcf_variants)
+
+                if chrom not in self.genome.chromosomes:
+                    logger.warning(
+                        "chromosome %s not found in the reference genome %s; "
+                        "skipping variant %s",
+                        chrom, self.genome.resource.resource_id,
+                        current_vcf_variant)
+                    for idx in vcf_iterator_idexes_to_advance:
+                        vcf_variants[idx] = next(vcf_iterators[idx], None)
+                    summary_index += 1
+                    continue
 
                 if len(current_summary_variant.alt_alleles) > 127:
                     logger.warning(
@@ -567,6 +580,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 family_genotypes = VcfFamiliesGenotypes(
                     self, all_genotypes)
                 family_variants = []
+
+                # pylint: disable=protected-access
+                current_summary_variant.chrom = chrom
 
                 for fam, genotype, best_state in family_genotypes \
                         .family_genotype_iterator():

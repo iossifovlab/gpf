@@ -9,7 +9,7 @@ from dae.genomic_resources.testing import (
 )
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.testing.foobar_import import foobar_gpf
+from dae.testing.alla_import import alla_gpf
 from dae.testing.import_helpers import vcf_study
 from dae.utils.regions import Region
 
@@ -21,7 +21,7 @@ def imported_study(
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp("test_variant_attributes")
     genotype_storage = genotype_storage_factory(root_path)
-    gpf_instance = foobar_gpf(root_path, genotype_storage)
+    gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -35,12 +35,12 @@ def imported_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=bar>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom dad ch1
-chrA   1   .  A   C   .    .      .    GT     0/1 0/0 0/0
-chrA   2   .  A   C   .    .      .    GT     0/0 0/1 0/0
-chrA   3   .  A   C   .    .      .    GT     1/1 0/0 0/0
-chrA   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
+chr1   1   .  A   C   .    .      .    GT     0/1 0/0 0/0
+chr1   2   .  A   C   .    .      .    GT     0/0 0/1 0/0
+chr1   3   .  A   C   .    .      .    GT     1/1 0/0 0/0
+chr1   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
         """)
 
     return vcf_study(
@@ -79,7 +79,7 @@ def test_variant_frequencies(
     position: int,
     freqs: list[float | None],
 ) -> None:
-    regions = [Region("chrA", position, position)]
+    regions = [Region("chr1", position, position)]
     vs = list(imported_study.query_variants(regions=regions))
     assert len(vs) == 1
 

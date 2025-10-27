@@ -92,7 +92,7 @@ def iterator_to_json(
         curr = post
         post = next(users, None)
     yield "]"
-    return 0
+    return 0  # noqa: B901
 
 
 class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors

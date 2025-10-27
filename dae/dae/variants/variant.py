@@ -626,6 +626,12 @@ class SummaryVariant:
     def chrom(self) -> str:
         return self._chromosome
 
+    @chrom.setter
+    def chrom(self, chrom: str) -> None:
+        self._chromosome = chrom
+        for sa in self.alleles:
+            sa.chrom = chrom
+
     @property
     def position(self) -> int:
         return self._position

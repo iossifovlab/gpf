@@ -127,10 +127,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         to_email = override or self.email
 
         mail = send_mail(subject, message, from_email, [to_email])
-        logger.info("email sent: to:      <%s>", str(self.email))
-        logger.info("email sent: from:    <%s>", str(from_email))
-        logger.info("email sent: subject:  %s", str(subject))
-        logger.info("email sent: message:  %s", str(message))
+        logger.info("email sent: to:      <%s>", self.email)
+        logger.info("email sent: from:    <%s>", from_email)
+        logger.info("email sent: subject:  %s", subject)
+        logger.info("email sent: message:  %s", message)
 
         return mail
 

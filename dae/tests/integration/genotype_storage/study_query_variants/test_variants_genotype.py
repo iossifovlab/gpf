@@ -37,17 +37,17 @@ def imported_study(
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1
-chrA   1   .  A   G,C   .    .      .    GT     0/0  0/0  ./0
-chrA   2   .  A   G,C   .    .      .    GT     1/2  1/.  ./2
-chrA   3   .  A   G,C   .    .      .    GT     ./.  ./.  ./2
-chrA   4   .  A   G,C   .    .      .    GT     ./.  ./.  ./.
-chrA   5   .  A   G,C,T .    .      .    GT     ./.  ./.  ./3
-chrA   6   .  A   G,C,T .    .      .    GT     0/0  0/0  0/0
-chrA   7   .  A   G     .    .      .    GT     1/0  1/0  0/0
-chrA   8   .  A   G     .    .      .    GT     1/0  1/0  1/0
-chrA   9   .  A   G,C   .    .      .    GT     2/0  2/0  2/0
+chr1   1   .  A   G,C   .    .      .    GT     0/0  0/0  ./0
+chr1   2   .  A   G,C   .    .      .    GT     1/2  1/.  ./2
+chr1   3   .  A   G,C   .    .      .    GT     ./.  ./.  ./2
+chr1   4   .  A   G,C   .    .      .    GT     ./.  ./.  ./.
+chr1   5   .  A   G,C,T .    .      .    GT     ./.  ./.  ./3
+chr1   6   .  A   G,C,T .    .      .    GT     0/0  0/0  0/0
+chr1   7   .  A   G     .    .      .    GT     1/0  1/0  0/0
+chr1   8   .  A   G     .    .      .    GT     1/0  1/0  1/0
+chr1   9   .  A   G,C   .    .      .    GT     2/0  2/0  2/0
         """)
 
     return vcf_study(
@@ -89,7 +89,7 @@ def test_variant_gt(
         imported_study: GenotypeData, position: int,
         genotype: np.ndarray) -> None:
     vs = list(imported_study.query_variants(
-        regions=[Region("chrA", position, position)],
+        regions=[Region("chr1", position, position)],
         return_reference=True,
         return_unknown=True))
     assert len(vs) == 1
@@ -114,7 +114,7 @@ def test_variant_genotype(
         imported_study: GenotypeData, position: int,
         genotype: np.ndarray) -> None:
     vs = list(imported_study.query_variants(
-        regions=[Region("chrA", position, position)],
+        regions=[Region("chr1", position, position)],
         return_reference=True,
         return_unknown=True))
     assert len(vs) == 1
@@ -139,7 +139,7 @@ def test_variant_genotype_flatten(
         imported_study: GenotypeData, position: int,
         genotype: np.ndarray) -> None:
     vs = list(imported_study.query_variants(
-        regions=[Region("chrA", position, position)],
+        regions=[Region("chr1", position, position)],
         return_reference=True,
         return_unknown=True))
     assert len(vs) == 1
@@ -160,7 +160,7 @@ def test_variant_in_member(
         imported_study: GenotypeData, position: int,
         members: list[str]) -> None:
     vs = list(imported_study.query_variants(
-        regions=[Region("chrA", position, position)],
+        regions=[Region("chr1", position, position)],
         return_reference=True,
         return_unknown=True))
     assert len(vs) == 1

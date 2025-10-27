@@ -26,6 +26,28 @@ def genome(
         {25 * "ACGT"}
         >chr3
         {25 * "ACGT"}
+        >chr4
+        {25 * "ACGT"}
+        """,
+    )
+
+
+@pytest.fixture(scope="module")
+def genome_nochr(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> ReferenceGenome:
+    root_path = tmp_path_factory.mktemp("genome")
+    return setup_genome(
+        root_path / "acgt_gpf" / "genome" / "allChr.fa",
+        f"""
+        >1
+        {25 * "ACGT"}
+        >2
+        {25 * "ACGT"}
+        >3
+        {25 * "ACGT"}
+        >4
+        {25 * "ACGT"}
         """,
     )
 
@@ -54,21 +76,21 @@ def multi_contig_vcf(
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=chr1>
-    ##contig=<ID=chr2>
-    ##contig=<ID=chr3>
-    ##contig=<ID=chr4>
+    ##contig=<ID=1>
+    ##contig=<ID=2>
+    ##contig=<ID=3>
+    ##contig=<ID=4>
     #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    chr1   	3   	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1   	13  	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1   	15  	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    chr2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    chr3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3   	25  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3   	29   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    chr4   	55   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
+    1   	3   	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    1   	13  	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    1   	15  	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    3   	25  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    3   	29   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    4   	44  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    4   	55   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
     return str(vcf_path)
@@ -82,21 +104,21 @@ def multi_contig_vcf_gz(
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=chr1>
-    ##contig=<ID=chr2>
-    ##contig=<ID=chr3>
-    ##contig=<ID=chr4>
+    ##contig=<ID=1>
+    ##contig=<ID=2>
+    ##contig=<ID=3>
+    ##contig=<ID=4>
     #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom 	dad 	ch1 	ch2 	ch3 	gma 	gpa
-    chr1   	3 	    .	T	G,A	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/0 	0/0 	0/0	    0/0
-    chr1   	13	    .	T	G,A	        .	    .   	.   	GT  	0/2 	0/0 	0/0 	0/0 	0/0 	0/0 	0/0
-    chr1   	15  	.	T	G,A	        .	    .   	.   	GT  	./. 	./. 	./. 	./. 	./. 	./. 	./.
-    chr2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1 	0/0 	0/0 	0/0 	0/2 	0/0	    0/0
-    chr3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/0 	0/0	    0/0
-    chr3   	25  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/0 	0/0	    0/0
-    chr3   	29  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/1 	0/0	    0/0
-    chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	1/1 	0/1 	0/0	    0/0
-    chr4   	55  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/1 	0/0 	0/0	    1/1
-    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3 	2/2 	2/2 	2/2 	2/2 	2/2	2/2
+    1   	3 	    .	T	G,A	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/0 	0/0 	0/0	    0/0
+    1   	13	    .	T	G,A	        .	    .   	.   	GT  	0/2 	0/0 	0/0 	0/0 	0/0 	0/0 	0/0
+    1   	15  	.	T	G,A	        .	    .   	.   	GT  	./. 	./. 	./. 	./. 	./. 	./. 	./.
+    2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1 	0/0 	0/0 	0/0 	0/2 	0/0	    0/0
+    3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/0 	0/0	    0/0
+    3   	25  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/0 	0/0	    0/0
+    3   	29  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/1 	0/0	    0/0
+    4   	44  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	1/1 	0/1 	0/0	    0/0
+    4   	55  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/1 	0/0 	0/0	    1/1
+    4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3 	2/2 	2/2 	2/2 	2/2 	2/2	2/2
     """) # noqa
 
     return str(vcf_path)
@@ -192,7 +214,7 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
         params={"add_chrom_prefix": "chr"})
 
     assert set(loader.chromosomes) == {
-        "chrchr1", "chrchr2", "chrchr3", "chrchr4"}
+        "chr1", "chr2", "chr3", "chr4"}
 
 
 def test_chromosomes_have_adjusted_chrom_del_prefix(
@@ -239,7 +261,7 @@ def test_variants_have_adjusted_chrom_add_prefix(
 def test_variants_have_adjusted_chrom_del_prefix(
     multi_generational_ped: str,
     multi_contig_chr_vcf: str,
-    genome: ReferenceGenome,
+    genome_nochr: ReferenceGenome,
 ) -> None:
     ped_file = multi_generational_ped
 
@@ -247,7 +269,7 @@ def test_variants_have_adjusted_chrom_del_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_chr_vcf],
-        genome,
+        genome_nochr,
         params={"del_chrom_prefix": "chr"})
 
     list(loader.full_variants_iterator())
@@ -272,7 +294,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
         genome,
         params={"add_chrom_prefix": "chr"},
     )
-    regions = ["chrchr1", "chrchr2"]
+    regions = ["chr1", "chr2"]
 
     loader.reset_regions([Region.from_str(reg) for reg in regions])
 
@@ -285,7 +307,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
 def test_reset_regions_with_adjusted_chrom_del_prefix(
     quad_ped: str,
     multi_contig_chr_vcf_gz: str,
-    genome: ReferenceGenome,
+    genome_nochr: ReferenceGenome,
 ) -> None:
     ped_file = quad_ped
     family_loader = FamiliesLoader(ped_file).load()
@@ -293,7 +315,7 @@ def test_reset_regions_with_adjusted_chrom_del_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_chr_vcf_gz],
-        genome,
+        genome_nochr,
         params={"del_chrom_prefix": "chr"})
     regions = ["1", "2"]
 

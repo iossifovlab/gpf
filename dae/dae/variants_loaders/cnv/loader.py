@@ -304,7 +304,7 @@ class CNVLoader(VariantsGenotypesLoader):
             return True
         isin = [
             True if r is None else r.isin(
-                self._adjust_chrom_prefix(summary_variant.chrom),
+                summary_variant.chrom,
                 summary_variant.position,
             )
             for r in self.regions
@@ -348,6 +348,16 @@ class CNVLoader(VariantsGenotypesLoader):
             del summary_rec["variant_type"]
 
             alt_rec["allele_index"] = 1
+            chrom = self._adjust_chrom_prefix(summary_rec["chrom"])
+            summary_rec["chrom"] = chrom
+
+            if chrom not in self.genome.chromosomes:
+                logger.warning(
+                    "chromosome %s not found in the reference genome %s; "
+                    "skipping variant %s",
+                    chrom, self.genome.resource.resource_id,
+                    summary_rec)
+                continue
 
             svar = SummaryVariantFactory.summary_variant_from_records(
                 [summary_rec, alt_rec], self.transmission_type,

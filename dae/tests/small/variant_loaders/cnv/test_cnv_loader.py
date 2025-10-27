@@ -125,12 +125,12 @@ def variants_file_alt(
         root_path / "cnv_data" / "in.tsv",
         """
         person_id  chr    start      stop      variant_type
-        f1.mo      chr15  12         15        Dup_Germline
-        f2.mo      chr15  1           4        Dup
+        f1.mo      chr2   12         15        Dup_Germline
+        f2.mo      chr2   1           4        Dup
         f1.fa      chr1   7          10        Del_Germline
         f2.fa      chr1   44         48        Del
         f1.fa      chr1   66         68        Dup_Germline
-        f1.mo      chr15  93         96        Dup
+        f1.mo      chr2   93         96        Dup
         """)
 
 
@@ -173,10 +173,10 @@ def variants_file_best_state(
         root_path / "cnv_data" / "in.tsv",
         """
         person_id  chr      start       stop        variant_type
-        f1.mo	   chr15	1	        12	        Dup
-        f1.fa	   chr15	13	        20	        Dup
-        f1.p1	   chr15	23	        29	        Dup
-        f1.s1	   chr15	55	        59	        Dup
+        f1.mo      chr1     1	        12          Dup
+        f1.fa      chr1     13          20          Dup
+        f1.p1      chr1     23          29          Dup
+        f1.s1      chr1     55          59          Dup
         """)
 
 
@@ -326,29 +326,12 @@ def test_chromosomes_have_adjusted_chrom_del(
     assert loader.chromosomes == ["1", "2"]
 
 
-def test_variants_have_adjusted_chrom_add(
-    simple_cnv_loader: Any,
-    cnv_ped: Any,
-    variants_file: Path,
-) -> None:
-    loader = simple_cnv_loader(cnv_ped, variants_file, {
-        "add_chrom_prefix": "chr",
-        "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state",
-    })
-
-    variants = list(loader.full_variants_iterator())
-    assert len(variants) > 0
-    for summary_variant, _ in variants:
-        assert summary_variant.chromosome.startswith("chrchr")
-
-
 def test_variants_have_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file_2: Path,
+    variants_file_doublechr: Path,
 ) -> None:
-    loader = simple_cnv_loader(cnv_ped, variants_file_2, {
+    loader = simple_cnv_loader(cnv_ped, variants_file_doublechr, {
         "del_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
         "cnv_best_state": "best_state",
@@ -360,17 +343,33 @@ def test_variants_have_adjusted_chrom_del(
         assert not summary_variant.chromosome.startswith("chrchr")
 
 
+@pytest.fixture(scope="module")
+def variants_file_nochr(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Path:
+    root_path = tmp_path_factory.mktemp("acgt_instance")
+    return setup_denovo(
+        root_path / "cnv_data" / "in.tsv",
+        """
+        family_id location    variant  best_state
+        f1        1:1-20      CNV+     2||2||2||3
+        f1        1:31-50     CNV-     2||2||2||1
+        f2        2:51-70     CNV+     2||2||3
+        f2        2:81-100    CNV-     2||2||1
+        """)
+
+
 def test_reset_regions_with_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file: Path,
+    variants_file_nochr: Path,
 ) -> None:
-    loader = simple_cnv_loader(cnv_ped, variants_file, {
+    loader = simple_cnv_loader(cnv_ped, variants_file_nochr, {
         "add_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
         "cnv_best_state": "best_state",
     })
-    regions = [Region.from_str("chrchr1")]
+    regions = [Region.from_str("chr1")]
     loader.reset_regions(regions)
 
     variants = list(loader.full_variants_iterator())
@@ -379,17 +378,33 @@ def test_reset_regions_with_adjusted_chrom_add(
     assert (unique_chroms == [str(r) for r in regions]).all()
 
 
+@pytest.fixture(scope="module")
+def variants_file_doublechr(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Path:
+    root_path = tmp_path_factory.mktemp("acgt_instance")
+    return setup_denovo(
+        root_path / "cnv_data" / "in.tsv",
+        """
+        family_id location       variant  best_state
+        f1        chrchr1:1-20   CNV+     2||2||2||3
+        f1        chrchr1:31-50  CNV-     2||2||2||1
+        f2        chrchr2:51-70  CNV+     2||2||3
+        f2        chrchr2:81-100 CNV-     2||2||1
+        """)
+
+
 def test_reset_regions_with_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file_2: Path,
+    variants_file_doublechr: Path,
 ) -> None:
-    loader = simple_cnv_loader(cnv_ped, variants_file_2, {
+    loader = simple_cnv_loader(cnv_ped, variants_file_doublechr, {
         "del_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
         "cnv_best_state": "best_state",
     })
-    regions = [Region.from_str("1")]
+    regions = [Region.from_str("chr1")]
     loader.reset_regions(regions)
 
     variants = list(loader.full_variants_iterator())

@@ -38,23 +38,23 @@ def trio_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1
-chrA   1   .  A   G     .    .      .    GT     0/0  0/0  0/0
-chrA   2   .  A   G     .    .      .    GT     0/1  0/0  0/0
-chrA   3   .  A   G     .    .      .    GT     1/0  0/0  0/0
-chrA   4   .  A   G     .    .      .    GT     0/0  0/1  0/0
-chrA   5   .  A   G     .    .      .    GT     0/0  1/0  0/0
-chrA   6   .  A   G     .    .      .    GT     1/1  0/0  0/0
-chrA   7   .  A   G     .    .      .    GT     0/0  1/1  0/0
-chrA   8   .  A   G     .    .      .    GT     1/0  1/1  0/0
-chrA   9   .  A   G     .    .      .    GT     1/1  1/0  0/0
-chrA   10  .  A   G     .    .      .    GT     0/0  1/0  1/1
-chrA   11  .  A   G     .    .      .    GT     0/0  0/0  1/0
-chrA   12  .  A   G     .    .      .    GT     0/0  0/0  0/1
-chrA   13  .  A   G     .    .      .    GT     1/1  1/1  0/1
-chrA   14  .  A   G     .    .      .    GT     1/1  1/1  1/0
-chrA   15  .  A   G     .    .      .    GT     1/.  1/1  1/0
+chr1   1   .  A   G     .    .      .    GT     0/0  0/0  0/0
+chr1   2   .  A   G     .    .      .    GT     0/1  0/0  0/0
+chr1   3   .  A   G     .    .      .    GT     1/0  0/0  0/0
+chr1   4   .  A   G     .    .      .    GT     0/0  0/1  0/0
+chr1   5   .  A   G     .    .      .    GT     0/0  1/0  0/0
+chr1   6   .  A   G     .    .      .    GT     1/1  0/0  0/0
+chr1   7   .  A   G     .    .      .    GT     0/0  1/1  0/0
+chr1   8   .  A   G     .    .      .    GT     1/0  1/1  0/0
+chr1   9   .  A   G     .    .      .    GT     1/1  1/0  0/0
+chr1   10  .  A   G     .    .      .    GT     0/0  1/0  1/1
+chr1   11  .  A   G     .    .      .    GT     0/0  0/0  1/0
+chr1   12  .  A   G     .    .      .    GT     0/0  0/0  0/1
+chr1   13  .  A   G     .    .      .    GT     1/1  1/1  0/1
+chr1   14  .  A   G     .    .      .    GT     1/1  1/1  1/0
+chr1   15  .  A   G     .    .      .    GT     1/.  1/1  1/0
         """)
 
     return vcf_study(
@@ -104,12 +104,12 @@ def test_inheritance_query_trio(
 @pytest.mark.parametrize(
     "region,count,inheritance",
     [
-        (Region("chrA", 13, 14), 2, "mendelian"),
-        (Region("chrA", 10, 10), 1, "mendelian"),
-        (Region("chrA", 6, 9), 4, "omission"),
-        (Region("chrA", 11, 12), 2, "denovo"),
-        (Region("chrA", 1, 15), 14, "unknown"),
-        (Region("chrA", 2, 5), 4, "missing"),
+        (Region("chr1", 13, 14), 2, "mendelian"),
+        (Region("chr1", 10, 10), 1, "mendelian"),
+        (Region("chr1", 6, 9), 4, "omission"),
+        (Region("chr1", 11, 12), 2, "denovo"),
+        (Region("chr1", 1, 15), 14, "unknown"),
+        (Region("chr1", 2, 5), 4, "missing"),
     ],
 )
 def test_inheritance_trio_full(

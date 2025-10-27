@@ -47,10 +47,10 @@ def vcf_import_data(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
-chrA   1   .  A   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
-chrA   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
+chr1   1   .  A   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
+chr1   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         """)
 
     return (
@@ -188,8 +188,8 @@ def denovo_import_data(
         root_path / "denovo_data" / "in.tsv",
         """
         chrom  pos  ref  alt  person_id
-        chrA   1    A    C    p1
-        chrA   2    A    G    p2
+        chr1   1    A    C    p1
+        chr1   2    A    G    p2
         """)
 
     return (

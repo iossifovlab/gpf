@@ -40,8 +40,8 @@ def imported_study(
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 mom2 ch2
-chrA   1   .  A   G     .    .      .    GT     0/0  0/1  0/1 0/0  0/0  0/0
-chrA   2   .  A   G     .    .      .    GT     0/0  0/0  0/0 1/1  0/0  1/1
+chr1   1   .  A   G     .    .      .    GT     0/0  0/1  0/1 0/0  0/0  0/0
+chr1   2   .  A   G     .    .      .    GT     0/0  0/0  0/0 1/1  0/0  1/1
         """)
 
     return vcf_study(

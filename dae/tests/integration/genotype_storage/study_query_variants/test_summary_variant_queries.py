@@ -37,16 +37,16 @@ def imported_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/1  0/2 0/1
-chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/1
-chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
-chrA   4   .  A   C     .    .      .    GT     0/0  0/0  0/0 0/1  0/0 0/0
-chrA   5   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/0
-chrA   6   .  A   C     .    .      .    GT     1/1  1/1  0/0 1/1  0/0 1/1
-chrA   7   .  A   C     .    .      .    GT     1/1  1/1  1/1 1/1  1/1 1/1
-chrA   8   .  A   C     .    .      .    GT     0/0  0/0  1/1 0/0  1/1 0/0
+chr1   1   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/1  0/2 0/1
+chr1   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/1
+chr1   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
+chr1   4   .  A   C     .    .      .    GT     0/0  0/0  0/0 0/1  0/0 0/0
+chr1   5   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/0
+chr1   6   .  A   C     .    .      .    GT     1/1  1/1  0/0 1/1  0/0 1/1
+chr1   7   .  A   C     .    .      .    GT     1/1  1/1  1/1 1/1  1/1 1/1
+chr1   8   .  A   C     .    .      .    GT     0/0  0/0  1/1 0/0  1/1 0/0
         """)
 
     return vcf_study(
@@ -73,15 +73,15 @@ chrA   8   .  A   C     .    .      .    GT     0/0  0/0  1/1 0/0  1/1 0/0
 @pytest.mark.parametrize(
     "summary_variant_ids, count",
     [
-        (["chrA:1:sub(A->C)"], 1),
-        (["chrA:1:sub(A->G)"], 1),
-        (["chrA:2:sub(A->C)"], 2),
-        (["chrA:3:sub(A->C)"], 2),
-        (["chrA:4:sub(A->C)"], 1),
-        (["chrA:5:sub(A->C)"], 1),
-        (["chrA:6:sub(A->C)"], 2),
-        (["chrA:7:sub(A->C)"], 2),
-        (["chrA:8:sub(A->C)"], 2),
+        (["chr1:1:sub(A->C)"], 1),
+        (["chr1:1:sub(A->G)"], 1),
+        (["chr1:2:sub(A->C)"], 2),
+        (["chr1:3:sub(A->C)"], 2),
+        (["chr1:4:sub(A->C)"], 1),
+        (["chr1:5:sub(A->C)"], 1),
+        (["chr1:6:sub(A->C)"], 2),
+        (["chr1:7:sub(A->C)"], 2),
+        (["chr1:8:sub(A->C)"], 2),
     ],
 )
 def test_query_by_summary_variant_ids(

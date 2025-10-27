@@ -111,9 +111,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def _init_chromosomes(self) -> None:
         self._chromosomes = list(self.denovo_df.chrom.unique())
-        self._chromosomes = [
-            self._adjust_chrom_prefix(chrom) for chrom in self._chromosomes
-        ]
 
         all_chromosomes = self.genome.chromosomes
         if all(chrom in set(all_chromosomes) for chrom in self._chromosomes):
@@ -130,7 +127,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             return True
         isin = [
             r.isin(
-                self._adjust_chrom_prefix(summary_variant.chrom),
+                summary_variant.chrom,
                 summary_variant.position,
             )
             if r is not None
@@ -511,14 +508,26 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
-            ref_alt_tuples = [
-                dae2vcf_variant(
-                    self._adjust_chrom_prefix(variant_tuple[0]),
+            ref_alt_tuples = []
+            for variant_tuple in zip(
+                    chrom_col, pos_col, variant_col, strict=True):
+                chrom = self._adjust_chrom_prefix(variant_tuple[0])
+                if chrom not in self.genome.chromosomes:
+                    logger.warning(
+                        "chromosome %s not found in the reference genome %s; "
+                        "skipping variant %s",
+                        chrom, self.genome.resource.resource_id,
+                        (chrom, variant_tuple[1], variant_tuple[2]))
+                    ref_alt_tuples.append((np.nan, np.nan, np.nan))
+                    continue
+
+                res = dae2vcf_variant(
+                    chrom,
                     variant_tuple[1], variant_tuple[2],
                     genome,
-                ) for variant_tuple in zip(
-                    chrom_col, pos_col, variant_col, strict=True)
-            ]
+                )
+                ref_alt_tuples.append(res)  # type: ignore
+
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples, strict=True)
 
         else:
@@ -557,7 +566,6 @@ class DenovoLoader(VariantsGenotypesLoader):
                         "person_id": raw_df.loc[:, denovo_person_id],
                     },
                 )
-
                 grouped = temp_df.groupby([
                     "chrom", "pos", "ref", "alt", "person_id"])
 
@@ -669,7 +677,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             extra_attributes_df = raw_df[extra_attributes_cols]
             denovo_df = denovo_df.join(extra_attributes_df)
-
+        denovo_df.chrom = denovo_df.chrom.apply(self._adjust_chrom_prefix)
+        denovo_df = denovo_df.dropna(axis=0, how="any", subset=[
+            "position", "reference", "alternative"])
         return (denovo_df, extra_attributes_cols.tolist())
 
     def flexible_denovo_load(
@@ -902,11 +912,19 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     def _summary_variant_from_dae_record(
         self, summary_index: int, rec: dict[str, Any],
-    ) -> SummaryVariant:
+    ) -> SummaryVariant | None:
         rec["cshl_position"] = int(rec["cshl_position"])
-        chrom = rec["chrom"]
+        chrom = self._adjust_chrom_prefix(rec["chrom"])
+        if chrom not in self.genome.chromosomes:
+            logger.warning(
+                "chromosome %s not found in the reference genome %s; "
+                "skipping variant %s",
+                chrom, self.genome.resource.resource_id,
+                (chrom, rec["cshl_position"], rec["cshl_variant"]))
+            return None
+
         position, reference, alternative = dae2vcf_variant(
-            self._adjust_chrom_prefix(chrom),
+            chrom,
             rec["cshl_position"],
             rec["cshl_variant"],
             self.genome,
@@ -1048,6 +1066,9 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                             summary_variant = \
                                 self._summary_variant_from_dae_record(
                                     summary_index, rec)
+                            if summary_variant is None:
+                                continue
+                            assert summary_variant is not None
 
                             family_data = rec["familyData"]
                             if family_data == "TOOMANY":

@@ -50,11 +50,11 @@ f5       f5.s1    f5.dad  f5.mom 2   2      sib  autism
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-##contig=<ID=1>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT f1.mom f1.dad f1.p1 f1.s1 f2.mom f2.dad f2.p1 f2.s1 f3.mom f3.dad f3.p1 f3.s1 f4.mom f4.dad f4.p1 f4.s1 f5.mom f5.dad f5.p1 f5.s1
-chrA   1   .  A   C,G,T .    .      .    GT     1/3    2/3    1/3   1/2   1/2    2/3    2/3   2/2   1/2    3/3    1/3   2/3   1/2    2/3    2/3   1/2   2/3    1/2    2/1   1/3
-chrA   2   .  A   C,G,T .    .      .    GT     1/3    2/3    1/3   1/2   1/2    2/3    2/3   2/2   1/2    3/3    1/3   2/3   1/2    2/3    2/3   1/2   ./.    ./.    ./.   ./.
-chrA   3   .  A   C,G,T .    .      .    GT     1/2    1/2    1/1   2/2   0/2    0/2    0/2   2/2   1/2    1/2    1/2   2/2   2/3    2/3    2/3   2/2   0/3    0/3    3/3   0/0
+chr1   1   .  A   C,G,T .    .      .    GT     1/3    2/3    1/3   1/2   1/2    2/3    2/3   2/2   1/2    3/3    1/3   2/3   1/2    2/3    2/3   1/2   2/3    1/2    2/1   1/3
+chr1   2   .  A   C,G,T .    .      .    GT     1/3    2/3    1/3   1/2   1/2    2/3    2/3   2/2   1/2    3/3    1/3   2/3   1/2    2/3    2/3   1/2   ./.    ./.    ./.   ./.
+chr1   3   .  A   C,G,T .    .      .    GT     1/2    1/2    1/1   2/2   0/2    0/2    0/2   2/2   1/2    1/2    1/2   2/2   2/3    2/3    2/3   2/2   0/3    0/3    3/3   0/0
         """)  # noqa
 
     return vcf_study(
@@ -87,11 +87,11 @@ def test_summary_stats_simple(summary_stats: GenotypeData) -> None:
 
 
 @pytest.mark.parametrize("regions,sv_count,fv_count", [
-    ([Region("chrA", 1, 1)], 1, 5),
-    ([Region("chrA", 2, 2)], 1, 4),
-    ([Region("chrA", 1, 2)], 2, 9),
-    ([Region("chrA", 3, 3)], 3, 8),
-    ([Region("chrA", 1, 3)], 5, 17),
+    ([Region("chr1", 1, 1)], 1, 5),
+    ([Region("chr1", 2, 2)], 1, 4),
+    ([Region("chr1", 1, 2)], 2, 9),
+    ([Region("chr1", 3, 3)], 3, 8),
+    ([Region("chr1", 1, 3)], 5, 17),
 ])
 def test_summary_stats_summary(
         summary_stats: GenotypeData,

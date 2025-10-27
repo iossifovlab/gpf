@@ -14,6 +14,7 @@ from dae.genomic_resources.testing import (
 )
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.import_tools.import_tools import ImportProject
+from dae.testing.alla_import import alla_gpf
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
 
@@ -280,108 +281,6 @@ def test_import_vcf_and_denovo_into_genotype_storage(
     assert len(vs) == 7
 
 
-def test_add_chrom_prefix_simple(
-    tmp_path: pathlib.Path,
-    pedigree_data: pathlib.Path,
-    denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
-    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> None:
-    root_path = tmp_path
-    genotype_storage = genotype_storage_factory(root_path)
-    gpf_instance = foobar_gpf(root_path, genotype_storage)
-    study_id = f"test_comp_all_prefix_{genotype_storage.storage_id}"
-
-    argv = [
-        str(pedigree_data),
-        "--id",
-        study_id,
-        "--skip-reports",
-        "--vcf-denovo-mode", "possible_denovo",
-        "--vcf-omission-mode", "possible_omission",
-        "--vcf-files",
-        str(vcf_data),
-        "--denovo-file",
-        str(denovo_dae_data),
-        "--denovo-location",
-        "location",
-        "--denovo-variant",
-        "variant",
-        "--denovo-family-id",
-        "familyId",
-        "--denovo-best-state",
-        "bestState",
-        "--genotype-storage",
-        genotype_storage.storage_id,
-        "-o",
-        str(root_path / "output"),
-        "--add-chrom-prefix",
-        "ala_bala",
-    ]
-
-    main(argv, gpf_instance)
-
-    gpf_instance.reload()
-
-    study = gpf_instance.get_genotype_data(study_id)
-    assert study is not None
-    assert study.has_denovo
-    assert study.has_transmitted
-    assert not study.has_cnv
-
-    vs = list(study.query_variants())
-    assert len(vs) == 7
-
-    for v in vs:
-        print(v)
-        assert v.chromosome.startswith("ala_bala")
-        for fa in v.alleles:
-            print("\t", fa)
-            assert fa.chromosome.startswith("ala_bala")
-
-
-def test_import_del_chrom_prefix(
-    tmp_path: pathlib.Path,
-    pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
-    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> None:
-    root_path = tmp_path
-    genotype_storage = genotype_storage_factory(root_path)
-    gpf_instance = foobar_gpf(root_path, genotype_storage)
-
-    study_id = f"test_comp_all_del_chrom_prefix_{genotype_storage.storage_id}"
-
-    argv = [
-        str(pedigree_data),
-        "--id",
-        study_id,
-        "--skip-reports",
-        "--vcf-denovo-mode", "possible_denovo",
-        "--vcf-omission-mode", "possible_omission",
-        "--vcf-files",
-        str(vcf_data),
-        "--genotype-storage",
-        genotype_storage.storage_id,
-        "--del-chrom-prefix",
-        "fo",
-        "-o",
-        str(root_path / "output"),
-    ]
-
-    main(argv, gpf_instance)
-
-    gpf_instance.reload()
-    study = gpf_instance.get_genotype_data(study_id)
-    assert study is not None
-    assert not study.has_denovo
-    assert study.has_transmitted
-    assert not study.has_cnv
-
-    vs = list(study.query_variants())
-    assert len(vs) == 2
-    for v in vs:
-        assert v.chromosome == "o", v
-
-
 def test_import_transmitted_dae_into_genotype_storage(
     tmp_path: pathlib.Path,
     pedigree_data: pathlib.Path,
@@ -557,7 +456,7 @@ def test_denovo_db_import(
 ) -> None:
     root_path = tmp_path
     genotype_storage = genotype_storage_factory(root_path)
-    gpf_instance = foobar_gpf(root_path, genotype_storage)
+    gpf_instance = alla_gpf(root_path, genotype_storage)
 
     families_filename = fixture_dirname("denovo-db-person-id.ped")
     denovo_filename = fixture_dirname("denovo-db-person-id.tsv")
@@ -575,6 +474,7 @@ def test_denovo_db_import(
         "--denovo-person-id", "SampleID",
         "--denovo-file", denovo_filename,
         "--genotype-storage", genotype_storage.storage_id,
+        "--add-chrom-prefix", "chr",
     ]
 
     main(argv, gpf_instance)

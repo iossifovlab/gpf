@@ -192,6 +192,7 @@ EOT
         --exclude wdae_tests \
         --exclude versioneer.py \
         --exclude _version.py \
+        --exclude *.ipynb \
         --exit-zero \
         --output-format=pylint \
         --output-file=/wd/results/ruff_report . || true'

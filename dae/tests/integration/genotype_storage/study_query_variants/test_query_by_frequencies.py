@@ -43,19 +43,19 @@ def imported_vcf_study(
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 dad2 ch2 mom2
-chrA   1   .  A   G     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/1
-chrA   2   .  A   G     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
-chrA   3   .  A   G     .    .      .    GT     0/0  0/0  0/0 0/1  0/0 0/0
-chrA   4   .  A   G     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/0
-chrA   5   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1  0/0 1/1
-chrA   6   .  A   G     .    .      .    GT     1/1  1/1  1/1 1/1  1/1 1/1
-chrA   7   .  A   G     .    .      .    GT     0/0  0/0  1/1 0/0  1/1 0/0
-chrA   8   .  A   G,T   .    .      .    GT     0/1  0/1  0/0 0/0  0/0 0/0
-chrA   9   .  A   G,T   .    .      .    GT     0/2  0/2  0/0 0/0  0/0 0/0
-chrA   10  .  A   G,T   .    .      .    GT     0/0  0/0  0/0 0/2  0/0 0/2
-chrA   11  .  A   G,T   .    .      .    GT     0/0  0/0  0/0 0/1  0/0 0/1
-chrA   12  .  A   G,T   .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
-chrA   13  .  A   G,T,C .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
+chr1   1   .  A   G     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/1
+chr1   2   .  A   G     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
+chr1   3   .  A   G     .    .      .    GT     0/0  0/0  0/0 0/1  0/0 0/0
+chr1   4   .  A   G     .    .      .    GT     0/1  0/0  0/0 0/0  0/0 0/0
+chr1   5   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1  0/0 1/1
+chr1   6   .  A   G     .    .      .    GT     1/1  1/1  1/1 1/1  1/1 1/1
+chr1   7   .  A   G     .    .      .    GT     0/0  0/0  1/1 0/0  1/1 0/0
+chr1   8   .  A   G,T   .    .      .    GT     0/1  0/1  0/0 0/0  0/0 0/0
+chr1   9   .  A   G,T   .    .      .    GT     0/2  0/2  0/0 0/0  0/0 0/0
+chr1   10  .  A   G,T   .    .      .    GT     0/0  0/0  0/0 0/2  0/0 0/2
+chr1   11  .  A   G,T   .    .      .    GT     0/0  0/0  0/0 0/1  0/0 0/1
+chr1   12  .  A   G,T   .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
+chr1   13  .  A   G,T,C .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
 
         """)
 
@@ -117,10 +117,10 @@ def imported_denovo_study(
         root_path / "denovo_data" / "denovo.tsv",
         """
         chrom  pos  ref  alt  person_id
-        chrA   1    A    T    f1.p1
-        chrA   2    A    T    f1.p1
-        chrA   3    A    T    f1.p1
-        chrA   4    A    T    f1.p1
+        chr1   1    A    T    f1.p1
+        chr1   2    A    T    f1.p1
+        chr1   3    A    T    f1.p1
+        chr1   4    A    T    f1.p1
         """)
 
     return denovo_study(

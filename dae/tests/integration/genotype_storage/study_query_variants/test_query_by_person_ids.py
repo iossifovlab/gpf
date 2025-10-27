@@ -38,22 +38,22 @@ def imported_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 mis dad2 ch2 mom2
-chrA   1   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/0 0/1  0/2 0/1
-chrA   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 1/1 0/0  0/0 0/1
-chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
-chrA   4   .  A   C     .    .      .    GT     0/0  0/0  0/0 0/0 0/1  0/0 0/0
-chrA   5   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/0 0/0  0/0 0/0
-chrA   6   .  A   C     .    .      .    GT     1/1  1/1  0/0 0/0 1/1  0/0 1/1
-chrA   7   .  A   C     .    .      .    GT     1/1  1/1  1/1 1/1 1/1  1/1 1/1
-chrA   8   .  A   C     .    .      .    GT     0/0  0/0  1/1 1/1 0/0  1/1 0/0
-chrA   9   .  A   C,G   .    .      .    GT     0/1  0/1  0/0 0/0 0/0  0/0 0/0
-chrA   10   .  A   C,G   .    .      .    GT     0/2  0/2  0/0 0/0 0/0  0/0 0/0
-chrA   11   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/0 0/2  0/0 0/2
-chrA   12   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/0 0/1  0/0 0/1
-chrA   13   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/0 0/1  0/0 0/2
-chrA   14   .  A   C,G,T .    .      .    GT     0/1  0/2  0/0 0/0 0/1  0/0 0/2
+chr1   1   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/0 0/1  0/2 0/1
+chr1   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 1/1 0/0  0/0 0/1
+chr1   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
+chr1   4   .  A   C     .    .      .    GT     0/0  0/0  0/0 0/0 0/1  0/0 0/0
+chr1   5   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/0 0/0  0/0 0/0
+chr1   6   .  A   C     .    .      .    GT     1/1  1/1  0/0 0/0 1/1  0/0 1/1
+chr1   7   .  A   C     .    .      .    GT     1/1  1/1  1/1 1/1 1/1  1/1 1/1
+chr1   8   .  A   C     .    .      .    GT     0/0  0/0  1/1 1/1 0/0  1/1 0/0
+chr1   9   .  A   C,G   .    .      .    GT     0/1  0/1  0/0 0/0 0/0  0/0 0/0
+chr1   10   .  A   C,G   .    .      .    GT     0/2  0/2  0/0 0/0 0/0  0/0 0/0
+chr1   11   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/0 0/2  0/0 0/2
+chr1   12   .  A   C,G   .    .      .    GT     0/0  0/0  0/0 0/0 0/1  0/0 0/1
+chr1   13   .  A   C,G   .    .      .    GT     0/1  0/2  0/0 0/0 0/1  0/0 0/2
+chr1   14   .  A   C,G,T .    .      .    GT     0/1  0/2  0/0 0/0 0/1  0/0 0/2
         """)
 
     return vcf_study(
@@ -102,7 +102,7 @@ def test_query_by_person_ids(
     person_ids: list[str] | None,
     count: int,
 ) -> None:
-    region = Region("chrA", begin, end)
+    region = Region("chr1", begin, end)
     vs = list(imported_study.query_variants(
         regions=[region],
         person_ids=person_ids,

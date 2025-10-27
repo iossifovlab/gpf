@@ -35,16 +35,16 @@ def imported_study(
         """
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chrA>
+        ##contig=<ID=chr1>
         #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
-        chrA   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
-        chrA   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
-        chrA   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/0 0/0 0/0
-        chrA   4   .  A   T    .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0
-        chrA   5   .  A   T,G  .    .      .    GT     0/1 0/0 0/0 0/2 0/0 0/0
-        chrA   6   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/2 0/0 0/0
-        chrA   7   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/1 0/0 0/0
-        chrA   8   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/1 2/0 0/0
+        chr1   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
+        chr1   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
+        chr1   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/0 0/0 0/0
+        chr1   4   .  A   T    .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0
+        chr1   5   .  A   T,G  .    .      .    GT     0/1 0/0 0/0 0/2 0/0 0/0
+        chr1   6   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/2 0/0 0/0
+        chr1   7   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/1 0/0 0/0
+        chr1   8   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/1 2/0 0/0
         """)
 
     return vcf_study(
@@ -54,10 +54,10 @@ def imported_study(
 
 
 @pytest.mark.parametrize("region,family_variants_count", [
-    (Region("chrA", 1, 1), 2),
-    (Region("chrA", 2, 2), 1),
-    (Region("chrA", 3, 3), 1),
-    (Region("chrA", 4, 4), 2),
+    (Region("chr1", 1, 1), 2),
+    (Region("chr1", 2, 2), 1),
+    (Region("chr1", 3, 3), 1),
+    (Region("chr1", 4, 4), 2),
 ])
 def test_summary_variants_family_variants_count_single_allele(
         region: Region,
@@ -74,10 +74,10 @@ def test_summary_variants_family_variants_count_single_allele(
 @pytest.mark.gs_inmemory
 @pytest.mark.gs_impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
-    (Region("chrA", 5, 5), [1, 1]),
-    (Region("chrA", 6, 6), [1, 2]),
-    (Region("chrA", 7, 7), [2, 1]),
-    (Region("chrA", 8, 8), [2, 2]),
+    (Region("chr1", 5, 5), [1, 1]),
+    (Region("chr1", 6, 6), [1, 2]),
+    (Region("chr1", 7, 7), [2, 1]),
+    (Region("chr1", 8, 8), [2, 2]),
 ])
 def test_summary_variants_family_variants_count_multi_allele(
         region: Region, family_variants_count: list[int],
@@ -95,10 +95,10 @@ def test_summary_variants_family_variants_count_multi_allele(
 
 @pytest.mark.gs_impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
-    (Region("chrA", 5, 5), [1, 1]),
-    (Region("chrA", 6, 6), [1, 2]),
-    (Region("chrA", 7, 7), [2, 1]),
-    (Region("chrA", 8, 8), [2, 2]),
+    (Region("chr1", 5, 5), [1, 1]),
+    (Region("chr1", 6, 6), [1, 2]),
+    (Region("chr1", 7, 7), [2, 1]),
+    (Region("chr1", 8, 8), [2, 2]),
 ])
 def test_summary_variants_family_alleles_count_multi_allele(
         region: Region, family_variants_count: list[int],

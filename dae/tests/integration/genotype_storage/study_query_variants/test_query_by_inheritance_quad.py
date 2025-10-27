@@ -39,19 +39,19 @@ def quad_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chrA>
+##contig=<ID=chr1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1 ch2
-chrA   1   .  A   G     .    .      .    GT     0/0  0/0  0/0 0/0
-chrA   2   .  A   G     .    .      .    GT     0/1  0/1  0/0 0/0
-chrA   3   .  A   G     .    .      .    GT     1/0  1/0  0/0 0/0
-chrA   4   .  A   G     .    .      .    GT     1/0  1/0  1/0 0/0
-chrA   5   .  A   G     .    .      .    GT     1/0  1/0  0/1 0/0
-chrA   6   .  A   G     .    .      .    GT     1/0  1/0  0/1 1/0
-chrA   7   .  A   G     .    .      .    GT     0/0  1/1  1/0 0/0
-chrA   8   .  A   G     .    .      .    GT     0/0  1/1  1/0 1/1
-chrA   9   .  A   G     .    .      .    GT     0/0  1/1  1/1 1/1
-chrA   10  .  A   G     .    .      .    GT     0/0  0/0  0/0 0/1
-chrA   11  .  A   G     .    .      .    GT     1/1  1/1  1/0 1/1
+chr1   1   .  A   G     .    .      .    GT     0/0  0/0  0/0 0/0
+chr1   2   .  A   G     .    .      .    GT     0/1  0/1  0/0 0/0
+chr1   3   .  A   G     .    .      .    GT     1/0  1/0  0/0 0/0
+chr1   4   .  A   G     .    .      .    GT     1/0  1/0  1/0 0/0
+chr1   5   .  A   G     .    .      .    GT     1/0  1/0  0/1 0/0
+chr1   6   .  A   G     .    .      .    GT     1/0  1/0  0/1 1/0
+chr1   7   .  A   G     .    .      .    GT     0/0  1/1  1/0 0/0
+chr1   8   .  A   G     .    .      .    GT     0/0  1/1  1/0 1/1
+chr1   9   .  A   G     .    .      .    GT     0/0  1/1  1/1 1/1
+chr1   10  .  A   G     .    .      .    GT     0/0  0/0  0/0 0/1
+chr1   11  .  A   G     .    .      .    GT     1/1  1/1  1/0 1/1
         """)
 
     return vcf_study(
@@ -100,10 +100,10 @@ def test_inheritance_query_quad(
 @pytest.mark.parametrize(
     "region,count,inheritance",
     [
-        (Region("chrA", 4, 9), 6, "mendelian"),
-        (Region("chrA", 7, 7), 1, "omission"),
-        (Region("chrA", 10, 10), 1, "denovo"),
-        (Region("chrA", 1, 11), 10, "unknown"),
+        (Region("chr1", 4, 9), 6, "mendelian"),
+        (Region("chr1", 7, 7), 1, "omission"),
+        (Region("chr1", 10, 10), 1, "denovo"),
+        (Region("chr1", 1, 11), 10, "unknown"),
     ],
 )
 def test_inheritance_quad_full(
