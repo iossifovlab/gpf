@@ -489,7 +489,7 @@ Example: Null histogram configuration
     type: str
     desc: dbSNP ID (i.e. rs number)
     histogram:
-      type: null
+      type: "null"
       reason: "Histogram is not available for this score."
 
 
