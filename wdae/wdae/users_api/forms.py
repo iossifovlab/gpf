@@ -21,7 +21,7 @@ from .models import WdaeUser
 class WdaeResetPasswordForm(SetPasswordForm):
     """A form for users to reset their password when forgotten."""
 
-    error_messages = {
+    error_messages = {  # noqa: RUF012
         "password_invalid": gettext_lazy(
             "Your password is either too short "
             "(less than 10 symbols) or too weak.",
@@ -64,7 +64,7 @@ class WdaeLoginForm(forms.Form):
         ),
     )
 
-    error_messages = {
+    error_messages = {  # noqa: RUF012
         "invalid_credentials": gettext_lazy(
             "Invalid login credentials.",
         ),
@@ -89,7 +89,8 @@ class WdaeLoginForm(forms.Form):
         # Set the max length and label for the "username" field.
         user_model = get_user_model()
         self.username_field = \
-            user_model._meta.get_field(user_model.USERNAME_FIELD)
+            user_model._meta.get_field(  # noqa: SLF001
+                user_model.USERNAME_FIELD)
         username_max_length = \
             self.username_field.max_length or 254  # type: ignore
         self.fields[
