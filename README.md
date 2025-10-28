@@ -1,161 +1,170 @@
 # GPF: Genotypes and Phenotypes in Families
 
-The Genotype and Phenotype in Families (GPF) system manages large databases
-of genetic variants and phenotypic measurements obtained from collections
-of families and individual family members.
+The Genotypes and Phenotypes in Families (GPF) system manages large databases
+of genetic variants and phenotypic measurements from family collections.
 
-The main application of the system has been in managing the data gathered from
-the Simons Simplex Collection, a collection of ~2,600 families with one child
-diagnosed with autism.
 
-Information on how to use GPF can be found in the
-[GPF documentation](https://iossifovlab.com/gpfuserdocs/).
+User documentation: see the GPF documentation at
+https://iossifovlab.com/gpfuserdocs/.
+
+## Repository overview
+
+- Core library: DAE (Data Access Environment) in `dae/`
+- Web application and REST API: WDAE in `wdae/`
+- Optional genotype storages: `impala_storage/`, `impala2_storage/`,
+  `gcp_storage/`
+- Federation and REST client: `federation/`, `rest_client/`
+- Documentation sources: `docs/`
+
+Primary stack: Python 3.12, Django 5.2, dask, pandas, pyarrow, duckdb, pysam,
+pytest, mypy, ruff.
+
+Release notes live in `docs/changes.rst`.
 
 ## Development
-We recommend using [Anaconda environment](https://www.anaconda.com/)
-for creation of GPF development environment.
-In the steps below, we use the
-[mamba](https://mamba.readthedocs.io/en/latest/index.html) package manager.
 
-### Install GPF dependencies
+We recommend using a Conda/Mamba environment. All development tools
+(pytest, ruff, mypy) are installed via Conda, not system pip.
 
-Create a conda `gpf` environment with all of the conda package dependencies
-from `environment.yml` and `dev-environment.yml` files. Update federation
-environment if you plan to use federation. From `gpf` root directory run:
+### 1) Create and activate the environment
+
+From the repository root:
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
-```
 
-To use this environment, you need to activate it using the following command:
-
-```bash
 conda activate gpf
 ```
 
-The following commands are going to install GPF `dae` and `wdae` packages for
-development usage. (You need to install GPF packages in the development `gpf`
-conda environment.)
+Notes:
+- Prefer `environment.yml` over the legacy `requirements.txt`.
+- Always activate the `gpf` environment before running tools or tests.
+
+### 2) Install core packages in editable mode
+
+Install GPF packages into the active `gpf` environment:
 
 ```bash
-for d in dae wdae; do (cd $d; pip install -e .); done
+pip install -e dae
+pip install -e wdae
 ```
 
-### REST Client and Federation
+Tip: after changing package code, re-run the editable installs if imports fail.
 
-If you want to work with GPF `federation` and `rest_client` modules you
-will need to install additional dependencies:
+### 3) Run tests
+
+Quick cycles (examples):
+
+```bash
+cd dae
+pytest -v tests/small/test_file.py
+pytest -v tests/small/module/
+```
+
+Full suites (parallel):
+
+```bash
+cd dae
+conda run -n gpf pytest -v -n 10 tests/
+
+cd ../wdae
+conda run -n gpf pytest -v -n 5 wdae/
+```
+
+Test markers and configuration are defined in `dae/pytest.ini` (e.g.,
+`gs_impala`, `gs_gcp`, `gs_duckdb`, `grr_rw`, `grr_ro`).
+
+### 4) Linting and type checking
+
+```bash
+ruff check --fix .
+mypy dae --exclude dae/docs/
+mypy wdae --exclude wdae/docs/ --exclude wdae/conftest.py
+# Optional extra checks
+pylint dae/dae -f parseable --reports=no -j 4
+```
+
+### REST Client and Federation (optional)
+
+If you want to work with `federation` and `rest_client` modules, install
+additional dependencies and then the packages:
 
 ```bash
 mamba env update --name gpf --file ./federation/federation-environment.yml
-```
-
-After that you will need to install both modules:
-
-```bash
 pip install -e rest_client
 pip install -e federation
 ```
 
-### Additional GPF genotype storages
+### Additional genotype storages (optional)
 
-There are some additional genotype storages that are not included in the
-default GPF installation and if you plan to use or develop features for these
-genotype storages you need to install their dependencies.
+Some storages are not included in the default installation. Install their
+dependencies only if you plan to use or develop them.
 
 #### Apache Impala genotype storage
 
-To use ore develop features for GPF impala genotype storage you need some
-additional dependencies installed. From `gpf` root directory update your `gpf`
-conda environment using:
-
 ```bash
 mamba env update --name gpf --file ./impala_storage/impala-environment.yml
-```
-
-and install the `gpf_impala_storage` package using:
-
-```bash
 pip install -e impala_storage
 ```
 
 #### Apache Impala2 genotype storage
 
-To use ore develop features for GPF impala genotype storage you need some
-additional dependencies installed. From `gpf` root directory update your `gpf`
-conda environment using:
-
 ```bash
 mamba env update --name gpf --file ./impala2_storage/impala2-environment.yml
-```
-
-and install the `gpf_impala2_storage` package using:
-
-```bash
 pip install -e impala2_storage
 ```
 
-#### GCP genotype storage
-
-If you want support for genotype storage on Google Cloud Platform (GCP) using
-the Google BigQuery for querying variants you need to install more dependencies
-in your development environment:
+#### GCP (BigQuery) genotype storage
 
 ```bash
 mamba env update --name gpf --file ./gcp_storage/gcp-environment.yml
-```
-
-and install `gcp_genotype_storage` package using:
-
-```bash
 pip install -e gcp_storage
 ```
 
-To run the tests you need to authenticate for `seqpipe-gcp-storage-testing`
-project:
+Authenticate for the `seqpipe-gcp-storage-testing` project before running tests:
 
 ```bash
 gcloud config list project
-```
-
-```
-[core]
-project = seqpipe-gcp-storage-testing
-
-Your active configuration is: [default]
-```
-
-using
-
-```bash
 gcloud auth application-default login
 ```
 
-To run the GCP storge tests you should enter into the
-`gpf/gcp_storage` directory and run:
+Run GCP storage tests (from the `gcp_storage/` directory):
 
 ```bash
-py.test -v gcp_storage/tests/
+pytest -v gcp_storage/tests/
 ```
 
-To run the intergration tests use:
+Run integration tests against the GCP genotype storage definition:
 
 ```bash
-py.test -v ../dae/tests/ --gsf gcp_storage/tests/gcp_storage.yaml
+pytest -v ../dae/tests/ --gsf gcp_storage/tests/gcp_storage.yaml
 ```
 
-#### Pre-commit lint check hook
+### Pre-commit lint check hook
 
 A git pre-commit hook for lint checking with Ruff is included.
-To install it, run the following command from the repository's directory:
+Install it from the repository root:
 
 ```bash
-cp pre-commit .git/hooks
+cp pre-commit .git/hooks/
 ```
 
-To bypass the pre-commit hook, use the following flag when committing:
+To bypass the pre-commit hook when committing:
 
 ```bash
 git commit --no-verify
 ```
+
+## Common pitfalls
+
+- Always activate the `gpf` Conda environment before running commands:
+  `conda activate gpf`.
+- Prefer `environment.yml` over `requirements.txt` (legacy).
+- If imports fail after changes, re-run `pip install -e dae` and/or 
+  `pip install -e wdae`.
+- Some tests may be flaky with high parallelism; reduce `-n` or run without it.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.

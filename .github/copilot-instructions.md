@@ -2,7 +2,9 @@
 
 ## Repository Overview
 
-**GPF** is a system for managing large databases of genetic variants and phenotypic measurements from family collections. The main application manages data from the Simons Simplex Collection (~2,600 families with autism diagnoses).
+**GPF** is a system for managing large databases of genetic variants and 
+phenotypic measurements from family collections. The main application manages
+data from the Simons Simplex Collection (~2,600 families with autism diagnoses).
 
 **Key Stats:**
 - ~1,000+ Python files across core packages
@@ -14,13 +16,18 @@
 
 ### Core Modules
 
-- **dae/** - Data Access Environment (DAE), core library for genetic data analysis
-  - `dae/dae/` - Main source (35+ subpackages: genomic_resources, genotype_storage, variants, pedigrees, etc.)
-  - `dae/tests/` - 442+ test files organized in `small/` and `integration/` subdirectories
-  - Key areas: annotation, genomic_resources, genotype_storage, import_tools, parquet_storage
+- **dae/** - Data Access Environment (DAE), core library for genetic data
+  analysis
+  - `dae/dae/` - Main source (35+ subpackages: genomic_resources, 
+    genotype_storage, variants, pedigrees, etc.)
+  - `dae/tests/` - 442+ test files organized in `small/` and `integration/`
+    subdirectories
+  - Key areas: annotation, genomic_resources, genotype_storage, import_tools,
+    parquet_storage
 
 - **wdae/** - Web Django Application Environment
-  - `wdae/wdae/` - Django REST API (28+ apps: datasets_api, genotype_browser, users_api, etc.)
+  - `wdae/wdae/` - Django REST API (28+ apps: datasets_api, genotype_browser,
+    users_api, etc.)
   - `wdae/wdae_tests/` - 88+ integration test files
   - Main Django app with REST endpoints for variant browsing and analysis
 
@@ -29,18 +36,19 @@
 - **impala_storage/** - Apache Impala genotype storage (29MB, largest module)
 - **impala2_storage/** - Apache Impala2 genotype storage
 - **gcp_storage/** - Google Cloud Platform/BigQuery storage
-- **federation/** - Federated query support
-- **rest_client/** - REST API client library
 
 ### Other Modules
 
 - **external_demo_annotator/** - Demo external annotation plugin
 - **external_vep_annotator/** - VEP annotation plugin
 - **spliceai_annotator/** - SpliceAI annotation plugin
+- **federation/** - Federated query support
+- **rest_client/** - REST API client library
 
 ## Environment Setup
 
-**CRITICAL:** This project requires conda/mamba. All development tools (pytest, ruff, mypy) are installed via conda, NOT system pip.
+**CRITICAL:** This project requires conda/mamba. All development tools 
+(pytest, ruff, mypy) are installed via conda, NOT system pip.
 
 ### Initial Setup (Required)
 
@@ -53,7 +61,8 @@ mamba env update --name gpf --file ./dev-environment.yml
 conda activate gpf
 
 # Install core packages in development mode
-for d in dae wdae; do (cd $d; pip install -e .); done
+pip install -e dae
+pip install -e wdae
 ```
 
 ### Optional Storage Modules
@@ -73,7 +82,13 @@ pip install -e impala2_storage
 mamba env update --name gpf --file ./gcp_storage/gcp-environment.yml
 pip install -e gcp_storage
 gcloud auth application-default login  # Required for GCP tests
+```
 
+### Optional Federation Module
+
+Only install if working with federation features:
+
+```bash
 # For Federation and REST client
 mamba env update --name gpf --file ./federation/federation-environment.yml
 pip install -e rest_client
@@ -84,7 +99,8 @@ pip install -e federation
 
 ### Running Tests
 
-**IMPORTANT:** Tests use pytest with parallel execution. The conda environment MUST be activated.
+**IMPORTANT:** Tests use pytest with parallel execution. The conda 
+environment MUST be activated.
 
 ```bash
 # Core dae tests (takes ~10-15 minutes with parallel execution)
@@ -108,7 +124,8 @@ conda run -n gpf pytest -v ../dae/tests/ --gsf gcp_storage/tests/gcp_storage.yam
 
 ### Linting
 
-**CRITICAL:** Always run linting before committing. Use ruff (primary) and the pre-commit hook.
+**CRITICAL:** Always run linting before committing. Use ruff (primary) and
+the pre-commit hook.
 
 ```bash
 # Run ruff (primary linter) - FAST
@@ -146,7 +163,8 @@ cp pre-commit .git/hooks/
 
 ### Jenkins Build (Jenkinsfile)
 
-The project uses a complex Jenkins pipeline with Docker containers. DO NOT attempt to replicate locally.
+The project uses a complex Jenkins pipeline with Docker containers.
+DO NOT attempt to replicate locally.
 
 **Build Script:** `build.sh` orchestrates the full build:
 1. Cleanup stage
@@ -166,7 +184,8 @@ The project uses a complex Jenkins pipeline with Docker containers. DO NOT attem
 - Coverage reports combined from dae/.coverage and wdae/.coverage
 - Results in `test-results/`: junit XML, coverage XML, HTML reports
 
-**DO NOT RUN `build.sh` locally** - it requires build-scripts submodule and Docker infrastructure.
+**DO NOT RUN `build.sh` locally** - it requires build-scripts submodule and
+Docker infrastructure.
 
 ## Configuration Files
 
@@ -214,7 +233,8 @@ The project uses a complex Jenkins pipeline with Docker containers. DO NOT attem
 ### Build Script Warnings
 
 - DO NOT run `build.sh` without Docker and build-scripts submodule
-- The build-scripts submodule is from a private repo (ssh://git@github.com/seqpipe/build-scripts.git)
+- The build-scripts submodule is from a private repo 
+  (ssh://git@github.com/seqpipe/build-scripts.git)
 - Use manual conda commands for local development instead
 
 ### Storage Module Testing
@@ -293,4 +313,6 @@ The project uses a complex Jenkins pipeline with Docker containers. DO NOT attem
 
 ---
 
-**When in doubt:** Check `README.md` first, then this file, then ask for clarification. Trust these instructions and minimize exploration when the information is already documented here.
+**When in doubt:** Check `README.md` first, then this file, then ask for 
+clarification. Trust these instructions and minimize exploration when the
+information is already documented here.
