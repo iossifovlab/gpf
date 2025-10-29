@@ -233,7 +233,8 @@ def test_bad_cnv_effect_annotation(
 
     with pytest.raises(
         ValueError,
-        match="errors occured during reading of CSV file",
+        match=r"errors occured during reading of CSV file starting at line"
+        r".*unexpected CNV variant type: bla",
     ):
         cli_columns([
             str(root_path / "input" / infile),
