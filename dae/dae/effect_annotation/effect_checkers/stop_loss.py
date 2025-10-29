@@ -29,9 +29,9 @@ class StopLossEffectChecker(EffectChecker):
             try:
                 ref_aa, alt_aa = request.get_amino_acids()
 
-                if len(ref_aa) == len(alt_aa):
-                    if alt_aa[ref_aa.index("End")] == "End":
-                        return None
+                if len(ref_aa) == len(alt_aa) and \
+                        alt_aa[ref_aa.index("End")] == "End":
+                    return None
 
                 logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
 

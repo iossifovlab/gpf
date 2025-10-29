@@ -37,10 +37,9 @@ class ProteinChangeEffectChecker(EffectChecker):
             return None
 
         for j in coding_regions:
-            if j.start <= request.variant.position <= j.stop:
-                if length == 0:
-                    ref_aa, alt_aa = request.get_amino_acids()
-                    return EffectFactory.create_effect_with_aa_change(
-                        self.mutation_type(ref_aa, alt_aa), request,
-                    )
+            if j.start <= request.variant.position <= j.stop and length == 0:
+                ref_aa, alt_aa = request.get_amino_acids()
+                return EffectFactory.create_effect_with_aa_change(
+                    self.mutation_type(ref_aa, alt_aa), request,
+                )
         return None

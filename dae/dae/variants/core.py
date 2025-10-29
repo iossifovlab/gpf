@@ -43,7 +43,7 @@ class Allele:
         small_deletion = 1 << 2
         complex = 1 << 3
 
-        indel = small_insertion | small_deletion | complex
+        indel = small_insertion | small_deletion | complex  # noqa: A003
 
         large_deletion = 1 << 4
         large_duplication = 1 << 5
