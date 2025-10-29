@@ -96,8 +96,17 @@ class _CSVSource(Source):
         self.header: list[str] = self._extract_header()
 
     def __enter__(self) -> _CSVSource:
-        if self.path.endswith(".gz"):
+        # TODO: Clean up this hotfix for supporting gzip files without tabix
+        # Implemented for web annotation annotate columns support
+        
+        path = Path(self.path)
+        filename = path.name
+        parent = path.parent
+        if filename.endswith(".gz") and (parent / f"{filename}.tbi").exists():
             self.source_file = TabixFile(self.path)
+        elif filename.endswith(".gz"):
+            self.source_file = gzip.open(self.path, "rt")
+            self.source_file.readline()  # Skip header line
         else:
             self.source_file = open(self.path, "rt")
             self.source_file.readline()  # Skip header line
