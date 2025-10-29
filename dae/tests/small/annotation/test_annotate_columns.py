@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,C0302
 import gzip
 import logging
 import os
@@ -1448,3 +1448,92 @@ def test_annotate_columns_version_report(
 
     out, _err = capsys.readouterr()
     assert out.startswith("GPF version")
+
+
+def test_cli_annotatables_that_need_ref_genome_but_do_not_have_it(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        location  variant
+        chr1:23   sub(C->T)
+        chr1:24   sub(C->A)
+        chr2:33   ins(AAA)
+        chr2:34   del(3)
+    """)
+    out_expected_content = (
+        "location\tvariant\tscore\n"
+        "chr1:23\tsub(C->T)\t0.1\n"
+        "chr1:24\tsub(C->A)\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    with pytest.raises(
+        ValueError,
+        match=r"errors occured during reading of CSV file .*"
+        r"genome is required for ins/del variants",
+    ):
+        cli([
+            str(a) for a in [
+                in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+                "--col-location", "location",
+                "--col-variant", "variant",
+                "-w", work_dir,
+                "-j", 1,
+            ]
+        ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_cli_annotatables_dae_that_need_ref_genome_but_do_not_have_it(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chr   pos   variant
+        chr1  23   sub(C->T)
+        chr1  24   sub(C->A)
+        chr2  33   ins(AAA)
+        chr2  34   del(3)
+    """)
+    out_expected_content = (
+        "chr\tpos\tvariant\tscore\n"
+        "chr1\t23\tsub(C->T)\t0.1\n"
+        "chr1\t24\tsub(C->A)\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    work_dir = tmp_path / "work"
+
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    with pytest.raises(
+        ValueError,
+        match=r"errors occured during reading of CSV file .*"
+        r"genome is required for ins/del variants",
+    ):
+        cli([
+            str(a) for a in [
+                in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+                "--col-chrom", "chr",
+                "--col-pos", "pos",
+                "--col-variant", "variant",
+                "-w", work_dir,
+                "-j", 1,
+            ]
+        ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content

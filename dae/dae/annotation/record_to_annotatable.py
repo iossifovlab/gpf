@@ -26,7 +26,7 @@ class RecordToAnnotable(abc.ABC):
 
     @abc.abstractmethod
     def build(self, record: dict[str, str]) -> Annotatable:
-        pass
+        """Constructs an annotatable from a record."""
 
 
 class RecordToPosition(RecordToAnnotable):
@@ -128,11 +128,8 @@ class DaeAlleleRecordToAnnotatable(RecordToAnnotable):
         self.chrom_column, self.pos_column, self.variant_column = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
-        if self.ref_genome is None:
-            raise ValueError("unable to build without a referrence genome")
         variant = record[self.variant_column]
         chrom = record[self.chrom_column]
-        assert self.ref_genome is not None
         return VCFAllele(chrom, *dae2vcf_variant(
             chrom,
             int(record[self.pos_column]),

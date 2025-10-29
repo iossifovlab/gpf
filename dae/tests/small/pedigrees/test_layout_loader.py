@@ -8,7 +8,8 @@ def assert_positions(
     expected: list[list[IndividualWithCoordinates]],
     resulted: list[list[IndividualWithCoordinates]],
 ) -> None:
-    for expected_level, resulted_level in zip(expected, resulted, strict=False):
+    for expected_level, resulted_level in zip(
+            expected, resulted, strict=False):
         expected_level.sort(
             key=lambda layout:
             layout.individual.member.person_id,  # type: ignore
@@ -40,7 +41,6 @@ def test_load_from_family_layout(
 ) -> None:
     layout1 = Layout.from_family_layout(family1)
     assert layout1 is None
-    # assert len(layout1.positions) == 1
 
     layout2_loaded = Layout.from_family_layout(family2)
     assert layout2_loaded is not None

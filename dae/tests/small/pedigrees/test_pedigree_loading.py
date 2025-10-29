@@ -126,7 +126,7 @@ def test_flexible_pedigree_read(
     ]
     for column in columns:
         assert np.all(
-            loaded_pedigree[column].values == pedigree[column].values)
+            loaded_pedigree[column].to_numpy() == pedigree[column].to_numpy())
 
 
 @pytest.mark.parametrize(

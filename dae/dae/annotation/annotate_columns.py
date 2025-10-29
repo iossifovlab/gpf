@@ -7,6 +7,7 @@ import itertools
 import logging
 import os
 import sys
+import traceback
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from dataclasses import dataclass
@@ -113,7 +114,7 @@ class _CSVSource(Source):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.source_file.close()
 
@@ -151,8 +152,9 @@ class _CSVSource(Source):
         record_to_annotatable = build_record_to_annotatable(
             self.columns_args, set(self.header),
             ref_genome=self.ref_genome)
-        errors = []
+
         reg_start = region.start if region and region.start is not None else 1
+        errors = []
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(self.input_separator)
@@ -165,17 +167,21 @@ class _CSVSource(Source):
                 )
             except Exception as ex:  # pylint: disable=broad-except
                 logger.exception(
-                    "unexpected input data format at line %s: %s",
-                    lnum, line)
-                errors.append((lnum, line, str(ex)))
+                    "unexpected input data format at line: %s", line)
+                errors.append((
+                    lnum, line,
+                    "".join(traceback.format_exception(ex)), str(ex)))
                 if len(errors) >= 10:
                     break
-
         if len(errors) > 0:
-            for lnum, line, error in errors:
-                logger.error("line %s: %s", lnum, line)
+            for _lnum, line, error, message in errors:
+                logger.error("line: %s", line)
+                logger.error("\t%s", message)
                 logger.error("\t%s", error)
-            raise ValueError("errors occured during reading of CSV file")
+            lnum, line, error, message = errors[0]
+            raise ValueError(
+                f"errors occured during reading of CSV file starting at "
+                f"line: {line.strip()}: {message}")
 
 
 class _CSVBatchSource(Source):

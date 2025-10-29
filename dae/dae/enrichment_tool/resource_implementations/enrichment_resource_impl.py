@@ -43,7 +43,7 @@ class EnrichmentBackgroundResourceImplementation(
         return res
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,
+        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
     ) -> list[Task]:
         return []
 

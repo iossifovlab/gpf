@@ -24,7 +24,10 @@ from dae.pedigrees.testing import build_families_data
     ("tag_missing_mom_family", False),
     ("tag_missing_dad_family", False),
 ])
-def test_family_tags_builder_simple(tag_label: str, value: bool) -> None:
+def test_family_tags_builder_simple(
+    tag_label: str,
+    value: bool,  # noqa: FBT001
+) -> None:
 
     families = build_families_data(
         """

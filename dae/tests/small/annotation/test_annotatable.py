@@ -30,7 +30,10 @@ from dae.utils.variant_utils import trim_parsimonious
         ),
     ],
 )
-def test_vcf_allele(allele, allele_type):  # type: ignore
+def test_vcf_allele(
+    allele: tuple,
+    allele_type: Annotatable.Type,
+) -> None:
     annotatable = VCFAllele(*allele)
     assert annotatable.type == allele_type
 
@@ -64,8 +67,11 @@ def test_vcf_allele(allele, allele_type):  # type: ignore
         1, 109, VCFAllele.Type.SUBSTITUTION,
     ),
 ])
-def test_parsimonious_vcf_allele(  # type: ignore
-        allele, expected, length, end_pos, allele_type):
+def test_parsimonious_vcf_allele(
+    allele: tuple, expected: tuple, length: int,
+    end_pos: int,  # noqa: ARG001
+    allele_type: Annotatable.Type,
+) -> None:
 
     parsimonious = trim_parsimonious(*allele)
     annotatable = VCFAllele("1", *parsimonious)
@@ -83,7 +89,10 @@ def test_parsimonious_vcf_allele(  # type: ignore
         ("POSITION(chr1, 123)", Position("chr1", 123)),
     ],
 )
-def test_annotatable_from_string_position(value, expected):  # type: ignore
+def test_annotatable_from_string_position(
+    value: str,
+    expected: Annotatable,
+) -> None:
     from_string = Annotatable.from_string(value)
     assert from_string == expected
     assert Annotatable.from_string(repr(from_string)) == expected
@@ -95,7 +104,10 @@ def test_annotatable_from_string_position(value, expected):  # type: ignore
         ("REGION(chr1, 123, 456)", Region("chr1", 123, 456)),
     ],
 )
-def test_annotatable_from_string_region(value, expected):  # type: ignore
+def test_annotatable_from_string_region(
+    value: str,
+    expected: Annotatable,
+) -> None:
     from_string = Annotatable.from_string(value)
     assert from_string == expected
     assert Annotatable.from_string(repr(from_string)) == expected
@@ -110,7 +122,10 @@ def test_annotatable_from_string_region(value, expected):  # type: ignore
         ("SMALL_INSERTION(X, 1, A, AAA)", VCFAllele("X", 1, "A", "AAA")),
     ],
 )
-def test_annotatable_from_string_vcf(value, expected):  # type: ignore
+def test_annotatable_from_string_vcf(
+    value: str,
+    expected: Annotatable,
+) -> None:
     from_string = Annotatable.from_string(value)
     assert from_string == expected
     assert Annotatable.from_string(repr(from_string)) == expected
@@ -128,5 +143,8 @@ def test_annotatable_from_string_vcf(value, expected):  # type: ignore
          CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DELETION)),
     ],
 )
-def test_annotatable_from_string_cnv(value, expected):  # type: ignore
+def test_annotatable_from_string_cnv(
+    value: str,
+    expected: Annotatable,
+) -> None:
     assert Annotatable.from_string(value) == expected
