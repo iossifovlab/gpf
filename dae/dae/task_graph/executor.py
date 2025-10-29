@@ -74,6 +74,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         super().__init__()
         self._task_cache = task_cache
         self._executing = False
+        self._task2result: dict[Task, Any] = {}
 
     @staticmethod
     def _exec_internal(
@@ -275,8 +276,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 
     def __init__(self, task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any):
         super().__init__(task_cache)
-        self._task_queue: list[Task] = []
-        self._task2result: dict[Task, Any] = {}
+        self._task_queue: deque[Task] = deque()
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
         self._params["task_log_dir"] = log_dir
@@ -326,7 +326,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
             yield task_node, result
 
         # all tasks have already executed. Let's clean the state.
-        self._task_queue = []
+        self._task_queue = deque()
         self._task2result = {}
 
     def _set_task_result(self, task: Task, result: Any) -> None:
@@ -344,7 +344,6 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._client = client
         self._task2future: dict[Task, Future] = {}
         self._future_key2task: dict[str, Task] = {}
-        self._task2result: dict[Task, Any] = {}
         self._task_queue: deque[Task] = deque()
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
