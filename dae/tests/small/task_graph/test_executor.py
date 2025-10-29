@@ -76,7 +76,8 @@ def test_implicit_dependancies(executor: AbstractTaskGraphExecutor) -> None:
         last_task = graph.create_task(
             f"{i}", add_to_list, args=[i, last_task], deps=[])
 
-    graph.create_task("9", add_to_list, args=[9, last_task], deps=[])
+    last_task = graph.create_task(
+        "9", add_to_list, args=[9, last_task], deps=[])
 
     full_list = []
     for task, result in executor.execute(graph):

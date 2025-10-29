@@ -70,11 +70,15 @@ NO_TASK_CACHE = NoTaskCache()
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
 
-    def __init__(self, task_cache: TaskCache = NO_TASK_CACHE):
+    def __init__(self, task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any):
         super().__init__()
         self._task_cache = task_cache
         self._executing = False
         self._task2result: dict[Task, Any] = {}
+        self._task_queue: deque[Task] = deque()
+        log_dir = ensure_log_dir(**kwargs)
+        self._params = copy(kwargs)
+        self._params["task_log_dir"] = log_dir
 
     @staticmethod
     def _exec_internal(
@@ -178,18 +182,15 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         self._check_for_cyclic_deps(task_graph)
         self._executing = True
 
-        already_computed_tasks = {}
         for task_node, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
-                already_computed_tasks[task_node] = record.result
+                self._set_task_result(task_node, record.result)
 
         for task_node in self._in_exec_order(task_graph):
-            if task_node in already_computed_tasks:
-                task_result = already_computed_tasks[task_node]
-                self._set_task_result(task_node, task_result)
-            else:
-                self._queue_task(task_node)
-        return self._yield_task_results(already_computed_tasks)
+            if task_node in self._task2result:
+                continue
+            self._queue_task(task_node)
+        return self._yield_task_results(self._task2result)
 
     def _yield_task_results(
         self, already_computed_tasks: dict[Task, Any],
@@ -274,13 +275,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
-    def __init__(self, task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any):
-        super().__init__(task_cache)
-        self._task_queue: deque[Task] = deque()
-        log_dir = ensure_log_dir(**kwargs)
-        self._params = copy(kwargs)
-        self._params["task_log_dir"] = log_dir
-
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
 
@@ -340,14 +334,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self, client: Client, task_cache: TaskCache = NO_TASK_CACHE,
         **kwargs: Any,
     ):
-        super().__init__(task_cache)
+        super().__init__(task_cache, **kwargs)
         self._client = client
         self._task2future: dict[Task, Future] = {}
         self._future_key2task: dict[str, Task] = {}
-        self._task_queue: deque[Task] = deque()
-        log_dir = ensure_log_dir(**kwargs)
-        self._params = copy(kwargs)
-        self._params["task_log_dir"] = log_dir
 
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
@@ -397,13 +387,20 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     def _queue_size(self) -> int:
         n_workers = cast(
             int,
-            sum(self._client.ncores().values()))  # pyright: ignore
+            sum(self._client.ncores().values()))
         return max(self.MIN_QUEUE_SIZE, 2 * n_workers)
 
     def _schedule_tasks(self, currently_running: set[Future]) -> set[Future]:
         while self._task_queue and len(currently_running) < self._queue_size():
-            future = self._submit_task(self._task_queue.popleft())
+            task_node: Task = self._task_queue[0]
+
+            if not all(d in self._task2result for d in task_node.deps):
+                return currently_running
+
+            task_node = self._task_queue.popleft()
+            future = self._submit_task(task_node)
             currently_running.add(future)
+
         return currently_running
 
     def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
@@ -416,10 +413,15 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         finished_tasks = 0
 
         not_completed = self._schedule_tasks(not_completed)
-        while not_completed:
-            completed, not_completed = wait(
-                not_completed,
-                return_when="FIRST_COMPLETED")  # pyright: ignore
+        while not_completed or self._task_queue:
+            if not_completed:
+                completed, not_completed = wait(
+                    not_completed,
+                    return_when="FIRST_COMPLETED")
+
+            if not completed:
+                time.sleep(1.0)
+                continue
 
             for future in completed:
                 try:
@@ -432,11 +434,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
                 yield task, result
                 finished_tasks += 1
-                # del ref to future in order to make dask gc its resources
-                logger.debug("clean up task %s", task)
                 logger.info(
                     "finished %s/%s", finished_tasks,
                     initial_task_count)
+                # del ref to future in order to make dask gc its resources
                 del self._task2future[task]
 
             not_completed = self._schedule_tasks(not_completed)
