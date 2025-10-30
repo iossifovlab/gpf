@@ -1,12 +1,13 @@
-# pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613,protected-access
 import os
+import pickle  # noqa: S403
 import time
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
 import pytest
-from dae.task_graph.cache import CacheRecordType, FileTaskCache
+from dae.task_graph.cache import CacheRecord, CacheRecordType, FileTaskCache
 from dae.task_graph.executor import SequentialExecutor
 from dae.task_graph.graph import Task, TaskGraph
 
@@ -39,6 +40,70 @@ def execute_with_file_cache(graph: TaskGraph, work_dir: str) -> None:
     executor = SequentialExecutor(FileTaskCache(cache_dir=work_dir))
     for _ in executor.execute(graph):
         pass
+
+
+def test_get_record_force_returns_needs_compute(tmp_path: Path) -> None:
+    cache = FileTaskCache(cache_dir=str(tmp_path), force=True)
+    task = TaskGraph().create_task("Task", noop, args=[], deps=[])
+
+    record = cache._get_record(task, {})
+
+    assert record.type == CacheRecordType.NEEDS_COMPUTE
+
+
+def test_get_record_returns_cached_entry(tmp_path: Path) -> None:
+    cache = FileTaskCache(cache_dir=str(tmp_path))
+    task = TaskGraph().create_task("Task", noop, args=[], deps=[])
+    cached = CacheRecord(CacheRecordType.COMPUTED, "cached")
+    task2record = {task: cached}
+
+    record = cache._get_record(task, task2record)
+
+    assert record is cached
+
+
+def test_get_record_requires_compute_if_deps_not_ready(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cache = FileTaskCache(cache_dir=str(tmp_path))
+    cache._global_dependancies = []
+    monkeypatch.setattr(cache, "_needs_compute", lambda _task: False)
+
+    graph = TaskGraph()
+    dep = graph.create_task("dep", noop, args=[], deps=[])
+    task = graph.create_task("task", noop, args=[], deps=[dep])
+    task2record = {dep: CacheRecord(CacheRecordType.NEEDS_COMPUTE)}
+
+    record = cache._get_record(task, task2record)
+
+    assert record.type == CacheRecordType.NEEDS_COMPUTE
+    assert task2record[task] is record
+
+
+def test_get_record_reads_serialized_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cache = FileTaskCache(cache_dir=str(tmp_path))
+    cache._global_dependancies = []
+    monkeypatch.setattr(cache, "_needs_compute", lambda _task: False)
+
+    graph = TaskGraph()
+    task = graph.create_task("task", noop, args=[], deps=[])
+
+    flag_path = tmp_path / "task.flag"
+    monkeypatch.setattr(
+        cache, "_get_flag_filename", lambda _task: str(flag_path),
+    )
+
+    expected = CacheRecord(CacheRecordType.COMPUTED, "payload")
+    with open(flag_path, "wb") as out:
+        pickle.dump(expected, out)
+
+    task2record: dict[Task, CacheRecord] = {}
+    result = cache._get_record(task, task2record)
+
+    assert result == expected
+    assert task2record[task] == expected
 
 
 def test_file_cache_clear_state(
