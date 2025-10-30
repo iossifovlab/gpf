@@ -80,6 +80,18 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         self._params = copy(kwargs)
         self._params["task_log_dir"] = log_dir
 
+    def _all_deps_finished(self, task_node: Task) -> bool:
+        return all(
+            d in self._task2result for d in task_node.deps
+        )
+
+    def _all_deps_calculated(self, task_node: Task) -> bool:
+        return all(
+            d in self._task2result
+            and not isinstance(self._task2result[d], BaseException)
+            for d in task_node.deps
+        )
+
     @staticmethod
     def _exec_internal(
         task_func: Callable, args: list, _deps: list, params: dict[str, Any],
@@ -181,6 +193,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
         self._executing = True
+        self._task2result = {}
 
         for task_node, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
@@ -206,6 +219,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             )
             yield task_node, result
         self._executing = False
+        self._task2result = {}
 
     @abstractmethod
     def _queue_task(self, task_node: Task) -> None:
@@ -249,7 +263,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 cycle = AbstractTaskGraphExecutor._find_cycle(
                     node, visited, stack)
                 if cycle is not None:
-                    raise ValueError(f"Cyclic dependancy {cycle}")
+                    raise ValueError(f"Cyclic dependency {cycle}")
 
     @staticmethod
     def _find_cycle(
@@ -283,10 +297,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         initial_task_count = len(self._task_queue)
 
         for task_node in self._task_queue:
-            all_deps_satisfied = all(
-                d in self._task2result for d in task_node.deps
-            )
-            if not all_deps_satisfied:
+            if not self._all_deps_calculated(task_node):
                 # some of the dependancies were errors and didn't run
                 logger.info(
                     "Skipping execution of task(id=%s) because one or more of "
@@ -298,7 +309,6 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
                 self._task2result[arg] if isinstance(arg, Task) else arg
                 for arg in task_node.args
             ]
-            is_error = False
 
             params = copy(self._params)
             task_id = safe_task_id(task_node.task_id)
@@ -309,14 +319,13 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
             except Exception as exp:  # noqa: BLE001
                 # pylint: disable=broad-except
                 result = exp
-                is_error = True
             finished_tasks += 1
             logger.debug("clean up task %s", task_node)
             logger.info(
                 "finished %s/%s", finished_tasks,
                 initial_task_count)
-            if not is_error:
-                self._task2result[task_node] = result
+
+            self._task2result[task_node] = result
             yield task_node, result
 
         # all tasks have already executed. Let's clean the state.
@@ -341,6 +350,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
+
+    def _get_future_or_result(self, task: Task) -> Any:
+        future = self._task2future.get(task)
+        return future or self._task2result[task]
 
     def _submit_task(self, task_node: Task) -> Future:
         deps = []
@@ -378,10 +391,6 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future_key2task[str(future.key)] = task_node
         return cast(Future, future)
 
-    def _get_future_or_result(self, task: Task) -> Any:
-        future = self._task2future.get(task)
-        return future or self._task2result[task]
-
     MIN_QUEUE_SIZE = 700
 
     def _queue_size(self) -> int:
@@ -394,10 +403,17 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         while self._task_queue and len(currently_running) < self._queue_size():
             task_node: Task = self._task_queue[0]
 
-            if not all(d in self._task2result for d in task_node.deps):
+            if not self._all_deps_finished(task_node):
                 return currently_running
 
             task_node = self._task_queue.popleft()
+            if not self._all_deps_calculated(task_node):
+                # some of the dependancies were errors and didn't run
+                logger.info(
+                    "Skipping execution of task(id=%s) because one or more of "
+                    "its dependancies failed with an error", task_node.task_id)
+                continue
+
             future = self._submit_task(task_node)
             currently_running.add(future)
 
@@ -443,10 +459,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             not_completed = self._schedule_tasks(not_completed)
 
         # clean up
-        if len(self._task2future) > 0:
-            logger.error("[BUG] Dask Executor's future q is not empty.")
-        if len(self._task_queue) > 0:
-            logger.error("[BUG] Dask Executor's task q is not empty.")
+        assert len(self._task2future) == 0, \
+            "[BUG] Dask Executor's future queue is not empty."
+        assert len(self._task_queue) == 0, \
+            "[BUG] Dask Executor's task queue is not empty."
 
         self._task2future = {}
         self._future_key2task = {}
@@ -458,6 +474,68 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
     def close(self) -> None:
         self._client.close()
+
+
+def task_graph_run(
+    task_graph: TaskGraph,
+    executor: TaskGraphExecutor | None = None,
+    *,
+    keep_going: bool = False,
+) -> bool:
+    """Execute (runs) the task_graph with the given executor."""
+    no_errors = True
+    for result_or_error in task_graph_run_with_results(
+            task_graph, executor, keep_going=keep_going):
+        if isinstance(result_or_error, Exception):
+            no_errors = False
+    return no_errors
+
+
+def task_graph_run_with_results(
+    task_graph: TaskGraph, executor: TaskGraphExecutor | None = None,
+    *,
+    keep_going: bool = False,
+) -> Generator[Any, None, None]:
+    """Run a task graph, yielding the results from each task."""
+    if executor is None:
+        executor = SequentialExecutor()
+    tasks_iter = executor.execute(task_graph)
+    for task, result_or_error in tasks_iter:
+        if isinstance(result_or_error, Exception):
+            if keep_going:
+                print(f"Task {task.task_id} failed with:",
+                      file=sys.stderr)
+                traceback.print_exception(
+                    None, value=result_or_error,
+                    tb=result_or_error.__traceback__,
+                    file=sys.stdout,
+                )
+            else:
+                raise result_or_error
+        yield result_or_error
+
+
+def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
+    """Check if the task graph is fully executed.
+
+    When all tasks are already computed, the function returns True.
+    If there are tasks, that need to run, the function returns False.
+    """
+    # pylint: disable=protected-access
+    AbstractTaskGraphExecutor._check_for_cyclic_deps(  # noqa: SLF001
+        task_graph)
+
+    already_computed_tasks = {}
+    for task_node, record in task_cache.load(task_graph):
+        if record.type == CacheRecordType.COMPUTED:
+            already_computed_tasks[task_node] = record.result
+
+    for task_node in AbstractTaskGraphExecutor._in_exec_order(  # noqa: SLF001
+            task_graph):
+        if task_node not in already_computed_tasks:
+            return False
+
+    return True
 
 
 def task_graph_status(
@@ -483,65 +561,4 @@ def task_graph_status(
                 tb=record.error.__traceback__,
                 file=sys.stdout,
             )
-    return True
-
-
-def task_graph_run(
-    task_graph: TaskGraph,
-    executor: TaskGraphExecutor | None = None,
-    *,
-    keep_going: bool = False,
-) -> bool:
-    """Execute (runs) the task_graph with the given executor."""
-    if executor is None:
-        executor = SequentialExecutor()
-    tasks_iter = executor.execute(task_graph)
-    no_errors = True
-    for task, result_or_error in tasks_iter:
-        if isinstance(result_or_error, Exception):
-            if keep_going:
-                print(f"Task {task.task_id} failed with:",
-                      file=sys.stderr)
-                traceback.print_exception(
-                    None, value=result_or_error,
-                    tb=result_or_error.__traceback__,
-                    file=sys.stdout,
-                )
-                no_errors = False
-            else:
-                raise result_or_error
-    return no_errors
-
-
-def task_graph_run_with_results(
-    task_graph: TaskGraph, executor: TaskGraphExecutor,
-) -> Generator[Any, None, None]:
-    """Run a task graph, yielding the results from each task."""
-    tasks_iter = executor.execute(task_graph)
-    for _, result_or_error in tasks_iter:
-        if isinstance(result_or_error, Exception):
-            raise result_or_error
-        yield result_or_error
-
-
-def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
-    """Check if the task graph is fully executed.
-
-    When all tasks are already computed, the function returns True.
-    If there are tasks, that need to run, the function returns False.
-    """
-    # pylint: disable=protected-access
-    AbstractTaskGraphExecutor._check_for_cyclic_deps(  # noqa: SLF001
-        task_graph)
-
-    already_computed_tasks = {}
-    for task_node, record in task_cache.load(task_graph):
-        if record.type == CacheRecordType.COMPUTED:
-            already_computed_tasks[task_node] = record.result
-
-    for task_node in AbstractTaskGraphExecutor._in_exec_order(  # noqa: SLF001
-            task_graph):
-        if task_node not in already_computed_tasks:
-            return False
-
     return True

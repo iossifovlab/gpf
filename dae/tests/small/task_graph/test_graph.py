@@ -26,6 +26,29 @@ def test_pruning_non_existent_ids() -> None:
         graph.prune(ids_to_keep=["non-existant id"])
 
 
+def test_add_task_deps_collects_all_dependencies() -> None:
+    graph = _create_simple_graph()
+    final_task = next(task for task in graph.tasks if task.task_id == "final")
+
+    collected = {"final"}
+    TaskGraph._add_task_deps(final_task, collected)
+
+    expected = {"final", *(str(i) for i in range(1, 10))}
+    assert collected == expected
+
+
+def test_add_task_deps_preserves_existing_entries() -> None:
+    graph = TaskGraph()
+    root = graph.create_task("root", lambda: None, args=[], deps=[])
+    mid = graph.create_task("mid", lambda: None, args=[], deps=[root])
+    leaf = graph.create_task("leaf", lambda: None, args=[], deps=[mid])
+
+    collected = {"leaf", "root"}
+    TaskGraph._add_task_deps(leaf, collected)
+
+    assert collected == {"leaf", "root", "mid"}
+
+
 def _create_simple_graph() -> TaskGraph:
     graph = TaskGraph()
     graph.input_files.extend(["file1", "file2"])

@@ -1,9 +1,12 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+# pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613,too-many-lines
 import argparse
 import pathlib
 import pickle  # noqa: S403
+from collections.abc import Callable
+from typing import Any, cast
 
 import fsspec
+import pytest
 from dae.task_graph import TaskGraph, TaskGraphCli
 from dae.task_graph.executor import AbstractTaskGraphExecutor
 
@@ -30,6 +33,96 @@ def test_executor_fork_tasks(
     TaskGraphCli.process_graph(graph, **vars(args))
 
     assert (tmp_path / "0.result").exists()
+
+
+def test_exec_without_fork_invokes_internal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_internal(
+        task_func: Callable[..., object],
+        args: list[object],
+        deps: list[object],
+        params: dict[str, object],
+    ) -> str:
+        captured["call"] = (task_func, args, deps, params)
+        return "sentinel"
+
+    monkeypatch.setattr(
+        AbstractTaskGraphExecutor,
+        "_exec_internal",
+        staticmethod(fake_internal),
+    )
+
+    def sample_task(value: int) -> int:
+        return value * 2
+
+    params = {"fork_tasks": False, "task_id": "plain"}
+
+    result = AbstractTaskGraphExecutor._exec(
+        sample_task, [21], [], params,
+    )
+
+    assert result == "sentinel"
+    assert captured["call"] == (sample_task, [21], [], params)
+
+
+def test_exec_with_fork_uses_process_and_reads_result(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: dict[str, Any] = {}
+
+    def fake_internal(
+        task_func: Callable[..., object],
+        args: list[object],
+        deps: list[object],
+        params: dict[str, object],
+    ) -> dict[str, int]:
+        calls["internal"] = (task_func, args, deps, params)
+        return {"value": 42}
+
+    monkeypatch.setattr(
+        AbstractTaskGraphExecutor,
+        "_exec_internal",
+        staticmethod(fake_internal),
+    )
+
+    class FakeProcess:
+        def __init__(self, *init_args: object, **init_kwargs: object) -> None:
+            assert not init_args
+            self._target = cast(Callable, init_kwargs["target"])
+            self._args = cast(list[object], init_kwargs["args"])
+            calls["init"] = True
+
+        def start(self) -> None:
+            calls["start"] = True
+            self._target(*self._args)
+
+        def join(self) -> None:
+            calls["join"] = True
+
+    monkeypatch.setattr(
+        "dae.task_graph.executor.mp.Process",
+        FakeProcess,
+    )
+
+    params = {
+        "fork_tasks": True,
+        "task_id": "forked",
+        "task_status_dir": str(tmp_path),
+    }
+
+    result = AbstractTaskGraphExecutor._exec(
+        add_to_list, [5, []], [], params,
+    )
+
+    assert calls.get("init")
+    assert calls.get("start")
+    assert calls.get("join")
+    assert calls["internal"][3] == params
+    assert result == {"value": 42}
+    assert (tmp_path / "forked.result").exists()
 
 
 def test_exec_forked_simple(
