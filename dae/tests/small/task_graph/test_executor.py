@@ -75,7 +75,7 @@ class DummyCache(TaskCache):
         self.mapping[task_node] = CacheRecord(record_type, result)
 
 
-def test_dependancy_chain(executor: AbstractTaskGraphExecutor) -> None:
+def test_dependency_chain(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
     task_1 = graph.create_task("Task 1", do_work, args=[0.01], deps=[])
     graph.create_task("Task 2", do_work, args=[0], deps=[task_1])
@@ -348,7 +348,7 @@ def test_check_for_cyclic_deps_detects_cycle() -> None:
     # introduce a cycle A -> B -> A
     task_a.deps.append(task_b)
 
-    with pytest.raises(ValueError, match="Cyclic dependancy"):
+    with pytest.raises(ValueError, match="Cyclic dependency"):
         AbstractTaskGraphExecutor._check_for_cyclic_deps(graph)
 
 
@@ -529,5 +529,5 @@ def test_task_graph_all_done_detects_cycle() -> None:
 
     cache = DummyCache({})
 
-    with pytest.raises(ValueError, match="Cyclic dependancy"):
+    with pytest.raises(ValueError, match="Cyclic dependency"):
         task_graph_all_done(graph, cache)

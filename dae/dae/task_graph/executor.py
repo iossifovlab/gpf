@@ -263,7 +263,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 cycle = AbstractTaskGraphExecutor._find_cycle(
                     node, visited, stack)
                 if cycle is not None:
-                    raise ValueError(f"Cyclic dependancy {cycle}")
+                    raise ValueError(f"Cyclic dependency {cycle}")
 
     @staticmethod
     def _find_cycle(
