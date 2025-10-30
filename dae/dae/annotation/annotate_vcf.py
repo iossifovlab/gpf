@@ -58,7 +58,7 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph, sync_tasks
-from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -481,7 +481,7 @@ def _add_tasks_plaintext(
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
 ) -> None:
-    task_graph.create_task(
+    annotate_task = task_graph.create_task(
         "all_variants_annotate",
         _annotate_vcf,
         args=[
@@ -493,6 +493,12 @@ def _add_tasks_plaintext(
         ],
         deps=[],
     )
+    if is_compressed_filename(args["input"]):
+        task_graph.create_task(
+            "tabix_compress",
+            _tabix_compress,
+            args=[output_path],
+            deps=[annotate_task])
 
 
 def _add_tasks_tabixed(
