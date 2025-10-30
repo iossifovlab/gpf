@@ -70,7 +70,7 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph, sync_tasks
-from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -96,8 +96,14 @@ class _CSVSource(Source):
         self.header: list[str] = self._extract_header()
 
     def __enter__(self) -> _CSVSource:
-        if self.path.endswith(".gz"):
+        path = Path(self.path)
+        filename = path.name
+        parent = path.parent
+        if filename.endswith(".gz") and (parent / f"{filename}.tbi").exists():
             self.source_file = TabixFile(self.path)
+        elif filename.endswith(".gz"):
+            self.source_file = gzip.open(self.path, "rt")
+            self.source_file.readline()  # Skip header line
         else:
             self.source_file = open(self.path, "rt")
             self.source_file.readline()  # Skip header line
@@ -596,7 +602,7 @@ def _add_tasks_plaintext(
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
 ) -> None:
-    task_graph.create_task(
+    annotate_task = task_graph.create_task(
         "annotate_all",
         _annotate_csv,
         args=[
@@ -608,6 +614,12 @@ def _add_tasks_plaintext(
             args,
         ],
         deps=[])
+    if is_compressed_filename(args["input"]):
+        task_graph.create_task(
+            "tabix_compress",
+            _tabix_compress,
+            args=[output_path],
+            deps=[annotate_task])
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:

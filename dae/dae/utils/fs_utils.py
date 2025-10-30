@@ -123,6 +123,12 @@ def glob(path: str) -> list[str]:
     return cast(list[str], fs.glob(relative_path))
 
 
+def is_compressed_filename(filename: str) -> bool:
+    """Check if a file is compressed by its extension."""
+    compressed_extensions = [".gz", ".bgz"]
+    return any(filename.endswith(ext) for ext in compressed_extensions)
+
+
 def rm_file(path: str) -> None:
     """Remove a file."""
     fs, relative_path = url_to_fs(path)
