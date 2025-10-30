@@ -98,7 +98,7 @@ class _CSVSource(Source):
     def __enter__(self) -> _CSVSource:
         # TODO: Clean up this hotfix for supporting gzip files without tabix
         # Implemented for web annotation annotate columns support
-        
+
         path = Path(self.path)
         filename = path.name
         parent = path.parent
@@ -597,6 +597,12 @@ def _add_tasks_tabixed(
         deps=[compress_task])
 
 
+def is_compressed_filename(filename: str) -> bool:
+    """Check if a file is compressed by its extension."""
+    compressed_extensions = [".gz", ".bgz"]
+    return any(filename.endswith(ext) for ext in compressed_extensions)
+
+
 def _add_tasks_plaintext(
     args: dict[str, Any],
     task_graph: TaskGraph,
@@ -605,7 +611,7 @@ def _add_tasks_plaintext(
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
 ) -> None:
-    task_graph.create_task(
+    annotate_task = task_graph.create_task(
         "annotate_all",
         _annotate_csv,
         args=[
@@ -617,6 +623,12 @@ def _add_tasks_plaintext(
             args,
         ],
         deps=[])
+    if is_compressed_filename(args["input"]):
+        task_graph.create_task(
+            "tabix_compress",
+            _tabix_compress,
+            args=[output_path],
+            deps=[annotate_task])
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:
