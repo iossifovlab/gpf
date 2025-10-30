@@ -70,7 +70,7 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph, sync_tasks
-from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -595,12 +595,6 @@ def _add_tasks_tabixed(
         _tabix_index,
         args=[f"{output_path}.gz", args["columns_args"]],
         deps=[compress_task])
-
-
-def is_compressed_filename(filename: str) -> bool:
-    """Check if a file is compressed by its extension."""
-    compressed_extensions = [".gz", ".bgz"]
-    return any(filename.endswith(ext) for ext in compressed_extensions)
 
 
 def _add_tasks_plaintext(
