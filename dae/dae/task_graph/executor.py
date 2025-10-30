@@ -476,32 +476,6 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._client.close()
 
 
-def task_graph_status(
-        task_graph: TaskGraph, task_cache: TaskCache,
-        verbose: int | None) -> bool:
-    """Show the status of each task from the task graph."""
-    id_col_len = max(len(t.task_id) for t in task_graph.tasks)
-    id_col_len = min(120, max(50, id_col_len))
-    columns = ["TaskID", "Status"]
-    print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-    task2record = dict(task_cache.load(task_graph))
-    for task in task_graph.tasks:
-        record = task2record[task]
-        status = record.type.name
-        msg = f"{task.task_id:{id_col_len}s} {status}"
-        is_error = record.type == CacheRecordType.ERROR
-        if is_error and not verbose:
-            msg += " (-v to see exception)"
-        print(msg)
-        if is_error and verbose:
-            traceback.print_exception(
-                None, value=record.error,
-                tb=record.error.__traceback__,
-                file=sys.stdout,
-            )
-    return True
-
-
 def task_graph_run(
     task_graph: TaskGraph,
     executor: TaskGraphExecutor | None = None,
@@ -509,23 +483,11 @@ def task_graph_run(
     keep_going: bool = False,
 ) -> bool:
     """Execute (runs) the task_graph with the given executor."""
-    if executor is None:
-        executor = SequentialExecutor()
-    tasks_iter = executor.execute(task_graph)
     no_errors = True
-    for task, result_or_error in tasks_iter:
+    for result_or_error in task_graph_run_with_results(
+            task_graph, executor, keep_going=keep_going):
         if isinstance(result_or_error, Exception):
-            if keep_going:
-                print(f"Task {task.task_id} failed with:",
-                      file=sys.stderr)
-                traceback.print_exception(
-                    None, value=result_or_error,
-                    tb=result_or_error.__traceback__,
-                    file=sys.stdout,
-                )
-                no_errors = False
-            else:
-                raise result_or_error
+            no_errors = False
     return no_errors
 
 
@@ -573,4 +535,30 @@ def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
         if task_node not in already_computed_tasks:
             return False
 
+    return True
+
+
+def task_graph_status(
+        task_graph: TaskGraph, task_cache: TaskCache,
+        verbose: int | None) -> bool:
+    """Show the status of each task from the task graph."""
+    id_col_len = max(len(t.task_id) for t in task_graph.tasks)
+    id_col_len = min(120, max(50, id_col_len))
+    columns = ["TaskID", "Status"]
+    print(f"{columns[0]:{id_col_len}s} {columns[1]}")
+    task2record = dict(task_cache.load(task_graph))
+    for task in task_graph.tasks:
+        record = task2record[task]
+        status = record.type.name
+        msg = f"{task.task_id:{id_col_len}s} {status}"
+        is_error = record.type == CacheRecordType.ERROR
+        if is_error and not verbose:
+            msg += " (-v to see exception)"
+        print(msg)
+        if is_error and verbose:
+            traceback.print_exception(
+                None, value=record.error,
+                tb=record.error.__traceback__,
+                file=sys.stdout,
+            )
     return True
