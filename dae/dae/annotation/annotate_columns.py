@@ -96,9 +96,6 @@ class _CSVSource(Source):
         self.header: list[str] = self._extract_header()
 
     def __enter__(self) -> _CSVSource:
-        # TODO: Clean up this hotfix for supporting gzip files without tabix
-        # Implemented for web annotation annotate columns support
-
         path = Path(self.path)
         filename = path.name
         parent = path.parent
