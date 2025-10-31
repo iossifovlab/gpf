@@ -130,7 +130,7 @@ class _CSVSource(Source):
         return exc_type is None
 
     def _extract_header(self) -> list[str]:
-        if self.path.endswith(".gz"):
+        if is_compressed_filename(self.path):
             with gzip.open(self.path, "rt") as in_file_raw:
                 raw_header = in_file_raw.readline()
         else:
