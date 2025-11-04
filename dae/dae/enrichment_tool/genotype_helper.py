@@ -64,7 +64,7 @@ class GenotypeHelper:
                     if ge.symbol is None or ge.effect is None:
                         continue
                     gene_effects.add(GeneEffect(ge.symbol.upper(), ge.effect))
-                persons = set(fa.variant_in_members_fpid)
+                persons = set(fa.variant_in_member_fpids)
                 allele_events.append(
                     AlleleEvent(
                         persons,

@@ -140,7 +140,7 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(
-            family.members_ids,
+            family.member_ids,
             status=status.HTTP_200_OK,
         )
 

@@ -79,6 +79,7 @@ from copy import copy
 from pathlib import Path
 from typing import Any, TextIO
 
+import numpy as np
 import pandas as pd
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -375,12 +376,15 @@ class CNVLoader(VariantsGenotypesLoader):
                     values.get("family_id")):  # type: ignore
                 best_state = values.get("best_state")[f_idx]  # type: ignore
                 assert best_state is not None
-
+                assert isinstance(best_state, np.ndarray)
                 family = self.families.get(family_id)
                 if family is None:
                     continue
                 fvar = FamilyVariant(
-                    svar, family, None, best_state)  # type: ignore
+                    svar, family,
+                    family_id=family_id,
+                    member_ids=family.member_ids,
+                    genotype=None, best_state=best_state)
                 extra_attributes = {}
                 for attr in extra_attributes_keys:
                     attr_val = values.get(attr)[f_idx]  # type: ignore

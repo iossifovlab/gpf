@@ -324,8 +324,8 @@ def f1_trio_variants(
         fv = FamilyVariant(
             sv,
             f1_trio_families[fv_record["family_id"]],
-            np.array(fv_record["genotype"]),
-            np.array(fv_record["best_state"]),
+            genotype=np.array(fv_record["genotype"]),
+            best_state=np.array(fv_record["best_state"]),
             inheritance_in_members=inheritance_in_members,
         )
         if fattributes:

@@ -588,7 +588,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         .family_genotype_iterator():
 
                     fvariant = FamilyVariant(
-                        current_summary_variant, fam, genotype, best_state)
+                        current_summary_variant, fam,
+                        genotype=genotype, best_state=best_state)
                     if self._denovo_handler(fvariant):
                         continue
                     if self._omission_handler(fvariant):

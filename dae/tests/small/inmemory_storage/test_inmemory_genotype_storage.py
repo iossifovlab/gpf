@@ -47,7 +47,7 @@ def test_build_backend(
     registry = gpf_instance.genotype_storages
 
     assert len(backend.families) == 1
-    assert len(backend.families["f1"].members_ids) == 5
+    assert len(backend.families["f1"].member_ids) == 5
     assert len(list(
         registry.query_variants([(study_config["id"], {})]),
     )) == 2

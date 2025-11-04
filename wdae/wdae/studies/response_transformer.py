@@ -98,7 +98,9 @@ class ResponseTransformer(ResponseTransformerProtocol):
         "carrier_person_attributes":
         lambda v: [
                 members_in_order_get_family_structure([
-                    m for m in aa.variant_in_members_objects if m is not None])
+                    v.family.persons[m]
+                    for m in aa.variant_in_members
+                    if m is not None])
                 for aa in v.alt_alleles
         ],
 
@@ -155,7 +157,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         [
             ":".join([
                 phenotype_person_sets.get_person_set_of_person(mid).name
-                for mid in v.members_fpids]),
+                for mid in v.member_fpids]),
         ],
 
         "carrier_phenotypes":
@@ -163,7 +165,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         [
             ":".join([
                 phenotype_person_sets.get_person_set_of_person(mid).name
-                for mid in filter(None, aa.variant_in_members_fpid)])
+                for mid in aa.variant_in_member_fpids])
             for aa in v.alt_alleles
         ],
     }
@@ -382,13 +384,16 @@ class ResponseTransformer(ResponseTransformerProtocol):
                 Exception,  # noqa: BLE001
             ):
                 if isinstance(v, FamilyVariant):
-                    logger.info(
+                    logger.warning(
                         "problem building family variant %s, %s",
                         v, v.family_id,
+                        exc_info=True,
                     )
                 else:
-                    logger.info(
-                        "problem building summary variant %s", v)
+                    logger.warning(
+                        "problem building summary variant %s", v,
+                        exc_info=True,
+                    )
 
         return row_variant
 

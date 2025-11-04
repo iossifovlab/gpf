@@ -156,7 +156,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                 family, genotypes, best_state)  # type: ignore
             for fam, genotype, best_state in \
                     family_genotypes.family_genotype_iterator():
-                fv = FamilyVariant(svariant, fam, genotype, best_state)
+                fv = FamilyVariant(
+                    svariant, fam,
+                    family_id=family_id,
+                    member_ids=family.member_ids,
+                    genotype=genotype,
+                    best_state=best_state)
                 extra_attributes = {}
                 for attr in extra_attributes_keys:
                     attr_val = values.get(attr)[f_idx]  # type: ignore
@@ -212,12 +217,17 @@ class DenovoLoader(VariantsGenotypesLoader):
         full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
             for fvariant in family_variants:
+                family = fvariant.family
+                denovo_members = {
+                    mem.person_id
+                    for mem in family.members_in_order
+                    if mem.role in {Role.prb, Role.sib, Role.unknown}
+                }
                 for fa in fvariant.family_alt_alleles:
                     inheritance = [
                         Inheritance.denovo
                         if vinmem is not None
-                        and mem.role in {
-                            Role.prb, Role.sib, Role.unknown}
+                        and mem in denovo_members
                         and inh in {
                             Inheritance.unknown,
                             Inheritance.possible_denovo,
@@ -226,7 +236,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         for inh, vinmem, mem in zip(
                             fa.inheritance_in_members,
                             fa.variant_in_members,
-                            fa.members_in_order,
+                            fa.member_ids,
                             strict=True,
                         )
                     ]
@@ -1019,7 +1029,10 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 families_genotypes.family_genotype_iterator():
 
             fv = FamilyVariant(
-                summary_variant, fam, None, best_state)
+                summary_variant, fam,
+                family_id=fam.family_id,
+                member_ids=fam.member_ids,
+                genotype=None, best_state=best_state)
             fv.gt, fv._genetic_model = self._calc_genotype(  # noqa: SLF001
                     fv, self.genome)
 

@@ -96,7 +96,10 @@ def fv1(
         gt: np.ndarray | None,
         best_st: np.ndarray | None,
     ) -> FamilyVariant:
-        return FamilyVariant(sv1, fam1, gt, best_st)
+        return FamilyVariant(
+            sv1, fam1,
+            genotype=gt,
+            best_state=best_st)
 
     return build
 
@@ -277,7 +280,9 @@ def fv_x1(
         gt: np.ndarray | None,
         best_st: np.ndarray | None,
     ) -> FamilyVariant:
-        return FamilyVariant(sv_x1, fam1, gt, best_st)
+        return FamilyVariant(
+            sv_x1, fam1,
+            genotype=gt, best_state=best_st)
 
     return build
 
@@ -291,7 +296,9 @@ def fv_x2(
         gt: np.ndarray | None,
         best_st: np.ndarray | None,
     ) -> FamilyVariant:
-        return FamilyVariant(sv_x2, fam1, gt, best_st)
+        return FamilyVariant(
+            sv_x2, fam1,
+            genotype=gt, best_state=best_st)
 
     return build
 
