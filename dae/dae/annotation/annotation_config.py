@@ -36,11 +36,11 @@ class RawFullConfig(TypedDict):
 RawPipelineConfig = RawAnnotatorsConfig | RawFullConfig
 
 
-class ErrorMark():
+@dataclass
+class ErrorMark:
     """Marks an error position in a file."""
-    def __init__(self, row: int, column: int):
-        self.row = row
-        self.column = column
+    row: int
+    column: int
 
 
 class AnnotationConfigurationError(Exception):
@@ -59,10 +59,10 @@ class AnnotationConfigurationError(Exception):
         self.other_error = other_error
         self.error_mark = error_mark
 
-    def __str__(self):
+    def __str__(self) -> str:
         message = self.message
         if self.other_error is not None:
-            message = f"{message} {str(self.other_error)}"
+            message = f"{message} {self.other_error}"
 
         mark = None
         if self.error_mark is not None:

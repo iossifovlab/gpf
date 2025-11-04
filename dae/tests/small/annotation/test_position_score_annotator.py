@@ -3,8 +3,8 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.annotation.annotation_config import AnnotationConfigurationError
 from dae.annotation.annotatable import Position, VCFAllele
+from dae.annotation.annotation_config import AnnotationConfigurationError
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.genomic_scores import PositionScore
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -290,7 +290,7 @@ def test_position_score_annotator_attributes_with_aggr_fails(
     with pytest.raises(
         AnnotationConfigurationError,
         match="nucleotide_aggregator",
-    ) as error:
+    ):
         load_pipeline_from_yaml("""
             - position_score:
                 resource_id: position_score1
@@ -307,7 +307,7 @@ def test_position_score_annotator_invalid_aggregator(
     with pytest.raises(
         AnnotationConfigurationError,
         match="minn",
-    ) as error:
+    ):
         load_pipeline_from_yaml("""
             - position_score:
                 resource_id: position_score1
@@ -316,6 +316,7 @@ def test_position_score_annotator_invalid_aggregator(
                   name: test100min
                   position_aggregator: minn
         """, position_score_repo)
+
 
 def test_position_annotator_documentation(
         position_score_repo: GenomicResourceRepo) -> None:
