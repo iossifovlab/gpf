@@ -36,8 +36,49 @@ class RawFullConfig(TypedDict):
 RawPipelineConfig = RawAnnotatorsConfig | RawFullConfig
 
 
-class AnnotationConfigurationError(ValueError):
-    pass
+@dataclass
+class ErrorMark:
+    """Marks an error position in a file."""
+    row: int
+    column: int
+
+
+class AnnotationConfigurationError(Exception):
+    """Exception raised for errors in the annotation configuration."""
+    error_mark: ErrorMark | None
+    message: str | None
+
+    def __init__(
+        self,
+        message: str | None,
+        other_error: Exception | None = None,
+        error_mark: ErrorMark | None = None,
+    ):
+        super().__init__(message)
+        self.message = message
+        self.other_error = other_error
+        self.error_mark = error_mark
+
+    def __str__(self) -> str:
+        message = self.message
+        if self.other_error is not None:
+            message = f"{message} {self.other_error}"
+
+        mark = None
+        if self.error_mark is not None:
+            mark = (
+                f"At line {self.error_mark.row}, "
+                f"column {self.error_mark.column}."
+            )
+
+        result = ""
+        if message is not None and mark is not None:
+            result = f"{message}: {mark}"
+        elif message is not None:
+            result = message
+        elif mark is not None:
+            result = mark
+        return result
 
 
 class ParamsUsageMonitor(Mapping):
@@ -335,7 +376,9 @@ class AnnotationConfigParser:
             annotators = pipeline_raw_config
             preamble = None
         else:
-            raise AnnotationConfigurationError
+            raise AnnotationConfigurationError(
+                "Raw pipeline configuration is not a list or dict.",
+            )
 
         result = []
         for idx, raw_cfg in enumerate(annotators):
@@ -388,14 +431,24 @@ class AnnotationConfigParser:
         """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)
-        except yaml.YAMLError as error:
+        except yaml.MarkedYAMLError as error:
+            error_mark = None
+            if error.problem_mark is not None:
+                error_mark = ErrorMark(
+                    error.problem_mark.line + 1,
+                    error.problem_mark.column + 1,
+                )
             if source_file_name is None:
                 raise AnnotationConfigurationError(
-                    f"The pipeline configuration {content} is an invalid yaml "
-                    "string.", error) from error
+                    f"The pipeline configuration {content} "
+                    f"is an invalid yaml string.",
+                    error_mark=error_mark,
+                ) from error
             raise AnnotationConfigurationError(
-                f"The pipeline configuration file {source_file_name} is "
-                "an invalid yaml file.", error) from error
+                f"The pipeline configuration file {source_file_name} "
+                f"is an invalid yaml file.",
+                error_mark=error_mark,
+            ) from error
 
         return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
 
