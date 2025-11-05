@@ -19,7 +19,7 @@ def study_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
 
         [genotype_storage]
         id = "genotype_filesystem"
-        files.pedigree = {path = "data/quads_f1.ped", params = { ped_family= "familyId", ped_person= "personId", ped_mom= "momId"}}  # noqa
+        files.pedigree = {path = "data/quads_f1.ped", params = { ped_family= "familyId", ped_person= "personId", ped_mom= "momId"}}
 
         [[genotype_storage.files.variants]]
         path = "data/quads_f1.vcf"
@@ -65,7 +65,7 @@ def study_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
         prb_cat.name = "Categorical"
         prb_cat.source = "instrument1.categorical"
         prb_cat.role = "prb"
-    """)
+    """)  # noqa
     root_dir = tmp_path_factory.mktemp("quads_f1_test_config")
     config_file = root_dir / "quads_f1.conf"
     config_file.write_text(config_contents)
@@ -99,7 +99,7 @@ def test_study_config_genotype_storage(study_config: Box) -> None:
 )
 def test_study_config_attr_access(
     study_config: Box, option_name: str,
-    expected_value: str | bool | None,
+    expected_value: str | bool | None,  # noqa: FBT001
 ) -> None:
     assert getattr(study_config, option_name) == expected_value
 
@@ -114,7 +114,8 @@ def test_study_config_attr_access(
     ],
 )
 def test_study_config_genotype_browser(
-    study_config: Box, option_name: str, expected_value: bool,
+    study_config: Box, option_name: str,
+    expected_value: bool,  # noqa: FBT001
 ) -> None:
     genotype_browser_config = study_config.genotype_browser
     assert getattr(genotype_browser_config, option_name) == expected_value

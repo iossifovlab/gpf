@@ -15,7 +15,6 @@ setuptools.setup(
         where=".", exclude=[
             "gcp_storage.docs", "tests.*", "*.tests.*", "*.tests"],
     ),
-    # include_package_data=True,
     package_data={
         "gcp_storage": ["py.typed"],
     },

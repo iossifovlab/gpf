@@ -526,7 +526,7 @@ def import_pheno_data(  # pylint: disable=R0912
         except shutil.SameFileError:
             logger.warning(
                 "Tried to copy pheno config to where it already is %s",
-                str(config_copy_destination),
+                config_copy_destination,
             )
 
     if data_copy_destination:
@@ -536,7 +536,7 @@ def import_pheno_data(  # pylint: disable=R0912
         except shutil.SameFileError:
             logger.warning(
                 "Tried to copy pheno data to where it already is %s",
-                str(data_copy_destination),
+                data_copy_destination,
             )
 
 

@@ -129,7 +129,6 @@ def test_omission_not_denovo() -> None:
     assert not FV.check_mendelian_trio(
         trio[0], trio[1], trio[2], allele_index=1)
 
-    # FIXME:
     assert not FV.check_omission_trio(
         trio[0], trio[1], trio[2], allele_index=0)
     assert not FV.check_denovo_trio(
@@ -464,7 +463,6 @@ def test_super_weird_denovo_omission_mix_from_ivan_2() -> None:
         trio[0], trio[1], trio[2], allele_index=2)
     assert FV.check_denovo_trio(
         trio[0], trio[1], trio[2], allele_index=3)
-    # assert FV.calc_inheritance_trio(*trio) == Inheritance.denovo
 
 
 def test_mixed_check_1() -> None:
