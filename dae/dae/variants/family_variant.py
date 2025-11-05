@@ -6,7 +6,7 @@ import numpy as np
 from deprecation import deprecated
 
 from dae.effect_annotation.effect import AlleleEffects
-from dae.pedigrees.family import Family, Person
+from dae.pedigrees.family import Family
 from dae.utils.variant_utils import (
     BitmaskEnumTranslator,
     GenotypeType,
@@ -635,17 +635,6 @@ class FamilyVariant(SummaryVariant):
             alleles.append(allele)
 
         self._family_alleles = alleles
-
-    @property
-    def members_in_order(self) -> list[Person]:
-        """
-        Return the members from the pedigree file in order.
-
-        Return list of the members of the family in the order specified from
-        the pedigree file. Each element of the returned list is an object of
-        type :class:`variants.family.Person`.
-        """
-        return self.family.members_in_order
 
     @property
     def member_ids(self) -> list[str]:
