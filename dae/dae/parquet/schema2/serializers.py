@@ -58,6 +58,7 @@ FAMILY_ALLELE_BASE_SCHEMA: dict[str, Any] = {
     "sj_index": pa.int64(),
     "family_index": pa.int32(),
     "family_id": pa.string(),
+    "member_ids": pa.list_(pa.string()),
     "is_denovo": pa.int8(),
     "allele_in_sexes": pa.int8(),
     "allele_in_statuses": pa.int8(),

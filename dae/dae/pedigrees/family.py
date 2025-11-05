@@ -444,7 +444,7 @@ class Family:
     def to_json(self) -> dict:
         return {
             "family_id": self.family_id,
-            "person_ids": self.members_ids,
+            "person_ids": self.member_ids,
             "samples_index": self._samples_index,
             "family_type": "other",  # deprecated
             "tags": {tag.label for tag in self.tags},
@@ -554,7 +554,7 @@ class Family:
             not self.member_has_mom(person_id)
 
     @property
-    def members_ids(self) -> list[str]:
+    def member_ids(self) -> list[str]:
         return [m.person_id for m in self.members_in_order]
 
     @property

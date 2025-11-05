@@ -96,8 +96,8 @@ def test_fv_zygosity_in_status(
     fv = FamilyVariant(
         sv,
         sample_family,
-        genotype,
-        None,
+        genotype=genotype,
+        best_state=None,
     )
     fv.update_attributes({"allele_count": [allele_count]})
     assert fv.zygosity_in_status == expected
@@ -172,8 +172,8 @@ def test_fv_zygosity_in_roles(
     fv = FamilyVariant(
         sv,
         sample_family,
-        genotype,
-        None,
+        genotype=genotype,
+        best_state=None,
     )
     fv.update_attributes({"allele_count": [allele_count]})
     assert fv.zygosity_in_roles == expected
@@ -240,8 +240,8 @@ def test_zygosity_in_sexes(
     fv = FamilyVariant(
         sv,
         sample_family,
-        genotype,
-        None,
+        genotype=genotype,
+        best_state=None,
     )
     fv.update_attributes({"allele_count": [allele_count]})
     assert fv.zygosity_in_sexes == expected

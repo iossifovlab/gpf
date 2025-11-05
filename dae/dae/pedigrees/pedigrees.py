@@ -155,13 +155,13 @@ class FamilyConnections:
                 )
                 new_members.append(father.member)
 
-        unique_new_members_ids = set()
+        unique_new_member_ids = set()
         unique_new_members = []
         for person in new_members:
-            if person.person_id in unique_new_members_ids:
+            if person.person_id in unique_new_member_ids:
                 continue
             unique_new_members.append(person)
-            unique_new_members_ids.add(person.person_id)
+            unique_new_member_ids.add(person.person_id)
 
         family.add_members(unique_new_members)
 

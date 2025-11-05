@@ -52,40 +52,7 @@ def calculate_simple_best_state(
     return best_st_arr
 
 
-class FamilyDelegate:
-    """Delegate for handling families."""
-
-    def __init__(self, family: Family):
-        self.family = family
-
-    @property
-    def members_in_order(self) -> list[Person]:
-        """
-        Return the members from the pedigree file in order.
-
-        Return list of the members of the family in the order specified from
-        the pedigree file. Each element of the returned list is an object of
-        type :class:`variants.family.Person`.
-        """
-        return self.family.members_in_order
-
-    @property
-    def members_ids(self) -> list[str]:
-        """Return list of family members IDs."""
-        return self.family.members_ids
-
-    @property
-    def members_fpids(self) -> list[tuple[str, str]]:
-        """Return list of family members IDs."""
-        return [m.fpid for m in self.family.members_in_order]
-
-    @property
-    def family_id(self) -> str:
-        """Return the family ID."""
-        return self.family.family_id
-
-
-class FamilyAllele(SummaryAllele, FamilyDelegate):
+class FamilyAllele(SummaryAllele):
     # pylint: disable=super-init-not-called,too-many-public-methods
     """Class representing an allele in a family."""
 
@@ -93,6 +60,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self,
         summary_allele: SummaryAllele,
         family: Family, *,
+        family_id: str | None = None,
+        member_ids: list[str] | None = None,
         genotype: np.ndarray | None,
         best_state: np.ndarray | None,
         genetic_model: GeneticModel | None = None,
@@ -101,7 +70,15 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         assert isinstance(family, Family)
 
-        FamilyDelegate.__init__(self, family)
+        self.family = family
+        if family_id is None:
+            family_id = family.family_id
+        self._family_id = family_id
+        if member_ids is None:
+            member_ids = family.member_ids
+        self._member_ids = member_ids
+        assert self._family_id is not None
+        assert self._member_ids is not None
 
         #: summary allele that corresponds to this allele in family variant
         self.summary_allele: SummaryAllele = summary_allele
@@ -116,7 +93,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         self._inheritance_in_members = inheritance_in_members
         self._variant_in_members: list[str | None] | None = None
-        self._variant_in_members_objects: list[Person] | None = None
         self._variant_in_roles: list[Role | None] | None = None
         self._variant_in_sexes: list[Sex | None] | None = None
         self._variant_in_statuses: list[Status | None] | None = None
@@ -131,6 +107,21 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     def __repr__(self) -> str:
         allele_repr = SummaryAllele.__repr__(self)
         return f"{allele_repr} {self.family_id}"
+
+    @property
+    def member_ids(self) -> list[str]:
+        """Return list of family members IDs."""
+        return self._member_ids
+
+    @property
+    def member_fpids(self) -> list[tuple[str, str]]:
+        """Return list of family members IDs."""
+        return [(self._family_id, pid) for pid in self.member_ids]
+
+    @property
+    def family_id(self) -> str:
+        """Return the family ID."""
+        return self._family_id
 
     @property
     def chromosome(self) -> str:
@@ -259,7 +250,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             if self.allele_index not in allele_pair:
                 continue
 
-            pid = self.members_in_order[idx].person_id
+            pid = self.member_ids[idx]
             person_status = self.family.persons[pid].status
 
             current_zygosity = Zygosity.homozygous \
@@ -283,7 +274,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             if self.allele_index not in allele_pair:
                 continue
 
-            pid = self.members_in_order[idx].person_id
+            pid = self.member_ids[idx]
             person_sex = self.family.persons[pid].sex
 
             current_zygosity = Zygosity.homozygous \
@@ -306,7 +297,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             if self.allele_index not in allele_pair:
                 continue
 
-            pid = self.members_in_order[idx].person_id
+            pid = self.member_ids[idx]
             person_role = self.family.persons[pid].role
             if person_role is None:
                 raise ValueError(f"Person {pid} has no role!")
@@ -359,7 +350,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             assert self.gt is not None
             allele_index = self.allele_index
             result = []
-            for pid in self.members_ids:
+            for pid in self.member_ids:
                 if pid not in self.family.trios:
                     result.append(Inheritance.unknown)
                     continue
@@ -398,12 +389,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = -1
 
             index = cast(np.ndarray, np.any(gt == allele_index, axis=0))
-            assert len(index) == len(self.members_in_order)
+            assert len(index) == len(self.member_ids)
 
             self._variant_in_members = [
-                m.person_id if has_variant else None
-                for m, has_variant in zip(
-                    self.members_in_order, index, strict=True)
+                pid if has_variant else None
+                for pid, has_variant in zip(
+                    self.member_ids, index, strict=True)
             ]
 
         return self._variant_in_members
@@ -413,22 +404,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self.variant_in_members
 
     @property
-    def variant_in_members_objects(self) -> list[Person]:
+    def variant_in_member_fpids(self) -> list[tuple[str, str]]:
         """Return list of person with the variant."""
-        if self._variant_in_members_objects is None:
-
-            variant_in_members = set(filter(None, self.variant_in_members))
-            self._variant_in_members_objects = [
-                member
-                for member in self.family.members_in_order
-                if member.person_id in variant_in_members
-            ]
-        return self._variant_in_members_objects
-
-    @property
-    def variant_in_members_fpid(self) -> list[tuple[str, str]]:
-        """Return list of person with the variant."""
-        return [p.fpid for p in self.variant_in_members_objects]
+        return [
+            (self.family_id, pid)
+            for pid in self.variant_in_members
+            if pid is not None]
 
     @property
     def variant_in_roles(self) -> list[Role | None]:
@@ -570,22 +551,35 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return Inheritance.other
 
 
-class FamilyVariant(SummaryVariant, FamilyDelegate):
+class FamilyVariant(SummaryVariant):
     # pylint: disable=super-init-not-called,too-many-public-methods
     """Class representing a variant in a family."""
 
     def __init__(
         self,
         summary_variant: SummaryVariant,
-        family: Family,
-        genotype: np.ndarray | None,
-        best_state: np.ndarray | None,
+        family: Family, *,
+        family_id: str | None = None,
+        member_ids: list[str] | None = None,
+        genotype: np.ndarray | None = None,
+        best_state: np.ndarray | None = None,
         inheritance_in_members: dict[int, list[Inheritance]] | None = None,
     ):
 
         assert family is not None
         assert isinstance(family, Family)
-        FamilyDelegate.__init__(self, family)
+        self.family = family
+
+        if family_id is None:
+            family_id = family.family_id
+        self._family_id = family_id
+
+        if member_ids is None:
+            member_ids = family.member_ids
+        self._member_ids = member_ids
+
+        assert self._family_id is not None
+        assert self._member_ids is not None
 
         self.summary_variant = summary_variant
         self.summary_alleles = self.summary_variant.alleles
@@ -631,6 +625,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             allele = FamilyAllele(
                 summary_allele,
                 self.family,
+                family_id=self.family_id,
+                member_ids=self.member_ids,
                 genotype=self.gt,
                 best_state=self._best_state,
                 inheritance_in_members=inheritance,
@@ -639,6 +635,32 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             alleles.append(allele)
 
         self._family_alleles = alleles
+
+    @property
+    def members_in_order(self) -> list[Person]:
+        """
+        Return the members from the pedigree file in order.
+
+        Return list of the members of the family in the order specified from
+        the pedigree file. Each element of the returned list is an object of
+        type :class:`variants.family.Person`.
+        """
+        return self.family.members_in_order
+
+    @property
+    def member_ids(self) -> list[str]:
+        """Return list of family members IDs."""
+        return self._member_ids
+
+    @property
+    def member_fpids(self) -> list[tuple[str, str]]:
+        """Return list of family members IDs."""
+        return [(self.family_id, pid) for pid in self.member_ids]
+
+    @property
+    def family_id(self) -> str:
+        """Return the family ID."""
+        return self._family_id
 
     @property
     def fvuid(self) -> str:

@@ -300,8 +300,10 @@ class ParquetLoader:
         return FamilyVariant(
             summary_variant,
             self.families[fv_record["family_id"]],
-            np.array(fv_record["genotype"]),
-            np.array(fv_record["best_state"]),
+            family_id=fv_record["family_id"],
+            member_ids=fv_record.get("member_ids"),
+            genotype=np.array(fv_record["genotype"]),
+            best_state=np.array(fv_record["best_state"]),
             inheritance_in_members=inheritance_in_members,
         )
 
