@@ -27,11 +27,11 @@ def _default_genotype_storage_configs(
     root_path: pathlib.Path,
 ) -> dict[str, dict[str, Any]]:
 
-    localstack_host = os.environ.get("LOCALSTACK_HOST", "localhost")
+    minio_host = os.environ.get("MINIO_HOST", "localhost")
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"  # noqa: S105
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"  # noqa: S105
     if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+        os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
 
     return {
         # Filesystem InMemory
@@ -61,8 +61,9 @@ def _default_genotype_storage_configs(
         "duckdb_s3_parquet": {
             "id": "duckdb_s3_parquet",
             "storage_type": "duckdb_s3_parquet",
-            "bucket_url": f"s3:/{root_path}/duckdb-s3-parquet",
-            "endpoint_url": f"http://{localstack_host}:4566/",
+            "bucket_url": f"s3://test-bucket{root_path}/duckdb-s3-parquet",
+            "endpoint_url": f"http://{minio_host}:9000/",
+            "use_ssl": False,
         },
 
         # DuckDb Storage
@@ -78,8 +79,9 @@ def _default_genotype_storage_configs(
             "id": "duckdb_s3",
             "storage_type": "duckdb_s3",
             "db": "storage_s3.db",
-            "bucket_url": f"s3:/{root_path}/duckdb-s3",
-            "endpoint_url": f"http://{localstack_host}:4566/",
+            "bucket_url": f"s3://test-bucket{root_path}/duckdb-s3",
+            "endpoint_url": f"http://{minio_host}:9000/",
+            "use_ssl": False,
         },
     }
 

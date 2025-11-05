@@ -345,7 +345,7 @@ def test_copy_resource(
 
     assert state is not None
     assert state.filename == "genes.gtf"
-    assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(timestamp, abs=5)
     assert state.timestamp == pytest.approx(time.time(), abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 

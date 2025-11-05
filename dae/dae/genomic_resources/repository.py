@@ -633,7 +633,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         else:
             timestamp = self.get_resource_file_timestamp(resource, entry.name)
             size = self.get_resource_file_size(resource, entry.name)
-            if timestamp == pre_state.timestamp and size == pre_state.size:
+            if abs(timestamp - pre_state.timestamp) <= 1.5 \
+                    and size == pre_state.size:
                 state = pre_state
             else:
                 state = self.build_resource_file_state(
@@ -650,7 +651,6 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         """Build full manifest for the resource."""
         if prebuild_entries is None:
             prebuild_entries = {}
-
         manifest = Manifest()
         for entry in self.collect_resource_entries(resource):
             self._update_manifest_entry_and_state(

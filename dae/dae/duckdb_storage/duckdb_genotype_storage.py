@@ -160,7 +160,8 @@ class DuckDbS3ParquetStorage(AbstractDuckDbStorage):
             memory_limit=self.config.memory_limit)
 
         s3_secret_clause = create_s3_secret_clause(
-            self.storage_id, self.config.endpoint_url)
+            self.storage_id, self.config.endpoint_url,
+            use_ssl=self.config.use_ssl)
         self.connection_factory.sql(s3_secret_clause)
 
         return self
@@ -271,7 +272,9 @@ class DuckDbS3Storage(AbstractDuckDbStorage):
             memory_limit=self.config.memory_limit)
 
         s3_secret_clause = create_s3_secret_clause(
-            self.storage_id, self.config.endpoint_url)
+            self.storage_id, self.config.endpoint_url,
+            use_ssl=self.config.use_ssl)
+
         self.connection_factory.sql(s3_secret_clause)
         s3_attach_clause = create_s3_attach_db_clause(db_filename)
         self.connection_factory.sql(s3_attach_clause)

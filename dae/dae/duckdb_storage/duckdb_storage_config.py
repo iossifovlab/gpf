@@ -62,6 +62,7 @@ class DuckDbS3Conf(DuckDbBaseConf):
     db: str
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
+    use_ssl: bool = True
 
 
 class DuckDbS3ParquetConf(DuckDbBaseConf):
@@ -69,6 +70,7 @@ class DuckDbS3ParquetConf(DuckDbBaseConf):
     storage_type: Literal["duckdb_s3_parquet"]
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
+    use_ssl: bool = True
 
 
 def parse_duckdb_config(

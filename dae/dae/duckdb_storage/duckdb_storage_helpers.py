@@ -261,7 +261,8 @@ def get_study_config_tables(
 
 def create_s3_secret_clause(
     storage_id: str,
-    endpoint_url: str | S3Path | None,
+    endpoint_url: str | S3Path | None, *,
+    use_ssl: bool = True,
 ) -> str:
     """Create a DuckDb secret clause for S3 storage."""
     endpoint = None
@@ -283,6 +284,7 @@ def create_s3_secret_clause(
                 secret '{{ aws_secret_access_key }}',
                 {%- if endpoint %}
                 endpoint '{{ endpoint }}',
+                use_ssl '{{ 'true' if use_ssl else 'false' }}',
                 {%- if 'amazonaws.com' not in endpoint %}
                 url_style 'path',
                 {%- endif %}
@@ -300,6 +302,7 @@ def create_s3_secret_clause(
         aws_secret_access_key=aws_secret_access_key,
         aws_region=aws_region,
         endpoint=endpoint,
+        use_ssl=use_ssl,
     )
 
 

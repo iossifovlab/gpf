@@ -136,21 +136,29 @@ EOT
     build_run_ctx_persist ctx:ctx_network
   }
 
-  # run localstack
-  build_stage "Run localstack"
+  # run minio
+  build_stage "Run minio"
   {
 
-        local -A ctx_localstack
+    local -A ctx_minio
 
-        build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
-           "cmd-from-image" "no-def-mounts" \
-           'ports:4566,4510-4559' \
-           --hostname localstack --network "${ctx_network["network_id"]}" --workdir /opt/code/localstack/
+    build_run_ctx_init ctx:ctx_minio "persistent" "container" "minio/minio" \
+        "cmd-from-image" "no-def-mounts" \
+        'ports:9000' \
+        --hostname minio --network "${ctx_network["network_id"]}"
 
-        defer_ret build_run_ctx_reset ctx:ctx_localstack
-        build_run_ctx_persist ctx:ctx_localstack
+    defer_ret build_run_ctx_reset ctx:ctx_minio
+    build_run_ctx_persist ctx:ctx_minio
 
-  }
+    build_run_local sleep 15
+
+    build_run_ctx_init "container" "minio/mc:latest" \
+        "no-def-mounts" \
+        --network "${ctx_network["network_id"]}"
+    defer_ret build_run_ctx_reset
+    build_run /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin
+    build_run /usr/bin/mc mb local/test-bucket
+}
 
   # run HTTP server
   build_stage "Run apache"
