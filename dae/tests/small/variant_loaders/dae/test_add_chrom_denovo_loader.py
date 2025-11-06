@@ -25,18 +25,27 @@ def trio_families(tmp_path_factory: pytest.TempPathFactory) -> FamiliesData:
     return loader.load()
 
 
-@pytest.fixture(scope="session")
-def trio_denovo(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
-    root_path = tmp_path_factory.mktemp(
-        "denovo_add_chrom_trio")
+@pytest.fixture
+def trio_denovo(tmp_path: pathlib.Path) -> pathlib.Path:
     return setup_denovo(
-        root_path / "trio_data" / "in.tsv",
+        tmp_path / "trio_data" / "in.tsv",
         """
           chrom  pos  ref  alt  person_id
           1      1    ACG  A    p1
           2      1    A    AAA  p1
         """,
     )
+
+
+@pytest.fixture
+def chrom_mapping_file(
+    tmp_path: pathlib.Path,
+) -> pathlib.Path:
+    mapping_path = tmp_path / "chrom_mapping.txt"
+    with open(mapping_path, "w") as f:
+        f.write("1\tchr1\n")
+        f.write("2\tchr2\n")
+    return mapping_path
 
 
 @pytest.mark.parametrize(
@@ -62,6 +71,41 @@ def test_add_chrom_denovo_loader(
         genome=acgt_genome_38,
         params={
             "add_chrom_prefix": "chr",
+        })
+    alt_alleles = [
+        sv.alt_alleles[0] for sv, _ in loader.full_variants_iterator()]
+    aa = alt_alleles[variant_index]
+
+    assert aa.chrom == chrom
+    assert aa.position == pos
+    assert aa.reference == ref
+    assert aa.alternative == alt
+
+
+@pytest.mark.parametrize(
+    "variant_index,chrom,pos,ref,alt",
+    [
+        (0, "chr1", 1, "ACG", "A"),
+        (1, "chr2", 1, "A", "AAA"),
+    ],
+)
+def test_chrom_mapping_denovo_loader(
+    acgt_genome_38: ReferenceGenome,
+    trio_families: FamiliesData,
+    trio_denovo: pathlib.Path,
+    chrom_mapping_file: pathlib.Path,
+    variant_index: int,
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+) -> None:
+
+    loader = DenovoLoader(
+        trio_families, str(trio_denovo),
+        genome=acgt_genome_38,
+        params={
+            "chrom_mapping": str(chrom_mapping_file),
         })
     alt_alleles = [
         sv.alt_alleles[0] for sv, _ in loader.full_variants_iterator()]

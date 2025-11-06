@@ -75,6 +75,19 @@ def trio_vcf(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
         """)
 
 
+@pytest.fixture
+def chrom_mapping(
+    tmp_path: pathlib.Path,
+) -> pathlib.Path:
+    mapping_path = tmp_path / "chrom_mapping.txt"
+    with open(mapping_path, "w") as f:
+        f.write("1\tchr1\n")
+        f.write("2\tchr2\n")
+        f.write("3\tchr3\n")
+        f.write("4\tchr4\n")
+    return mapping_path
+
+
 @pytest.mark.parametrize(
     "region,count",
     [
@@ -95,6 +108,36 @@ def test_add_chrom_reset_region(
         trio_families, [str(trio_vcf)], trio_genome,
         params={
             "add_chrom_prefix": "chr",
+        })
+    loader.reset_regions([Region.from_str(region)])
+    alt_alleles = [
+        sv.alt_alleles[0] for sv, _ in loader.full_variants_iterator()]
+
+    assert len(alt_alleles) == count
+
+
+@pytest.mark.parametrize(
+    "region,count",
+    [
+        ("chr1:5-8", 3),
+        ("chr2:1-4", 3),
+        ("chr2:5-8", 3),
+    ],
+)
+def test_chrom_mapping_reset_region(
+    trio_families: FamiliesData,
+    trio_genome: ReferenceGenome,
+    trio_vcf: pathlib.Path,
+    chrom_mapping: pathlib.Path,
+    region: str,
+    count: int,
+) -> None:
+
+    loader = VcfLoader(
+        trio_families, [str(trio_vcf)], trio_genome,
+        params={
+            "add_chrom_prefix": "chr",
+            "chrom_mapping": str(chrom_mapping),
         })
     loader.reset_regions([Region.from_str(region)])
     alt_alleles = [

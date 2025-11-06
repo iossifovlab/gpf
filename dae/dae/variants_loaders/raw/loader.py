@@ -440,16 +440,37 @@ class VariantsGenotypesLoader(VariantsLoader):
         if regions is not None:
             self.reset_regions(regions)
 
-        self._adjust_chrom_prefix: Callable[[str], str] = lambda chrom: chrom
-        self._unadjust_chrom_prefix: Callable[[str], str] = lambda chrom: chrom
+        self._adjust_chrom: Callable[[str], str] = lambda chrom: chrom
+        self._unadjust_chrom: Callable[[str], str] = lambda chrom: chrom
         if params.get("add_chrom_prefix", None):
             self._chrom_prefix = params["add_chrom_prefix"]
-            self._adjust_chrom_prefix = self._add_chrom_prefix
-            self._unadjust_chrom_prefix = self._del_chrom_prefix
+            self._adjust_chrom = self._add_chrom_prefix
+            self._unadjust_chrom = self._del_chrom_prefix
         elif params.get("del_chrom_prefix", None):
             self._chrom_prefix = params["del_chrom_prefix"]
-            self._adjust_chrom_prefix = self._del_chrom_prefix
-            self._unadjust_chrom_prefix = self._add_chrom_prefix
+            self._adjust_chrom = self._del_chrom_prefix
+            self._unadjust_chrom = self._add_chrom_prefix
+        elif params.get("chrom_mapping", None):
+            mapping_file = params["chrom_mapping"]
+            chrom_map: dict[str, str] = {}
+            with open(mapping_file, "r", encoding="utf-8") as infile:
+                for line in infile:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split()
+                    assert len(parts) == 2, (mapping_file, line)
+                    chrom_map[parts[0]] = parts[1]
+
+            def adjust_chrom(chrom: str) -> str:
+                return chrom_map.get(chrom, chrom)
+
+            def unadjust_chrom(chrom: str) -> str:
+                inv_map = {v: k for k, v in chrom_map.items()}
+                return inv_map.get(chrom, chrom)
+
+            self._adjust_chrom = adjust_chrom
+            self._unadjust_chrom = unadjust_chrom
 
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
@@ -468,6 +489,11 @@ class VariantsGenotypesLoader(VariantsLoader):
             value_type=str,
             help_text="Remove specified prefix to each chromosome name in "
             "variants file",
+        ))
+        arguments.append(CLIArgument(
+            "--chrom-mapping",
+            value_type=str,
+            help_text="File with chromosome name mapping",
         ))
         return arguments
 

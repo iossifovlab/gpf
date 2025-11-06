@@ -211,7 +211,7 @@ class CNVLoader(VariantsGenotypesLoader):
     def _init_chromosomes(self) -> None:
         self._chromosomes = list(self.cnv_df.chrom.unique())
         self._chromosomes = [
-            self._adjust_chrom_prefix(chrom) for chrom in self._chromosomes
+            self._adjust_chrom(chrom) for chrom in self._chromosomes
         ]
 
         all_chromosomes = self.genome.chromosomes
@@ -349,7 +349,7 @@ class CNVLoader(VariantsGenotypesLoader):
             del summary_rec["variant_type"]
 
             alt_rec["allele_index"] = 1
-            chrom = self._adjust_chrom_prefix(summary_rec["chrom"])
+            chrom = self._adjust_chrom(summary_rec["chrom"])
             summary_rec["chrom"] = chrom
 
             if chrom not in self.genome.chromosomes:
