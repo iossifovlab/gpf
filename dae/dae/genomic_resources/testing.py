@@ -420,9 +420,9 @@ def build_s3_test_filesystem(
         endpoint_url: str | None = None) -> S3FileSystem:
     """Create an S3 fsspec filesystem connected to the S3 server."""
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"  # noqa: S105
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"  # noqa: S105
     if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+        os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
     if endpoint_url is None:
         endpoint_url = s3_test_server_endpoint()
     assert endpoint_url is not None

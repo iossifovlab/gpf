@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 from collections.abc import Generator
 from typing import Any
 
 import pytest
+import pytest_mock
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     RepositoryProtocol,
@@ -24,6 +26,7 @@ def tabix_fsspec_proto(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
     grr_scheme: str,
+    mocker: pytest_mock.MockerFixture,
 ) -> Generator[RepositoryProtocol, None, None]:
 
     root_path = tmp_path_factory.mktemp("tabix_fsspec_proto")
@@ -63,6 +66,11 @@ def tabix_fsspec_proto(
             yield proto
         return
     if scheme == "s3":
+        mocker.patch.dict(os.environ, {
+            "AWS_SECRET_ACCESS_KEY": "minioadmin",
+            "AWS_ACCESS_KEY_ID": "minioadmin",
+        })
+
         with build_s3_test_protocol(root_path) as proto:
             yield proto
         return

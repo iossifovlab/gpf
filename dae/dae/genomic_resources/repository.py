@@ -633,7 +633,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         else:
             timestamp = self.get_resource_file_timestamp(resource, entry.name)
             size = self.get_resource_file_size(resource, entry.name)
-            if abs(timestamp - pre_state.timestamp) <= 1.5 \
+            if abs(timestamp - pre_state.timestamp) <= 1e-2 \
                     and size == pre_state.size:
                 state = pre_state
             else:

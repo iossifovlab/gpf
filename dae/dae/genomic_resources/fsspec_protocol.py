@@ -5,7 +5,6 @@ import datetime
 import hashlib
 import json
 import logging
-import math
 import operator
 import os
 from collections.abc import Generator
@@ -406,11 +405,11 @@ class FsspecReadWriteProtocol(
         try:
             modification = self.filesystem.modified(filepath)
             modification = modification.replace(tzinfo=datetime.timezone.utc)
-            return cast(float, math.ceil(modification.timestamp()))
+            return cast(float, round(modification.timestamp(), 2))
         except NotImplementedError:
             info = self.filesystem.info(filepath)
             modification = cast(float, info.get("created"))
-            return cast(float, math.ceil(modification))
+            return cast(float, round(modification, 2))
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources managed by this protocol."""
