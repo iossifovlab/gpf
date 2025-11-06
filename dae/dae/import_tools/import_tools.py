@@ -517,9 +517,10 @@ class ImportProject:
             "parquet": 400_000,
         }[loader_type]
 
-    @staticmethod
     def _add_loader_prefix(
-            params: dict[str, Any], prefix: str) -> dict[str, Any]:
+        self,
+        params: dict[str, Any], prefix: str,
+    ) -> dict[str, Any]:
         res = {}
         exclude = {
             "add_chrom_prefix", "del_chrom_prefix", "files", "chrom_mapping"}
@@ -527,7 +528,10 @@ class ImportProject:
             if k not in exclude:
                 res[prefix + k] = val
             else:
-                res[k] = val
+                if k == "chrom_mapping":
+                    res[k] = fs_utils.join(self.input_dir, val)
+                else:
+                    res[k] = val
         return res
 
     @staticmethod

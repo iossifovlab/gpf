@@ -95,6 +95,29 @@ def test_import_with_add_chrom_prefix(
     assert len(files) != 0
 
 
+def test_import_with_chrom_mapping(
+    tmp_path: pathlib.Path,
+    gpf_instance: GPFInstance,
+    resources_dir: pathlib.Path,
+) -> None:
+    input_dir = resources_dir / "vcf_import"
+    config_fn = input_dir / "import_config_chrom_mapping.yaml"
+
+    import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
+    import_config["processing_config"] = {
+        "work_dir": str(tmp_path),
+    }
+
+    project = import_tools.ImportProject.build_from_config(
+        import_config,
+        base_input_dir=str(input_dir),
+        gpf_instance=gpf_instance)
+    cli.run_with_project(project)
+
+    files = os.listdir(tmp_path)
+    assert len(files) != 0
+
+
 def test_add_chrom_prefix_is_propagated_to_the_loader(
     resources_dir: pathlib.Path,
     mocker: pytest_mock.MockerFixture,
@@ -108,6 +131,24 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(
     project = import_tools.ImportProject.build_from_file(config_fn)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
+
+
+def test_chrom_mapping_is_propagated_to_the_loader(
+    resources_dir: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+    gpf_instance: GPFInstance,
+) -> None:
+    config_fn = resources_dir / "vcf_import" \
+        / "import_config_chrom_mapping.yaml"
+
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance)
+    project = import_tools.ImportProject.build_from_file(config_fn)
+    loader = project._get_variant_loader("vcf")
+    assert loader._adjust_chrom("1") == "chr1"
+    assert loader._adjust_chrom("2") == "chr2"
+    assert loader._adjust_chrom("3") == "chr3"
+    assert loader._adjust_chrom("4") == "chr4"
 
 
 @pytest.mark.parametrize("row_group_size, expected", [
