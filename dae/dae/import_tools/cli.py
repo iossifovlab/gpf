@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     context_providers_add_argparser_arguments(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    args = parser.parse_args(argv or sys.argv[1:])
+    args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
     context_providers_init(**vars(args))
 
