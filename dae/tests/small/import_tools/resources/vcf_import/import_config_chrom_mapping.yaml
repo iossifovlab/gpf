@@ -1,0 +1,24 @@
+id: test_import
+
+input:
+  pedigree:
+    file: multivcf.ped
+
+  vcf:
+    files:
+      - multivcf_[vc].vcf.gz
+    chromosomes: 1;2;3
+    chrom_mapping: chrom_mapping.tsv
+
+
+partition_description:
+  region_bin:
+    chromosomes: chr1, chr2, chr3, chr4
+    region_length: 100000000
+  family_bin:
+    family_bin_size: 10
+  frequency_bin:
+    rare_boundary: 5
+
+destination:
+  storage_type: schema2
