@@ -417,7 +417,7 @@ def test_query_family_variants_by_variant_type(
     assert len(fvs) == count
 
 
-@pytest.mark.xfail(reason="impala v3.x does not support int64")
+@pytest.mark.no_gs_impala
 def test_sj_index(
     query_builder: SqlQueryBuilder,
 ) -> None:
