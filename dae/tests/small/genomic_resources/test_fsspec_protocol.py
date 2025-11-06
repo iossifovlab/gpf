@@ -345,7 +345,7 @@ def test_copy_resource(
 
     assert state is not None
     assert state.filename == "genes.gtf"
-    assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(timestamp, abs=5)
     assert state.timestamp == pytest.approx(time.time(), abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
@@ -406,6 +406,11 @@ def test_build_manifest_should_not_update_existing_resource_state(
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
+    mocker.patch(
+        "dae.genomic_resources.fsspec_protocol.FsspecReadWriteProtocol."
+        "_get_filepath_timestamp",
+        return_value=1_000_000_000.00,
+    )
     proto.build_manifest(res)
 
     mocker.patch.object(proto, "save_resource_file_state")

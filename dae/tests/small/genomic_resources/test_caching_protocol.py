@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 from collections.abc import Generator
 from typing import Any
 
 import pytest
+import pytest_mock
 from dae.genomic_resources.cached_repository import CachingProtocol
 from dae.genomic_resources.testing import (
     FsspecReadWriteProtocol,
@@ -59,7 +61,13 @@ def caching_proto(
     tmp_path_factory: pytest.TempPathFactory,
     remote_proto_fixture: FsspecReadWriteProtocol,
     grr_scheme: str,
+    mocker: pytest_mock.MockerFixture,
 ) -> Generator[CachingProtocol, None, None]:
+
+    mocker.patch.dict(os.environ, {
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+    })
 
     remote_proto = remote_proto_fixture
     caching_scheme = grr_scheme

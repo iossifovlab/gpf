@@ -136,21 +136,34 @@ EOT
     build_run_ctx_persist ctx:ctx_network
   }
 
-  # run localstack
-  build_stage "Run localstack"
+  # run minio
+  build_stage "Run minio"
   {
 
-        local -A ctx_localstack
+    local -A ctx_minio
 
-        build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
-           "cmd-from-image" "no-def-mounts" \
-           'ports:4566,4510-4559' \
-           --hostname localstack --network "${ctx_network["network_id"]}" --workdir /opt/code/localstack/
+    build_run_ctx_init ctx:ctx_minio "persistent" "container" "minio/minio" \
+        "cmd-from-image" "no-def-mounts" \
+        'ports:9000' \
+        -e MINIO_ROOT_USER=minioadmin \
+        -e MINIO_ROOT_PASSWORD=minioadmin \
+        --hostname minio --network "${ctx_network["network_id"]}" \
+        -- server /data --console-address ":9001"
 
-        defer_ret build_run_ctx_reset ctx:ctx_localstack
-        build_run_ctx_persist ctx:ctx_localstack
+    defer_ret build_run_ctx_reset ctx:ctx_minio
+    build_run_ctx_persist ctx:ctx_minio
 
-  }
+    build_run_local echo "Network ID: ${ctx_network["network_id"]}"
+    build_run_local sleep 15
+
+    build_run_local docker run \
+        --rm --network "${ctx_network["network_id"]}" \
+        --entrypoint '/bin/sh'  \
+        minio/mc -c '
+            /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+            /usr/bin/mc mb local/test-bucket'
+
+}
 
   # run HTTP server
   build_stage "Run apache"
@@ -288,9 +301,9 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
-          --env LOCALSTACK_HOST="localstack" \
-          --env AWS_ACCESS_KEY_ID="foo" \
-          --env AWS_SECRET_ACCESS_KEY="foo" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_dae
@@ -321,7 +334,9 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
-          --env LOCALSTACK_HOST="localstack" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_wdae
@@ -351,9 +366,9 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
-          --env LOCALSTACK_HOST="localstack" \
-          --env AWS_ACCESS_KEY_ID="foo" \
-          --env AWS_SECRET_ACCESS_KEY="foo" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_demo
@@ -382,9 +397,9 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
-          --env LOCALSTACK_HOST="localstack" \
-          --env AWS_ACCESS_KEY_ID="foo" \
-          --env AWS_SECRET_ACCESS_KEY="foo" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_vep

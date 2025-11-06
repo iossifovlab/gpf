@@ -43,8 +43,8 @@ def test_gene_scores_partitions(
 
     data = response.json()
     assert len(data) == 3
-    assert data["left"]["count"] == 0
-    assert data["right"]["count"] == 2
+    assert data["left"]["count"] == 0  # type: ignore
+    assert data["right"]["count"] == 2  # type: ignore
 
 
 @pytest.mark.parametrize("data", [

@@ -401,8 +401,8 @@ def build_http_test_protocol(
 
 
 def s3_test_server_endpoint() -> str:
-    host = os.environ.get("LOCALSTACK_HOST", "localhost")
-    return f"http://{host}:4566"
+    host = os.environ.get("MINIO_HOST", "localhost")
+    return f"http://{host}:9000"
 
 
 def s3_test_protocol() -> FsspecReadWriteProtocol:
@@ -420,9 +420,9 @@ def build_s3_test_filesystem(
         endpoint_url: str | None = None) -> S3FileSystem:
     """Create an S3 fsspec filesystem connected to the S3 server."""
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"  # noqa: S105
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"  # noqa: S105
     if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+        os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
     if endpoint_url is None:
         endpoint_url = s3_test_server_endpoint()
     assert endpoint_url is not None
@@ -437,7 +437,7 @@ def build_s3_test_bucket(s3filesystem: S3FileSystem | None = None) -> str:
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
         if s3filesystem is None:
             s3filesystem = build_s3_test_filesystem()
-        bucket_url = f"s3:/{tmp_path}"
+        bucket_url = f"s3://test-bucket{tmp_path}"
         s3filesystem.mkdir(bucket_url, acl="public-read")
         return bucket_url
 

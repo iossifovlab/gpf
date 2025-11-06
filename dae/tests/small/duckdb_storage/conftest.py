@@ -76,6 +76,7 @@ def duckdb_storage_config(
             "storage_type": "duckdb_s3_parquet",
             "bucket_url": fs_utils.join(s3_test_bucket, "parquet"),
             "endpoint_url": s3_endpoint,
+            "use_ssl": False,
         }
     assert storage_type == "duckdb_s3"
     return {
@@ -83,6 +84,7 @@ def duckdb_storage_config(
         "storage_type": "duckdb_s3",
         "bucket_url": fs_utils.join(s3_test_bucket, "database"),
         "endpoint_url": s3_endpoint,
+        "use_ssl": False,
         "db": "storage.db",
     }
 

@@ -409,7 +409,7 @@ class FsspecReadWriteProtocol(
         except NotImplementedError:
             info = self.filesystem.info(filepath)
             modification = cast(float, info.get("created"))
-            return round(modification, 2)
+            return cast(float, round(modification, 2))
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources managed by this protocol."""

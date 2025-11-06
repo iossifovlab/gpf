@@ -21,13 +21,14 @@ from dae.duckdb_storage.duckdb_storage_helpers import (
                 region 'us-west-2'
             );
             """)),
-        ("my_key", "my_secret", None, "http://localhost:4566",
+        ("my_key", "my_secret", None, "http://localhost:9000",
          textwrap.dedent("""
             create secret (
                 type s3,
                 key_id 'my_key',
                 secret 'my_secret',
-                endpoint 'localhost:4566',
+                endpoint 'localhost:9000',
+                use_ssl 'true',
                 url_style 'path',
                 region 'us-east-1'
             );
@@ -40,6 +41,7 @@ from dae.duckdb_storage.duckdb_storage_helpers import (
                 key_id 'my_key',
                 secret 'my_secret',
                 endpoint 's3express-use1-az5.us-east-1.amazonaws.com',
+                use_ssl 'true',
                 region 'us-east-1'
             );
             """)),

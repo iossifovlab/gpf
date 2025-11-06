@@ -389,7 +389,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         self._task2future[task_node] = future
         self._future_key2task[str(future.key)] = task_node
-        return cast(Future, future)
+        return future
 
     MIN_QUEUE_SIZE = 700
 

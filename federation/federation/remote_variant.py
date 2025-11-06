@@ -130,7 +130,7 @@ class RemoteFamilyAllele(FamilyAllele):
 
     @property
     def inheritance_in_members(self) -> list:
-        # TODO Implement this
+        # Not in use at the moment.
         return []
 
 
@@ -186,7 +186,8 @@ class RemoteFamilyVariant(FamilyVariant):
 
         super().__init__(
             self.summary_variant, family,
-            str2fgt(genotype), str2mat(best_state),
+            genotype=str2fgt(genotype),
+            best_state=str2mat(best_state),
         )
 
     @property

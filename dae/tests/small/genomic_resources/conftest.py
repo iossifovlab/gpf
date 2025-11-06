@@ -2,10 +2,12 @@
 
 import gzip
 import logging
+import os
 from collections.abc import Generator
 from typing import Any
 
 import pytest
+import pytest_mock
 from dae.genomic_resources.fsspec_protocol import FsspecRepositoryProtocol
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -75,6 +77,7 @@ def fsspec_proto(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
     grr_scheme: str,
+    mocker: pytest_mock.MockerFixture,
 ) -> Generator[FsspecRepositoryProtocol, None, None]:
 
     root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
@@ -85,6 +88,10 @@ def fsspec_proto(
         return
 
     if grr_scheme == "s3":
+        mocker.patch.dict(os.environ, {
+            "AWS_SECRET_ACCESS_KEY": "minioadmin",
+            "AWS_ACCESS_KEY_ID": "minioadmin",
+        })
         proto = s3_test_protocol()
         copy_proto_genomic_resources(
             proto,
