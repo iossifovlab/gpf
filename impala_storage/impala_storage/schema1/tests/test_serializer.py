@@ -15,7 +15,9 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
 
-from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
+from impala_storage.schema1.impala_genotype_storage import (
+    ImpalaGenotypeStorage,
+)
 from impala_storage.schema1.impala_variants import ImpalaVariants
 from impala_storage.schema1.serializers import AlleleParquetSerializer
 
