@@ -7,6 +7,7 @@ from collections.abc import Generator
 
 import pysam
 import pytest
+import pytest_mock
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import (
     FsspecReadWriteProtocol,
@@ -25,7 +26,10 @@ def dask_client() -> Generator[Client, None, None]:
 
 
 @pytest.fixture
-def proto_fixture(tmp_path: pathlib.Path) -> FsspecReadWriteProtocol:
+def proto_fixture(
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> FsspecReadWriteProtocol:
     # the following config is missing min/max for phastCons100way
     setup_directories(tmp_path, {
         "one": {
@@ -54,6 +58,11 @@ def proto_fixture(tmp_path: pathlib.Path) -> FsspecReadWriteProtocol:
         2       5          80       0.01  2.01
         2       10         11       0.02  2.02
         """, seq_col=0, start_col=1, end_col=2)
+    mocker.patch(
+        "dae.genomic_resources.fsspec_protocol.FsspecReadWriteProtocol."
+        "_get_filepath_timestamp",
+        return_value=1_000_000_000.00,
+    )
     return build_filesystem_test_protocol(tmp_path)
 
 
@@ -73,10 +82,18 @@ def one_tabix_index_update(proto: FsspecReadWriteProtocol) -> None:
     proto.build_content_file()
 
 
-def test_tabix_index_update(proto_fixture: FsspecReadWriteProtocol) -> None:
+def test_tabix_index_update(
+    proto_fixture: FsspecReadWriteProtocol,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
     res = proto_fixture.get_resource("one")
     manifest = res.get_manifest()
 
+    mocker.patch(
+        "dae.genomic_resources.fsspec_protocol.FsspecReadWriteProtocol."
+        "_get_filepath_timestamp",
+        return_value=1_000_000_001.00,
+    )
     one_tabix_index_update(proto_fixture)
 
     res_u = proto_fixture.get_resource("one")
