@@ -80,14 +80,14 @@ class ResponseTransformer(ResponseTransformerProtocol):
 
         "family_person_attributes":
         lambda v: [members_in_order_get_family_structure(
-            v.members_in_order)],
+            v.family.members_in_order)],
 
         "family_structure":
         lambda v: [members_in_order_get_family_structure(
-            v.members_in_order)],
+            v.family.members_in_order)],
 
         "family_person_ids":
-        lambda v: [";".join([m.person_id for m in v.members_in_order])],
+        lambda v: [";".join([m.person_id for m in v.family.members_in_order])],
 
         "carrier_person_ids":
         lambda v: [
@@ -255,7 +255,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
         genotype = variant.family_genotype
 
         missing_members = set()
-        for index, member in enumerate(variant.members_in_order):
+        for index, member in enumerate(variant.family.members_in_order):
             try:
                 result.append(
                     ResponseTransformer._get_wdae_member(

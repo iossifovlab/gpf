@@ -3,10 +3,10 @@ import pathlib
 
 import box
 import duckdb
+import pytest
 from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
-from pytest import approx
 
 
 def test_gpdb_table_building(
@@ -66,13 +66,13 @@ def test_gpdb_insert_and_get_gp(
     assert gp.gene_scores["autism_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
-        "RVIS": {"value": approx(-2.34), "format": "%s"},
+        "RVIS": {"value": pytest.approx(-2.34), "format": "%s"},
     }
 
     assert gp.gene_scores["protection_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
-        "RVIS": {"value": approx(-2.34), "format": "%s"},
+        "RVIS": {"value": pytest.approx(-2.34), "format": "%s"},
     }
 
     assert gp.variant_counts == {

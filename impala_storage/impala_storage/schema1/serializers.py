@@ -502,17 +502,16 @@ class AlleleParquetSerializer:
         self.member_prop_serializers = {
             "variant_in_members": StringListSerializer,
         }
-        self._schema = None
+        self._schema: pa.Schema | None = None
 
         additional_searchable_props = {}
         additional_searchable_props["af_allele_freq"] = pa.float32()
-        additional_searchable_props["af_allele_count"] = pa.int32()
         additional_searchable_props[
-            "af_parents_called_percent"
-        ] = pa.float32()
+            "af_allele_count"] = pa.int32()  # type: ignore
         additional_searchable_props[
-            "af_parents_called_count"
-        ] = pa.int32()
+            "af_parents_called_percent"] = pa.float32()
+        additional_searchable_props[
+            "af_parents_called_count"] = pa.int32()  # type: ignore
 
         scores_searchable = {}
         scores_binary = {}
@@ -805,7 +804,9 @@ class AlleleParquetSerializer:
             attr_filter=set(self.ALLELE_CREATION_PROPERTIES),
         )
         fv = FamilyVariant(
-            sv, family, allele_data["gt"], allele_data["best_state"],
+            sv, family,
+            genotype=allele_data["gt"],
+            best_state=allele_data["best_state"],
             inheritance_in_members=inheritnace_in_members,
         )
 

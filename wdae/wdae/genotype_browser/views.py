@@ -95,7 +95,7 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
             deselectedFamilyTags (list): Family tags to exlude
         """
         # pylint: disable=too-many-branches
-        logger.info("query v3 variants request: %s", str(request.data))
+        logger.info("query v3 variants request: %s", request.data)
         data = cast(dict[str, Any], request.data)
         user = request.user
 
@@ -172,7 +172,7 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
         Query for variants from a dataset for downloading.
         """
         # pylint: disable=too-many-branches
-        logger.info("query v3 variants request: %s", str(request.data))
+        logger.info("query v3 variants request: %s", request.data)
         data = cast(dict[str, Any], request.data)
         user = request.user
 

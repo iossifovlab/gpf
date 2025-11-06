@@ -109,7 +109,7 @@ def sample_gp() -> GPStatistic:
 def gp_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
-        sample_gp: GPStatistic,
+        sample_gp: GPStatistic,  # noqa: ARG001
         mocker: MockerFixture) -> GPFInstance:
     root_path = tmp_path
     gpf_instance = alla_gpf(root_path)
@@ -138,9 +138,8 @@ def gp_gpf_instance(
             "autism candidates",
             ["CHD8"]))
 
-    gpf_instance._gene_profile_db = \
-        GeneProfileDB(
-            gpf_instance._gene_profile_config,
+    gpf_instance._gene_profile_db = GeneProfileDB(  # noqa: SLF001
+            gpf_instance._gene_profile_config,  # noqa: SLF001
             gpdb_filename,
         )
     print(gpdb_filename)
@@ -160,7 +159,7 @@ def gpdb_write(
 def local_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
-        sample_gp: GPStatistic,
+        sample_gp: GPStatistic,  # noqa: ARG001
         mocker: MockerFixture) -> GPFInstance:
     root_path = tmp_path
     gpf_instance = GPFInstance.build(
@@ -198,9 +197,8 @@ def local_gpf_instance(
         return_value=main_gene_sets,
     )
 
-    gpf_instance._gene_profile_db = \
-        GeneProfileDB(
-            gpf_instance._gene_profile_config,
+    gpf_instance._gene_profile_db = GeneProfileDB(  # noqa: SLF001
+            gpf_instance._gene_profile_config,  # noqa: SLF001
             gpdb_filename,
         )
     print(gpdb_filename)

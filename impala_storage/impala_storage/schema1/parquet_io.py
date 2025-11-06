@@ -417,7 +417,9 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
         return FamilyVariant(
             SummaryVariant(alleles),  # type: ignore
-            family, genotype, best_state,
+            family,
+            genotype=genotype,
+            best_state=best_state,
         )
 
     def _build_family_filename(self, allele: FamilyAllele) -> str:

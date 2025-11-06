@@ -50,7 +50,7 @@ def cli_export(
         outfile = sys.stdout
     else:
         # pylint: disable=consider-using-with
-        outfile = open(args.output, "wt", encoding="utf8")
+        outfile = open(args.output, "wt", encoding="utf8")  # noqa: SIM115
 
     try:
         rows = list(gpf_instance.query_gp_statistics(1))

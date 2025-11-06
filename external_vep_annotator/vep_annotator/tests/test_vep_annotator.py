@@ -136,7 +136,7 @@ def test_aggregate_attributes(vep_annotator: VEPCacheAnnotator) -> None:
     assert contexts[0]["sample2"] == "4;5;6"
 
 
-@pytest.mark.skip  # FIXME
+@pytest.mark.xfail
 def test_read_output(
     vep_annotator: VEPCacheAnnotator, vep_fixtures: Path,
 ) -> None:
@@ -148,7 +148,7 @@ def test_read_output(
         {},
     ]
 
-    vep_annotator.read_output(output_file, contexts)
+    vep_annotator.read_output(output_file, contexts, {})
 
     assert len(contexts[0]) == 20
     assert contexts[0]["worst_consequence"] == ["splice_acceptor_variant"]

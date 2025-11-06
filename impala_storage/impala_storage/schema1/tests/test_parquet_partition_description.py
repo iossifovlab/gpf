@@ -85,7 +85,7 @@ def test_parquet_region_bin(
     expected: str,
 ) -> None:
     sv = SummaryVariant(summary_alleles)
-    fv = FamilyVariant(sv, fam1, genotype, None)
+    fv = FamilyVariant(sv, fam1, genotype=genotype)
     part_desc = PartitionDescriptor(
         chromosomes=chromosomes, region_length=region_length)
     region_bin = part_desc.make_region_bin(fv.chrom, fv.position)
@@ -101,8 +101,8 @@ def test_parquet_family_bin(
     genotype: np.ndarray,
 ) -> None:
     sv = SummaryVariant(summary_alleles_chr1)
-    fv1 = FamilyVariant(sv, fam1, genotype, None)
-    fv2 = FamilyVariant(sv, fam2, genotype, None)
+    fv1 = FamilyVariant(sv, fam1, genotype=genotype)
+    fv2 = FamilyVariant(sv, fam2, genotype=genotype)
 
     family_bin_size = 10
     part_desc = PartitionDescriptor(
@@ -140,7 +140,7 @@ def test_parquet_frequency_bin(
             summary_index=0, allele_index=0, attributes=attributes),
     ] * 3
     sv = SummaryVariant(summary_alleles)
-    fv = FamilyVariant(sv, fam1, genotype, None)
+    fv = FamilyVariant(sv, fam1, genotype=genotype)
     part_desc = PartitionDescriptor(
         chromosomes=["1"], region_length=1000,
         rare_boundary=rare_boundary)
