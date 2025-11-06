@@ -76,6 +76,28 @@ chrbar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2
     return summary_data
 
 
+@pytest.fixture
+def chrom_mapping_del(
+    tmp_path: Path,
+) -> Path:
+    mapping_path = tmp_path / "chrom_mapping.txt"
+    with open(mapping_path, "w") as f:
+        f.write("chrfoo\tfoo\n")
+        f.write("chrbar\tbar\n")
+    return mapping_path
+
+
+@pytest.fixture
+def chrom_mapping_add(
+    tmp_path: Path,
+) -> Path:
+    mapping_path = tmp_path / "chrom_mapping.txt"
+    with open(mapping_path, "w") as f:
+        f.write("foo\tchrfoo\n")
+        f.write("bar\tchrbar\n")
+    return mapping_path
+
+
 @pytest.fixture(scope="session")
 def dae_transmitted(
     gpf_instance: GPFInstance,
@@ -138,6 +160,26 @@ def test_variants_have_adjusted_chrom(
         assert summary_variant.chromosome in {"foo", "bar"}
 
 
+def test_variants_have_adjusted_chrom_with_chrom_mapping(
+    gpf_instance: GPFInstance,
+    families_data: FamiliesData,
+    summary_data_with_prefix: Path,
+    chrom_mapping_del: Path,
+) -> None:
+    variants_loader = DaeTransmittedLoader(
+        families_data,
+        str(summary_data_with_prefix),
+        genome=gpf_instance.reference_genome,
+        params={"chrom_mapping": str(chrom_mapping_del)},
+        regions=None,
+    )
+
+    variants = list(variants_loader.full_variants_iterator())
+    assert len(variants) > 0
+    for summary_variant, _ in variants:
+        assert summary_variant.chromosome in {"foo", "bar"}
+
+
 def test_reset_regions_with_adjusted_chrom(
     gpf_instance: GPFInstance, families_data: FamiliesData,
     summary_data_with_prefix: Path,
@@ -147,6 +189,30 @@ def test_reset_regions_with_adjusted_chrom(
         str(summary_data_with_prefix),
         genome=gpf_instance.reference_genome,
         params={"del_chrom_prefix": "chr"},
+        regions=None,
+    )
+
+    regions = [Region.from_str("bar:10-11")]
+
+    variants_loader.reset_regions(regions)
+
+    variants = list(variants_loader.full_variants_iterator())
+    assert len(variants) == 2
+    unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
+    assert unique_chroms is not None
+    assert (unique_chroms == ["bar"]).all()
+
+
+def test_reset_regions_with_chrom_map(
+    gpf_instance: GPFInstance, families_data: FamiliesData,
+    summary_data_with_prefix: Path,
+    chrom_mapping_del: Path,
+) -> None:
+    variants_loader = DaeTransmittedLoader(
+        families_data,
+        str(summary_data_with_prefix),
+        genome=gpf_instance.reference_genome,
+        params={"chrom_mapping": str(chrom_mapping_del)},
         regions=None,
     )
 
@@ -226,4 +292,32 @@ def test_fetch_family_variants(
     expected: int,
 ) -> None:
     variants = list(dae_transmitted.fetch_family_variants(region=region))
+    assert len(variants) == expected
+
+
+@pytest.mark.parametrize(
+    "region, expected", [
+        (None, 4),
+        (Region("foo", 10, 10), 1),
+        (Region("bar", 10, 10), 1),
+        (Region("bar", 10, 11), 3),
+    ],
+)
+def test_fetch_family_variants_with_chrom_mapping(
+    gpf_instance: GPFInstance,
+    families_data: FamiliesData,
+    summary_data_with_prefix: Path,
+    chrom_mapping_del: Path,
+    region: Region | None,
+    expected: int,
+) -> None:
+    variants_loader = DaeTransmittedLoader(
+        families_data,
+        str(summary_data_with_prefix),
+        genome=gpf_instance.reference_genome,
+        params={"chrom_mapping": str(chrom_mapping_del)},
+        regions=None,
+    )
+
+    variants = list(variants_loader.fetch_family_variants(region=region))
     assert len(variants) == expected

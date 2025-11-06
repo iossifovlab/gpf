@@ -521,7 +521,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             ref_alt_tuples = []
             for variant_tuple in zip(
                     chrom_col, pos_col, variant_col, strict=True):
-                chrom = self._adjust_chrom_prefix(variant_tuple[0])
+                chrom = self._adjust_chrom(variant_tuple[0])
                 if chrom not in self.genome.chromosomes:
                     logger.warning(
                         "chromosome %s not found in the reference genome %s; "
@@ -687,7 +687,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             extra_attributes_df = raw_df[extra_attributes_cols]
             denovo_df = denovo_df.join(extra_attributes_df)
-        denovo_df.chrom = denovo_df.chrom.apply(self._adjust_chrom_prefix)
+        denovo_df.chrom = denovo_df.chrom.apply(self._adjust_chrom)
         denovo_df = denovo_df.dropna(axis=0, how="any", subset=[
             "position", "reference", "alternative"])
         return (denovo_df, extra_attributes_cols.tolist())
@@ -854,7 +854,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             # pylint: disable=no-member
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self._chromosomes = \
-                    [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
+                    [self._adjust_chrom(chrom) for chrom in tbx.contigs]
         except Exception:  # noqa: BLE001 pylint: disable=broad-except
             self._chromosomes = self.genome.chromosomes
 
@@ -924,7 +924,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         self, summary_index: int, rec: dict[str, Any],
     ) -> SummaryVariant | None:
         rec["cshl_position"] = int(rec["cshl_position"])
-        chrom = self._adjust_chrom_prefix(rec["chrom"])
+        chrom = self._adjust_chrom(rec["chrom"])
         if chrom not in self.genome.chromosomes:
             logger.warning(
                 "chromosome %s not found in the reference genome %s; "
@@ -1060,11 +1060,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                         closing(pysam.Tabixfile(self.toomany_filename)) \
                         as too_tbf:
 
-                    region_unadjusted = (
-                        self._unadjust_chrom_prefix(str(region))
-                        if region is not None
-                        else None
-                    )
+                    region_unadjusted = None
+                    if region is not None:
+                        chrom = self._unadjust_chrom(region.chrom)
+                        region_unadjusted = str(Region(
+                            chrom,
+                            region.start,
+                            region.end))
+
                     summary_iterator = sum_tbf.fetch(
                         region=region_unadjusted, parser=pysam.asTuple(),
                     )

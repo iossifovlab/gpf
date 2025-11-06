@@ -333,9 +333,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 vcf.fetch()
                 for vcf in self.vcfs
             ]
-
+        unadjust_region = str(Region(
+            self._unadjust_chrom(region.chrom),
+            region.start,
+            region.end,
+        ))
         return [
-            vcf.fetch(region=self._unadjust_chrom_prefix(str(region)))
+            vcf.fetch(region=unadjust_region)
             for vcf in self.vcfs]
 
     def _init_chromosome_order(self) -> None:
@@ -378,7 +382,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         except Exception:  # noqa: BLE001
             res = seqnames
 
-        return [self._adjust_chrom_prefix(chrom) for chrom in res]
+        return [self._adjust_chrom(chrom) for chrom in res]
 
     def _match_pedigree_to_samples(self) -> None:
         # pylint: disable=too-many-branches
@@ -552,7 +556,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     SummaryVariantFactory.summary_variant_from_vcf(
                         current_vcf_variant, summary_index,
                         transmission_type=self.transmission_type)
-                chrom = self._adjust_chrom_prefix(
+                chrom = self._adjust_chrom(
                     current_summary_variant.chromosome)
 
                 all_genotypes, vcf_iterator_idexes_to_advance = \
@@ -688,7 +692,7 @@ class VcfLoader(VariantsGenotypesLoader):
         for batch in files_batches:
             for filename in batch:
                 chromosomes = {
-                    self._adjust_chrom_prefix(c)
+                    self._adjust_chrom(c)
                     for c in vcffile_chromosomes(filename)
                 }
                 if set(chromosomes).intersection(region_chromosomes):
@@ -949,7 +953,7 @@ class VcfLoader(VariantsGenotypesLoader):
         result: set[str] = set()
         for filname in self.filenames:
             result.update(vcffile_chromosomes(filname))
-        return [self._adjust_chrom_prefix(chrom) for chrom in result]
+        return [self._adjust_chrom(chrom) for chrom in result]
 
     def reset_regions(
         self,

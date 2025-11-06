@@ -378,6 +378,39 @@ def test_reset_regions_with_adjusted_chrom_add(
     assert (unique_chroms == [str(r) for r in regions]).all()
 
 
+@pytest.fixture
+def chrom_mapping_add(
+    tmp_path: Path,
+) -> Path:
+    mapping_path = tmp_path / "chrom_mapping.txt"
+    with open(mapping_path, "w") as f:
+        f.write("1\tchr1\n")
+        f.write("2\tchr2\n")
+        f.write("3\tchr3\n")
+        f.write("4\tchr4\n")
+    return mapping_path
+
+
+def test_reset_regions_with_chrom_mapping_add(
+    simple_cnv_loader: Any,
+    cnv_ped: Any,
+    variants_file_nochr: Path,
+    chrom_mapping_add: Path,
+) -> None:
+    loader = simple_cnv_loader(cnv_ped, variants_file_nochr, {
+        "chrom_mapping": str(chrom_mapping_add),
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state",
+    })
+    regions = [Region.from_str("chr1")]
+    loader.reset_regions(regions)
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) > 0
+    unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
+    assert (unique_chroms == [str(r) for r in regions]).all()
+
+
 @pytest.fixture(scope="module")
 def variants_file_doublechr(
     tmp_path_factory: pytest.TempPathFactory,
@@ -403,6 +436,39 @@ def test_reset_regions_with_adjusted_chrom_del(
         "del_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
         "cnv_best_state": "best_state",
+    })
+    regions = [Region.from_str("chr1")]
+    loader.reset_regions(regions)
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) > 0
+    unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
+    assert (unique_chroms == [str(r) for r in regions]).all()
+
+
+@pytest.fixture
+def chrom_mapping_del(
+    tmp_path: Path,
+) -> Path:
+    mapping_path = tmp_path / "chrom_mapping.txt"
+    with open(mapping_path, "w") as f:
+        f.write("chrchr1\tchr1\n")
+        f.write("chrchr2\tchr2\n")
+        f.write("chrchr3\tchr3\n")
+        f.write("chrchr4\tchr4\n")
+    return mapping_path
+
+
+def test_reset_regions_with_chrom_mapping(
+    simple_cnv_loader: Any,
+    cnv_ped: Any,
+    variants_file_doublechr: Path,
+    chrom_mapping_del: Path,
+) -> None:
+    loader = simple_cnv_loader(cnv_ped, variants_file_doublechr, {
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state",
+        "chrom_mapping": str(chrom_mapping_del),
     })
     regions = [Region.from_str("chr1")]
     loader.reset_regions(regions)
