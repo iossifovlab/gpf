@@ -521,7 +521,8 @@ class ImportProject:
     def _add_loader_prefix(
             params: dict[str, Any], prefix: str) -> dict[str, Any]:
         res = {}
-        exclude = {"add_chrom_prefix", "del_chrom_prefix", "files"}
+        exclude = {
+            "add_chrom_prefix", "del_chrom_prefix", "files", "chrom_mapping"}
         for k, val in params.items():
             if k not in exclude:
                 res[prefix + k] = val
