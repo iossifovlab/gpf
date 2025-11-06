@@ -126,7 +126,7 @@ class GeneSetsView(QueryBaseView):
         response = gene_sets[:]
         if "filter" in data:
             query = data["filter"].lower()
-            response = [  # type: ignore
+            response = [
                 r
                 for r in response
                 if query in r["name"].lower() or query in r["desc"].lower()
