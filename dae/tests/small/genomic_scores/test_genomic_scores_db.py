@@ -1,8 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
+from typing import cast
 
 import pytest
+from dae.annotation.score_annotator import GenomicScoreAnnotatorBase
+from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import NumberHistogram
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -18,6 +21,7 @@ from dae.genomic_resources.testing import (
     setup_empty_gene_models,
     setup_genome,
 )
+from dae.genomic_scores.scores import _build_score_help
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.setup_helpers import setup_gpf_instance
 
@@ -166,3 +170,51 @@ def test_genomic_scores_db_with_annotation(
     assert len(score.hist.bins) == 11
     assert not score.hist.config.x_log_scale
     assert not score.hist.config.y_log_scale
+
+
+def test_build_score_help(
+    annotation_gpf: GPFInstance,
+    scores_repo: GenomicResourceProtocolRepo,
+) -> None:
+    annotation_pipeline = annotation_gpf.get_annotation_pipeline()
+    assert annotation_pipeline is not None
+    assert len(annotation_pipeline.annotators) > 0
+
+    # Find the position_score annotator
+    score_annotator = None
+    for annotator in annotation_pipeline.annotators:
+        if annotator.get_info().type == "position_score":
+            score_annotator = annotator
+            break
+
+    assert score_annotator is not None
+    annotator_info = score_annotator.get_info()
+    assert annotator_info.type == "position_score"
+
+    # Get the first attribute
+    attr_info = annotator_info.attributes[0]
+    assert attr_info.name == "phastcons100"
+
+    # Build the genomic score
+    resource = scores_repo.get_resource("phastCons")
+    genomic_score = build_score_from_resource(resource)
+
+    # Build the help text
+    help_text = _build_score_help(
+        cast(GenomicScoreAnnotatorBase, score_annotator),
+        attr_info, genomic_score)
+
+    # Verify the help text contains expected elements
+    assert help_text is not None
+    assert len(help_text) > 0
+    assert "phastcons100" in help_text
+    assert "phastCons100 desc" in help_text
+    assert "phastCons" in help_text
+    assert "position_score" in help_text
+    assert '<div class="score-description">' in help_text
+    assert "Genomic resource:" in help_text
+    assert "histogram" in help_text.lower()
+    assert "details" in help_text.lower()
+    assert "**source**:" in help_text
+    assert "**resource_type**:" in help_text
+    assert "**annotator_type**:" in help_text
