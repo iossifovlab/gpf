@@ -161,3 +161,165 @@ def test_open_tabix_file_simple(
     res = caching_proto.get_resource("one")
     with caching_proto.open_tabix_file(res, "test.txt.gz") as tabix:
         assert tabix.contigs == ["1", "2", "3"]
+
+
+@pytest.mark.grr_full
+def test_open_tabix_file_caches_both_files(
+        caching_proto: CachingProtocol) -> None:
+    """Test that opening tabix file caches both data and index."""
+    res = caching_proto.get_resource("one")
+
+    local_proto = caching_proto.local_protocol
+    assert not local_proto.file_exists(res, "test.txt.gz")
+    assert not local_proto.file_exists(res, "test.txt.gz.tbi")
+
+    with caching_proto.open_tabix_file(res, "test.txt.gz") as tabix:
+        assert tabix.contigs == ["1", "2", "3"]
+
+    # Both files should be cached
+    assert local_proto.file_exists(res, "test.txt.gz")
+    assert local_proto.file_exists(res, "test.txt.gz.tbi")
+
+
+@pytest.mark.grr_full
+def test_load_manifest(
+    caching_proto: CachingProtocol,
+) -> None:
+    """Test loading manifest through caching protocol."""
+    res = caching_proto.get_resource("three")
+
+    manifest = caching_proto.load_manifest(res)
+    assert manifest is not None
+
+    # Config file should be cached after loading manifest
+    local_proto = caching_proto.local_protocol
+    assert local_proto.file_exists(res, "genomic_resource.yaml")
+
+
+@pytest.mark.grr_full
+def test_get_all_resources_caches_list(
+        caching_proto: CachingProtocol) -> None:
+    """Test that get_all_resources caches the resource list."""
+    assert caching_proto._all_resources is None
+
+    # First call populates cache
+    resources = list(caching_proto.get_all_resources())
+    assert len(resources) == 5
+    assert caching_proto._all_resources is not None
+
+    # Second call uses cached list
+    resources2 = list(caching_proto.get_all_resources())
+    assert resources2 == caching_proto._all_resources
+
+
+@pytest.mark.grr_full
+def test_refresh_cached_resource(
+        caching_proto: CachingProtocol) -> None:
+    """Test refreshing all files in a resource."""
+    res = caching_proto.get_resource("three")
+
+    local_proto = caching_proto.local_protocol
+    assert not local_proto.file_exists(res, "sub1/a.txt")
+    assert not local_proto.file_exists(res, "sub2/b.txt")
+
+    # Refresh all files
+    caching_proto.refresh_cached_resource(res)
+
+    # All files should be cached (except lockfiles)
+    assert local_proto.file_exists(res, "genomic_resource.yaml")
+    assert local_proto.file_exists(res, "sub1/a.txt")
+    assert local_proto.file_exists(res, "sub2/b.txt")
+
+
+@pytest.mark.grr_full
+def test_refresh_cached_resource_file_returns_tuple(
+        caching_proto: CachingProtocol) -> None:
+    """Test that refresh_cached_resource_file returns resource_id, filename."""
+    res = caching_proto.get_resource("three")
+
+    result = caching_proto.refresh_cached_resource_file(res, "sub1/a.txt")
+    assert isinstance(result, tuple)
+    assert result == (res.resource_id, "sub1/a.txt")
+
+
+@pytest.mark.grr_full
+def test_lockfiles_are_ignored(
+        caching_proto: CachingProtocol) -> None:
+    """Test that .lockfile files are ignored during refresh."""
+    res = caching_proto.get_resource("one")
+
+    # Attempting to refresh a lockfile should return immediately
+    result = caching_proto.refresh_cached_resource_file(
+        res, "test.txt.gz.lockfile")
+    assert result == (res.resource_id, "test.txt.gz.lockfile")
+
+    # Lockfile should not be cached
+    local_proto = caching_proto.local_protocol
+    assert not local_proto.file_exists(res, "test.txt.gz.lockfile")
+
+
+@pytest.mark.grr_full
+def test_public_url_override(
+        content_fixture: dict[str, Any],
+        tmp_path_factory: pytest.TempPathFactory) -> None:
+    """Test CachingProtocol with custom public URL."""
+    remote_proto = build_inmemory_test_protocol(content_fixture)
+    local_proto = build_filesystem_test_protocol(
+        tmp_path_factory.mktemp("cache_test"))
+
+    custom_public_url = "https://custom.example.com/resources"
+    caching_proto = CachingProtocol(
+        remote_proto, local_proto, public_url=custom_public_url)
+
+    assert caching_proto.get_public_url() == custom_public_url
+    assert caching_proto.get_url() == remote_proto.get_url()
+
+
+@pytest.mark.grr_full
+def test_get_resource_url_after_caching(
+        caching_proto: CachingProtocol) -> None:
+    """Test getting resource URL points to cached location."""
+    res = caching_proto.get_resource("one")
+
+    resource_url = caching_proto.get_resource_url(res)
+    assert resource_url is not None
+
+
+@pytest.mark.grr_full
+def test_get_resource_file_url_triggers_caching(
+        caching_proto: CachingProtocol) -> None:
+    """Test getting file URL triggers caching."""
+    res = caching_proto.get_resource("three")
+
+    local_proto = caching_proto.local_protocol
+    assert not local_proto.file_exists(res, "sub1/a.txt")
+
+    # Getting file URL should trigger caching
+    file_url = caching_proto.get_resource_file_url(res, "sub1/a.txt")
+    assert file_url is not None
+    assert "sub1/a.txt" in file_url
+
+    # File should now be cached
+    assert local_proto.file_exists(res, "sub1/a.txt")
+
+
+@pytest.mark.grr_full
+def test_protocol_invalidate_clears_cache(
+        caching_proto: CachingProtocol) -> None:
+    """Test invalidate() clears cached resources list."""
+    # Populate cache
+    list(caching_proto.get_all_resources())
+    assert caching_proto._all_resources is not None
+
+    # Invalidate
+    caching_proto.invalidate()
+    assert caching_proto._all_resources is None
+
+
+@pytest.mark.grr_full
+def test_protocol_get_id(
+        caching_proto: CachingProtocol) -> None:
+    """Test protocol ID is set correctly."""
+    proto_id = caching_proto.get_id()
+    assert proto_id is not None
+    assert proto_id == caching_proto.local_protocol.proto_id

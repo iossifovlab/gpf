@@ -79,7 +79,8 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
             self)
 
     def refresh_cached_resource_file(
-            self, resource: GenomicResource, filename: str) -> tuple[str, str]:
+        self, resource: GenomicResource, filename: str,
+    ) -> tuple[str, str]:
         """Refresh a resource file in cache if neccessary."""
         assert resource.proto == self
 
@@ -97,7 +98,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 remote_resource, resource, filename)
         return (resource.resource_id, filename)
 
-    def refresh_cached_resource(self, resource: GenomicResource) -> None:
+    def refresh_cached_resource(
+        self, resource: GenomicResource,
+    ) -> tuple[str, None]:
         """Refresh all resource files in cache if neccessary."""
         assert resource.proto == self
 
@@ -114,6 +117,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                     resource, filename):
                 self.local_protocol.update_resource_file(
                     remote_resource, resource, filename)
+        return (resource.resource_id, None)
 
     def get_resource_url(self, resource: GenomicResource) -> str:
         """Return url of the specified resources."""
@@ -171,7 +175,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
     def load_manifest(self, resource: GenomicResource) -> Manifest:
         self.refresh_cached_resource_file(resource, GR_CONF_FILE_NAME)
-        return self.local_protocol.load_manifest(resource)
+        return self.remote_protocol.load_manifest(resource)
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):
@@ -195,6 +199,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         self.child.invalidate()
         for proto in self.cache_protos.values():
             proto.invalidate()
+        self._all_resources = None
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         if self._all_resources is None:
@@ -286,8 +291,9 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
 
 def cache_resources(
-        repository: GenomicResourceRepo, resource_ids: Iterable[str] | None,
-        workers: int | None = None) -> None:
+    repository: GenomicResourceRepo, resource_ids: Iterable[str] | None,
+    workers: int | None = None,
+) -> None:
     """Cache resources from a list of remote resource IDs."""
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources import get_resource_implementation_builder
@@ -320,14 +326,12 @@ def cache_resources(
                 ),
             )
             continue
-
         futures.append(
             executor.submit(
                 cached_proto.refresh_cached_resource_file,  # type: ignore
                 resource,
                 "genomic_resource.yaml",
-            ),
-        )
+            ))
         impl = impl_builder(resource)
 
         for res_file in impl.files:
