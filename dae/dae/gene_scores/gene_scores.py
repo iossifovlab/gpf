@@ -377,7 +377,7 @@ def _build_gene_score_help(
         "description": score_def.desc,
         "resource_id": gene_score.resource.resource_id,
         "resource_summary": gene_score.resource.get_summary(),
-        "resource_url": f"{gene_score.resource.get_url()}/index.html",
+        "resource_url": f"{gene_score.resource.get_public_url()}/index.html",
         "histogram": histogram,
     }
     template = Template(GENE_SCORE_HELP)
