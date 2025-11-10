@@ -2,6 +2,7 @@
 import os
 import pathlib
 import textwrap
+from typing import Any
 
 import dae.annotation.annotate_vcf
 import pysam
@@ -16,9 +17,16 @@ from dae.annotation.annotate_vcf import (
     _VCFBatchSource,
     _VCFSource,
     _VCFWriter,
+    annotate_vcf,
     cli,
 )
 from dae.annotation.annotation_config import AttributeInfo
+from dae.annotation.annotation_factory import (
+    build_annotation_pipeline,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_vcf,
@@ -877,3 +885,311 @@ def test_annotate_vcf_version_report(
 
     out, _err = capsys.readouterr()
     assert out.startswith("GPF version")
+
+
+def _build_annotate_vcf_args(**overrides: Any) -> dict[str, Any]:
+    """Build args dict for annotate_vcf function with sensible defaults."""
+    defaults = {
+        "batch_size": 0,
+    }
+    defaults.update(overrides)
+    return defaults
+
+
+def test_annotate_vcf_function_basic(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_vcf function with basic VCF data."""
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_vcf function
+    args = _build_annotate_vcf_args()
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    # Verify output
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        result = [v.info["score"][0] for v in vcf_file.fetch()]
+    assert result == ["0.1", "0.2"]
+
+
+def test_annotate_vcf_function_with_batch_mode(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    """Test annotate_vcf function with batch processing."""
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    spy = mocker.spy(_VCFBatchSource, "__init__")
+
+    # Test annotate_vcf function with batch mode
+    args = _build_annotate_vcf_args(batch_size=10)
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    # Verify output
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        result = [v.info["score"][0] for v in vcf_file.fetch()]
+    assert result == ["0.1", "0.2"]
+
+    # Verify batch mode was used
+    assert len(spy.call_args.args) == 2
+    assert spy.call_args.kwargs["batch_size"] == 10
+
+
+def test_annotate_vcf_function_with_region(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_vcf function with region parameter."""
+    # Note: Region filtering requires indexed VCF
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   50  .  G   C   .    .      .    GT     0/1 0/0 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf"
+
+    grr_file = root_path / "grr.yaml"
+
+    # Create indexed VCF file
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_vcf function with region
+    # Should only annotate positions 23-30
+    args = _build_annotate_vcf_args()
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+        region=Region("chr1", 1, 30),
+    )
+
+    # Verify output - position 50 should be excluded
+    with pysam.VariantFile(str(tmp_path / "out.vcf.gz")) as vcf_file:
+        result = [(v.pos, v.info["score"][0]) for v in vcf_file.fetch()]
+    assert len(result) == 2
+    assert result == [(23, "0.1"), (24, "0.2")]
+
+
+def test_annotate_vcf_function_with_attributes_to_delete(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_vcf function with attributes_to_delete parameter."""
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##INFO=<ID=old_score,Number=1,Type=Float,Description="Old score">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      old_score=999    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      old_score=888    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_vcf function with attributes to delete
+    args = _build_annotate_vcf_args()
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+        attributes_to_delete=["old_score"],
+    )
+
+    # Verify output - old_score should be removed
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for variant in vcf_file.fetch():
+            assert "old_score" not in variant.info
+            assert "score" in variant.info
+
+
+def test_annotate_vcf_function_multiallelic(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_vcf function with multiallelic variants."""
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T,A .    .      .    GT     0/1 0/0 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline with allele score
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"allele_score": "two"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_vcf function
+    args = _build_annotate_vcf_args()
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    # Verify output - should have two scores for two alleles
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for variant in vcf_file.fetch():
+            assert "score" in variant.info
+            # Multiallelic should have list of scores
+            scores = variant.info["score"]
+            assert len(scores) == 2
+
+
+def test_annotate_vcf_function_with_compressed_input(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_vcf function with compressed input file."""
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf"
+
+    grr_file = root_path / "grr.yaml"
+
+    # Create compressed input file
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_vcf function with compressed input
+    args = _build_annotate_vcf_args()
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    # Verify output was compressed
+    assert (tmp_path / "out.vcf.gz").exists()
+
+    # Verify content
+    with pysam.VariantFile(str(tmp_path / "out.vcf.gz")) as vcf_file:
+        result = [v.info["score"][0] for v in vcf_file.fetch()]
+    assert result == ["0.1", "0.2"]
