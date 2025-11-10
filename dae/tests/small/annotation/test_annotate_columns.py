@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 import textwrap
+from typing import Any
 
 import dae.annotation.annotate_columns
 import pysam
@@ -22,7 +23,11 @@ from dae.annotation.annotate_columns import (
     _CSVHeader,
     _CSVSource,
     _CSVWriter,
+    annotate_columns,
     cli,
+)
+from dae.annotation.annotation_factory import (
+    build_annotation_pipeline,
 )
 from dae.annotation.processing_pipeline import (
     Annotation,
@@ -33,13 +38,21 @@ from dae.genomic_resources.genomic_context_base import (
     GenomicContext,
     SimpleGenomicContext,
 )
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource_id,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
     setup_genome,
+    setup_gzip,
     setup_tabix,
 )
 from dae.task_graph.logging import FsspecHandler
+from dae.utils.regions import Region as GenomicRegion
 
 pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
@@ -1535,5 +1548,373 @@ def test_cli_annotatables_dae_that_need_ref_genome_but_do_not_have_it(
                 "-j", 1,
             ]
         ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def _build_annotate_columns_args(**overrides: Any) -> dict[str, Any]:
+    """Build args dict for annotate_columns function with sensible defaults."""
+    defaults = {
+        "input_separator": "\t",
+        "output_separator": "\t",
+        "batch_size": 0,
+        "columns_args": {
+            "col_chrom": "chrom",
+            "col_pos": "pos",
+            "col_pos_beg": "pos_beg",
+            "col_pos_end": "pos_end",
+            "col_ref": "ref",
+            "col_alt": "alt",
+            "col_location": "location",
+            "col_variant": "variant",
+            "col_vcf_like": "vcf_like",
+            "col_cnv_type": "cnv_type",
+        },
+    }
+    defaults.update(overrides)
+    return defaults
+
+
+def test_annotate_columns_function_basic(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function with basic position data."""
+
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_function_with_batch_mode(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    """Test annotate_columns function with batch processing."""
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    spy = mocker.spy(_CSVBatchSource, "__init__")
+
+    # Test annotate_columns function with batch mode
+    args = _build_annotate_columns_args(batch_size=10)
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+    # Verify batch mode was used
+    assert len(spy.call_args.args) == 6
+    assert spy.call_args.args[5] == 10  # batch_size is the 6th positional arg
+
+
+def test_annotate_columns_function_with_vcf_alleles(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function with VCF alleles."""
+    in_content = textwrap.dedent("""
+        chrom   pos   ref   alt
+        chr1    23    C     T
+        chr1    24    C     A
+    """)
+    out_expected_content = (
+        "chrom\tpos\tref\talt\tscore\n"
+        "chr1\t23\tC\tT\t0.1\n"
+        "chr1\t24\tC\tA\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_function_with_region(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function - region parameter is accepted."""
+
+    # Note: Region filtering only works with tabix-indexed files in the
+    # full CLI workflow. For the direct function call, we just verify
+    # the parameter is accepted without error.
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function - region parameter is accepted
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+        region=GenomicRegion("chr1", 1, 30),
+    )
+
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_function_with_attributes_to_delete(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function with attributes_to_delete parameter."""
+    in_content = textwrap.dedent("""
+        chrom   pos   old_score
+        chr1    23    999
+        chr1    24    888
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function with attributes to delete
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+        attributes_to_delete=["old_score"],
+    )
+
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_function_with_compressed_input(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function with compressed input file."""
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt.gz"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    # Create compressed input file (gzipped without tabix index)
+    setup_gzip(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function with compressed input
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    # Verify output was compressed
+    assert (tmp_path / "out.txt.gz").exists()
+
+    # Verify content
+    with gzip.open(tmp_path / "out.txt.gz", "rt") as f:
+        out_file_content = f.read()
+
+    assert "chrom\tpos\tscore\n" in out_file_content
+    assert "chr1\t23\t0.1\n" in out_file_content
+    assert "chr1\t24\t0.2\n" in out_file_content
+
+
+def test_annotate_columns_function_with_reference_genome(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function with reference genome for CSHL format."""
+    in_content = textwrap.dedent("""
+        location  variant
+        chr1:23   sub(C->T)
+        chr1:24   sub(C->A)
+    """)
+    out_expected_content = (
+        "location\tvariant\tscore\n"
+        "chr1:23\tsub(C->T)\t0.1\n"
+        "chr1:24\tsub(C->A)\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    # Build pipeline and get reference genome
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    ref_genome = build_reference_genome_from_resource_id(
+        "test_genome", grr,
+    )
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function with reference genome
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+        reference_genome=ref_genome,
+    )
+
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
