@@ -4,6 +4,7 @@ import textwrap
 import numpy as np
 import pytest
 from dae.gene_scores.gene_scores import (
+    _build_gene_score_help,
     build_gene_score_from_resource,
     build_gene_score_from_resource_id,
 )
@@ -310,3 +311,26 @@ def test_build_gene_scores_from_resource_id(
     gs = build_gene_score_from_resource_id("LinearHist", scores_repo)
     assert gs is not None
     assert len(gs.get_scores()) == 1
+
+
+def test_build_gene_score_help(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+    assert gene_score is not None
+
+    # Get the score definition
+    score_def = gene_score.score_definitions["linear score"]
+    assert score_def is not None
+
+    # Build the help text
+    help_text = _build_gene_score_help(score_def, gene_score)
+
+    # Verify the help text contains expected elements
+    assert help_text is not None
+    assert len(help_text) > 0
+    assert "linear score" in help_text
+    assert "linear gene score" in help_text
+    assert "LinearHist" in help_text
+    assert '<div class="score-description">' in help_text
+    assert "Genomic resource:" in help_text
+    assert "histogram" in help_text.lower()

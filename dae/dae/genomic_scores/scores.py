@@ -163,7 +163,8 @@ def _build_score_help(
         "description": attr_info.description,
         "resource_id": genomic_score.resource_id,
         "resource_summary": genomic_score.resource.get_summary(),
-        "resource_url": f"{genomic_score.resource.get_url()}/index.html",
+        "resource_url":
+        f"{genomic_score.resource.get_public_url()}/index.html",
         "resource_type": genomic_score.resource.get_type(),
         "histogram": histogram,
         "source": attr_info.source,

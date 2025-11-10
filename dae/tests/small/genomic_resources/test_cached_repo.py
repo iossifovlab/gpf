@@ -479,3 +479,278 @@ def test_cached_repo_nested_list_cli(
             "gene_models          0        1/ 2 41.0 B       test_grr "
             "sub/two\n"
         )
+
+
+@pytest.mark.grr_full
+def test_cached_repo_invalidate(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test that invalidate() clears cached resources."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data.txt": "alabala",
+            }}) as cache_repo:
+
+        # Access resource to populate cache
+        result = list(cache_repo.get_all_resources())
+        assert len(result) == 1
+
+        # Cache should be populated
+        assert cache_repo._all_resources is not None
+
+        # Invalidate cache
+        cache_repo.invalidate()
+
+        # Cache should be cleared
+        assert cache_repo._all_resources is None
+
+
+@pytest.mark.grr_full
+def test_cache_resource_wrapper(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test CacheResource wraps remote resource correctly."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "type: gene_models",
+                "data.txt": "test data",
+            }}) as cache_repo:
+
+        cache_res = cache_repo.get_resource("one")
+        remote_res = cache_repo.child.get_resource("one")
+
+        # CacheResource should have same resource_id and version
+        assert cache_res.resource_id == remote_res.resource_id
+        assert cache_res.version == remote_res.version
+        assert cache_res.config == remote_res.config
+        assert cache_res.get_manifest() == remote_res.get_manifest()
+
+
+@pytest.mark.grr_full
+def test_caching_protocol_public_url(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test CachingProtocol uses correct public URL."""
+    with cache_repository({
+            "one": {GR_CONF_FILE_NAME: ""}}) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        cache_proto = cast(CachingProtocol, resource.proto)
+
+        # Public URL should be from remote protocol
+        assert cache_proto.get_public_url() is not None
+        assert cache_proto.get_url() == \
+            cache_proto.remote_protocol.get_url()
+
+
+@pytest.mark.grr_full
+def test_caching_protocol_invalidate(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test CachingProtocol invalidate() clears both protocols."""
+    with cache_repository({
+            "one": {GR_CONF_FILE_NAME: ""}}) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        cache_proto = cast(CachingProtocol, resource.proto)
+
+        # Populate cache
+        list(cache_proto.get_all_resources())
+        assert cache_proto._all_resources is not None
+
+        # Invalidate
+        cache_proto.invalidate()
+
+        # Cache should be cleared
+        assert cache_proto._all_resources is None
+
+
+@pytest.mark.grr_full
+def test_find_resource_with_version_constraint(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test find_resource with version constraints."""
+    with cache_repository({
+            "one(1.0)": {GR_CONF_FILE_NAME: ""},
+            "one(2.0)": {GR_CONF_FILE_NAME: ""},
+            "one(3.0)": {GR_CONF_FILE_NAME: ""},
+        }) as cache_repo:
+
+        # Find latest version
+        res = cache_repo.find_resource("one")
+        assert res is not None
+        assert res.version == (3, 0)
+
+        # Find with version constraint
+        res = cache_repo.find_resource("one", ">=2.0")
+        assert res is not None
+        assert res.version == (3, 0)
+
+        res = cache_repo.find_resource("one", "=1.0")
+        assert res is not None
+        assert res.version == (1, 0)
+
+
+@pytest.mark.grr_full
+def test_find_resource_nonexistent(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test find_resource returns None for nonexistent resources."""
+    with cache_repository({
+            "one": {GR_CONF_FILE_NAME: ""}}) as cache_repo:
+
+        res = cache_repo.find_resource("nonexistent")
+        assert res is None
+
+
+@pytest.mark.grr_full
+def test_cached_repo_get_resource_url(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test getting resource and file URLs through cache."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data.txt": "content",
+            }}) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        cache_proto = cast(CachingProtocol, resource.proto)
+
+        # Get resource URL
+        resource_url = cache_proto.get_resource_url(resource)
+        assert resource_url is not None
+
+        # Get file URL (should trigger caching)
+        file_url = cache_proto.get_resource_file_url(resource, "data.txt")
+        assert file_url is not None
+        assert "data.txt" in file_url
+
+
+@pytest.mark.grr_full
+def test_caching_protocol_readonly(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test that CachingProtocol is read-only."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data.txt": "content",
+            }}) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        cache_proto = cast(CachingProtocol, resource.proto)
+
+        # Attempting to open file for writing should fail
+        with pytest.raises(OSError, match="Read-Only"):
+            cache_proto.open_raw_file(resource, "data.txt", mode="wt")
+
+
+@pytest.mark.grr_full
+def test_cache_resources_with_specific_ids(
+    cache_repository: CacheRepositoryBuilder,
+) -> None:
+    """Test cache_resources with specific resource IDs."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data1.txt": "content1",
+            },
+            "two": {
+                GR_CONF_FILE_NAME: "",
+                "data2.txt": "content2",
+            }}) as cache_repo:
+
+        # Cache only "one"
+        cache_resources(cache_repo, ["one"], workers=1)
+
+        # Verify "one" is cached
+        assert cache_repo.get_resource_cached_files("one") == {"data1.txt"}
+
+        # Verify "two" is not cached
+        assert cache_repo.get_resource_cached_files("two") == set()
+
+
+@pytest.mark.grr_full
+def test_empty_resource_caching(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test caching of empty resources (no data files)."""
+    with cache_repository({
+            "empty": {GR_CONF_FILE_NAME: ""}}) as cache_repo:
+
+        resource = cache_repo.get_resource("empty")
+        assert resource.resource_id == "empty"
+
+        # No files to cache besides config
+        cached_files = cache_repo.get_resource_cached_files("empty")
+        assert cached_files == set()
+
+
+@pytest.mark.grr_full
+def test_caching_protocol_file_exists(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test file_exists through caching protocol."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "exists.txt": "content",
+            }}) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        cache_proto = cast(CachingProtocol, resource.proto)
+
+        # File should exist (triggers caching)
+        assert cache_proto.file_exists(resource, "exists.txt")
+
+        # Nonexistent file should not exist
+        assert not cache_proto.file_exists(resource, "nonexistent.txt")
+
+
+@pytest.mark.grr_full
+def test_concurrent_resource_access(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test concurrent access to same resource from multiple threads."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data.txt": "test content",
+            }}) as cache_repo:
+
+        results: list[str] = []
+        errors: list[BaseException] = []
+
+        def read_resource() -> None:
+            # pylint: disable=broad-exception-caught
+            try:
+                resource = cache_repo.get_resource("one")
+                with resource.open_raw_file("data.txt") as f:
+                    content = f.read()
+                    results.append(content)
+            except BaseException as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [threading.Thread(target=read_resource) for _ in range(5)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        # All threads should succeed
+        assert len(errors) == 0
+        assert len(results) == 5
+        assert all(r == "test content" for r in results)
+
+
+@pytest.mark.grr_full
+def test_cache_resources_parallel_workers(
+        cache_repository: CacheRepositoryBuilder) -> None:
+    """Test cache_resources with parallel workers."""
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data1.txt": "content1",
+                "data2.txt": "content2",
+                "data3.txt": "content3",
+            }}) as cache_repo:
+
+        # Cache with multiple workers
+        cache_resources(cache_repo, ["one"], workers=3)
+
+        # All files should be cached
+        cached = cache_repo.get_resource_cached_files("one")
+        assert "data1.txt" in cached
+        assert "data2.txt" in cached
+        assert "data3.txt" in cached

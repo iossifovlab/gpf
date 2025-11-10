@@ -138,9 +138,11 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
 
     def __init__(
-            self, proto_id: str,
-            url: str,
-            filesystem: fsspec.AbstractFileSystem):
+        self, proto_id: str,
+        url: str,
+        filesystem: fsspec.AbstractFileSystem,
+        public_url: str | None = None,
+    ):
 
         super().__init__(proto_id, url)
 
@@ -152,12 +154,21 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self.root_path = parsed.path
 
         self.url = f"{self.scheme}://{self.netloc}{self.root_path}"
+
+        if public_url is None:
+            self.public_url = self.url
+        else:
+            self.public_url = public_url
+
         self.filesystem = filesystem
 
         self._all_resources: list[GenomicResource] | None = None
 
     def get_url(self) -> str:
         return self.url
+
+    def get_public_url(self) -> str:
+        return self.public_url
 
     def invalidate(self) -> None:
         if self._all_resources is not None:
@@ -302,11 +313,13 @@ class FsspecReadWriteProtocol(
     """Provides fsspec genomic resources repository protocol."""
 
     def __init__(
-            self, proto_id: str,
-            url: str,
-            filesystem: fsspec.AbstractFileSystem):
+        self, proto_id: str,
+        url: str,
+        filesystem: fsspec.AbstractFileSystem,
+        public_url: str | None = None,
+    ):
 
-        super().__init__(proto_id, url, filesystem)
+        super().__init__(proto_id, url, filesystem, public_url=public_url)
 
         self.filesystem.makedirs(self.url, exist_ok=True)
 
@@ -678,6 +691,7 @@ def build_fsspec_protocol(
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
     # pylint: disable=import-outside-toplevel
+    public_url = kwargs.get("public_url")
 
     if url.scheme in {"file", ""}:
         from fsspec.implementations.local import LocalFileSystem
@@ -685,9 +699,11 @@ def build_fsspec_protocol(
         read_only = kwargs.get("read_only", False)
         if read_only:
             return FsspecReadOnlyProtocol(
-                proto_id, root_url, filesystem)
+                proto_id, root_url, filesystem,
+                public_url=public_url)
         return FsspecReadWriteProtocol(
-            proto_id, root_url, filesystem)
+            proto_id, root_url, filesystem,
+            public_url=public_url)
     if url.scheme in {"http", "https"}:
         from fsspec.implementations.http import HTTPFileSystem
         base_url = kwargs.get("base_url")

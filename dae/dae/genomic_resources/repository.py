@@ -1,6 +1,11 @@
 """
 Provides basic classes for genomic resources and repositories.
 
+This module defines the core architecture for managing genomic resources
+through a flexible repository system. It supports different storage backends
+(local files, HTTP, S3) and provides both read-only and read-write access.
+
+Class Hierarchy:
        +---------------------+                    +-----------------+
  +-----| GenomicResourceRepo |--------------------| GenomicResource |
  |     +---------------------+                    +-----------------+
@@ -15,6 +20,27 @@ Provides basic classes for genomic resources and repositories.
  +----| GenomicResourceGroupRepo |            | ReadWriteRepositoryProtocol |
       +--------------------------+            +-----------------------------+
 
+Key Concepts:
+    - GenomicResource: Represents a single genomic resource (e.g., a reference
+      genome, score set, or gene model) with metadata and file access methods.
+
+    - GenomicResourceRepo: Abstract base for repositories that manage
+      collections of genomic resources.
+
+    - RepositoryProtocol: Defines the storage backend interface (file system,
+      HTTP, S3, etc.) for accessing resource files.
+
+    - Manifest: Tracks files and their checksums within a resource to ensure
+      data integrity and enable caching.
+
+Resource Identifiers:
+    Resources are identified by an ID and optional version suffix:
+    - Simple: "hg19/gene_models/refseq"
+    - Versioned: "hg19/gene_models/refseq(1.2.3)"
+
+Configuration Files:
+    Each resource contains a genomic_resource.yaml configuration file with
+    metadata including type, description, and resource-specific settings.
 
 """
 from __future__ import annotations
@@ -122,11 +148,29 @@ def version_string_to_suffix(version: str) -> str:
 
 
 def version_tuple_to_string(version: tuple[int, ...]) -> str:
+    """Convert version tuple to string representation.
+
+    Args:
+        version: Version tuple like (1, 2, 3)
+
+    Returns:
+        String representation like "1.2.3"
+    """
     return ".".join(map(str, version))
 
 
 def version_tuple_to_suffix(version: tuple[int, ...]) -> str:
-    """Transform version tuple into resource ID version suffix."""
+    """Transform version tuple into resource ID version suffix.
+
+    The suffix is used to append version information to resource IDs.
+    Default version (0,) produces no suffix.
+
+    Args:
+        version: Version tuple like (1, 2, 3)
+
+    Returns:
+        Empty string for version (0,), otherwise "(1.2.3)" format
+    """
     if version == (0,):
         return ""
     return f"({'.'.join(map(str, version))})"
@@ -137,7 +181,23 @@ VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
 
 def is_version_constraint_satisfied(
         version_constraint: str | None, version: tuple[int, ...]) -> bool:
-    """Check if a version matches a version constraint."""
+    """Check if a version matches a version constraint.
+
+    Supports two types of constraints:
+        - "=X.Y.Z": Exact match required
+        - ">=X.Y.Z" or "X.Y.Z": Minimum version required (default)
+
+    Args:
+        version_constraint: Constraint string like ">=1.2.0" or "=1.2.3".
+                          None or empty string matches any version.
+        version: Version tuple to check like (1, 2, 3)
+
+    Returns:
+        True if the version satisfies the constraint
+
+    Raises:
+        ValueError: If constraint has invalid syntax or unknown operator
+    """
     if not version_constraint:
         return True
     match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
@@ -157,7 +217,16 @@ def is_version_constraint_satisfied(
 
 @dataclass(order=True)
 class ManifestEntry:
-    """Provides an entry into manifest object."""
+    """Represents a file entry in a genomic resource manifest.
+
+    A manifest tracks all files within a resource with their sizes and
+    checksums to ensure data integrity and enable efficient caching.
+
+    Attributes:
+        name: Relative path to the file within the resource
+        size: File size in bytes
+        md5: MD5 checksum of file content, or None if not computed
+    """
 
     name: str
     size: int
@@ -166,7 +235,17 @@ class ManifestEntry:
 
 @dataclass(order=True)
 class ResourceFileState:
-    """Defines resource file state saved into internal GRR state."""
+    """Tracks the state of a resource file in internal repository storage.
+
+    Used for caching and synchronization to determine if files need
+    to be refreshed or re-downloaded.
+
+    Attributes:
+        filename: Relative path to the file within the resource
+        size: File size in bytes
+        timestamp: Last modification time as Unix timestamp
+        md5: MD5 checksum of file content
+    """
 
     filename: str
     size: int
@@ -175,14 +254,29 @@ class ResourceFileState:
 
 
 class Manifest:
-    """Provides genomic resource manifest object."""
+    """Manages file listings and checksums for a genomic resource.
+
+    A manifest maintains a catalog of all files in a resource with their
+    sizes and MD5 checksums. This enables data integrity verification,
+    efficient caching, and incremental updates.
+
+    The manifest is typically stored in a .MANIFEST file within the resource
+    directory and is automatically loaded when accessing the resource.
+    """
 
     def __init__(self) -> None:
         self.entries: dict[str, ManifestEntry] = {}
 
     @staticmethod
     def from_file_content(file_content: str) -> Manifest:
-        """Produce a manifest from manifest file content."""
+        """Create a manifest from raw YAML file content.
+
+        Args:
+            file_content: YAML-formatted string containing manifest entries
+
+        Returns:
+            Manifest object with entries parsed from the content
+        """
         manifest_entries = yaml.safe_load(file_content)
         if manifest_entries is None:
             manifest_entries = []
@@ -191,7 +285,14 @@ class Manifest:
     @staticmethod
     def from_manifest_entries(
             manifest_entries: list[dict[str, Any]]) -> Manifest:
-        """Produce a manifest from parsed manifest file content."""
+        """Create a manifest from parsed manifest entry dictionaries.
+
+        Args:
+            manifest_entries: List of dicts with 'name', 'size', 'md5' keys
+
+        Returns:
+            Manifest object populated with the provided entries
+        """
         result = Manifest()
         for data in manifest_entries:
             entry = ManifestEntry(
@@ -200,6 +301,11 @@ class Manifest:
         return result
 
     def get_files(self) -> list[tuple[str, int]]:
+        """Get list of all files with their sizes.
+
+        Returns:
+            List of (filename, size) tuples for all files in manifest
+        """
         return [
             (entry.name, entry.size)
             for entry in self.entries.values()
@@ -226,40 +332,87 @@ class Manifest:
         return str(self.entries)
 
     def to_manifest_entries(self) -> list[dict[str, Any]]:
-        """Transform manifest to list of dictionaries.
+        """Convert manifest to list of dictionaries for serialization.
 
-        Helpfull when storing the manifest.
+        Returns:
+            List of dictionaries with 'name', 'size', 'md5' keys,
+            sorted by filename
         """
         return [
             asdict(entry) for entry in sorted(self.entries.values())]
 
     def add(self, entry: ManifestEntry) -> None:
-        """Add manifest enry to the manifest."""
+        """Add or update a manifest entry.
+
+        Args:
+            entry: ManifestEntry to add to the manifest
+        """
         self.entries[entry.name] = entry
 
     def update(self, entries: dict[str, ManifestEntry]) -> None:
+        """Add or update multiple manifest entries.
+
+        Args:
+            entries: Dictionary mapping filenames to ManifestEntry objects
+        """
         for entry in entries.values():
             self.add(entry)
 
     def names(self) -> set[str]:
-        """Return set of all file names from the manifest."""
+        """Get set of all filenames in the manifest.
+
+        Returns:
+            Set of filenames tracked by this manifest
+        """
         return set(self.entries.keys())
 
 
 @dataclass
 class ManifestUpdate:
-    """Provides a manifest update object."""
+    """Represents a set of changes to apply to a manifest.
+
+    Used during resource synchronization to track which files need
+    to be deleted or updated.
+
+    Attributes:
+        manifest: The updated manifest with all changes applied
+        entries_to_delete: Set of filenames to remove
+        entries_to_update: Set of filenames that need updating
+    """
 
     manifest: Manifest
     entries_to_delete: set[str]
     entries_to_update: set[str]
 
     def __bool__(self) -> bool:
+        """Check if there are any changes in this update.
+
+        Returns:
+            True if there are files to delete or update
+        """
         return bool(self.entries_to_delete or self.entries_to_update)
 
 
 class GenomicResource:
-    """Base class for genomic resources."""
+    """Represents a single genomic resource with metadata and file access.
+
+    A genomic resource is a versioned collection of data files with a
+    configuration file (genomic_resource.yaml) that defines its type,
+    description, and resource-specific settings.
+
+    Common resource types include:
+        - genome: Reference genome sequences
+        - gene_models: Gene annotations and transcript models
+        - position_score: Position-based genomic scores
+        - allele_score: Variant effect scores
+        - gene_score: Gene-level scores
+
+    Attributes:
+        resource_id: Unique identifier like "hg19/gene_models/refseq"
+        version: Version tuple like (1, 2, 3)
+        config: Configuration dictionary from genomic_resource.yaml
+        proto: Repository protocol for accessing resource files
+    """
 
     def __init__(
             self, resource_id: str, version: tuple[int, ...],
@@ -333,6 +486,13 @@ class GenomicResource:
     def get_repo_url(self) -> str:
         """Return repository's URL."""
         return self.proto.get_url()
+
+    def get_repo_public_url(self) -> str:
+        """Return repository's URL."""
+        return self.proto.get_public_url()
+
+    def get_public_url(self) -> str:
+        return f"{self.get_repo_public_url()}/{self.get_full_id()}"
 
     def get_url(self) -> str:
         return f"{self.get_repo_url()}/{self.get_full_id()}"
@@ -419,14 +579,35 @@ class GenomicResource:
 
 
 class Mode(enum.Enum):
-    """Protocol mode."""
+    """Enumeration of repository protocol access modes.
+
+    Attributes:
+        READONLY: Protocol supports only read operations
+        READWRITE: Protocol supports both read and write operations
+    """
 
     READONLY = 1
     READWRITE = 2
 
 
 class ReadOnlyRepositoryProtocol(abc.ABC):
-    """Defines read only genomic resources repository protocol."""
+    """Abstract base class for read-only repository storage protocols.
+
+    A protocol defines how to access genomic resources from a specific
+    storage backend (local filesystem, HTTP server, S3 bucket, etc.).
+    Read-only protocols can retrieve resources but cannot modify them.
+
+    Subclasses must implement methods for:
+        - Listing available resources
+        - Reading configuration files
+        - Opening resource files
+        - Loading manifests
+
+    Attributes:
+        proto_id: Unique identifier for this protocol instance
+        url: Base URL or path to the repository root
+        CHUNK_SIZE: Default buffer size for file operations (32KB)
+    """
 
     CHUNK_SIZE = 32768
 
@@ -435,16 +616,36 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         self.url = url
 
     def mode(self) -> Mode:
-        """Return repository protocol mode - READONLY or READWRITE."""
+        """Return repository protocol mode.
+
+        Returns:
+            Mode.READONLY for this base class
+        """
         return Mode.READONLY
 
     def get_id(self) -> str:
-        """Return the repository ID."""
+        """Return the repository protocol identifier.
+
+        Returns:
+            Protocol ID string
+        """
         return self.proto_id
 
     @abc.abstractmethod
     def get_url(self) -> str:
-        """Return the repository URL."""
+        """Return the base URL of the repository.
+
+        Returns:
+            URL or path string pointing to repository root
+        """
+
+    @abc.abstractmethod
+    def get_public_url(self) -> str:
+        """Return the public base URL of the repository.
+
+        Returns:
+            URL or path string pointing to a public repository root
+        """
 
     @abc.abstractmethod
     def invalidate(self) -> None:
@@ -587,7 +788,19 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             self, resource_id: str, version: tuple[int, ...],
             config: dict | None = None,
             manifest: Manifest | None = None) -> GenomicResource:
-        """Build a genomic resource based on this protocol."""
+        """Build a genomic resource instance using this protocol.
+
+        Args:
+            resource_id: Resource identifier like "hg19/gene_models/refseq"
+            version: Version tuple like (1, 2, 3)
+            config: Optional pre-loaded configuration dict. If None, will
+                   load from genomic_resource.yaml
+            manifest: Optional pre-loaded manifest. If None, will load
+                     when first accessed
+
+        Returns:
+            GenomicResource instance configured with this protocol
+        """
         if not config:
             res = GenomicResource(resource_id, version, self)
             config = self.load_yaml(res, GR_CONF_FILE_NAME)
@@ -597,20 +810,47 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
 
 class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
-    """Defines read write genomic resources repository protocol."""
+    """Abstract base class for read-write repository storage protocols.
+
+    Extends ReadOnlyRepositoryProtocol with write capabilities including:
+        - Creating and updating resources
+        - Managing manifests
+        - File upload and deletion
+        - Resource versioning
+
+    This protocol type is used for local repositories and writable remote
+    storage backends where resources can be modified or created.
+    """
 
     # pylint: disable=too-many-public-methods
 
     def mode(self) -> Mode:
+        """Return repository protocol mode.
+
+        Returns:
+            Mode.READWRITE for this protocol type
+        """
         return Mode.READWRITE
 
     @abc.abstractmethod
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
-        """Return generator for all resources managed by this protocol."""
+        """Scan repository and yield all resources.
+
+        Returns:
+            Generator yielding GenomicResource instances for each
+            resource found in the repository
+        """
 
     @abc.abstractmethod
     def collect_resource_entries(self, resource: GenomicResource) -> Manifest:
-        """Scan the resource and returns manifest with all files."""
+        """Scan resource directory and build manifest from files found.
+
+        Args:
+            resource: Resource to scan
+
+        Returns:
+            Manifest containing entries for all files in the resource
+        """
 
     def _update_manifest_entry_and_state(
             self, resource: GenomicResource, entry: ManifestEntry,
@@ -924,31 +1164,69 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
 
 class GenomicResourceRepo(abc.ABC):
-    """Base class for genomic resources repositories."""
+    """Abstract base class for genomic resource repositories.
+
+    A repository manages a collection of genomic resources, providing
+    methods to discover, retrieve, and (for writable repos) create resources.
+
+    Repositories can be:
+        - Protocol-based: Direct access to a single storage backend
+        - Group: Aggregates multiple child repositories
+        - Cached: Wraps another repository with local caching
+
+    All repositories support resource lookup with optional version constraints:
+        repo.get_resource("hg19/genome")           # Latest version
+        repo.get_resource("hg19/genome", ">=2.0")  # Version 2.0 or higher
+        repo.get_resource("hg19/genome", "=2.1")   # Exact version 2.1
+
+    Attributes:
+        repo_id: Unique identifier for this repository
+        definition: Configuration dict used to create this repository
+    """
 
     def __init__(self, repo_id: str):
         self._repo_id: str = repo_id
         self._definition: dict[str, Any] | None = None
 
     def close(self) -> None:
+        """Release any resources held by this repository."""
         self._definition = None
 
     @property
     def definition(self) -> dict[str, Any] | None:
+        """Get a copy of the repository configuration definition.
+
+        Returns:
+            Deep copy of definition dict, or None if not set
+        """
         if self._definition:
             return copy.deepcopy(self._definition)
         return self._definition
 
     @definition.setter
     def definition(self, value: dict[str, Any]) -> None:
+        """Set the repository configuration definition.
+
+        Args:
+            value: Configuration dict to store (will be deep copied)
+        """
         self._definition = copy.deepcopy(value)
 
     @abc.abstractmethod
     def invalidate(self) -> None:
-        """Invalidate internal state of the repository."""
+        """Clear cached state and force reload on next access.
+
+        Implementations should clear any cached resource lists, metadata,
+        or file contents to ensure fresh data is loaded.
+        """
 
     @property
     def repo_id(self) -> str:
+        """Get the repository identifier.
+
+        Returns:
+            Repository ID string
+        """
         return self._repo_id
 
     @abc.abstractmethod
