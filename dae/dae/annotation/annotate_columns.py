@@ -721,26 +721,42 @@ def _annotate_columns_helper(
 ) -> None:
     """Annotate a columns file using a processing pipeline."""
     attributes_to_delete = attributes_to_delete or []
+
+    filters: list[Filter] = []
+    source: Source
+
     batch_size = cast(int, args.get("batch_size", 0))
     if batch_size <= 0:
-        processor = _build_sequential(
+        source = _CSVSource(
             input_path,
-            pipeline,
-            output_path,
-            args,
             reference_genome,
-            attributes_to_delete,
+            args["columns_args"],
+            args["input_separator"],
         )
+        new_header = _build_new_header(
+            source.header, pipeline.get_attributes(), attributes_to_delete)
+        filters.extend([
+            DeleteAttributesFromAWSFilter(attributes_to_delete),
+            AnnotationPipelineAnnotatablesFilter(pipeline),
+            _CSVWriter(output_path, args["output_separator"], new_header),
+        ])
     else:
-        processor = _build_batched(
+        source = _CSVBatchSource(
             input_path,
-            pipeline,
-            output_path,
-            args,
             reference_genome,
-            attributes_to_delete,
+            args["columns_args"],
+            args["input_separator"],
+            args["batch_size"],
         )
-    with processor:
+        new_header = _build_new_header(
+            source.header, pipeline.get_attributes(), attributes_to_delete)
+        filters.extend([
+            DeleteAttributesFromAWSBatchFilter(attributes_to_delete),
+            AnnotationPipelineAnnotatablesBatchFilter(pipeline),
+            _CSVBatchWriter(output_path, args["output_separator"], new_header),
+        ])
+
+    with PipelineProcessor(source, filters) as processor:
         processor.process_region(region)
 
 
