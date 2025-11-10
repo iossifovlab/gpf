@@ -4,6 +4,8 @@ import textwrap
 import numpy as np
 import pytest
 from dae.gene_scores.gene_scores import (
+    GeneScoresDb,
+    ScoreDesc,
     _build_gene_score_help,
     build_gene_score_from_resource,
     build_gene_score_from_resource_id,
@@ -334,3 +336,280 @@ def test_build_gene_score_help(scores_repo: GenomicResourceRepo) -> None:
     assert '<div class="score-description">' in help_text
     assert "Genomic resource:" in help_text
     assert "histogram" in help_text.lower()
+
+
+def test_gene_scores_db_initialization(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb initialization with gene scores."""
+    res1 = scores_repo.get_resource("LinearHist")
+    gene_score1 = build_gene_score_from_resource(res1)
+
+    res2 = scores_repo.get_resource("LogHist")
+    gene_score2 = build_gene_score_from_resource(res2)
+
+    db = GeneScoresDb([gene_score1, gene_score2])
+
+    assert db is not None
+    assert len(db.get_gene_score_ids()) == 2
+    assert "LinearHist" in db.get_gene_score_ids()
+    assert "LogHist" in db.get_gene_score_ids()
+
+
+def test_gene_scores_db_get_score_ids(scores_repo: GenomicResourceRepo) -> None:
+    """Test GeneScoresDb.get_score_ids method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    score_ids = db.get_score_ids()
+    assert len(score_ids) == 1
+    assert "linear score" in score_ids
+
+
+def test_gene_scores_db_get_gene_scores(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb.get_gene_scores method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    gene_scores = db.get_gene_scores()
+    assert len(gene_scores) == 1
+    assert gene_scores[0] == gene_score
+
+
+def test_gene_scores_db_get_scores(scores_repo: GenomicResourceRepo) -> None:
+    """Test GeneScoresDb.get_scores method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    scores = db.get_scores()
+    assert len(scores) == 1
+    assert isinstance(scores[0], ScoreDesc)
+    assert scores[0].score_id == "linear score"
+
+
+def test_gene_scores_db_get_gene_score(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb.get_gene_score method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    retrieved = db.get_gene_score("LinearHist")
+    assert retrieved is not None
+    assert retrieved == gene_score
+
+
+def test_gene_scores_db_get_gene_score_missing(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb.get_gene_score with missing score."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    retrieved = db.get_gene_score("NonExistent")
+    assert retrieved is None
+
+
+def test_gene_scores_db_get_score_desc(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb.get_score_desc method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    score_desc = db.get_score_desc("linear score")
+    assert score_desc is not None
+    assert isinstance(score_desc, ScoreDesc)
+    assert score_desc.score_id == "linear score"
+
+
+def test_gene_scores_db_get_score_desc_missing(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb.get_score_desc with missing score."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    score_desc = db.get_score_desc("nonexistent")
+    assert score_desc is None
+
+
+def test_gene_scores_db_getitem(scores_repo: GenomicResourceRepo) -> None:
+    """Test GeneScoresDb __getitem__ method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    score_desc = db["linear score"]
+    assert score_desc is not None
+    assert isinstance(score_desc, ScoreDesc)
+    assert score_desc.score_id == "linear score"
+
+
+def test_gene_scores_db_getitem_missing(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb __getitem__ with missing score raises error."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    with pytest.raises(ValueError, match=r"score .* not found"):
+        _ = db["nonexistent"]
+
+
+def test_gene_scores_db_contains(scores_repo: GenomicResourceRepo) -> None:
+    """Test GeneScoresDb __contains__ method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    assert "linear score" in db
+    assert "nonexistent" not in db
+
+
+def test_gene_scores_db_len(scores_repo: GenomicResourceRepo) -> None:
+    """Test GeneScoresDb __len__ method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    assert len(db) == 1
+
+
+def test_gene_scores_db_empty() -> None:
+    """Test GeneScoresDb with no gene scores."""
+    db = GeneScoresDb([])
+
+    assert len(db) == 0
+    assert len(db.get_score_ids()) == 0
+    assert len(db.get_gene_score_ids()) == 0
+    assert len(db.get_scores()) == 0
+    assert "anything" not in db
+
+
+def test_gene_scores_db_build_descs_from_score(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    """Test GeneScoresDb.build_descs_from_score method."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    score_descs = GeneScoresDb.build_descs_from_score(gene_score)
+
+    assert len(score_descs) == 1
+    assert isinstance(score_descs[0], ScoreDesc)
+    assert score_descs[0].score_id == "linear score"
+    assert score_descs[0].resource_id == "LinearHist"
+    assert score_descs[0].name == "linear score"
+    assert score_descs[0].description == "linear gene score"
+    assert isinstance(score_descs[0].hist, NumberHistogram)
+    assert score_descs[0].help is not None
+
+
+def test_gene_scores_db_multiple_scores_per_resource() -> None:
+    """Test GeneScoresDb with resource containing multiple scores."""
+    # Create a resource with multiple scores
+    multi_score_repo = build_inmemory_test_repository({
+        "MultiScore": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: multi.csv
+                scores:
+                - id: score1
+                  desc: first score
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                - id: score2
+                  desc: second score
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "multi.csv": textwrap.dedent("""
+                gene,score1,score2
+                G1,1,10
+                G2,2,20
+                G3,3,30
+            """),
+            "statistics": {
+                "histogram_score1.json": textwrap.dedent("""{
+                    "bars":[1,1,1],
+                    "bins":[1.0,1.665,2.333,3.0],
+                    "config":{
+                      "type": "number",
+                      "number_of_bins": 3,
+                      "view_range": {"max": 3.0, "min": 1.0},
+                      "x_log_scale": false,
+                      "y_log_scale": false
+                    }
+                }"""),
+                "histogram_score2.json": textwrap.dedent("""{
+                    "bars":[1,1,1],
+                    "bins":[10.0,16.65,23.33,30.0],
+                    "config":{
+                      "type": "number",
+                      "number_of_bins": 3,
+                      "view_range": {"max": 30.0, "min": 10.0},
+                      "x_log_scale": false,
+                      "y_log_scale": false
+                    }
+                }"""),
+            },
+        },
+    })
+
+    res = multi_score_repo.get_resource("MultiScore")
+    gene_score = build_gene_score_from_resource(res)
+
+    db = GeneScoresDb([gene_score])
+
+    assert len(db) == 2
+    assert "score1" in db
+    assert "score2" in db
+    assert len(db.get_gene_score_ids()) == 1
+    assert "MultiScore" in db.get_gene_score_ids()
+
+
+def test_score_desc_properties(scores_repo: GenomicResourceRepo) -> None:
+    """Test ScoreDesc dataclass properties."""
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    score_descs = GeneScoresDb.build_descs_from_score(gene_score)
+    score_desc = score_descs[0]
+
+    assert score_desc.resource_id == "LinearHist"
+    assert score_desc.score_id == "linear score"
+    assert score_desc.name == "linear score"
+    assert isinstance(score_desc.hist, NumberHistogram)
+    assert score_desc.description == "linear gene score"
+    assert score_desc.help is not None
+    assert len(score_desc.help) > 0
+    assert score_desc.small_values_desc is None
+    assert score_desc.large_values_desc is None
