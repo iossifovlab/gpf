@@ -10,7 +10,7 @@ from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any
+from typing import Any, cast
 
 from pysam import (
     TabixFile,
@@ -45,6 +45,7 @@ from dae.annotation.annotation_factory import (
     load_pipeline_from_file,
 )
 from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.processing_pipeline import (
@@ -397,37 +398,14 @@ def _annotate_vcf(
             full_reannotation=args["full_reannotation"])
         attributes_to_delete = pipeline.deleted_attributes
 
-    annotation_attributes = [
-        attr for attr in pipeline.get_attributes()
-        if not attr.internal
-    ]
-
-    source: Source
-    filters: list[Filter] = []
-
-    if args["batch_size"] <= 0:
-        source = _VCFSource(args["input"])
-        header = source.header.copy()
-        filters.extend([
-            AnnotationPipelineAnnotatablesFilter(pipeline),
-            _VCFWriter(output_path,
-                       header,
-                       annotation_attributes,
-                       attributes_to_delete),
-        ])
-    else:
-        source = _VCFBatchSource(args["input"], batch_size=args["batch_size"])
-        header = source.source.header.copy()
-        filters.extend([
-            AnnotationPipelineAnnotatablesBatchFilter(pipeline),
-            _VCFBatchWriter(output_path,
-                            header,
-                            annotation_attributes,
-                            attributes_to_delete),
-        ])
-
-    with PipelineProcessor(source, filters) as processor:
-        processor.process_region(region)
+    _annotate_vcf_helper(
+        args["input"],
+        pipeline,
+        output_path,
+        args,
+        region=region,
+        attributes_to_delete=attributes_to_delete,
+    )
 
 
 def _concat(
@@ -598,3 +576,70 @@ def cli(argv: list[str] | None = None) -> None:
 
     add_input_files_to_task_graph(args, task_graph)
     TaskGraphCli.process_graph(task_graph, **args)
+
+
+def _annotate_vcf_helper(
+    input_path: str,
+    pipeline: AnnotationPipeline,
+    output_path: str,
+    args: dict[str, Any], *,
+    region: Region | None = None,
+    attributes_to_delete: Sequence[str] | None = None,
+) -> None:
+    """Annotate a columns file using a processing pipeline."""
+    annotation_attributes = [
+        attr for attr in pipeline.get_attributes()
+        if not attr.internal
+    ]
+
+    attributes_to_delete = attributes_to_delete or []
+    batch_size = cast(int, args.get("batch_size", 0))
+
+    source: Source
+    filters: list[Filter] = []
+
+    if batch_size <= 0:
+        source = _VCFSource(input_path)
+        header = source.header.copy()
+        filters.extend([
+            AnnotationPipelineAnnotatablesFilter(pipeline),
+            _VCFWriter(output_path,
+                       header,
+                       annotation_attributes,
+                       attributes_to_delete),
+        ])
+    else:
+        source = _VCFBatchSource(
+            input_path, batch_size=batch_size)
+        header = source.source.header.copy()
+        filters.extend([
+            AnnotationPipelineAnnotatablesBatchFilter(pipeline),
+            _VCFBatchWriter(output_path,
+                            header,
+                            annotation_attributes,
+                            attributes_to_delete),
+        ])
+
+    with PipelineProcessor(source, filters) as processor:
+        processor.process_region(region)
+
+
+def annotate_vcf(
+    input_path: str,
+    pipeline: AnnotationPipeline,
+    output_path: str,
+    args: dict[str, Any], *,
+    region: Region | None = None,
+    attributes_to_delete: Sequence[str] | None = None,
+) -> None:
+    """Annotate a columns file using a processing pipeline."""
+    _annotate_vcf_helper(
+        input_path,
+        pipeline,
+        output_path,
+        args,
+        region=region,
+        attributes_to_delete=attributes_to_delete,
+    )
+    if is_compressed_filename(input_path):
+        _tabix_compress(output_path)

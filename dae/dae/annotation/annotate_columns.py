@@ -13,7 +13,7 @@ from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 from pysam import TabixFile, tabix_compress, tabix_index
 
@@ -351,14 +351,15 @@ def _build_new_header(
 
 
 def _build_sequential(
-    args: dict[str, Any],
-    output_path: str,
+    input_path: str,
     pipeline: AnnotationPipeline,
+    output_path: str,
+    args: dict[str, Any],
     reference_genome: ReferenceGenome | None,
     attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVSource(
-        args["input"],
+        input_path,
         reference_genome,
         args["columns_args"],
         args["input_separator"],
@@ -375,14 +376,15 @@ def _build_sequential(
 
 
 def _build_batched(
-    args: dict[str, Any],
-    output_path: str,
+    input_path: str,
     pipeline: AnnotationPipeline,
+    output_path: str,
+    args: dict[str, Any],
     reference_genome: ReferenceGenome | None,
     attributes_to_delete: Sequence[str],
 ) -> PipelineProcessor:
     source = _CSVBatchSource(
-        args["input"],
+        input_path,
         reference_genome,
         args["columns_args"],
         args["input_separator"],
@@ -435,20 +437,15 @@ def _annotate_csv(
             full_reannotation=args["full_reannotation"])
         attributes_to_delete = pipeline.deleted_attributes
 
-    build_processor = _build_sequential \
-        if args["batch_size"] <= 0 \
-        else _build_batched
-
-    processor = build_processor(
-        args,
-        output_path,
-        pipeline,
-        ref_genome,
-        attributes_to_delete,
+    _annotate_columns_helper(
+        input_path=args["input"],
+        pipeline=pipeline,
+        output_path=output_path,
+        args=args,
+        reference_genome=ref_genome,
+        region=region,
+        attributes_to_delete=attributes_to_delete,
     )
-
-    with processor:
-        processor.process_region(region)
 
 
 def _concat(
@@ -711,3 +708,76 @@ def cli(argv: list[str] | None = None) -> None:
         ref_genome.close()
 
     gc.collect()
+
+
+def _annotate_columns_helper(
+    input_path: str,
+    pipeline: AnnotationPipeline,
+    output_path: str,
+    args: dict[str, Any], *,
+    reference_genome: ReferenceGenome | None = None,
+    region: Region | None = None,
+    attributes_to_delete: Sequence[str] | None = None,
+) -> None:
+    """Annotate a columns file using a processing pipeline."""
+    attributes_to_delete = attributes_to_delete or []
+
+    filters: list[Filter] = []
+    source: Source
+
+    batch_size = cast(int, args.get("batch_size", 0))
+    if batch_size <= 0:
+        source = _CSVSource(
+            input_path,
+            reference_genome,
+            args["columns_args"],
+            args["input_separator"],
+        )
+        new_header = _build_new_header(
+            source.header, pipeline.get_attributes(), attributes_to_delete)
+        filters.extend([
+            DeleteAttributesFromAWSFilter(attributes_to_delete),
+            AnnotationPipelineAnnotatablesFilter(pipeline),
+            _CSVWriter(output_path, args["output_separator"], new_header),
+        ])
+    else:
+        source = _CSVBatchSource(
+            input_path,
+            reference_genome,
+            args["columns_args"],
+            args["input_separator"],
+            args["batch_size"],
+        )
+        new_header = _build_new_header(
+            source.header, pipeline.get_attributes(), attributes_to_delete)
+        filters.extend([
+            DeleteAttributesFromAWSBatchFilter(attributes_to_delete),
+            AnnotationPipelineAnnotatablesBatchFilter(pipeline),
+            _CSVBatchWriter(output_path, args["output_separator"], new_header),
+        ])
+
+    with PipelineProcessor(source, filters) as processor:
+        processor.process_region(region)
+
+
+def annotate_columns(
+    input_path: str,
+    pipeline: AnnotationPipeline,
+    output_path: str,
+    args: dict[str, Any], *,
+    reference_genome: ReferenceGenome | None = None,
+    region: Region | None = None,
+    attributes_to_delete: Sequence[str] | None = None,
+) -> None:
+    """Annotate a columns file using a processing pipeline."""
+    _annotate_columns_helper(
+        input_path,
+        pipeline,
+        output_path,
+        args,
+        reference_genome=reference_genome,
+        region=region,
+        attributes_to_delete=attributes_to_delete,
+    )
+    if is_compressed_filename(input_path):
+        _tabix_compress(output_path)
