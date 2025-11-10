@@ -40,16 +40,22 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
     """Defines caching GRR repository protocol."""
 
     def __init__(
-            self,
-            remote_protocol: ReadOnlyRepositoryProtocol,
-            local_protocol: FsspecReadWriteProtocol):
+        self,
+        remote_protocol: ReadOnlyRepositoryProtocol,
+        local_protocol: FsspecReadWriteProtocol,
+        public_url: str | None = None,
+    ):
         self.remote_protocol = remote_protocol
         self.local_protocol = local_protocol
         super().__init__(local_protocol.proto_id, local_protocol.get_url())
+        self.public_url = public_url or remote_protocol.get_public_url()
         self._all_resources: list[CacheResource] | None = None
 
     def get_url(self) -> str:
         return self.remote_protocol.get_url()
+
+    def get_public_url(self) -> str:
+        return self.public_url
 
     def invalidate(self) -> None:
         self.remote_protocol.invalidate()
