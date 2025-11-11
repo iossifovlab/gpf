@@ -33,10 +33,6 @@ pipeline {
         try {
           discoverGitReferenceBuild(latestBuildIfNotFound: true, maxCommits: 400, skipUnknownCommits: true)
 
-          resultBeforeTests = currentBuild.currentResult
-          junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml, test-results/dae-tests-junit.xml, test-results/wdae-tests-junit.xml'
-          sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
-
           recordCoverage sourceCodeEncoding: 'UTF-8', enabledForFailure: true, sourceCodeRetention: 'LAST_BUILD', tools: [
             [parser: 'COBERTURA', pattern: 'test-results/coverage.xml']
           ]
@@ -71,6 +67,10 @@ pipeline {
             reportFiles: 'bandit_wdae_report.html',
             reportName: 'bandit-wdae-report',
             reportTitles: 'bandit-wdae-report'])
+
+          resultBeforeTests = currentBuild.currentResult
+          junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml, test-results/dae-tests-junit.xml, test-results/wdae-tests-junit.xml'
+          sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
 
         } finally {
           zulipNotification(

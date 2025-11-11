@@ -11,12 +11,12 @@ channels:
 dependencies:
   - dask-kubernetes=2025.1.1
   - duckdb=1.4.1
-  - coverage=7.6
-  - pytest=8.3
-  - pytest-cov=6.0
-  - pytest-xdist=3.6
-  - pytest-mock=3.14
-  - pytest-django=4.11.1
+  - coverage
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - pytest-mock
+  - pytest-django
   - pytest-doctestplus=1.2
   - ruff==0.14.0
   - pylint=3.3.8
