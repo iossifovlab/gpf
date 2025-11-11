@@ -5,8 +5,8 @@ import versioneer
 
 setuptools.setup(
     name="gpf_impala_storage",
-    version=versioneer.get_version(),  # type: ignore
-    cmdclass=versioneer.get_cmdclass(),  # type: ignore
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF Apache Impala Genotype Storage",
@@ -15,7 +15,6 @@ setuptools.setup(
         where=".", exclude=[
             "impala_storage.docs", "tests.*", "*.tests.*", "*.tests"],
     ),
-    # include_package_data=True,
     package_data={
         "impala_storage": ["py.typed"],
     },
