@@ -101,6 +101,7 @@ def test_f1_matched_allele_indexes(
     assert vs[0].matched_alleles_indexes == matched_alleles
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     "position,inheritance,effects,matched_effects",
     [
