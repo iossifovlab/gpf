@@ -186,7 +186,7 @@ EOT
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    for d in dae wdae impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator; do
+    for d in dae wdae; do
       build_run_container bash -c \
         'cd /wd;
         /opt/conda/bin/conda run --no-capture-output -n gpf \
@@ -220,7 +220,7 @@ EOT
 
     # mypy
     build_run_detached bash -c '
-      cd /wd/;
+      cd /wd/dae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
           --exclude dae/docs/ \
           --exclude dae/docs/conf.py \
@@ -230,7 +230,7 @@ EOT
           > /wd/results/mypy_dae_report || true'
 
     build_run_detached bash -c '
-      cd /wd/;
+      cd /wd/wdae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
           --exclude wdae/docs/ \
           --exclude wdae/docs/conf.py \
