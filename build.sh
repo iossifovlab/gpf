@@ -188,10 +188,33 @@ EOT
 
     for d in dae wdae; do
       build_run_container bash -c \
-        'cd /wd;
+        'cd /wd/'"${d}"';
         /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e "'"${d}"'"'
+            python setup.py install'
     done
+
+
+    # mypy
+    build_run_detached bash -c '
+      cd /wd/dae;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
+          --exclude dae/docs/ \
+          --exclude dae/docs/conf.py \
+          --pretty \
+          --show-error-context \
+          --no-incremental \
+          > /wd/results/mypy_dae_report || true'
+
+    build_run_detached bash -c '
+      cd /wd/wdae;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
+          --exclude wdae/docs/ \
+          --exclude wdae/docs/conf.py \
+          --exclude wdae/conftest.py \
+          --pretty \
+          --show-error-context \
+          --no-incremental \
+          > /wd/results/mypy_wdae_report || true'
 
     # ruff
     build_run_detached bash -c '
@@ -217,29 +240,6 @@ EOT
       /opt/conda/bin/conda run --no-capture-output -n gpf
       pylint dae/dae  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_report || true'
-
-    # mypy
-    build_run_detached bash -c '
-      cd /wd/dae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
-          --exclude dae/docs/ \
-          --exclude dae/docs/conf.py \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_dae_report || true'
-
-    build_run_detached bash -c '
-      cd /wd/wdae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
-          --exclude wdae/docs/ \
-          --exclude wdae/docs/conf.py \
-          --exclude wdae/conftest.py \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_wdae_report || true'
-
     build_run_container wait
 
     build_run bash -c '
