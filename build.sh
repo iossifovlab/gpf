@@ -240,30 +240,6 @@ EOT
           --no-incremental \
           > /wd/results/mypy_wdae_report || true'
 
-    # build_run_detached bash -c '
-    #   cd /wd/impala_storage;
-    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
-    #       --pretty \
-    #       --show-error-context \
-    #       --no-incremental \
-    #       > /wd/results/mypy_impala_report || true'
-
-    # build_run_detached bash -c '
-    #   cd /wd/impala2_storage;
-    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala2_storage \
-    #       --pretty \
-    #       --show-error-context \
-    #       --no-incremental \
-    #       > /wd/results/mypy_impala2_report || true'
-
-    # build_run_detached bash -c '
-    #   cd /wd/gcp_storage;
-    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy gcp_storage \
-    #       --pretty \
-    #       --show-error-context \
-    #       --no-incremental \
-    #       > /wd/results/mypy_gcp_report || true'
-
     build_run_container wait
 
     build_run bash -c '
@@ -283,10 +259,6 @@ EOT
         ./results/ruff_report \
         ./results/pylint_report \
         ./test-results/
-
-        #   ./results/mypy_impala_report \
-        #   ./results/mypy_impala2_report \
-        #   ./results/mypy_gcp_report \
 
   }
 
