@@ -650,7 +650,7 @@ class WDAEStudy(WDAEAbstractStudy):
                 )
                 table_columns.append(new_col)
             else:
-                if config["genotype_browser"]["columns"]["genotype"] and \
+                if config["genotype_browser"]["columns"].get("genotype") and \
                         column in \
                         config["genotype_browser"]["columns"]["genotype"]:
                     table_columns.append(
@@ -660,7 +660,7 @@ class WDAEStudy(WDAEAbstractStudy):
                             ["genotype"][column],
                         ),
                     )
-                elif config["genotype_browser"]["columns"]["phenotype"] \
+                elif config["genotype_browser"]["columns"].get("phenotype") \
                     and column in \
                         config["genotype_browser"]["columns"]["phenotype"]:
                     table_columns.append(
