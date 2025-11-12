@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+* 2025.11.0
+    * Added chromosome mapping annotator to support removing and adding
+      chromosome's prefixes during annotation.
+    * Bumped version of DuckDb to 1.4.1.
+    * Handling of missing chromosomes in variant loaders.
+    * Improved error reporting in annotate_columns and annotate_vcf tools.
+    * Dependencies management in Dask executor stopped relying on Dask API.
+    * Support for compressed input in annotate_columns and annotate_vcf tools.
+    * Adjustments in serialization of family variants.
+    * Support for chromosome mapping in variant loaders.
+    * Support for chromosome mapping in import genotypes tool.
+    * Improved support for S3 genomic resources and genotype storages.
+    * Switched to using MinIO for testing of S3 genomic resources and
+      genotype storages.
+
 * 2025.10.7
     * Bumped version to enable Google Analytics in production.
 
