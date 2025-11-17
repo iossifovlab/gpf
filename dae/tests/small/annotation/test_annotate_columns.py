@@ -186,11 +186,6 @@ def test_build_record_to_annotatable_failures() -> None:
         build_record_to_annotatable({"gosho": "pesho"}, set())
 
 
-def get_file_content_as_string(file: str) -> str:
-    with open(file, "rt", encoding="utf8") as infile:
-        return "".join(infile.readlines())
-
-
 @pytest.mark.parametrize(
     "parameters,record,expected", [
         ({"col_chrom": "chromosome", "col_pos": "position"},
@@ -238,7 +233,7 @@ def test_annotate_columns_basic_setup(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -279,7 +274,7 @@ def test_annotate_columns_batch_mode(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
 
     assert out_file_content == out_expected_content
 
@@ -443,7 +438,7 @@ def test_annotate_columns_idempotence(
                 "--force",
             ]
         ])
-        out_file_content = get_file_content_as_string(str(out_file))
+        out_file_content = out_file.read_text()
         assert out_file_content == out_expected_content
 
 
@@ -636,7 +631,7 @@ def test_annotate_columns_repeated_attributes(
             "--allow-repeated-attributes",
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -671,7 +666,7 @@ def test_annotate_with_pipeline_from_grr(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -706,7 +701,7 @@ def test_annotate_columns_autodetect_columns_with_underscore(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -739,7 +734,7 @@ def test_annotate_columns_float_precision(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -774,7 +769,7 @@ def test_annotate_columns_internal_attributes(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1020,7 +1015,7 @@ def test_cli_renamed_columns(
             "--col-pos", "POSITION",
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1062,7 +1057,7 @@ def test_cli_annotatables_that_need_ref_genome(
             "-R", "test_genome",
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1278,7 +1273,7 @@ def test_annotate_columns_append_columns(
             "-j", 1,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1319,7 +1314,7 @@ def test_annotate_columns_adjust_output_separator(
             "--in-sep", sep,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1367,7 +1362,7 @@ def test_annotate_columns_output_separator(
             "--out-sep", osep,
         ]
     ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1503,7 +1498,7 @@ def test_cli_annotatables_that_need_ref_genome_but_do_not_have_it(
                 "-j", 1,
             ]
         ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1548,7 +1543,7 @@ def test_cli_annotatables_dae_that_need_ref_genome_but_do_not_have_it(
                 "-j", 1,
             ]
         ])
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1618,7 +1613,7 @@ def test_annotate_columns_function_basic(
         args,
     )
 
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1667,7 +1662,7 @@ def test_annotate_columns_function_with_batch_mode(
         args,
     )
 
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
     # Verify batch mode was used
@@ -1717,7 +1712,7 @@ def test_annotate_columns_function_with_vcf_alleles(
         args,
     )
 
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1768,7 +1763,7 @@ def test_annotate_columns_function_with_region(
         region=GenomicRegion("chr1", 1, 30),
     )
 
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1815,7 +1810,7 @@ def test_annotate_columns_function_with_attributes_to_delete(
         attributes_to_delete=["old_score"],
     )
 
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
     assert out_file_content == out_expected_content
 
 
@@ -1916,5 +1911,56 @@ def test_annotate_columns_function_with_reference_genome(
         reference_genome=ref_genome,
     )
 
-    out_file_content = get_file_content_as_string(str(out_file))
+    out_file_content = out_file.read_text()
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_columns_function_with_compressed_input_output(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_columns function with reference genome for CSHL format."""
+    in_content = textwrap.dedent("""
+        location  variant
+        chr1:23   sub(C->T)
+        chr1:24   sub(C->A)
+    """)
+    out_expected_content = (
+        "location\tvariant\tscore\n"
+        "chr1:23\tsub(C->T)\t0.1\n"
+        "chr1:24\tsub(C->A)\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.txt.gz"
+    out_file = tmp_path / "out.txt.gz"
+
+    grr_file = root_path / "grr.yaml"
+
+    setup_gzip(in_file, in_content)
+
+    # Build pipeline and get reference genome
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    ref_genome = build_reference_genome_from_resource_id(
+        "test_genome", grr,
+    )
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_columns function with reference genome
+    args = _build_annotate_columns_args()
+
+    annotate_columns(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+        reference_genome=ref_genome,
+    )
+
+    with gzip.open(str(out_file), "rt") as result:
+        out_file_content = result.read()
     assert out_file_content == out_expected_content

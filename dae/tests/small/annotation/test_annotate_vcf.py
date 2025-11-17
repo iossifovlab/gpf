@@ -1193,3 +1193,54 @@ def test_annotate_vcf_function_with_compressed_input(
     with pysam.VariantFile(str(tmp_path / "out.vcf.gz")) as vcf_file:
         result = [v.info["score"][0] for v in vcf_file.fetch()]
     assert result == ["0.1", "0.2"]
+
+
+def test_annotate_vcf_function_with_compressed_input_output(
+    annotate_directory_fixture: pathlib.Path,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test annotate_vcf function with compressed input file."""
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+
+    root_path = annotate_directory_fixture
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf.gz"
+
+    grr_file = root_path / "grr.yaml"
+
+    # Create compressed input file
+    setup_vcf(in_file, in_content)
+
+    # Build pipeline
+    grr = build_genomic_resource_repository(file_name=str(grr_file))
+    pipeline_config = [
+        {"position_score": "one"},
+    ]
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+    )
+
+    # Test annotate_vcf function with compressed input
+    args = _build_annotate_vcf_args()
+
+    annotate_vcf(
+        str(in_file),
+        pipeline,
+        str(out_file),
+        args,
+    )
+
+    # Verify output was compressed
+    assert (tmp_path / "out.vcf.gz").exists()
+
+    # Verify content
+    with pysam.VariantFile(str(tmp_path / "out.vcf.gz")) as vcf_file:
+        result = [v.info["score"][0] for v in vcf_file.fetch()]
+    assert result == ["0.1", "0.2"]
