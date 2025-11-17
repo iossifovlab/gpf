@@ -87,6 +87,41 @@ f"""##description: GTF format dump for gene models "{gene_models.resource.resour
 """)  # noqa
 
 
+def get_exon_number_for(
+    transcript: TranscriptModel,
+    start: int,
+    stop: int,
+) -> int:
+    """Get the exon number for a genomic region.
+
+    Returns the exon number (in transcript order) that overlaps the
+    given genomic coordinates.
+
+    Args:
+        start (int): Start position (1-based).
+        stop (int): End position (1-based).
+
+    Returns:
+        int: Exon number (1-based) in transcript orientation.
+            Returns 0 if no overlapping exon found.
+
+    Example:
+        >>> # For a region within the second exon of a + strand transcript
+        >>> exon_num = transcript.get_exon_number_for(1000, 1050)
+        >>> print(f"Region is in exon {exon_num}")
+
+    Note:
+        Exon numbering is strand-aware:
+        - Positive strand: numbered 5' to 3' (exon 1 is first)
+        - Negative strand: numbered 5' to 3' (exon 1 is last in genome)
+    """
+    for exon_number, exon in enumerate(transcript.exons):
+        if not (start > exon.stop or stop < exon.start):
+            return exon_number + 1 if transcript.strand == "+" \
+                    else len(transcript.exons) - exon_number
+    return 0
+
+
 def build_gtf_record(
     transcript: TranscriptModel,
     feature: str,
@@ -98,7 +133,7 @@ def build_gtf_record(
     phase = "."
     exon_number = -1
     if feature in ("exon", "CDS", "start_codon", "stop_codon"):
-        exon_number = transcript.get_exon_number_for(start, stop)
+        exon_number = get_exon_number_for(transcript, start, stop)
 
     if feature in ("CDS", "start_codon", "stop_codon"):
         frame = calc_frame_for_gtf_cds_feature(

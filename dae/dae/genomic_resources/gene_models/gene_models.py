@@ -32,7 +32,40 @@ logger = logging.getLogger(__name__)
 class GeneModels(
     ResourceConfigValidationMixin,
 ):
-    """Provides class for gene models."""
+    """Manage and query gene model data from genomic resources.
+
+    This class provides access to gene models loaded from various file formats
+    (GTF, refFlat, refSeq, CCDS, etc.) and offers efficient querying by gene
+    name or genomic location.
+
+    The class maintains three internal data structures:
+    - transcript_models: Dict mapping transcript IDs to TranscriptModel objects
+    - gene_models: Dict mapping gene names to lists of TranscriptModel objects
+    - _tx_index: IntervalTree index for fast location-based queries
+
+    Attributes:
+        resource (GenomicResource): The genomic resource containing gene models.
+        config (dict): Validated configuration from the resource.
+        reference_genome_id (str | None): ID of the reference genome.
+        gene_models (dict[str, list[TranscriptModel]]): Gene name to
+            transcript models mapping.
+        transcript_models (dict[str, TranscriptModel]): Transcript ID to
+            transcript model mapping.
+
+    Example:
+        >>> from dae.genomic_resources.gene_models.gene_models_factory import \\
+        ...     build_gene_models_from_file
+        >>> gene_models = build_gene_models_from_file("genes.gtf")
+        >>> gene_models.load()
+        >>> # Query by gene name
+        >>> tp53_transcripts = gene_models.gene_models_by_gene_name("TP53")
+        >>> # Query by location
+        >>> transcripts = gene_models.gene_models_by_location("chr17", 7676592)
+
+    Note:
+        The gene models must be loaded using the load() method before queries
+        can be performed. The class is thread-safe for concurrent access.
+    """
 
     def __init__(self, resource: GenomicResource):
         self._is_loaded = False
@@ -96,6 +129,16 @@ class GeneModels(
             self._add_to_utr_index(transcript)
 
     def gene_names(self) -> list[str]:
+        """Get list of all gene names in the loaded gene models.
+
+        Returns:
+            list[str]: List of gene names (symbols).
+
+        Example:
+            >>> gene_models.load()
+            >>> genes = gene_models.gene_names()
+            >>> print(f"Loaded {len(genes)} genes")
+        """
         if self.gene_models is None:
             logger.warning(
                 "gene models %s are empty", self.resource.resource_id)
@@ -106,23 +149,68 @@ class GeneModels(
     def gene_models_by_gene_name(
         self, name: str,
     ) -> list[TranscriptModel] | None:
+        """Retrieve all transcript models for a specific gene.
+
+        Args:
+            name (str): The gene name/symbol to search for.
+
+        Returns:
+            list[TranscriptModel] | None: List of transcript models for the
+                gene, or None if the gene is not found.
+
+        Example:
+            >>> transcripts = gene_models.gene_models_by_gene_name("BRCA1")
+            >>> if transcripts:
+            ...     print(f"BRCA1 has {len(transcripts)} transcript variants")
+        """
         return self.gene_models.get(name, None)
 
     def has_chromosome(self, chrom: str) -> bool:
+        """Check if a chromosome has any gene models.
+
+        Args:
+            chrom (str): The chromosome name to check.
+
+        Returns:
+            bool: True if the chromosome has gene models, False otherwise.
+
+        Example:
+            >>> if gene_models.has_chromosome("chr1"):
+            ...     print("Chromosome 1 has gene annotations")
+        """
         return chrom in self._tx_index
 
     def gene_models_by_location(
         self, chrom: str, pos_begin: int, pos_end: int | None = None,
     ) -> list[TranscriptModel]:
-        """Retrieve TranscriptModel objects based on a single genomic position.
+        """Retrieve transcripts overlapping a genomic position or region.
+
+        This method uses an interval tree index for efficient querying of
+        transcripts by genomic coordinates.
 
         Args:
-            chrom (str): The chromosome name.
-            pos (int): The genomic position.
+            chrom (str): The chromosome name (e.g., "chr1", "17").
+            pos_begin (int): The start position (1-based, inclusive).
+            pos_end (int | None): The end position (1-based, inclusive).
+                If None, queries a single position.
 
         Returns:
-            list[TranscriptModel]: A list of TranscriptModel objects that
-                contain the given position.
+            list[TranscriptModel]: List of TranscriptModel objects whose
+                transcript regions overlap the query position/region.
+                Returns empty list if no overlaps found.
+
+        Example:
+            >>> # Query single position
+            >>> models = gene_models.gene_models_by_location("chr17", 7676592)
+            >>> # Query region
+            >>> models = gene_models.gene_models_by_location(
+            ...     "chr17", 7661779, 7687550
+            ... )
+            >>> for tm in models:
+            ...     print(f"{tm.gene}: {tm.tr_id}")
+
+        Note:
+            Positions are swapped automatically if pos_end < pos_begin.
         """
         if chrom not in self._tx_index:
             return []
@@ -140,7 +228,27 @@ class GeneModels(
         self, relabel: dict[str, str] | None = None,
         map_file: str | None = None,
     ) -> None:
-        """Relabel chromosomes in gene model."""
+        """Relabel chromosome names in all transcript models.
+
+        This method is useful for converting between different chromosome
+        naming conventions (e.g., "chr1" <-> "1").
+
+        Args:
+            relabel (dict[str, str] | None): Mapping from old to new
+                chromosome names. Either this or map_file must be provided.
+            map_file (str | None): Path to file with chromosome mappings,
+                one mapping per line (old_name new_name).
+
+        Example:
+            >>> # Using dict
+            >>> gene_models.relabel_chromosomes({"1": "chr1", "2": "chr2"})
+            >>> # Using file
+            >>> gene_models.relabel_chromosomes(map_file="chrom_map.txt")
+
+        Note:
+            Transcripts on chromosomes not in the mapping are removed.
+            Internal indexes are rebuilt after relabeling.
+        """
         assert relabel or map_file
         if not relabel:
             assert map_file is not None
@@ -170,7 +278,24 @@ class GeneModels(
         }
 
     def load(self) -> GeneModels:
-        """Load gene models."""
+        """Load gene models from the genomic resource.
+
+        This method parses the gene model file and builds internal indexes
+        for efficient querying. It is thread-safe and will only load once.
+
+        Returns:
+            GeneModels: Self, for method chaining.
+
+        Example:
+            >>> gene_models = build_gene_models_from_file("genes.gtf")
+            >>> gene_models.load()
+            >>> num_transcripts = len(gene_models.transcript_models)
+            >>> print(f"Loaded {num_transcripts} transcripts")
+
+        Note:
+            Calling load() multiple times is safe - subsequent calls return
+            immediately if already loaded.
+        """
         with self.__lock:
             if self._is_loaded:
                 return self
@@ -181,13 +306,42 @@ class GeneModels(
             return self
 
     def is_loaded(self) -> bool:
-        """Check if gene models are loaded."""
+        """Check if gene models have been loaded.
+
+        Returns:
+            bool: True if load() has been called and completed, False otherwise.
+
+        Example:
+            >>> if not gene_models.is_loaded():
+            ...     gene_models.load()
+        """
         with self.__lock:
             return self._is_loaded
 
     @staticmethod
     def join_gene_models(*gene_models: GeneModels) -> GeneModels:
-        """Join muliple gene models into a single gene models object."""
+        """Merge multiple gene models into a single GeneModels object.
+
+        This combines transcript models from multiple sources into one
+        unified gene models object.
+
+        Args:
+            *gene_models (GeneModels): Two or more GeneModels objects to merge.
+
+        Returns:
+            GeneModels: New GeneModels object containing all transcripts.
+
+        Raises:
+            ValueError: If fewer than 2 gene models provided.
+
+        Example:
+            >>> gm1 = build_gene_models_from_file("genes1.gtf")
+            >>> gm2 = build_gene_models_from_file("genes2.gtf")
+            >>> merged = GeneModels.join_gene_models(gm1, gm2)
+
+        Note:
+            Transcript IDs should be unique across all input gene models.
+        """
         if len(gene_models) < 2:
             raise ValueError("The function needs at least 2 arguments!")
 

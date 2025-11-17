@@ -575,25 +575,6 @@ def test_test_frames_false(
     assert transcript_with_matching_frames.test_frames() is False
 
 
-def test_get_exon_number_for_out_of_bounds() -> None:
-    transcript = TranscriptModel(
-        gene="gene",
-        tr_id="transcript",
-        tr_name="transcript",
-        chrom="chr",
-        strand="+",
-        exons=[
-            Exon(start=0, stop=10),
-            Exon(start=20, stop=30),
-        ],
-        cds=(0, 30),
-        tx=(0, 30),
-    )
-
-    result = transcript.get_exon_number_for(start=100, stop=110)
-    assert result == 0
-
-
 def test_join_gene_models_invalid_count(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_models = build_gene_models_from_file(filename, "gtf")

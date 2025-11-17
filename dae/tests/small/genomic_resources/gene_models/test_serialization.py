@@ -7,6 +7,7 @@ from io import StringIO
 import pytest
 from dae.genomic_resources.gene_models.gene_models import GeneModels
 from dae.genomic_resources.gene_models.gene_models_factory import (
+    build_gene_models_from_file,
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.gene_models.serialization import (
@@ -17,6 +18,7 @@ from dae.genomic_resources.gene_models.serialization import (
     collect_gtf_start_codon_regions,
     collect_gtf_stop_codon_regions,
     gene_models_to_gtf,
+    get_exon_number_for,
     gtf_canonical_index,
     save_as_default_gene_models,
     transcript_to_gtf,
@@ -39,10 +41,11 @@ def simple_gene_models() -> GeneModels:
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
 TP53      tx1  1     +      10      100   12       95     3         10,50,70   15,60,100
 BRCA1     tx2  2     -      200     300   210      290    2         200,250    220,300
-"""
+"""  # noqa
     res = build_inmemory_test_resource(
         content={
-            "genomic_resource.yaml": "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genomic_resource.yaml":
+            "{type: gene_models, filename: genes.txt, format: refflat}",
             "genes.txt": convert_to_tab_separated(content),
         },
     )
@@ -57,10 +60,11 @@ def noncoding_gene_models() -> GeneModels:
     content = """
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
 NCRNA     tx1  1     +      10      100   100      100    2         10,50      40,100
-"""
+"""  # noqa
     res = build_inmemory_test_resource(
         content={
-            "genomic_resource.yaml": "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genomic_resource.yaml":
+            "{type: gene_models, filename: genes.txt, format: refflat}",
             "genes.txt": convert_to_tab_separated(content),
         },
     )
@@ -224,10 +228,11 @@ def test_gene_models_to_gtf_empty() -> None:
     """Test gene_models_to_gtf with empty gene models."""
     content = """
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
-"""
+"""  # noqa
     res = build_inmemory_test_resource(
         content={
-            "genomic_resource.yaml": "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genomic_resource.yaml":
+            "{type: gene_models, filename: genes.txt, format: refflat}",
             "genes.txt": convert_to_tab_separated(content),
         },
     )
@@ -519,9 +524,6 @@ def test_save_as_default_gene_models_roundtrip(
     tmp_path: pathlib.Path,
 ) -> None:
     """Test saving and loading gene models maintains data integrity."""
-    from dae.genomic_resources.gene_models.gene_models_factory import (
-        build_gene_models_from_file,
-    )
 
     output_file = tmp_path / "gene_models.txt"
 
@@ -653,10 +655,11 @@ def test_save_as_default_gene_models_attributes_escaping(
     content = """
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
 TEST      tx1  1     +      10      100   12       95     2         10,50      40,100
-"""
+"""  # noqa
     res = build_inmemory_test_resource(
         content={
-            "genomic_resource.yaml": "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genomic_resource.yaml":
+            "{type: gene_models, filename: genes.txt, format: refflat}",
             "genes.txt": convert_to_tab_separated(content),
         },
     )
@@ -697,10 +700,11 @@ def test_save_as_default_gene_models_empty_attributes() -> None:
     content = """
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
 TEST      tx1  1     +      10      100   12       95     1         10         100
-"""
+"""  # noqa
     res = build_inmemory_test_resource(
         content={
-            "genomic_resource.yaml": "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genomic_resource.yaml":
+            "{type: gene_models, filename: genes.txt, format: refflat}",
             "genes.txt": convert_to_tab_separated(content),
         },
     )
@@ -713,3 +717,22 @@ TEST      tx1  1     +      10      100   12       95     1         10         1
     content = output.getvalue()
     # Should handle empty attributes gracefully
     assert "\t\n" in content or content.endswith("\t")
+
+
+def test_get_exon_number_for_out_of_bounds() -> None:
+    transcript = TranscriptModel(
+        gene="gene",
+        tr_id="transcript",
+        tr_name="transcript",
+        chrom="chr",
+        strand="+",
+        exons=[
+            Exon(start=0, stop=10),
+            Exon(start=20, stop=30),
+        ],
+        cds=(0, 30),
+        tx=(0, 30),
+    )
+
+    result = get_exon_number_for(transcript, start=100, stop=110)
+    assert result == 0
