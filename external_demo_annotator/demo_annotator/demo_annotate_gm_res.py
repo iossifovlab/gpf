@@ -4,12 +4,12 @@ import sys
 from pathlib import Path
 
 from dae.annotation.annotatable import Annotatable
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models import (
     build_gene_models_from_file,
 )
 
 
-def annotate_genes_cli(raw_args: list[str] | None = None):
+def annotate_genes_cli(raw_args: list[str] | None = None) -> None:
     """Dummy tool which outputs genes for an annotatable."""
     if raw_args is None:
         raw_args = sys.argv[1:]

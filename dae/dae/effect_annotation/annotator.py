@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from dae.annotation.annotatable import Annotatable
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models import (
     GeneModels,
     TranscriptModel,
 )

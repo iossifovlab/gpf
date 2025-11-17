@@ -8,7 +8,7 @@ from dae.effect_annotation.annotator import (
     Variant,
 )
 from dae.effect_annotation.effect_checkers.coding import CodingEffectChecker
-from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
 
 from .mocks import TranscriptModelMock
 

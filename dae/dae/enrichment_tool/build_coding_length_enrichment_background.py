@@ -6,10 +6,8 @@ from typing import cast
 
 import pandas as pd
 
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models import (
     GeneModels,
-)
-from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo

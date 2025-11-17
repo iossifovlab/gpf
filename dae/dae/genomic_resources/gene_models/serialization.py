@@ -10,8 +10,10 @@ from deprecation import deprecated
 from dae.utils.regions import BedRegion, difference, total_length
 
 from .gene_models import (
-    Exon,
     GeneModels,
+)
+from .transcript_models import (
+    Exon,
     TranscriptModel,
 )
 

@@ -5,9 +5,7 @@ from pathlib import Path
 
 import pytest
 from dae.genomic_resources.gene_models.gene_models import (
-    Exon,
     GeneModels,
-    TranscriptModel,
 )
 from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
@@ -20,6 +18,10 @@ from dae.genomic_resources.gene_models.serialization import (
     collect_gtf_stop_codon_regions,
     find_exon_cds_region_for_gtf_cds_feature,
     gene_models_to_gtf,
+)
+from dae.genomic_resources.gene_models.transcript_models import (
+    Exon,
+    TranscriptModel,
 )
 from dae.genomic_resources.testing import (
     build_inmemory_test_resource,

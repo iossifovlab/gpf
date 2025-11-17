@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
-from dae.genomic_resources.gene_models.gene_models import GeneModels
+from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,

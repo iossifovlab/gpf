@@ -28,7 +28,7 @@ from dae.gene_sets.gene_sets_db import (
     GeneSetsDb,
     build_gene_set_collection_from_resource,
 )
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models import (
     GeneModels,
     TranscriptModel,
 )
