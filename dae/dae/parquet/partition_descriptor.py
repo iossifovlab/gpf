@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import configparser
 import hashlib
+import logging
 import pathlib
 import sys
 import textwrap
@@ -26,6 +27,8 @@ from dae.utils.regions import (
 from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import SummaryAllele
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, eq=True)
@@ -316,6 +319,10 @@ class PartitionDescriptor:
 
         result = defaultdict(list)
         for chrom in chromosomes:
+            if chrom not in chromosome_lengths:
+                logger.warning(
+                    f"Chromosome <{chrom}> not found in chromosome lengths.")
+                continue
             region_bins_count = self.region_bins_count(
                 chrom, chromosome_lengths)
 
