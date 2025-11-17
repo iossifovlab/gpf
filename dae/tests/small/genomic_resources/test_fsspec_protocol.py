@@ -2,7 +2,6 @@
 
 import gzip
 import io
-import time
 from typing import Any, cast
 
 import pytest
@@ -300,14 +299,22 @@ def test_delete_resource_file(
 
 @pytest.mark.grr_rw
 def test_copy_resource_file(
-        content_fixture: dict[str, Any],
-        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    content_fixture: dict[str, Any],
+    fsspec_proto: FsspecReadWriteProtocol,
+    mocker: MockerFixture,
+) -> None:
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
     proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
+
+    mocker.patch(
+        "dae.genomic_resources.fsspec_protocol.FsspecReadWriteProtocol."
+        "_get_filepath_timestamp",
+        return_value=1_000_000_000.00,
+    )
 
     # When
     state = proto.copy_resource_file(src_res, dst_res, "genes.gtf")
@@ -326,13 +333,21 @@ def test_copy_resource_file(
 
 @pytest.mark.grr_rw
 def test_copy_resource(
-        content_fixture: dict[str, Any],
-        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    content_fixture: dict[str, Any],
+    fsspec_proto: FsspecReadWriteProtocol,
+    mocker: MockerFixture,
+) -> None:
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
     proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
+
+    mocker.patch(
+        "dae.genomic_resources.fsspec_protocol.FsspecReadWriteProtocol."
+        "_get_filepath_timestamp",
+        return_value=1_000_000_000.00,
+    )
 
     # When
     proto.copy_resource(src_res)
@@ -346,7 +361,7 @@ def test_copy_resource(
     assert state is not None
     assert state.filename == "genes.gtf"
     assert state.timestamp == pytest.approx(timestamp, abs=5)
-    assert state.timestamp == pytest.approx(time.time(), abs=5)
+    assert state.timestamp == pytest.approx(1_000_000_000, abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
