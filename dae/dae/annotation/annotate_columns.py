@@ -6,6 +6,7 @@ import gzip
 import itertools
 import logging
 import os
+import pathlib
 import sys
 import traceback
 from collections.abc import Iterable, Sequence
@@ -488,8 +489,11 @@ def _read_header(filepath: str, separator: str = "\t") -> list[str]:
 
 
 def _tabix_compress(filepath: str) -> None:
+    """Produce a tabix-compressed version of the given variants file."""
+
     tabix_compress(filepath, f"{filepath}.gz", force=True)
-    os.remove(filepath)
+    if os.path.exists(filepath):
+        os.remove(filepath)
 
 
 def _tabix_index(filepath: str, args: dict | None = None) -> None:
@@ -770,14 +774,19 @@ def annotate_columns(
     attributes_to_delete: Sequence[str] | None = None,
 ) -> None:
     """Annotate a columns file using a processing pipeline."""
+    temp_output_path = output_path
+    if is_compressed_filename(output_path):
+        temp_output_path = str(pathlib.Path(output_path).with_suffix(""))
+
     _annotate_columns_helper(
         input_path,
         pipeline,
-        output_path,
+        temp_output_path,
         args,
         reference_genome=reference_genome,
         region=region,
         attributes_to_delete=attributes_to_delete,
     )
-    if is_compressed_filename(input_path):
-        _tabix_compress(output_path)
+    if is_compressed_filename(input_path) or \
+            is_compressed_filename(output_path):
+        _tabix_compress(temp_output_path)

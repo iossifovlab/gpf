@@ -4,6 +4,7 @@ import argparse
 import itertools
 import logging
 import os
+import pathlib
 import sys
 from collections.abc import Iterable, Sequence
 from contextlib import closing
@@ -633,13 +634,18 @@ def annotate_vcf(
     attributes_to_delete: Sequence[str] | None = None,
 ) -> None:
     """Annotate a columns file using a processing pipeline."""
+    temp_output_path = output_path
+    if is_compressed_filename(output_path):
+        temp_output_path = str(pathlib.Path(output_path).with_suffix(""))
+
     _annotate_vcf_helper(
         input_path,
         pipeline,
-        output_path,
+        temp_output_path,
         args,
         region=region,
         attributes_to_delete=attributes_to_delete,
     )
-    if is_compressed_filename(input_path):
-        _tabix_compress(output_path)
+    if is_compressed_filename(input_path) or \
+            is_compressed_filename(output_path):
+        _tabix_compress(temp_output_path)
