@@ -1,10 +1,10 @@
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
-import copy
 import logging
 from collections import defaultdict
 from collections.abc import Callable, Generator
+from threading import Lock
 from typing import IO, Any, cast
 
 import pandas as pd
@@ -451,9 +451,9 @@ class GeneModels(
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
         self._tx_index: dict[str, IntervalTree] = defaultdict(IntervalTree)
         self.transcript_models: dict[str, Any] = {}
-        self.alternative_names: dict[str, Any] = {}
 
         self.reset()
+        self.__lock = Lock()
 
     @property
     def resource_id(self) -> str:
@@ -465,7 +465,6 @@ class GeneModels(
     def reset(self) -> None:
         """Reset gene models."""
         self._is_loaded = False
-        self.alternative_names = {}
 
         self.transcript_models = {}
         self.gene_models = defaultdict(list)
@@ -474,7 +473,7 @@ class GeneModels(
     def _add_to_utr_index(self, tm: TranscriptModel) -> None:
         self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
 
-    def add_transcript_model(self, transcript_model: TranscriptModel) -> None:
+    def _add_transcript_model(self, transcript_model: TranscriptModel) -> None:
         """Add a transcript model to the gene models."""
         assert transcript_model.tr_id not in self.transcript_models
         self.transcript_models[transcript_model.tr_id] = transcript_model
@@ -575,17 +574,19 @@ class GeneModels(
 
     def load(self) -> GeneModels:
         """Load gene models."""
-        if self.is_loaded():
+        with self.__lock:
+            if self._is_loaded:
+                return self
+            self.reset()
+            self.transcript_models = load_transcript_models(self.resource)
+            self.update_indexes()
+            self._is_loaded = True
             return self
-        self.reset()
-        load_gene_models(self)
-        self.update_indexes()
-        self._is_loaded = True
-        return self
 
     def is_loaded(self) -> bool:
         """Check if gene models are loaded."""
-        return self._is_loaded
+        with self.__lock:
+            return self._is_loaded
 
 
 def join_gene_models(*gene_models: GeneModels) -> GeneModels:
@@ -657,17 +658,16 @@ def create_regions_from_genes(
 
 
 GeneModelsParser = Callable[
-    [GeneModels, IO, dict[str, str] | None, int | None],
-    bool,
+    [IO, dict[str, str] | None, int | None],
+    dict[str, TranscriptModel] | None,
 ]
 
 
 def parse_default_gene_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse default gene models file format."""
     # pylint: disable=too-many-locals
     infile.seek(0)
@@ -702,15 +702,16 @@ def parse_default_gene_models_format(
     assert set(expected_columns) <= set(df.columns)
 
     if not set(expected_columns) <= set(df.columns):
-        return False
+        return None
 
     if "trOrigId" not in df.columns:
         tr_names = pd.Series(data=df["trID"].values)
         df["trOrigId"] = tr_names
 
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
+    if gene_mapping is None:
+        gene_mapping = {}
 
+    transcript_models = {}
     records = df.to_dict(orient="records")
     for line in records:
         line = cast(dict, line)
@@ -731,7 +732,7 @@ def parse_default_gene_models_format(
                 a[0]: a[1] for a in astep
             }
         gene = line["gene"]
-        gene = gene_models.alternative_names.get(gene, gene)
+        gene = gene_mapping.get(gene, gene)
         transcript_model = TranscriptModel(
             gene=gene,
             tr_id=line["trID"],
@@ -743,20 +744,15 @@ def parse_default_gene_models_format(
             exons=exons,
             attributes=attributes,
         )
-        gene_models.add_transcript_model(transcript_model)
-
-    if nrows is not None:
-        return True
-
-    return True
+        transcript_models[transcript_model.tr_id] = transcript_model
+    return transcript_models
 
 
 def parse_ref_flat_gene_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse refFlat gene models file format."""
     # pylint: disable=too-many-locals
     expected_columns = [
@@ -776,17 +772,18 @@ def parse_ref_flat_gene_models_format(
     infile.seek(0)
     df = parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
-        return False
+        return None
 
     records = df.to_dict(orient="records")
 
     transcript_ids_counter: dict[str, int] = defaultdict(int)
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
+    if gene_mapping is None:
+        gene_mapping = {}
 
+    transcript_models = {}
     for rec in records:
         gene = rec["#geneName"]
-        gene = gene_models.alternative_names.get(gene, gene)
+        gene = gene_mapping.get(gene, gene)
         tr_name = rec["name"]
         chrom = rec["chrom"]
         strand = rec["strand"]
@@ -819,17 +816,17 @@ def parse_ref_flat_gene_models_format(
             exons=exons,
         )
         transcript_model.update_frames()
-        gene_models.add_transcript_model(transcript_model)
+        assert transcript_model.tr_id not in transcript_models
+        transcript_models[transcript_model.tr_id] = transcript_model
 
-    return True
+    return transcript_models
 
 
 def parse_ref_seq_gene_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse refSeq gene models file format."""
     # pylint: disable=too-many-locals
     expected_columns = [
@@ -854,17 +851,17 @@ def parse_ref_seq_gene_models_format(
     infile.seek(0)
     df = parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
-        return False
+        return None
 
     records = df.to_dict(orient="records")
 
     transcript_ids_counter: dict[str, int] = defaultdict(int)
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
-
+    if gene_mapping is None:
+        gene_mapping = {}
+    transcript_models = {}
     for rec in records:
         gene = rec["name2"]
-        gene = gene_models.alternative_names.get(gene, gene)
+        gene = gene_mapping.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -910,9 +907,10 @@ def parse_ref_seq_gene_models_format(
             attributes=attributes,
         )
         transcript_model.update_frames()
-        gene_models.add_transcript_model(transcript_model)
+        assert transcript_model.tr_id not in transcript_models
+        transcript_models[transcript_model.tr_id] = transcript_model
 
-    return True
+    return transcript_models
 
 
 def probe_header(
@@ -968,11 +966,10 @@ def parse_raw(
 
 
 def parse_ccds_gene_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse CCDS gene models file format."""
     # pylint: disable=too-many-locals
     expected_columns = [
@@ -998,17 +995,18 @@ def parse_ccds_gene_models_format(
     infile.seek(0)
     df = parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
-        return False
+        return None
 
     records = df.to_dict(orient="records")
 
     transcript_ids_counter: dict[str, int] = defaultdict(int)
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
+    if gene_mapping is None:
+        gene_mapping = {}
 
+    transcript_models = {}
     for rec in records:
         gene = rec["name"]
-        gene = gene_models.alternative_names.get(gene, gene)
+        gene = gene_mapping.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -1054,17 +1052,17 @@ def parse_ccds_gene_models_format(
             attributes=attributes,
         )
         transcript_model.update_frames()
-        gene_models.add_transcript_model(transcript_model)
+        assert transcript_model.tr_id not in transcript_models
+        transcript_models[transcript_model.tr_id] = transcript_model
 
-    return True
+    return transcript_models
 
 
 def parse_known_gene_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse known gene models file format."""
     # pylint: disable=too-many-locals
     expected_columns = [
@@ -1085,18 +1083,18 @@ def parse_known_gene_models_format(
     infile.seek(0)
     df = parse_raw(infile, expected_columns, nrows=nrows)
     if df is None:
-        return False
+        return None
 
     records = df.to_dict(orient="records")
 
     transcript_ids_counter: dict[str, int] = defaultdict(int)
 
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
-
+    if gene_mapping is None:
+        gene_mapping = {}
+    transcript_models = {}
     for rec in records:
         gene = rec["name"]
-        gene = gene_models.alternative_names.get(gene, gene)
+        gene = gene_mapping.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -1132,17 +1130,17 @@ def parse_known_gene_models_format(
             attributes=attributes,
         )
         transcript_model.update_frames()
-        gene_models.add_transcript_model(transcript_model)
+        assert transcript_model.tr_id not in transcript_models
+        transcript_models[transcript_model.tr_id] = transcript_model
 
-    return True
+    return transcript_models
 
 
 def parse_ucscgenepred_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse UCSC gene prediction models file fomrat.
 
     table genePred
@@ -1209,19 +1207,19 @@ def parse_ucscgenepred_models_format(
         infile.seek(0)
         df = parse_raw(infile, expected_columns, nrows=nrows)
         if df is None:
-            return False
+            return None
 
     records = df.to_dict(orient="records")
 
     transcript_ids_counter: dict[str, int] = defaultdict(int)
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
-
+    if gene_mapping is None:
+        gene_mapping = {}
+    transcript_models = {}
     for rec in records:
         gene = rec.get("name2")
         if not gene:
             gene = rec["name"]
-        gene = gene_models.alternative_names.get(gene, gene)
+        gene = gene_mapping.get(gene, gene)
 
         tr_name = rec["name"]
         chrom = rec["chrom"]
@@ -1260,9 +1258,10 @@ def parse_ucscgenepred_models_format(
             attributes=attributes,
         )
         transcript_model.update_frames()
-        gene_models.add_transcript_model(transcript_model)
+        assert transcript_model.tr_id not in transcript_models
+        transcript_models[transcript_model.tr_id] = transcript_model
 
-    return True
+    return transcript_models
 
 
 def _parse_gtf_attributes(data: str) -> dict[str, str]:
@@ -1277,13 +1276,11 @@ def _parse_gtf_attributes(data: str) -> dict[str, str]:
 
 
 def parse_gtf_gene_models_format(
-    gene_models: GeneModels,
     infile: IO,
     gene_mapping: dict[str, str] | None = None,
     nrows: int | None = None,
-) -> bool:
+) -> dict[str, TranscriptModel] | None:
     """Parse GTF gene models file format."""
-    assert not gene_models.transcript_models
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     expected_columns = [
         "seqname",
@@ -1307,13 +1304,13 @@ def parse_gtf_gene_models_format(
         df = parse_raw(
             infile, expected_columns, nrows=nrows, comment="#")
         if df is None:
-            return False
+            return None
 
-    if gene_mapping:
-        gene_models.alternative_names = copy.deepcopy(gene_mapping)
+    if gene_mapping is None:
+        gene_mapping = {}
+    transcript_models = {}
 
-    records = df.to_dict(orient="records")
-    for rec in records:
+    for rec in df.to_dict(orient="records"):
         feature = rec["feature"]
         if feature == "gene":
             continue
@@ -1321,14 +1318,14 @@ def parse_gtf_gene_models_format(
         tr_id = attributes["transcript_id"]
         if feature in {"transcript", "Selenocysteine"}:
             if feature == "Selenocysteine" and \
-                    tr_id in gene_models.transcript_models:
+                    tr_id in transcript_models:
                 continue
-            if tr_id in gene_models.transcript_models:
+            if tr_id in transcript_models:
                 raise ValueError(
                     f"{tr_id} of {feature} already in transcript models",
                 )
             gene = attributes["gene_name"]
-            gene = gene_models.alternative_names.get(gene, gene)
+            gene = gene_mapping.get(gene, gene)
 
             transcript_model = TranscriptModel(
                 gene=gene,
@@ -1340,15 +1337,16 @@ def parse_gtf_gene_models_format(
                 cds=(rec["end"], rec["start"]),
                 attributes=attributes,
             )
-            gene_models.add_transcript_model(transcript_model)
+            assert transcript_model.tr_id not in transcript_models
+            transcript_models[transcript_model.tr_id] = transcript_model
             continue
         if feature == "exon":
-            if tr_id not in gene_models.transcript_models:
+            if tr_id not in transcript_models:
                 raise ValueError(
                     f"exon or CDS transcript {tr_id} not found "
                     f"in transcript models",
                 )
-            transcript_model = gene_models.transcript_models[tr_id]
+            transcript_model = transcript_models[tr_id]
             if feature == "exon":
                 exon = Exon(
                     rec["start"], rec["end"], frame=-1,
@@ -1358,7 +1356,7 @@ def parse_gtf_gene_models_format(
         if feature in {"UTR", "5UTR", "3UTR", "CDS"}:
             continue
         if feature in {"start_codon", "stop_codon"}:
-            transcript_model = gene_models.transcript_models[tr_id]
+            transcript_model = transcript_models[tr_id]
             cds = transcript_model.cds
             transcript_model.cds = \
                 (min(cds[0], rec["start"]), max(cds[1], rec["end"]))
@@ -1367,32 +1365,46 @@ def parse_gtf_gene_models_format(
         raise ValueError(
             f"unknown feature {feature} found in gtf gene models")
 
-    for transcript_model in gene_models.transcript_models.values():
+    for transcript_model in transcript_models.values():
         transcript_model.exons = sorted(
             transcript_model.exons, key=lambda x: x.start)
         transcript_model.update_frames()
 
-    return True
+    return transcript_models
 
 
-def load_gene_mapping(infile: IO) -> dict[str, str]:
+def load_gene_mapping(resource: GenomicResource) -> dict[str, str]:
     """Load alternative names for genes.
 
     Assume that its first line has two column names
     """
-    df = pd.read_csv(infile, sep="\t")
-    assert len(df.columns) == 2
+    gene_mapping_filename = resource.get_config().get(
+        "gene_mapping", None)
+    if gene_mapping_filename is None:
+        return {}
+    compression = False
+    if gene_mapping_filename.endswith(".gz"):
+        compression = True
+    with resource.open_raw_file(
+            gene_mapping_filename, "rt",
+            compression=compression) as infile:
 
-    df = df.rename(columns={df.columns[0]: "tr_id", df.columns[1]: "gene"})
+        logger.debug(
+            "loading gene mapping from %s", gene_mapping_filename)
 
-    records = df.to_dict(orient="records")
+        df = pd.read_csv(infile, sep="\t")
+        assert len(df.columns) == 2
 
-    alt_names = {}
-    for rec in records:
-        rec = cast(dict, rec)
-        alt_names[rec["tr_id"]] = rec["gene"]
+        df = df.rename(columns={df.columns[0]: "tr_id", df.columns[1]: "gene"})
 
-    return alt_names
+        records = df.to_dict(orient="records")
+
+        alt_names = {}
+        for rec in records:
+            rec = cast(dict, rec)
+            alt_names[rec["tr_id"]] = rec["gene"]
+
+        return alt_names
 
 
 SUPPORTED_GENE_MODELS_FILE_FORMATS: set[str] = {
@@ -1429,7 +1441,6 @@ def get_parser(
 
 
 def infer_gene_model_parser(
-    gene_models: GeneModels,
     infile: IO,
     file_format: str | None = None,
 ) -> str | None:
@@ -1442,14 +1453,13 @@ def infer_gene_model_parser(
     logger.info("going to infer gene models file format...")
     inferred_formats = []
     for inferred_format in SUPPORTED_GENE_MODELS_FILE_FORMATS:
-        gene_models.reset()
         parser = get_parser(inferred_format)
         if parser is None:
             continue
         try:
             logger.debug("trying file format: %s...", inferred_format)
             infile.seek(0)
-            res = parser(gene_models, infile, None, 50)
+            res = parser(infile, None, 50)
             if res:
                 inferred_formats.append(inferred_format)
                 logger.debug(
@@ -1459,7 +1469,6 @@ def infer_gene_model_parser(
                 "file format %s does not match; %s",
                 inferred_format, ex, exc_info=True)
 
-    gene_models.reset()
     logger.info("inferred file formats: %s", inferred_formats)
     if len(inferred_formats) == 1:
         return inferred_formats[0]
@@ -1470,25 +1479,16 @@ def infer_gene_model_parser(
     return None
 
 
-def load_gene_models(gene_models: GeneModels) -> GeneModels:
+def load_transcript_models(
+    resource: GenomicResource,
+) -> dict[str, TranscriptModel]:
     """Load gene models."""
-    resource = gene_models.resource
+    assert resource.get_type() == "gene_models"
 
     filename = resource.get_config()["filename"]
     fileformat = resource.get_config().get("format", None)
-    gene_mapping_filename = resource.get_config().get(
-        "gene_mapping", None)
-    gene_mapping = None
-    if gene_mapping_filename is not None:
-        compression = False
-        if gene_mapping_filename.endswith(".gz"):
-            compression = True
-        with resource.open_raw_file(
-                gene_mapping_filename, "rt",
-                compression=compression) as gene_mapping_file:
-            logger.debug(
-                "loading gene mapping from %s", gene_mapping_filename)
-            gene_mapping = load_gene_mapping(gene_mapping_file)
+
+    gene_mapping = load_gene_mapping(resource)
 
     logger.debug("loading gene models %s (%s)", filename, fileformat)
     compression = False
@@ -1499,7 +1499,7 @@ def load_gene_models(gene_models: GeneModels) -> GeneModels:
             filename, mode="rt", compression=compression) as infile:
 
         if fileformat is None:
-            fileformat = infer_gene_model_parser(gene_models, infile)
+            fileformat = infer_gene_model_parser(infile)
             logger.info("infering gene models file format: %s", fileformat)
             if fileformat is None:
                 logger.error(
@@ -1516,9 +1516,10 @@ def load_gene_models(gene_models: GeneModels) -> GeneModels:
             raise ValueError
 
         infile.seek(0)
-
-        if not parser(gene_models, infile, gene_mapping, None):
+        transcript_models = parser(
+            infile, gene_mapping, None)
+        if transcript_models is None:
             raise ValueError(
                 f"Failed to parse gene models file {filename} "
                 f"with format {fileformat}")
-    return gene_models
+    return transcript_models

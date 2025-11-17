@@ -249,11 +249,8 @@ def test_infer_gene_models(
 ) -> None:
 
     filename = fixture_dirname(filename)
-    gene_models = build_gene_models_from_file(
-        filename, file_format=file_format)
     with open(filename, encoding="utf8") as infile:
         inferred_file_format = infer_gene_model_parser(
-            gene_models,
             infile,
             file_format=file_format)
 
@@ -273,10 +270,8 @@ def test_infer_gene_models_no_header(
 ) -> None:
 
     filename = fixture_dirname(filename)
-    gene_models = build_gene_models_from_file(
-        filename, file_format=file_format)
     with gzip.open(filename, "rt") as infile:
-        inferred_file_format = infer_gene_model_parser(gene_models, infile)
+        inferred_file_format = infer_gene_model_parser(infile)
         assert inferred_file_format is not None
         assert inferred_file_format == file_format
 
