@@ -54,7 +54,7 @@ class GeneModels(
         self._tx_index: dict[str, IntervalTree] = defaultdict(IntervalTree)
         self.transcript_models: dict[str, Any] = {}
 
-        self.reset()
+        self._reset()
         self.__lock = Lock()
 
     @property
@@ -64,7 +64,7 @@ class GeneModels(
     def close(self) -> None:
         pass
 
-    def reset(self) -> None:
+    def _reset(self) -> None:
         """Reset gene models."""
         self._is_loaded = False
 
@@ -74,11 +74,6 @@ class GeneModels(
 
     def _add_to_utr_index(self, tm: TranscriptModel) -> None:
         self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
-
-    def _add_transcript_model(self, transcript_model: TranscriptModel) -> None:
-        """Add a transcript model to the gene models."""
-        assert transcript_model.tr_id not in self.transcript_models
-        self.transcript_models[transcript_model.tr_id] = transcript_model
 
     def chrom_gene_models(self) -> Generator[
             tuple[tuple[str, str], list[TranscriptModel]], None, None]:
@@ -92,7 +87,7 @@ class GeneModels(
                 gene_models[tm.chrom, tm.gene].append(tm)
             yield from gene_models.items()
 
-    def update_indexes(self) -> None:
+    def _update_indexes(self) -> None:
         """Update internal indexes."""
         self.gene_models = defaultdict(list)
         self._tx_index = defaultdict(IntervalTree)
@@ -163,7 +158,7 @@ class GeneModels(
         for transcript_model in self.transcript_models.values():
             transcript_model.chrom = relabel[transcript_model.chrom]
 
-        self.update_indexes()
+        self._update_indexes()
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -179,9 +174,9 @@ class GeneModels(
         with self.__lock:
             if self._is_loaded:
                 return self
-            self.reset()
+            self._reset()
             self.transcript_models = load_transcript_models(self.resource)
-            self.update_indexes()
+            self._update_indexes()
             self._is_loaded = True
             return self
 
@@ -190,23 +185,23 @@ class GeneModels(
         with self.__lock:
             return self._is_loaded
 
+    @staticmethod
+    def join_gene_models(*gene_models: GeneModels) -> GeneModels:
+        """Join muliple gene models into a single gene models object."""
+        if len(gene_models) < 2:
+            raise ValueError("The function needs at least 2 arguments!")
 
-def join_gene_models(*gene_models: GeneModels) -> GeneModels:
-    """Join muliple gene models into a single gene models object."""
-    if len(gene_models) < 2:
-        raise ValueError("The function needs at least 2 arguments!")
+        gm = GeneModels(gene_models[0].resource)
+        gm._reset()
 
-    gm = GeneModels(gene_models[0].resource)
-    gm.reset()
+        gm.transcript_models = gene_models[0].transcript_models.copy()
 
-    gm.transcript_models = gene_models[0].transcript_models.copy()
+        for i in gene_models[1:]:
+            gm.transcript_models.update(i.transcript_models)
 
-    for i in gene_models[1:]:
-        gm.transcript_models.update(i.transcript_models)
+        gm._update_indexes()
 
-    gm.update_indexes()
-
-    return gm
+        return gm
 
 
 def create_regions_from_genes(

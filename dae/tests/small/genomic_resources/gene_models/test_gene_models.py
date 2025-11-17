@@ -11,7 +11,6 @@ import pytest_mock
 from dae.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
-    join_gene_models,
 )
 from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
@@ -601,7 +600,7 @@ def test_join_gene_models_invalid_count(fixture_dirname: Callable) -> None:
     gene_models.load()
 
     with pytest.raises(ValueError, match="at least 2 arguments"):
-        join_gene_models(gene_models)
+        GeneModels.join_gene_models(gene_models)
 
 
 def test_join_gene_models(
@@ -618,7 +617,7 @@ def test_join_gene_models(
     assert t4c8_gene_models.gene_names() == ["t4", "c8"]
     assert len(t4c8_gene_models.transcript_models) == 2
 
-    combined = join_gene_models(example_gencode, t4c8_gene_models)
+    combined = GeneModels.join_gene_models(example_gencode, t4c8_gene_models)
     assert combined.gene_names() == ["C2CD4C", "t4", "c8"]
     assert len(combined.transcript_models) == 3
 
