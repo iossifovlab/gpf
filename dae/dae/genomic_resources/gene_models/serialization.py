@@ -5,8 +5,6 @@ from datetime import datetime
 from io import StringIO
 from typing import IO
 
-from deprecation import deprecated
-
 from dae.utils.regions import BedRegion, difference, total_length
 
 from .gene_models import (
@@ -116,63 +114,6 @@ def build_gtf_record(
     index = \
         (transcript.chrom, start, -stop, GTF_FEATURE_ORDER[feature])
     return (index, line)
-
-
-@deprecated("This function was split into multiple specialized functions.")
-def collect_cds_regions(
-    transcript: TranscriptModel,
-) -> tuple[list[BedRegion], list[BedRegion], list[BedRegion]]:
-    """
-    Returns a tuple of start codon regions, normal coding regions
-    and stop codon regions for a given transcript.
-    """
-    if not transcript.is_coding():
-        return ([], [], [])
-    reverse = transcript.strand == "-"
-    start_codons: list[BedRegion] = []
-    cds_regions: list[BedRegion] = transcript.cds_regions()
-    stop_codons: list[BedRegion] = []
-
-    start_bases_remaining, stop_bases_remaining = 3, 3
-
-    while start_bases_remaining > 0:
-        cds = cds_regions.pop(0 if not reverse else -1)
-        cds_len = cds.stop - cds.start + 1
-        bases_to_write = min(start_bases_remaining, cds_len)
-
-        codon_start = cds.start if not reverse \
-            else cds.stop - (bases_to_write - 1)
-        codon_stop = codon_start + (bases_to_write - 1) if not reverse \
-            else cds.stop
-        start_codons.append(BedRegion(cds.chrom, codon_start, codon_stop))
-
-        if cds_len - bases_to_write > 0:
-            cds_regions.insert(0 if not reverse else -1, cds)
-
-        start_bases_remaining -= bases_to_write
-
-    while stop_bases_remaining > 0:
-        cds = cds_regions.pop(-1 if not reverse else 0)
-        cds_len = cds.stop - cds.start + 1
-        bases_to_write = min(stop_bases_remaining, cds_len)
-
-        codon_start = cds.stop - (bases_to_write - 1) if not reverse \
-            else cds.start
-        codon_stop = cds.stop if not reverse \
-            else codon_start + (bases_to_write - 1)
-        stop_codons.append(BedRegion(cds.chrom, codon_start, codon_stop))
-
-        if cds_len - bases_to_write > 0:
-            remainder = BedRegion(
-                cds.chrom,
-                cds.start if not reverse else codon_stop + 1,
-                codon_start - 1 if not reverse else cds.stop,
-            )
-            cds_regions.insert(-1 if not reverse else 0, remainder)
-
-        stop_bases_remaining -= bases_to_write
-
-    return start_codons, cds_regions, stop_codons
 
 
 def collect_gtf_start_codon_regions(
