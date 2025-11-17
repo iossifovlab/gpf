@@ -53,7 +53,7 @@ def merge_parquets(
 
     try:
         with duckdb.connect() as con:
-            con.execute("SET memory_limit = '768MB';")
+            con.execute("SET memory_limit = '4G';")
             con.execute("SET threads = 1;")
             con.execute(f"SET temp_directory = '{out_file}.tmp';")
             con.from_parquet(in_files).to_parquet(
