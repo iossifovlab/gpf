@@ -9,7 +9,7 @@ import yaml
 from dae.duckdb_storage.duckdb_connection_factory import (
     DuckDbConnectionFactory,
 )
-from dae.genomic_resources.gene_models.gene_models import GeneModels
+from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants

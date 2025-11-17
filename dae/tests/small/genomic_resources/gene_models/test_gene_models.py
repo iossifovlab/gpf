@@ -9,19 +9,22 @@ from collections.abc import Callable
 import pytest
 import pytest_mock
 from dae.genomic_resources.gene_models.gene_models import (
-    Exon,
     GeneModels,
-    TranscriptModel,
     create_regions_from_genes,
-    infer_gene_model_parser,
-    join_gene_models,
 )
 from dae.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
     build_gene_models_from_resource,
 )
+from dae.genomic_resources.gene_models.parsers import (
+    infer_gene_model_parser,
+)
 from dae.genomic_resources.gene_models.serialization import (
     save_as_default_gene_models,
+)
+from dae.genomic_resources.gene_models.transcript_models import (
+    Exon,
+    TranscriptModel,
 )
 from dae.genomic_resources.testing import (
     build_inmemory_test_resource,
@@ -249,11 +252,8 @@ def test_infer_gene_models(
 ) -> None:
 
     filename = fixture_dirname(filename)
-    gene_models = build_gene_models_from_file(
-        filename, file_format=file_format)
     with open(filename, encoding="utf8") as infile:
         inferred_file_format = infer_gene_model_parser(
-            gene_models,
             infile,
             file_format=file_format)
 
@@ -273,10 +273,8 @@ def test_infer_gene_models_no_header(
 ) -> None:
 
     filename = fixture_dirname(filename)
-    gene_models = build_gene_models_from_file(
-        filename, file_format=file_format)
     with gzip.open(filename, "rt") as infile:
-        inferred_file_format = infer_gene_model_parser(gene_models, infile)
+        inferred_file_format = infer_gene_model_parser(infile)
         assert inferred_file_format is not None
         assert inferred_file_format == file_format
 
@@ -577,32 +575,13 @@ def test_test_frames_false(
     assert transcript_with_matching_frames.test_frames() is False
 
 
-def test_get_exon_number_for_out_of_bounds() -> None:
-    transcript = TranscriptModel(
-        gene="gene",
-        tr_id="transcript",
-        tr_name="transcript",
-        chrom="chr",
-        strand="+",
-        exons=[
-            Exon(start=0, stop=10),
-            Exon(start=20, stop=30),
-        ],
-        cds=(0, 30),
-        tx=(0, 30),
-    )
-
-    result = transcript.get_exon_number_for(start=100, stop=110)
-    assert result == 0
-
-
 def test_join_gene_models_invalid_count(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("gene_models/example_gencode.txt")
     gene_models = build_gene_models_from_file(filename, "gtf")
     gene_models.load()
 
     with pytest.raises(ValueError, match="at least 2 arguments"):
-        join_gene_models(gene_models)
+        GeneModels.join_gene_models(gene_models)
 
 
 def test_join_gene_models(
@@ -619,7 +598,7 @@ def test_join_gene_models(
     assert t4c8_gene_models.gene_names() == ["t4", "c8"]
     assert len(t4c8_gene_models.transcript_models) == 2
 
-    combined = join_gene_models(example_gencode, t4c8_gene_models)
+    combined = GeneModels.join_gene_models(example_gencode, t4c8_gene_models)
     assert combined.gene_names() == ["C2CD4C", "t4", "c8"]
     assert len(combined.transcript_models) == 3
 

@@ -1,7 +1,7 @@
 from itertools import islice
 from typing import Any
 
-from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
 from dae.utils.regions import Region
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator

@@ -2,7 +2,7 @@
 import pytest
 from box import Box
 from dae.gene_profile.statistic import GPStatistic
-from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture

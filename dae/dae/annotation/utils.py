@@ -6,7 +6,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
-from dae.genomic_resources.gene_models.gene_models import (
+from dae.genomic_resources.gene_models import (
     GeneModels,
 )
 from dae.genomic_resources.gene_models.gene_models_factory import (

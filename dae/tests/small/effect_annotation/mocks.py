@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613,R0917
 from typing import ClassVar, cast
 
-from dae.genomic_resources.gene_models.gene_models import Exon
+from dae.genomic_resources.gene_models import Exon
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.regions import Region
 

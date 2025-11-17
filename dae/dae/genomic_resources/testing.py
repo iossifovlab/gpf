@@ -22,7 +22,7 @@ from dae.genomic_resources.fsspec_protocol import (
     build_fsspec_protocol,
     build_inmemory_protocol,
 )
-from dae.genomic_resources.gene_models.gene_models import GeneModels
+from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import (
     GenomicResource,

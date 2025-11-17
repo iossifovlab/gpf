@@ -321,7 +321,7 @@ class PartitionDescriptor:
         for chrom in chromosomes:
             if chrom not in chromosome_lengths:
                 logger.warning(
-                    f"Chromosome <{chrom}> not found in chromosome lengths.")
+                    "Chromosome <%s> not found in chromosome lengths.", chrom)
                 continue
             region_bins_count = self.region_bins_count(
                 chrom, chromosome_lengths)
