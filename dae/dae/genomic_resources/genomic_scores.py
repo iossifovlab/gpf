@@ -524,7 +524,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                     )
 
                 if "column_name" in score:
-                    assert score["column_name"] in self.table.header
+                    assert score["column_name"] in self.table.header, (
+                        score, self.table.header)
                 elif "column_index" in score:
                     assert 0 <= score["column_index"] < len(self.table.header)
                 else:
@@ -997,18 +998,42 @@ class AlleleScore(GenomicScore):
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"},
+                "column_index": {
+                    "type": "integer",
+                    "excludes": ["index", "name", "column_name"],
+                },
+                "column_name": {
+                    "type": "string",
+                    "excludes": ["name", "index", "column_index"],
+                },
             },
         }
         schema["table"]["schema"]["alternative"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"},
+                "column_index": {
+                    "type": "integer",
+                    "excludes": ["index", "name", "column_name"],
+                },
+                "column_name": {
+                    "type": "string",
+                    "excludes": ["name", "index", "column_index"],
+                },
             },
         }
         schema["table"]["schema"]["variant"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"},
+                "column_index": {
+                    "type": "integer",
+                    "excludes": ["index", "name", "column_name"],
+                },
+                "column_name": {
+                    "type": "string",
+                    "excludes": ["name", "index", "column_index"],
+                },
             },
         }
         scores_schema = schema["scores"]["schema"]["schema"]
