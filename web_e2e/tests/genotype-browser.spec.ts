@@ -38,7 +38,7 @@ test.describe('Genotype browser tests', () => {
   test('should load query after filtering with scores and family and person filters', async({ page }) => {
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select')
-      .selectOption('gene-score - Evidence strength supporting a gene\'s association with autism');
+      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
     await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
 

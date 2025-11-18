@@ -249,7 +249,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select')
-      .selectOption('gene-score - Evidence strength supporting a gene\'s association with autism');
+      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
   });
 
   test('should switch historgam selection modes', async({ page }) => {
@@ -401,7 +401,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.locator('gpf-gene-scores select')
       .selectOption('RVIS score - Intolerance of a gene to genetic variants');
     await page.locator('gpf-gene-scores select')
-      .selectOption('gene-score - Evidence strength supporting a gene\'s association with autism');
+      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
     await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
     await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
@@ -419,7 +419,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.locator('gpf-gene-scores select')
       .selectOption('RVIS score - Intolerance of a gene to genetic variants');
     await page.locator('gpf-gene-scores select')
-      .selectOption('gene-score - Evidence strength supporting a gene\'s association with autism');
+      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
     await page.getByRole('button', {name: 'Mode'}).click();
     await page.getByRole('menuitem', {name: 'click selector'}).click();

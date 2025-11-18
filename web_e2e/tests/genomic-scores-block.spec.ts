@@ -443,7 +443,7 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select')
-      .selectOption('gene-score - Evidence strength supporting a gene\'s association with autism');
+      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
     await page.getByRole('button', {name: 'Mode'}).click();
     await page.getByRole('menuitem', {name: 'click selector'}).click();
