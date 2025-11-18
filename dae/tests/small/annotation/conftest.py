@@ -42,6 +42,7 @@ class DummyAnnotator(Annotator):
     def open(self) -> Annotator:
         """Reset the annotator state."""
         self.index = 0
+        super().open()
         return self
 
     def annotate(
