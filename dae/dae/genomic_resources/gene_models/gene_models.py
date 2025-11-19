@@ -275,6 +275,14 @@ class GeneModels(
             "filename": {"type": "string"},
             "format": {"type": "string"},
             "gene_mapping": {"type": "string"},
+            "chrom_mapping": {"type": "dict", "schema": {
+                "filename": {
+                    "type": "string",
+                    "excludes": ["add_prefix", "del_prefix"],
+                },
+                "add_prefix": {"type": "string"},
+                "del_prefix": {"type": "string", "excludes": "add_prefix"},
+            }},
         }
 
     def load(self) -> GeneModels:
