@@ -56,7 +56,3 @@ def main(argv: list[str] | None = None) -> None:
     gene_models.load()
 
     save_as_default_gene_models(gene_models, args.output_gene_models)
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
