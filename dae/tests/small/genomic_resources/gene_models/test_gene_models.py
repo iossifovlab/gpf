@@ -570,7 +570,7 @@ def test_test_frames_true(
 def test_test_frames_false(
     transcript_with_matching_frames: TranscriptModel,
 ) -> None:
-    transcript_with_matching_frames.exons[1].frame = 1
+    transcript_with_matching_frames.exons[1]._frame = 1
     assert transcript_with_matching_frames.test_frames() is False
 
 

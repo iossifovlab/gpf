@@ -31,6 +31,8 @@ class Exon:
         True
     """
 
+    __slots__ = ("_frame", "_start", "_stop")
+
     def __init__(
         self,
         start: int,
@@ -46,9 +48,21 @@ class Exon:
             frame (Optional[int]): The frame of the exon.
         """
 
-        self.start = start
-        self.stop = stop
-        self.frame = frame  # related to cds
+        self._start = start
+        self._stop = stop
+        self._frame = frame
+
+    @property
+    def start(self) -> int:
+        return self._start
+
+    @property
+    def stop(self) -> int:
+        return self._stop
+
+    @property
+    def frame(self) -> int | None:
+        return self._frame
 
     def __repr__(self) -> str:
         return f"Exon(start={self.start}; stop={self.stop})"
@@ -594,7 +608,7 @@ class TranscriptModel:
         """
         frames = self.calc_frames()
         for exon, frame in zip(self.exons, frames, strict=True):
-            exon.frame = frame
+            exon._frame = frame  # noqa: SLF001
 
     def test_frames(self) -> bool:
         """Verify that exon frames are correctly set.
