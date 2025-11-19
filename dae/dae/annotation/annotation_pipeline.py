@@ -265,7 +265,6 @@ class AnnotationPipeline:
                 logger.exception(
                     "exception while closing annotator %s",
                     annotator.get_info())
-        self.repository = None  # type: ignore
         self._is_open = False
 
     def print(self) -> None:

@@ -18,6 +18,7 @@ from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
 )
+from dae.genomic_resources.utils import build_chrom_mapping
 from dae.utils.regions import (
     Region,
     collapse,
@@ -108,7 +109,7 @@ class GeneModels(
     def _add_to_utr_index(self, tm: TranscriptModel) -> None:
         self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
 
-    def chrom_gene_models(self) -> Generator[
+    def _chrom_genes(self) -> Generator[
             tuple[tuple[str, str], list[TranscriptModel]], None, None]:
         """Generate chromosome and gene name keys with transcript models."""
         for chrom, interval_tree in self._tx_index.items():
@@ -212,61 +213,18 @@ class GeneModels(
         Note:
             Positions are swapped automatically if pos_end < pos_begin.
         """
-        if chrom not in self._tx_index:
-            return []
+        with self.__lock:
+            if chrom not in self._tx_index:
+                return []
 
-        if pos_end is None:
-            pos_end = pos_begin
-        if pos_end < pos_begin:
-            pos_begin, pos_end = pos_end, pos_begin
-        tms_interval = self._tx_index[chrom]
-        result = tms_interval.overlap(pos_begin, pos_end + 1)
+            if pos_end is None:
+                pos_end = pos_begin
+            if pos_end < pos_begin:
+                pos_begin, pos_end = pos_end, pos_begin
+            tms_interval = self._tx_index[chrom]
+            result = tms_interval.overlap(pos_begin, pos_end + 1)
 
-        return [r.data for r in result]
-
-    def relabel_chromosomes(
-        self, relabel: dict[str, str] | None = None,
-        map_file: str | None = None,
-    ) -> None:
-        """Relabel chromosome names in all transcript models.
-
-        This method is useful for converting between different chromosome
-        naming conventions (e.g., "chr1" <-> "1").
-
-        Args:
-            relabel (dict[str, str] | None): Mapping from old to new
-                chromosome names. Either this or map_file must be provided.
-            map_file (str | None): Path to file with chromosome mappings,
-                one mapping per line (old_name new_name).
-
-        Example:
-            >>> # Using dict
-            >>> gene_models.relabel_chromosomes({"1": "chr1", "2": "chr2"})
-            >>> # Using file
-            >>> gene_models.relabel_chromosomes(map_file="chrom_map.txt")
-
-        Note:
-            Transcripts on chromosomes not in the mapping are removed.
-            Internal indexes are rebuilt after relabeling.
-        """
-        assert relabel or map_file
-        if not relabel:
-            assert map_file is not None
-            with open(map_file) as infile:
-                relabel = dict(
-                    line.strip("\n\r").split()[:2]for line in infile
-                )
-
-        self.transcript_models = {
-            tid: tm
-            for tid, tm in self.transcript_models.items()
-            if tm.chrom in relabel
-        }
-
-        for transcript_model in self.transcript_models.values():
-            transcript_model.chrom = relabel[transcript_model.chrom]
-
-        self._update_indexes()
+            return [r.data for r in result]
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -275,6 +233,14 @@ class GeneModels(
             "filename": {"type": "string"},
             "format": {"type": "string"},
             "gene_mapping": {"type": "string"},
+            "chrom_mapping": {"type": "dict", "schema": {
+                "filename": {
+                    "type": "string",
+                    "excludes": ["add_prefix", "del_prefix"],
+                },
+                "add_prefix": {"type": "string"},
+                "del_prefix": {"type": "string", "excludes": "add_prefix"},
+            }},
         }
 
     def load(self) -> GeneModels:
@@ -300,10 +266,32 @@ class GeneModels(
             if self._is_loaded:
                 return self
             self._reset()
-            self.transcript_models = load_transcript_models(self.resource)
+            transcript_models = load_transcript_models(self.resource)
+            self.transcript_models = self._chrom_mapping(transcript_models)
             self._update_indexes()
             self._is_loaded = True
             return self
+
+    def _chrom_mapping(
+        self, transcript_models: dict[str, TranscriptModel],
+    ) -> dict[str, TranscriptModel]:
+        chrom_mapping = build_chrom_mapping(self.resource)
+        if chrom_mapping is None:
+            return transcript_models
+
+        result = {}
+        for tm in transcript_models.values():
+            chrom = chrom_mapping(tm.chrom)
+            if chrom is None:
+                logger.warning(
+                        "transcript %s on chrom %s is removed by "
+                        "chrom_mapping",
+                        tm.tr_id, tm.chrom,
+                    )
+                continue
+            tm.chrom = chrom
+            result[tm.tr_id] = tm
+        return result
 
     def is_loaded(self) -> bool:
         """Check if gene models have been loaded.
