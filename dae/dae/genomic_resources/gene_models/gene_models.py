@@ -266,22 +266,31 @@ class GeneModels(
                 return self
             self._reset()
             transcript_models = load_transcript_models(self.resource)
-            chrom_mapping = build_chrom_mapping(self.resource)
-            if chrom_mapping is not None:
-                for tm in transcript_models.values():
-                    chrom = chrom_mapping(tm.chrom)
-                    if chrom is None:
-                        logger.warning(
-                            "transcript %s on chrom %s is removed by "
-                            "chrom_mapping",
-                            tm.tr_id, tm.chrom,
-                        )
-                        continue
-                    tm.chrom = chrom
-            self.transcript_models = transcript_models
+            self.transcript_models = self._chrom_mapping(transcript_models)
             self._update_indexes()
             self._is_loaded = True
             return self
+
+    def _chrom_mapping(
+        self, transcript_models: dict[str, TranscriptModel],
+    ) -> dict[str, TranscriptModel]:
+        chrom_mapping = build_chrom_mapping(self.resource)
+        if chrom_mapping is None:
+            return transcript_models
+
+        result = {}
+        for tm in transcript_models.values():
+            chrom = chrom_mapping(tm.chrom)
+            if chrom is None:
+                logger.warning(
+                        "transcript %s on chrom %s is removed by "
+                        "chrom_mapping",
+                        tm.tr_id, tm.chrom,
+                    )
+                continue
+            tm.chrom = chrom
+            result[tm.tr_id] = tm
+        return result
 
     def is_loaded(self) -> bool:
         """Check if gene models have been loaded.
