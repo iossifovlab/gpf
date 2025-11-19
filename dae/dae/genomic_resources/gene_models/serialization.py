@@ -48,7 +48,7 @@ def gene_models_to_gtf(
 
     record_buffer: list[GTFRecord] = []
 
-    for (chrom, gene_name), transcripts in gene_models.chrom_gene_models():
+    for (chrom, gene_name), transcripts in gene_models._chrom_genes():  # noqa
         t = transcripts[0]
         start = min(t.tx[0] for t in transcripts)
         stop = max(t.tx[1] for t in transcripts)

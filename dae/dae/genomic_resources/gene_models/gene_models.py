@@ -109,7 +109,7 @@ class GeneModels(
     def _add_to_utr_index(self, tm: TranscriptModel) -> None:
         self._tx_index[tm.chrom].add(Interval(tm.tx[0], tm.tx[1] + 1, tm))
 
-    def chrom_gene_models(self) -> Generator[
+    def _chrom_genes(self) -> Generator[
             tuple[tuple[str, str], list[TranscriptModel]], None, None]:
         """Generate chromosome and gene name keys with transcript models."""
         for chrom, interval_tree in self._tx_index.items():
@@ -213,17 +213,18 @@ class GeneModels(
         Note:
             Positions are swapped automatically if pos_end < pos_begin.
         """
-        if chrom not in self._tx_index:
-            return []
+        with self.__lock:
+            if chrom not in self._tx_index:
+                return []
 
-        if pos_end is None:
-            pos_end = pos_begin
-        if pos_end < pos_begin:
-            pos_begin, pos_end = pos_end, pos_begin
-        tms_interval = self._tx_index[chrom]
-        result = tms_interval.overlap(pos_begin, pos_end + 1)
+            if pos_end is None:
+                pos_end = pos_begin
+            if pos_end < pos_begin:
+                pos_begin, pos_end = pos_end, pos_begin
+            tms_interval = self._tx_index[chrom]
+            result = tms_interval.overlap(pos_begin, pos_end + 1)
 
-        return [r.data for r in result]
+            return [r.data for r in result]
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
