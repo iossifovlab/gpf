@@ -2,7 +2,6 @@
 import gzip
 import os
 import pathlib
-import tempfile
 import textwrap
 from collections.abc import Callable
 
@@ -601,43 +600,6 @@ def test_join_gene_models(
     combined = GeneModels.join_gene_models(example_gencode, t4c8_gene_models)
     assert combined.gene_names() == ["C2CD4C", "t4", "c8"]
     assert len(combined.transcript_models) == 3
-
-
-def test_relabel_chromosomes(fixture_dirname: Callable) -> None:
-    filename = fixture_dirname("gene_models/example_gencode.txt")
-    gene_model = build_gene_models_from_file(filename, "gtf")
-    gene_model.load()
-
-    transcript_id = "ENST00000332235.7"
-
-    assert gene_model.transcript_models[transcript_id].chrom == "chr19"
-    assert gene_model.has_chromosome("chr19")
-
-    gene_model.relabel_chromosomes(relabel={"chr19": "19"})
-
-    assert gene_model.transcript_models[transcript_id].chrom == "19"
-    assert gene_model.has_chromosome("19")
-    assert not gene_model.has_chromosome("chr19")
-
-
-def test_relabel_chromosomes_from_mapfile(fixture_dirname: Callable) -> None:
-    filename = fixture_dirname("gene_models/example_gencode.txt")
-    gene_model = build_gene_models_from_file(filename, "gtf")
-    gene_model.load()
-
-    transcript_id = "ENST00000332235.7"
-    assert gene_model.transcript_models[transcript_id].chrom == "chr19"
-    assert gene_model.has_chromosome("chr19")
-
-    with tempfile.NamedTemporaryFile("w+", delete=False) as tmp:
-        tmp.write("chr19 19")
-        tmp_path = tmp.name
-
-    gene_model.relabel_chromosomes(map_file=tmp_path)
-
-    assert gene_model.transcript_models[transcript_id].chrom == "19"
-    assert not gene_model.has_chromosome("chr19")
-    assert gene_model.has_chromosome("19")
 
 
 def test_is_loaded(fixture_dirname: Callable) -> None:
