@@ -1,3 +1,4 @@
+import textwrap
 from copy import deepcopy
 from typing import Any
 
@@ -39,6 +40,15 @@ class ChromMappingAnnotator(AnnotatorBase):
                     "renamed_chromosome",
                     internal=True,
                     parameters={})]
+
+        info.documentation += textwrap.dedent(f"""
+
+Annotator that maps chromsomes from one naming convention to another.
+
+<a href="{self.BASE_DOC_URL}#chromosome-mapping-annotator" target="_blank">More info</a>
+
+""")  # noqa
+
         super().__init__(pipeline, info, {
             "renamed_chromosome": (
                 "annotatable", "Allele with renamed chromosome.",

@@ -35,6 +35,8 @@ class AttributeDesc:
 class AnnotatorBase(Annotator):
     """Base implementation of the `Annotator` class."""
 
+    BASE_DOC_URL = "https://iossifovlab.com/gpfuserdocs/administration/annotation.html"
+
     def __init__(
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
