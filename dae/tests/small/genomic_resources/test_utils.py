@@ -60,6 +60,7 @@ chrM\tMT
     assert mapping_func("chr2") == "2"
     assert mapping_func("chrX") == "X"
     assert mapping_func("chrM") == "MT"
+    # Unmapped chromosomes should be None
     assert mapping_func("chr3") is None
     assert mapping_func("Y") is None
 
@@ -276,7 +277,7 @@ def test_build_chrom_mapping_filename_returns_none_for_missing() -> None:
     assert mapping_func is not None
     assert mapping_func("1") == "chr1"
     assert mapping_func("2") == "chr2"
-    # Unmapped chromosomes should return None
+    # Unmapped chromosomes should be None
     assert mapping_func("3") is None
     assert mapping_func("X") is None
     assert mapping_func("chr1") is None
@@ -354,8 +355,8 @@ def test_build_chrom_mapping_del_prefix_parametrized(
     ("chrX", "X"),
     ("chrY", "Y"),
     ("chrMT", "MT"),
-    ("1", "1"),  # No prefix to remove
-    ("X", "X"),  # No prefix to remove
+    ("1", None),
+    ("X", None),
 ])
 def test_build_chrom_mapping_mapping_parameterized(
     chrom: str,

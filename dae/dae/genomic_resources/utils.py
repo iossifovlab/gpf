@@ -1,13 +1,13 @@
 
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 from dae.genomic_resources.repository import GenomicResource
 
 
 def build_chrom_mapping(
-    resource: GenomicResource,
+    resource: GenomicResource | None,
     config: dict[str, Any] | None = None,
 ) -> Callable[[str], str | None] | None:
     """Build chromosome mapping function from resource config.
@@ -24,6 +24,8 @@ def build_chrom_mapping(
         function that maps chromosome names or None if no mapping is defined
     """
     if config is None:
+        if resource is None:
+            raise ValueError("Either resource or config must be provided")
         config = resource.get_config()
     chrom_mapping_config = config.get("chrom_mapping")
     if chrom_mapping_config is None:
@@ -32,8 +34,13 @@ def build_chrom_mapping(
     filename = chrom_mapping_config.get("filename")
 
     if filename is not None:
-        assert "add_prefix" not in chrom_mapping_config
-        assert "del_prefix" not in chrom_mapping_config
+        assert chrom_mapping_config.get("add_prefix") is None
+        assert chrom_mapping_config.get("del_prefix") is None
+        assert chrom_mapping_config.get("mapping") is None
+
+        if resource is None:
+            raise ValueError(
+                "Resource must be provided when filename is used")
 
         mapping = {}
         with resource.open_raw_file(filename) as f:
@@ -48,7 +55,8 @@ def build_chrom_mapping(
 
     add_prefix = chrom_mapping_config.get("add_prefix")
     if add_prefix:
-        assert "del_prefix" not in chrom_mapping_config
+        assert chrom_mapping_config.get("del_prefix") is None
+        assert chrom_mapping_config.get("mapping") is None
 
         def add_prefix_func(chrom: str) -> str:
             return f"{add_prefix}{chrom}"
@@ -57,6 +65,8 @@ def build_chrom_mapping(
 
     del_prefix = chrom_mapping_config.get("del_prefix")
     if del_prefix:
+        assert chrom_mapping_config.get("mapping") is None
+
         def del_prefix_func(chrom: str) -> str:
             if chrom.startswith(del_prefix):
                 return chrom[len(del_prefix):]
@@ -66,9 +76,10 @@ def build_chrom_mapping(
     mapping = chrom_mapping_config.get("mapping")
     if mapping:
         def chrom_mapping(chrom: str) -> str | None:
-            return cast(str, mapping.get(chrom, chrom))
+            return mapping.get(chrom)
 
         return chrom_mapping
 
     raise ValueError(
-        f"Invalid chrom_mapping configuration in: {resource.get_id()}")
+        f"Invalid chrom_mapping configuration: "
+        f"{resource}; {chrom_mapping_config}")
