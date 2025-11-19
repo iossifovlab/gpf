@@ -1,7 +1,7 @@
 
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from dae.genomic_resources.repository import GenomicResource
 
@@ -62,6 +62,13 @@ def build_chrom_mapping(
                 return chrom[len(del_prefix):]
             return chrom
         return del_prefix_func
+
+    mapping = chrom_mapping_config.get("mapping")
+    if mapping:
+        def chrom_mapping(chrom: str) -> str | None:
+            return cast(str, mapping.get(chrom, chrom))
+
+        return chrom_mapping
 
     raise ValueError(
         f"Invalid chrom_mapping configuration in: {resource.get_id()}")

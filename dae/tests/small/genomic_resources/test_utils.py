@@ -346,3 +346,42 @@ def test_build_chrom_mapping_del_prefix_parametrized(
     mapping_func = build_chrom_mapping(res, config=table_config)
     assert mapping_func is not None
     assert mapping_func(chrom) == expected
+
+
+@pytest.mark.parametrize("chrom,expected", [
+    ("chr1", "1"),
+    ("chr2", "2"),
+    ("chrX", "X"),
+    ("chrY", "Y"),
+    ("chrMT", "MT"),
+    ("1", "1"),  # No prefix to remove
+    ("X", "X"),  # No prefix to remove
+])
+def test_build_chrom_mapping_mapping_parameterized(
+    chrom: str,
+    expected: str,
+) -> None:
+    """Test del_prefix mapping with various chromosome names."""
+    res = build_inmemory_test_resource({
+        "genomic_resource.yaml": """
+            type: position_score
+            table:
+                filename: data.mem
+                chrom_mapping:
+                    mapping:
+                        chr1: "1"
+                        chr2: "2"
+                        chrX: "X"
+                        chrY: "Y"
+                        chrMT: "MT"
+        """,
+        "data.mem": """
+            chrom pos_begin c2
+            1     10        0.1
+        """,
+    })
+
+    table_config = res.get_config()["table"]
+    mapping_func = build_chrom_mapping(res, config=table_config)
+    assert mapping_func is not None
+    assert mapping_func(chrom) == expected
