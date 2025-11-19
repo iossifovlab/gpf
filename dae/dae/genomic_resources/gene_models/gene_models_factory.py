@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from threading import Lock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from dae.genomic_resources.gene_models.gene_models import GeneModels
@@ -21,6 +21,7 @@ def build_gene_models_from_file(
     file_name: str,
     file_format: str | None = None,
     gene_mapping_file_name: str | None = None,
+    chrom_mapping_file_name: str | None = None,
 ) -> GeneModels:
     """Load gene models from local filesystem."""
     # pylint: disable=import-outside-toplevel
@@ -35,7 +36,7 @@ def build_gene_models_from_file(
         if cache_id in _INMEMORY_CACHE:
             return _INMEMORY_CACHE[cache_id]
 
-        config = {
+        config: dict[str, Any] = {
             "type": "gene_models",
             "filename": file_name,
         }
@@ -43,6 +44,10 @@ def build_gene_models_from_file(
             config["format"] = file_format
         if gene_mapping_file_name:
             config["gene_mapping"] = gene_mapping_file_name
+        if chrom_mapping_file_name is not None:
+            config["chrom_mapping"] = {
+                "filename": chrom_mapping_file_name,
+            }
 
         res = build_local_resource(".", config)
 

@@ -28,18 +28,18 @@ def main(argv: list[str] | None = None) -> None:
         type=str,
     )
     parser.add_argument(
-        "--gm_format",
+        "--gm-format",
         help="gene models format (refseq, ccds or knowngene)",
         type=str,
     )
     parser.add_argument(
-        "--gm_names",
+        "--gm-names",
         help="gene names mapping file [type None for no mapping]",
         default=None,
         type=str,
     )
     parser.add_argument(
-        "--chr_names",
+        "--chrom-mapping",
         help="chromosome names mapping file",
         type=str,
         default=None,
@@ -51,10 +51,9 @@ def main(argv: list[str] | None = None) -> None:
         args.input_gene_models,
         file_format=args.gm_format,
         gene_mapping_file_name=args.gm_names,
+        chrom_mapping_file_name=args.chrom_mapping,
     )
     gene_models.load()
-    if args.chr_names is not None:
-        gene_models.relabel_chromosomes(args.chr_names)
 
     save_as_default_gene_models(gene_models, args.output_gene_models)
 
