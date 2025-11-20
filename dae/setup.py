@@ -67,7 +67,7 @@ setuptools.setup(
     gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
     simple_effect_annotator=dae.annotation.simple_effect_annotator:build_simple_effect_annotator
     cnv_collection=dae.annotation.cnv_collection_annotator:build_cnv_collection_annotator
-    chromosome_annotator=dae.annotation.chromosome_annotator:build_chromosome_annotator
+    chrom_mapping=dae.annotation.chrom_mapping_annotator:build_chrom_mapping_annotator
     debug_annotator=dae.annotation.debug_annotator:build_annotator
 
     [dae.genotype_storage.factories]

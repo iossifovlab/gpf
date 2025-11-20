@@ -12,38 +12,35 @@ from dae.annotation.annotatable import (
 )
 from dae.annotation.annotation_config import AnnotatorInfo
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.chromosome_annotator import ChromosomeAnnotator
+from dae.annotation.chrom_mapping_annotator import ChromMappingAnnotator
 
 
 def test_chromosome_annotator_creation(tmp_path: Path) -> None:
-    annotator = ChromosomeAnnotator(
+    annotator = ChromMappingAnnotator(
         None,  # type: ignore
         AnnotatorInfo(
             "test",
             [],
             {
-                "chrom_mapping": {"add_prefix": "chr"},
+                "add_prefix": "chr",
                 "work_dir": tmp_path,
             },
         ),
     )
     assert annotator is not None
-    assert annotator.add_prefix == "chr"
-    assert annotator.del_prefix is None
-    annotator = ChromosomeAnnotator(
+
+    annotator = ChromMappingAnnotator(
         None,  # type: ignore
         AnnotatorInfo(
             "test",
             [],
             {
-                "chrom_mapping": {"del_prefix": "chr"},
+                "del_prefix": "chr",
                 "work_dir": tmp_path,
             },
         ),
     )
     assert annotator is not None
-    assert annotator.add_prefix is None
-    assert annotator.del_prefix == "chr"
 
 
 @pytest.mark.parametrize("annotatable_type,annotatable", [
@@ -56,13 +53,13 @@ def test_chromosome_annotator_annotation_add_prefix(
     annotatable_type: type, annotatable: Annotatable,
     tmp_path: Path,
 ) -> None:
-    annotator = ChromosomeAnnotator(
+    annotator = ChromMappingAnnotator(
         None,  # type: ignore
         AnnotatorInfo(
             "test",
             [],
             {
-                "chrom_mapping": {"add_prefix": "chr"},
+                "add_prefix": "chr",
                 "work_dir": tmp_path,
             },
         ),
@@ -89,13 +86,13 @@ def test_chromosome_annotator_annotation_del_prefix(
     annotatable_type: type, annotatable: Annotatable,
     tmp_path: Path,
 ) -> None:
-    annotator = ChromosomeAnnotator(
+    annotator = ChromMappingAnnotator(
         None,  # type: ignore
         AnnotatorInfo(
             "test",
             [],
             {
-                "chrom_mapping": {"del_prefix": "chr"},
+                "del_prefix": "chr",
                 "work_dir": tmp_path,
             },
         ),
@@ -114,9 +111,8 @@ def test_chromosome_annotator_annotation_del_prefix(
 
 def test_pipeline_initialization(tmp_path: Path) -> None:
     pipeline_config = """
-        - chromosome_annotator:
-            chrom_mapping:
-                add_prefix: chr
+        - chrom_mapping:
+            add_prefix: chr
     """
 
     pipeline = load_pipeline_from_yaml(
@@ -125,6 +121,5 @@ def test_pipeline_initialization(tmp_path: Path) -> None:
     assert len(pipeline.annotators) == 1
     annotator = pipeline.annotators[0]
     assert annotator is not None
-    assert isinstance(annotator, ChromosomeAnnotator)
-    assert annotator.add_prefix == "chr"
-    assert annotator.del_prefix is None
+    assert isinstance(annotator, ChromMappingAnnotator)
+    assert annotator.chrom_mapping is not None

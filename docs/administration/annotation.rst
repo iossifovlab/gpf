@@ -374,6 +374,38 @@ Similar to the liftover annotator, produces an "annotatable" object called ``nor
           name: hg38_normalized_annotatable
           internal: true
 
+Chromsome mapping annotator
+###########################
+
+Map chromosome names from one naming convention to another.
+
+Supports adding or deleting prefixes (e.g., "chr") and mapping specific
+chromosome names.
+
+The produced attributes is of type annotatable and
+called ``renamed_chromosome``. By default this attribute is an internal
+attribute.
+
+.. code:: yaml
+
+    - chrom_mapping:
+        del_prefix: chr
+
+        attributes:
+        - source: renamed_chromosome
+          name: new_annotatable
+          internal: true
+
+.. code:: yaml
+
+    - chrom_mapping:
+        mapping:
+            "1": chr1
+            "2": chr2
+            "X": chrX
+            "Y": chrY
+            "MT": chrM
+
 
 Gene score annotator
 ####################

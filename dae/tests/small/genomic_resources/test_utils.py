@@ -60,6 +60,7 @@ chrM\tMT
     assert mapping_func("chr2") == "2"
     assert mapping_func("chrX") == "X"
     assert mapping_func("chrM") == "MT"
+    # Unmapped chromosomes should be None
     assert mapping_func("chr3") is None
     assert mapping_func("Y") is None
 
@@ -276,7 +277,7 @@ def test_build_chrom_mapping_filename_returns_none_for_missing() -> None:
     assert mapping_func is not None
     assert mapping_func("1") == "chr1"
     assert mapping_func("2") == "chr2"
-    # Unmapped chromosomes should return None
+    # Unmapped chromosomes should be None
     assert mapping_func("3") is None
     assert mapping_func("X") is None
     assert mapping_func("chr1") is None
@@ -335,6 +336,45 @@ def test_build_chrom_mapping_del_prefix_parametrized(
                 filename: data.mem
                 chrom_mapping:
                     del_prefix: chr
+        """,
+        "data.mem": """
+            chrom pos_begin c2
+            1     10        0.1
+        """,
+    })
+
+    table_config = res.get_config()["table"]
+    mapping_func = build_chrom_mapping(res, config=table_config)
+    assert mapping_func is not None
+    assert mapping_func(chrom) == expected
+
+
+@pytest.mark.parametrize("chrom,expected", [
+    ("chr1", "1"),
+    ("chr2", "2"),
+    ("chrX", "X"),
+    ("chrY", "Y"),
+    ("chrMT", "MT"),
+    ("1", None),
+    ("X", None),
+])
+def test_build_chrom_mapping_mapping_parameterized(
+    chrom: str,
+    expected: str,
+) -> None:
+    """Test del_prefix mapping with various chromosome names."""
+    res = build_inmemory_test_resource({
+        "genomic_resource.yaml": """
+            type: position_score
+            table:
+                filename: data.mem
+                chrom_mapping:
+                    mapping:
+                        chr1: "1"
+                        chr2: "2"
+                        chrX: "X"
+                        chrY: "Y"
+                        chrMT: "MT"
         """,
         "data.mem": """
             chrom pos_begin c2
