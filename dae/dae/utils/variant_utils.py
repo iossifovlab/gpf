@@ -27,10 +27,9 @@ def mat2str(
                 for i in range(mat.shape[0])
             ],
         )
-
     return row_sep.join(
         [
-            col_sep.join([str(n) if n >= 0 else "?" for n in mat[i]])
+            col_sep.join([str(n) if int(n) >= 0 else "?" for n in mat[i]])
             for i in range(len(mat))
         ],
     )

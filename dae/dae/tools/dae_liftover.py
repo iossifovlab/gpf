@@ -119,6 +119,8 @@ def main(
         variants_loader.reset_regions([region])
         summary_filename = f"{args.output_prefix}-{region}.txt"
         toomany_filename = f"{args.output_prefix}-TOOMANY-{region}.txt"
+    logger.info("summary output: %s", summary_filename)
+    logger.info("toomany output: %s", toomany_filename)
 
     pipeline_config = textwrap.dedent(
         f"""
@@ -230,8 +232,7 @@ def main(
                 fdata = [
                     fa.family_id,
                     mat2str(fa.best_state),
-                    mat2str(
-                        fa.family_attributes["read_counts"], col_sep=" "),
+                    fa.family_attributes["read_counts"],
                 ]
                 families_data.append(":".join(fdata))
 
