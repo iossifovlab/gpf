@@ -49,7 +49,6 @@ dependencies:
   - python-duckdb=1.4.2
   - sqlglot=28
   - sentry-sdk=2.12
-  - pyzstd=0.16
   - gunicorn=22.0
   - mysqlclient=2.2
   - mysql-common=8.0
