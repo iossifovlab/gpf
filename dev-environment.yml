@@ -10,7 +10,6 @@ channels:
   - iossifovlab
 dependencies:
   - dask-kubernetes=2025.1.1
-  - duckdb=1.4.1
   - coverage
   - pytest
   - pytest-cov
