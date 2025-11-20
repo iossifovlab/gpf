@@ -37,12 +37,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("config", type=str,
                         help="Path to the import configuration")
     TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
-    context_providers_add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(
+        parser, skip_cli_annotation_context=True)
     VerbosityConfiguration.set_arguments(parser)
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
-    context_providers_init(**vars(args))
+    context_providers_init(
+        **vars(args), skip_cli_annotation_context=True)
 
     genomic_context = get_genomic_context()
 

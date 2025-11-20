@@ -54,6 +54,7 @@ class CLIGenomicContextProvider(GenomicContextProvider):
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         """Expose CLI options that control genomic resource resolution.
 
