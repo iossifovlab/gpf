@@ -66,6 +66,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(

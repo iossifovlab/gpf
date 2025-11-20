@@ -48,6 +48,7 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
+        **kwargs: Any,
     ) -> None:
         """Register arguments that describe the annotation pipeline source.
 
@@ -56,11 +57,14 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
         parser
             The parser that should receive the provider specific CLI options.
         """
+        if kwargs.get("skip_cli_annotation_context"):
+            return
         parser.add_argument(
             "pipeline", default="context", nargs="?",
             help="The pipeline definition file. By default, or if "
             "the value is gpf_instance, the annotation pipeline "
             "from the configured gpf instance will be used.")
+
         parser.add_argument(
             "-ar", "--allow-repeated-attributes", default=False,
             action="store_true",
@@ -84,6 +88,9 @@ class CLIAnnotationContextProvider(GenomicContextProvider):
             pipeline could be created (for example when the ``pipeline``
             argument is omitted).
         """
+        if kwargs.get("skip_cli_annotation_context"):
+            return None
+
         # pylint: disable=import-outside-toplevel
         from dae.genomic_resources.genomic_context import (
             get_genomic_context,

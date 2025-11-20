@@ -249,6 +249,7 @@ class GenomicContextProvider(ABC):
     @abstractmethod
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
+        **kwargs: Any,
     ) -> None:
         """Register command-line arguments that configure the provider.
 

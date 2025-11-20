@@ -88,6 +88,7 @@ class DefaultRepositoryContextProvider(GenomicContextProvider):
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
+        **kwargs: Any,
     ) -> None:
         """Declare command line arguments for this provider.
 
@@ -223,6 +224,7 @@ def clear_registered_contexts() -> None:
 
 def context_providers_add_argparser_arguments(
     parser: argparse.ArgumentParser,
+    **kwargs: Any,
 ) -> None:
     """Delegate command line argument registration to each provider.
 
@@ -236,7 +238,7 @@ def context_providers_add_argparser_arguments(
             _REGISTERED_CONTEXT_PROVIDERS,
             key=lambda g: (- g.get_context_provider_priority(),
                            g.get_context_provider_type())):
-        provider.add_argparser_arguments(parser)
+        provider.add_argparser_arguments(parser, **kwargs)
 
 
 def register_context(context: GenomicContext) -> None:
