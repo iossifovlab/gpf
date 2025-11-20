@@ -47,7 +47,7 @@ dependencies:
   - toolz=0.12
   - markdown2=2.4
   - python-duckdb=1.4.2
-  - sqlglot=25
+  - sqlglot=28
   - polars=1.14
   - sentry-sdk=2.12
   - pyzstd=0.16
