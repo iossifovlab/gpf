@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+* 2025.11.1
+    * Reorganization of GeneModels for better maintainability.
+    * Improved test coverage for GeneModels.
+    * Improved GeneModels documentation.
+    * Fixed allele score resource schema to support column_name and
+      column_index.
+    * Improved handling of study wrapper configuration.
+    * Support for public URL in GRR definition.
+    * Support for using annotate_columns and annotate_vcf as Python API.
+    * Fixes in handling compression in annotate_columns and annotate_vcf tools.
+    * Increased DuckDb memory limit for merging parquet files.
+    * Fix handling of missing chromosomes in partition descriptor.
+
 * 2025.11.0
     * Added chromosome mapping annotator to support removing and adding
       chromosome's prefixes during annotation.
