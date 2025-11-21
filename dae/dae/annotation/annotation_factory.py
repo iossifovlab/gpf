@@ -132,9 +132,11 @@ def load_pipeline_from_grr(
     if resource.get_type() != "annotation_pipeline":
         logger.error(
             "trying to open a resource %s of type "
-            "%s as reference genome",
+            "%s as annotation pipeline",
             resource.resource_id, resource.get_type())
-        raise ValueError(f"wrong resource type: {resource.resource_id}")
+        raise ValueError(
+            f"wrong resource type {resource.get_type()} of "
+            f"{resource.resource_id}; expected annotation_pipeline")
 
     raw: str = resource.get_file_content(
         resource.get_config()["filename"])
