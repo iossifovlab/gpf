@@ -2,7 +2,7 @@
 import pathlib
 import textwrap
 
-import polars as pl
+import pandas as pd
 import pytest
 from dae.enrichment_tool.build_coding_length_enrichment_background import cli
 from dae.genomic_resources.testing import setup_directories
@@ -40,7 +40,7 @@ def test_build_coding_length_background(
     assert output.exists()
     assert output.is_file()
 
-    df = pl.read_csv(str(output), separator="\t")
+    df = pd.read_csv(str(output), sep="\t")
     assert df.shape == (2, 2)
     assert df["gene"].to_list() == ["T4", "C8"]
     assert df["gene_weight"].to_list() == [44, 45]
