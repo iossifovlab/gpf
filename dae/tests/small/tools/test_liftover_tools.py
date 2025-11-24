@@ -13,6 +13,7 @@ from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     convert_to_tab_separated,
     setup_dae_transmitted,
+    setup_denovo,
     setup_directories,
     setup_genome,
     setup_gzip,
@@ -20,6 +21,7 @@ from dae.genomic_resources.testing import (
     setup_vcf,
 )
 from dae.tools.dae_liftover import main as dae_liftover_main
+from dae.tools.denovo_liftover import main as denovo_liftover_main
 from dae.tools.vcf_liftover import main
 
 
@@ -501,6 +503,71 @@ def test_dae_liftover_simple(
 
     # Verify the output contains the lifted variant
     with open(out_prefix.with_suffix(".txt"), encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) > 1  # Header + at least one variant
+        # Check that chrB is in the output (lifted from chrA)
+        content = "".join(lines)
+        assert "chrB" in content
+
+
+@pytest.fixture
+def denovo_data(
+    tmp_path: pathlib.Path,
+) -> tuple[pathlib.Path, pathlib.Path]:
+    """Create pedigree and denovo variant files for testing."""
+    # Setup pedigree file
+    pedigree_file = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        textwrap.dedent("""
+            familyId personId dadId momId sex status role
+            f1       mom1     0     0     2   1      mom
+            f1       dad1     0     0     1   1      dad
+            f1       ch1      dad1  mom1  1   2      prb
+        """),
+    )
+
+    # Setup denovo variant file
+    # Variant at chrA:6 A->C should map to chrB:6 A->C (identity region)
+    denovo_file = setup_denovo(
+        tmp_path / "denovo.txt",
+        textwrap.dedent("""
+            familyId location    variant   bestState
+            f1       chrA:6      sub(A->C) 2||2||1/0||0||1
+        """),
+    )
+
+    return pedigree_file, denovo_file
+
+
+def test_denovo_liftover_simple(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    denovo_data: tuple[pathlib.Path, pathlib.Path],
+) -> None:
+    """Test basic denovo_liftover functionality."""
+    pedigree_file, denovo_file = denovo_data
+
+    out_file = tmp_path / "lifted_denovo.txt"
+    argv = [
+        str(pedigree_file),
+        str(denovo_file),
+        "--denovo-location", "location",
+        "--denovo-variant", "variant",
+        "--denovo-family-id", "familyId",
+        "--denovo-best-state", "bestState",
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_file),
+    ]
+
+    denovo_liftover_main(argv, grr=liftover_data)
+
+    # Check that output file was created
+    assert out_file.exists()
+
+    # Verify the output contains the lifted variant
+    with open(out_file, encoding="utf-8") as f:
         lines = f.readlines()
         assert len(lines) > 1  # Header + at least one variant
         # Check that chrB is in the output (lifted from chrA)
