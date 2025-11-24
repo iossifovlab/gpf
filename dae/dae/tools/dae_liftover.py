@@ -80,8 +80,8 @@ def build_cli_arguments_parser() -> argparse.ArgumentParser:
 
 
 def main(
-        argv: list[str] | None = None,
-        grr: GenomicResourceRepo | None = None,
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
 ) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
