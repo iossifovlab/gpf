@@ -20,6 +20,7 @@ from dae.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from dae.tools.cnv_liftover import main as cnv_liftover_main
 from dae.tools.dae_liftover import main as dae_liftover_main
 from dae.tools.denovo_liftover import main as denovo_liftover_main
 from dae.tools.vcf_liftover import main
@@ -562,6 +563,71 @@ def test_denovo_liftover_simple(
     ]
 
     denovo_liftover_main(argv, grr=liftover_data)
+
+    # Check that output file was created
+    assert out_file.exists()
+
+    # Verify the output contains the lifted variant
+    with open(out_file, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) > 1  # Header + at least one variant
+        # Check that chrB is in the output (lifted from chrA)
+        content = "".join(lines)
+        assert "chrB" in content
+
+
+@pytest.fixture
+def cnv_data(
+    tmp_path: pathlib.Path,
+) -> tuple[pathlib.Path, pathlib.Path]:
+    """Create pedigree and CNV variant files for testing."""
+    # Setup pedigree file
+    pedigree_file = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        textwrap.dedent("""
+            familyId personId dadId momId sex status role
+            f1       mom1     0     0     2   1      mom
+            f1       dad1     0     0     1   1      dad
+            f1       ch1      dad1  mom1  1   2      prb
+        """),
+    )
+
+    # Setup CNV variant file
+    # CNV at chrA:4-8 (covers position 6) should map to chrB
+    cnv_file = setup_denovo(
+        tmp_path / "cnv.txt",
+        textwrap.dedent("""
+            familyId location    variant bestState
+            f1       chrA:4-8    CNV+    2||2||3
+        """),
+    )
+
+    return pedigree_file, cnv_file
+
+
+def test_cnv_liftover_simple(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    cnv_data: tuple[pathlib.Path, pathlib.Path],
+) -> None:
+    """Test basic cnv_liftover functionality."""
+    pedigree_file, cnv_file = cnv_data
+
+    out_file = tmp_path / "lifted_cnv.txt"
+    argv = [
+        str(pedigree_file),
+        str(cnv_file),
+        "--cnv-location", "location",
+        "--cnv-variant-type", "variant",
+        "--cnv-family-id", "familyId",
+        "--cnv-best-state", "bestState",
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_file),
+    ]
+
+    cnv_liftover_main(argv, grr=liftover_data)
 
     # Check that output file was created
     assert out_file.exists()
