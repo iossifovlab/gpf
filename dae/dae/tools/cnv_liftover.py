@@ -6,29 +6,38 @@ from typing import cast
 
 from dae.annotation.annotatable import CNVAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
+    context_providers_init,
+    get_genomic_context,
+)
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
+    GenomicResourceRepo,
 )
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.stats_collection import StatsCollection
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.cnv.loader import CNVLoader
 
-logger = logging.getLogger("denovo_liftover")
+logger = logging.getLogger("cnv_liftover")
 
 
-def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
+def build_cli_arguments_parser() -> argparse.ArgumentParser:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(description="liftover CNV variants")
 
     VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
     CNVLoader.cli_arguments(parser)
+
+    context_providers_add_argparser_arguments(
+        parser,
+        skip_cli_annotation_context=True,
+    )
 
     parser.add_argument(
         "-c", "--chain", help="chain resource id",
@@ -43,31 +52,75 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
         default="hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
 
     parser.add_argument(
-        "--stats", help="filename to store liftover statistics",
-        default="stats.txt",
-    )
-
-    parser.add_argument(
         "-o", "--output", help="output filename",
         default="cnv_liftover.txt")
 
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--mode",
+        type=str,
+        dest="mode",
+        metavar="mode",
+        default="bcf_liftover",
+        help="mode to use for liftover: 'bcf_liftover' or 'basic_liftover'",
+    )
+
+    return parser
+
+
+def build_liftover_pipeline(
+    mode: str,
+    source_genome: str,
+    target_genome: str,
+    chain: str,
+    grr: GenomicResourceRepo,
+) -> AnnotationPipeline:
+    """Build liftover annotator based on the selected mode."""
+    if mode not in {"bcf_liftover", "basic_liftover"}:
+        raise ValueError(f"unknown liftover mode: {mode}")
+    annotator_type = "liftover_annotator"
+    if mode == "basic_liftover":
+        annotator_type = "basic_liftover_annotator"
+
+    pipeline_config = textwrap.dedent(
+        f"""
+        - {annotator_type}:
+            chain: {chain}
+            source_genome: {source_genome}
+            target_genome: {target_genome}
+            attributes:
+            - source: liftover_annotatable
+              name: target_annotatable
+        """,
+    )
+
+    pipeline = load_pipeline_from_yaml(pipeline_config, grr)
+    pipeline.open()
+
+    return pipeline
 
 
 def main(
-        argv: list[str] | None = None,
-        gpf_instance: GPFInstance | None = None) -> None:
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
     """Liftover de Novo variants tool main function."""
     # pylint: disable=too-many-locals
     if argv is None:
         argv = sys.argv[1:]
-    if gpf_instance is None:
-        gpf_instance = GPFInstance.build()
-
-    args = parse_cli_arguments(argv)
+    parser = build_cli_arguments_parser()
+    assert argv is not None
+    args = parser.parse_args(argv)
 
     VerbosityConfiguration.set(args)
-    grr = build_genomic_resource_repository()
+    context_providers_init(
+        **vars(args), skip_cli_annotation_context=True)
+    genomic_context = get_genomic_context()
+
+    if grr is None:
+        grr = genomic_context.get_genomic_resources_repository()
+    if grr is None:
+        raise ValueError("no valid GRR configured")
+
     source_genome = build_reference_genome_from_resource(
         grr.get_resource(args.source_genome))
     assert source_genome is not None
@@ -91,29 +144,19 @@ def main(
         params=variants_params,
         genome=source_genome,
     )
-
-    pipeline_config = textwrap.dedent(
-        f"""
-        - liftover_annotator:
-            chain: {args.chain}
-            source_genome: {args.source_genome}
-            target_genome: {args.target_genome}
-            attributes:
-            - source: liftover_annotatable
-              name: target_annotatable
-        """,
+    pipeline = build_liftover_pipeline(
+        args.mode,
+        args.source_genome,
+        args.target_genome,
+        args.chain,
+        grr,
     )
-
-    pipeline = load_pipeline_from_yaml(pipeline_config, gpf_instance.grr)
-    pipeline.open()
-
-    stats: StatsCollection = StatsCollection()
 
     with open(args.output, "wt") as output:
 
         header = [
-            "location38", "cnv_type38",
-            "location19", "cnv_type19",
+            "location", "cnv_type",
+            "location_src", "cnv_type_src",
             "size_change",
             "familyId", "personId",
         ]
@@ -132,25 +175,18 @@ def main(
 
             if liftover_annotatable is None:
                 logger.error("can't liftover %s", aa)
-                stats.inc(("no_liftover", ))
                 continue
 
             for fv in fvs:
-                stats.inc(("liftover", ))
-                stats.inc((
-                    annotatable.type.name,
-                    liftover_annotatable.type.name))
-                size19 = len(annotatable)
-                size38 = len(liftover_annotatable)
+                size_src = len(annotatable)
+                size = len(liftover_annotatable)
 
-                size_diff = (100.0 * abs(size19 - size38)) / size19
+                size_diff = (100.0 * abs(size_src - size)) / size_src
                 if size_diff >= 50:
                     logger.warning(
-                        "CNV variant changed more than 50 percent: %s; "
+                        "CNV variant size changed more than 50 percent: %s; "
                         "%s -> %s",
                         size_diff, annotatable, liftover_annotatable)
-
-                stats.inc((f"size_diff: {int(size_diff / 10) * 10}", ))
 
                 for aa in fv.alt_alleles:
                     fa = cast(FamilyAllele, aa)
@@ -178,6 +214,3 @@ def main(
 
                     output.write("\t".join(line))
                     output.write("\n")
-                    stats.inc(("output", ))
-
-    stats.save(args.stats)
