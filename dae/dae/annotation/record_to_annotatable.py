@@ -158,26 +158,24 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def build_record_to_annotatable(
-        parameters: dict[str, str],
+        renamed_columns: dict[str, str],
         available_columns: set[str],
         ref_genome: ReferenceGenome | None = None) -> RecordToAnnotable:
     """Transform a variant record into an annotatable."""
-    for columns, record_to_annotatable_class in \
+    for annotatable_columns, record_to_annotatable_class in \
             RECORD_TO_ANNOTATABLE_CONFIGURATION.items():
-        renamed_columns = [
-            parameters.get(f"col_{col}", col) for col in columns
+        columns = [
+            renamed_columns.get(f"col_{annot_col}", annot_col)
+            for annot_col in annotatable_columns
         ]
-        all_available = len(
-            [cn for cn in renamed_columns if cn not in available_columns],
-        ) == 0
-        if all_available:
+        if set(columns).issubset(set(available_columns)):
             logger.info(
                 "record to annotatable using %s(%s, ref_genome=%s)",
                 record_to_annotatable_class.__name__,
-                tuple(renamed_columns),
+                tuple(columns),
                 ref_genome.resource_id if ref_genome else None,
             )
             return record_to_annotatable_class(
-                tuple(renamed_columns), ref_genome,
+                tuple(columns), ref_genome,
             )
     raise ValueError("no record to annotatable could be found.")
