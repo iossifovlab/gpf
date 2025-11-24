@@ -12,11 +12,14 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     convert_to_tab_separated,
+    setup_dae_transmitted,
     setup_directories,
     setup_genome,
     setup_gzip,
+    setup_pedigree,
     setup_vcf,
 )
+from dae.tools.dae_liftover import main as dae_liftover_main
 from dae.tools.vcf_liftover import main
 
 
@@ -436,3 +439,70 @@ foo    7   .  G   A   .    .      .    GT     0/0  1/0  0/1
             str(out_vcf.with_suffix(".vcf")))) as vcffile:
         variants = list(vcffile.fetch())
         assert len(variants) == 3
+
+
+@pytest.fixture
+def dae_transmitted_data(
+    tmp_path: pathlib.Path,
+) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+    """Create pedigree and DAE transmitted variant files for testing."""
+    # Setup pedigree file
+    pedigree_file = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        textwrap.dedent("""
+            familyId personId dadId momId sex status role
+            f1       mom1     0     0     2   1      mom
+            f1       dad1     0     0     1   1      dad
+            f1       ch1      dad1  mom1  1   2      prb
+        """),
+    )
+
+    # Setup DAE transmitted variant files
+    # Variant at chrA:6 A->C should map to chrB:6 A->C (identity region)
+    summary_file, toomany_file = setup_dae_transmitted(
+        tmp_path,
+        textwrap.dedent("""
+            chr  position variant   familyData all.nParCalled \
+all.prcntParCalled all.nAltAlls all.altFreq
+            chrA 6        sub(A->C) \
+f1:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0 2 100.00 1 50.00
+        """),
+        textwrap.dedent("""
+            chr position variant familyData
+        """),
+    )
+
+    return pedigree_file, summary_file, toomany_file
+
+
+def test_dae_liftover_simple(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    dae_transmitted_data: tuple[pathlib.Path, pathlib.Path, pathlib.Path],
+) -> None:
+    """Test basic dae_liftover functionality."""
+    pedigree_file, summary_file, _toomany_file = dae_transmitted_data
+
+    out_prefix = tmp_path / "lifted"
+    argv = [
+        str(pedigree_file),
+        str(summary_file),
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_prefix),
+    ]
+
+    dae_liftover_main(argv, grr=liftover_data)
+
+    # Check that output files were created
+    assert out_prefix.with_suffix(".txt").exists()
+    assert out_prefix.with_name(f"{out_prefix.name}-TOOMANY.txt").exists()
+
+    # Verify the output contains the lifted variant
+    with open(out_prefix.with_suffix(".txt"), encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) > 1  # Header + at least one variant
+        # Check that chrB is in the output (lifted from chrA)
+        content = "".join(lines)
+        assert "chrB" in content

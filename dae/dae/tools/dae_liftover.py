@@ -18,6 +18,7 @@ from dae.genomic_resources.liftover_chain import (
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
@@ -80,6 +81,7 @@ def build_cli_arguments_parser() -> argparse.ArgumentParser:
 
 def main(
         argv: list[str] | None = None,
+        grr: GenomicResourceRepo | None = None,
 ) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
@@ -95,7 +97,8 @@ def main(
         **vars(args), skip_cli_annotation_context=True)
     genomic_context = get_genomic_context()
 
-    grr = genomic_context.get_genomic_resources_repository()
+    if grr is None:
+        grr = genomic_context.get_genomic_resources_repository()
     if grr is None:
         raise ValueError("no valid GRR configured")
 
