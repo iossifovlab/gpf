@@ -42,3 +42,8 @@ Verify the correctness of the `bcf_liftover_allele` function in `dae/dae/annotat
 *   **Description:** Variant falls into a region with no chain mapping.
 *   **Input:** Coordinate not in chain file.
 *   **Expected:** `None`
+
+### 8. Internal Chain Gap (Failure Case)
+*   **Description:** Variant falls into a gap within a chain alignment (Source has sequence not present in Target).
+*   **Input:** Coordinate in the source gap.
+*   **Expected:** `None`

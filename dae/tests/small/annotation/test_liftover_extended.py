@@ -102,6 +102,79 @@ def liftover_data(
     return build_filesystem_test_repository(tmp_path)
 
 
+@pytest.fixture
+def liftover_gap_data(
+    tmp_path: pathlib.Path,
+) -> GenomicResourceRepo:
+    setup_genome(
+        tmp_path / "source_genome" / "genome.fa",
+        textwrap.dedent("""
+            >chrA
+            NNNNNAAAAA
+            GGGGGTTTTT
+            CCCCC
+            """),
+    )
+    setup_genome(
+        tmp_path / "target_genome" / "genome.fa",
+        textwrap.dedent("""
+            >chrB
+            NNNNNAAAAA
+            TTTTTCCCCC
+            CCCCC
+            """),
+    )
+    # Chain with a gap in source.
+    # chrA:0-10 maps to chrB:0-10
+    # Gap in chrA of 5 bases (10-15).
+    # chrA:15-20 maps to chrB:10-15.
+    #
+    # Chain header:
+    # chain 100 chrA 25 + 0 20 chrB 25 + 0 15 1
+    # Block 1: size 10.
+    # dt = 5 (source skips 5 bases: 10-15)
+    # dq = 0 (target continues)
+    # Block 2: size 5.
+    #
+    # 10 5 0
+    # 5
+
+    setup_gzip(
+        tmp_path / "liftover_chain" / "liftover.chain.gz",
+        convert_to_tab_separated("""
+        chain 100 chrA 25 + 0 20 chrB 25 + 0 15 1
+        10 5 0
+        5
+        """),
+    )
+    setup_directories(tmp_path, {
+        "source_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: genome
+                filename: genome.fa
+            """),
+        },
+        "target_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: genome
+                filename: genome.fa
+            """),
+        },
+        "liftover_chain": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: liftover_chain
+                filename: liftover.chain.gz
+                meta:
+                  labels:
+                    source_genome: source_genome
+                    target_genome: target_genome
+            """),
+        },
+    })
+
+    return build_filesystem_test_repository(tmp_path)
+
+
 def test_check_liftover_resources(
     liftover_data: GenomicResourceRepo,
 ) -> None:
@@ -296,3 +369,43 @@ def test_liftover_indel_strand(liftover_data: GenomicResourceRepo) -> None:
     assert pos == 12
     assert ref == "G"
     assert alt == "GA"
+
+
+def test_liftover_chain_gap(liftover_data: GenomicResourceRepo) -> None:
+    chain_res = liftover_data.get_resource("liftover_chain")
+    chain = build_liftover_chain_from_resource(chain_res).open()
+    source_genome = build_reference_genome_from_resource(
+        liftover_data.get_resource("source_genome")).open()
+    target_genome = build_reference_genome_from_resource(
+        liftover_data.get_resource("target_genome")).open()
+
+    # chrA:22 is in the gap (20-25).
+    # Variant C>G
+    result = bcf_liftover_allele(
+        "chrA", 22, "C", "G", chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+    )
+
+    assert result is None
+
+
+def test_liftover_internal_chain_gap(
+    liftover_gap_data: GenomicResourceRepo,
+) -> None:
+    chain_res = liftover_gap_data.get_resource("liftover_chain")
+    chain = build_liftover_chain_from_resource(chain_res).open()
+    source_genome = build_reference_genome_from_resource(
+        liftover_gap_data.get_resource("source_genome")).open()
+    target_genome = build_reference_genome_from_resource(
+        liftover_gap_data.get_resource("target_genome")).open()
+
+    # chrA:12 is in the gap (10-15).
+    # Variant G>C
+    result = bcf_liftover_allele(
+        "chrA", 12, "G", "C", chain,
+        source_genome=source_genome,
+        target_genome=target_genome,
+    )
+
+    assert result is None
