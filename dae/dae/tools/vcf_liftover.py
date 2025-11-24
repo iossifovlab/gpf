@@ -31,12 +31,13 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 logger = logging.getLogger("vcf_liftover")
 
 
-def parse_cli_arguments() -> argparse.ArgumentParser:
+def build_cli_arguments_parser() -> argparse.ArgumentParser:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(
         description="liftover VCF variants")
 
-    context_providers_add_argparser_arguments(parser)
+    context_providers_add_argparser_arguments(
+        parser, skip_cli_annotation_context=True)
     VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
@@ -115,7 +116,7 @@ def main(
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = parse_cli_arguments()
+    parser = build_cli_arguments_parser()
     args = parser.parse_args(argv)
 
     VerbosityConfiguration.set(args)
