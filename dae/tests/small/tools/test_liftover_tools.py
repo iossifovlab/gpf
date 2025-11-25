@@ -1,8 +1,9 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme,R0917
 import pathlib
 import textwrap
 from contextlib import closing
 
+import pandas as pd
 import pysam
 import pytest
 from dae.genomic_resources.liftover_chain import (
@@ -471,11 +472,10 @@ def dae_transmitted_data(
     summary_file, toomany_file = setup_dae_transmitted(
         tmp_path,
         textwrap.dedent("""
-            chr  position variant   familyData all.nParCalled \
-all.prcntParCalled all.nAltAlls all.altFreq
-            chrA 6        sub(A->C) \
-f1:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0 2 100.00 1 50.00
-        """),
+            chr  position variant   familyData all.nParCalled all.prcntParCalled all.nAltAlls all.altFreq
+            chrA 6        sub(A->C) f1:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0 2 100.00 1 50.00
+            chrA 13       sub(T->G) f1:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0 2 100.00 1 50.00
+        """),  # noqa
         textwrap.dedent("""
             chr position variant familyData
         """),
@@ -540,6 +540,7 @@ def denovo_data(
         textwrap.dedent("""
             familyId location    variant   bestState
             f1       chrA:6      sub(A->C) 2||2||1/0||0||1
+            f1       chrA:13     sub(T->G) 2||2||1/0||0||1
         """),
     )
 
@@ -604,7 +605,8 @@ def cnv_data(
         tmp_path / "cnv.txt",
         textwrap.dedent("""
             familyId location    variant bestState
-            f1       chrA:4-8    CNV+    2||2||3
+            f1       chrA:5-8    CNV+    2||2||3
+            f1       chrA:12-14  CNV+    2||2||3
         """),
     )
 
@@ -662,9 +664,19 @@ def test_region_output_filename(
     assert result == expected
 
 
+@pytest.mark.parametrize("region_str, region_suffix, count, positions", [
+    (None, None, 2, [6, 13]),
+    ("chrA:5-10", "chrA_5_10", 1, [6]),
+    ("chrA:11-15", "chrA_11_15", 1, [13]),
+    ("chrA:5-15", "chrA_5_15", 2, [6, 13]),
+])
 def test_vcf_liftover_with_region(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
+    region_str: str,
+    region_suffix: str,
+    count: int,
+    positions: list[int],
 ) -> None:
     """Test VCF liftover with region filtering."""
     vcf_file = setup_vcf(
@@ -682,20 +694,25 @@ chrA   13  .  T   G   .    .      .    GT     0/1
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
         "--target-genome", "target_genome",
-        "--region", "chrA:5-10",
         "-o", str(out_vcf),
         str(vcf_file),
     ]
 
+    if region_str is not None:
+        argv.extend(["--region", region_str])
+        expected_vcf = tmp_path / f"liftover_{region_suffix}.vcf"
+    else:
+        expected_vcf = out_vcf.with_suffix(".vcf")
+
     vcf_liftover_main(argv, grr=liftover_data)
 
-    # When region is specified, output filename changes
-    expected_vcf = tmp_path / "liftover_chrA_5_10.vcf"
+    assert expected_vcf.exists()
+
     with closing(pysam.VariantFile(str(expected_vcf))) as vcffile:
         variants = list(vcffile.fetch())
         # Only variant at position 6 should be in region chrA:5-10
-        assert len(variants) == 1
-        assert variants[0].pos == 6
+        assert len(variants) == count
+        assert [v.pos for v in variants] == positions
 
 
 def test_vcf_liftover_basic_mode(
@@ -759,10 +776,67 @@ def test_dae_liftover_with_region(
     assert expected_toomany.exists()
 
 
+@pytest.mark.parametrize("region_str, region_suffix, count, positions", [
+    (None, None, 2, [6, 13]),
+    ("chrA:5-10", "chrA_5_10", 1, [6]),
+    ("chrA:11-15", "chrA_11_15", 1, [13]),
+    ("chrA:5-15", "chrA_5_15", 2, [6, 13]),
+])
+def test_dae_liftover_region_filename(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    dae_transmitted_data: tuple[pathlib.Path, pathlib.Path, pathlib.Path],
+    region_str: str | None,
+    region_suffix: str | None,
+    count: int,
+    positions: list[int],
+) -> None:
+    """Test DAE liftover region parameter changes output filenames."""
+    pedigree_file, summary_file, _toomany_file = dae_transmitted_data
+
+    out_prefix = tmp_path / "lifted"
+    argv = [
+        str(pedigree_file),
+        str(summary_file),
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_prefix),
+    ]
+    if region_str is not None:
+        argv.extend(["--region", region_str])
+        expected_summary = tmp_path / f"lifted-{region_suffix}.txt"
+        expected_toomany = tmp_path / f"lifted-TOOMANY-{region_suffix}.txt"
+    else:
+        expected_summary = tmp_path / "lifted.txt"
+        expected_toomany = tmp_path / "lifted-TOOMANY.txt"
+
+    dae_liftover_main(argv, grr=liftover_data)
+
+    # When region is specified, output filenames include the region
+    assert expected_summary.exists()
+    assert expected_toomany.exists()
+
+    # Verify the output contains lifted variants
+    df = pd.read_csv(expected_summary, sep="\t")
+    assert len(df) == count
+    assert df["position"].tolist() == positions
+
+
+@pytest.mark.parametrize("region_str, region_suffix, count, positions", [
+    (None, None, 2, [6, 13]),
+    ("chrA:5-10", "chrA_5_10", 1, [6]),
+    ("chrA:11-15", "chrA_11_15", 1, [13]),
+    ("chrA:5-15", "chrA_5_15", 2, [6, 13]),
+])
 def test_denovo_liftover_with_region(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
     denovo_data: tuple[pathlib.Path, pathlib.Path],
+    region_str: str | None,
+    region_suffix: str | None,
+    count: int,
+    positions: list[int],
 ) -> None:
     """Test denovo liftover with region parameter (filename generation)."""
     pedigree_file, denovo_file = denovo_data
@@ -781,17 +855,35 @@ def test_denovo_liftover_with_region(
         "--target-genome", "target_genome",
         "-o", str(out_file),
     ]
+    if region_str is not None:
+        argv.extend(["--region", region_str])
+        expected_out = tmp_path / f"lifted_denovo_{region_suffix}.txt"
+    else:
+        expected_out = tmp_path / "lifted_denovo.txt"
 
     denovo_liftover_main(argv, grr=liftover_data)
 
     # Check that output file was created
-    assert out_file.exists()
+    assert expected_out.exists()
+    df = pd.read_csv(expected_out, sep="\t")
+    assert len(df) == count
+    assert df["pos"].tolist() == positions
 
 
+@pytest.mark.parametrize("region_str, region_suffix, count, locations", [
+    (None, None, 2, ["chrB:5-8", "chrB:12-14"]),
+    ("chrA:5-10", "chrA_5_10", 1, ["chrB:5-8"]),
+    ("chrA:11-15", "chrA_11_15", 1, ["chrB:12-14"]),
+    ("chrA:5-15", "chrA_5_15", 2, ["chrB:5-8", "chrB:12-14"]),
+])
 def test_cnv_liftover_with_region(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
     cnv_data: tuple[pathlib.Path, pathlib.Path],
+    region_str: str | None,
+    region_suffix: str | None,
+    count: int,
+    locations: list[str],
 ) -> None:
     """Test CNV liftover with region parameter (filename generation)."""
     pedigree_file, cnv_file = cnv_data
@@ -810,11 +902,18 @@ def test_cnv_liftover_with_region(
         "--target-genome", "target_genome",
         "-o", str(out_file),
     ]
+    if region_str is not None:
+        argv.extend(["--region", region_str])
+        expected_out = tmp_path / f"lifted_cnv_{region_suffix}.txt"
+    else:
+        expected_out = tmp_path / "lifted_cnv.txt"
 
     cnv_liftover_main(argv, grr=liftover_data)
-
     # Check that output file was created
-    assert out_file.exists()
+    assert expected_out.exists()
+    df = pd.read_csv(expected_out, sep="\t")
+    assert len(df) == count
+    assert df["location"].tolist() == locations
 
 
 def test_vcf_liftover_invalid_mode(

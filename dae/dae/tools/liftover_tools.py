@@ -393,8 +393,9 @@ class DaeLiftoverTool(LiftoverTool):
         if region is not None:
             logger.info("resetting regions (region): %s", region)
             variants_loader.reset_regions([region])
-            summary_filename = f"{output_prefix}-{region}.txt"
-            toomany_filename = f"{output_prefix}-TOOMANY-{region}.txt"
+            region_str = str(region).replace(":", "_").replace("-", "_")
+            summary_filename = f"{output_prefix}-{region_str}.txt"
+            toomany_filename = f"{output_prefix}-TOOMANY-{region_str}.txt"
         logger.info("summary output: %s", summary_filename)
         logger.info("toomany output: %s", toomany_filename)
 
