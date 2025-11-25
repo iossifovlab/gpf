@@ -21,12 +21,11 @@ from dae.genomic_resources.testing import (
     setup_vcf,
 )
 from dae.tools.liftover_tools import (
+    VCFLiftoverTool,
     _region_output_filename,
     cnv_liftover_main,
     dae_liftover_main,
     denovo_liftover_main,
-    report_variant,
-    report_vcf_variant,
     vcf_liftover_main,
 )
 from dae.utils.regions import Region
@@ -847,20 +846,20 @@ chrA   6   .  A   C   .    .      .
 def test_report_variant() -> None:
     """Test report_variant function."""
     variant = ("chr1", 100, "A", ["C"])
-    result = report_variant(variant)
+    result = VCFLiftoverTool.report_variant(variant)
     assert result == "(chr1:100 A > C)"
 
 
 def test_report_variant_none() -> None:
     """Test report_variant with None input."""
-    result = report_variant(None)
+    result = VCFLiftoverTool.report_variant(None)
     assert result == "(none)"
 
 
 def test_report_variant_multiple_alts() -> None:
     """Test report_variant with multiple alternatives."""
     variant = ("chr2", 200, "T", ["A", "G"])
-    result = report_variant(variant)
+    result = VCFLiftoverTool.report_variant(variant)
     assert result == "(chr2:200 T > A,G)"
 
 
@@ -876,7 +875,7 @@ chr1   100 .  A   C   .    .      .
 
     with closing(pysam.VariantFile(str(vcf_file))) as vcffile:
         variant = next(vcffile.fetch())
-        result = report_vcf_variant(variant)
+        result = VCFLiftoverTool.report_vcf_variant(variant)
         assert result == "(chr1:100 A > C)"
 
 
@@ -892,7 +891,7 @@ chr1   100 .  A   .   .    .      .
 
     with closing(pysam.VariantFile(str(vcf_file))) as vcffile:
         variant = next(vcffile.fetch())
-        result = report_vcf_variant(variant)
+        result = VCFLiftoverTool.report_vcf_variant(variant)
         assert result == "(chr1:100 A > .)"
 
 

@@ -49,7 +49,7 @@ from dae.variants_loaders.dae.loader import (
 )
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
-logger = logging.getLogger("cnv_liftover")
+logger = logging.getLogger("liftover_tools")
 
 
 def _build_variant_loader(
@@ -585,51 +585,6 @@ def denovo_liftover_main(
     tool.run(argv=argv, grr=grr)
 
 
-def _vcf_liftover_header(
-    vcffile: str,
-    source_genome: ReferenceGenome,
-    target_genome: ReferenceGenome,
-) -> pysam.VariantHeader:
-    """Create liftover VCF header."""
-    target_contigs = []
-    target_contigs = target_genome.chromosomes[:]
-
-    with tempfile.NamedTemporaryFile(
-            mode="wt", suffix=".vcf") as temp_vcf:
-
-        with closing(pysam.VariantFile(vcffile)) as vcf, \
-            closing(pysam.VariantFile(
-                    temp_vcf.name, "w", header=vcf.header)) as tmp:
-            pass
-
-        with open(temp_vcf.name, "rt") as tmp:
-            lines = tmp.readlines()
-            outheader = []
-            contig_index = None
-            for index, line in enumerate(lines):
-                if line.startswith("##contig"):
-                    if contig_index is None:
-                        contig_index = index
-                    continue
-                outheader.append(line)
-        outcontigs = [f"##contig=<ID={contig}>\n" for contig in target_contigs]
-        if contig_index is None:
-            raise ValueError("No contig lines found in header")
-
-        out_buf = "".join([
-            *outheader[:contig_index],
-            *outcontigs,
-            *outheader[contig_index:],
-            f"##source_genome={source_genome.resource_id}\n",
-            f"##target_genome={target_genome.resource_id}\n",
-            f"##command=vcf_liftover {' '.join(sys.argv[1:])}\n",
-        ])
-        pathlib.Path(temp_vcf.name).write_text(out_buf)
-
-        with closing(pysam.VariantFile(temp_vcf.name)) as tmp:
-            return tmp.header
-
-
 class VCFLiftoverTool(LiftoverTool):
     """VCF liftover tool class."""
 
@@ -669,7 +624,7 @@ class VCFLiftoverTool(LiftoverTool):
         else:
             raise ValueError(f"Invalid mode: {self.cli_args.mode}")
 
-        output_header = _vcf_liftover_header(
+        output_header = self._vcf_liftover_header(
             self.cli_args.vcffile,
             self.source_genome,
             self.target_genome)
@@ -697,7 +652,7 @@ class VCFLiftoverTool(LiftoverTool):
                 if lo_variant is None:
                     logger.warning(
                         "skipping variant without liftover: %s",
-                        report_vcf_variant(vcf_variant))
+                        self.report_vcf_variant(vcf_variant))
                     continue
 
                 vcf_variant.translate(output_header)
@@ -714,27 +669,73 @@ class VCFLiftoverTool(LiftoverTool):
                     logger.exception(
                         "skipping variant with invalid liftover: "
                         "%s liftover to %s",
-                        report_vcf_variant(vcf_variant),
-                        report_variant(lo_variant))
+                        self.report_vcf_variant(vcf_variant),
+                        self.report_variant(lo_variant))
                     raise
 
+    @staticmethod
+    def report_vcf_variant(vcf_variant: pysam.VariantRecord) -> str:
+        """Report VCF variant."""
+        return (
+            f"({vcf_variant.chrom}:{vcf_variant.pos} "
+            f"{vcf_variant.ref} > "
+            f"{','.join(vcf_variant.alts) if vcf_variant.alts else '.'})"
+        )
 
-def report_vcf_variant(vcf_variant: pysam.VariantRecord) -> str:
-    """Report VCF variant."""
-    return (
-        f"({vcf_variant.chrom}:{vcf_variant.pos} "
-        f"{vcf_variant.ref} > "
-        f"{','.join(vcf_variant.alts) if vcf_variant.alts else '.'})"
-    )
+    @staticmethod
+    def report_variant(variant: tuple[str, int, str, list[str]] | None) -> str:
+        """Report variant."""
+        if not variant:
+            return "(none)"
+        chrom, pos, ref, alts = variant
+        s_alts = ",".join(alts)
+        return f"({chrom}:{pos} {ref} > {s_alts})"
 
+    @staticmethod
+    def _vcf_liftover_header(
+        vcffile: str,
+        source_genome: ReferenceGenome,
+        target_genome: ReferenceGenome,
+    ) -> pysam.VariantHeader:
+        """Create liftover VCF header."""
+        target_contigs = []
+        target_contigs = target_genome.chromosomes[:]
 
-def report_variant(variant: tuple[str, int, str, list[str]] | None) -> str:
-    """Report variant."""
-    if not variant:
-        return "(none)"
-    chrom, pos, ref, alts = variant
-    s_alts = ",".join(alts)
-    return f"({chrom}:{pos} {ref} > {s_alts})"
+        with tempfile.NamedTemporaryFile(
+                mode="wt", suffix=".vcf") as temp_vcf:
+
+            with closing(pysam.VariantFile(vcffile)) as vcf, \
+                closing(pysam.VariantFile(
+                        temp_vcf.name, "w", header=vcf.header)) as tmp:
+                pass
+
+            with open(temp_vcf.name, "rt") as tmp:
+                lines = tmp.readlines()
+                outheader = []
+                contig_index = None
+                for index, line in enumerate(lines):
+                    if line.startswith("##contig"):
+                        if contig_index is None:
+                            contig_index = index
+                        continue
+                    outheader.append(line)
+            outcontigs = [
+                f"##contig=<ID={contig}>\n" for contig in target_contigs]
+            if contig_index is None:
+                raise ValueError("No contig lines found in header")
+
+            out_buf = "".join([
+                *outheader[:contig_index],
+                *outcontigs,
+                *outheader[contig_index:],
+                f"##source_genome={source_genome.resource_id}\n",
+                f"##target_genome={target_genome.resource_id}\n",
+                f"##command=vcf_liftover {' '.join(sys.argv[1:])}\n",
+            ])
+            pathlib.Path(temp_vcf.name).write_text(out_buf)
+
+            with closing(pysam.VariantFile(temp_vcf.name)) as tmp:
+                return tmp.header
 
 
 def vcf_liftover_main(
