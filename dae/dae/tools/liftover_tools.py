@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 import textwrap
+from collections.abc import Callable
 from typing import cast
 
 from dae.annotation.annotatable import CNVAllele
@@ -22,17 +23,17 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 logger = logging.getLogger("cnv_liftover")
 
 
-def build_cli_arguments_parser() -> argparse.ArgumentParser:
+def build_cli_arguments_parser(description: str) -> argparse.ArgumentParser:
     """Create CLI parser."""
-    parser = argparse.ArgumentParser(description="liftover CNV variants")
+    parser = argparse.ArgumentParser(description=description)
 
     VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
-    CNVLoader.cli_arguments(parser)
 
     context_providers_add_argparser_arguments(
         parser,
@@ -99,7 +100,24 @@ def build_liftover_pipeline(
     return pipeline
 
 
-def main(
+def cnv_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """CNV liftover tool main function."""
+    _main(
+        description="liftover CNV variants",
+        loader_class=CNVLoader,
+        liftover_variants=_liftover_cnv_variants,
+        argv=argv, grr=grr,
+    )
+
+
+def _main(
+    description: str,
+    loader_class: type[VariantsGenotypesLoader],
+    liftover_variants: Callable[
+        [str, VariantsGenotypesLoader, AnnotationPipeline], None],
     argv: list[str] | None = None,
     grr: GenomicResourceRepo | None = None,
 ) -> None:
@@ -107,7 +125,9 @@ def main(
     # pylint: disable=too-many-locals
     if argv is None:
         argv = sys.argv[1:]
-    parser = build_cli_arguments_parser()
+    parser = build_cli_arguments_parser(description)
+    loader_class.cli_arguments(parser)
+
     assert argv is not None
     args = parser.parse_args(argv)
 
@@ -136,11 +156,11 @@ def main(
     families = families_loader.load()
 
     variants_filenames, variants_params = \
-        CNVLoader.parse_cli_arguments(args)
+        loader_class.parse_cli_arguments(args)
 
-    variants_loader = CNVLoader(
+    variants_loader = loader_class(
         families,
-        variants_filenames,  # type: ignore
+        variants_filenames,
         params=variants_params,
         genome=source_genome,
     )
@@ -152,8 +172,15 @@ def main(
         grr,
     )
 
-    with open(args.output, "wt") as output:
+    liftover_variants(args.output, variants_loader, pipeline)
 
+
+def _liftover_cnv_variants(
+    output_filename: str,
+    variants_loader: VariantsGenotypesLoader,
+    pipeline: AnnotationPipeline,
+) -> None:
+    with open(output_filename, "wt") as output:
         header = [
             "location", "cnv_type",
             "location_src", "cnv_type_src",
@@ -202,7 +229,6 @@ def main(
                         f"{liftover_annotatable.pos}-"
                         f"{liftover_annotatable.pos_end}",
                         liftover_annotatable.type.name,
-
                         f"{annotatable.chrom}:"
                         f"{annotatable.pos}-"
                         f"{annotatable.pos_end}",
