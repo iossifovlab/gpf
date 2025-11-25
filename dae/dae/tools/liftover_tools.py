@@ -5,7 +5,10 @@ import textwrap
 from collections.abc import Callable
 from typing import cast
 
-from dae.annotation.annotatable import CNVAllele
+from dae.annotation.annotatable import (
+    CNVAllele,
+    VCFAllele,
+)
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.genomic_context import (
@@ -20,9 +23,13 @@ from dae.genomic_resources.repository_factory import (
     GenomicResourceRepo,
 )
 from dae.pedigrees.loader import FamiliesLoader
+from dae.utils.regions import Region
+from dae.utils.variant_utils import mat2str
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
+from dae.variants.variant import VariantDetails
 from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 logger = logging.getLogger("cnv_liftover")
@@ -109,6 +116,19 @@ def cnv_liftover_main(
         description="liftover CNV variants",
         loader_class=CNVLoader,
         liftover_variants=_liftover_cnv_variants,
+        argv=argv, grr=grr,
+    )
+
+
+def dae_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """DAE liftover tool main function."""
+    _main(
+        description="liftover DAE transmitted variants",
+        loader_class=DaeTransmittedLoader,
+        liftover_variants=_liftover_dae_variants,
         argv=argv, grr=grr,
     )
 
@@ -240,3 +260,99 @@ def _liftover_cnv_variants(
 
                     output.write("\t".join(line))
                     output.write("\n")
+
+
+def _liftover_dae_variants(
+    output_prefix: str,
+    variants_loader: VariantsGenotypesLoader,
+    pipeline: AnnotationPipeline,
+    region: Region | None = None,
+) -> None:
+    summary_filename = f"{output_prefix}.txt"
+    toomany_filename = f"{output_prefix}-TOOMANY.txt"
+    if region is not None:
+        logger.info("resetting regions (region): %s", region)
+        variants_loader.reset_regions([region])
+        summary_filename = f"{output_prefix}-{region}.txt"
+        toomany_filename = f"{output_prefix}-TOOMANY-{region}.txt"
+    logger.info("summary output: %s", summary_filename)
+    logger.info("toomany output: %s", toomany_filename)
+
+    with open(summary_filename, "wt") as output_summary, \
+            open(toomany_filename, "wt") as output_toomany:
+
+        summary_header = [
+            "#chr", "position", "variant",
+            "familyData",
+            "all.nParCalled", "all.prcntParCalled",
+            "all.nAltAlls", "all.altFreq",
+        ]
+        toomany_header = [
+            "#chr", "position", "variant",
+            "familyData",
+        ]
+
+        output_summary.write("\t".join(summary_header))
+        output_summary.write("\n")
+
+        output_toomany.write("\t".join(toomany_header))
+        output_toomany.write("\n")
+
+        for sv, fvs in variants_loader.full_variants_iterator():
+            assert len(sv.alt_alleles) == 1
+
+            aa = sv.alt_alleles[0]
+            annotatable = aa.get_annotatable()
+            result = pipeline.annotate(annotatable)
+            liftover_annotatable: VCFAllele = \
+                cast(VCFAllele, result.get("target_annotatable"))
+            if liftover_annotatable is None:
+                logger.error("can't liftover %s", aa)
+                continue
+            liftover_cshl_variant = VariantDetails.from_vcf(
+                liftover_annotatable.chrom, liftover_annotatable.pos,
+                liftover_annotatable.ref,
+                liftover_annotatable.alt)
+
+            summary_line = [
+                liftover_cshl_variant.chrom,
+                str(liftover_cshl_variant.cshl_position),
+                liftover_cshl_variant.cshl_variant,
+            ]
+            frequency_data = [
+                str(aa.attributes.get("af_parents_called_count", "")),
+                str(aa.attributes.get("af_parents_called_percent", "")),
+                str(aa.attributes.get("af_allele_count", "")),
+                str(aa.attributes.get("af_allele_freq", "")),
+            ]
+            toomany_line = [
+                liftover_cshl_variant.chrom,
+                str(liftover_cshl_variant.cshl_position),
+                liftover_cshl_variant.cshl_variant,
+            ]
+
+            families_data = []
+            for fv in fvs:
+                fa = cast(FamilyAllele, fv.alt_alleles[0])
+
+                fdata = [
+                    fa.family_id,
+                    mat2str(fa.best_state),
+                    fa.family_attributes["read_counts"],
+                ]
+                families_data.append(":".join(fdata))
+
+            if len(families_data) < 20:
+                summary_line.append(";".join(families_data))
+                summary_line.extend(frequency_data)
+                output_summary.write("\t".join(summary_line))
+                output_summary.write("\n")
+            else:
+                summary_line.append("TOOMANY")
+                summary_line.extend(frequency_data)
+                output_summary.write("\t".join(summary_line))
+                output_summary.write("\n")
+
+                toomany_line.append(";".join(families_data))
+                output_toomany.write("\t".join(toomany_line))
+                output_toomany.write("\n")
