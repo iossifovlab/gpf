@@ -35,7 +35,10 @@ from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 logger = logging.getLogger("cnv_liftover")
 
 
-def build_cli_arguments_parser(description: str) -> argparse.ArgumentParser:
+def build_cli_arguments_parser(
+    description: str,
+    default_output: str,
+) -> argparse.ArgumentParser:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(description=description)
 
@@ -61,7 +64,17 @@ def build_cli_arguments_parser(description: str) -> argparse.ArgumentParser:
 
     parser.add_argument(
         "-o", "--output", help="output filename",
-        default="cnv_liftover.txt")
+        default=default_output)
+
+    parser.add_argument(
+        "--region",
+        type=str,
+        dest="region",
+        metavar="region",
+        default=None,
+        help="region to convert [default: None] "
+        "ex. chr1:1-10000. ",
+    )
 
     parser.add_argument(
         "--mode",
@@ -114,6 +127,7 @@ def cnv_liftover_main(
     """CNV liftover tool main function."""
     _main(
         description="liftover CNV variants",
+        default_output="cnv_liftover.tsv",
         loader_class=CNVLoader,
         liftover_variants=_liftover_cnv_variants,
         argv=argv, grr=grr,
@@ -127,6 +141,7 @@ def dae_liftover_main(
     """DAE liftover tool main function."""
     _main(
         description="liftover DAE transmitted variants",
+        default_output="transmitted_liftover",
         loader_class=DaeTransmittedLoader,
         liftover_variants=_liftover_dae_variants,
         argv=argv, grr=grr,
@@ -135,9 +150,12 @@ def dae_liftover_main(
 
 def _main(
     description: str,
+    default_output: str,
     loader_class: type[VariantsGenotypesLoader],
     liftover_variants: Callable[
-        [str, VariantsGenotypesLoader, AnnotationPipeline], None],
+        [str, VariantsGenotypesLoader, AnnotationPipeline,
+         Region | None],
+        None],
     argv: list[str] | None = None,
     grr: GenomicResourceRepo | None = None,
 ) -> None:
@@ -145,7 +163,8 @@ def _main(
     # pylint: disable=too-many-locals
     if argv is None:
         argv = sys.argv[1:]
-    parser = build_cli_arguments_parser(description)
+    parser = build_cli_arguments_parser(
+        description, default_output)
     loader_class.cli_arguments(parser)
 
     assert argv is not None
@@ -191,15 +210,27 @@ def _main(
         args.chain,
         grr,
     )
+    region = None
+    if args.region is not None:
+        region = Region.from_str(args.region)
 
-    liftover_variants(args.output, variants_loader, pipeline)
+    liftover_variants(
+        args.output,
+        variants_loader,
+        pipeline,
+        region)
 
 
 def _liftover_cnv_variants(
     output_filename: str,
     variants_loader: VariantsGenotypesLoader,
     pipeline: AnnotationPipeline,
+    region: Region | None = None,
 ) -> None:
+    if region is not None:
+        logger.info("resetting regions (region): %s", region)
+        variants_loader.reset_regions([region])
+    logger.info("output: %s", output_filename)
     with open(output_filename, "wt") as output:
         header = [
             "location", "cnv_type",
