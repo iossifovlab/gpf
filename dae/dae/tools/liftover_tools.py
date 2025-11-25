@@ -1,9 +1,9 @@
+import abc
 import argparse
 import logging
 import pathlib
 import sys
 import textwrap
-from collections.abc import Callable
 from typing import cast
 
 from dae.annotation.annotatable import (
@@ -18,6 +18,7 @@ from dae.genomic_resources.genomic_context import (
     get_genomic_context,
 )
 from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository_factory import (
@@ -39,170 +40,11 @@ from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 logger = logging.getLogger("cnv_liftover")
 
 
-def build_cli_arguments_parser(
-    description: str,
-    default_output: str,
-) -> argparse.ArgumentParser:
-    """Create CLI parser."""
-    parser = argparse.ArgumentParser(description=description)
-
-    VerbosityConfiguration.set_arguments(parser)
-    FamiliesLoader.cli_arguments(parser)
-
-    context_providers_add_argparser_arguments(
-        parser,
-        skip_cli_annotation_context=True,
-    )
-
-    parser.add_argument(
-        "-c", "--chain", help="chain resource id",
-        default="liftover/hg19ToHg38")
-
-    parser.add_argument(
-        "-t", "--target-genome", help="target genome",
-        default="hg38/genomes/GRCh38-hg38")
-
-    parser.add_argument(
-        "-s", "--source-genome", help="source genome",
-        default="hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
-
-    parser.add_argument(
-        "-o", "--output", help="output filename",
-        default=default_output)
-
-    parser.add_argument(
-        "--region",
-        type=str,
-        dest="region",
-        metavar="region",
-        default=None,
-        help="region to convert [default: None] "
-        "ex. chr1:1-10000. ",
-    )
-
-    parser.add_argument(
-        "--mode",
-        type=str,
-        dest="mode",
-        metavar="mode",
-        default="bcf_liftover",
-        help="mode to use for liftover: 'bcf_liftover' or 'basic_liftover'",
-    )
-
-    return parser
-
-
-def build_liftover_pipeline(
-    mode: str,
-    source_genome: str,
-    target_genome: str,
-    chain: str,
-    grr: GenomicResourceRepo,
-) -> AnnotationPipeline:
-    """Build liftover annotator based on the selected mode."""
-    if mode not in {"bcf_liftover", "basic_liftover"}:
-        raise ValueError(f"unknown liftover mode: {mode}")
-    annotator_type = "liftover_annotator"
-    if mode == "basic_liftover":
-        annotator_type = "basic_liftover_annotator"
-
-    pipeline_config = textwrap.dedent(
-        f"""
-        - {annotator_type}:
-            chain: {chain}
-            source_genome: {source_genome}
-            target_genome: {target_genome}
-            attributes:
-            - source: liftover_annotatable
-              name: target_annotatable
-        """,
-    )
-
-    pipeline = load_pipeline_from_yaml(pipeline_config, grr)
-    pipeline.open()
-
-    return pipeline
-
-
-def cnv_liftover_main(
-    argv: list[str] | None = None,
-    grr: GenomicResourceRepo | None = None,
-) -> None:
-    """CNV liftover tool main function."""
-    _main(
-        description="liftover CNV variants",
-        default_output="cnv_liftover.tsv",
-        loader_class=CNVLoader,
-        liftover_variants=_liftover_cnv_variants,
-        argv=argv, grr=grr,
-    )
-
-
-def dae_liftover_main(
-    argv: list[str] | None = None,
-    grr: GenomicResourceRepo | None = None,
-) -> None:
-    """DAE liftover tool main function."""
-    _main(
-        description="liftover DAE transmitted variants",
-        default_output="transmitted_liftover",
-        loader_class=DaeTransmittedLoader,
-        liftover_variants=_liftover_dae_variants,
-        argv=argv, grr=grr,
-    )
-
-
-def denovo_liftover_main(
-    argv: list[str] | None = None,
-    grr: GenomicResourceRepo | None = None,
-) -> None:
-    """Denovo liftover tool main function."""
-    _main(
-        description="liftover de Novo variants",
-        default_output="denovo_liftover.txt",
-        loader_class=DenovoLoader,
-        liftover_variants=_liftover_denovo_variants,
-        argv=argv, grr=grr,
-    )
-
-
-def _main(
-    description: str,
-    default_output: str,
+def _build_variant_loader(
     loader_class: type[VariantsGenotypesLoader],
-    liftover_variants: Callable[
-        [str, VariantsGenotypesLoader, AnnotationPipeline,
-         Region | None],
-        None],
-    argv: list[str] | None = None,
-    grr: GenomicResourceRepo | None = None,
-) -> None:
-    """Liftover de Novo variants tool main function."""
-    # pylint: disable=too-many-locals
-    if argv is None:
-        argv = sys.argv[1:]
-    parser = build_cli_arguments_parser(
-        description, default_output)
-    loader_class.cli_arguments(parser)
-
-    assert argv is not None
-    args = parser.parse_args(argv)
-
-    VerbosityConfiguration.set(args)
-    context_providers_init(
-        **vars(args), skip_cli_annotation_context=True)
-    genomic_context = get_genomic_context()
-
-    if grr is None:
-        grr = genomic_context.get_genomic_resources_repository()
-    if grr is None:
-        raise ValueError("no valid GRR configured")
-
-    source_genome = build_reference_genome_from_resource(
-        grr.get_resource(args.source_genome))
-    assert source_genome is not None
-    source_genome.open()
-
+    args: argparse.Namespace,
+    source_genome: ReferenceGenome,
+) -> VariantsGenotypesLoader:
     families_filenames, families_params = \
         FamiliesLoader.parse_cli_arguments(args)
     families_filename = families_filenames[0]
@@ -215,28 +57,12 @@ def _main(
     variants_filenames, variants_params = \
         loader_class.parse_cli_arguments(args)
 
-    variants_loader = loader_class(
+    return loader_class(
         families,
         variants_filenames,
         params=variants_params,
         genome=source_genome,
     )
-    pipeline = build_liftover_pipeline(
-        args.mode,
-        args.source_genome,
-        args.target_genome,
-        args.chain,
-        grr,
-    )
-    region = None
-    if args.region is not None:
-        region = Region.from_str(args.region)
-
-    liftover_variants(
-        args.output,
-        variants_loader,
-        pipeline,
-        region)
 
 
 def _region_output_filename(
@@ -495,3 +321,280 @@ def _liftover_dae_variants(
                 toomany_line.append(";".join(families_data))
                 output_toomany.write("\t".join(toomany_line))
                 output_toomany.write("\n")
+
+
+class LiftoverTool(abc.ABC):
+    """Liftover tools base class."""
+
+    def __init__(
+        self, description: str,
+        default_output: str,
+    ) -> None:
+        self.description = description
+        self.default_output = default_output
+        self.cli_args: argparse.Namespace = argparse.Namespace()
+        self.source_genome: ReferenceGenome | None = None
+
+    def build_liftover_pipeline(
+        self,
+        grr: GenomicResourceRepo,
+    ) -> AnnotationPipeline:
+        """Build liftover annotator based on the selected mode."""
+        if self.cli_args.mode not in {"bcf_liftover", "basic_liftover"}:
+            raise ValueError(f"unknown liftover mode: {self.cli_args.mode}")
+        annotator_type = "liftover_annotator"
+        if self.cli_args.mode == "basic_liftover":
+            annotator_type = "basic_liftover_annotator"
+
+        pipeline_config = textwrap.dedent(
+            f"""
+            - {annotator_type}:
+                chain: {self.cli_args.chain}
+                source_genome: {self.cli_args.source_genome}
+                target_genome: {self.cli_args.target_genome}
+                attributes:
+                - source: liftover_annotatable
+                  name: target_annotatable
+            """,
+        )
+
+        pipeline = load_pipeline_from_yaml(pipeline_config, grr)
+        pipeline.open()
+
+        return pipeline
+
+    def build_cli_arguments_parser(
+        self,
+    ) -> argparse.ArgumentParser:
+        """Create CLI parser."""
+        parser = argparse.ArgumentParser(description=self.description)
+
+        VerbosityConfiguration.set_arguments(parser)
+        FamiliesLoader.cli_arguments(parser)
+
+        context_providers_add_argparser_arguments(
+            parser,
+            skip_cli_annotation_context=True,
+        )
+
+        parser.add_argument(
+            "-c", "--chain", help="chain resource id",
+            default="liftover/hg19ToHg38")
+
+        parser.add_argument(
+            "-t", "--target-genome", help="target genome",
+            default="hg38/genomes/GRCh38-hg38")
+
+        parser.add_argument(
+            "-s", "--source-genome", help="source genome",
+            default="hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
+
+        parser.add_argument(
+            "-o", "--output", help="output filename",
+            default=self.default_output)
+
+        parser.add_argument(
+            "--region",
+            type=str,
+            dest="region",
+            metavar="region",
+            default=None,
+            help="region to convert [default: None] "
+            "ex. chr1:1-10000. ",
+        )
+
+        parser.add_argument(
+            "--mode",
+            type=str,
+            dest="mode",
+            metavar="mode",
+            default="bcf_liftover",
+            help="mode to use for liftover: 'bcf_liftover' or 'basic_liftover'",
+        )
+
+        return parser
+
+    def run(self,
+        argv: list[str] | None = None,
+        grr: GenomicResourceRepo | None = None,
+    ) -> None:
+        """Liftover tool main function."""
+        parser = self.build_cli_arguments_parser()
+
+        if argv is None:
+            argv = sys.argv[1:]
+        assert argv is not None
+        self.cli_args = parser.parse_args(argv)
+
+        VerbosityConfiguration.set(self.cli_args)
+        context_providers_init(
+            **vars(self.cli_args), skip_cli_annotation_context=True)
+        genomic_context = get_genomic_context()
+
+        if grr is None:
+            grr = genomic_context.get_genomic_resources_repository()
+        if grr is None:
+            raise ValueError("no valid GRR configured")
+
+        self.source_genome = build_reference_genome_from_resource(
+            grr.get_resource(self.cli_args.source_genome))
+        assert self.source_genome is not None
+        self.source_genome.open()
+
+        pipeline = self.build_liftover_pipeline(
+            grr,
+        )
+        region = None
+        if self.cli_args.region is not None:
+            region = Region.from_str(self.cli_args.region)
+
+        self.liftover_variants(
+            pipeline,
+            region)
+
+    @abc.abstractmethod
+    def liftover_variants(
+        self,
+        pipeline: AnnotationPipeline,
+        region: Region | None = None,
+    ) -> None:
+        """Liftover variants abstract method."""
+
+
+class CNVLiftoverTool(LiftoverTool):
+    """CNV liftover tool class."""
+
+    def __init__(self) -> None:
+        super().__init__("liftover CNV variants", "cnv_liftover.tsv")
+
+    def build_cli_arguments_parser(
+        self,
+    ) -> argparse.ArgumentParser:
+        """Create CLI parser."""
+        parser = super().build_cli_arguments_parser()
+        CNVLoader.cli_arguments(parser)
+        return parser
+
+    def liftover_variants(
+        self,
+        pipeline: AnnotationPipeline,
+        region: Region | None = None,
+    ) -> None:
+        """Liftover CNV variants method."""
+        assert self.source_genome is not None
+        variants_loader = _build_variant_loader(
+            CNVLoader, self.cli_args, self.source_genome)
+
+        assert isinstance(variants_loader, CNVLoader)
+        output_filename = _region_output_filename(
+            self.cli_args.output, region,
+        )
+        _liftover_cnv_variants(
+            output_filename,
+            variants_loader,
+            pipeline,
+            region,
+        )
+
+
+def cnv_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """CNV liftover tool main function."""
+    tool = CNVLiftoverTool()
+    tool.run(argv=argv, grr=grr)
+
+
+class DaeLiftoverTool(LiftoverTool):
+    """DAE liftover tool class."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "liftover DAE transmitted variants",
+            "transmitted_liftover")
+
+    def build_cli_arguments_parser(
+        self,
+    ) -> argparse.ArgumentParser:
+        """Create CLI parser."""
+        parser = super().build_cli_arguments_parser()
+        DaeTransmittedLoader.cli_arguments(parser)
+        return parser
+
+    def liftover_variants(
+        self,
+        pipeline: AnnotationPipeline,
+        region: Region | None = None,
+    ) -> None:
+        """Liftover CNV variants method."""
+        assert self.source_genome is not None
+        variants_loader = _build_variant_loader(
+            DaeTransmittedLoader, self.cli_args, self.source_genome)
+
+        assert isinstance(variants_loader, DaeTransmittedLoader)
+        output_filename = _region_output_filename(
+            self.cli_args.output, region,
+        )
+        _liftover_dae_variants(
+            output_filename,
+            variants_loader,
+            pipeline,
+            region,
+        )
+
+
+def dae_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """DAE liftover tool main function."""
+    tool = DaeLiftoverTool()
+    tool.run(argv=argv, grr=grr)
+
+
+class DenovoLiftoverTool(LiftoverTool):
+    """Denovo liftover tool class."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "lliftover de Novo variants",
+            "denovo_liftover.txt")
+
+    def build_cli_arguments_parser(
+        self,
+    ) -> argparse.ArgumentParser:
+        """Create CLI parser."""
+        parser = super().build_cli_arguments_parser()
+        DenovoLoader.cli_arguments(parser)
+        return parser
+
+    def liftover_variants(
+        self,
+        pipeline: AnnotationPipeline,
+        region: Region | None = None,
+    ) -> None:
+        """Liftover CNV variants method."""
+        assert self.source_genome is not None
+        variants_loader = _build_variant_loader(
+            DenovoLoader, self.cli_args, self.source_genome)
+
+        assert isinstance(variants_loader, DenovoLoader)
+        output_filename = _region_output_filename(
+            self.cli_args.output, region,
+        )
+        _liftover_denovo_variants(
+            output_filename,
+            variants_loader,
+            pipeline,
+            region,
+        )
+
+
+def denovo_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """Denovo liftover tool main function."""
+    tool = DenovoLiftoverTool()
+    tool.run(argv=argv, grr=grr)
