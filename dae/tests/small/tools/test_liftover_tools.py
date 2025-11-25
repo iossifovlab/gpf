@@ -20,10 +20,10 @@ from dae.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
-from dae.tools.denovo_liftover import main as denovo_liftover_main
 from dae.tools.liftover_tools import (
     cnv_liftover_main,
     dae_liftover_main,
+    denovo_liftover_main,
 )
 from dae.tools.vcf_liftover import main
 

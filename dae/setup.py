@@ -121,7 +121,7 @@ setuptools.setup(
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
     gpf_instance_adjustments=dae.gpf_instance.adjustments.gpf_instance_adjustments:cli
     gpf_convert_study_config=dae.tools.gpf_convert_study_config:main
-    denovo_liftover=dae.tools.denovo_liftover:main
+    denovo_liftover=dae.tools.liftover_tools:denovo_liftover_main
     dae_liftover=dae.tools.liftover_tools:dae_liftover_main
     cnv_liftover=dae.tools.liftover_tools:cnv_liftover_main
     vcf_liftover=dae.tools.vcf_liftover:main

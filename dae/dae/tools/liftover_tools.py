@@ -29,7 +29,10 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import VariantDetails
 from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.variants_loaders.dae.loader import DaeTransmittedLoader
+from dae.variants_loaders.dae.loader import (
+    DaeTransmittedLoader,
+    DenovoLoader,
+)
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 logger = logging.getLogger("cnv_liftover")
@@ -148,6 +151,20 @@ def dae_liftover_main(
     )
 
 
+def denovo_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """Denovo liftover tool main function."""
+    _main(
+        description="liftover de Novo variants",
+        default_output="denovo_liftover.txt",
+        loader_class=DenovoLoader,
+        liftover_variants=_liftover_denovo_variants,
+        argv=argv, grr=grr,
+    )
+
+
 def _main(
     description: str,
     default_output: str,
@@ -221,12 +238,79 @@ def _main(
         region)
 
 
+def _liftover_denovo_variants(
+    output_filename: str,
+    variants_loader: VariantsGenotypesLoader,
+    pipeline: AnnotationPipeline,
+    region: Region | None = None,
+) -> None:
+    assert isinstance(variants_loader, DenovoLoader)
+
+    if region is not None:
+        logger.info("resetting regions (region): %s", region)
+        variants_loader.reset_regions([region])
+    logger.info("output: %s", output_filename)
+
+    with open(output_filename, "wt") as output:
+
+        header = [
+            "chrom", "pos", "ref", "alt",  # target variant
+            "chrom_src", "pos_src", "ref_src", "alt_src",  # source variant
+            "familyId", "bestSt",
+        ]
+
+        additional_columns = set(variants_loader.denovo_df.columns) - {
+            "chrom", "position", "reference", "alternative", "family_id",
+            "genotype", "best_state",
+        }
+        header.extend(sorted(additional_columns))
+
+        output.write("\t".join(header))
+        output.write("\n")
+
+        for sv, fvs in variants_loader.full_variants_iterator():
+            assert len(sv.alt_alleles) == 1
+
+            aa = sv.alt_alleles[0]
+            annotatable: VCFAllele = cast(VCFAllele, aa.get_annotatable())
+            result = pipeline.annotate(annotatable)
+            liftover_annotatable: VCFAllele = \
+                cast(VCFAllele, result.get("target_annotatable"))
+
+            if liftover_annotatable is None:
+                logger.error("can't liftover %s", aa)
+                continue
+
+            for fv in fvs:
+                fa = cast(FamilyAllele, fv.alt_alleles[0])
+
+                line = [
+                    liftover_annotatable.chrom,
+                    str(liftover_annotatable.pos),
+                    liftover_annotatable.ref,
+                    liftover_annotatable.alt,
+
+                    annotatable.chrom, str(annotatable.pos),
+                    annotatable.ref, annotatable.alt,
+
+                    fa.family_id,
+                    mat2str(fa.best_state, col_sep=" "),
+                ]
+                line.extend([
+                    str(fa.get_attribute(col) or "")
+                    for col in sorted(additional_columns)])
+                output.write("\t".join(line))
+                output.write("\n")
+
+
 def _liftover_cnv_variants(
     output_filename: str,
     variants_loader: VariantsGenotypesLoader,
     pipeline: AnnotationPipeline,
     region: Region | None = None,
 ) -> None:
+    assert isinstance(variants_loader, CNVLoader)
+
     if region is not None:
         logger.info("resetting regions (region): %s", region)
         variants_loader.reset_regions([region])
@@ -299,6 +383,8 @@ def _liftover_dae_variants(
     pipeline: AnnotationPipeline,
     region: Region | None = None,
 ) -> None:
+    assert isinstance(variants_loader, DaeTransmittedLoader)
+
     summary_filename = f"{output_prefix}.txt"
     toomany_filename = f"{output_prefix}-TOOMANY.txt"
     if region is not None:
