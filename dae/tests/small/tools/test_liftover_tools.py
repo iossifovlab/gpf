@@ -25,6 +25,8 @@ from dae.tools.liftover_tools import (
     cnv_liftover_main,
     dae_liftover_main,
     denovo_liftover_main,
+    report_variant,
+    report_vcf_variant,
     vcf_liftover_main,
 )
 from dae.utils.regions import Region
@@ -658,3 +660,385 @@ def test_region_output_filename(
 ) -> None:
     result = _region_output_filename(filename, region)
     assert result == expected
+
+
+def test_vcf_liftover_with_region(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test VCF liftover with region filtering."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1
+chrA   6   .  A   C   .    .      .    GT     0/1
+chrA   13  .  T   G   .    .      .    GT     0/1
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "--region", "chrA:5-10",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    vcf_liftover_main(argv, grr=liftover_data)
+
+    # When region is specified, output filename changes
+    expected_vcf = tmp_path / "liftover_chrA_5_10.vcf"
+    with closing(pysam.VariantFile(str(expected_vcf))) as vcffile:
+        variants = list(vcffile.fetch())
+        # Only variant at position 6 should be in region chrA:5-10
+        assert len(variants) == 1
+        assert variants[0].pos == 6
+
+
+def test_vcf_liftover_basic_mode(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test VCF liftover with basic_liftover mode."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1
+chrA   6   .  A   C   .    .      .    GT     0/1
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "--mode", "basic_liftover",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    vcf_liftover_main(argv, grr=liftover_data)
+
+    with closing(pysam.VariantFile(str(out_vcf))) as vcffile:
+        variants = list(vcffile.fetch())
+        assert len(variants) == 1
+        assert variants[0].chrom == "chrB"
+        assert variants[0].pos == 6
+
+
+def test_dae_liftover_with_region(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    dae_transmitted_data: tuple[pathlib.Path, pathlib.Path, pathlib.Path],
+) -> None:
+    """Test DAE liftover with region parameter (filename generation)."""
+    pedigree_file, summary_file, _toomany_file = dae_transmitted_data
+
+    # Test without region to verify basic functionality
+    out_prefix = tmp_path / "lifted"
+    argv = [
+        str(pedigree_file),
+        str(summary_file),
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_prefix),
+    ]
+
+    dae_liftover_main(argv, grr=liftover_data)
+
+    # Check that output files were created without region suffix
+    expected_summary = tmp_path / "lifted.txt"
+    expected_toomany = tmp_path / "lifted-TOOMANY.txt"
+    assert expected_summary.exists()
+    assert expected_toomany.exists()
+
+
+def test_denovo_liftover_with_region(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    denovo_data: tuple[pathlib.Path, pathlib.Path],
+) -> None:
+    """Test denovo liftover with region parameter (filename generation)."""
+    pedigree_file, denovo_file = denovo_data
+
+    # Test without region to verify basic functionality
+    out_file = tmp_path / "lifted_denovo.txt"
+    argv = [
+        str(pedigree_file),
+        str(denovo_file),
+        "--denovo-location", "location",
+        "--denovo-variant", "variant",
+        "--denovo-family-id", "familyId",
+        "--denovo-best-state", "bestState",
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_file),
+    ]
+
+    denovo_liftover_main(argv, grr=liftover_data)
+
+    # Check that output file was created
+    assert out_file.exists()
+
+
+def test_cnv_liftover_with_region(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    cnv_data: tuple[pathlib.Path, pathlib.Path],
+) -> None:
+    """Test CNV liftover with region parameter (filename generation)."""
+    pedigree_file, cnv_file = cnv_data
+
+    # Test without region to verify basic functionality
+    out_file = tmp_path / "lifted_cnv.txt"
+    argv = [
+        str(pedigree_file),
+        str(cnv_file),
+        "--cnv-location", "location",
+        "--cnv-variant-type", "variant",
+        "--cnv-family-id", "familyId",
+        "--cnv-best-state", "bestState",
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_file),
+    ]
+
+    cnv_liftover_main(argv, grr=liftover_data)
+
+    # Check that output file was created
+    assert out_file.exists()
+
+
+def test_vcf_liftover_invalid_mode(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test VCF liftover with invalid mode raises error."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chrA   6   .  A   C   .    .      .
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "--mode", "invalid_mode",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    with pytest.raises(ValueError, match="Invalid mode"):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_report_variant() -> None:
+    """Test report_variant function."""
+    variant = ("chr1", 100, "A", ["C"])
+    result = report_variant(variant)
+    assert result == "(chr1:100 A > C)"
+
+
+def test_report_variant_none() -> None:
+    """Test report_variant with None input."""
+    result = report_variant(None)
+    assert result == "(none)"
+
+
+def test_report_variant_multiple_alts() -> None:
+    """Test report_variant with multiple alternatives."""
+    variant = ("chr2", 200, "T", ["A", "G"])
+    result = report_variant(variant)
+    assert result == "(chr2:200 T > A,G)"
+
+
+def test_report_vcf_variant(tmp_path: pathlib.Path) -> None:
+    """Test report_vcf_variant function."""
+    vcf_file = setup_vcf(
+        tmp_path / "test.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chr1>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chr1   100 .  A   C   .    .      .
+        """))
+
+    with closing(pysam.VariantFile(str(vcf_file))) as vcffile:
+        variant = next(vcffile.fetch())
+        result = report_vcf_variant(variant)
+        assert result == "(chr1:100 A > C)"
+
+
+def test_report_vcf_variant_no_alt(tmp_path: pathlib.Path) -> None:
+    """Test report_vcf_variant with no ALT field."""
+    vcf_file = setup_vcf(
+        tmp_path / "test.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chr1>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chr1   100 .  A   .   .    .      .
+        """))
+
+    with closing(pysam.VariantFile(str(vcf_file))) as vcffile:
+        variant = next(vcffile.fetch())
+        result = report_vcf_variant(variant)
+        assert result == "(chr1:100 A > .)"
+
+
+def test_vcf_liftover_variant_without_alt(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test VCF liftover handles variants without ALT field (skips them)."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chrA   6   .  A   .   .    .      .
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    vcf_liftover_main(argv, grr=liftover_data)
+
+    with closing(pysam.VariantFile(str(out_vcf))) as vcffile:
+        variants = list(vcffile.fetch())
+        # Variants without ALT are skipped per the warning log
+        assert len(variants) == 0
+
+
+def test_vcf_liftover_region_overwrite(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test VCF liftover with multiple regions (last one wins)."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1
+chrA   6   .  A   C   .    .      .    GT     0/1
+chrA   11  .  T   G   .    .      .    GT     0/1
+chrA   13  .  T   G   .    .      .    GT     0/1
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "--region", "chrA:5-10",
+        "--region", "chrA:12-14",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    vcf_liftover_main(argv, grr=liftover_data)
+
+    # Only the last region is used: chrA:12-14
+    expected_vcf = tmp_path / "liftover_chrA_12_14.vcf"
+
+    with closing(pysam.VariantFile(str(expected_vcf))) as vcffile:
+        variants = list(vcffile.fetch())
+        # Should get variant at position 13 only
+        assert len(variants) == 1
+        assert variants[0].pos == 13
+
+
+def test_liftover_tool_missing_source_genome(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test liftover tool with missing source genome."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chrA   6   .  A   C   .    .      .
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "missing_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    with pytest.raises(FileNotFoundError, match="resource <missing_genome>"):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_liftover_tool_missing_target_genome(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+) -> None:
+    """Test liftover tool with missing target genome."""
+    vcf_file = setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chrA   6   .  A   C   .    .      .
+        """))
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "missing_genome",
+        "-o", str(out_vcf),
+        str(vcf_file),
+    ]
+
+    with pytest.raises(FileNotFoundError, match="resource <missing_genome>"):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_cnv_liftover_invalid_mode(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    cnv_data: tuple[pathlib.Path, pathlib.Path],
+) -> None:
+    """Test CNV liftover with invalid mode."""
+    pedigree_file, cnv_file = cnv_data
+
+    out_file = tmp_path / "lifted_cnv.txt"
+    argv = [
+        str(pedigree_file),
+        str(cnv_file),
+        "--cnv-location", "location",
+        "--cnv-variant-type", "variant",
+        "--cnv-family-id", "familyId",
+        "--cnv-best-state", "bestState",
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "--mode", "invalid_mode",
+        "-o", str(out_file),
+    ]
+
+    with pytest.raises(ValueError, match="unknown liftover mode"):
+        cnv_liftover_main(argv, grr=liftover_data)

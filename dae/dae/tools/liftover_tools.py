@@ -280,7 +280,6 @@ class CNVLiftoverTool(LiftoverTool):
         if region is not None:
             logger.info("resetting regions (region): %s", region)
             variants_loader.reset_regions([region])
-            output_filename = _region_output_filename(output_filename, region)
 
         logger.info("output: %s", output_filename)
         with open(output_filename, "wt") as output:
@@ -522,7 +521,6 @@ class DenovoLiftoverTool(LiftoverTool):
         if region is not None:
             logger.info("resetting regions (region): %s", region)
             variants_loader.reset_regions([region])
-            output_filename = _region_output_filename(output_filename, region)
 
         logger.info("output: %s", output_filename)
 
