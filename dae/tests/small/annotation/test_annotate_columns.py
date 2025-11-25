@@ -202,6 +202,24 @@ def test_renamed_columns(
     assert str(annotatable) == str(expected)
 
 
+def test_renamed_columns_excludes() -> None:
+    record = {
+        "chromosome": "chr1",
+        "position": "4",
+        "ref": "C",
+        "alt": "CT",
+    }
+    annotatable = build_record_to_annotatable(
+        {
+            "col_chrom": "chromosome",
+            "col_pos": "position",
+            "col_alt": "-",
+        },
+        set(record.keys()),
+    ).build(record)
+    assert str(annotatable) == str(Position("chr1", 4))
+
+
 def test_annotate_columns_basic_setup(
     annotate_directory_fixture: pathlib.Path,
     tmp_path: pathlib.Path,
