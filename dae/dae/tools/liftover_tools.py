@@ -356,6 +356,8 @@ def cnv_liftover_main(
 class DaeLiftoverTool(LiftoverTool):
     """DAE liftover tool class."""
 
+    _TOOMANY_THRESHOLD = 20
+
     def __init__(self) -> None:
         super().__init__(
             "liftover DAE transmitted variants",
@@ -460,7 +462,7 @@ class DaeLiftoverTool(LiftoverTool):
                     ]
                     families_data.append(":".join(fdata))
 
-                if len(families_data) < 20:
+                if len(families_data) < self._TOOMANY_THRESHOLD:
                     summary_line.append(";".join(families_data))
                     summary_line.extend(frequency_data)
                     output_summary.write("\t".join(summary_line))

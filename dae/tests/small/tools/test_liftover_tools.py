@@ -29,6 +29,7 @@ from dae.tools.liftover_tools import (
     vcf_liftover_main,
 )
 from dae.utils.regions import Region
+from pytest_mock import MockerFixture
 
 
 @pytest.fixture
@@ -1041,3 +1042,222 @@ def test_cnv_liftover_invalid_mode(
 
     with pytest.raises(ValueError, match="unknown liftover mode"):
         cnv_liftover_main(argv, grr=liftover_data)
+
+
+def test_dae_liftover_below_toomany_threshold(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    mocker: MockerFixture,
+) -> None:
+    """Test DAE liftover with families below TOOMANY threshold."""
+    # Mock the threshold to 3 for easier testing
+    mocker.patch(
+        "dae.tools.liftover_tools.DaeLiftoverTool._TOOMANY_THRESHOLD", 3)
+
+    # Create pedigree with 2 families (below threshold of 3)
+    ped_lines = ["familyId personId dadId momId sex status role"]
+    family_data_parts = []
+
+    for i in range(1, 3):
+        fid = f"f{i}"
+        ped_lines.extend([
+            f"{fid} mom{i} 0 0 2 1 mom",
+            f"{fid} dad{i} 0 0 1 1 dad",
+            f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
+        ])
+        family_data_parts.append(
+            f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
+
+    pedigree_file = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        "\n".join(ped_lines),
+    )
+
+    family_data_str = ";".join(family_data_parts)
+
+    summary_file, _ = setup_dae_transmitted(
+        tmp_path,
+        f"chr  position variant   familyData all.nParCalled "
+        f"all.prcntParCalled all.nAltAlls all.altFreq\n"
+        f"chrA 6        sub(A->C) {family_data_str} 4 100.00 2 50.00",
+        "chr position variant familyData",
+    )
+
+    out_prefix = tmp_path / "lifted_below_threshold"
+    argv = [
+        str(pedigree_file),
+        str(summary_file),
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_prefix),
+    ]
+
+    dae_liftover_main(argv, grr=liftover_data)
+
+    # Check output
+    out_summary = out_prefix.with_suffix(".txt")
+    out_toomany = out_prefix.with_name(f"{out_prefix.name}-TOOMANY.txt")
+
+    assert out_summary.exists()
+    assert out_toomany.exists()
+
+    with open(out_summary, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) == 2  # Header + 1 variant
+        # The familyData column (index 3) should contain family data
+        parts = lines[1].strip().split("\t")
+        assert parts[3] != "TOOMANY"
+        assert len(parts[3].split(";")) == 2
+
+    # TOOMANY file should only have header
+    with open(out_toomany, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) == 1  # Only header
+
+
+def test_dae_liftover_above_toomany_threshold(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    mocker: MockerFixture,
+) -> None:
+    """Test DAE liftover with families above TOOMANY threshold."""
+    # Mock the threshold to 3 for easier testing
+    mocker.patch(
+        "dae.tools.liftover_tools.DaeLiftoverTool._TOOMANY_THRESHOLD", 3)
+
+    # Create pedigree with 4 families (above threshold of 3)
+    ped_lines = ["familyId personId dadId momId sex status role"]
+    family_data_parts = []
+
+    for i in range(1, 5):
+        fid = f"f{i}"
+        ped_lines.extend([
+            f"{fid} mom{i} 0 0 2 1 mom",
+            f"{fid} dad{i} 0 0 1 1 dad",
+            f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
+        ])
+        family_data_parts.append(
+            f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
+
+    pedigree_file = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        "\n".join(ped_lines),
+    )
+
+    family_data_str = ";".join(family_data_parts)
+
+    summary_file, _ = setup_dae_transmitted(
+        tmp_path,
+        f"chr  position variant   familyData all.nParCalled "
+        f"all.prcntParCalled all.nAltAlls all.altFreq\n"
+        f"chrA 6        sub(A->C) {family_data_str} 8 100.00 4 50.00",
+        "chr position variant familyData",
+    )
+
+    out_prefix = tmp_path / "lifted_above_threshold"
+    argv = [
+        str(pedigree_file),
+        str(summary_file),
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_prefix),
+    ]
+
+    dae_liftover_main(argv, grr=liftover_data)
+
+    # Check output
+    out_summary = out_prefix.with_suffix(".txt")
+    out_toomany = out_prefix.with_name(f"{out_prefix.name}-TOOMANY.txt")
+
+    assert out_summary.exists()
+    assert out_toomany.exists()
+
+    with open(out_summary, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) == 2  # Header + 1 variant
+        # The familyData column (index 3) should be TOOMANY
+        parts = lines[1].strip().split("\t")
+        assert parts[3] == "TOOMANY"
+
+    # TOOMANY file should have the actual family data
+    with open(out_toomany, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) == 2  # Header + 1 variant
+        parts = lines[1].strip().split("\t")
+        assert parts[3] != "TOOMANY"
+        assert len(parts[3].split(";")) == 4
+
+
+def test_dae_liftover_exact_toomany_threshold(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    mocker: MockerFixture,
+) -> None:
+    """Test DAE liftover with exactly at threshold boundary."""
+    # Mock the threshold to 3 for easier testing
+    mocker.patch(
+        "dae.tools.liftover_tools.DaeLiftoverTool._TOOMANY_THRESHOLD", 3)
+
+    # Create pedigree with exactly 3 families (at threshold)
+    ped_lines = ["familyId personId dadId momId sex status role"]
+    family_data_parts = []
+
+    for i in range(1, 4):
+        fid = f"f{i}"
+        ped_lines.extend([
+            f"{fid} mom{i} 0 0 2 1 mom",
+            f"{fid} dad{i} 0 0 1 1 dad",
+            f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
+        ])
+        family_data_parts.append(
+            f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
+
+    pedigree_file = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        "\n".join(ped_lines),
+    )
+
+    family_data_str = ";".join(family_data_parts)
+
+    summary_file, _ = setup_dae_transmitted(
+        tmp_path,
+        f"chr  position variant   familyData all.nParCalled "
+        f"all.prcntParCalled all.nAltAlls all.altFreq\n"
+        f"chrA 6        sub(A->C) {family_data_str} 6 100.00 3 50.00",
+        "chr position variant familyData",
+    )
+
+    out_prefix = tmp_path / "lifted_exact_threshold"
+    argv = [
+        str(pedigree_file),
+        str(summary_file),
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_prefix),
+    ]
+
+    dae_liftover_main(argv, grr=liftover_data)
+
+    # Check output
+    out_summary = out_prefix.with_suffix(".txt")
+    out_toomany = out_prefix.with_name(f"{out_prefix.name}-TOOMANY.txt")
+
+    assert out_summary.exists()
+    assert out_toomany.exists()
+
+    with open(out_summary, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) == 2  # Header + 1 variant
+        # With exactly 3 families, should use TOOMANY (threshold is < 3)
+        parts = lines[1].strip().split("\t")
+        assert parts[3] == "TOOMANY"
+
+    # TOOMANY file should have the actual family data
+    with open(out_toomany, encoding="utf-8") as f:
+        lines = f.readlines()
+        assert len(lines) == 2  # Header + 1 variant
+        parts = lines[1].strip().split("\t")
+        assert len(parts[3].split(";")) == 3
