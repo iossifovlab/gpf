@@ -153,22 +153,47 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser) -> None:
         col for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
         for col in cols}
     for col in all_columns:
-        parser.add_argument(f"--col-{col.replace('_', '-')}", default=col,
-                            help=f"The column name that stores {col}")
+        parser.add_argument(
+            f"--col-{col.replace('_', '-')}",
+            default=col,
+            help=(
+                f"The column name that stores {col}. "
+                f'Use "-" to exclude this column requirement, causing '
+                f'annotatable patterns that require {col} to be skipped.'
+            ),
+        )
 
 
 def build_record_to_annotatable(
         renamed_columns: dict[str, str],
         available_columns: set[str],
         ref_genome: ReferenceGenome | None = None) -> RecordToAnnotable:
-    """Transform a variant record into an annotatable."""
+    """
+    Transform a variant record into an annotatable.
+
+    Parameters
+    ----------
+    renamed_columns : dict[str, str]
+        Mapping from expected internal column identifiers (e.g. "col_<field>")
+        to the actual column names present in the input source.
+        A column can be excluded from usage if an identifier is mapped to "-".
+        Example rename:
+            "col_<field>": "<input source column name for the field>"
+        Example exclude:
+            "col_<field>": "-"
+    available_columns : set[str]
+        The set of column names available in the input records.
+    ref_genome : ReferenceGenome | None, optional
+        Optional reference genome context used for creating annotatables.
+        Not all annotatables require it.
+    """
     for annotatable_columns, record_to_annotatable_class in \
             RECORD_TO_ANNOTATABLE_CONFIGURATION.items():
         columns = [
             renamed_columns.get(f"col_{annot_col}", annot_col)
             for annot_col in annotatable_columns
         ]
-        if set(columns).issubset(set(available_columns)):
+        if set(columns).issubset(available_columns):
             logger.info(
                 "record to annotatable using %s(%s, ref_genome=%s)",
                 record_to_annotatable_class.__name__,
