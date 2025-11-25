@@ -124,7 +124,7 @@ setuptools.setup(
     denovo_liftover=dae.tools.liftover_tools:denovo_liftover_main
     dae_liftover=dae.tools.liftover_tools:dae_liftover_main
     cnv_liftover=dae.tools.liftover_tools:cnv_liftover_main
-    vcf_liftover=dae.tools.vcf_liftover:main
+    vcf_liftover=dae.tools.liftover_tools:vcf_liftover_main
 
     import_tools=dae.import_tools.cli:main
     import_genotypes=dae.import_tools.cli:main

@@ -25,8 +25,8 @@ from dae.tools.liftover_tools import (
     cnv_liftover_main,
     dae_liftover_main,
     denovo_liftover_main,
+    vcf_liftover_main,
 )
-from dae.tools.vcf_liftover import main
 from dae.utils.regions import Region
 
 
@@ -200,7 +200,7 @@ def test_vcf_liftover_identity(
 chrA   6   .  A   C   .    .      .    GT     0/1
         """))
 
-    out_vcf = tmp_path / "liftover"
+    out_vcf = tmp_path / "liftover.vcf"
     argv = [
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
@@ -209,7 +209,7 @@ chrA   6   .  A   C   .    .      .    GT     0/1
         str(vcf_file),
     ]
 
-    main(argv, grr=liftover_data)
+    vcf_liftover_main(argv, grr=liftover_data)
 
     assert out_vcf.with_suffix(".vcf").exists()
 
@@ -249,7 +249,7 @@ def test_vcf_liftover_strand_change(
 chrA   13  .  T   G   .    .      .    GT     0/1
         """))
 
-    out_vcf = tmp_path / "liftover"
+    out_vcf = tmp_path / "liftover.vcf"
     argv = [
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
@@ -258,7 +258,7 @@ chrA   13  .  T   G   .    .      .    GT     0/1
         str(vcf_file),
     ]
 
-    main(argv, grr=liftover_data)
+    vcf_liftover_main(argv, grr=liftover_data)
 
     with closing(pysam.VariantFile(
             str(out_vcf.with_suffix(".vcf")))) as vcffile:
@@ -309,7 +309,7 @@ def test_vcf_liftover_allele_swap(
 chrA   16  .  G   C   .    .      .    GT     0/1
         """))
 
-    out_vcf = tmp_path / "liftover"
+    out_vcf = tmp_path / "liftover.vcf"
     argv = [
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
@@ -318,7 +318,7 @@ chrA   16  .  G   C   .    .      .    GT     0/1
         str(vcf_file),
     ]
 
-    main(argv, grr=liftover_data)
+    vcf_liftover_main(argv, grr=liftover_data)
 
     with closing(pysam.VariantFile(
             str(out_vcf.with_suffix(".vcf")))) as vcffile:
@@ -348,7 +348,7 @@ def test_vcf_liftover_chain_gap(
 chrA   12  .  G   C   .    .      .    GT     0/1
         """))
 
-    out_vcf = tmp_path / "liftover"
+    out_vcf = tmp_path / "liftover.vcf"
     argv = [
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
@@ -357,7 +357,7 @@ chrA   12  .  G   C   .    .      .    GT     0/1
         str(vcf_file),
     ]
 
-    main(argv, grr=liftover_gap_data)
+    vcf_liftover_main(argv, grr=liftover_gap_data)
 
     with closing(pysam.VariantFile(
             str(out_vcf.with_suffix(".vcf")))) as vcffile:
@@ -380,7 +380,7 @@ def test_vcf_liftover_outside_chain(
 chrA   22  .  G   C   .    .      .    GT     0/1
         """))
 
-    out_vcf = tmp_path / "liftover"
+    out_vcf = tmp_path / "liftover.vcf"
     argv = [
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
@@ -389,7 +389,7 @@ chrA   22  .  G   C   .    .      .    GT     0/1
         str(vcf_file),
     ]
 
-    main(argv, grr=liftover_data)
+    vcf_liftover_main(argv, grr=liftover_data)
 
     with closing(pysam.VariantFile(
             str(out_vcf.with_suffix(".vcf")))) as vcffile:
@@ -429,7 +429,7 @@ foo    6   .  C   T   .    .      .    GT     0/1  0/0  0/0
 foo    7   .  G   A   .    .      .    GT     0/0  1/0  0/1
         """))
 
-    out_vcf = tmp_path / "liftover"
+    out_vcf = tmp_path / "liftover.vcf"
     argv = [
         "--chain", "liftover_chain",
         "--source-genome", "source_genome",
@@ -438,7 +438,7 @@ foo    7   .  G   A   .    .      .    GT     0/0  1/0  0/1
         str(vcf_file),
     ]
 
-    main(argv, grr=liftover_grr_fixture)
+    vcf_liftover_main(argv, grr=liftover_grr_fixture)
 
     assert out_vcf.with_suffix(".vcf").exists()
 

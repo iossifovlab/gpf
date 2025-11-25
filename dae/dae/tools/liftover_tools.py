@@ -3,8 +3,12 @@ import argparse
 import logging
 import pathlib
 import sys
+import tempfile
 import textwrap
+from contextlib import closing
 from typing import cast
+
+import pysam
 
 from dae.annotation.annotatable import (
     CNVAllele,
@@ -12,10 +16,18 @@ from dae.annotation.annotatable import (
 )
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.liftover_annotator import (
+    basic_liftover_variant,
+    bcf_liftover_variant,
+)
 from dae.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
+)
+from dae.genomic_resources.liftover_chain import (
+    LiftoverChain,
+    build_liftover_chain_from_resource,
 )
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
@@ -334,6 +346,9 @@ class LiftoverTool(abc.ABC):
         self.default_output = default_output
         self.cli_args: argparse.Namespace = argparse.Namespace()
         self.source_genome: ReferenceGenome | None = None
+        self.target_genome: ReferenceGenome | None = None
+        self.chain: LiftoverChain | None = None
+        self.pipeline: AnnotationPipeline | None = None
 
     def build_liftover_pipeline(
         self,
@@ -370,7 +385,6 @@ class LiftoverTool(abc.ABC):
         parser = argparse.ArgumentParser(description=self.description)
 
         VerbosityConfiguration.set_arguments(parser)
-        FamiliesLoader.cli_arguments(parser)
 
         context_providers_add_argparser_arguments(
             parser,
@@ -441,21 +455,28 @@ class LiftoverTool(abc.ABC):
         assert self.source_genome is not None
         self.source_genome.open()
 
-        pipeline = self.build_liftover_pipeline(
+        self.target_genome = build_reference_genome_from_resource(
+            grr.get_resource(self.cli_args.target_genome))
+        assert self.target_genome is not None
+        self.target_genome.open()
+
+        self.chain = build_liftover_chain_from_resource(
+            grr.get_resource(self.cli_args.chain))
+        assert self.chain is not None
+        self.chain.open()
+
+        self.pipeline = self.build_liftover_pipeline(
             grr,
         )
         region = None
         if self.cli_args.region is not None:
             region = Region.from_str(self.cli_args.region)
 
-        self.liftover_variants(
-            pipeline,
-            region)
+        self.liftover_variants(region)
 
     @abc.abstractmethod
     def liftover_variants(
         self,
-        pipeline: AnnotationPipeline,
         region: Region | None = None,
     ) -> None:
         """Liftover variants abstract method."""
@@ -472,12 +493,12 @@ class CNVLiftoverTool(LiftoverTool):
     ) -> argparse.ArgumentParser:
         """Create CLI parser."""
         parser = super().build_cli_arguments_parser()
+        FamiliesLoader.cli_arguments(parser)
         CNVLoader.cli_arguments(parser)
         return parser
 
     def liftover_variants(
         self,
-        pipeline: AnnotationPipeline,
         region: Region | None = None,
     ) -> None:
         """Liftover CNV variants method."""
@@ -489,10 +510,11 @@ class CNVLiftoverTool(LiftoverTool):
         output_filename = _region_output_filename(
             self.cli_args.output, region,
         )
+        assert self.pipeline is not None
         _liftover_cnv_variants(
             output_filename,
             variants_loader,
-            pipeline,
+            self.pipeline,
             region,
         )
 
@@ -519,12 +541,12 @@ class DaeLiftoverTool(LiftoverTool):
     ) -> argparse.ArgumentParser:
         """Create CLI parser."""
         parser = super().build_cli_arguments_parser()
+        FamiliesLoader.cli_arguments(parser)
         DaeTransmittedLoader.cli_arguments(parser)
         return parser
 
     def liftover_variants(
         self,
-        pipeline: AnnotationPipeline,
         region: Region | None = None,
     ) -> None:
         """Liftover CNV variants method."""
@@ -536,10 +558,11 @@ class DaeLiftoverTool(LiftoverTool):
         output_filename = _region_output_filename(
             self.cli_args.output, region,
         )
+        assert self.pipeline is not None
         _liftover_dae_variants(
             output_filename,
             variants_loader,
-            pipeline,
+            self.pipeline,
             region,
         )
 
@@ -566,12 +589,12 @@ class DenovoLiftoverTool(LiftoverTool):
     ) -> argparse.ArgumentParser:
         """Create CLI parser."""
         parser = super().build_cli_arguments_parser()
+        FamiliesLoader.cli_arguments(parser)
         DenovoLoader.cli_arguments(parser)
         return parser
 
     def liftover_variants(
         self,
-        pipeline: AnnotationPipeline,
         region: Region | None = None,
     ) -> None:
         """Liftover CNV variants method."""
@@ -583,10 +606,11 @@ class DenovoLiftoverTool(LiftoverTool):
         output_filename = _region_output_filename(
             self.cli_args.output, region,
         )
+        assert self.pipeline is not None
         _liftover_denovo_variants(
             output_filename,
             variants_loader,
-            pipeline,
+            self.pipeline,
             region,
         )
 
@@ -597,4 +621,165 @@ def denovo_liftover_main(
 ) -> None:
     """Denovo liftover tool main function."""
     tool = DenovoLiftoverTool()
+    tool.run(argv=argv, grr=grr)
+
+
+def _vcf_liftover_header(
+    vcffile: str,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+) -> pysam.VariantHeader:
+    """Create liftover VCF header."""
+    target_contigs = []
+    target_contigs = target_genome.chromosomes[:]
+
+    with tempfile.NamedTemporaryFile(
+            mode="wt", suffix=".vcf") as temp_vcf:
+
+        with closing(pysam.VariantFile(vcffile)) as vcf, \
+            closing(pysam.VariantFile(
+                    temp_vcf.name, "w", header=vcf.header)) as tmp:
+            pass
+
+        with open(temp_vcf.name, "rt") as tmp:
+            lines = tmp.readlines()
+            outheader = []
+            contig_index = None
+            for index, line in enumerate(lines):
+                if line.startswith("##contig"):
+                    if contig_index is None:
+                        contig_index = index
+                    continue
+                outheader.append(line)
+        outcontigs = [f"##contig=<ID={contig}>\n" for contig in target_contigs]
+        if contig_index is None:
+            raise ValueError("No contig lines found in header")
+
+        out_buf = "".join([
+            *outheader[:contig_index],
+            *outcontigs,
+            *outheader[contig_index:],
+            f"##source_genome={source_genome.resource_id}\n",
+            f"##target_genome={target_genome.resource_id}\n",
+            f"##command=vcf_liftover {' '.join(sys.argv[1:])}\n",
+        ])
+        pathlib.Path(temp_vcf.name).write_text(out_buf)
+
+        with closing(pysam.VariantFile(temp_vcf.name)) as tmp:
+            return tmp.header
+
+
+class VCFLiftoverTool(LiftoverTool):
+    """VCF liftover tool class."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "liftover VCF variants",
+            "vcf_liftover.vcf")
+
+    def build_cli_arguments_parser(
+        self,
+    ) -> argparse.ArgumentParser:
+        """Create CLI parser."""
+        parser = super().build_cli_arguments_parser()
+        parser.add_argument(
+            "vcffile", help="vcf file to liftover",
+        )
+        return parser
+
+    def liftover_variants(
+        self,
+        region: Region | None = None,
+    ) -> None:
+        """Liftover CNV variants method."""
+        assert self.source_genome is not None
+
+        output_filename = _region_output_filename(
+            self.cli_args.output, region,
+        )
+        assert self.target_genome is not None
+        assert self.source_genome is not None
+        assert self.chain is not None
+
+        if self.cli_args.mode == "bcf_liftover":
+            liftover_variant_func = bcf_liftover_variant
+        elif self.cli_args.mode == "basic_liftover":
+            liftover_variant_func = basic_liftover_variant
+        else:
+            raise ValueError(f"Invalid mode: {self.cli_args.mode}")
+
+        output_header = _vcf_liftover_header(
+            self.cli_args.vcffile,
+            self.source_genome,
+            self.target_genome)
+
+        with closing(pysam.VariantFile(self.cli_args.vcffile)) as infile, \
+                closing(pysam.VariantFile(
+                    output_filename, "w", header=output_header)) as outfile:
+            fetch_region = str(region) if region else None
+            for vcf_variant in infile.fetch(region=fetch_region):
+                if vcf_variant.alts is None:
+                    logger.warning(
+                        "skipping variant without alts: %s", vcf_variant)
+                    continue
+                if vcf_variant.ref is None:
+                    logger.warning(
+                        "skipping variant without ref: %s", vcf_variant)
+                    continue
+                lo_variant = liftover_variant_func(
+                        vcf_variant.chrom, vcf_variant.pos,
+                        vcf_variant.ref, list(vcf_variant.alts),
+                        self.chain,
+                        source_genome=self.source_genome,
+                        target_genome=self.target_genome,
+                )
+                if lo_variant is None:
+                    logger.warning(
+                        "skipping variant without liftover: %s",
+                        report_vcf_variant(vcf_variant))
+                    continue
+
+                vcf_variant.translate(output_header)
+                chrom, pos, ref, alts = lo_variant
+
+                try:
+                    vcf_variant.contig = chrom
+                    vcf_variant.pos = pos
+                    vcf_variant.ref = ref
+                    vcf_variant.alts = tuple(alts)
+
+                    outfile.write(vcf_variant)
+                except ValueError:
+                    logger.exception(
+                        "skipping variant with invalid liftover: "
+                        "%s liftover to %s",
+                        report_vcf_variant(vcf_variant),
+                        report_variant(lo_variant))
+                    raise
+
+
+def report_vcf_variant(vcf_variant: pysam.VariantRecord) -> str:
+    """Report VCF variant."""
+    return (
+        f"({vcf_variant.chrom}:{vcf_variant.pos} "
+        f"{vcf_variant.ref} > "
+        f"{','.join(vcf_variant.alts) if vcf_variant.alts else '.'})"
+    )
+
+
+def report_variant(variant: tuple[str, int, str, list[str]] | None) -> str:
+    """Report variant."""
+    if not variant:
+        return "(none)"
+    chrom, pos, ref, alts = variant
+    s_alts = ",".join(alts)
+    return f"({chrom}:{pos} {ref} > {s_alts})"
+
+
+def vcf_liftover_main(
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
+    """VCF liftover tool main function."""
+    tool = VCFLiftoverTool()
     tool.run(argv=argv, grr=grr)
