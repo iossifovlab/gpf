@@ -94,247 +94,6 @@ def _region_output_filename(
     return f"{output_prefix}_{region_str}{suffix}"
 
 
-def _liftover_denovo_variants(
-    output_filename: str,
-    variants_loader: VariantsGenotypesLoader,
-    pipeline: AnnotationPipeline,
-    region: Region | None = None,
-) -> None:
-    assert isinstance(variants_loader, DenovoLoader)
-
-    if region is not None:
-        logger.info("resetting regions (region): %s", region)
-        variants_loader.reset_regions([region])
-        output_filename = _region_output_filename(output_filename, region)
-
-    logger.info("output: %s", output_filename)
-
-    with open(output_filename, "wt") as output:
-
-        header = [
-            "chrom", "pos", "ref", "alt",  # target variant
-            "chrom_src", "pos_src", "ref_src", "alt_src",  # source variant
-            "familyId", "bestSt",
-        ]
-
-        additional_columns = set(variants_loader.denovo_df.columns) - {
-            "chrom", "position", "reference", "alternative", "family_id",
-            "genotype", "best_state",
-        }
-        header.extend(sorted(additional_columns))
-
-        output.write("\t".join(header))
-        output.write("\n")
-
-        for sv, fvs in variants_loader.full_variants_iterator():
-            assert len(sv.alt_alleles) == 1
-
-            aa = sv.alt_alleles[0]
-            annotatable: VCFAllele = cast(VCFAllele, aa.get_annotatable())
-            result = pipeline.annotate(annotatable)
-            liftover_annotatable: VCFAllele = \
-                cast(VCFAllele, result.get("target_annotatable"))
-
-            if liftover_annotatable is None:
-                logger.error("can't liftover %s", aa)
-                continue
-
-            for fv in fvs:
-                fa = cast(FamilyAllele, fv.alt_alleles[0])
-
-                line = [
-                    liftover_annotatable.chrom,
-                    str(liftover_annotatable.pos),
-                    liftover_annotatable.ref,
-                    liftover_annotatable.alt,
-
-                    annotatable.chrom, str(annotatable.pos),
-                    annotatable.ref, annotatable.alt,
-
-                    fa.family_id,
-                    mat2str(fa.best_state, col_sep=" "),
-                ]
-                line.extend([
-                    str(fa.get_attribute(col) or "")
-                    for col in sorted(additional_columns)])
-                output.write("\t".join(line))
-                output.write("\n")
-
-
-def _liftover_cnv_variants(
-    output_filename: str,
-    variants_loader: VariantsGenotypesLoader,
-    pipeline: AnnotationPipeline,
-    region: Region | None = None,
-) -> None:
-    assert isinstance(variants_loader, CNVLoader)
-
-    if region is not None:
-        logger.info("resetting regions (region): %s", region)
-        variants_loader.reset_regions([region])
-        output_filename = _region_output_filename(output_filename, region)
-
-    logger.info("output: %s", output_filename)
-    with open(output_filename, "wt") as output:
-        header = [
-            "location", "cnv_type",
-            "location_src", "cnv_type_src",
-            "size_change",
-            "familyId", "personId",
-        ]
-
-        output.write("\t".join(header))
-        output.write("\n")
-
-        for sv, fvs in variants_loader.full_variants_iterator():
-            assert len(sv.alt_alleles) == 1
-
-            aa = sv.alt_alleles[0]
-            annotatable: CNVAllele = cast(CNVAllele, aa.get_annotatable())
-            result = pipeline.annotate(annotatable)
-            liftover_annotatable: CNVAllele = \
-                cast(CNVAllele, result.get("target_annotatable"))
-
-            if liftover_annotatable is None:
-                logger.error("can't liftover %s", aa)
-                continue
-
-            for fv in fvs:
-                size_src = len(annotatable)
-                size = len(liftover_annotatable)
-
-                size_diff = (100.0 * abs(size_src - size)) / size_src
-                if size_diff >= 50:
-                    logger.warning(
-                        "CNV variant size changed more than 50 percent: %s; "
-                        "%s -> %s",
-                        size_diff, annotatable, liftover_annotatable)
-
-                for aa in fv.alt_alleles:
-                    fa = cast(FamilyAllele, aa)
-                    line: list[str] = []
-                    person_ids = [
-                        person_id
-                        for person_id in fa.variant_in_members
-                        if person_id is not None
-                    ]
-                    assert len(person_ids) >= 1
-                    line = [
-                        f"{liftover_annotatable.chrom}:"
-                        f"{liftover_annotatable.pos}-"
-                        f"{liftover_annotatable.pos_end}",
-                        liftover_annotatable.type.name,
-                        f"{annotatable.chrom}:"
-                        f"{annotatable.pos}-"
-                        f"{annotatable.pos_end}",
-                        annotatable.type.name,
-                        str(size_diff),
-                        fa.family_id,
-                        ";".join(person_ids),
-                    ]
-
-                    output.write("\t".join(line))
-                    output.write("\n")
-
-
-def _liftover_dae_variants(
-    output_prefix: str,
-    variants_loader: VariantsGenotypesLoader,
-    pipeline: AnnotationPipeline,
-    region: Region | None = None,
-) -> None:
-    assert isinstance(variants_loader, DaeTransmittedLoader)
-
-    summary_filename = f"{output_prefix}.txt"
-    toomany_filename = f"{output_prefix}-TOOMANY.txt"
-    if region is not None:
-        logger.info("resetting regions (region): %s", region)
-        variants_loader.reset_regions([region])
-        summary_filename = f"{output_prefix}-{region}.txt"
-        toomany_filename = f"{output_prefix}-TOOMANY-{region}.txt"
-    logger.info("summary output: %s", summary_filename)
-    logger.info("toomany output: %s", toomany_filename)
-
-    with open(summary_filename, "wt") as output_summary, \
-            open(toomany_filename, "wt") as output_toomany:
-
-        summary_header = [
-            "#chr", "position", "variant",
-            "familyData",
-            "all.nParCalled", "all.prcntParCalled",
-            "all.nAltAlls", "all.altFreq",
-        ]
-        toomany_header = [
-            "#chr", "position", "variant",
-            "familyData",
-        ]
-
-        output_summary.write("\t".join(summary_header))
-        output_summary.write("\n")
-
-        output_toomany.write("\t".join(toomany_header))
-        output_toomany.write("\n")
-
-        for sv, fvs in variants_loader.full_variants_iterator():
-            assert len(sv.alt_alleles) == 1
-
-            aa = sv.alt_alleles[0]
-            annotatable = aa.get_annotatable()
-            result = pipeline.annotate(annotatable)
-            liftover_annotatable: VCFAllele = \
-                cast(VCFAllele, result.get("target_annotatable"))
-            if liftover_annotatable is None:
-                logger.error("can't liftover %s", aa)
-                continue
-            liftover_cshl_variant = VariantDetails.from_vcf(
-                liftover_annotatable.chrom, liftover_annotatable.pos,
-                liftover_annotatable.ref,
-                liftover_annotatable.alt)
-
-            summary_line = [
-                liftover_cshl_variant.chrom,
-                str(liftover_cshl_variant.cshl_position),
-                liftover_cshl_variant.cshl_variant,
-            ]
-            frequency_data = [
-                str(aa.attributes.get("af_parents_called_count", "")),
-                str(aa.attributes.get("af_parents_called_percent", "")),
-                str(aa.attributes.get("af_allele_count", "")),
-                str(aa.attributes.get("af_allele_freq", "")),
-            ]
-            toomany_line = [
-                liftover_cshl_variant.chrom,
-                str(liftover_cshl_variant.cshl_position),
-                liftover_cshl_variant.cshl_variant,
-            ]
-
-            families_data = []
-            for fv in fvs:
-                fa = cast(FamilyAllele, fv.alt_alleles[0])
-
-                fdata = [
-                    fa.family_id,
-                    mat2str(fa.best_state),
-                    fa.family_attributes["read_counts"],
-                ]
-                families_data.append(":".join(fdata))
-
-            if len(families_data) < 20:
-                summary_line.append(";".join(families_data))
-                summary_line.extend(frequency_data)
-                output_summary.write("\t".join(summary_line))
-                output_summary.write("\n")
-            else:
-                summary_line.append("TOOMANY")
-                summary_line.extend(frequency_data)
-                output_summary.write("\t".join(summary_line))
-                output_summary.write("\n")
-
-                toomany_line.append(";".join(families_data))
-                output_toomany.write("\t".join(toomany_line))
-                output_toomany.write("\n")
-
-
 class LiftoverTool(abc.ABC):
     """Liftover tools base class."""
 
@@ -345,10 +104,10 @@ class LiftoverTool(abc.ABC):
         self.description = description
         self.default_output = default_output
         self.cli_args: argparse.Namespace = argparse.Namespace()
+        self.grr: GenomicResourceRepo | None = None
         self.source_genome: ReferenceGenome | None = None
         self.target_genome: ReferenceGenome | None = None
         self.chain: LiftoverChain | None = None
-        self.pipeline: AnnotationPipeline | None = None
 
     def build_liftover_pipeline(
         self,
@@ -449,15 +208,23 @@ class LiftoverTool(abc.ABC):
             grr = genomic_context.get_genomic_resources_repository()
         if grr is None:
             raise ValueError("no valid GRR configured")
+        self.grr = grr
 
         self.source_genome = build_reference_genome_from_resource(
             grr.get_resource(self.cli_args.source_genome))
-        assert self.source_genome is not None
+        if self.source_genome is None:
+            raise ValueError(
+                f"reference genome "
+                f"{self.cli_args.source_genome} not found")
+
         self.source_genome.open()
 
         self.target_genome = build_reference_genome_from_resource(
             grr.get_resource(self.cli_args.target_genome))
-        assert self.target_genome is not None
+        if self.target_genome is None:
+            raise ValueError(
+                f"reference genome "
+                f"{self.cli_args.target_genome} not found")
         self.target_genome.open()
 
         self.chain = build_liftover_chain_from_resource(
@@ -465,9 +232,6 @@ class LiftoverTool(abc.ABC):
         assert self.chain is not None
         self.chain.open()
 
-        self.pipeline = self.build_liftover_pipeline(
-            grr,
-        )
         region = None
         if self.cli_args.region is not None:
             region = Region.from_str(self.cli_args.region)
@@ -510,13 +274,75 @@ class CNVLiftoverTool(LiftoverTool):
         output_filename = _region_output_filename(
             self.cli_args.output, region,
         )
-        assert self.pipeline is not None
-        _liftover_cnv_variants(
-            output_filename,
-            variants_loader,
-            self.pipeline,
-            region,
-        )
+        assert self.grr is not None
+        pipeline = self.build_liftover_pipeline(self.grr)
+
+        if region is not None:
+            logger.info("resetting regions (region): %s", region)
+            variants_loader.reset_regions([region])
+            output_filename = _region_output_filename(output_filename, region)
+
+        logger.info("output: %s", output_filename)
+        with open(output_filename, "wt") as output:
+            header = [
+                "location", "cnv_type",
+                "location_src", "cnv_type_src",
+                "size_change",
+                "familyId", "personId",
+            ]
+
+            output.write("\t".join(header))
+            output.write("\n")
+
+            for sv, fvs in variants_loader.full_variants_iterator():
+                assert len(sv.alt_alleles) == 1
+
+                aa = sv.alt_alleles[0]
+                annotatable: CNVAllele = cast(CNVAllele, aa.get_annotatable())
+                result = pipeline.annotate(annotatable)
+                liftover_annotatable: CNVAllele = \
+                    cast(CNVAllele, result.get("target_annotatable"))
+
+                if liftover_annotatable is None:
+                    logger.error("can't liftover %s", aa)
+                    continue
+
+                for fv in fvs:
+                    size_src = len(annotatable)
+                    size = len(liftover_annotatable)
+
+                    size_diff = (100.0 * abs(size_src - size)) / size_src
+                    if size_diff >= 50:
+                        logger.warning(
+                            "CNV variant size changed more than 50 percent: "
+                            "%s; %s -> %s",
+                            size_diff, annotatable, liftover_annotatable)
+
+                    for aa in fv.alt_alleles:
+                        fa = cast(FamilyAllele, aa)
+                        line: list[str] = []
+                        person_ids = [
+                            person_id
+                            for person_id in fa.variant_in_members
+                            if person_id is not None
+                        ]
+                        assert len(person_ids) >= 1
+                        line = [
+                            f"{liftover_annotatable.chrom}:"
+                            f"{liftover_annotatable.pos}-"
+                            f"{liftover_annotatable.pos_end}",
+                            liftover_annotatable.type.name,
+                            f"{annotatable.chrom}:"
+                            f"{annotatable.pos}-"
+                            f"{annotatable.pos_end}",
+                            annotatable.type.name,
+                            str(size_diff),
+                            fa.family_id,
+                            ";".join(person_ids),
+                        ]
+
+                        output.write("\t".join(line))
+                        output.write("\n")
 
 
 def cnv_liftover_main(
@@ -555,16 +381,100 @@ class DaeLiftoverTool(LiftoverTool):
             DaeTransmittedLoader, self.cli_args, self.source_genome)
 
         assert isinstance(variants_loader, DaeTransmittedLoader)
-        output_filename = _region_output_filename(
-            self.cli_args.output, region,
-        )
-        assert self.pipeline is not None
-        _liftover_dae_variants(
-            output_filename,
-            variants_loader,
-            self.pipeline,
-            region,
-        )
+        assert self.grr is not None
+        pipeline = self.build_liftover_pipeline(self.grr)
+
+        assert isinstance(variants_loader, DaeTransmittedLoader)
+
+        output_prefix = self.cli_args.output
+        summary_filename = f"{output_prefix}.txt"
+        toomany_filename = f"{output_prefix}-TOOMANY.txt"
+        if region is not None:
+            logger.info("resetting regions (region): %s", region)
+            variants_loader.reset_regions([region])
+            summary_filename = f"{output_prefix}-{region}.txt"
+            toomany_filename = f"{output_prefix}-TOOMANY-{region}.txt"
+        logger.info("summary output: %s", summary_filename)
+        logger.info("toomany output: %s", toomany_filename)
+
+        with open(summary_filename, "wt") as output_summary, \
+                open(toomany_filename, "wt") as output_toomany:
+
+            summary_header = [
+                "#chr", "position", "variant",
+                "familyData",
+                "all.nParCalled", "all.prcntParCalled",
+                "all.nAltAlls", "all.altFreq",
+            ]
+            toomany_header = [
+                "#chr", "position", "variant",
+                "familyData",
+            ]
+
+            output_summary.write("\t".join(summary_header))
+            output_summary.write("\n")
+
+            output_toomany.write("\t".join(toomany_header))
+            output_toomany.write("\n")
+
+            for sv, fvs in variants_loader.full_variants_iterator():
+                assert len(sv.alt_alleles) == 1
+
+                aa = sv.alt_alleles[0]
+                annotatable = aa.get_annotatable()
+                result = pipeline.annotate(annotatable)
+                liftover_annotatable: VCFAllele = \
+                    cast(VCFAllele, result.get("target_annotatable"))
+                if liftover_annotatable is None:
+                    logger.error("can't liftover %s", aa)
+                    continue
+                liftover_cshl_variant = VariantDetails.from_vcf(
+                    liftover_annotatable.chrom, liftover_annotatable.pos,
+                    liftover_annotatable.ref,
+                    liftover_annotatable.alt)
+
+                summary_line = [
+                    liftover_cshl_variant.chrom,
+                    str(liftover_cshl_variant.cshl_position),
+                    liftover_cshl_variant.cshl_variant,
+                ]
+                frequency_data = [
+                    str(aa.attributes.get("af_parents_called_count", "")),
+                    str(aa.attributes.get("af_parents_called_percent", "")),
+                    str(aa.attributes.get("af_allele_count", "")),
+                    str(aa.attributes.get("af_allele_freq", "")),
+                ]
+                toomany_line = [
+                    liftover_cshl_variant.chrom,
+                    str(liftover_cshl_variant.cshl_position),
+                    liftover_cshl_variant.cshl_variant,
+                ]
+
+                families_data = []
+                for fv in fvs:
+                    fa = cast(FamilyAllele, fv.alt_alleles[0])
+
+                    fdata = [
+                        fa.family_id,
+                        mat2str(fa.best_state),
+                        fa.family_attributes["read_counts"],
+                    ]
+                    families_data.append(":".join(fdata))
+
+                if len(families_data) < 20:
+                    summary_line.append(";".join(families_data))
+                    summary_line.extend(frequency_data)
+                    output_summary.write("\t".join(summary_line))
+                    output_summary.write("\n")
+                else:
+                    summary_line.append("TOOMANY")
+                    summary_line.extend(frequency_data)
+                    output_summary.write("\t".join(summary_line))
+                    output_summary.write("\n")
+
+                    toomany_line.append(";".join(families_data))
+                    output_toomany.write("\t".join(toomany_line))
+                    output_toomany.write("\n")
 
 
 def dae_liftover_main(
@@ -606,13 +516,66 @@ class DenovoLiftoverTool(LiftoverTool):
         output_filename = _region_output_filename(
             self.cli_args.output, region,
         )
-        assert self.pipeline is not None
-        _liftover_denovo_variants(
-            output_filename,
-            variants_loader,
-            self.pipeline,
-            region,
-        )
+        assert self.grr is not None
+        pipeline = self.build_liftover_pipeline(self.grr)
+
+        if region is not None:
+            logger.info("resetting regions (region): %s", region)
+            variants_loader.reset_regions([region])
+            output_filename = _region_output_filename(output_filename, region)
+
+        logger.info("output: %s", output_filename)
+
+        with open(output_filename, "wt") as output:
+
+            header = [
+                "chrom", "pos", "ref", "alt",  # target variant
+                "chrom_src", "pos_src", "ref_src", "alt_src",  # source variant
+                "familyId", "bestSt",
+            ]
+
+            additional_columns = set(variants_loader.denovo_df.columns) - {
+                "chrom", "position", "reference", "alternative", "family_id",
+                "genotype", "best_state",
+            }
+            header.extend(sorted(additional_columns))
+
+            output.write("\t".join(header))
+            output.write("\n")
+
+            for sv, fvs in variants_loader.full_variants_iterator():
+                assert len(sv.alt_alleles) == 1
+
+                aa = sv.alt_alleles[0]
+                annotatable: VCFAllele = cast(VCFAllele, aa.get_annotatable())
+                result = pipeline.annotate(annotatable)
+                liftover_annotatable: VCFAllele = \
+                    cast(VCFAllele, result.get("target_annotatable"))
+
+                if liftover_annotatable is None:
+                    logger.error("can't liftover %s", aa)
+                    continue
+
+                for fv in fvs:
+                    fa = cast(FamilyAllele, fv.alt_alleles[0])
+
+                    line = [
+                        liftover_annotatable.chrom,
+                        str(liftover_annotatable.pos),
+                        liftover_annotatable.ref,
+                        liftover_annotatable.alt,
+
+                        annotatable.chrom, str(annotatable.pos),
+                        annotatable.ref, annotatable.alt,
+
+                        fa.family_id,
+                        mat2str(fa.best_state, col_sep=" "),
+                    ]
+                    line.extend([
+                        str(fa.get_attribute(col) or "")
+                        for col in sorted(additional_columns)])
+                    output.write("\t".join(line))
+                    output.write("\n")
 
 
 def denovo_liftover_main(
