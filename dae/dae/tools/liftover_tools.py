@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pathlib
 import sys
 import textwrap
 from collections.abc import Callable
@@ -238,6 +239,23 @@ def _main(
         region)
 
 
+def _region_output_filename(
+    output_filename: str,
+    region: Region | None,
+) -> str:
+    if region is None:
+        return output_filename
+    out = pathlib.Path(output_filename)
+    suffixes = out.suffixes
+    output_prefix = out
+    for _ in suffixes:
+        output_prefix = output_prefix.with_suffix("")
+
+    region_str = str(region).replace(":", "_").replace("-", "_")
+    suffix = "".join(suffixes)
+    return f"{output_prefix}_{region_str}{suffix}"
+
+
 def _liftover_denovo_variants(
     output_filename: str,
     variants_loader: VariantsGenotypesLoader,
@@ -249,6 +267,8 @@ def _liftover_denovo_variants(
     if region is not None:
         logger.info("resetting regions (region): %s", region)
         variants_loader.reset_regions([region])
+        output_filename = _region_output_filename(output_filename, region)
+
     logger.info("output: %s", output_filename)
 
     with open(output_filename, "wt") as output:
@@ -314,6 +334,8 @@ def _liftover_cnv_variants(
     if region is not None:
         logger.info("resetting regions (region): %s", region)
         variants_loader.reset_regions([region])
+        output_filename = _region_output_filename(output_filename, region)
+
     logger.info("output: %s", output_filename)
     with open(output_filename, "wt") as output:
         header = [

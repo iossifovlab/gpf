@@ -21,11 +21,13 @@ from dae.genomic_resources.testing import (
     setup_vcf,
 )
 from dae.tools.liftover_tools import (
+    _region_output_filename,
     cnv_liftover_main,
     dae_liftover_main,
     denovo_liftover_main,
 )
 from dae.tools.vcf_liftover import main
+from dae.utils.regions import Region
 
 
 @pytest.fixture
@@ -641,3 +643,18 @@ def test_cnv_liftover_simple(
         # Check that chrB is in the output (lifted from chrA)
         content = "".join(lines)
         assert "chrB" in content
+
+
+@pytest.mark.parametrize("region, filename, expected", [
+    (None, "output.txt", "output.txt"),
+    (Region("chr1", 10, 20), "output.txt", "output_chr1_10_20.txt"),
+    (Region("chr1", 10, 20), "output", "output_chr1_10_20"),
+    (Region("chr1", 10, 20), "output.txt.gz", "output_chr1_10_20.txt.gz"),
+])
+def test_region_output_filename(
+    region: Region | None,
+    filename: str,
+    expected: str,
+) -> None:
+    result = _region_output_filename(filename, region)
+    assert result == expected
