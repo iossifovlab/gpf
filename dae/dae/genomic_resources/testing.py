@@ -108,6 +108,7 @@ def setup_gzip(gzip_path: pathlib.Path, gzip_content: str) -> pathlib.Path:
     """Set up a gzipped TSV file."""
     content = convert_to_tab_separated(gzip_content)
     out_path = gzip_path
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     if gzip_path.suffix != ".gz":
         out_path = gzip_path.with_suffix("gz")
     with gzip.open(out_path, "wt") as outfile:

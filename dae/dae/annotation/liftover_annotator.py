@@ -397,7 +397,10 @@ def basic_liftover_allele(
             lo_chrom, lo_pos, lo_ref, lo_alt)
         return None
 
-    return lo_chrom, lo_pos, lo_ref, lo_alt
+    nchrom, npos, nref, nalts = normalize_variant(
+        lo_chrom, lo_pos, lo_ref, [lo_alt], target_genome)
+
+    return nchrom, npos, nref, nalts[0]
 
 
 class LiftoverFunction(Protocol):

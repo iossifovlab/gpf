@@ -1067,13 +1067,16 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                             chrom,
                             region.start,
                             region.end))
-
                     summary_iterator = sum_tbf.fetch(
                         region=region_unadjusted, parser=pysam.asTuple(),
                     )
-                    toomany_iterator = too_tbf.fetch(
-                        region=region_unadjusted, parser=pysam.asTuple(),
-                    )
+                    try:
+                        toomany_iterator = too_tbf.fetch(
+                            region=region_unadjusted,
+                            parser=pysam.asTuple(),
+                        )
+                    except ValueError:
+                        toomany_iterator = iter([])
 
                     for summary_line in summary_iterator:
                         rec = dict(
