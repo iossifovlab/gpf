@@ -1,11 +1,17 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme,R0917
+# pylint: disable=redefined-outer-name,C0114,C0116,R0917,C0302
 import pathlib
 import textwrap
+from collections.abc import Callable
 from contextlib import closing
 
 import pandas as pd
 import pysam
 import pytest
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    SimpleGenomicContext,
+    register_context,
+)
 from dae.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
 )
@@ -109,6 +115,20 @@ def liftover_data(
                     source_genome: source_genome
                     target_genome: target_genome
             """),
+        },
+        "not_a_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: gene_score
+                filename: scores.txt
+            """),
+            "scores.txt": "gene1\t0.5\n",
+        },
+        "not_a_chain": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: position_score
+                filename: scores.txt
+            """),
+            "scores.txt": "chr1\t100\t0.5\n",
         },
     })
 
@@ -482,6 +502,47 @@ def dae_transmitted_data(
     )
 
     return pedigree_file, summary_file, toomany_file
+
+
+@pytest.fixture
+def dae_data_families(
+    tmp_path: pathlib.Path,
+) -> Callable[[int], tuple[pathlib.Path, pathlib.Path]]:
+
+    def builder(count: int) -> tuple[pathlib.Path, pathlib.Path]:
+        """Create pedigree and DAE transmitted variant files for testing."""
+        # Create pedigree with <count> families (below threshold of 3)
+        ped_lines = ["familyId personId dadId momId sex status role"]
+        family_data_parts = []
+
+        for i in range(1, count + 1):
+            fid = f"f{i}"
+            ped_lines.extend([
+                f"{fid} mom{i} 0 0 2 1 mom",
+                f"{fid} dad{i} 0 0 1 1 dad",
+                f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
+            ])
+            family_data_parts.append(
+                f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
+
+        pedigree_file = setup_pedigree(
+            tmp_path / "pedigree.ped",
+            "\n".join(ped_lines),
+        )
+
+        family_data_str = ";".join(family_data_parts)
+
+        summary_file, _toomany_file = setup_dae_transmitted(
+            tmp_path,
+            f"chr  position variant   familyData all.nParCalled "
+            f"all.prcntParCalled all.nAltAlls all.altFreq\n"
+            f"chrA 6        sub(A->C) {family_data_str} 4 100.00 2 50.00",
+            "chr position variant familyData",
+        )
+
+        return pedigree_file, summary_file
+
+    return builder
 
 
 def test_dae_liftover_simple(
@@ -1143,9 +1204,179 @@ def test_cnv_liftover_invalid_mode(
         cnv_liftover_main(argv, grr=liftover_data)
 
 
+@pytest.fixture
+def vcf_data(tmp_path: pathlib.Path) -> pathlib.Path:
+    """Create a simple VCF file for testing."""
+    return setup_vcf(
+        tmp_path / "in.vcf.gz", textwrap.dedent("""
+##fileformat=VCFv4.2
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chrA   6   .  A   C   .    .      .
+        """))
+
+
+def test_liftover_tool_invalid_source_genome_type(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    vcf_data: pathlib.Path,
+) -> None:
+    """Test liftover with source genome that's not a genome resource."""
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "not_a_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    with pytest.raises(
+        ValueError, match="wrong resource type: not_a_genome",
+    ):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_liftover_tool_invalid_target_genome_type(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    vcf_data: pathlib.Path,
+) -> None:
+    """Test liftover with target genome that's not a genome resource."""
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "not_a_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    with pytest.raises(
+        ValueError, match="wrong resource type: not_a_genome",
+    ):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_liftover_tool_missing_chain(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    vcf_data: pathlib.Path,
+) -> None:
+    """Test liftover with missing chain resource."""
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "missing_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    with pytest.raises(FileNotFoundError, match="resource <missing_chain>"):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_liftover_tool_invalid_missing_source_genome(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    vcf_data: pathlib.Path,
+) -> None:
+    """Test liftover with source genome that's not a genome resource."""
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "missing_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    with pytest.raises(
+            FileNotFoundError,
+            match=r"resource \<missing_genome\> \(None\) not found"):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
+def test_liftover_tool_no_grr(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,  # noqa: ARG001
+    vcf_data: pathlib.Path,
+    context_fixture: GenomicContext,  # noqa: ARG001
+) -> None:
+    """Test liftover with source genome that's not a genome resource."""
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    with pytest.raises(
+            ValueError,
+            match=r"no valid GRR configured"):
+        vcf_liftover_main(argv, grr=None)
+
+
+def test_liftover_tool_grr_from_context(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    vcf_data: pathlib.Path,
+    context_fixture: GenomicContext,  # noqa: ARG001
+) -> None:
+    """Test liftover with source genome that's not a genome resource."""
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    register_context(
+        SimpleGenomicContext({
+                "genomic_resources_repository": liftover_data,
+            },
+            "test_context",
+        ))
+
+    vcf_liftover_main(argv, grr=None)
+    assert out_vcf.exists()
+
+
+def test_liftover_tool_invalid_missing_target_genome(
+    tmp_path: pathlib.Path,
+    liftover_data: GenomicResourceRepo,
+    vcf_data: pathlib.Path,
+) -> None:
+    """Test liftover with source genome that's not a genome resource."""
+
+    out_vcf = tmp_path / "liftover.vcf"
+    argv = [
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "missing_genome",
+        "-o", str(out_vcf),
+        str(vcf_data),
+    ]
+
+    with pytest.raises(
+            FileNotFoundError,
+            match=r"resource \<missing_genome\> \(None\) not found"):
+        vcf_liftover_main(argv, grr=liftover_data)
+
+
 def test_dae_liftover_below_toomany_threshold(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
+    dae_data_families: Callable[[int], tuple[pathlib.Path, pathlib.Path]],
     mocker: MockerFixture,
 ) -> None:
     """Test DAE liftover with families below TOOMANY threshold."""
@@ -1154,34 +1385,7 @@ def test_dae_liftover_below_toomany_threshold(
         "dae.tools.liftover_tools.DaeLiftoverTool._TOOMANY_THRESHOLD", 3)
 
     # Create pedigree with 2 families (below threshold of 3)
-    ped_lines = ["familyId personId dadId momId sex status role"]
-    family_data_parts = []
-
-    for i in range(1, 3):
-        fid = f"f{i}"
-        ped_lines.extend([
-            f"{fid} mom{i} 0 0 2 1 mom",
-            f"{fid} dad{i} 0 0 1 1 dad",
-            f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
-        ])
-        family_data_parts.append(
-            f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
-
-    pedigree_file = setup_pedigree(
-        tmp_path / "pedigree.ped",
-        "\n".join(ped_lines),
-    )
-
-    family_data_str = ";".join(family_data_parts)
-
-    summary_file, _ = setup_dae_transmitted(
-        tmp_path,
-        f"chr  position variant   familyData all.nParCalled "
-        f"all.prcntParCalled all.nAltAlls all.altFreq\n"
-        f"chrA 6        sub(A->C) {family_data_str} 4 100.00 2 50.00",
-        "chr position variant familyData",
-    )
-
+    pedigree_file, summary_file = dae_data_families(2)
     out_prefix = tmp_path / "lifted_below_threshold"
     argv = [
         str(pedigree_file),
@@ -1218,6 +1422,7 @@ def test_dae_liftover_below_toomany_threshold(
 def test_dae_liftover_above_toomany_threshold(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
+    dae_data_families: Callable[[int], tuple[pathlib.Path, pathlib.Path]],
     mocker: MockerFixture,
 ) -> None:
     """Test DAE liftover with families above TOOMANY threshold."""
@@ -1226,33 +1431,7 @@ def test_dae_liftover_above_toomany_threshold(
         "dae.tools.liftover_tools.DaeLiftoverTool._TOOMANY_THRESHOLD", 3)
 
     # Create pedigree with 4 families (above threshold of 3)
-    ped_lines = ["familyId personId dadId momId sex status role"]
-    family_data_parts = []
-
-    for i in range(1, 5):
-        fid = f"f{i}"
-        ped_lines.extend([
-            f"{fid} mom{i} 0 0 2 1 mom",
-            f"{fid} dad{i} 0 0 1 1 dad",
-            f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
-        ])
-        family_data_parts.append(
-            f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
-
-    pedigree_file = setup_pedigree(
-        tmp_path / "pedigree.ped",
-        "\n".join(ped_lines),
-    )
-
-    family_data_str = ";".join(family_data_parts)
-
-    summary_file, _ = setup_dae_transmitted(
-        tmp_path,
-        f"chr  position variant   familyData all.nParCalled "
-        f"all.prcntParCalled all.nAltAlls all.altFreq\n"
-        f"chrA 6        sub(A->C) {family_data_str} 8 100.00 4 50.00",
-        "chr position variant familyData",
-    )
+    pedigree_file, summary_file = dae_data_families(4)
 
     out_prefix = tmp_path / "lifted_above_threshold"
     argv = [
@@ -1292,6 +1471,7 @@ def test_dae_liftover_above_toomany_threshold(
 def test_dae_liftover_exact_toomany_threshold(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
+    dae_data_families: Callable[[int], tuple[pathlib.Path, pathlib.Path]],
     mocker: MockerFixture,
 ) -> None:
     """Test DAE liftover with exactly at threshold boundary."""
@@ -1300,33 +1480,7 @@ def test_dae_liftover_exact_toomany_threshold(
         "dae.tools.liftover_tools.DaeLiftoverTool._TOOMANY_THRESHOLD", 3)
 
     # Create pedigree with exactly 3 families (at threshold)
-    ped_lines = ["familyId personId dadId momId sex status role"]
-    family_data_parts = []
-
-    for i in range(1, 4):
-        fid = f"f{i}"
-        ped_lines.extend([
-            f"{fid} mom{i} 0 0 2 1 mom",
-            f"{fid} dad{i} 0 0 1 1 dad",
-            f"{fid} ch{i} dad{i} mom{i} 1 2 prb",
-        ])
-        family_data_parts.append(
-            f"{fid}:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0")
-
-    pedigree_file = setup_pedigree(
-        tmp_path / "pedigree.ped",
-        "\n".join(ped_lines),
-    )
-
-    family_data_str = ";".join(family_data_parts)
-
-    summary_file, _ = setup_dae_transmitted(
-        tmp_path,
-        f"chr  position variant   familyData all.nParCalled "
-        f"all.prcntParCalled all.nAltAlls all.altFreq\n"
-        f"chrA 6        sub(A->C) {family_data_str} 6 100.00 3 50.00",
-        "chr position variant familyData",
-    )
+    pedigree_file, summary_file = dae_data_families(3)
 
     out_prefix = tmp_path / "lifted_exact_threshold"
     argv = [
