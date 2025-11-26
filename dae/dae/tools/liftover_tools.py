@@ -212,24 +212,14 @@ class LiftoverTool(abc.ABC):
 
         self.source_genome = build_reference_genome_from_resource(
             grr.get_resource(self.cli_args.source_genome))
-        if self.source_genome is None:
-            raise ValueError(
-                f"reference genome "
-                f"{self.cli_args.source_genome} not found")
-
         self.source_genome.open()
 
         self.target_genome = build_reference_genome_from_resource(
             grr.get_resource(self.cli_args.target_genome))
-        if self.target_genome is None:
-            raise ValueError(
-                f"reference genome "
-                f"{self.cli_args.target_genome} not found")
         self.target_genome.open()
 
         self.chain = build_liftover_chain_from_resource(
             grr.get_resource(self.cli_args.chain))
-        assert self.chain is not None
         self.chain.open()
 
         region = None
