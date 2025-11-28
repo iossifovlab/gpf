@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+* 2025.11.2
+    * Complete refactoring of all liftover CLI tools (VCF, DAE, denovo, CNV)
+    * Fixed handling of region parameters and output filenames in liftover
+      tools.
+    * Comprehensive test suite added for liftover tools with extensive coverage
+      including error handling.
+    * Refactoring and doucmenting chromosome mapping annotator.
+    * Added support for chromosome mapping in GeneModels resources.
+    * Remove GeneModels.relable_chromosomes method.
+    * Fixed annotation pipelien close method.
+    * Fixed error messages for annotation pipeline creation errors.
+    * Bumped DuckDb to version 1.4.2.
+    * Bumped sqlglot to version 28.
+
+
 * 2025.11.1
     * Reorganization of GeneModels for better maintainability.
     * Improved test coverage for GeneModels.
