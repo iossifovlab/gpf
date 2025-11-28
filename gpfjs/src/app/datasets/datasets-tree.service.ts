@@ -39,7 +39,7 @@ export class DatasetsTreeService {
   }
 
   // This method works with the backend derived treelist data structure and finds it by id
-  public findHierarchyNode(node: object, id: string): object | undefined {
+  public findHierarchyNode(node: object, id: string): object {
     if (node['dataset'] === id) {
       return node;
     }

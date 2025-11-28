@@ -16,8 +16,8 @@ export class GeneProfilesColumn {
   public displayName: string;
   public sortable: boolean;
   public displayVertical: boolean;
-  public clickable: string | null;
-  public meta: string | null;
+  public clickable: string;
+  public meta: string;
   public format: string;
 
   public parent?: GeneProfilesColumn = null;
