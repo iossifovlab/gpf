@@ -341,8 +341,13 @@ Liftover annotator
 ##################
 
 Lifts over a variant from one reference genome to another.
-The product is an "annotatable" (an object annotators can work on) in the target reference genome.
-This produced annotatable is labeled ``liftover_annotatable`` and can be passed to other annotators using the ``input_annotatable`` setting.
+The product is an "annotatable" (an object annotators can work on) in the
+target reference genome. This produced annotatable is labeled
+``liftover_annotatable`` and can be passed to other annotators using
+the ``input_annotatable`` setting.
+
+The produced ``liftover_annotatable`` is normalized in respect to the target
+reference genome.
 
 .. code:: yaml
 
@@ -355,7 +360,13 @@ This produced annotatable is labeled ``liftover_annotatable`` and can be passed 
           name: hg19_annotatable
           internal: true
 
-Specifying the ``source_genome`` and ``target_genome`` parameters in the configuration is optional - if none are provided, the annotator will attempt to collect them from the provided ``chain`` resource's configuration. Specifically, the ``chain`` resource can have ``source_genome`` and ``target_genome`` labels in its configuration's meta section.
+Specifying the ``source_genome`` and ``target_genome`` parameters in the
+configuration is optional - if none are provided, the annotator will attempt
+to collect them from the provided ``chain`` resource's configuration.
+Specifically, the ``chain`` resource can have ``source_genome`` and
+``target_genome`` labels in its configuration's meta section.
+
+
 
 Normalize allele annotator
 ##########################
