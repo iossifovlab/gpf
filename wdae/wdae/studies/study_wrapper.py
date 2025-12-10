@@ -802,7 +802,7 @@ class WDAEStudy(WDAEAbstractStudy):
             elapsed = time.time() - started
             logger.info(
                 "study wrapper (%s)  query returned %s variants; "
-                "closed in %0.3fsec", self.study_id, index, elapsed)
+                "closed in %0.3fsec", self.study_id, index + 1, elapsed)
 
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
