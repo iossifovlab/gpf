@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import pytest
+import pytest_mock
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 
 
@@ -198,27 +199,154 @@ def test_query_result_with_limit(
     assert results == [0, 1, 2, 3, 4]
 
 
-def test_query_result_get_method(
+def test_query_result_limit_zero(
     executor: ThreadPoolExecutor,
 ) -> None:
-    """Test QueryResult.get() method."""
-    runner = MockQueryRunner(data=[1, 2, 3], delay=0.01)
+    """Test QueryResult with limit=0 (treated as unlimited)."""
+    runner = MockQueryRunner(data=list(range(10)))
     runner.set_study_id("test_study")
 
-    result = QueryResult(executor, [runner])
+    result = QueryResult(executor, [runner], limit=0)
     result.start()
 
-    results = []
-    while True:
-        try:
-            item = result.get(timeout=0.1)
-            if item is not None:
-                results.append(item)
-        except StopIteration:
-            break
+    results = [
+        item for item in result if item is not None
+    ]
 
     result.close()
+    # limit=0 is treated as unlimited, so we get all items
+    assert len(results) == 10
+    assert results == list(range(10))
+
+
+def test_query_result_limit_none(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult with limit=None (unlimited)."""
+    runner = MockQueryRunner(data=list(range(10)))
+    runner.set_study_id("test_study")
+
+    result = QueryResult(executor, [runner], limit=None)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    # Should get all 10 items with no limit
+    assert len(results) == 10
+    assert results == list(range(10))
+
+
+def test_query_result_limit_negative(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult with limit=-1 (unlimited)."""
+    runner = MockQueryRunner(data=list(range(10)))
+    runner.set_study_id("test_study")
+
+    result = QueryResult(executor, [runner], limit=-1)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    # Should get all 10 items with limit=-1
+    assert len(results) == 10
+    assert results == list(range(10))
+
+
+def test_query_result_limit_exceeds_data(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult when limit exceeds available data."""
+    runner = MockQueryRunner(data=[1, 2, 3])
+    runner.set_study_id("test_study")
+
+    result = QueryResult(executor, [runner], limit=100)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    # Should only get 3 items even though limit is 100
+    assert len(results) == 3
     assert results == [1, 2, 3]
+
+
+def test_query_result_limit_with_multiple_runners(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult limit with multiple runners."""
+    runner1 = MockQueryRunner(data=list(range(10)))
+    runner1.set_study_id("study1")
+
+    runner2 = MockQueryRunner(data=list(range(10, 20)))
+    runner2.set_study_id("study2")
+
+    runner3 = MockQueryRunner(data=list(range(20, 30)))
+    runner3.set_study_id("study3")
+
+    result = QueryResult(executor, [runner1, runner2, runner3], limit=15)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    # Should stop at 15 items total across all runners
+    assert len(results) == 15
+
+
+def test_query_result_limit_with_iteration(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult limit with iteration (not get() method).
+
+    Note: The limit is only enforced in __next__, not in get().
+    """
+    runner = MockQueryRunner(data=list(range(20)), delay=0.001)
+    runner.set_study_id("test_study")
+
+    result = QueryResult(executor, [runner], limit=5)
+    result.start()
+
+    # Use iteration which enforces limit
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert len(results) == 5
+
+
+def test_query_result_limit_is_done_behavior(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test that is_done() returns True when limit is reached."""
+    runner = MockQueryRunner(data=list(range(100)), delay=0.001)
+    runner.set_study_id("test_study")
+
+    result = QueryResult(executor, [runner], limit=10)
+    result.start()
+
+    # Consume exactly the limit
+    consumed = 0
+    for item in result:
+        if item is not None:
+            consumed += 1
+            if consumed >= 10:
+                break
+
+    # Should be done after consuming limit items
+    assert result.is_done()
+    result.close()
 
 
 def test_query_result_is_done(
@@ -303,6 +431,104 @@ def test_query_result_close_before_start(
 
     # Verify the runner is closed
     assert runner.is_closed()
+
+
+def test_query_result_runner_exception_on_close(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult handles exceptions from runner.close()."""
+
+    class ExceptionOnCloseRunner(QueryRunner):
+        """Runner that raises exception on close."""
+
+        def run(self) -> None:
+            self.put_value_in_result_queue(1)
+            self.put_value_in_result_queue(2)
+            with self._status_lock:
+                self._done = True
+
+        def close(self) -> None:
+            super().close()
+            raise RuntimeError("Error during close")
+
+    runner1 = MockQueryRunner(data=[10, 20])
+    runner1.set_study_id("good_runner")
+
+    runner2 = ExceptionOnCloseRunner()
+    runner2.set_study_id("bad_runner")
+
+    runner3 = MockQueryRunner(data=[30, 40])
+    runner3.set_study_id("another_good_runner")
+
+    result = QueryResult(executor, [runner1, runner2, runner3])
+    result.start()
+
+    # Consume all results
+    results = [
+        item for item in result if item is not None
+    ]
+
+    # Close should not raise even though runner2.close() raises
+    result.close()
+
+    # All runners should be closed
+    assert runner1.is_closed()
+    assert runner2.is_closed()
+    assert runner3.is_closed()
+
+    # Should have gotten results from all runners
+    assert sorted(results) == [1, 2, 10, 20, 30, 40]
+
+
+def test_query_result_multiple_runners_exception_on_close(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test QueryResult handles exceptions from multiple runners on close."""
+
+    class ExceptionOnCloseRunner(QueryRunner):
+        """Runner that raises exception on close."""
+
+        def __init__(self, data: list[int], **kwargs: Any):
+            super().__init__(**kwargs)
+            self.data = data
+
+        def run(self) -> None:
+            for item in self.data:
+                self.put_value_in_result_queue(item)
+            with self._status_lock:
+                self._done = True
+
+        def close(self) -> None:
+            super().close()
+            raise ValueError(f"Error closing {self.study_id}")
+
+    runner1 = ExceptionOnCloseRunner(data=[1, 2])
+    runner1.set_study_id("failing1")
+
+    runner2 = ExceptionOnCloseRunner(data=[3, 4])
+    runner2.set_study_id("failing2")
+
+    runner3 = MockQueryRunner(data=[5, 6])
+    runner3.set_study_id("good_runner")
+
+    result = QueryResult(executor, [runner1, runner2, runner3])
+    result.start()
+
+    # Consume all results
+    results = [
+        item for item in result if item is not None
+    ]
+
+    # Close should not raise even though multiple runners raise
+    result.close()
+
+    # All runners should be closed
+    assert runner1.is_closed()
+    assert runner2.is_closed()
+    assert runner3.is_closed()
+
+    # Should have gotten all results
+    assert sorted(results) == [1, 2, 3, 4, 5, 6]
 
 
 def test_query_runner_put_value_backpressure(
@@ -643,3 +869,122 @@ def test_multiple_runners_none_filtering(
     result.close()
     # Should only get even numbers
     assert sorted(results) == [2, 4, 6, 8, 10]
+
+
+def test_query_runner_nobody_consumes_results(
+    executor: ThreadPoolExecutor,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    """Test runner behavior when queue fills and nobody consumes results.
+
+    The runner should eventually close itself after hitting
+    NOBODY_INTEREST_THRESHOLD retries.
+    """
+    # Create runner with lots of data
+    runner = MockQueryRunner(data=list(range(100)), delay=0.0)
+    runner.set_study_id("unconsummed_study")
+    mocker.patch.object(runner, "NOBODY_INTEREST_THRESHOLD", 5)
+    mocker.patch(
+        "dae.query_variants.query_runners."
+        "QUEUE_TIMEOUT", 0.0)
+
+    try:
+        # Create a very small queue that will fill up quickly
+        small_queue: queue.Queue = queue.Queue(maxsize=2)
+        runner.set_result_queue(small_queue)
+
+        runner.start(executor)
+
+        # Don't consume any results - let the queue fill up
+        # Wait for runner to hit the threshold and close itself
+        # Each retry is 0.1s, so 5 retries = ~0.5s + some margin
+        time.sleep(0.5)
+
+        # Runner should have closed itself due to nobody consuming
+        assert runner.is_closed()
+
+        # Queue should be full
+        assert small_queue.full()
+
+        # Drain the queue to verify some items were added
+        items_count = 0
+        while not small_queue.empty():
+            small_queue.get()
+            items_count += 1
+
+        # Should have at least filled the queue (2 items)
+        assert items_count >= 2
+
+    finally:
+        # Restore original threshold
+        runner.close()
+
+
+def test_query_result_nobody_consumes_results(
+    executor: ThreadPoolExecutor,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    """Test QueryResult behavior when nobody consumes results.
+
+    When multiple runners produce results but nobody consumes them,
+    the runners should eventually close themselves after hitting
+    NOBODY_INTEREST_THRESHOLD, and QueryResult should handle this gracefully.
+    """
+    # Override threshold to make test faster
+    mocker.patch(
+        "dae.query_variants.query_runners."
+        "QueryRunner.NOBODY_INTEREST_THRESHOLD", 5)
+    mocker.patch(
+        "dae.query_variants.query_runners."
+        "QUEUE_TIMEOUT", 0.0)
+
+    # Create multiple runners with lots of data
+    runner1 = MockQueryRunner(data=list(range(50)), delay=0.0)
+    runner1.set_study_id("producer1")
+
+    runner2 = MockQueryRunner(data=list(range(50, 100)), delay=0.0)
+    runner2.set_study_id("producer2")
+
+    runner3 = MockQueryRunner(data=list(range(100, 150)), delay=0.0)
+    runner3.set_study_id("producer3")
+
+    # Create QueryResult with a small queue that will fill up quickly
+    result = QueryResult(
+        executor,
+        [runner1, runner2, runner3],
+        max_queue_size=5,
+    )
+
+    result.start()
+
+    # Don't consume any results - let the queue fill up
+    # Wait for runners to hit threshold and close themselves
+    # Each retry is 0.1s, so 5 retries = ~0.5s + some margin
+    time.sleep(.5)
+
+    # All runners should have closed themselves due to nobody consuming
+    assert runner1.is_closed()
+    assert runner2.is_closed()
+    assert runner3.is_closed()
+
+    assert runner1._future is not None
+    assert runner1._future.done()
+
+    assert runner2._future is not None
+    assert runner2._future.done()
+
+    assert runner3._future is not None
+    assert runner3._future.done()
+
+    # Queue should be full
+    assert result.result_queue.full()
+
+    # QueryResult should recognize all runners are done
+    assert result.is_done()
+
+    # Verify we can still close cleanly
+    result.close()
+
+    # Verify some items were produced before runners gave up
+    # The queue size is 5, so at least that many items should have been produced
+    assert result.result_queue.qsize() == 0  # Queue drained by close()

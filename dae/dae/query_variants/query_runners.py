@@ -10,6 +10,7 @@ from concurrent.futures import Executor, Future, ThreadPoolExecutor
 from typing import Any
 
 logger = logging.getLogger(__name__)
+QUEUE_TIMEOUT = 0.1
 
 
 class QueryRunner(abc.ABC):
@@ -76,10 +77,7 @@ class QueryRunner(abc.ABC):
 
     @abc.abstractmethod
     def run(self) -> None:
-        pass
-
-    def _set_future(self, future: Future) -> None:
-        self._future = future
+        """Run the query and enqueue results in the result queue."""
 
     @property
     def result_queue(self) -> queue.Queue | None:
@@ -101,7 +99,7 @@ class QueryRunner(abc.ABC):
         no_interest = 0
         while True:
             try:
-                self._result_queue.put(val, timeout=0.1)
+                self._result_queue.put(val, timeout=QUEUE_TIMEOUT)
                 break
             except queue.Full:
                 no_interest += 1
@@ -129,6 +127,7 @@ class QueryResult:
 
     The result of the queries is enqueued on result_queue
     """
+    CHECK_DONE_VERBOSITY = 20
 
     def __init__(
         self, executor: ThreadPoolExecutor,
@@ -152,8 +151,6 @@ class QueryResult:
         self.executor = executor
         self._is_done_check = 0
 
-    CHECK_VERBOSITY = 20
-
     def is_done(self) -> bool:
         """Check if the query result is done."""
         self._is_done_check += 1
@@ -164,7 +161,7 @@ class QueryResult:
             logger.debug("all runners are done... exiting...")
             logger.info("returned variants: %s", self._counter)
             return True
-        if self._is_done_check > self.CHECK_VERBOSITY:
+        if self._is_done_check > self.CHECK_DONE_VERBOSITY:
             self._is_done_check = 0
             logger.debug(
                 "studies not done: %s",
@@ -177,7 +174,7 @@ class QueryResult:
     def __next__(self) -> Any:
         while True:
             try:
-                item = self.result_queue.get(timeout=0.1)
+                item = self.result_queue.get(timeout=QUEUE_TIMEOUT)
 
                 if isinstance(item, Exception):
                     self._exceptions.append(item)
@@ -192,22 +189,6 @@ class QueryResult:
                     return None
                 raise StopIteration from exp
             return item
-
-    def get(self, timeout: float = 0.0) -> Any:
-        """Pop the next entry from the queue.
-
-        Return None if the queue is still empty after timeout seconds.
-        """
-        try:
-            row = self.result_queue.get(timeout=timeout)
-            if isinstance(row, Exception):
-                self._exceptions.append(row)
-                return None
-        except queue.Empty as exp:
-            if self.is_done():
-                raise StopIteration from exp
-            return None
-        return row
 
     def start(self) -> None:
         self.timestamp = time.time()
