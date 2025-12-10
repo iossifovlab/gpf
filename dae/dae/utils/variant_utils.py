@@ -268,10 +268,12 @@ def trim_parsimonious(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
 
 
 def get_locus_ploidy(
-        chrom: str, pos: int, sex: Sex, genome: ReferenceGenome) -> int:
+    chrom: str, pos: int, sex: Sex, genome: ReferenceGenome,
+) -> int:
     """Return the number of ploidy at a given position in a chromosome."""
     if chrom == "Y" and sex == Sex.F:
-        raise ValueError("Chromosome Y identified for a female individual!")
+        logger.error("Chromosome Y identified for a female individual!")
+        return 0
 
     if chrom in ("chrX", "X", "chrY", "Y") \
             and sex in (Sex.M, Sex.U) \

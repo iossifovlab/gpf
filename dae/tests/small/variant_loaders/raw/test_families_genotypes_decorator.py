@@ -105,21 +105,20 @@ X      92  .  T   G   .    .      .    GT     0/0  0/1  0/0  0/1
 
 
 @pytest.mark.parametrize(
-    "region,count,expected",
+    "region,expected",
     [
-        (Region("1", 4, 4), 1, [[True, True]]),  # duploid
-        (Region("2", 4, 4), 1, [[True, True]]),  # duploid
-        (Region("2", 8, 8), 1, [[True, True]]),  # duploid
-        (Region("X", 4, 4), 1, [[False, False]]),
-        (Region("X", 52, 52), 1, [[True, True]]),  # psuedo autosomal
-        (Region("X", 64, 64), 1, [[False, False]]),
-        (Region("X", 92, 92), 1, [[True, True]]),  # psuedo autosomal
+        (Region("1", 4, 4), [True, True]),  # diploid
+        (Region("2", 4, 4), [True, True]),  # diploid
+        (Region("2", 8, 8), [True, True]),  # diploid
+        (Region("X", 4, 4), [False, False]),
+        (Region("X", 52, 52), [True, True]),  # psuedo autosomal
+        (Region("X", 64, 64), [False, False]),
+        (Region("X", 92, 92), [True, True]),  # psuedo autosomal
     ],
 )
 def test_get_diploid_males(
     quads_f1: VcfLoader,
     region: Region,
-    count: int,
     expected: list[bool],
 ) -> None:
 
@@ -127,11 +126,9 @@ def test_get_diploid_males(
     result = []
     for _sv, fvs in quads_f1.full_variants_iterator():
         result.extend(fvs)
-    assert len(result) == count
-    assert [
-        VariantsGenotypesLoader._get_diploid_males(fv)
-        for fv in result
-    ] == expected
+    assert len(result) == 1
+    fv = result[0]
+    assert VariantsGenotypesLoader._get_diploid_males(fv) == expected
 
 
 @pytest.mark.parametrize(
@@ -160,11 +157,11 @@ def test_vcf_loader_genetic_model(
     assert len(result) == count
     fv = result[0]
     assert fv._genetic_model is not None
-    for fa in fv.alleles:
+    for fa in fv.family_alleles:
         assert fa._genetic_model is not None
 
     assert fv.genetic_model == expected
-    for fa in fv.alleles:
+    for fa in fv.family_alleles:
         assert fa._genetic_model == expected
 
 
@@ -194,9 +191,9 @@ def test_vcf_loader_best_state(
     assert len(result) == count
     fv = result[0]
     assert fv._best_state is not None
-    for fa in fv.alleles:
+    for fa in fv.family_alleles:
         assert fa._best_state is not None
 
     assert np.array_equal(fv.best_state, expected)
-    for fa in fv.alleles:
+    for fa in fv.family_alleles:
         assert np.array_equal(fa.best_state, expected)

@@ -130,10 +130,7 @@ def test_get_locus_ploidy(
 
 
 def test_get_locus_ploidy_y_chrom_female(genome: ReferenceGenome) -> None:
-    with pytest.raises(
-            ValueError,
-            match="Chromosome Y identified for a female individual!"):
-        get_locus_ploidy("Y", 57217415, Sex.F, genome)
+    assert get_locus_ploidy("Y", 57217415, Sex.F, genome) == 0
 
 
 @pytest.mark.parametrize("dna,expected", [
