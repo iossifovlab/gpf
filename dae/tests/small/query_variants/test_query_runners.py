@@ -330,3 +330,316 @@ def test_query_runner_put_value_backpressure(
 
     time.sleep(0.1)
     runner.close()
+
+
+def test_multiple_runners_with_different_delays(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test multiple runners with different execution delays."""
+    runner1 = MockQueryRunner(data=[1, 2, 3], delay=0.01)
+    runner1.set_study_id("slow_study")
+
+    runner2 = MockQueryRunner(data=[4, 5, 6], delay=0.0)
+    runner2.set_study_id("fast_study")
+
+    runner3 = MockQueryRunner(data=[7, 8, 9], delay=0.005)
+    runner3.set_study_id("medium_study")
+
+    result = QueryResult(executor, [runner1, runner2, runner3])
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert sorted(results) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert len(results) == 9
+
+
+def test_multiple_runners_with_different_deserializers(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test multiple runners with different deserializers."""
+    runner1 = MockQueryRunner(
+        data=[1, 2, 3],
+        deserializer=lambda x: x * 10,
+    )
+    runner1.set_study_id("study1")
+
+    runner2 = MockQueryRunner(
+        data=[4, 5, 6],
+        deserializer=lambda x: x * 100,
+    )
+    runner2.set_study_id("study2")
+
+    result = QueryResult(executor, [runner1, runner2])
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert sorted(results) == [10, 20, 30, 400, 500, 600]
+
+
+def test_multiple_runners_one_fails(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test multiple runners where one fails."""
+
+    class FailingRunner(QueryRunner):
+        def run(self) -> None:
+            self.put_value_in_result_queue(RuntimeError("Intentional error"))
+            with self._status_lock:
+                self._done = True
+
+    runner1 = MockQueryRunner(data=[1, 2, 3])
+    runner1.set_study_id("good_study1")
+
+    runner2 = FailingRunner()
+    runner2.set_study_id("failing_study")
+
+    runner3 = MockQueryRunner(data=[4, 5, 6])
+    runner3.set_study_id("good_study2")
+
+    result = QueryResult(executor, [runner1, runner2, runner3])
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    # Should get results from the non-failing runners
+    assert sorted(results) == [1, 2, 3, 4, 5, 6]
+
+    # Should have one exception
+    assert len(result._exceptions) == 1
+    assert isinstance(result._exceptions[0], RuntimeError)
+
+    with pytest.raises(OSError, match="Intentional error"):
+        result.close()
+
+
+def test_multiple_runners_with_limit_reaches_first(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test that limit stops all runners when reached."""
+    runner1 = MockQueryRunner(data=list(range(100)), delay=0.001)
+    runner1.set_study_id("study1")
+
+    runner2 = MockQueryRunner(data=list(range(100, 200)), delay=0.001)
+    runner2.set_study_id("study2")
+
+    runner3 = MockQueryRunner(data=list(range(200, 300)), delay=0.001)
+    runner3.set_study_id("study3")
+
+    result = QueryResult(executor, [runner1, runner2, runner3], limit=10)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert len(results) == 10
+
+
+def test_multiple_runners_with_empty_and_non_empty(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test multiple runners where some return no data."""
+    runner1 = MockQueryRunner(data=[])
+    runner1.set_study_id("empty_study1")
+
+    runner2 = MockQueryRunner(data=[1, 2, 3])
+    runner2.set_study_id("data_study")
+
+    runner3 = MockQueryRunner(data=[])
+    runner3.set_study_id("empty_study2")
+
+    result = QueryResult(executor, [runner1, runner2, runner3])
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert results == [1, 2, 3]
+
+
+def test_multiple_runners_early_close_all(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test closing result early stops all runners."""
+    runner1 = MockQueryRunner(data=list(range(100)), delay=0.01)
+    runner1.set_study_id("study1")
+
+    runner2 = MockQueryRunner(data=list(range(100, 200)), delay=0.01)
+    runner2.set_study_id("study2")
+
+    runner3 = MockQueryRunner(data=list(range(200, 300)), delay=0.01)
+    runner3.set_study_id("study3")
+
+    result = QueryResult(executor, [runner1, runner2, runner3])
+    result.start()
+
+    # Let them process a few items
+    time.sleep(0.05)
+
+    result.close()
+
+    # All runners should be closed
+    assert runner1.is_closed()
+    assert runner2.is_closed()
+    assert runner3.is_closed()
+
+    # Should not have processed all items
+    results_count = result.result_queue.qsize()
+    assert results_count < 300
+
+
+def test_multiple_runners_with_adapters(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test multiple runners with different adapter chains."""
+    runner1 = MockQueryRunner(
+        data=[1, 2, 3],
+        deserializer=lambda x: x * 2,
+    )
+    runner1.set_study_id("study1")
+    runner1.adapt(lambda x: x + 1)  # (x * 2) + 1
+
+    runner2 = MockQueryRunner(
+        data=[4, 5, 6],
+        deserializer=lambda x: x * 3,
+    )
+    runner2.set_study_id("study2")
+    runner2.adapt(lambda x: x - 1)  # (x * 3) - 1
+
+    result = QueryResult(executor, [runner1, runner2])
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    # runner1-> [3, 5, 7]  (1*2+1, 2*2+1, 3*2+1)
+    # runner2-> [11, 14, 17]  (4*3-1, 5*3-1, 6*3-1)
+    assert sorted(results) == [3, 5, 7, 11, 14, 17]
+
+
+def test_multiple_runners_large_number(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test with many runners to verify thread pool handling."""
+    runners = []
+    expected_total = 0
+
+    for i in range(10):
+        data = list(range(i * 10, (i + 1) * 10))
+        runner = MockQueryRunner(data=data, delay=0.001)
+        runner.set_study_id(f"study_{i}")
+        runners.append(runner)
+        expected_total += len(data)
+
+    result = QueryResult(executor, runners)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert len(results) == expected_total
+    assert sorted(results) == list(range(100))
+
+
+def test_multiple_runners_custom_queue_size(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test multiple runners with custom queue size."""
+    runner1 = MockQueryRunner(data=[1, 2, 3])
+    runner1.set_study_id("study1")
+
+    runner2 = MockQueryRunner(data=[4, 5, 6])
+    runner2.set_study_id("study2")
+
+    # Create result with small queue
+    result = QueryResult(executor, [runner1, runner2], max_queue_size=10)
+    result.start()
+
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    assert sorted(results) == [1, 2, 3, 4, 5, 6]
+    assert result.result_queue.maxsize == 10
+
+
+def test_multiple_runners_sequential_completion(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test that runners can complete at different times."""
+    # Fast runner completes first
+    runner1 = MockQueryRunner(data=[1, 2], delay=0.0)
+    runner1.set_study_id("fast_study")
+
+    # Slow runner completes last
+    runner2 = MockQueryRunner(data=[3, 4, 5, 6], delay=0.05)
+    runner2.set_study_id("slow_study")
+
+    result = QueryResult(executor, [runner1, runner2])
+    result.start()
+
+    # Fast runner should complete quickly
+    time.sleep(0.02)
+    assert runner1.is_done()
+    assert not runner2.is_done()
+
+    # Wait for slow runner
+    results = [
+        item for item in result if item is not None
+    ]
+
+    assert runner2.is_done()
+    result.close()
+    assert sorted(results) == [1, 2, 3, 4, 5, 6]
+
+
+def test_multiple_runners_none_filtering(
+    executor: ThreadPoolExecutor,
+) -> None:
+    """Test that None values from deserializers are handled correctly."""
+
+    def filter_even(x: int) -> int | None:
+        return x if x % 2 == 0 else None
+
+    runner1 = MockQueryRunner(
+        data=[1, 2, 3, 4, 5],
+        deserializer=filter_even,
+    )
+    runner1.set_study_id("study1")
+
+    runner2 = MockQueryRunner(
+        data=[6, 7, 8, 9, 10],
+        deserializer=filter_even,
+    )
+    runner2.set_study_id("study2")
+
+    result = QueryResult(executor, [runner1, runner2])
+    result.start()
+
+    # The iterator returns None when queue is empty but not done
+    # We collect all non-None items
+    results = [
+        item for item in result if item is not None
+    ]
+
+    result.close()
+    # Should only get even numbers
+    assert sorted(results) == [2, 4, 6, 8, 10]

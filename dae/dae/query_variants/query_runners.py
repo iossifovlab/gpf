@@ -5,7 +5,7 @@ import logging
 import queue
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from concurrent.futures import Executor, Future, ThreadPoolExecutor
 from typing import Any
 
@@ -132,7 +132,7 @@ class QueryResult:
 
     def __init__(
         self, executor: ThreadPoolExecutor,
-        runners: list[QueryRunner], *,
+        runners: Sequence[QueryRunner], *,
         limit: int | None = -1,
         max_queue_size: int = 5_000,
     ):
