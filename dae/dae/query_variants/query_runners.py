@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class QueryRunner(abc.ABC):
     """Run a query in the backround using the provided executor."""
 
+    NOBODY_INTEREST_THRESHOLD = 1_000
+
     def __init__(self, **kwargs: Any):
         super().__init__()
 
@@ -102,18 +104,18 @@ class QueryRunner(abc.ABC):
                 self._result_queue.put(val, timeout=0.1)
                 break
             except queue.Full:
-                logger.debug(
-                    "runner (%s) nobody interested %s",
-                    self.study_id, no_interest)
+                no_interest += 1
 
                 if self.is_closed():
+                    logger.info(
+                        "runner (%s) closed while putting value in"
+                        " result queue",
+                        self.study_id)
                     break
-                no_interest += 1
-                if no_interest % 500 == 0:
-                    logger.warning(
-                        "runner (%s) nobody interested %s",
-                        self.study_id, no_interest)
-                if no_interest > 1_000:
+                logger.warning(
+                    "runner (%s) nobody interested %s",
+                    self.study_id, no_interest)
+                if no_interest > self.NOBODY_INTEREST_THRESHOLD:
                     logger.warning(
                         "runner (%s) nobody interested %s"
                         "closing...",
@@ -130,9 +132,11 @@ class QueryResult:
 
     def __init__(
         self, executor: ThreadPoolExecutor,
-        runners: list[QueryRunner], limit: int | None = -1,
+        runners: list[QueryRunner], *,
+        limit: int | None = -1,
+        max_queue_size: int = 5_000,
     ):
-        self.result_queue: queue.Queue = queue.Queue(maxsize=5_000)
+        self.result_queue: queue.Queue = queue.Queue(maxsize=max_queue_size)
 
         if limit is None:
             limit = -1
