@@ -23,7 +23,9 @@ translator = BitmaskEnumTranslator(
         ("prb~heterozygous and sib", Role.sib, Zygosity.homozygous, False),
     ],
 )
-def test_compound_zygosity(query, role, zygosity, expected):
+def test_compound_zygosity(
+    query: str, role: Role, zygosity: Zygosity, expected: bool,  # noqa: FBT001
+) -> None:
     matcher = transform_attribute_query_to_function(
         Role, query, complementary_type=Zygosity,
     )
@@ -55,6 +57,8 @@ def test_compound_zygosity(query, role, zygosity, expected):
         ),
     ],
 )
-def test_compound_addition_to_query(query, zygosity_str, expected):
+def test_compound_addition_to_query(
+    query: str, zygosity_str: str, expected: str,
+) -> None:
     assert update_attribute_query_with_compounds(
         query, zygosity_str) == expected
