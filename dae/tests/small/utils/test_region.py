@@ -4,7 +4,10 @@ import textwrap
 
 import pysam
 import pytest
-from dae.genomic_resources.testing import setup_tabix
+from dae.genomic_resources.testing import (
+    setup_tabix,
+    setup_vcf,
+)
 from dae.utils.regions import (
     BedRegion,
     Region,
@@ -83,6 +86,9 @@ def test_collapse_no_chrom_simple(data: str, expected: list[Region]) -> None:
             Region("1", 3, 3),
             Region("1", 4, 4),
         ]),
+        ("1", 10, 10, [Region("1", 1, 10)]),
+        ("1", 10, 11, [Region("1", 1, 10)]),
+        ("1", 11, 10, [Region("1", 1, 10), Region("1", 11, 20)]),
     ],
 )
 def test_split_into_regions(
@@ -292,3 +298,40 @@ def test_get_chromosome_length_tabix_avoid_infinite_loop(
 
     assert get_chromosome_length_tabix(
         pysam.TabixFile(str(in_file)), "chr1") is None
+
+
+@pytest.fixture
+def sample_vcf(tmp_path: pathlib.Path) -> pathlib.Path:
+    root_path = tmp_path / "vcf_score"
+    return setup_vcf(
+        root_path / "score.vcf.gz", """
+##fileformat=VCFv4.0
+##contig=<ID=1>
+##contig=<ID=2>
+##contig=<ID=3>
+#CHROM POS      ID  REF ALT    QUAL FILTER  INFO
+1      29999977 .   A   G      .    .       .
+1      29999993 .   T   C      .    .       .
+1      29999999 .   T   TAAAAA .    .       .
+""")
+
+
+@pytest.mark.parametrize(
+    "precision",
+    [
+        5_000_000,
+        1000,
+        100,
+        1,
+    ],
+)
+def test_get_chrom_length_vcf(
+    sample_vcf: pathlib.Path,
+    precision: int,
+) -> None:
+    variant_file = pysam.VariantFile(str(sample_vcf))
+    one_length = get_chromosome_length_tabix(
+        variant_file, "1", precision=precision)
+    assert one_length is not None
+    assert one_length >= 30_000_000
+    assert abs(one_length - 30_000_000) <= precision
