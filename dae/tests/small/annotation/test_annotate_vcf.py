@@ -738,7 +738,14 @@ def test_vcf_region_boundary(
 def test_vcf_keep_parts(
     annotate_directory_fixture: pathlib.Path,
     tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
+    mocker.patch(
+        "dae.annotation.annotate_utils."
+        "get_chromosome_length_tabix",
+        return_value=47,
+    )
+
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">

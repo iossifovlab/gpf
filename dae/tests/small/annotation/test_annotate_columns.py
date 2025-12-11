@@ -1163,7 +1163,13 @@ def test_annotate_columns_region_boundary(
 def test_annotate_columns_keep_parts(
     annotate_directory_fixture: pathlib.Path,
     tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
+    mocker.patch(
+        "dae.annotation.annotate_utils."
+        "get_chromosome_length_tabix",
+        return_value=47,
+    )
     in_content = textwrap.dedent("""
         chrom   pos
         chr1    23

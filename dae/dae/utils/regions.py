@@ -87,8 +87,9 @@ def calc_bin_index(bin_len: int, pos: int) -> int:
 
 
 def split_into_regions(
-        chrom: str, chrom_length: int,
-        region_size: int, start: int = 1) -> list[Region]:
+    chrom: str, chrom_length: int,
+    region_size: int, start: int = 1,
+) -> list[Region]:
     """Return a list of regions for a chrom with a given length."""
 
     if region_size == 0:
@@ -128,8 +129,7 @@ def get_chromosome_length_tabix(
         left, right = None, None
         pos = step
         while left is None or right is None:
-            region = Region(chrom, pos, None)
-            if any_records(tabix_file.fetch(str(region))):
+            if any_records(tabix_file.fetch(chrom, start=pos)):
                 left = pos
                 pos = pos * 2
             else:
@@ -142,12 +142,11 @@ def get_chromosome_length_tabix(
         # index of the last element (in left) and the length (in right)
         while (right - left) > precision:
             pos = (left + right) // 2
-            region = Region(chrom, pos, None)
-            if any_records(tabix_file.fetch(str(region))):
+            if any_records(tabix_file.fetch(chrom, start=pos)):
                 left = pos
             else:
                 right = pos
-        return right  # noqa: TRY300
+        return right + 1
 
     except ValueError as ex:
         logger.warning(
