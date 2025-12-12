@@ -30,6 +30,11 @@ from dae.genomic_resources.testing import (
     setup_genome,
     setup_vcf,
 )
+from dae.task_graph.executor import (
+    AbstractTaskGraphExecutor,
+    SequentialExecutor,
+    task_graph_run,
+)
 from dae.task_graph.graph import TaskGraph
 
 
@@ -561,10 +566,15 @@ def vcf_allele_score_resource(tmp_path: pathlib.Path) -> GenomicResource:
 ##bcftools_viewVersion=1.22+htslib-1.22.1
 ##bcftools_viewCommand=view All_20180418_chr.vcf.gz chr17:29999993-30000000; Date=Thu Dec 11 12:03:13 2025
 #CHROM POS      ID           REF                  ALT QUAL FILTER  INFO
-chr17  29999977 rs1457635223 GTAAGAGTTACATTATTTAA G   .    .       RS=1457635223;RSPOS=29999978;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000100005000002000200;GENEINFO=EFCAB5:374786;WGT=1;VC=DIV;DSS;ASP
-chr17  29999993 rs1195812073 T                    C   .    .       RS=1195812073;RSPOS=29999993;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;INT;ASP
-chr17  29999999 rs1388869160 TTTGAA               T   .    .       RS=1388869160;RSPOS=30000000;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000200;GENEINFO=EFCAB5:374786;WGT=1;VC=DIV;INT;ASP        
-""")  # noqa
+chr17  29999973 rs1205271212 A                    G       .       .       RS=1205271212;RSPOS=29999973;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000000305000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;REF;SYN;ASP;TOPMED=0.99999203618756371,0.00000796381243628
+chr17  29999977 rs1251997933 G                    A       .       .       RS=1251997933;RSPOS=29999977;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000100005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;DSS;ASP
+chr17  29999977 rs1457635223 GTAAGAGTTACATTATTTAA G       .       .       RS=1457635223;RSPOS=29999978;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000100005000002000200;GENEINFO=EFCAB5:374786;WGT=1;VC=DIV;DSS;ASP
+chr17  29999981 rs764366409  G                    C       .       .       RS=764366409;RSPOS=29999981;dbSNPBuildID=144;SSR=0;SAO=0;VP=0x050000080005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;INT;ASP
+chr17  29999983 rs1197780623 G                    C       .       .       RS=1197780623;RSPOS=29999983;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;INT;ASP;TOPMED=0.99999203618756371,0.00000796381243628
+chr17  29999987 rs1246911347 C                    T       .       .       RS=1246911347;RSPOS=29999987;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;INT;ASP
+chr17  29999992 rs1455026420 T                    C       .       .       RS=1455026420;RSPOS=29999992;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;INT;ASP
+chr17  29999993 rs1195812073 T                    C       .       .       RS=1195812073;RSPOS=29999993;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000100;GENEINFO=EFCAB5:374786;WGT=1;VC=SNV;INT;ASP
+chr17  29999999 rs1388869160 TTTGAA               T       .       .       RS=1388869160;RSPOS=30000000;dbSNPBuildID=151;SSR=0;SAO=0;VP=0x050000080005000002000200;GENEINFO=EFCAB5:374786;WGT=1;VC=DIV;INT;ASP""")  # noqa
     setup_directories(
         root_path,
         {
@@ -604,8 +614,14 @@ chr17  29999999 rs1388869160 TTTGAA               T   .    .       RS=1388869160
     return grr.get_resource("vcf_score")
 
 
+@pytest.fixture
+def executor() -> AbstractTaskGraphExecutor:
+    return SequentialExecutor()
+
+
 def test_statistics_with_vcf_allele_score(
     vcf_allele_score_resource: GenomicResource,
+    executor: AbstractTaskGraphExecutor,
 ) -> None:
 
     impl = build_score_implementation_from_resource(vcf_allele_score_resource)
@@ -616,16 +632,19 @@ def test_statistics_with_vcf_allele_score(
     task_ids = {task.task_id for task in graph.tasks}
     assert any("calculate_min_max" in task_id for task_id in task_ids)
 
+    task_graph_run(graph, executor)
+
 
 def test_statistics_with_vcf_allele_score_30_000_000(
     vcf_allele_score_resource: GenomicResource,
     mocker: pytest_mock.MockerFixture,
+    executor: AbstractTaskGraphExecutor,
 ) -> None:
 
     mocker.patch(
         "dae.genomic_resources.implementations.genomic_scores_impl."
         "get_chromosome_length_tabix",
-        return_value=30_000_000,
+        return_value=30_000_001,
     )
     impl = build_score_implementation_from_resource(vcf_allele_score_resource)
     graph = TaskGraph()
@@ -634,3 +653,5 @@ def test_statistics_with_vcf_allele_score_30_000_000(
 
     task_ids = {task.task_id for task in graph.tasks}
     assert any("calculate_min_max" in task_id for task_id in task_ids)
+
+    task_graph_run(graph, executor)

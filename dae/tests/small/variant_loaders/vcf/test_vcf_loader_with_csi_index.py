@@ -55,7 +55,9 @@ def import_vcf_data(
     return (genome, ped_path, vcf_path)
 
 
-def test_vcf_loader_with_csi_index(import_vcf_data):
+def test_vcf_loader_with_csi_index(
+    import_vcf_data: tuple[ReferenceGenome, pathlib.Path, pathlib.Path],
+) -> None:
     genome, ped_path, vcf_path = import_vcf_data
 
     families_loader = FamiliesLoader(str(ped_path))

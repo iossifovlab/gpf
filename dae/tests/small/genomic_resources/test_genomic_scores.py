@@ -855,7 +855,7 @@ def test_statistics_build_tasks(tmp_path: pathlib.Path) -> None:
     assert len(calc_tasks) == 1 + 1  # 1 hist region tasks, 1 for hist conf
 
 
-def test_get_number_range_reads_histogram() -> None:
+def test_get_score_range_reads_histogram() -> None:
     histogram = NumberHistogram(NumberHistogramConfig((0.0, 1.0)))
     histogram.min_value = 0.25
     histogram.max_value = 0.75
@@ -867,10 +867,10 @@ def test_get_number_range_reads_histogram() -> None:
     score = build_score_from_resource(res)
     score.open()
 
-    assert score.get_number_range("score") == (0.25, 0.75)
+    assert score.get_score_range("score") == (0.25, 0.75)
 
 
-def test_get_number_range_returns_none_for_null_histogram() -> None:
+def test_get_score_range_returns_none_for_null_histogram() -> None:
     null_hist = NullHistogram(NullHistogramConfig("disabled"))
     res = build_simple_position_score_resource({
         "statistics/histogram_score.json": null_hist.serialize(),
@@ -879,15 +879,15 @@ def test_get_number_range_returns_none_for_null_histogram() -> None:
     score = build_score_from_resource(res)
     score.open()
 
-    assert score.get_number_range("score") is None
+    assert score.get_score_range("score") is None
 
 
-def test_get_number_range_unknown_score_raises() -> None:
+def test_get_score_range_unknown_score_raises() -> None:
     score = build_score_from_resource(build_simple_position_score_resource())
     score.open()
 
     with pytest.raises(ValueError, match="unknown score missing"):
-        score.get_number_range("missing")
+        score.get_score_range("missing")
 
 
 def test_get_histogram_filename_prefers_yaml_from_manifest() -> None:
