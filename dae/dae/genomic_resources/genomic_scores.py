@@ -694,6 +694,8 @@ class GenomicScore(ResourceConfigValidationMixin):
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
+            if pos_begin is not None and line_pos_end < pos_begin:
+                continue
 
             val = [line.get_score(scr_id) for scr_id in scores]
 
@@ -1094,7 +1096,7 @@ class AlleleScore(GenomicScore):
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
-                    logger.info(
+                    logger.debug(
                         "multiple values for positions %s:%s-%s "
                         "and nucleotides %s",
                         chrom, left, right, returned_nucleotides)
