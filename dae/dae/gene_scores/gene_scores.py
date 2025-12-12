@@ -284,9 +284,9 @@ class GeneScore(
         }
 
     @lru_cache(maxsize=64)
-    def get_number_range(
+    def get_score_range(
             self, score_id: str) -> tuple[float, float] | None:
-        """Return the value range for a number score."""
+        """Return the value range for a numeric score."""
         if score_id not in self.get_all_scores():
             raise ValueError(
                 f"unknown score {score_id}; "

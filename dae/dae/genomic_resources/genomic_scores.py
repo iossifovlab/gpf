@@ -235,11 +235,108 @@ ScoreQuery = PositionScoreQuery | AlleleScoreQuery
 
 
 class GenomicScore(ResourceConfigValidationMixin):
-    """Genomic scores base class.
+    """Base class for genomic score resources.
 
-    PositionScore, NPScore and AlleleScore inherit from this class.
-    Statistics builder implementation uses only GenomicScore interface
-    to build all defined statistics.
+    GenomicScore provides a unified interface for accessing and managing
+    genomic annotation scores stored in various formats. It serves as the
+    foundation for specialized score types including PositionScore (position-
+    based scores) and AlleleScore (variant-specific scores).
+
+    This abstract base class handles:
+    - Resource configuration validation and normalization
+    - Score definition management and parsing
+    - File format abstraction through GenomicPositionTable
+    - Histogram and statistics management
+    - Default annotation attribute configuration
+    - Context manager protocol for resource lifecycle
+
+    Score resources can be stored in multiple formats:
+    - Tabix-indexed files (TSV, BED)
+    - VCF files (particularly for allele scores)
+    - BigWig files (for position scores)
+    - In-memory tables (for testing)
+
+    Configuration Structure:
+        A genomic score resource requires a YAML configuration file
+        (genomic_resource.yaml) specifying:
+
+        - **type**: Resource type (position_score, allele_score, np_score)
+        - **table**: Table configuration with filename, format, and column
+          mappings for chrom, pos_begin, pos_end (and ref/alt for allele scores)
+        - **scores**: List of score definitions with id, type, name/index,
+          description, and optional aggregators
+        - **default_annotation**: Optional list specifying which scores to
+          include in default annotations with optional name mappings
+        - **histograms**: Optional histogram configurations for statistics
+
+    Score Definition:
+        Each score in the resource is defined with:
+        - **id**: Unique identifier for the score
+        - **type**: Data type (int, float, str, bool)
+        - **name/index**: Column name or index in the data file
+        - **desc**: Human-readable description
+        - **na_values**: Values to treat as missing/NA (optional)
+        - **hist_conf**: Histogram configuration for statistics (optional)
+        - **position_aggregator**: Default aggregator for positions (optional)
+        - **allele_aggregator**: Default aggregator for alleles (optional)
+
+    Usage Pattern:
+        Genomic scores follow a resource lifecycle pattern:
+
+        1. Build/retrieve the resource from a repository
+        2. Create a score object from the resource
+        3. Open the score to initialize data access
+        4. Query scores using fetch methods
+        5. Close the score to release resources
+
+        Example using context manager:
+            >>> from dae.genomic_resources.genomic_scores import (
+            ...     build_score_from_resource_id
+            ... )
+            >>> score = build_score_from_resource_id("phastCons100way")
+            >>> with score.open():
+            ...     # Score is open and ready to use
+            ...     chromosomes = score.get_all_chromosomes()
+            ...     scores = score.get_all_scores()
+            ...     # Query data...
+            >>> # Score is automatically closed
+
+    Statistics and Histograms:
+        GenomicScore supports automatic statistics generation including:
+        - Value distribution histograms
+        - Min/max ranges for numeric scores
+        - Category frequencies for categorical scores
+        - Custom histogram configurations per score
+
+    Attributes:
+        resource (GenomicResource): The underlying genomic resource object
+        resource_id (str): Unique identifier for the resource
+        config (dict): Validated and normalized configuration dictionary
+        table (GenomicPositionTable): Data access abstraction layer
+        score_definitions (dict[str, _ScoreDef]): Mapping of score IDs to
+            their internal definitions including parsers and metadata
+        table_loaded (bool): Flag indicating if the table is currently open
+
+    Key Methods:
+        open(): Initialize the score resource for data access
+        close(): Release resources and close the data table
+        get_all_scores(): Get list of all available score IDs
+        get_all_chromosomes(): Get list of all available chromosomes
+        get_score_definition(): Get metadata for a specific score
+        get_default_annotation_attributes(): Get default annotation config
+        get_histogram(): Load histogram for a score (if available)
+        get_score_range(): Get value range for a numeric scores
+
+    Abstract Methods:
+        Subclasses must implement:
+        - _fetch_region_values(): Core method for retrieving score values
+          in a genomic region, used for statistics computation
+
+    See Also:
+        - PositionScore: For position-based genomic scores
+        - AlleleScore: For variant-specific genomic scores
+        - GenomicResource: Base resource abstraction
+        - GenomicPositionTable: Table format abstraction
     """
 
     def __init__(self, resource: GenomicResource):
@@ -724,10 +821,10 @@ class GenomicScore(ResourceConfigValidationMixin):
         """
 
     @lru_cache(maxsize=64)
-    def get_number_range(
+    def get_score_range(
         self, score_id: str,
     ) -> tuple[float, float] | None:
-        """Return the value range for a number score."""
+        """Return the value range for a numeric score."""
         if score_id not in self.get_all_scores():
             raise ValueError(
                 f"unknown score {score_id}; "
@@ -766,7 +863,54 @@ class GenomicScore(ResourceConfigValidationMixin):
 
 
 class PositionScore(GenomicScore):
-    """Defines position genomic score."""
+    """Position-based genomic score resource.
+
+    A PositionScore provides scores associated with genomic positions,
+    where each score value applies to a specific genomic coordinate or range.
+    Unlike AlleleScore, PositionScore does not consider reference or
+    alternative alleles - scores are purely position-based.
+
+    Typical use cases include:
+    - Conservation scores (e.g., phastCons, phyloP)
+    - Mappability scores
+    - GC content
+    - Recombination rates
+    - Any metric that depends only on genomic position
+
+    The score data can be stored in various formats including tabix-indexed
+    files, BigWig files, or in-memory tables.
+
+    Example:
+        >>> from dae.genomic_resources.repository_factory import (
+        ...     build_genomic_resource_repository
+        ... )
+        >>> repo = build_genomic_resource_repository()
+        >>> resource = repo.get_resource("phastCons100way")
+        >>> score = build_score_from_resource(resource)
+        >>> with score.open() as score:
+        ...     # Fetch scores at a specific position
+        ...     values = score.fetch_scores("chr1", 12345)
+        ...     # Fetch scores across a region
+        ...     for pos_begin, pos_end, scores in score.fetch_region(
+        ...         "chr1", 10000, 20000
+        ...     ):
+        ...         print(f"{pos_begin}-{pos_end}: {scores}")
+        ...     # Aggregate scores over a region
+        ...     aggs = score.fetch_scores_agg("chr1", 10000, 20000)
+
+    Attributes:
+        resource: The underlying GenomicResource object
+        resource_id: Unique identifier for the resource
+        config: Configuration dictionary for the score
+        table: GenomicPositionTable for data access
+        score_definitions: Dictionary mapping score IDs to their definitions
+
+    Key Methods:
+        fetch_scores: Get score values at a specific position
+        fetch_region: Iterate over score values in a genomic region
+        fetch_scores_agg: Aggregate score values over a region
+        get_region_scores: Get all scores in a region for a specific score ID
+    """
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -937,7 +1081,92 @@ class PositionScore(GenomicScore):
 
 
 class AlleleScore(GenomicScore):
-    """Defines allele genomic scores."""
+    """Allele-specific genomic score resource.
+
+    An AlleleScore provides scores that depend on specific alleles at genomic
+    positions. Unlike PositionScore, AlleleScore considers both the reference
+    and alternative alleles when computing scores. This makes it suitable for
+    variant-specific predictions and annotations.
+
+    AlleleScore supports two operational modes:
+
+    1. **SUBSTITUTIONS mode**: Scores are specific to nucleotide substitutions
+       (e.g., A>T, C>G). This mode is optimized for single nucleotide variants
+       and considers the directionality of the change. Used by resources like
+       CADD, which provide substitution-specific scores.
+
+    2. **ALLELES mode**: Scores are associated with specific alleles at
+       positions, without considering the reference allele. This mode supports
+       insertions, deletions, and more complex variants. The score depends on
+       the alternative allele itself rather than the substitution pattern.
+
+    Typical use cases include:
+    - Variant pathogenicity scores (e.g., CADD, DANN)
+    - Functional impact predictions (e.g., PolyPhen, SIFT scores)
+    - Splice site predictions
+    - Regulatory variant scores
+    - Any metric that depends on specific alleles
+
+    The score data is typically stored in VCF files or tabix-indexed tables
+    with reference and alternative allele columns.
+
+    Example:
+        >>> from dae.genomic_resources.repository_factory import (
+        ...     build_genomic_resource_repository
+        ... )
+        >>> repo = build_genomic_resource_repository()
+        >>> resource = repo.get_resource("cadd_v1_6")
+        >>> score = build_score_from_resource(resource)
+        >>> with score.open() as score:
+        ...     # Fetch scores for a specific variant
+        ...     values = score.fetch_scores(
+        ...         "chr1", 12345, "A", "T"
+        ...     )
+        ...     # Iterate over variants in a region
+        ...     for pos, ref, alt, scores in score.fetch_region(
+        ...         "chr1", 10000, 20000
+        ...     ):
+        ...         print(f"{pos} {ref}>{alt}: {scores}")
+        ...     # Aggregate scores over a region
+        ...     from dae.genomic_resources.genomic_scores import (
+        ...         AlleleScoreQuery
+        ...     )
+        ...     queries = [
+        ...         AlleleScoreQuery(
+        ...             "cadd_raw",
+        ...             position_aggregator="mean",
+        ...             allele_aggregator="max"
+        ...         )
+        ...     ]
+        ...     aggs = score.fetch_scores_agg(
+        ...         "chr1", 10000, 20000, queries
+        ...     )
+
+    Attributes:
+        resource: The underlying GenomicResource object
+        resource_id: Unique identifier for the resource
+        config: Configuration dictionary for the score
+        table: GenomicPositionTable for data access (typically VCF)
+        score_definitions: Dictionary mapping score IDs to their definitions
+        mode: Operating mode (SUBSTITUTIONS or ALLELES)
+
+    Key Methods:
+        fetch_scores: Get score values for a specific variant
+        fetch_region: Iterate over variant scores in a genomic region
+        fetch_scores_agg: Aggregate scores over a region with position and
+                         allele aggregation
+        substitutions_mode: Check if operating in SUBSTITUTIONS mode
+        alleles_mode: Check if operating in ALLELES mode
+
+    Configuration:
+        The resource configuration should specify:
+        - table.filename: Path to the data file (usually VCF)
+        - table.reference: Column/field containing reference alleles
+        - table.alternative: Column/field containing alternative alleles
+        - allele_score_mode: Either "substitutions" or "alleles" (optional)
+        - scores: List of score definitions with optional position_aggregator
+                 and allele_aggregator specifications
+    """
 
     class Mode(enum.Enum):
         """Allele score mode."""
