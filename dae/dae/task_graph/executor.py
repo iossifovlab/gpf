@@ -398,21 +398,29 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             sum(self._client.ncores().values()))
         return max(self.MIN_QUEUE_SIZE, 2 * n_workers)
 
+    def _select_tasks_that_depend_on(
+        self, task_node: Task,
+    ) -> list[Task]:
+        return [
+            t for t in self._task_queue
+            if task_node in t.deps
+        ]
+
+    def _select_tasks_to_run(
+        self, currently_running: int,
+    ) -> list[Task]:
+        selected_tasks = []
+        for task_node in self._task_queue:
+            if self._all_deps_calculated(task_node):
+                selected_tasks.append(task_node)
+            if len(selected_tasks) + currently_running >= self._queue_size():
+                break
+        return selected_tasks
+
     def _schedule_tasks(self, currently_running: set[Future]) -> set[Future]:
-        while self._task_queue and len(currently_running) < self._queue_size():
-            task_node: Task = self._task_queue[0]
-
-            if not self._all_deps_finished(task_node):
-                return currently_running
-
-            task_node = self._task_queue.pop(0)
-            if not self._all_deps_calculated(task_node):
-                # some of the dependancies were errors and didn't run
-                logger.info(
-                    "Skipping execution of task(id=%s) because one or more of "
-                    "its dependancies failed with an error", task_node.task_id)
-                continue
-
+        tasks_to_run = self._select_tasks_to_run(len(currently_running))
+        for task_node in tasks_to_run:
+            self._task_queue.remove(task_node)
             future = self._submit_task(task_node)
             currently_running.add(future)
 
@@ -441,10 +449,19 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             for future in completed:
                 try:
                     result = future.result()
+                    task = self._future_key2task[future.key]
                 except Exception as exp:  # noqa: BLE001
                     # pylint: disable=broad-except
+                    task = self._future_key2task[future.key]
                     result = exp
-                task = self._future_key2task[future.key]
+                    failed_deps = self._select_tasks_that_depend_on(task)
+                    for failed in failed_deps:
+                        logger.info(
+                            "Skipping execution of task(id=%s) because one or "
+                            "more of its dependancies failed with an error",
+                            failed.task_id)
+                        self._task_queue.remove(failed)
+
                 self._task2result[task] = result
 
                 yield task, result
