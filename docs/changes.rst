@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+* 2025.12.0
+    * Fixed handling of allele scores on region boundary.
+    * Improved test coverage for allele scores.
+    * Fixed utility function for finding contig length in tabix or VCF files.
+    * Improved test coverage for regions moudule.
+    * Improved test coverage for QueryRunner and QueryResult base classes.
+
 * 2025.11.2
     * Complete refactoring of all liftover CLI tools (VCF, DAE, denovo, CNV)
     * Fixed handling of region parameters and output filenames in liftover
