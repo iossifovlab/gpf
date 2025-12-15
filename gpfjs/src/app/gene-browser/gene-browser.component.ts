@@ -230,9 +230,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
-    this.summaryVariantsArray = new SummaryAllelesArray();
     this.queryService.getSummaryVariants(this.requestParamsSummary).pipe(take(1),
       takeUntil(this.interruptSummaryVariants$)).subscribe(res => {
+      this.summaryVariantsArray = new SummaryAllelesArray();
       (res as object[]).forEach(row => this.summaryVariantsArray.addSummaryRow(row));
       // reset summary variants filter, without the coding only field
       this.summaryVariantsFilter = new SummaryAllelesFilter(true, true, this.summaryVariantsFilter.codingOnly);
