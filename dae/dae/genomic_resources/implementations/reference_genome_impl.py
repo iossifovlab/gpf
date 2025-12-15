@@ -480,7 +480,9 @@ class ReferenceGenomeImplementation(
     ) -> list[Task]:
         tasks = []
         chrom_save_tasks = []
-        region_size = kwargs.get("region_size", 1_000_000)
+        region_size = kwargs.get("region_size", 3_000_000_000)
+        if region_size <= 0:
+            region_size = 3_000_000_000
 
         with self.reference_genome.open():
             for chrom in self.reference_genome.chromosomes:
