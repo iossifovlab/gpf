@@ -436,6 +436,9 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         finished_tasks = 0
 
         not_completed = self._schedule_tasks(not_completed)
+        logger.warning(
+            "currently running %s/%s tasks (finished %s tasks)",
+            len(not_completed), initial_task_count, finished_tasks)
         while not_completed or self._task_queue:
             if not_completed:
                 completed, not_completed = wait(
@@ -473,6 +476,9 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 del self._task2future[task]
 
             not_completed = self._schedule_tasks(not_completed)
+            logger.warning(
+                "currently running %s/%s tasks (finished %s tasks)",
+                len(not_completed), initial_task_count, finished_tasks)
 
         # clean up
         assert len(self._task2future) == 0, \
