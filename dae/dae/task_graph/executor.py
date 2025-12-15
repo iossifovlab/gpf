@@ -8,7 +8,6 @@ import sys
 import time
 import traceback
 from abc import abstractmethod
-from collections import deque
 from collections.abc import Callable, Generator, Iterator
 from copy import copy
 from types import TracebackType
@@ -75,7 +74,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         self._task_cache = task_cache
         self._executing = False
         self._task2result: dict[Task, Any] = {}
-        self._task_queue: deque[Task] = deque()
+        self._task_queue: list[Task] = []
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
         self._params["task_log_dir"] = log_dir
@@ -329,7 +328,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
             yield task_node, result
 
         # all tasks have already executed. Let's clean the state.
-        self._task_queue = deque()
+        self._task_queue = []
         self._task2result = {}
 
     def _set_task_result(self, task: Task, result: Any) -> None:
@@ -406,7 +405,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             if not self._all_deps_finished(task_node):
                 return currently_running
 
-            task_node = self._task_queue.popleft()
+            task_node = self._task_queue.pop(0)
             if not self._all_deps_calculated(task_node):
                 # some of the dependancies were errors and didn't run
                 logger.info(
@@ -466,7 +465,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         self._task2future = {}
         self._future_key2task = {}
-        self._task_queue = deque()
+        self._task_queue = []
         self._task2result = {}
 
     def _set_task_result(self, task: Task, result: Any) -> None:
