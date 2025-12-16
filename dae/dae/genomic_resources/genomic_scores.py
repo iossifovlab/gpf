@@ -738,13 +738,13 @@ class GenomicScore(ResourceConfigValidationMixin):
         self.close()
 
     @staticmethod
-    def _line_to_begin_end(line: ScoreLine) -> tuple[int, int]:
+    def _line_to_begin_end(line: ScoreLine) -> tuple[str, int, int]:
         if line.pos_end < line.pos_begin:
             raise OSError(
                 f"The resource line {line} has a regions "
                 f" with end {line.pos_end} smaller that the "
                 f"begining {line.pos_end}.")
-        return line.pos_begin, line.pos_end
+        return line.chrom, line.pos_begin, line.pos_end
 
     def _get_header(self) -> tuple[Any, ...] | None:
         assert self.table is not None
@@ -777,7 +777,8 @@ class GenomicScore(ResourceConfigValidationMixin):
         pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
-            tuple[int, int, list[ScoreValue] | None, ScoreLine], None, None]:
+            tuple[str, int, int, list[ScoreValue] | None, ScoreLine],
+            None, None]:
         """Return score values in a region."""
         if not self.is_open():
             raise ValueError(f"genomic score <{self.resource_id}> is not open")
@@ -790,21 +791,18 @@ class GenomicScore(ResourceConfigValidationMixin):
             scores = self.get_all_scores()
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
-            line_pos_begin, line_pos_end = self._line_to_begin_end(line)
-            if pos_begin is not None and line_pos_end < pos_begin:
+            line_chrom, line_begin, line_end = self._line_to_begin_end(line)
+            if pos_begin is not None and line_end < pos_begin:
                 continue
 
             val = [line.get_score(scr_id) for scr_id in scores]
 
             if pos_begin is not None:
-                left = max(pos_begin, line_pos_begin)
+                left = max(pos_begin, line_begin)
             else:
-                left = line_pos_begin
-            if pos_end is not None:
-                right = min(pos_end, line_pos_end)
-            else:
-                right = line_pos_end
-            yield (left, right, val, line)
+                left = line_begin
+            right = min(pos_end, line_end) if pos_end is not None else line_end
+            yield (line_chrom, left, right, val, line)
 
     @abc.abstractmethod
     def _fetch_region_values(
@@ -932,12 +930,16 @@ class PositionScore(GenomicScore):
             tuple[int, int, list[ScoreValue] | None], None, None]:
         """Return position score values in a region."""
         returned_region: tuple[
-            int | None, int | None, list[ScoreValue] | None,
-        ] = (None, None, None)
-        for left, right, val, _ in self._fetch_region_lines(
+            str | None, int | None, int | None, list[ScoreValue] | None,
+        ] = (None, None, None, None)
+        for lchrom, left, right, val, _ in self._fetch_region_lines(
             chrom, pos_begin, pos_end, scores,
         ):
-            prev_end = returned_region[1]
+            prev_chrom = returned_region[0]
+            if prev_chrom and lchrom != prev_chrom:
+                returned_region = (lchrom, None, None, None)
+            prev_end = returned_region[2]
+
             if prev_end and left <= prev_end:
                 logger.warning(
                     "multiple values for positions %s:%s-%s",
@@ -945,12 +947,13 @@ class PositionScore(GenomicScore):
                 raise ValueError(
                     f"multiple values for positions "
                     f"{chrom}:{left}-{right}")
-            returned_region = (left, right, val)
+            returned_region = (lchrom, left, right, val)
             yield (left, right, val)
 
     def fetch_region(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self, chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
@@ -1064,15 +1067,15 @@ class PositionScore(GenomicScore):
         score_aggs = self._build_scores_agg(scores)
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
-            line_pos_begin, line_pos_end = self._line_to_begin_end(line)
+            _line_chrom, line_begin, line_end = self._line_to_begin_end(line)
             for sagg in score_aggs:
                 val = line.get_score(sagg.score)
 
                 left = (
-                    max(pos_begin, line_pos_begin)
+                    max(pos_begin, line_begin)
                 )
                 right = (
-                    min(pos_end, line_pos_end)
+                    min(pos_end, line_end)
                 )
                 for _ in range(left, right + 1):
                     sagg.position_aggregator.add(val)
@@ -1305,39 +1308,42 @@ class AlleleScore(GenomicScore):
         first_line = next(region_lines, None)
         if first_line is None:
             return
-        left, right, val, line = first_line
+        lchrom, left, right, val, line = first_line
         if left != right:
             raise ValueError(
                 f"value for a region in allele score "
                 f"{chrom}:{left}-{right}")
 
         returned_region: tuple[
-            int, int, list[ScoreValue] | None,
+            str, int | None, int | None, list[ScoreValue] | None,
             set[tuple[str | None, str | None]],
-        ] = (left, right, val, {(line.ref, line.alt)})
+        ] = (lchrom, left, right, val, {(line.ref, line.alt)})
         yield (left, line.ref, line.alt, val)
 
-        for left, right, val, line in region_lines:
+        for lchrom, left, right, val, line in region_lines:
             if left != right:
                 raise ValueError(
                     f"value for a region in allele score "
                     f"{chrom}:{left}-{right}")
             returned_nucleotides = (line.ref, line.alt)
-            if (left, right) == (returned_region[0], returned_region[1]):
-                if returned_nucleotides in returned_region[3]:
+            if (left, right) == (returned_region[1], returned_region[2]):
+                if returned_nucleotides in returned_region[4]:
                     logger.debug(
                         "multiple values for positions %s:%s-%s "
                         "and nucleotides %s",
                         chrom, left, right, returned_nucleotides)
 
-                returned_region[3].add((line.ref, line.alt))
+                returned_region[4].add((line.ref, line.alt))
                 yield (left, line.ref, line.alt, val)
                 continue
-            prev_right = returned_region[1]
-            if left < prev_right:
+            prev_chrom = returned_region[0]
+            if lchrom != prev_chrom:
+                returned_region = (lchrom, None, None, None, set())
+            prev_right = returned_region[2]
+            if prev_right is not None and left < prev_right:
                 raise ValueError(
                     f"multiple values for positions [{left}, {prev_right}]")
-            returned_region = (left, right, val, {(line.ref, line.alt)})
+            returned_region = (lchrom, left, right, val, {(line.ref, line.alt)})
             yield (left, line.ref, line.alt, val)
 
     def fetch_scores(
@@ -1482,7 +1488,7 @@ class CnvCollection(GenomicScore):
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
         """Return score values in a region."""
-        for start, stop, values, _ in self._fetch_region_lines(
+        for _, start, stop, values, _ in self._fetch_region_lines(
                 chrom, pos_begin, pos_end, scores):
             yield start, stop, values
 
