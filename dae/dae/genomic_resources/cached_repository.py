@@ -291,7 +291,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
 
 def cache_resources(
-    repository: GenomicResourceRepo, resource_ids: Iterable[str] | None,
+    repository: GenomicResourceRepo,
+    resource_ids: Iterable[str] | None,
     workers: int | None = None,
 ) -> None:
     """Cache resources from a list of remote resource IDs."""

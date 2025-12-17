@@ -15,7 +15,9 @@ from dae.annotation.liftover_annotator import (
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
+    convert_to_tab_separated,
     setup_directories,
+    setup_gzip,
 )
 
 
@@ -48,6 +50,16 @@ def dummy_liftover_grr_fixture(
             """),
         },
     })
+    setup_gzip(
+        root_path / "dummyChain" / "liftover.chain.gz",
+        convert_to_tab_separated("""
+        chain 2200 22 40 + 20 40 chr22 20 + 0 20 4a
+        20 0 0
+        0
+
+        """),
+    )
+
     return build_filesystem_test_repository(root_path)
 
 

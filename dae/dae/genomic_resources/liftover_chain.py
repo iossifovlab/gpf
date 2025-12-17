@@ -57,11 +57,13 @@ class LiftoverChain(ResourceConfigValidationMixin):
             self.target_genome_id = labels.get("target_genome")
 
     def close(self) -> None:
-        if self.liftover is not None:
-            del self.liftover
-            self.liftover = None
+        pass
 
     def open(self) -> LiftoverChain:
+        """Open the liftover chain resource."""
+        if self.is_open():
+            return self
+
         filename: str = self.resource.get_config()["filename"]
         with self.resource.open_raw_file(
                 filename, "rb", compression=True) as chain_file:
@@ -154,6 +156,8 @@ def build_liftover_chain_from_resource(
             return _INMEMORY_CACHE[cache_id]
 
         liftover_chain = LiftoverChain(resource)
+        liftover_chain.open()
+
         _INMEMORY_CACHE[cache_id] = liftover_chain
 
         return liftover_chain

@@ -13,3 +13,6 @@
 - md5: 3d323fd0c7f7abcb5e9c6b3eb26eeea7
   name: statistics/reference_genome_statistic.yaml
   size: 294
+- md5: 928b184d9007e2c5b059cd7ab5f2fecc
+  name: statistics/stats_hash
+  size: 54
