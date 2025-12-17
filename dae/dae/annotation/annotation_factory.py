@@ -178,7 +178,7 @@ def build_annotation_pipeline(
             check_for_unused_parameters(annotator_config)
             check_for_repeated_attributes_in_annotator(annotator_config)
             pipeline.add_annotator(annotator)
-    except ValueError as value_error:
+    except (ValueError, FileNotFoundError) as value_error:
         assert annotator_config is not None
         raise AnnotationConfigurationError(
             f"The {annotator_config.annotator_id} annotator"
