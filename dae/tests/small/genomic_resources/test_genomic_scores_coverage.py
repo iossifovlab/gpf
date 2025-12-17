@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 """Tests to improve coverage of genomic_scores module."""
 import logging
+from typing import cast
 
 import pytest
 from dae.genomic_resources import GenomicResource
@@ -798,3 +799,73 @@ def test_cnv_collection_get_schema() -> None:
     schema = CnvCollection.get_schema()
     assert "scores" in schema
     assert "allele_aggregator" in schema["scores"]["schema"]["schema"]
+
+
+def test_position_score_fetch_region_all() -> None:
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+                - id: score1
+                  type: float
+                  name: score1
+                - id: score2
+                  type: float
+                  name: score2
+            default_annotation:
+                - source: score1
+                  name: custom_name
+                - source: score2
+        """,
+        "data.mem": """
+            chrom  pos_begin pos_end score1  score2
+            1      11        20      0.1     0.2
+            1      21        30      0.1     0.2
+            2      11        20      0.1     0.2
+            2      21        30      0.1     0.2
+        """,
+    })
+
+    score = cast(PositionScore, build_score_from_resource(res))
+    score.open()
+    result = list(score.fetch_region(None, None, None))
+    assert len(result) == 4
+
+
+def test_allele_score_fetch_region_all() -> None:
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: allele_score
+            table:
+                filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
+                  nucleotide_aggregator: max
+        """,
+        "data.mem": """
+            chrom  pos_begin  reference  alternative  freq
+            1      10         A          G            0.02
+            1      20         A          G            0.02
+            1      30         A          G            0.02
+            2      10         A          G            0.02
+            2      20         A          G            0.02
+            2      30         A          G            0.02
+            3      10         A          G            0.02
+            3      20         A          G            0.02
+            3      30         A          G            0.02
+        """,
+    })
+    score = AlleleScore(res)
+    score.open()
+
+    result = list(score.fetch_region(None, None, None))
+    assert len(result) == 9

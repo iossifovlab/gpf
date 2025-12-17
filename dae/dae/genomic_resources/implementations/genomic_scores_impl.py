@@ -90,7 +90,7 @@ class GenomicScoreImplementation(
     def add_statistics_build_tasks(
         self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
-        region_size = kwargs.get("region_size", 1_000_000)
+        region_size = kwargs.get("region_size", 3_000_000_000)
         grr = kwargs.get("grr")
 
         with self.score.open():
@@ -178,7 +178,7 @@ class GenomicScoreImplementation(
         self, region_size: int, grr: GenomicResourceRepo | None = None,
     ) -> list[Region]:
 
-        if region_size == 0:
+        if region_size <= 0:
             # Forcefully setting the chromosome to None is a bit hacky,
             # but is more elegant than properly supporting it in Region.
             return [Region(None, None, None)]  # type: ignore

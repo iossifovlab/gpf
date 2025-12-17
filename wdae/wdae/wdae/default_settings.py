@@ -224,6 +224,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": sys.maxsize,
 }
 
+# pylint: disable=invalid-name
 DEFAULT_RENDERER_CLASSES = [
     "rest_framework.renderers.JSONRenderer",
 ]

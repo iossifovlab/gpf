@@ -13,6 +13,9 @@
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'
 - config:
     filename: allChr.fa
@@ -28,18 +31,54 @@
   - md5: 53520646d9aa2a74e38d280b46474eb7
     name: genomic_resource.yaml
     size: 35
+  - md5: 954a31c40bef2bdca5ec28b06626ae4c
+    name: statistics/chrA_statistic.yaml
+    size: 233
+  - md5: 3d323fd0c7f7abcb5e9c6b3eb26eeea7
+    name: statistics/reference_genome_statistic.yaml
+    size: 294
+  - md5: 928b184d9007e2c5b059cd7ab5f2fecc
+    name: statistics/stats_hash
+    size: 54
   version: '0'
 - config:
-    filename: mock_file
+    filename: allChr.fa
+    type: genome
+  id: genomes/mock0
+  manifest:
+  - md5: 02da5b5e851f2e4073da2cbdc897e397
+    name: allChr.fa
+    size: 107
+  - md5: c44c2b62a7ff9cc728b1b821f5d5e3e4
+    name: allChr.fa.fai
+    size: 19
+  - md5: 53520646d9aa2a74e38d280b46474eb7
+    name: genomic_resource.yaml
+    size: 35
+  - md5: 954a31c40bef2bdca5ec28b06626ae4c
+    name: statistics/chrA_statistic.yaml
+    size: 233
+  - md5: 3d323fd0c7f7abcb5e9c6b3eb26eeea7
+    name: statistics/reference_genome_statistic.yaml
+    size: 294
+  - md5: 928b184d9007e2c5b059cd7ab5f2fecc
+    name: statistics/stats_hash
+    size: 54
+  version: '0'
+- config:
+    filename: liftover.chain.gz
     type: liftover_chain
   id: liftover/mock
   manifest:
-  - md5: 03b5fe1c532ef36280cc55cf4de980f5
+  - md5: 3b5976564667852f52398b66fdc2a0a8
     name: genomic_resource.yaml
-    size: 41
-  - md5: 39407e7570763e1b085527daa17d1438
-    name: mock_file
-    size: 20
+    size: 49
+  - md5: 28b566deda58135d67a67ed504e52973
+    name: liftover.chain.gz
+    size: 80
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'
 - config:
     scores:
@@ -57,6 +96,9 @@
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
+  - md5: 9211350eab2ac7443dfce5faf79ba9f7
+    name: statistics/stats_hash
+    size: 319
   version: '0'
 - config:
     scores:
@@ -74,6 +116,9 @@
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
+  - md5: 8ec9b1bf1131c3b4166e516e24966647
+    name: statistics/stats_hash
+    size: 319
   version: '0'
 - config:
     scores:
@@ -91,4 +136,7 @@
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
+  - md5: 3bfd0d03e43a2ded9dc8a342d091f227
+    name: statistics/stats_hash
+    size: 329
   version: '0'

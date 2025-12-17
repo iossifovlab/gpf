@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from threading import Lock
 from typing import Any, cast
 
 from pyliftover import LiftOver  # type: ignore
@@ -56,11 +57,13 @@ class LiftoverChain(ResourceConfigValidationMixin):
             self.target_genome_id = labels.get("target_genome")
 
     def close(self) -> None:
-        if self.liftover is not None:
-            del self.liftover
-            self.liftover = None
+        pass
 
     def open(self) -> LiftoverChain:
+        """Open the liftover chain resource."""
+        if self.is_open():
+            return self
+
         filename: str = self.resource.get_config()["filename"]
         with self.resource.open_raw_file(
                 filename, "rb", compression=True) as chain_file:
@@ -129,19 +132,35 @@ class LiftoverChain(ResourceConfigValidationMixin):
         }
 
 
+_INMEMORY_CACHE: dict[tuple[str, str], LiftoverChain] = {}
+_INMEMORY_CACHE_LOCK = Lock()
+
+
 def build_liftover_chain_from_resource(
-        resource: GenomicResource) -> LiftoverChain:
+    resource: GenomicResource,
+) -> LiftoverChain:
     """Load a Lift Over chain from GRR resource."""
-    config: dict = resource.get_config()
+    if resource is None:
+        raise ValueError(f"missing resource {resource}")
 
     if resource.get_type() != "liftover_chain":
         logger.error(
             "trying to use genomic resource %s "
-            "as a liftover chaing but its type is %s; %s",
-            resource.resource_id, resource.get_type(), config)
-        raise ValueError(f"wrong resource type: {config}")
+            "as a liftover chaing but its type is %s;",
+            resource.resource_id, resource.get_type())
+        raise ValueError(f"wrong resource type: {resource.resource_id}")
 
-    return LiftoverChain(resource)
+    cache_id = (resource.get_full_id(), resource.get_repo_url())
+    with _INMEMORY_CACHE_LOCK:
+        if cache_id in _INMEMORY_CACHE:
+            return _INMEMORY_CACHE[cache_id]
+
+        liftover_chain = LiftoverChain(resource)
+        liftover_chain.open()
+
+        _INMEMORY_CACHE[cache_id] = liftover_chain
+
+        return liftover_chain
 
 
 def build_liftover_chain_from_resource_id(

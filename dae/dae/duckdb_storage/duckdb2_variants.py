@@ -71,7 +71,7 @@ class DuckDb2Runner(QueryRunner):
                     cursor.execute(single_query)
                     while record := cursor.fetchone():
                         if record is None:
-                            logger.debug("query %s done")
+                            logger.debug("query %s done", single_query)
                             break
                         val = self.deserializer(record)
                         if val is None:
