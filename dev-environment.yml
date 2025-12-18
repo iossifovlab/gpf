@@ -33,7 +33,7 @@ dependencies:
   - types-psutil
   - invoke=2.2
   - gitpython=3.1
-  - sphinx=7.3
+  - sphinx
   - sphinx_rtd_theme
   - sphinx-copybutton
   - sphinxcontrib-httpdomain
