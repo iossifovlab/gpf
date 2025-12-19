@@ -390,7 +390,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future_key2task[str(future.key)] = task_node
         return future
 
-    MIN_QUEUE_SIZE = 700
+    MIN_QUEUE_SIZE = 1400
 
     def _queue_size(self) -> int:
         n_workers = cast(
@@ -436,9 +436,6 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         finished_tasks = 0
 
         not_completed = self._schedule_tasks(not_completed)
-        logger.warning(
-            "currently running %s/%s tasks (finished %s tasks)",
-            len(not_completed), initial_task_count, finished_tasks)
         while not_completed or self._task_queue:
             if not_completed:
                 completed, not_completed = wait(
@@ -446,9 +443,16 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                     return_when="FIRST_COMPLETED")
 
             if not completed:
+                logger.warning("no completed tasks; waiting...")
                 time.sleep(1.0)
                 continue
 
+            logger.warning(
+                "completed %s tasks; "
+                "currently running %s of %s remaining tasks",
+                len(completed), len(not_completed),
+                initial_task_count - finished_tasks)
+            process_completed = time.time()
             for future in completed:
                 try:
                     result = future.result()
@@ -474,11 +478,16 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                     initial_task_count)
                 # del ref to future in order to make dask gc its resources
                 del self._task2future[task]
+                del self._future_key2task[future.key]
 
+            process_elapsed = time.time() - process_completed
+            logger.warning(
+                "processed %s completed tasks in %0.2f sec",
+                len(completed), process_elapsed)
             not_completed = self._schedule_tasks(not_completed)
             logger.warning(
-                "currently running %s/%s tasks (finished %s tasks)",
-                len(not_completed), initial_task_count, finished_tasks)
+                "running %s of %s remaining tasks",
+                len(not_completed), initial_task_count - finished_tasks)
 
         # clean up
         assert len(self._task2future) == 0, \
