@@ -81,6 +81,21 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _queue_size(self) -> int:
         return 1
 
+    def _cleanup_task_results(self) -> None:
+        """Clean up task results to save memory."""
+        # currently, we do not clean up any results
+        results_to_keep = set()
+        for task_node in self._task_queue:
+            results_to_keep.update(dep.task_id for dep in task_node.deps)
+
+        results_to_remove = set()
+        for task in self._task2result:
+            if task.task_id not in results_to_keep and \
+                    task in self._task2result:
+                results_to_remove.add(task)
+        for task in results_to_remove:
+            del self._task2result[task]
+
     def _select_tasks_to_run(
         self, currently_running: int,
     ) -> list[Task]:
@@ -120,6 +135,8 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         for task_node in tasks_to_remove:
             if task_node in self._task_queue:
                 self._task_queue.remove(task_node)
+
+        self._cleanup_task_results()
 
         return selected_tasks
 
@@ -374,14 +391,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         super().__init__(task_cache, **kwargs)
         self._client = client
         self._task2future: dict[Task, Future] = {}
-        self._future_key2task: dict[str, Task] = {}
+        self._future2task: dict[str, Task] = {}
 
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
-
-    def _get_future_or_result(self, task: Task) -> Any:
-        future = self._task2future.get(task)
-        return future or self._task2result[task]
 
     def _submit_task(self, task_node: Task) -> Future:
         deps = []
@@ -395,12 +408,11 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         # handle tasks that use the output of other tasks
         args = []
-        for arg in task_node.args:
-            if isinstance(arg, Task):
-                value = self._get_future_or_result(arg)
-            else:
-                value = arg
-            args.append(value)
+        args = [
+            self._task2future[arg] if isinstance(arg, Task) else arg
+            for arg in task_node.args
+        ]
+
         params = copy(self._params)
         task_id = safe_task_id(task_node.task_id)
         params["task_id"] = task_id
@@ -417,10 +429,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         assert future is not None
 
         self._task2future[task_node] = future
-        self._future_key2task[str(future.key)] = task_node
+        self._future2task[str(future.key)] = task_node
         return future
 
-    MIN_QUEUE_SIZE = 1400
+    MIN_QUEUE_SIZE = 700
 
     def _queue_size(self) -> int:
         n_workers = cast(
@@ -502,10 +514,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             for future in completed:
                 try:
                     result = future.result()
-                    task = self._future_key2task[future.key]
+                    task = self._future2task[future.key]
                 except Exception as ex:  # noqa: BLE001
                     # pylint: disable=broad-except
-                    task = self._future_key2task[future.key]
+                    task = self._future2task[future.key]
                     result = ex
                     failed_deps = self._select_tasks_that_depend_on(task)
                     for failed in failed_deps:
@@ -524,9 +536,8 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                     initial_task_count)
                 # del ref to future in order to make dask gc its resources
                 del self._task2future[task]
-                del self._future_key2task[future.key]
+                del self._future2task[future.key]
 
-            completed = set()
             process_elapsed = time.time() - process_completed
             logger.warning(
                 "processed %s completed tasks in %0.2f sec",
@@ -541,6 +552,14 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             logger.warning(
                 "running %s of %s remaining tasks",
                 len(not_completed), initial_task_count - finished_tasks)
+            logger.debug(
+                "task2result size: %s", len(self._task2result))
+            logger.debug(
+                "task2future size: %s", len(self._task2future))
+            logger.debug(
+                "future2task size: %s", len(self._future2task))
+            logger.debug(
+                "task queue size: %s", len(self._task_queue))
 
         # clean up
         assert len(self._task2future) == 0, \
@@ -549,7 +568,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             "[BUG] Dask Executor's task queue is not empty."
 
         self._task2future = {}
-        self._future_key2task = {}
+        self._future2task = {}
         self._task_queue = []
         self._task2result = {}
 
