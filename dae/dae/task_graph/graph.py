@@ -9,7 +9,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-@dataclass(eq=False, frozen=True)
+@dataclass(frozen=True)
 class Task:
     """Represent one node in a TaskGraph together with its dependencies."""
 
@@ -23,6 +23,14 @@ class Task:
         deps = ",".join(dep.task_id for dep in self.deps)
         in_files = ",".join(self.input_files)
         return f"Task(id={self.task_id}, deps={deps}, in_files={in_files})"
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Task):
+            return False
+        return self.task_id == other.task_id
+
+    def __hash__(self) -> int:
+        return hash(self.task_id)
 
 
 class TaskGraph:
