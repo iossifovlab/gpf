@@ -512,22 +512,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 initial_task_count - finished_tasks)
             process_completed = time.time()
             for future in completed:
-                try:
-                    result = future.result()
-                    task = self._future2task[future.key]
-                except Exception as ex:  # noqa: BLE001
-                    # pylint: disable=broad-except
-                    task = self._future2task[future.key]
-                    result = ex
-                    failed_deps = self._select_tasks_that_depend_on(task)
-                    for failed in failed_deps:
-                        logger.info(
-                            "Skipping execution of task(id=%s) because one or "
-                            "more of its dependancies failed with an error",
-                            failed.task_id)
-                        self._task_queue.remove(failed)
-
-                self._task2result[task] = result
+                result, task = self._process_completed(future)
 
                 yield task, result
                 finished_tasks += 1
@@ -560,6 +545,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 "future2task size: %s", len(self._future2task))
             logger.debug(
                 "task queue size: %s", len(self._task_queue))
+            logger.debug("Top 10 memory differences since last check:")
 
         # clean up
         assert len(self._task2future) == 0, \
@@ -571,6 +557,25 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future2task = {}
         self._task_queue = []
         self._task2result = {}
+
+    def _process_completed(self, future: Future) -> tuple[Any, Task]:
+        try:
+            result = future.result()
+            task = self._future2task[future.key]
+        except Exception as ex:  # noqa: BLE001
+            # pylint: disable=broad-except
+            task = self._future2task[future.key]
+            result = ex
+            failed_deps = self._select_tasks_that_depend_on(task)
+            for failed in failed_deps:
+                logger.info(
+                    "Skipping execution of task(id=%s) because one or "
+                    "more of its dependancies failed with an error",
+                    failed.task_id)
+                self._task_queue.remove(failed)
+
+        self._task2result[task] = result
+        return result, task
 
     def _set_task_result(self, task: Task, result: Any) -> None:
         self._task2result[task] = result
