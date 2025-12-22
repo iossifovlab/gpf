@@ -660,7 +660,7 @@ def cli(argv: list[str] | None = None) -> None:
         print(f"GPF version {__version__}")
         sys.exit(0)
 
-    VerbosityConfiguration.set_verbosity(args["verbose"])
+    VerbosityConfiguration.set(args)
     args = handle_default_args(args)
     args = _adjust_default_output_separator(args)
 

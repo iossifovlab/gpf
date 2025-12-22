@@ -10,25 +10,39 @@ class VerbosityConfiguration:
     def set_arguments(parser: argparse.ArgumentParser) -> None:
         """Add verbosity arguments to argument parser."""
         parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
+        parser.add_argument(
+            "--logfile", type=str, default=None,
+            help="File to log output to. If not set, logs to console.",
+        )
 
     @staticmethod
-    def set(args: argparse.Namespace) -> None:
+    def set(args: argparse.Namespace | dict[str, str]) -> None:
         """Read verbosity settings from parsed arguments and sets logger."""
-        VerbosityConfiguration.set_verbosity(args.verbose)
+        if isinstance(args, argparse.Namespace):
+            args = vars(args)
+        verbosity = int(args.get("verbose", 0))
+        loglevel = VerbosityConfiguration.verbosity(verbosity)
+        logging.basicConfig(
+            filename=args["logfile"],
+            encoding="utf-8",
+            level=loglevel,
+        )
+        VerbosityConfiguration.adjust_verbosity(loglevel)
 
     @staticmethod
-    def set_verbosity(verbose: int) -> None:
-        """Set logging level according to the verbosity specified."""
-        if verbose == 1:
+    def verbosity(verbosity: int) -> int:
+        """Get verbosity level from loglevel."""
+        if verbosity == 1:
             loglevel = logging.INFO
-            logging.basicConfig(level=logging.INFO)
-        elif verbose >= 2:
+        elif verbosity >= 2:
             loglevel = logging.DEBUG
-            logging.basicConfig(level=logging.DEBUG)
         else:
             loglevel = logging.WARNING
-            logging.basicConfig(level=logging.WARNING)
+        return loglevel
 
+    @staticmethod
+    def adjust_verbosity(loglevel: int) -> None:
+        """Set logging level according to the verbosity specified."""
         logging.getLogger("dae.effect_annotation").setLevel(
             max(loglevel, logging.INFO))
 

@@ -24,7 +24,6 @@ from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
 )
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +97,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         verbose = params.get("verbose")
         if verbose is None:  # Dont use .get default in case of a Box
             verbose = 0
-        VerbosityConfiguration.set_verbosity(verbose)
 
         task_id = params["task_id"]
         log_dir = params.get("task_log_dir", ".")
@@ -108,6 +106,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         root_logger.addHandler(handler)
 
         task_logger = logging.getLogger("task_executor")
+        task_logger.warning("task logging verbosity level: %d", verbose)
         task_logger.info("task <%s> started", task_id)
         start = time.time()
 
@@ -434,6 +433,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         completed = set()
         initial_task_count = len(self._task_queue)
         finished_tasks = 0
+        process = psutil.Process(os.getpid())
+        current_memory_mb = process.memory_info().rss / (1024 * 1024)
+        logger.info(
+            "executor memory usage: %.2f MB", current_memory_mb)
 
         not_completed = self._schedule_tasks(not_completed)
         while not_completed or self._task_queue:
@@ -484,6 +487,12 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             logger.warning(
                 "processed %s completed tasks in %0.2f sec",
                 len(completed), process_elapsed)
+            cycle_memory_mb = process.memory_info().rss / (1024 * 1024)
+            logger.info(
+                "executor memory usage: %.2f MB; change: %+0.2f MB",
+            cycle_memory_mb, cycle_memory_mb - current_memory_mb)
+            current_memory_mb = cycle_memory_mb
+
             not_completed = self._schedule_tasks(not_completed)
             logger.warning(
                 "running %s of %s remaining tasks",
