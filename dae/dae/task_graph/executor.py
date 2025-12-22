@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 from abc import abstractmethod
+from collections import deque
 from collections.abc import Callable, Generator, Iterator
 from copy import copy
 from types import TracebackType
@@ -84,11 +85,11 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _cleanup_task_results(self) -> None:
         """Clean up task results to save memory."""
         # currently, we do not clean up any results
-        results_to_keep = set()
+        results_to_keep: set[str] = set()
         for task_node in self._task_queue:
             results_to_keep.update(dep.task_id for dep in task_node.deps)
 
-        results_to_remove = set()
+        results_to_remove: set[Task] = set()
         for task in self._task2result:
             if task.task_id not in results_to_keep and \
                     task in self._task2result:
@@ -480,8 +481,8 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         # pylint: disable=import-outside-toplevel
         from dask.distributed import wait
 
-        not_completed: set = set()
-        completed = set()
+        not_completed: set[Future] = set()
+        completed: deque[Future] = deque()
         initial_task_count = len(self._task_queue)
         finished_tasks = 0
         process = psutil.Process(os.getpid())
@@ -493,25 +494,27 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         while not_completed or self._task_queue:
 
             if not_completed:
-                completed, not_completed = wait(
-                    not_completed,
-                    return_when="FIRST_COMPLETED")
+                try:
+                    new_completed, not_completed = wait(
+                        not_completed,
+                        return_when="FIRST_COMPLETED",
+                        timeout=0.1,
+                    )
+                except TimeoutError:
+                    new_completed = []
+
             else:
-                completed = set()
+                new_completed = set()
                 not_completed = self._schedule_tasks(not_completed)
 
-            if not completed:
+            if not new_completed:
                 logger.warning("no completed tasks; waiting...")
-                time.sleep(1.0)
                 continue
 
-            logger.warning(
-                "completed %s tasks; "
-                "currently running %s of %s remaining tasks",
-                len(completed), len(not_completed),
-                initial_task_count - finished_tasks)
-            process_completed = time.time()
-            for future in completed:
+            for future in new_completed:
+                completed.append(future)
+            while completed:
+                future = completed.popleft()
                 result, task = self._process_completed(future)
 
                 yield task, result
@@ -523,29 +526,23 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 del self._task2future[task]
                 del self._future2task[future.key]
 
-            process_elapsed = time.time() - process_completed
-            logger.warning(
-                "processed %s completed tasks in %0.2f sec",
-                len(completed), process_elapsed)
-            cycle_memory_mb = process.memory_info().rss / (1024 * 1024)
-            logger.info(
-                "executor memory usage: %.2f MB; change: %+0.2f MB",
-            cycle_memory_mb, cycle_memory_mb - current_memory_mb)
-            current_memory_mb = cycle_memory_mb
+                try:
+                    new_completed, not_completed = wait(
+                        not_completed,
+                        return_when="FIRST_COMPLETED",
+                        timeout=0.0001,
+                    )
+                except TimeoutError:
+                    new_completed = []
 
-            not_completed = self._schedule_tasks(not_completed)
-            logger.warning(
-                "running %s of %s remaining tasks",
-                len(not_completed), initial_task_count - finished_tasks)
-            logger.debug(
-                "task2result size: %s", len(self._task2result))
-            logger.debug(
-                "task2future size: %s", len(self._task2future))
-            logger.debug(
-                "future2task size: %s", len(self._future2task))
-            logger.debug(
-                "task queue size: %s", len(self._task_queue))
-            logger.debug("Top 10 memory differences since last check:")
+                for future in new_completed:
+                    completed.append(future)
+                start = time.time()
+                if len(not_completed) < self._queue_size() * 0.9:
+                    not_completed = self._schedule_tasks(not_completed)
+                elapsed = time.time() - start
+                logger.debug(
+                    "scheduling took %.2f sec", elapsed)
 
         # clean up
         assert len(self._task2future) == 0, \
