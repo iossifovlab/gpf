@@ -571,3 +571,37 @@ def test_dask_executor_scheduling(
     assert espy.call_count >= 1
     assert len(espy.call_args_list) >= 1
     assert len(espy.call_args_list[0].args[0]) == first_scheduled
+
+
+def test_walk_graph_wide_1() -> None:
+    graph = TaskGraph()
+    task_a = graph.create_task("A", lambda: None, args=[], deps=[])
+    task_b = graph.create_task("B", lambda: None, args=[], deps=[task_a])
+    task_c = graph.create_task("C", lambda: None, args=[], deps=[task_a])
+    graph.create_task("D", lambda: None, args=[], deps=[task_b, task_c])
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert len(ids_in_walk_order) == 4
+    assert ids_in_walk_order[0] == "A"
+    assert set(ids_in_walk_order[1:3]) == {"B", "C"}
+    assert ids_in_walk_order[3] == "D"
+
+
+def test_walk_graph_wide_2() -> None:
+    graph = TaskGraph()
+    task_a = graph.create_task("A", lambda: None, args=[], deps=[])
+    graph.create_task("B", lambda: None, args=[], deps=[task_a])
+    graph.create_task("C", lambda: None, args=[], deps=[])
+    graph.create_task("D", lambda: None, args=[], deps=[])
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert len(ids_in_walk_order) == 4
+    assert ids_in_walk_order == ["A", "C", "D", "B"]
