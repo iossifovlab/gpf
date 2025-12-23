@@ -15,6 +15,7 @@ from types import TracebackType
 from typing import Any, cast
 
 import fsspec
+import networkx
 import psutil
 from dask.distributed import Client, Future
 
@@ -89,10 +90,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             dep not in self._task2result
             for dep in task.deps
         ):
-            logger.debug(
-                "Task(id=%s) is not ready to run because one or more "
-                "of its dependancies have not finished yet",
-                task.task_id)
             return False
         for dep in task.deps:
             if isinstance(self._task2result.get(dep), BaseException):
@@ -107,20 +104,33 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 return False
         return True
 
+    MAX_UNSUCCESSFUL_PROBES = 1_000
+
     def _select_tasks_to_run(
         self, currently_running: int,
     ) -> list[Task]:
         started = time.time()
         selected_tasks: list[Task] = []
+        unsuccessful_probes = 0
         for task in self._task_queue.values():
+            elapsed = time.time() - started
+            if elapsed > 1.0:
+                logger.debug(
+                    "selecting tasks to run took too long (%.2f sec), "
+                    "stopping search", elapsed)
+                break
             if not self._ready_to_run(task):
+                unsuccessful_probes += 1
+                if unsuccessful_probes >= self.MAX_UNSUCCESSFUL_PROBES:
+                    break
                 continue
             selected_tasks.append(task)
             if len(selected_tasks) + currently_running >= self._queue_size():
                 break
         elapsed = time.time() - started
         logger.debug(
-            "selecting tasks to run took %.2f sec", elapsed)
+            "selecting %s tasks to run took %.2f sec; unsuccessful probes: %d",
+            len(selected_tasks), elapsed, unsuccessful_probes)
         return selected_tasks
 
     def _prune_dependents(self, task_id: str) -> None:
@@ -293,48 +303,41 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _in_exec_order(
         task_graph: TaskGraph,
     ) -> Generator[Task, None, None]:
-        yield from AbstractTaskGraphExecutor._walk_graph_wide(task_graph)
+        yield from AbstractTaskGraphExecutor._toplogical_order(task_graph)
 
     @staticmethod
-    def _walk_graph_wide(
+    def _build_di_graph(
         task_graph: TaskGraph,
-    ) -> Generator[Task, None, None]:
-        queue: list[Task] = []
-        visited: set[str] = set()
+    ) -> networkx.DiGraph:
+
+        di_graph = networkx.DiGraph()
+        nodes: list[str] = [
+            task.task_id for task in task_graph.tasks
+        ]
+        di_graph.add_nodes_from(sorted(nodes))
+
         for task in task_graph.tasks:
             for dep in task.deps:
-                if dep.task_id not in visited:
-                    queue.append(dep)
-                    visited.add(dep.task_id)
-            if task.task_id not in visited:
-                queue.append(task)
-                visited.add(task.task_id)
+                di_graph.add_edge(dep.task_id, task.task_id)
+        return di_graph
 
-        def key_func(t: Task) -> tuple[int, str]:
-            return (len(t.deps), t.task_id)
+    @staticmethod
+    def _toplogical_order(
+        task_graph: TaskGraph,
+    ) -> Generator[Task, None, None]:
+        queue: dict[str, Task] = {}
+        for task in task_graph.tasks:
+            for dep in task.deps:
+                if dep.task_id not in queue:
+                    queue[dep.task_id] = dep
+            if task.task_id not in queue:
+                queue[task.task_id] = task
 
-        visited = set()
-        postponed: set[str] = set()
+        graph = AbstractTaskGraphExecutor._build_di_graph(task_graph)
 
-        while queue:
-
-            node = queue.pop(0)
-            if node.task_id in visited:
-                continue
-            all_deps_visited = True
-            for dep in node.deps:
-                if dep.task_id not in visited:
-                    all_deps_visited = False
-                    break
-            if not all_deps_visited:
-                if node.task_id not in postponed:
-                    queue.append(node)
-                    postponed.add(node.task_id)
-                else:
-                    queue.insert(1, node)
-                continue
-            visited.add(node.task_id)
-            yield node
+        for task_id in networkx.topological_sort(graph):
+            task = queue.pop(task_id)
+            yield task
 
     @staticmethod
     def _check_for_cyclic_deps(task_graph: TaskGraph) -> None:
@@ -462,7 +465,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future2task[str(future.key)] = task_node
         return future
 
-    MIN_QUEUE_SIZE = 700
+    MIN_QUEUE_SIZE = 1400
 
     def _queue_size(self) -> int:
         n_workers = cast(
@@ -492,16 +495,23 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         start = time.time()
         tasks_to_run = self._select_tasks_to_run(len(currently_running))
         logger.debug("scheduling %d tasks", len(tasks_to_run))
+        scheduled = 0
         for task in tasks_to_run:
-            task_node = self._task_queue[task.task_id]
             del self._task_queue[task.task_id]
-            task_node = self._reconfigure_task_node_deps(task_node)
-            future = self._submit_task(task_node)
+            task = self._reconfigure_task_node_deps(task)
+            future = self._submit_task(task)
             currently_running.add(future)
+            elapsed = time.time() - start
+            scheduled += 1
+            if elapsed > 2.0:
+                logger.debug(
+                    "scheduling took too long (%.2f sec), stopping",
+                    elapsed)
+                break
 
         elapsed = time.time() - start
         logger.debug(
-            "scheduling took %.2f sec", elapsed)
+            "scheduling %d tasks took %.2f sec", scheduled, elapsed)
         logger.debug("currently running %d tasks", len(currently_running))
         return currently_running
 
@@ -537,6 +547,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
             for future in new_completed:
                 completed.append(future)
+
             while completed:
                 future = completed.popleft()
                 result, task = self._process_completed(future)

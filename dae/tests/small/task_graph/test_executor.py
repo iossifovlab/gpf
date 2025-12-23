@@ -6,6 +6,7 @@ import time
 from collections.abc import Generator
 from typing import Any
 
+import networkx
 import pytest
 import pytest_mock
 from dae.task_graph.cache import (
@@ -582,7 +583,7 @@ def test_walk_graph_wide_1() -> None:
     graph.create_task("D", lambda: None, args=[], deps=[task_b, task_c])
 
     tasks_in_walk_order = list(
-        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+        AbstractTaskGraphExecutor._toplogical_order(graph),
     )
     ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
@@ -592,7 +593,6 @@ def test_walk_graph_wide_1() -> None:
     assert ids_in_walk_order[3] == "D"
 
 
-@pytest.mark.xfail(reason="Fails intermittently on CI")
 def test_walk_graph_wide_2() -> None:
     graph = TaskGraph()
     task_a = graph.create_task("A", lambda: None, args=[], deps=[])
@@ -601,7 +601,7 @@ def test_walk_graph_wide_2() -> None:
     graph.create_task("D", lambda: None, args=[], deps=[])
 
     tasks_in_walk_order = list(
-        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+        AbstractTaskGraphExecutor._toplogical_order(graph),
     )
     ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
@@ -609,7 +609,6 @@ def test_walk_graph_wide_2() -> None:
     assert ids_in_walk_order == ["A", "C", "D", "B"]
 
 
-@pytest.mark.xfail(reason="Fails intermittently on CI")
 def test_walk_graph_wide_3() -> None:
     graph = TaskGraph()
     for i in range(5):
@@ -618,7 +617,7 @@ def test_walk_graph_wide_3() -> None:
             f"B{i}", lambda: None, args=[], deps=[task_a])
 
     tasks_in_walk_order = list(
-        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+        AbstractTaskGraphExecutor._toplogical_order(graph),
     )
     ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
@@ -629,7 +628,6 @@ def test_walk_graph_wide_3() -> None:
     ]
 
 
-@pytest.mark.xfail(reason="Fails intermittently on CI")
 def test_walk_graph_wide_4() -> None:
     graph = TaskGraph()
     for i in range(5):
@@ -640,7 +638,7 @@ def test_walk_graph_wide_4() -> None:
             f"C{i}", lambda: None, args=[], deps=[task_b])
 
     tasks_in_walk_order = list(
-        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+        AbstractTaskGraphExecutor._toplogical_order(graph),
     )
     ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
@@ -652,7 +650,6 @@ def test_walk_graph_wide_4() -> None:
     ]
 
 
-@pytest.mark.xfail(reason="Fails intermittently on CI")
 def test_walk_graph_wide_5() -> None:
     graph = TaskGraph()
     for i in range(5):
@@ -665,7 +662,7 @@ def test_walk_graph_wide_5() -> None:
             f"D{i}", lambda: None, args=[], deps=[task_c])
 
     tasks_in_walk_order = list(
-        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+        AbstractTaskGraphExecutor._toplogical_order(graph),
     )
     ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
@@ -696,7 +693,7 @@ def test_walk_graph_wide_6() -> None:
     graph.create_task("E", lambda: None, args=[], deps=[third_task])
     ids_in_walk_order = [
         task.task_id
-        for task in AbstractTaskGraphExecutor._walk_graph_wide(graph)]
+        for task in AbstractTaskGraphExecutor._toplogical_order(graph)]
     assert len(ids_in_walk_order) == 9
     assert ids_in_walk_order == [
         "A",
@@ -747,6 +744,35 @@ def test_walk_graph_wide_6() -> None:
             ],
             ["A", "B", "C", "D", "E", "F"],
         ),
+        (
+            [  # multiple roots
+                ("A", []),
+                ("B", []),
+                ("C", ["A"]),
+                ("D", ["B"]),
+                ("E", ["C", "D"]),
+            ],
+            ["A", "B", "C", "D", "E"],
+        ),
+        (
+            [  # multiple independent chains
+                ("A1", []),
+                ("B1", ["A1"]),
+                ("C1", ["B1"]),
+                ("A2", []),
+                ("B2", ["A2"]),
+                ("C2", ["B2"]),
+            ],
+            ["A1", "A2", "B1", "B2", "C1", "C2"],
+        ),
+        (
+            [
+                ("3", []),
+                ("2", []),
+                ("1", ["2", "3"]),
+            ],
+            ["2", "3", "1"],
+        ),
     ],
 )
 def test_walk_graph_wide(
@@ -761,8 +787,81 @@ def test_walk_graph_wide(
         task_map[task_id] = task
 
     tasks_in_walk_order = list(
-        AbstractTaskGraphExecutor._walk_graph_wide(graph),
+        AbstractTaskGraphExecutor._toplogical_order(graph),
     )
     ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
     assert ids_in_walk_order == expected_order
+
+
+@pytest.mark.parametrize(
+    "tasks,expected_order", [
+        (
+            # initial
+            [
+                ("2", []),
+                ("3", []),
+                ("1", ["2", "3"]),
+            ],
+            ["2", "3", "1"],
+        ),
+        (
+            # different order
+            [
+                ("3", []),
+                ("2", []),
+                ("1", ["2", "3"]),
+            ],
+            ["3", "2", "1"],
+        ),
+        (
+            # simple chain
+            [
+                ("A", []),
+                ("B", ["A"]),
+                ("C", ["B"]),
+            ],
+            ["A", "B", "C"],
+        ),
+        (
+            # 2 chains
+            [
+                ("A1", []),
+                ("B1", ["A1"]),
+                ("C1", ["B1"]),
+                ("A2", []),
+                ("B2", ["A2"]),
+                ("C2", ["B2"]),
+            ],
+            ["A1", "A2", "B1", "B2", "C1", "C2"],
+        ),
+        (
+            # 2 deeper chains
+            [
+                ("A1", []),
+                ("B1", ["A1"]),
+                ("C1", ["B1"]),
+                ("D1", ["C1"]),
+                ("A2", []),
+                ("B2", ["A2"]),
+                ("C2", ["B2"]),
+                ("D2", ["C2"]),
+            ],
+            ["A1", "A2", "B1", "B2", "C1", "C2", "D1", "D2"],
+        ),
+
+    ],
+)
+def test_topological_sort(
+    tasks: list[tuple[str, list[str]]],
+    expected_order: list[str],
+) -> None:
+    graph = networkx.DiGraph()
+    for task_id, _dep_ids in tasks:
+        graph.add_node(task_id)
+    for task_id, dep_ids in tasks:
+        for dep_id in dep_ids:
+            graph.add_edge(dep_id, task_id)
+    assert networkx.is_directed_acyclic_graph(graph)
+    result = list(networkx.topological_sort(graph))
+    assert result == expected_order
