@@ -236,7 +236,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
         self._executing = True
-        self._task2result: dict[Task, Any] = {}
+        self._task2result = {}
 
         for task_node, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
@@ -571,7 +571,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         self._task2future = {}
         self._future2task = {}
-        self._task2result: dict[Task, Any] = {}
+        self._task2result = {}
         assert len(self._task_queue) == 0
 
     def _process_completed(self, future: Future) -> tuple[Any, Task]:
