@@ -179,7 +179,7 @@ class WGPFInstance(GPFInstance):
             children = None
         else:
             children = [
-                self.make_wdae_wrapper(child_id)
+                self.get_wdae_wrapper(child_id)
                 for child_id in children_ids
             ]
 
