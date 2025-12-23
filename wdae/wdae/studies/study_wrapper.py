@@ -314,14 +314,15 @@ class WDAEAbstractStudy:
             self.gene_score_column_sources = []
 
         # PREVIEW AND DOWNLOAD COLUMNS
-        self.columns = genotype_browser_config["columns"]
+        self.columns = copy(genotype_browser_config["columns"])
         self.column_groups = genotype_browser_config["column_groups"]
         self._validate_column_groups()
-        self.preview_columns = genotype_browser_config["preview_columns"]
+        self.preview_columns = copy(genotype_browser_config["preview_columns"])
         if genotype_browser_config.get("preview_columns_ext"):
             self.preview_columns.extend(
                 genotype_browser_config["preview_columns_ext"])
-        self.download_columns = genotype_browser_config["download_columns"]
+        self.download_columns = copy(
+            genotype_browser_config["download_columns"])
         if genotype_browser_config.get("download_columns_ext"):
             self.download_columns.extend(
                 genotype_browser_config["download_columns_ext"])
@@ -471,6 +472,31 @@ class WDAEStudy(WDAEAbstractStudy):
             self.phenotype_data.description = input_text
         else:
             self.genotype_data.description = input_text
+
+    def get_column_sources(
+        self, column_ids: list[str],
+    ) -> list[dict[str, Any]]:
+        genotype_cols = self.columns.get("genotype", {})
+        if genotype_cols is None:
+            genotype_cols = {}
+        phenotype_cols = self.columns.get("phenotype", {})
+        if phenotype_cols is None:
+            phenotype_cols = {}
+        result = []
+
+        for column_id in column_ids:
+            if column_id in self.column_groups:
+                source_cols = self.column_groups[column_id]["columns"]
+            else:
+                source_cols = [column_id]
+
+            for source_col_id in source_cols:
+                if source_col_id in genotype_cols:
+                    result.append(dict(genotype_cols[source_col_id]))
+                elif source_col_id in phenotype_cols:
+                    result.append(dict(phenotype_cols[source_col_id]))
+
+        return result
 
     @staticmethod
     def get_columns_as_sources(
@@ -634,39 +660,32 @@ class WDAEStudy(WDAEAbstractStudy):
                 "has_person_pheno_filters"] = True
 
         table_columns = []
-        for column in config["genotype_browser"]["preview_columns"]:
+        for column in self.preview_columns:
             logger.info(
                 "processing preview column %s for study %s",
                 column,
                 config["id"],
             )
 
-            if column in config["genotype_browser"]["column_groups"]:
+            if column in self.column_groups:
                 new_col = dict(
-                    config["genotype_browser"]["column_groups"][column],
+                    self.column_groups[column],
                 )
-                new_col["columns"] = WDAEStudy.get_columns_as_sources(
-                    config, [column],
-                )
+                new_col["columns"] = self.get_column_sources([column])
                 table_columns.append(new_col)
             else:
-                if config["genotype_browser"]["columns"].get("genotype") and \
+                if self.columns.get("genotype") and \
                         column in \
-                        config["genotype_browser"]["columns"]["genotype"]:
+                        self.columns["genotype"]:
                     table_columns.append(
-                        dict(
-                            config
-                            ["genotype_browser"]["columns"]
-                            ["genotype"][column],
-                        ),
+                        dict(self.columns["genotype"][column]),
                     )
                 elif config["genotype_browser"]["columns"].get("phenotype") \
                     and column in \
                         config["genotype_browser"]["columns"]["phenotype"]:
                     table_columns.append(
                         dict(
-                            config
-                            ["genotype_browser"]["columns"]
+                            self.columns
                             ["phenotype"][column]),
                     )
                 else:
@@ -852,10 +871,8 @@ class WDAEStudy(WDAEAbstractStudy):
         *,
         max_variants_count: int | None = None,
     ) -> Generator[list | None, None, None]:
-        cols = self.genotype_data.config["genotype_browser"]["preview_columns"]
-        sources = WDAEStudy.get_columns_as_sources(
-            self.genotype_data.config, cols,
-        )
+        cols = self.preview_columns
+        sources = self.get_column_sources(cols)
         yield from self.query_variants_wdae(
             kwargs,
             sources,
@@ -872,11 +889,8 @@ class WDAEStudy(WDAEAbstractStudy):
         *,
         max_variants_count: int | None = None,
     ) -> Generator[list | None, None, None]:
-        cols = self.genotype_data.config[
-            "genotype_browser"]["download_columns"]
-        sources = WDAEStudy.get_columns_as_sources(
-            self.genotype_data.config, cols,
-        )
+        cols = self.download_columns
+        sources = self.get_column_sources(cols)
 
         result = self.query_variants_wdae(
             kwargs,
