@@ -15,6 +15,7 @@ from types import TracebackType
 from typing import Any, cast
 
 import fsspec
+import networkx
 import psutil
 from dask.distributed import Client, Future
 
@@ -103,25 +104,46 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 return False
         return True
 
+    MAX_UNSUCCESSFUL_PROBES = 10
+
     def _select_tasks_to_run(
         self, currently_running: int,
     ) -> list[Task]:
+        started = time.time()
         selected_tasks: list[Task] = []
+        unsuccessful_probes = 0
         for task in self._task_queue.values():
+            elapsed = time.time() - started
+            if elapsed > 1.0:
+                logger.debug(
+                    "selecting tasks to run took too long (%.2f sec), "
+                    "stopping search", elapsed)
+                break
             if not self._ready_to_run(task):
+                unsuccessful_probes += 1
+                if unsuccessful_probes >= self.MAX_UNSUCCESSFUL_PROBES:
+                    break
                 continue
             selected_tasks.append(task)
             if len(selected_tasks) + currently_running >= self._queue_size():
                 break
+        elapsed = time.time() - started
+        logger.debug(
+            "selecting %s tasks to run took %.2f sec; unsuccessful probes: %d",
+            len(selected_tasks), elapsed, unsuccessful_probes)
         return selected_tasks
 
     def _prune_dependents(self, task_id: str) -> None:
+        started = time.time()
         dependents = self._task_dependents.get(task_id, set())
         for dep_id in dependents:
             logger.debug("pruning dependent task %s", dep_id)
             if dep_id not in self._task_queue:
                 continue
             del self._task_queue[dep_id]
+        elapsed = time.time() - started
+        logger.debug(
+            "pruning dependents of task %s took %.2f sec", task_id, elapsed)
 
     @staticmethod
     def _exec_internal(
@@ -224,7 +246,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
         self._executing = True
-        self._task2result: dict[Task, Any] = {}
+        self._task2result = {}
 
         for task_node, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
@@ -257,7 +279,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         result: set[str] | None = None,
     ) -> set[str]:
         if result is None:
-            result: set[str] = set()
+            result = set()
 
         for dep in task_node.deps:
             result.add(dep.task_id)
@@ -281,37 +303,38 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _in_exec_order(
         task_graph: TaskGraph,
     ) -> Generator[Task, None, None]:
-        yield from AbstractTaskGraphExecutor._walk_graph_wide(task_graph)
+        yield from AbstractTaskGraphExecutor._toplogical_order(task_graph)
 
     @staticmethod
-    def _walk_graph_wide(
+    def _build_di_graph(
+        task_graph: TaskGraph,
+    ) -> networkx.DiGraph:
+
+        di_graph = networkx.DiGraph()
+        nodes: list[str] = [
+            task.task_id for task in task_graph.tasks
+        ]
+        di_graph.add_nodes_from(sorted(nodes))
+
+        for task in task_graph.tasks:
+            for dep in task.deps:
+                di_graph.add_edge(dep.task_id, task.task_id)
+        return di_graph
+
+    @staticmethod
+    def _toplogical_order(
         task_graph: TaskGraph,
     ) -> Generator[Task, None, None]:
-        visited: set[str] = set()
-        postponed: set[str] = set()
+        queue: dict[str, Task] = {}
+        for task in task_graph.tasks:
+            if task.task_id not in queue:
+                queue[task.task_id] = task
 
-        queue: deque[Task] = deque(task_graph.tasks)
-        while queue:
-            node = queue.popleft()
-            if node.task_id in visited:
-                continue
-            if node.deps and node.task_id not in postponed:
-                queue.append(node)
-                postponed.add(node.task_id)
-                continue
-            all_deps_visited = True
-            for dep in node.deps:
-                if dep.task_id not in visited:
-                    all_deps_visited = False
-                    break
-            if not all_deps_visited:
-                queue.appendleft(node)
-                continue
-            visited.add(node.task_id)
-            yield node
-            for dep in node.deps:
-                if dep.task_id not in visited:
-                    queue.append(dep)
+        graph = AbstractTaskGraphExecutor._build_di_graph(task_graph)
+
+        for task_id in networkx.topological_sort(graph):
+            task = queue.pop(task_id)
+            yield task
 
     @staticmethod
     def _check_for_cyclic_deps(task_graph: TaskGraph) -> None:
@@ -450,18 +473,21 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     def _reconfigure_task_node_deps(self, task_node: Task) -> Task:
         args = []
         for arg in task_node.args:
-            if isinstance(arg, Task):
+            if isinstance(arg, Task) and arg in self._task2result:
                 arg = self._task2result[arg]
             args.append(arg)
 
+        deps = []
         for dep in task_node.deps:
-            dep = self._task2result[dep]
+            if dep in self._task2result:
+                continue
+            deps.append(dep)
 
         return Task(
             task_node.task_id,
             task_node.func,
             args,
-            [],
+            deps,
             task_node.input_files,
         )
 
@@ -469,16 +495,23 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         start = time.time()
         tasks_to_run = self._select_tasks_to_run(len(currently_running))
         logger.debug("scheduling %d tasks", len(tasks_to_run))
+        scheduled = 0
         for task in tasks_to_run:
-            task_node = self._task_queue[task.task_id]
             del self._task_queue[task.task_id]
-            task_node = self._reconfigure_task_node_deps(task_node)
-            future = self._submit_task(task_node)
+            task = self._reconfigure_task_node_deps(task)
+            future = self._submit_task(task)
             currently_running.add(future)
+            elapsed = time.time() - start
+            scheduled += 1
+            if elapsed > 2.0:
+                logger.debug(
+                    "scheduling took too long (%.2f sec), stopping",
+                    elapsed)
+                break
 
         elapsed = time.time() - start
         logger.debug(
-            "scheduling took %.2f sec", elapsed)
+            "scheduling %d tasks took %.2f sec", scheduled, elapsed)
         logger.debug("currently running %d tasks", len(currently_running))
         return currently_running
 
@@ -514,6 +547,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
             for future in new_completed:
                 completed.append(future)
+
             while completed:
                 future = completed.popleft()
                 result, task = self._process_completed(future)
@@ -548,20 +582,28 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         self._task2future = {}
         self._future2task = {}
-        self._task2result: dict[Task, Any] = {}
+        self._task2result = {}
         assert len(self._task_queue) == 0
 
     def _process_completed(self, future: Future) -> tuple[Any, Task]:
         try:
             result = future.result()
-            task = self._future2task[future.key]
+            task = self._future2task[str(future.key)]
+
         except Exception as ex:  # noqa: BLE001
             # pylint: disable=broad-except
-            task = self._future2task[future.key]
+            task = self._future2task[str(future.key)]
             self._prune_dependents(task.task_id)
             result = ex
 
         self._task2result[task] = result
+        for dep_id in self._task_dependents.get(task.task_id, set()):
+            if dep_id not in self._task_queue:
+                continue
+            dep_task = self._task_queue[dep_id]
+            dep_task = self._reconfigure_task_node_deps(dep_task)
+            self._task_queue[dep_id] = dep_task
+
         return result, task
 
     def _set_task_result(self, task: Task, result: Any) -> None:
