@@ -476,6 +476,7 @@ class WDAEStudy(WDAEAbstractStudy):
     def get_column_sources(
         self, column_ids: list[str],
     ) -> list[dict[str, Any]]:
+        """Return a list of column sources for the given column IDs."""
         genotype_cols = self.columns.get("genotype", {})
         if genotype_cols is None:
             genotype_cols = {}
