@@ -89,6 +89,10 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             dep not in self._task2result
             for dep in task.deps
         ):
+            logger.debug(
+                "Task(id=%s) is not ready to run because one or more "
+                "of its dependancies have not finished yet",
+                task.task_id)
             return False
         for dep in task.deps:
             if isinstance(self._task2result.get(dep), BaseException):
@@ -106,6 +110,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _select_tasks_to_run(
         self, currently_running: int,
     ) -> list[Task]:
+        started = time.time()
         selected_tasks: list[Task] = []
         for task in self._task_queue.values():
             if not self._ready_to_run(task):
@@ -113,15 +118,22 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             selected_tasks.append(task)
             if len(selected_tasks) + currently_running >= self._queue_size():
                 break
+        elapsed = time.time() - started
+        logger.debug(
+            "selecting tasks to run took %.2f sec", elapsed)
         return selected_tasks
 
     def _prune_dependents(self, task_id: str) -> None:
+        started = time.time()
         dependents = self._task_dependents.get(task_id, set())
         for dep_id in dependents:
             logger.debug("pruning dependent task %s", dep_id)
             if dep_id not in self._task_queue:
                 continue
             del self._task_queue[dep_id]
+        elapsed = time.time() - started
+        logger.debug(
+            "pruning dependents of task %s took %.2f sec", task_id, elapsed)
 
     @staticmethod
     def _exec_internal(
@@ -257,7 +269,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         result: set[str] | None = None,
     ) -> set[str]:
         if result is None:
-            result: set[str] = set()
+            result = set()
 
         for dep in task_node.deps:
             result.add(dep.task_id)
@@ -287,17 +299,27 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _walk_graph_wide(
         task_graph: TaskGraph,
     ) -> Generator[Task, None, None]:
+        queue: list[Task] = []
         visited: set[str] = set()
+        for task in task_graph.tasks:
+            for dep in task.deps:
+                if dep.task_id not in visited:
+                    queue.append(dep)
+                    visited.add(dep.task_id)
+            if task.task_id not in visited:
+                queue.append(task)
+                visited.add(task.task_id)
+
+        def key_func(t: Task) -> tuple[int, str]:
+            return (len(t.deps), t.task_id)
+
+        visited = set()
         postponed: set[str] = set()
 
-        queue: deque[Task] = deque(task_graph.tasks)
         while queue:
-            node = queue.popleft()
+
+            node = queue.pop(0)
             if node.task_id in visited:
-                continue
-            if node.deps and node.task_id not in postponed:
-                queue.append(node)
-                postponed.add(node.task_id)
                 continue
             all_deps_visited = True
             for dep in node.deps:
@@ -305,13 +327,14 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                     all_deps_visited = False
                     break
             if not all_deps_visited:
-                queue.appendleft(node)
+                if node.task_id not in postponed:
+                    queue.append(node)
+                    postponed.add(node.task_id)
+                else:
+                    queue.insert(1, node)
                 continue
             visited.add(node.task_id)
             yield node
-            for dep in node.deps:
-                if dep.task_id not in visited:
-                    queue.append(dep)
 
     @staticmethod
     def _check_for_cyclic_deps(task_graph: TaskGraph) -> None:
@@ -554,10 +577,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     def _process_completed(self, future: Future) -> tuple[Any, Task]:
         try:
             result = future.result()
-            task = self._future2task[future.key]
+            task = self._future2task[str(future.key)]
         except Exception as ex:  # noqa: BLE001
             # pylint: disable=broad-except
-            task = self._future2task[future.key]
+            task = self._future2task[str(future.key)]
             self._prune_dependents(task.task_id)
             result = ex
 
