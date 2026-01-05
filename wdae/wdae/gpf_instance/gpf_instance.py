@@ -401,7 +401,12 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
         Dataset.recreate_dataset_perm(data_id)
         Dataset.set_broken(data_id, broken=True)
 
-        wdae_study = gpf_instance.get_wdae_wrapper(data_id)
+        try:
+            wdae_study = gpf_instance.get_wdae_wrapper(data_id)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Failed getting wdae wrapper for dataset %s", data_id)
+            continue
         assert wdae_study is not None
         Dataset.set_broken(data_id, broken=False)
         Dataset.update_name(data_id, wdae_study.name)
