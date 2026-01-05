@@ -154,6 +154,7 @@ def _run_run_command(
     try:
         execute_from_command_line([
             "wgpf", "runserver", f"{host}:{port}",
+            "--noreload",
             "--skip-checks",
         ])
 
