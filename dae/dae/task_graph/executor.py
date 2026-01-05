@@ -8,12 +8,14 @@ import sys
 import time
 import traceback
 from abc import abstractmethod
-from collections.abc import Callable, Generator, Iterator
+from collections import defaultdict, deque
+from collections.abc import Callable, Generator, Iterator, Sequence
 from copy import copy
 from types import TracebackType
 from typing import Any, cast
 
 import fsspec
+import networkx
 import psutil
 from dask.distributed import Client, Future
 
@@ -24,7 +26,6 @@ from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
 )
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -73,23 +74,58 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         super().__init__()
         self._task_cache = task_cache
         self._executing = False
-        self._task2result: dict[Task, Any] = {}
-        self._task_queue: list[Task] = []
+        self._task_queue: dict[str, Task] = {}
+        self._task_dependants: dict[str, set[str]] = defaultdict(set)
+
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
         self._params["task_log_dir"] = log_dir
 
-    def _all_deps_finished(self, task_node: Task) -> bool:
-        return all(
-            d in self._task2result for d in task_node.deps
-        )
+    def _queue_size(self) -> int:
+        return 1
 
-    def _all_deps_calculated(self, task_node: Task) -> bool:
-        return all(
-            d in self._task2result
-            and not isinstance(self._task2result[d], BaseException)
-            for d in task_node.deps
-        )
+    @staticmethod
+    def _ready_to_run(task: Task) -> bool:
+        return not task.deps
+
+    def _select_tasks_to_run(
+        self, limit: int,
+    ) -> list[Task]:
+        started = time.time()
+        selected_tasks: list[Task] = []
+        di_graph = AbstractTaskGraphExecutor._build_di_graph(self._task_queue)
+        for task_id in networkx.topological_sort(di_graph):
+            if task_id not in self._task_queue:
+                break
+            task = self._task_queue[task_id]
+            elapsed = time.time() - started
+            if elapsed > 1.0:
+                logger.debug(
+                    "selecting tasks to run took too long (%.2f sec), "
+                    "stopping search", elapsed)
+                break
+            if not self._ready_to_run(task):
+                break
+            selected_tasks.append(task)
+            if len(selected_tasks) >= limit:
+                break
+        elapsed = time.time() - started
+        logger.debug(
+            "selecting %s tasks to run took %.2f sec",
+            len(selected_tasks), elapsed)
+        return selected_tasks
+
+    def _prune_dependants(self, task_id: str) -> None:
+        started = time.time()
+        dependents = self._task_dependants.get(task_id, set())
+        for dep_id in dependents:
+            logger.debug("pruning dependent task %s", dep_id)
+            if dep_id not in self._task_queue:
+                continue
+            del self._task_queue[dep_id]
+        elapsed = time.time() - started
+        logger.debug(
+            "pruning dependents of task %s took %.2f sec", task_id, elapsed)
 
     @staticmethod
     def _exec_internal(
@@ -98,7 +134,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         verbose = params.get("verbose")
         if verbose is None:  # Dont use .get default in case of a Box
             verbose = 0
-        VerbosityConfiguration.set_verbosity(verbose)
 
         task_id = params["task_id"]
         log_dir = params.get("task_log_dir", ".")
@@ -108,6 +143,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         root_logger.addHandler(handler)
 
         task_logger = logging.getLogger("task_executor")
+        task_logger.warning("task logging verbosity level: %d", verbose)
         task_logger.info("task <%s> started", task_id)
         start = time.time()
 
@@ -192,17 +228,26 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
         self._executing = True
-        self._task2result = {}
+        completed_tasks: dict[Task, Any] = {}
 
-        for task_node, record in self._task_cache.load(task_graph):
+        for task in self._in_exec_order(task_graph):
+            self._queue_task(task)
+
+        for task, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
-                self._set_task_result(task_node, record.result)
+                result = record.result
+                completed_tasks[task] = result
+                task_dependants = self._task_dependants.get(task.task_id, set())
+                for dep_id in task_dependants:
+                    if dep_id not in self._task_queue:
+                        continue
+                    dep_task = self._task_queue[dep_id]
+                    dep_task = self._reconfigure_task_node_deps(
+                        dep_task, task, result)
+                    self._task_queue[dep_id] = dep_task
+                del self._task_queue[task.task_id]
 
-        for task_node in self._in_exec_order(task_graph):
-            if task_node in self._task2result:
-                continue
-            self._queue_task(task_node)
-        return self._yield_task_results(self._task2result)
+        return self._yield_task_results(completed_tasks)
 
     def _yield_task_results(
         self, already_computed_tasks: dict[Task, Any],
@@ -218,40 +263,62 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             )
             yield task_node, result
         self._executing = False
-        self._task2result = {}
 
-    @abstractmethod
+    def _collect_deps(
+        self, task_node: Task,
+        result: set[str] | None = None,
+    ) -> set[str]:
+        if result is None:
+            result = set()
+
+        for dep in task_node.deps:
+            result.add(dep.task_id)
+            self._collect_deps(dep, result)
+        return result
+
     def _queue_task(self, task_node: Task) -> None:
-        """Put the task on the execution queue."""
+        self._task_queue[task_node.task_id] = task_node
+        for dep_id in self._collect_deps(task_node):
+            self._task_dependants[dep_id].add(task_node.task_id)
 
     @abstractmethod
     def _await_tasks(self) -> Iterator[tuple[Task, Any]]:
         """Yield enqueued tasks as soon as they finish."""
 
-    @abstractmethod
-    def _set_task_result(self, task: Task, result: Any) -> None:
-        """Set a precomputed result for a task."""
-
     @staticmethod
     def _in_exec_order(
         task_graph: TaskGraph,
-    ) -> Generator[Task, None, None]:
-        visited: set[Task] = set()
-        for node in task_graph.tasks:
-            yield from AbstractTaskGraphExecutor._node_in_exec_order(
-                node, visited)
+    ) -> Sequence[Task]:
+        return list(AbstractTaskGraphExecutor._toplogical_order(task_graph))
 
     @staticmethod
-    def _node_in_exec_order(
-        node: Task, visited: set[Task],
+    def _build_di_graph(
+        tasks: dict[str, Task],
+    ) -> networkx.DiGraph:
+
+        di_graph = networkx.DiGraph()
+        nodes: list[str] = list(tasks.keys())
+        di_graph.add_nodes_from(sorted(nodes))
+
+        for task in tasks.values():
+            for dep in task.deps:
+                di_graph.add_edge(dep.task_id, task.task_id)
+        return di_graph
+
+    @staticmethod
+    def _toplogical_order(
+        task_graph: TaskGraph,
     ) -> Generator[Task, None, None]:
-        if node in visited:
-            return
-        visited.add(node)
-        for dep in node.deps:
-            yield from AbstractTaskGraphExecutor._node_in_exec_order(
-                dep, visited)
-        yield node
+        queue: dict[str, Task] = {}
+        for task in task_graph.tasks:
+            if task.task_id not in queue:
+                queue[task.task_id] = task
+
+        graph = AbstractTaskGraphExecutor._build_di_graph(queue)
+
+        for task_id in networkx.topological_sort(graph):
+            task = queue.pop(task_id)
+            yield task
 
     @staticmethod
     def _check_for_cyclic_deps(task_graph: TaskGraph) -> None:
@@ -284,55 +351,87 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def close(self) -> None:
         pass
 
+    def _reconfigure_task_node_deps(
+        self, task: Task, completed_task: Task, completed_result: Any,
+    ) -> Task:
+        args = []
+        for arg in task.args:
+            if isinstance(arg, Task) and arg.task_id == completed_task.task_id:
+                arg = completed_result
+            args.append(arg)
+
+        deps = []
+        for dep in task.deps:
+            if dep.task_id == completed_task.task_id:
+                continue
+            deps.append(dep)
+
+        return Task(
+            task.task_id,
+            task.func,
+            args,
+            deps,
+            task.input_files,
+        )
+
+    def _process_completed_task(
+        self, task: Task, result: Any,
+    ) -> None:
+        if isinstance(result, BaseException):
+            self._prune_dependants(task.task_id)
+            return
+        start = time.time()
+
+        task_dependants = self._task_dependants.get(task.task_id, set())
+        logger.debug("processing %d dependants", len(task_dependants))
+        for dep_id in task_dependants:
+            if dep_id not in self._task_queue:
+                continue
+            dep_task = self._task_queue[dep_id]
+            dep_task = self._reconfigure_task_node_deps(dep_task, task, result)
+            self._task_queue[dep_id] = dep_task
+
+        if task.task_id in self._task_dependants:
+            del self._task_dependants[task.task_id]
+        logger.debug("task_dependents size: %d", len(self._task_dependants))
+        elapsed = time.time() - start
+        logger.debug("processing completed task took %.2f sec", elapsed)
+
 
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
-
-    def _queue_task(self, task_node: Task) -> None:
-        self._task_queue.append(task_node)
 
     def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
         finished_tasks = 0
         initial_task_count = len(self._task_queue)
 
-        for task_node in self._task_queue:
-            if not self._all_deps_calculated(task_node):
-                # some of the dependancies were errors and didn't run
+        while self._task_queue:
+            selected_tasks = self._select_tasks_to_run(1)
+            for task in selected_tasks:
+                # handle tasks that use the output of other tasks
+                params = copy(self._params)
+                task_id = safe_task_id(task.task_id)
+                params["task_id"] = task_id
+
+                try:
+                    result = self._exec(task.func, task.args, [], params)
+                except Exception as exp:  # noqa: BLE001
+                    # pylint: disable=broad-except
+                    result = exp
+                self._process_completed_task(task, result)
+
+                finished_tasks += 1
+                logger.debug("clean up task %s", task)
                 logger.info(
-                    "Skipping execution of task(id=%s) because one or more of "
-                    "its dependancies failed with an error", task_node.task_id)
-                continue
+                    "finished %s/%s", finished_tasks,
+                    initial_task_count)
 
-            # handle tasks that use the output of other tasks
-            args = [
-                self._task2result[arg] if isinstance(arg, Task) else arg
-                for arg in task_node.args
-            ]
+                del self._task_queue[task.task_id]
 
-            params = copy(self._params)
-            task_id = safe_task_id(task_node.task_id)
-            params["task_id"] = task_id
-
-            try:
-                result = self._exec(task_node.func, args, [], params)
-            except Exception as exp:  # noqa: BLE001
-                # pylint: disable=broad-except
-                result = exp
-            finished_tasks += 1
-            logger.debug("clean up task %s", task_node)
-            logger.info(
-                "finished %s/%s", finished_tasks,
-                initial_task_count)
-
-            self._task2result[task_node] = result
-            yield task_node, result
+                yield task, result
 
         # all tasks have already executed. Let's clean the state.
-        self._task_queue = []
-        self._task2result = {}
-
-    def _set_task_result(self, task: Task, result: Any) -> None:
-        self._task2result[task] = result
+        assert len(self._task_queue) == 0
 
 
 class DaskExecutor(AbstractTaskGraphExecutor):
@@ -345,140 +444,147 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         super().__init__(task_cache, **kwargs)
         self._client = client
         self._task2future: dict[Task, Future] = {}
-        self._future_key2task: dict[str, Task] = {}
+        self._future2task: dict[str, Task] = {}
 
-    def _queue_task(self, task_node: Task) -> None:
-        self._task_queue.append(task_node)
+    def _submit_task(self, task: Task) -> Future:
+        assert len(task.deps) == 0
+        assert not any(isinstance(arg, Task) for arg in task.args), \
+            "Task has no dependencies to wait for."
 
-    def _get_future_or_result(self, task: Task) -> Any:
-        future = self._task2future.get(task)
-        return future or self._task2result[task]
-
-    def _submit_task(self, task_node: Task) -> Future:
-        deps = []
-        for dep in task_node.deps:
-            future = self._task2future.get(dep)
-            if future:
-                deps.append(future)
-            else:
-                assert dep in self._task2result
-
-        # handle tasks that use the output of other tasks
-        args = []
-        for arg in task_node.args:
-            if isinstance(arg, Task):
-                value = self._get_future_or_result(arg)
-            else:
-                value = arg
-            args.append(value)
         params = copy(self._params)
-        task_id = safe_task_id(task_node.task_id)
+        task_id = safe_task_id(task.task_id)
         params["task_id"] = task_id
 
         future = self._client.submit(
-            self._exec, task_node.func, args, deps, params,
+            self._exec, task.func, task.args, [], params,
             key=task_id,
             pure=False,
         )
         if future is None:
             raise ValueError(
-                f"unexpected dask executor return None: {task_node}, {args}, "
-                f"{deps}, {params}")
+                f"unexpected dask executor return None: {task}, {task.args}, "
+                f"{params}")
         assert future is not None
 
-        self._task2future[task_node] = future
-        self._future_key2task[str(future.key)] = task_node
+        self._task2future[task] = future
+        self._future2task[str(future.key)] = task
         return future
 
-    MIN_QUEUE_SIZE = 700
+    MIN_QUEUE_SIZE = 400
 
     def _queue_size(self) -> int:
         n_workers = cast(
             int,
             sum(self._client.ncores().values()))
-        return max(self.MIN_QUEUE_SIZE, 2 * n_workers)
+        return max(self.MIN_QUEUE_SIZE, 4 * n_workers)
 
-    def _select_tasks_that_depend_on(
-        self, task_node: Task,
-    ) -> list[Task]:
-        return [
-            t for t in self._task_queue
-            if task_node in t.deps
-        ]
-
-    def _select_tasks_to_run(
-        self, currently_running: int,
-    ) -> list[Task]:
-        selected_tasks = []
-        for task_node in self._task_queue:
-            if self._all_deps_calculated(task_node):
-                selected_tasks.append(task_node)
-            if len(selected_tasks) + currently_running >= self._queue_size():
-                break
-        return selected_tasks
+    def _available_slots(self, currently_running: int) -> int:
+        return self._queue_size() - currently_running
 
     def _schedule_tasks(self, currently_running: set[Future]) -> set[Future]:
-        tasks_to_run = self._select_tasks_to_run(len(currently_running))
-        for task_node in tasks_to_run:
-            self._task_queue.remove(task_node)
-            future = self._submit_task(task_node)
+        start = time.time()
+        tasks_to_run = self._select_tasks_to_run(
+            self._available_slots(len(currently_running)))
+        logger.debug("scheduling %d tasks", len(tasks_to_run))
+        scheduled = 0
+        for task in tasks_to_run:
+            del self._task_queue[task.task_id]
+            future = self._submit_task(task)
             currently_running.add(future)
+            elapsed = time.time() - start
+            scheduled += 1
+            if elapsed > 2.0:
+                logger.debug(
+                    "scheduling took too long (%.2f sec), stopping",
+                    elapsed)
+                break
 
+        elapsed = time.time() - start
+        logger.debug(
+            "scheduling %d tasks took %.2f sec", scheduled, elapsed)
+        logger.debug("currently running %d tasks", len(currently_running))
         return currently_running
 
     def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
         # pylint: disable=import-outside-toplevel
         from dask.distributed import wait
 
-        not_completed: set = set()
-        completed = set()
+        not_completed: set[Future] = set()
+        completed: deque[Future] = deque()
         initial_task_count = len(self._task_queue)
         finished_tasks = 0
+        process = psutil.Process(os.getpid())
+        current_memory_mb = process.memory_info().rss / (1024 * 1024)
+        logger.info(
+            "executor memory usage: %.2f MB", current_memory_mb)
 
         not_completed = self._schedule_tasks(not_completed)
-        logger.warning(
-            "currently running %s/%s tasks (finished %s tasks)",
-            len(not_completed), initial_task_count, finished_tasks)
         while not_completed or self._task_queue:
+            if len(completed) < self._queue_size() // 2:
+                not_completed = self._schedule_tasks(not_completed)
+            else:
+                logger.debug(
+                    "too many completed tasks (%d), processing them first",
+                    len(completed))
+
             if not_completed:
-                completed, not_completed = wait(
-                    not_completed,
-                    return_when="FIRST_COMPLETED")
+                try:
+                    new_completed, not_completed = wait(
+                        not_completed,
+                        return_when="FIRST_COMPLETED",
+                        timeout=0.1,
+                    )
+                except TimeoutError:
+                    new_completed = []
 
-            if not completed:
-                time.sleep(1.0)
-                continue
+            else:
+                new_completed = set()
 
-            for future in completed:
+            for future in new_completed:
+                completed.append(future)
+
+            start = time.time()
+            processed: list[tuple[Task, Any]] = []
+            logger.debug("going to process %d completed tasks", len(completed))
+            while completed:
+                future = completed.popleft()
+                task = self._future2task[str(future.key)]
+                result_start = time.time()
                 try:
                     result = future.result()
-                    task = self._future_key2task[future.key]
-                except Exception as exp:  # noqa: BLE001
+                except Exception as ex:  # noqa: BLE001
                     # pylint: disable=broad-except
-                    task = self._future_key2task[future.key]
-                    result = exp
-                    failed_deps = self._select_tasks_that_depend_on(task)
-                    for failed in failed_deps:
-                        logger.info(
-                            "Skipping execution of task(id=%s) because one or "
-                            "more of its dependancies failed with an error",
-                            failed.task_id)
-                        self._task_queue.remove(failed)
+                    result = ex
+                result_elapsed = time.time() - result_start
+                logger.debug(
+                    "retrieving result for task %s took %.2f sec",
+                    task.task_id, result_elapsed)
 
-                self._task2result[task] = result
+                self._process_completed_task(task, result)
 
-                yield task, result
                 finished_tasks += 1
+                processed.append((task, result))
                 logger.info(
                     "finished %s/%s", finished_tasks,
                     initial_task_count)
                 # del ref to future in order to make dask gc its resources
                 del self._task2future[task]
+                del self._future2task[future.key]
 
-            not_completed = self._schedule_tasks(not_completed)
-            logger.warning(
-                "currently running %s/%s tasks (finished %s tasks)",
-                len(not_completed), initial_task_count, finished_tasks)
+                elapsed = time.time() - start
+                if elapsed > 2.0:
+                    logger.debug(
+                        "processing completed tasks took too long "
+                        "(%.2f sec), stopping", elapsed)
+                    break
+
+            logger.debug("processed %d completed tasks", len(processed))
+            start = time.time()
+            yield from processed
+            elapsed = time.time() - start
+            logger.debug(
+                "yielding %d completed tasks took %.2f sec",
+                len(processed), elapsed)
 
         # clean up
         assert len(self._task2future) == 0, \
@@ -487,12 +593,8 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             "[BUG] Dask Executor's task queue is not empty."
 
         self._task2future = {}
-        self._future_key2task = {}
-        self._task_queue = []
-        self._task2result = {}
-
-    def _set_task_result(self, task: Task, result: Any) -> None:
-        self._task2result[task] = result
+        self._future2task = {}
+        assert len(self._task_queue) == 0
 
     def close(self) -> None:
         self._client.close()

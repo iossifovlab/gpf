@@ -6,8 +6,8 @@ import time
 from collections.abc import Generator
 from typing import Any
 
+import networkx
 import pytest
-import pytest_mock
 from dae.task_graph.cache import (
     CacheRecord,
     CacheRecordType,
@@ -445,7 +445,8 @@ def test_task_graph_run_with_results_keep_going_handles_error(
     results = list(task_graph_run_with_results(graph, keep_going=True))
 
     assert len(results) == 2
-    assert isinstance(results[1], ValueError)
+    assert any(isinstance(r, ValueError) for r in results)
+
     captured = capsys.readouterr()
     assert "Task fail failed with:" in captured.err
     assert "ValueError: Task failed" in captured.out
@@ -534,40 +535,293 @@ def test_task_graph_all_done_detects_cycle() -> None:
         task_graph_all_done(graph, cache)
 
 
-@pytest.mark.parametrize(
-"queue_size,first_scheduled", [
-    (20, 9),
-    (10, 9),
-    (9, 9),
-    (5, 5),
-    (3, 3),
-    (2, 2),
-    (1, 1),
-])
-def test_dask_executor_scheduling(
-    threaded_client: Client,
-    mocker: pytest_mock.MockerFixture,
-    queue_size: int,
-    first_scheduled: int,
-) -> None:
-    mocker.patch(
-        "dae.task_graph.executor.DaskExecutor._queue_size",
-        return_value=queue_size,
-    )
-    executor = DaskExecutor(threaded_client)
-    espy = mocker.spy(
-        executor,
-        "_schedule_tasks",
-    )
+def test_walk_graph_wide_1() -> None:
     graph = TaskGraph()
-    task_1 = graph.create_task("Task 1", do_work, args=[0], deps=[])
-    graph.create_task("Task 2", do_work, args=[0], deps=[task_1])
-    for i in range(8):
-        graph.create_task(f"Task 3.{i}", do_work, args=[0], deps=[])
+    task_a = graph.create_task("A", lambda: None, args=[], deps=[])
+    task_b = graph.create_task("B", lambda: None, args=[], deps=[task_a])
+    task_c = graph.create_task("C", lambda: None, args=[], deps=[task_a])
+    graph.create_task("D", lambda: None, args=[], deps=[task_b, task_c])
 
-    results = list(executor.execute(graph))
-    assert len(results) == 10
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._toplogical_order(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
 
-    assert espy.call_count >= 1
-    assert len(espy.call_args_list) >= 1
-    assert len(espy.call_args_list[0].args[0]) == first_scheduled
+    assert len(ids_in_walk_order) == 4
+    assert ids_in_walk_order[0] == "A"
+    assert set(ids_in_walk_order[1:3]) == {"B", "C"}
+    assert ids_in_walk_order[3] == "D"
+
+
+def test_walk_graph_wide_2() -> None:
+    graph = TaskGraph()
+    task_a = graph.create_task("A", lambda: None, args=[], deps=[])
+    graph.create_task("B", lambda: None, args=[], deps=[task_a])
+    graph.create_task("C", lambda: None, args=[], deps=[])
+    graph.create_task("D", lambda: None, args=[], deps=[])
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._toplogical_order(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert len(ids_in_walk_order) == 4
+    assert ids_in_walk_order == ["A", "C", "D", "B"]
+
+
+def test_walk_graph_wide_3() -> None:
+    graph = TaskGraph()
+    for i in range(5):
+        task_a = graph.create_task(f"A{i}", lambda: None, args=[], deps=[])
+        graph.create_task(
+            f"B{i}", lambda: None, args=[], deps=[task_a])
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._toplogical_order(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert len(ids_in_walk_order) == 10
+    assert ids_in_walk_order == [
+        "A0", "A1", "A2", "A3", "A4",
+        "B0", "B1", "B2", "B3", "B4",
+    ]
+
+
+def test_walk_graph_wide_4() -> None:
+    graph = TaskGraph()
+    for i in range(5):
+        task_a = graph.create_task(f"A{i}", lambda: None, args=[], deps=[])
+        task_b = graph.create_task(
+            f"B{i}", lambda: None, args=[], deps=[task_a])
+        graph.create_task(
+            f"C{i}", lambda: None, args=[], deps=[task_b])
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._toplogical_order(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert len(ids_in_walk_order) == 15
+    assert ids_in_walk_order == [
+        "A0", "A1", "A2", "A3", "A4",
+        "B0", "B1", "B2", "B3", "B4",
+        "C0", "C1", "C2", "C3", "C4",
+    ]
+
+
+def test_walk_graph_wide_5() -> None:
+    graph = TaskGraph()
+    for i in range(5):
+        task_a = graph.create_task(f"A{i}", lambda: None, args=[], deps=[])
+        task_b = graph.create_task(
+            f"B{i}", lambda: None, args=[], deps=[task_a])
+        task_c = graph.create_task(
+            f"C{i}", lambda: None, args=[], deps=[task_b])
+        graph.create_task(
+            f"D{i}", lambda: None, args=[], deps=[task_c])
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._toplogical_order(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert len(ids_in_walk_order) == 20
+    assert ids_in_walk_order == [
+        "A0", "A1", "A2", "A3", "A4",
+        "B0", "B1", "B2", "B3", "B4",
+        "C0", "C1", "C2", "C3", "C4",
+        "D0", "D1", "D2", "D3", "D4",
+    ]
+
+
+def test_walk_graph_wide_6() -> None:
+    graph = TaskGraph()
+    first_task = graph.create_task("A", lambda: None, args=[], deps=[])
+    second_layer_tasks = [
+        graph.create_task(f"B{i}", lambda: None, args=[], deps=[first_task])
+        for i in range(5)
+    ]
+    intermediate_task = graph.create_task(
+        "C4", lambda: None,
+        args=[], deps=second_layer_tasks[-1:],  # just the last one
+    )
+    third_task = graph.create_task(
+        "D", lambda: None, args=[],
+        deps=[*second_layer_tasks, intermediate_task],
+    )
+    graph.create_task("E", lambda: None, args=[], deps=[third_task])
+    ids_in_walk_order = [
+        task.task_id
+        for task in AbstractTaskGraphExecutor._toplogical_order(graph)]
+    assert len(ids_in_walk_order) == 9
+    assert ids_in_walk_order == [
+        "A",
+        "B0", "B1", "B2", "B3", "B4",
+        "C4",
+        "D",
+        "E",
+    ]
+
+
+@pytest.mark.parametrize(
+    "tasks,expected_order", [
+        (  # simple chain
+            [
+                ("A", []),
+                ("B", ["A"]),
+                ("C", ["B"]),
+            ],
+            ["A", "B", "C"],
+        ),
+        (  # diamond
+            [
+                ("A", []),
+                ("B", ["A"]),
+                ("C", ["A"]),
+                ("D", ["B", "C"]),
+            ],
+            ["A", "B", "C", "D"],
+        ),
+        (  # wide graph
+            [
+                ("A", []),
+                ("B", []),
+                ("C", []),
+                ("D", []),
+                ("E", ["A", "B", "C", "D"]),
+            ],
+            ["A", "B", "C", "D", "E"],
+        ),
+        (  # complex graph
+            [
+                ("A", []),
+                ("B", ["A"]),
+                ("C", ["A"]),
+                ("D", ["B"]),
+                ("E", ["B", "C"]),
+                ("F", ["D", "E"]),
+            ],
+            ["A", "B", "C", "D", "E", "F"],
+        ),
+        (
+            [  # multiple roots
+                ("A", []),
+                ("B", []),
+                ("C", ["A"]),
+                ("D", ["B"]),
+                ("E", ["C", "D"]),
+            ],
+            ["A", "B", "C", "D", "E"],
+        ),
+        (
+            [  # multiple independent chains
+                ("A1", []),
+                ("B1", ["A1"]),
+                ("C1", ["B1"]),
+                ("A2", []),
+                ("B2", ["A2"]),
+                ("C2", ["B2"]),
+            ],
+            ["A1", "A2", "B1", "B2", "C1", "C2"],
+        ),
+        (
+            [
+                ("3", []),
+                ("2", []),
+                ("1", ["2", "3"]),
+            ],
+            ["2", "3", "1"],
+        ),
+    ],
+)
+def test_walk_graph_wide(
+    tasks: list[tuple[str, list[str]]],
+    expected_order: list[str],
+) -> None:
+    graph = TaskGraph()
+    task_map: dict[str, Task] = {}
+    for task_id, dep_ids in tasks:
+        deps = [task_map[dep_id] for dep_id in dep_ids]
+        task = graph.create_task(task_id, lambda: None, args=[], deps=deps)
+        task_map[task_id] = task
+
+    tasks_in_walk_order = list(
+        AbstractTaskGraphExecutor._toplogical_order(graph),
+    )
+    ids_in_walk_order = [task.task_id for task in tasks_in_walk_order]
+
+    assert ids_in_walk_order == expected_order
+
+
+@pytest.mark.parametrize(
+    "tasks,expected_order", [
+        (
+            # initial
+            [
+                ("2", []),
+                ("3", []),
+                ("1", ["2", "3"]),
+            ],
+            ["2", "3", "1"],
+        ),
+        (
+            # different order
+            [
+                ("3", []),
+                ("2", []),
+                ("1", ["2", "3"]),
+            ],
+            ["3", "2", "1"],
+        ),
+        (
+            # simple chain
+            [
+                ("A", []),
+                ("B", ["A"]),
+                ("C", ["B"]),
+            ],
+            ["A", "B", "C"],
+        ),
+        (
+            # 2 chains
+            [
+                ("A1", []),
+                ("B1", ["A1"]),
+                ("C1", ["B1"]),
+                ("A2", []),
+                ("B2", ["A2"]),
+                ("C2", ["B2"]),
+            ],
+            ["A1", "A2", "B1", "B2", "C1", "C2"],
+        ),
+        (
+            # 2 deeper chains
+            [
+                ("A1", []),
+                ("B1", ["A1"]),
+                ("C1", ["B1"]),
+                ("D1", ["C1"]),
+                ("A2", []),
+                ("B2", ["A2"]),
+                ("C2", ["B2"]),
+                ("D2", ["C2"]),
+            ],
+            ["A1", "A2", "B1", "B2", "C1", "C2", "D1", "D2"],
+        ),
+
+    ],
+)
+def test_topological_sort(
+    tasks: list[tuple[str, list[str]]],
+    expected_order: list[str],
+) -> None:
+    graph = networkx.DiGraph()
+    for task_id, _dep_ids in tasks:
+        graph.add_node(task_id)
+    for task_id, dep_ids in tasks:
+        for dep_id in dep_ids:
+            graph.add_edge(dep_id, task_id)
+    assert networkx.is_directed_acyclic_graph(graph)
+    result = list(networkx.topological_sort(graph))
+    assert result == expected_order

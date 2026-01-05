@@ -5,6 +5,7 @@ import uuid
 from typing import Any
 
 from dae.utils import fs_utils
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 
 class FsspecHandler(logging.StreamHandler):
@@ -59,13 +60,7 @@ def configure_task_logging(
     """Configure and return task logging hadnler."""
     if log_dir is None:
         return logging.NullHandler()
-
-    if verbosity == 1:
-        loglevel = logging.INFO
-    elif verbosity >= 2:
-        loglevel = logging.DEBUG
-    else:
-        loglevel = logging.WARNING
+    loglevel = VerbosityConfiguration.verbosity(verbosity)
 
     logfile = fs_utils.join(log_dir, f"log_{task_id}.log")
 
@@ -78,11 +73,11 @@ def configure_task_logging(
     return handler
 
 
-RE_TASK_ID = re.compile(r"[\. /,()\-:;]")
+_RE_TASK_ID = re.compile(r"[\. /,()\-:;]")
 
 
 def safe_task_id(task_id: str) -> str:
-    result = RE_TASK_ID.sub("_", task_id)
+    result = _RE_TASK_ID.sub("_", task_id)
     if len(result) <= 200:
         return result
     result = result[:150]

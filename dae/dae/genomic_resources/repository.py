@@ -932,6 +932,11 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
                 resource, entry.name)
             if state.timestamp != file_timestamp or \
                     state.size != file_size:
+                logger.debug(
+                    "timestamp (%s) or size (%s) mismatch for %s in %s; "
+                    "recomputing md5...",
+                    state.timestamp - file_timestamp, state.size - file_size,
+                    entry.name, resource.resource_id)
                 md5 = None
                 if prebuild_entries and entry.name in prebuild_entries:
                     md5 = prebuild_entries[entry.name].md5
