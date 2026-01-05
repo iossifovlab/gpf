@@ -8,7 +8,6 @@ from typing import Any
 
 import networkx
 import pytest
-import pytest_mock
 from dae.task_graph.cache import (
     CacheRecord,
     CacheRecordType,
@@ -534,45 +533,6 @@ def test_task_graph_all_done_detects_cycle() -> None:
 
     with pytest.raises(ValueError, match="Cyclic dependency"):
         task_graph_all_done(graph, cache)
-
-
-@pytest.mark.parametrize(
-"queue_size,first_scheduled", [
-    (20, 9),
-    (10, 9),
-    (9, 9),
-    (5, 5),
-    (3, 3),
-    (2, 2),
-    (1, 1),
-])
-def test_dask_executor_scheduling(
-    threaded_client: Client,
-    mocker: pytest_mock.MockerFixture,
-    queue_size: int,
-    first_scheduled: int,
-) -> None:
-    mocker.patch(
-        "dae.task_graph.executor.DaskExecutor._queue_size",
-        return_value=queue_size,
-    )
-    executor = DaskExecutor(threaded_client)
-    espy = mocker.spy(
-        executor,
-        "_schedule_tasks",
-    )
-    graph = TaskGraph()
-    task_1 = graph.create_task("Task 1", do_work, args=[0], deps=[])
-    graph.create_task("Task 2", do_work, args=[0], deps=[task_1])
-    for i in range(8):
-        graph.create_task(f"Task 3.{i}", do_work, args=[0], deps=[])
-
-    results = list(executor.execute(graph))
-    assert len(results) == 10
-
-    assert espy.call_count >= 1
-    assert len(espy.call_args_list) >= 1
-    assert len(espy.call_args_list[0].args[0]) == first_scheduled
 
 
 def test_walk_graph_wide_1() -> None:

@@ -73,11 +73,11 @@ def configure_task_logging(
     return handler
 
 
-RE_TASK_ID = re.compile(r"[\. /,()\-:;]")
+_RE_TASK_ID = re.compile(r"[\. /,()\-:;]")
 
 
 def safe_task_id(task_id: str) -> str:
-    result = RE_TASK_ID.sub("_", task_id)
+    result = _RE_TASK_ID.sub("_", task_id)
     if len(result) <= 200:
         return result
     result = result[:150]
