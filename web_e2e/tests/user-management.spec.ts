@@ -140,7 +140,6 @@ test.describe('Users management', () => {
   test('should search and not find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
     await expect(page.locator(`[id="${email}-user-cell"]`)).not.toBeVisible();
