@@ -470,7 +470,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future2task[str(future.key)] = task
         return future
 
-    MIN_QUEUE_SIZE = 400
+    MIN_QUEUE_SIZE = 200
 
     def _queue_size(self) -> int:
         n_workers = cast(
@@ -493,7 +493,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             currently_running.add(future)
             elapsed = time.time() - start
             scheduled += 1
-            if elapsed > 2.0:
+            if elapsed > 10.0:
                 logger.debug(
                     "scheduling took too long (%.2f sec), stopping",
                     elapsed)
@@ -535,7 +535,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                         timeout=0.1,
                     )
                 except TimeoutError:
-                    new_completed = []
+                    new_completed = set()
 
             else:
                 new_completed = set()
