@@ -397,14 +397,22 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
     # pylint: disable=import-outside-toplevel
     from datasets_api.models import Dataset, DatasetHierarchy
 
+    valid_dataset_ids = set()
+
     for data_id in gpf_instance.get_available_data_ids():
         Dataset.recreate_dataset_perm(data_id)
         Dataset.set_broken(data_id, broken=True)
 
-        wdae_study = gpf_instance.get_wdae_wrapper(data_id)
+        try:
+            wdae_study = gpf_instance.get_wdae_wrapper(data_id)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Failed getting wdae wrapper for dataset %s", data_id)
+            continue
         assert wdae_study is not None
         Dataset.set_broken(data_id, broken=False)
         Dataset.update_name(data_id, wdae_study.name)
+        valid_dataset_ids.add(data_id)
 
         for study_id in wdae_study.get_studies_ids(leaves=False):
             if study_id is None or study_id == data_id:
@@ -413,7 +421,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
 
     DatasetHierarchy.clear(gpf_instance.instance_id)
 
-    for data_id in gpf_instance.get_available_data_ids():
+    for data_id in valid_dataset_ids:
         wdae_study = gpf_instance.get_wdae_wrapper(data_id)
         DatasetHierarchy.add_relation(
             gpf_instance.instance_id, data_id, data_id,
