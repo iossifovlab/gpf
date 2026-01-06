@@ -262,9 +262,8 @@ EOT
 
   }
 
-  build_stage "Tests"
+  build_stage "DAE tests"
   {
-    # run dae, wdae, dae integration, demo annotator and vep annotator tests asynchronously
     {
       # dae
       {
@@ -298,7 +297,18 @@ EOT
               --cov dae \
               tests/ || true'
       }
+    }
+    {
+      {
+        build_run_container ctx:ctx_dae wait
+        build_run_container ctx:ctx_dae cp ./results/dae-junit.xml ./test-results/
+      }
+    }
+  }
 
+  build_stage "WDAE tests"
+  {
+    {
       # wdae
       {
         local -A ctx_wdae
@@ -330,7 +340,18 @@ EOT
               --cov wdae \
               wdae || true'
       }
+    }
+    {
+      {
+        build_run_container ctx:ctx_wdae wait
+        build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
+      }
+    }
+  }
 
+  build_stage "Demo annotator tests"
+  {
+    {
       # demo_annotator
       {
         local -A ctx_demo
@@ -362,6 +383,18 @@ EOT
               --cov demo_annotator \
               demo_annotator/ || true'
       }
+    }
+    {
+      {
+        build_run_container ctx:ctx_demo wait
+        build_run_container ctx:ctx_demo cp ./results/demo-annotator-junit.xml ./test-results/
+      }
+    }
+  }
+
+  build_stage "VEP annotator tests"
+  {
+    {
       # vep_annotator
       {
         local -A ctx_vep
@@ -394,39 +427,14 @@ EOT
               vep_annotator/ || true'
       }
     }
-
-    # wait for the asynchronously ran tests to finish and copy their results
     {
-      {
-        build_run_container ctx:ctx_dae wait
-        build_run_container ctx:ctx_dae cp ./results/dae-junit.xml ./test-results/
-      }
-
-      {
-        build_run_container ctx:ctx_wdae wait
-        build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
-      }
-
-      {
-        build_run_container ctx:ctx_demo wait
-        build_run_container ctx:ctx_demo cp ./results/demo-annotator-junit.xml ./test-results/
-      }
-
       {
         build_run_container ctx:ctx_vep wait
         build_run_container ctx:ctx_vep cp ./results/vep-annotator-junit.xml ./test-results/
       }
     }
-
-    # create cobertura report for jenkins and coverage html report for dae, wdae, dae_integ, wdae_integ
-    {
-      # the commands are run in the ctx_wdae_integ context to not rely on host to have the 'coverage' commandline tool
-      build_run_container ctx:ctx_wdae coverage combine dae/.coverage wdae/.coverage
-      build_run_container ctx:ctx_wdae coverage xml
-      build_run_container ctx:ctx_wdae cp coverage.xml ./test-results/
-      build_run_container ctx:ctx_wdae coverage html --title GPF -d ./test-results/coverage-html
-    }
   }
+
 
   build_stage "Package"
   {
