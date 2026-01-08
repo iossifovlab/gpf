@@ -293,7 +293,7 @@ EOT
         build_run ctx:ctx_dae bash -c '
             cd /wd/dae;
             export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test \
               --s3 --http \
               -n 10 \
               --durations 20 \
