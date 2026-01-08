@@ -774,14 +774,18 @@ test.describe('Pheno Measures tests', () => {
 async function selectRole(page: Page, measure: string, role: string): Promise<void> {
   await page.locator('gpf-person-filter').filter({ hasText: measure })
     .getByPlaceholder('Select role').click();
-  await page.locator('mat-option').getByText(role).click();
 
-  await page.waitForResponse(
+  const histogramResponse = page.waitForResponse(
     resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
   );
-  await page.waitForResponse(
+
+  const roleListResponse = page.waitForResponse(
     resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
   );
+
+  await page.locator('mat-option').getByText(role).click();
+  await histogramResponse;
+  await roleListResponse;
 
   await page.waitForSelector('gpf-person-filter .role-wrapper');
 }
@@ -797,14 +801,16 @@ async function checkIfRoleIsEnabled(page: Page, role: string): Promise<void> {
 }
 
 async function removeRole(page: Page, measure: string, role: string): Promise<void> {
-  await page.locator('gpf-person-filter').filter({ hasText: measure })
-    .locator(`#remove-${role}`).click();
-
-  await page.waitForResponse(
+  const histogramResponse = page.waitForResponse(
     resp => resp.url().includes('/api/v3/measures/histogram-beta') && resp.status() === 200
   );
 
-  await page.waitForResponse(
+  const roleListResponse = page.waitForResponse(
     resp => resp.url().includes('/api/v3/measures/role-list') && resp.status() === 200
   );
+  await page.locator('gpf-person-filter').filter({ hasText: measure })
+    .locator(`#remove-${role}`).click();
+
+  await histogramResponse;
+  await roleListResponse;
 }

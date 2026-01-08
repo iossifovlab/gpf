@@ -42,10 +42,9 @@ test.describe('Management tests for reset password in Users', () => {
     await navigateToManagement(page);
     await utils.createUser(page, email, username);
 
-    await Promise.all([
-      await page.locator('#log-out-button').click(),
-      await page.waitForResponse(resp => resp.url().includes('logout') && resp.status() === 204)
-    ]);
+    const logoutResponse = page.waitForResponse(resp => resp.url().includes('logout') && resp.status() === 204);
+    await page.locator('#log-out-button').click();
+    await logoutResponse;
 
     await page.locator('#log-in-button').click();
     await page.locator('#forgotten-password').click();
@@ -718,13 +717,12 @@ async function deleteGroup(page: Page, name: string): Promise<void> {
   await searchInTable(page, name);
   await page.locator(`[id="${name}-delete-group-button"]`).click();
 
-  await Promise.all([
-    await page.getByRole('button', { name: 'Delete', exact: true }).click(),
-    await page.waitForResponse(resp =>
-      (resp.url().includes('revoke-permission') && resp.status() === 200)
-      || (resp.url().includes('remove-user') && resp.status() === 204)
-    )
-  ]);
+  const permissionResponse = page.waitForResponse(resp =>
+    (resp.url().includes('revoke-permission') && resp.status() === 200)
+    || (resp.url().includes('remove-user') && resp.status() === 204)
+  );
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await permissionResponse;
 
   await expect(page.locator(`[id="${name}-group-cell"]`)).not.toBeVisible();
 }
@@ -755,12 +753,11 @@ async function deleteUser(page: Page, email: string): Promise<void> {
   await searchInTable(page, email);
   await page.locator(`[id="${email}-delete-user-button"]`).click();
 
-  await Promise.all([
-    await page.getByRole('button', { name: 'Delete', exact: true }).click(),
-    await page.waitForResponse(
-      resp => resp.request().method() === 'DELETE' && resp.status() === 204
-    )
-  ]);
+  const deleteResponse = page.waitForResponse(
+    resp => resp.request().method() === 'DELETE' && resp.status() === 204
+  );
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await deleteResponse;
 }
 
 async function searchInTable(page: Page, name: string): Promise<void> {
