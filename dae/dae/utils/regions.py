@@ -188,6 +188,14 @@ class Region:
     def end(self) -> int | None:
         return self.stop
 
+    def to_bed_region(self) -> BedRegion:
+        """Convert to BedRegion if possible."""
+        if self.start is None or self.stop is None:
+            raise ValueError(
+                f"Cannot convert {self} to BedRegion with undefined start/stop")
+
+        return BedRegion(self.chrom, self.start, self.stop)
+
     def __repr__(self) -> str:
         if self.start is None:
             return self.chrom
