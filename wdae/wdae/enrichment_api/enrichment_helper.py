@@ -26,7 +26,10 @@ from dae.enrichment_tool.gene_weights_background import (
 )
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import (
+    GenomicResourceRepo,
+    parse_resource_id_version,
+)
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
@@ -104,10 +107,15 @@ class EnrichmentHelper(BaseEnrichmentHelper):
         """
         enrichment_config = self.study.enrichment_config
         assert enrichment_config is not None
-
+        background_id: str
         if enrichment_config["default_background_model"]:
-            return str(enrichment_config["default_background_model"])
-        return str(enrichment_config["selected_background_models"][0])
+            background_id = str(
+                enrichment_config["default_background_model"])
+        else:
+            background_id = str(
+                enrichment_config["selected_background_models"][0])
+        resource_id, _ = parse_resource_id_version(background_id)
+        return resource_id
 
     def get_default_counting_model(self) -> str:
         enrichment_config = self.study.enrichment_config
@@ -187,7 +195,7 @@ class EnrichmentHelper(BaseEnrichmentHelper):
         background = self._build_background_from_resource(background_id)
         background.load()
 
-        self._BACKGROUNDS_CACHE[background_id] = background
+        self._BACKGROUNDS_CACHE[background.resource_id] = background
         return background
 
     def create_counter(self, counter_id: str) -> CounterBase:
