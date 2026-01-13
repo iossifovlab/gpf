@@ -17,6 +17,8 @@ from dae.genomic_resources.repository import (
     Manifest,
     ReadOnlyRepositoryProtocol,
     is_version_constraint_satisfied,
+    parse_resource_id_version,
+    version_tuple_to_string,
 )
 
 from .fsspec_protocol import build_fsspec_protocol
@@ -243,6 +245,10 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         repository_id: str | None = None,
     ) -> GenomicResource | None:
         """Return requested resource or None if not found."""
+        if version_constraint is None:
+            resource_id, version = parse_resource_id_version(resource_id)
+            if version is not None:
+                version_constraint = f"={version_tuple_to_string(version)}"
         matching_resources: list[GenomicResource] = []
         for res in self.get_all_resources():
             if res.resource_id != resource_id:
@@ -267,6 +273,11 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             self, resource_id: str,
             version_constraint: str | None = None,
             repository_id: str | None = None) -> GenomicResource:
+
+        if version_constraint is None:
+            resource_id, version = parse_resource_id_version(resource_id)
+            if version is not None:
+                version_constraint = f"={version_tuple_to_string(version)}"
 
         remote_resource = self.child.get_resource(
             resource_id, version_constraint, repository_id)

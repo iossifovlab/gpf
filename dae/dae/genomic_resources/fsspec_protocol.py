@@ -39,7 +39,6 @@ from dae.genomic_resources.repository import (
     ResourceFileState,
     is_gr_id_token,
     parse_gr_id_version_token,
-    parse_resource_id_version,
 )
 from dae.utils.helpers import convert_size
 
@@ -380,7 +379,7 @@ class FsspecReadWriteProtocol(
 
         if GR_CONF_FILE_NAME in content:
             res_path = "/".join(path_array)
-            resource_id, version = parse_resource_id_version(res_path)
+            resource_id, version = parse_gr_id_version_token(res_path)
             if resource_id is None:
                 logger.error("bad resource id/version: %s", res_path)
                 return

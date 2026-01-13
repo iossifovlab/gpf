@@ -24,7 +24,7 @@ from dae.genomic_resources.repository import (
     ManifestEntry,
     ReadOnlyRepositoryProtocol,
     ReadWriteRepositoryProtocol,
-    parse_resource_id_version,
+    parse_gr_id_version_token,
     version_tuple_to_string,
 )
 from dae.genomic_resources.repository_factory import (
@@ -448,7 +448,7 @@ def _find_resource(
             return None
 
         rid_ver = os.path.relpath(resource_dir, repo_url)
-        resource_id, version = parse_resource_id_version(rid_ver)
+        resource_id, version = parse_gr_id_version_token(rid_ver)
 
         res = proto.get_resource(
             resource_id,
