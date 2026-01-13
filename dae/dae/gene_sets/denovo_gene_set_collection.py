@@ -248,10 +248,11 @@ class DenovoGeneSetCollection:
         for psc_id in self.config.selected_person_set_collections:
             cache_file = self._cache_file(psc_id, cache_dir)
             content = self.cache[psc_id]
-            content = self._convert_cache_innermost_types(content, set, list)
+            content = self._convert_cache_innermost_types(
+                content, set, list, sort_values=True)
 
             with open(cache_file, "w") as outfile:
-                json.dump(content, outfile)
+                json.dump(content, outfile, sort_keys=True, indent=2)
 
     def load(self, cache_dir: str) -> None:
         """Load cached denovo gene set collection from a cache files."""
