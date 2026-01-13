@@ -16,10 +16,6 @@ def test_parse_gr_id_version_token() -> None:
         parse_gr_id_version_token("(3.2)")
     with pytest.raises(ValueError, match="unexpected value for resource ID"):
         parse_gr_id_version_token("aa*(3.0)")
-    with pytest.raises(ValueError, match="unexpected value for resource ID"):
-        parse_gr_id_version_token("aa(0)")
-    with pytest.raises(ValueError, match="unexpected value for resource ID"):
-        parse_gr_id_version_token("aa(0.2.3)")
 
     assert parse_gr_id_version_token("aa") == ("aa", (0,))
     assert parse_gr_id_version_token("aa(2)") == ("aa", (2,))

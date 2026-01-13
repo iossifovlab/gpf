@@ -83,7 +83,7 @@ def is_gr_id_token(token: str) -> bool:
 
 
 _GR_ID_WITH_VERSION_TOKEN_RE = re.compile(
-    r"([a-zA-Z0-9._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
+    r"([a-zA-Z0-9._-]+)(?:\(([0-9]\d*(?:\.\d+)*)\))?")
 
 
 def parse_gr_id_version_token(token: str) -> tuple[str, tuple[int, ...]]:
@@ -98,10 +98,10 @@ def parse_gr_id_version_token(token: str) -> tuple[str, tuple[int, ...]]:
     if token == "":
         return "", (0, )
 
-    match = _GR_ID_WITH_VERSION_TOKEN_RE.fullmatch(token)
+    match = _RESOURCE_ID_WITH_VERSION_PATH_RE.fullmatch(token)
     if not match:
         raise ValueError(
-            f"unexpected value for resource ID + version: {token}")
+            f"unexpected value for resource ID and version: {token}")
     token = match[1]
     version_string = match[2]
     if version_string:
@@ -112,11 +112,12 @@ def parse_gr_id_version_token(token: str) -> tuple[str, tuple[int, ...]]:
 
 
 _RESOURCE_ID_WITH_VERSION_PATH_RE = re.compile(
-    r"([a-zA-Z0-9/._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
+    r"([a-zA-Z0-9/._-]+)(?:\(([0-9]\d*(?:\.\d+)*)\))?")
 
 
 def parse_resource_id_version(
-        resource_path: str) -> tuple[str, tuple[int, ...]]:
+    resource_path: str,
+) -> tuple[str, tuple[int, ...] | None]:
     """Parse genomic resource id and version path into Id, Version tuple.
 
     An optional version (0,) appened if needed. If present, the version suffix
@@ -126,7 +127,7 @@ def parse_resource_id_version(
     (resource_id, version).
     """
     if resource_path == "":
-        return "", (0,)
+        return "", None
 
     match = _RESOURCE_ID_WITH_VERSION_PATH_RE.fullmatch(resource_path)
     if not match:
@@ -136,7 +137,7 @@ def parse_resource_id_version(
     if version_string:
         version = tuple(map(int, version_string.split(".")))
     else:
-        version = (0,)
+        version = None
     return token, version
 
 
@@ -660,6 +661,11 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         version_constraint: str | None = None,
     ) -> GenomicResource | None:
         """Return requested resource or None if not found."""
+        if version_constraint is None:
+            resource_id, version = parse_resource_id_version(resource_id)
+            if version is not None:
+                version_constraint = f"={version_tuple_to_string(version)}"
+
         matching_resources: list[GenomicResource] = []
         for res in self.get_all_resources():
             if res.resource_id != resource_id:

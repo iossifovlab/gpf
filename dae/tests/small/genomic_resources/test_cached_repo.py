@@ -754,3 +754,51 @@ def test_cache_resources_parallel_workers(
         assert "data1.txt" in cached
         assert "data2.txt" in cached
         assert "data3.txt" in cached
+
+
+@pytest.mark.grr_full
+@pytest.mark.parametrize(
+    "resource_id_version,expected_version", [
+        ("one(1.0)", (1, 0)),
+        ("one(1.1)", (1, 1)),
+        ("one(0)", (0,)),
+    ],
+)
+def test_cache_find_resource_with_version(
+    cache_repository: CacheRepositoryBuilder,
+    resource_id_version: str,
+    expected_version: tuple[int, ...],
+) -> None:
+
+    demo_gtf_content = "TP53\tchr3\t300\t200"
+    with cache_repository({
+            "one": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfilename: genes.gtf",
+                "genes.gtf": demo_gtf_content,
+            },
+            "one(1.0)": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfilename: genes.gtf",
+                "genes.gtf": demo_gtf_content,
+            },
+            "one(1.1)": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfilename: genes.gtf",
+                "genes.gtf": demo_gtf_content,
+            }}) as cache_repo:
+
+        cache_resources(cache_repo, None, workers=1)
+
+        resource = cache_repo.get_resource(resource_id_version)
+        assert resource.version == expected_version
+        assert resource.resource_id == "one"
+
+        cache_proto = resource.proto
+        filesystem = cast(CachingProtocol, cache_proto)\
+            .local_protocol.filesystem
+        base_url = cast(CachingProtocol, cache_proto).local_protocol.url
+
+        resource_path = resource_id_version
+        if expected_version == (0,):
+            resource_path = "one"
+
+        assert filesystem.exists(
+            os.path.join(base_url, resource_path, "genes.gtf"))
