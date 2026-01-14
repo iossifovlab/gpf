@@ -247,10 +247,13 @@ def collect_variant_counts(
     denovo_flag: bool,
 ) -> None:
     """Collect variant gene counts for a given dataset."""
+    started = time.time()
     for idx, v in enumerate(variants, 1):
         if idx % 1000 == 0:
+            elapsed = time.time() - started
             logger.info(
-                "%s: Counted %s variants from %s", dataset_id, idx, dataset_id,
+                "%s: Counted %s variants from %s in %.2f seconds",
+                dataset_id, idx, dataset_id, elapsed,
             )
         count_variant(
             v, dataset_id, variant_counts, config, person_ids,

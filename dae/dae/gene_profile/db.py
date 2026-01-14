@@ -560,7 +560,8 @@ class GeneProfileDBWriter:
     def update_gps_with_values(self, gs_values: dict[str, Any]) -> None:
         """Update gp statistic with values"""
         with duckdb.connect(f"{self.dbfile}") as connection:
-            for gs, vals in gs_values.items():
+            started = time.time()
+            for idx, (gs, vals) in enumerate(gs_values.items(), 1):
                 query = update(
                     self.table,
                     vals,
@@ -570,4 +571,9 @@ class GeneProfileDBWriter:
                     ).eq(gs),
                 )
                 connection.execute(to_duckdb_transpile(query))
+                if idx % 1000 == 0:
+                    elapsed = time.time() - started
+                    logger.info(
+                        "Updated %s/%s GP statistics in %.2f seconds",
+                        idx, len(gs_values), elapsed)
             connection.commit()
