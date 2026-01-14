@@ -189,8 +189,9 @@ class EnrichmentHelper(BaseEnrichmentHelper):
         self, background_id: str,
     ) -> BaseEnrichmentBackground:
         """Construct and return an enrichment background."""
-        if background_id in self._BACKGROUNDS_CACHE:
-            return self._BACKGROUNDS_CACHE[background_id]
+        resource_id, _ = parse_resource_id_version(background_id)
+        if resource_id in self._BACKGROUNDS_CACHE:
+            return self._BACKGROUNDS_CACHE[resource_id]
 
         background = self._build_background_from_resource(background_id)
         background.load()
