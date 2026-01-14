@@ -98,8 +98,8 @@ def grr() -> GenomicResourceRepo:
                     filename: data.mem
                     separator: "\t"
                     scores:
-                    - id: gene_weight
-                      name: CodingLenBackground
+                    - id: CodingLenBackground
+                      column_name: gene_weight
                       desc: Gene coding length enrichment background model
                       histogram:
                         type: number

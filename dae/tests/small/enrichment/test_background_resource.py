@@ -48,8 +48,8 @@ def test_background_gene_score_resource_simple() -> None:
             filename: data.mem
             separator: "\t"
             scores:
-            - id: gene_coding_length
-              name: coding length background
+            - id: coding length background
+              name: gene_coding_length
               desc: Gene coding length enrichment background model
               histogram:
                 type: number

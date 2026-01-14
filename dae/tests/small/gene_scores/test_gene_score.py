@@ -30,6 +30,7 @@ def scores_repo() -> GenomicResourceRepo:
                 filename: linear.csv
                 scores:
                 - id: linear score
+                  column_name: linear_score
                   desc: linear gene score
                   histogram:
                     type: number
@@ -38,7 +39,7 @@ def scores_repo() -> GenomicResourceRepo:
                     y_log_scale: false
                 """,
             "linear.csv": textwrap.dedent("""
-                gene,linear score
+                gene,linear_score
                 G1,1
                 G2,2
                 G3,3
@@ -71,6 +72,7 @@ def scores_repo() -> GenomicResourceRepo:
                 filename: log.csv
                 scores:
                 - id: log
+                  column_name: log_score
                   desc: log gene score
                   histogram:
                     type: number
@@ -83,7 +85,7 @@ def scores_repo() -> GenomicResourceRepo:
                     y_log_scale: false
                 """,
             "log.csv": textwrap.dedent("""
-                gene,log
+                gene,log_score
                 G1,0
                 G2,0.0001
                 G3,0.001
@@ -118,6 +120,7 @@ def scores_repo() -> GenomicResourceRepo:
                 filename: scores.csv
                 scores:
                 - id: score1
+                  column_name: score_1
                   desc: linear gene score
                   histogram:
                     type: number
@@ -126,7 +129,7 @@ def scores_repo() -> GenomicResourceRepo:
                     y_log_scale: false
                 """,
             "scores.csv": textwrap.dedent("""
-                gene,score1
+                gene,score_1
                 G1,1
                 G2,2
                 G3,nan
@@ -521,7 +524,7 @@ def test_gene_scores_db_build_descs_from_score(
     assert isinstance(score_descs[0], ScoreDesc)
     assert score_descs[0].score_id == "linear score"
     assert score_descs[0].resource_id == "LinearHist"
-    assert score_descs[0].name == "linear score"
+    assert score_descs[0].column_name == "linear_score"
     assert score_descs[0].description == "linear gene score"
     assert isinstance(score_descs[0].hist, NumberHistogram)
     assert score_descs[0].help is not None
@@ -606,7 +609,7 @@ def test_score_desc_properties(scores_repo: GenomicResourceRepo) -> None:
 
     assert score_desc.resource_id == "LinearHist"
     assert score_desc.score_id == "linear score"
-    assert score_desc.name == "linear score"
+    assert score_desc.column_name == "linear_score"
     assert isinstance(score_desc.hist, NumberHistogram)
     assert score_desc.description == "linear gene score"
     assert score_desc.help is not None

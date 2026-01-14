@@ -176,7 +176,11 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
 
     @property
     def name(self) -> str:
-        return self.gene_score.score_definitions[self.score_id].name
+        return self.gene_score.score_definitions[self.score_id].score_id
+
+    @property
+    def column_name(self) -> str:
+        return self.gene_score.score_definitions[self.score_id].column_name
 
     @property
     def resource_id(self) -> str:
@@ -202,11 +206,10 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
             return
 
         self._gene_weights = {}
-        score_id = self.score_id
         for row in self.gene_score.df.iterrows():
             self._gene_weights[row[1]["gene"]] = \
-                float(row[1][score_id])
-        self._total = float(self.gene_score.df[score_id].sum())
+                float(row[1][self.column_name])
+        self._total = float(self.gene_score.df[self.column_name].sum())
 
     def genes_weight(self, genes: Iterable[str]) -> float:
         assert self._gene_weights is not None

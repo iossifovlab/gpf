@@ -103,8 +103,8 @@ def grr() -> GenomicResourceRepo:
                     filename: data.mem
                     separator: "\t"
                     scores:
-                    - id: gene_weight
-                      name: CodingLenBackground
+                    - id: CodingLenBackground
+                      name: gene_weight
                       desc: Gene coding length enrichment background model
                       histogram:
                         type: number
@@ -168,8 +168,8 @@ def t4c8_fixture(
         filename: coding_len_background.tsv
         separator: "\t"
         scores:
-        - id: gene_weight
-          name: t4c8CodingLenBackground
+        - id: t4c8CodingLenBackground
+          name: gene_weight
           desc: Gene coding length enrichment background model
           histogram:
             type: number
