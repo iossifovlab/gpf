@@ -124,8 +124,8 @@ def setup_t4c8_grr(
             filename: coding_len_background.tsv
             separator: "\t"
             scores:
-            - id: gene_weight
-              name: t4c8CodingLenBackground
+            - id: t4c8CodingLenBackground
+              column_name: gene_weight
               histogram:
                 type: number
                 number_of_bins: 10

@@ -28,7 +28,7 @@ class GeneScoresListView(QueryBaseView):
             [
                 {
                     "score": score.score_id,
-                    "desc": f"{score.name} - {score.description}",
+                    "desc": f"{score.score_id} - {score.description}",
                     "bars": score.hist.bars,
                     "bins": score.hist.bins,
                     "xscale":
@@ -65,7 +65,7 @@ class HistogramView(QueryBaseView):
             [
                 {
                     "score": score.score_id,
-                    "desc": f"{score.name} - {score.description}",
+                    "desc": f"{score.score_id} - {score.description}",
                     "histogram": score.hist.to_dict(),
                     "help": score.help,
                     "small_values_desc": score.small_values_desc,
@@ -79,7 +79,7 @@ class HistogramView(QueryBaseView):
 class GeneScoresDownloadView(QueryBaseView):
     """Serves gene scores download requests."""
 
-    def get(self, _request: Request, score: str) -> Response:
+    def get(self, _request: Request, score: str) -> StreamingHttpResponse:
         """Serve a gene score download request."""
         score_desc = self.gpf_instance.get_gene_score_desc(score)
         gene_score = score_desc.resource_id

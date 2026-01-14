@@ -37,7 +37,7 @@ class ScoreDef:
     """Class used to represent a gene score definition."""
 
     score_id: str
-    name: str
+    column_name: str
     desc: str
 
     hist_conf: NumberHistogramConfig | CategoricalHistogramConfig | None
@@ -83,7 +83,16 @@ class GeneScore(
 
         for score_conf in self.config["scores"]:
             score_id = score_conf["id"]
-            score_name = score_conf.get("name", score_id)
+            deprecated_name = score_conf.get("name", None)
+            if deprecated_name is not None:
+                logger.warning(
+                    "The 'name' field in gene score definitions is "
+                    "deprecated. Please use 'column_name' instead. "
+                    "Resource: %s, score id: %s",
+                    self.resource.resource_id, score_id)
+                score_name = deprecated_name
+            else:
+                score_name = score_conf.get("column_name", score_id)
             hist_conf = build_histogram_config(score_conf)
 
             if not isinstance(
@@ -95,8 +104,8 @@ class GeneScore(
 
             if isinstance(hist_conf, NumberHistogramConfig) and \
                     not hist_conf.has_view_range():
-                min_value = self.get_min(score_id)
-                max_value = self.get_max(score_id)
+                min_value = self.get_min(score_name)
+                max_value = self.get_max(score_name)
                 hist_conf.view_range = (min_value, max_value)
 
             self.score_definitions[score_conf["id"]] = ScoreDef(
@@ -118,7 +127,8 @@ class GeneScore(
 
     def get_values(self, score_id: str) -> list[float]:
         """Return a list of score values."""
-        return cast(list[float], list(self.df[score_id].values))
+        score_name = self.score_definitions[score_id].column_name
+        return cast(list[float], list(self.df[score_name].values))
 
     def _get_hist_conf(self, score_id: str) -> NumberHistogramConfig | None:
         if score_id not in self.score_definitions:
@@ -164,7 +174,8 @@ class GeneScore(
         a score between a min and max value or
         genes with certain gene score values."""
         score_value_df = self.get_score_df(score_id)
-        df = score_value_df[score_id]
+        col_name = self.score_definitions[score_id].column_name
+        df = score_value_df[col_name]
         if values is None:
             if score_min is None:
                 score_min = float("-inf")
@@ -178,7 +189,7 @@ class GeneScore(
             genes = score_value_df[index].gene
         else:
             genes = score_value_df.loc[
-                score_value_df[score_id].isin([float(v) for v in values])
+                score_value_df[col_name].isin([float(v) for v in values])
             ].gene
         return set(genes.values)
 
@@ -191,10 +202,11 @@ class GeneScore(
 
     def _to_dict(self, score_id: str) -> dict[str, Any]:
         """Return dictionary of all defined scores keyed by gene symbol."""
+        col_name = self.score_definitions[score_id].column_name
+        df = self.get_score_df(score_id)
         return cast(
             dict[str, Any],
-            self.get_score_df(
-                score_id).set_index("gene")[score_id].to_dict())
+            df.set_index("gene")[col_name].to_dict())
 
     def get_gene_value(
             self, score_id: str, gene_symbol: str) -> float | None:
@@ -214,7 +226,8 @@ class GeneScore(
         return outbuf.getvalue().splitlines(keepends=True)
 
     def get_score_df(self, score_id: str) -> pd.DataFrame:
-        return self.df[["gene", score_id]].dropna()
+        column_name = self.score_definitions[score_id].column_name
+        return self.df[["gene", column_name]].dropna()
 
     @property
     def files(self) -> set[str]:
@@ -231,6 +244,7 @@ class GeneScore(
                 "schema": {
                     "id": {"type": "string"},
                     "name": {"type": "string"},
+                    "column_name": {"type": "string"},
                     "desc": {"type": "string"},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
@@ -331,7 +345,7 @@ class ScoreDesc:
 
     resource_id: str
     score_id: str
-    name: str
+    column_name: str
     hist: NumberHistogram
     description: str
     help: str
@@ -411,7 +425,7 @@ class GeneScoresDb:
             result.append(ScoreDesc(
                 resource_id=gene_score.resource.resource_id,
                 score_id=score_id,
-                name=score_def.name,
+                column_name=score_def.column_name,
                 hist=gene_score.get_score_histogram(score_id),
                 description=score_def.desc,
                 help=help_doc,
