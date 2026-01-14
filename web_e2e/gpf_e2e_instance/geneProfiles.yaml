@@ -48,9 +48,9 @@ gene_scores:
 - category: protection_scores
   display_name: Protection Scores
   scores:
-  - score_name: RVIS rank
+  - score_name: RVIS_rank
     format: "%%s"
-  - score_name: LGD rank
+  - score_name: LGD_rank
     format: "%%s"
   - score_name: pLI_rank
     format: "%%s"
