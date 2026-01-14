@@ -1,4 +1,5 @@
 import logging
+import time
 from copy import copy
 from typing import Any
 
@@ -541,6 +542,7 @@ class GeneProfileDBWriter:
         gps: list[GPStatistic],
     ) -> None:
         """Insert multiple GPStatistics into the DB."""
+        started = time.time()
         with duckdb.connect(f"{self.dbfile}") as connection:
             self._clear_gp_table(connection)
             gp_count = len(gps)
@@ -548,8 +550,10 @@ class GeneProfileDBWriter:
                 self.insert_gp(gp, connection)
 
                 if idx % 1000 == 0:
+                    elapsed = time.time() - started
                     logger.info(
-                        "Inserted %s/%s GPs into DB", idx, gp_count)
+                        "Inserted %s/%s GPs into DB in %.2f seconds",
+                        idx, gp_count, elapsed)
             logger.info("Done!")
             connection.commit()
 
