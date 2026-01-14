@@ -164,7 +164,9 @@ class DenovoGeneSetCollection:
         ]
         variants = genotype_data.query_variants(
             effect_types=effect_types,
-            inheritance=["denovo"])
+            inheritance=["denovo"],
+            unique_family_variants=False,
+        )
 
         for fv in variants:
             for fa in fv.family_alt_alleles:
