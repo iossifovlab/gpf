@@ -365,7 +365,7 @@ test.describe('Pheno tool download tests', () => {
   [
     {
       id: '16', measure: 'instrument_1.age',
-      geneScore: 'LGD rank - Gene rank after sorting by LGD vulnerability score',
+      geneScore: 'LGD_rank - Gene rank after sorting by LGD vulnerability score',
       geneScoresHistogramFromTo: ['2944', '14716']
     },
     {

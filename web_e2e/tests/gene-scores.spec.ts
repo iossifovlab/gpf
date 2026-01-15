@@ -30,10 +30,10 @@ test.describe('Gene scores tests', () => {
     await expect(page.locator('input#to-input-field')).toBeVisible();
   });
 
-  test('should have working from/to step up/down buttons in RVIS rank', async({ page }) => {
+  test('should have working from/to step up/down buttons in RVIS_rank', async({ page }) => {
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS rank - Gene rank after sorting by RVIS intolerance score');
+      .selectOption('RVIS_rank - Gene rank after sorting by RVIS intolerance score');
 
     await expect(page.locator('input#from-input-field')).toHaveValue('1');
     await expect(page.locator('input#to-input-field')).toHaveValue('16640');
@@ -85,11 +85,11 @@ test.describe('Gene scores tests', () => {
     await expect(page.locator('input#to-input-field')).toHaveValue('1');
   });
 
-  test('should filter variants when RVIS rank gene score is selected', async({ page }) => {
+  test('should filter variants when RVIS_rank gene score is selected', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
     await page.click('#gene-scores');
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS rank - Gene rank after sorting by RVIS intolerance score');
+      .selectOption('RVIS_rank - Gene rank after sorting by RVIS intolerance score');
 
     await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
 
@@ -99,10 +99,10 @@ test.describe('Gene scores tests', () => {
     await expect(page.locator('#variants-count-span')).toHaveText('55 variants selected');
   });
 
-  test('should download RVIS score and compare the file to the reference data', async({ page }) => {
+  test('should download RVIS_score and compare the file to the reference data', async({ page }) => {
     await page.click('#gene-scores');
 
-    await page.locator('gpf-gene-scores select').selectOption('RVIS score - Intolerance of a gene to genetic variants');
+    await page.locator('gpf-gene-scores select').selectOption('RVIS_score - Intolerance of a gene to genetic variants');
     const downloadPromise = page.waitForEvent('download');
     await page.click('gpf-gene-scores .download-link');
     const downloadedFile = await downloadPromise;
@@ -123,7 +123,7 @@ test.describe('Gene scores tests', () => {
   test('should type invalid and valid range start and check error state', async({ page }) => {
     await page.getByRole('tab', { name: 'Gene Scores' }).click();
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+      .selectOption('RVIS_score - Intolerance of a gene to genetic variants');
 
     await page.locator('#from-input-field').clear();
     await page.locator('#from-input-field').pressSequentially('-100');
@@ -144,7 +144,7 @@ test.describe('Gene scores tests', () => {
   test('should reset invalid gene scores state when switching to All tab', async({ page }) => {
     await page.getByRole('tab', { name: 'Gene Scores' }).click();
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+      .selectOption('RVIS_score - Intolerance of a gene to genetic variants');
 
     await page.locator('#from-input-field').clear();
     await page.locator('#from-input-field').pressSequentially('-500');
@@ -285,7 +285,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await expect(page.locator('input#to-input-field')).not.toBeVisible();
 
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+      .selectOption('RVIS_score - Intolerance of a gene to genetic variants');
     await expect(page.getByRole('button', {name: 'Mode'})).not.toBeVisible();
     await expect(page.locator('gpf-histogram')).toBeVisible();
   });
@@ -399,7 +399,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+      .selectOption('RVIS_score - Intolerance of a gene to genetic variants');
     await page.locator('gpf-gene-scores select')
       .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
@@ -417,7 +417,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
 
     await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS score - Intolerance of a gene to genetic variants');
+      .selectOption('RVIS_score - Intolerance of a gene to genetic variants');
     await page.locator('gpf-gene-scores select')
       .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
