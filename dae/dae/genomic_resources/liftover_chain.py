@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from threading import Lock
+from threading import Lock, RLock
 from typing import Any, cast
 
 from pyliftover import LiftOver  # type: ignore
@@ -27,6 +27,8 @@ class LiftoverChain(ResourceConfigValidationMixin):
     def __init__(self, resource: GenomicResource):
 
         self.resource = resource
+        self.lock = RLock()
+
         config = resource.get_config()
         if resource.get_type() != "liftover_chain":
             logger.error(
@@ -61,17 +63,19 @@ class LiftoverChain(ResourceConfigValidationMixin):
 
     def open(self) -> LiftoverChain:
         """Open the liftover chain resource."""
-        if self.is_open():
+        with self.lock:
+            if self.is_open():
+                return self
+
+            filename: str = self.resource.get_config()["filename"]
+            with self.resource.open_raw_file(
+                    filename, "rb", compression=True) as chain_file:
+                self.liftover = LiftOver(chain_file)
             return self
 
-        filename: str = self.resource.get_config()["filename"]
-        with self.resource.open_raw_file(
-                filename, "rb", compression=True) as chain_file:
-            self.liftover = LiftOver(chain_file)
-        return self
-
     def is_open(self) -> bool:
-        return self.liftover is not None
+        with self.lock:
+            return self.liftover is not None
 
     @property
     def files(self) -> set[str]:
@@ -156,7 +160,6 @@ def build_liftover_chain_from_resource(
             return _INMEMORY_CACHE[cache_id]
 
         liftover_chain = LiftoverChain(resource)
-        liftover_chain.open()
 
         _INMEMORY_CACHE[cache_id] = liftover_chain
 
