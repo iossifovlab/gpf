@@ -502,11 +502,13 @@ test.describe('Gene profiles table state tests', () => {
 
     // go to Genotype browser and return to Gene Profiles
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
-    await page.locator('#header a:text("Gene Profiles")').click();
 
-    await page.waitForResponse(
+    const geneProfilesStateResponse = page.waitForResponse(
       resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 200
     );
+
+    await page.locator('#header a:text("Gene Profiles")').click();
+    await geneProfilesStateResponse;
     await checkTable(page);
   });
 
