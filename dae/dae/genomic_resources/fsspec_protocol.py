@@ -514,6 +514,8 @@ class FsspecReadWriteProtocol(
             return None
         with self.filesystem.open(path, "rt", encodings="utf8") as infile:
             content = yaml.safe_load(infile.read())
+            if content is None or not content:
+                return None
             return ResourceFileState(
                 content["filename"],
                 content["size"],
