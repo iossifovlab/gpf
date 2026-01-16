@@ -12,6 +12,7 @@ from dae.task_graph.executor import (
     DaskExecutor,
     SequentialExecutor,
     TaskGraphExecutor,
+    ThreadedTaskExecutor,
     task_graph_all_done,
     task_graph_run,
     task_graph_status,
@@ -40,6 +41,12 @@ class TaskGraphCli:
             help="Number of jobs to run in parallel. Defaults to the number "
             "of processors on the machine")
 
+        executor_group.add_argument(
+            "--thread-pool", "--tp", "--threaded",
+            dest="use_thread_pool", action="store_true",
+            help="Use a thread pool executor with the specified number of "
+            "threads instead of a dask distributed executor.",
+        )
         executor_group.add_argument(
             "-N", "--dask-cluster-name", "--dcn",
             dest="dask_cluster_name",
@@ -112,6 +119,14 @@ class TaskGraphCli:
             assert args.dask_cluster_name is None
             assert args.dask_cluster_config_file is None
             return SequentialExecutor(task_cache=task_cache, **kwargs)
+
+        if args.use_thread_pool:
+            assert args.dask_cluster_name is None
+            assert args.dask_cluster_config_file is None
+            return ThreadedTaskExecutor(
+                n_threads=args.jobs,
+                task_cache=task_cache,
+                **kwargs)
 
         assert args.dask_cluster_name is None or \
             args.dask_cluster_config_file is None
