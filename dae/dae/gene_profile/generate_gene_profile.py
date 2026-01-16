@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from collections.abc import Iterable
+from itertools import batched
 from typing import Any, cast
 
 from box import Box
@@ -380,7 +381,12 @@ def main(
                 idx, gs_count, elapsed)
 
     logger.info("Inserting statistics into DB")
-    gpdb.insert_gps(list(gps.values()))
+    for idx, gene_profiles_batch in enumerate(batched(gps.values(), 1000), 1):
+        logger.info("Inserting batch %d", idx)
+        started = time.time()
+        gpdb.insert_gps(gene_profiles_batch)
+        elapsed = time.time() - started
+        logger.info("Done inserting batch %d, took %.2f seconds", idx, elapsed)
 
     generate_end = time.time()
     elapsed = generate_end - start
@@ -472,8 +478,8 @@ def main(
                     genotype_data.query_variants(
                         genes=genes,
                         inheritance=[
-                            "not denovo and "
-                            "not possible_denovo and not possible_omission",
+                            ("not denovo and "
+                             "not possible_denovo and not possible_omission"),
                             "mendelian or missing",
                         ],
                         frequency_filter=[("af_allele_freq", (None, 1.0))],
