@@ -17,6 +17,7 @@ class QueryRunner(abc.ABC):
     """Run a query in the backround using the provided executor."""
 
     NOBODY_INTEREST_THRESHOLD = 1_000
+    NOBODY_INTEREST_LOG_INTERVAL = 100
 
     def __init__(self, **kwargs: Any):
         super().__init__()
@@ -110,9 +111,10 @@ class QueryRunner(abc.ABC):
                         " result queue",
                         self.study_id)
                     break
-                logger.warning(
-                    "runner (%s) nobody interested %s",
-                    self.study_id, no_interest)
+                if no_interest % self.NOBODY_INTEREST_LOG_INTERVAL == 0:
+                    logger.warning(
+                        "runner (%s) nobody interested %s",
+                        self.study_id, no_interest)
                 if no_interest > self.NOBODY_INTEREST_THRESHOLD:
                     logger.warning(
                         "runner (%s) nobody interested %s"
