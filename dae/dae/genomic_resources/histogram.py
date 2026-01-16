@@ -411,7 +411,7 @@ class NumberHistogram(Statistic):
         import matplotlib.pyplot as plt
         width = self.bins[1:] - self.bins[:-1]
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(15, 10), tight_layout=True)
         ax.bar(
             x=self.bins[:-1], height=self.bars,
             log=self.config.y_log_scale,
@@ -419,7 +419,7 @@ class NumberHistogram(Statistic):
             align="edge")
 
         if self.config.x_log_scale:
-            plt.xscale("log")
+            ax.set_xscale("log")
 
         if (
             small_values_description is not None
@@ -447,16 +447,13 @@ class NumberHistogram(Statistic):
                 style="italic",
             )
 
-        plt.xlabel(f"\n{score_id}")
-        plt.ylabel("count" if y_axis_label is None else y_axis_label)
+        ax.set_xlabel(f"\n{score_id}")
+        ax.set_ylabel("count" if y_axis_label is None else y_axis_label)
 
-        plt.grid(axis="y")
-        plt.grid(axis="x")
+        ax.grid(axis="y")
+        ax.grid(axis="x")
 
-        plt.tight_layout()
-
-        plt.savefig(outfile)
-        plt.clf()
+        fig.savefig(outfile)
         plt.close(fig)
 
     @staticmethod
@@ -705,9 +702,7 @@ class CategoricalHistogram(Statistic):
         values = [str(k) for k in display_values]
         counts = list(display_values.values())
 
-        plt.figure(figsize=(15, 10), tight_layout=True)
-
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(15, 10), tight_layout=True)
         ax.bar(
             x=values,
             height=counts,
@@ -740,8 +735,8 @@ class CategoricalHistogram(Statistic):
                 style="italic",
             )
 
-        plt.xlabel(f"\n{score_id}")
-        plt.ylabel("count" if y_axis_label is None else y_axis_label)
+        ax.set_xlabel(f"\n{score_id}")
+        ax.set_ylabel("count" if y_axis_label is None else y_axis_label)
 
         label_angle = self.config.label_rotation % 360
         if self.config.label_rotation < 0:
@@ -756,10 +751,7 @@ class CategoricalHistogram(Statistic):
                 rotation_mode="default",
             )
 
-        plt.tight_layout()
-
-        plt.savefig(outfile)
-        plt.clf()
+        fig.savefig(outfile)
         plt.close(fig)
 
 

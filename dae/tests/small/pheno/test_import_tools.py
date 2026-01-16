@@ -79,6 +79,7 @@ def test_pheno_import_tool(
     assert mocked_import_func.call_args[0][2] == Namespace(
         verbose=None,
         jobs=None,
+        use_thread_pool=False,
         dask_cluster_name=None,
         dask_cluster_config_file=None,
         task_log_dir=f"{test_dir}/test_out/.task-log/first",

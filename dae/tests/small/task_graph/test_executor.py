@@ -18,6 +18,7 @@ from dae.task_graph.executor import (
     AbstractTaskGraphExecutor,
     DaskExecutor,
     SequentialExecutor,
+    ThreadedTaskExecutor,
     task_graph_all_done,
     task_graph_run,
     task_graph_run_with_results,
@@ -28,19 +29,21 @@ from dask.distributed import Client
 
 
 @pytest.fixture(scope="module")
-def threaded_client() -> Generator[Client, None, None]:
+def dask_client() -> Generator[Client, None, None]:
     # The client needs to be threaded b/c the global ORDER variable is modified
     client = Client(n_workers=4, threads_per_worker=1, processes=False)
     yield client
     client.close()
 
 
-@pytest.fixture(params=["dask", "sequential"])
+@pytest.fixture(params=["dask", "sequential", "threaded"])
 def executor(
-        threaded_client: Client,
+        dask_client: Client,
         request: pytest.FixtureRequest) -> AbstractTaskGraphExecutor:
     if request.param == "dask":
-        return DaskExecutor(threaded_client)
+        return DaskExecutor(dask_client)
+    if request.param == "threaded":
+        return ThreadedTaskExecutor(n_threads=2)
     return SequentialExecutor()
 
 
