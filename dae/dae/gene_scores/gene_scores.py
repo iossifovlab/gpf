@@ -116,6 +116,10 @@ class GeneScore(
                 score_conf.get("small_values_desc"),
                 score_conf.get("large_values_desc"),
             )
+        self.df = self.df.rename(columns={
+            score_def.column_name: score_def.score_id
+            for score_def in self.score_definitions.values()
+        })
 
     def get_min(self, score_id: str) -> float:
         """Return minimal score value."""
@@ -127,8 +131,7 @@ class GeneScore(
 
     def get_values(self, score_id: str) -> list[float]:
         """Return a list of score values."""
-        score_name = self.score_definitions[score_id].column_name
-        return cast(list[float], list(self.df[score_name].values))
+        return cast(list[float], list(self.df[score_id].values))
 
     def _get_hist_conf(self, score_id: str) -> NumberHistogramConfig | None:
         if score_id not in self.score_definitions:
@@ -202,11 +205,10 @@ class GeneScore(
 
     def _to_dict(self, score_id: str) -> dict[str, Any]:
         """Return dictionary of all defined scores keyed by gene symbol."""
-        col_name = self.score_definitions[score_id].column_name
         df = self.get_score_df(score_id)
         return cast(
             dict[str, Any],
-            df.set_index("gene")[col_name].to_dict())
+            df.set_index("gene")[score_id].to_dict())
 
     def get_gene_value(
             self, score_id: str, gene_symbol: str) -> float | None:
@@ -226,8 +228,7 @@ class GeneScore(
         return outbuf.getvalue().splitlines(keepends=True)
 
     def get_score_df(self, score_id: str) -> pd.DataFrame:
-        column_name = self.score_definitions[score_id].column_name
-        return self.df[["gene", column_name]].dropna()
+        return self.df[["gene", score_id]].dropna()
 
     @property
     def files(self) -> set[str]:
