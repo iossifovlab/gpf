@@ -103,7 +103,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 name="gene_list", type="object",
                 description="List of all affected genes.",
                 internal=True,
-                default=False,
+                default=True,
                 params={"gene_list": True},
             ),
             "genes": AttributeDesc(

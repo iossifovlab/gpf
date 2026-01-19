@@ -194,6 +194,7 @@ def test_simple_effect_annotator_handles_none_annotatable(
     assert result == {
         "worst_effect": None,
         "worst_effect_genes": None,
+        "gene_list": None,
     }
 
 
