@@ -177,8 +177,7 @@ class GeneScore(
         a score between a min and max value or
         genes with certain gene score values."""
         score_value_df = self.get_score_df(score_id)
-        col_name = self.score_definitions[score_id].column_name
-        df = score_value_df[col_name]
+        df = score_value_df[score_id]
         if values is None:
             if score_min is None:
                 score_min = float("-inf")
@@ -192,7 +191,7 @@ class GeneScore(
             genes = score_value_df[index].gene
         else:
             genes = score_value_df.loc[
-                score_value_df[col_name].isin([float(v) for v in values])
+                score_value_df[score_id].isin([float(v) for v in values])
             ].gene
         return set(genes.values)
 
