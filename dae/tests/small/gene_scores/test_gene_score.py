@@ -279,6 +279,17 @@ def test_gene_score(scores_repo: GenomicResourceRepo) -> None:
     assert gene_score.get_gene_value("linear score", "G3") == 3
 
 
+def test_gene_score_get_genes(scores_repo: GenomicResourceRepo) -> None:
+
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    assert gene_score is not None
+
+    assert gene_score.get_genes(
+        "linear score", score_min=2, score_max=3) == {"G2", "G3", "G5", "G6"}
+
+
 def test_gene_score_nan(scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("NaNTest")
     gene_score = build_gene_score_from_resource(res)
