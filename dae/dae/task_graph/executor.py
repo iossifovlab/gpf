@@ -475,7 +475,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future2task[str(future.key)] = task
         return future
 
-    MIN_QUEUE_SIZE = 200
+    MIN_QUEUE_SIZE = 700
 
     def _queue_size(self) -> int:
         n_workers = cast(
@@ -672,20 +672,21 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
         start = time.time()
         tasks_to_run = self._select_tasks_to_run(
             self._available_slots(len(currently_running)))
-        logger.debug("scheduling %d tasks", len(tasks_to_run))
-        for task in tasks_to_run:
-            del self._task_queue[task.task_id]
-            future = self._submit_task(task)
-            currently_running.add(future)
-            elapsed = time.time() - start
-            if elapsed > 10.0:
-                logger.debug(
-                    "scheduling took too long (%.2f sec), stopping",
-                    elapsed)
-                break
+        if tasks_to_run:
+            logger.debug("scheduling %d tasks", len(tasks_to_run))
+            for task in tasks_to_run:
+                del self._task_queue[task.task_id]
+                future = self._submit_task(task)
+                currently_running.add(future)
+                elapsed = time.time() - start
+                if elapsed > 10.0:
+                    logger.debug(
+                        "scheduling took too long (%.2f sec), stopping",
+                        elapsed)
+                    break
 
-        elapsed = time.time() - start
-        logger.debug("currently running %d tasks", len(currently_running))
+            elapsed = time.time() - start
+            logger.debug("currently running %d tasks", len(currently_running))
         return currently_running
 
     def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
@@ -705,9 +706,12 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
                 self._executor._work_queue.qsize())  # noqa: SLF001
             not_completed = self._schedule_tasks(not_completed)
 
-            for future in as_completed(not_completed):
-                not_completed.remove(future)
-                completed.append(future)
+            try:
+                for future in as_completed(not_completed, timeout=0.25):
+                    not_completed.remove(future)
+                    completed.append(future)
+            except TimeoutError:
+                pass
 
             start = time.time()
             processed: list[tuple[Task, Any]] = []
