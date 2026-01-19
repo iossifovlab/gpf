@@ -216,7 +216,7 @@ def test_add_statistics_build_tasks_creates_min_max_tasks() -> None:
     impl = build_score_implementation_from_resource(res)
     graph = TaskGraph()
 
-    tasks = impl.add_statistics_build_tasks(graph, region_size=0)
+    tasks = impl.add_statistics_build_tasks(graph, region_size=10)
 
     assert len(tasks) == 1
     save_task = tasks[0]
@@ -263,7 +263,7 @@ def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
     impl = build_score_implementation_from_resource(res)
     graph = TaskGraph()
 
-    impl.add_statistics_build_tasks(graph, region_size=0)
+    impl.add_statistics_build_tasks(graph, region_size=10)
 
     task_ids = {task.task_id for task in graph.tasks}
     assert not any("merge_min_max" in task_id for task_id in task_ids)
@@ -299,7 +299,7 @@ def test_add_min_max_tasks_builds_graph() -> None:
 
     calc_tasks = impl.add_statistics_build_tasks(
         graph,
-        region_size=0,
+        region_size=10,
     )
 
     assert len(calc_tasks) == 1
@@ -332,7 +332,7 @@ def test_add_histogram_tasks_skip_null_histograms_and_link_minmax() -> None:
 
     calc_tasks = impl.add_statistics_build_tasks(
         graph,
-        region_size=0,
+        region_size=10,
     )
 
     assert len(calc_tasks) == 1

@@ -86,11 +86,53 @@ class GenomicScoreImplementation(
     def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_statistics_info(self)
 
+    @staticmethod
+    def _do_noregion_histograms(
+        resource: GenomicResource,
+    ) -> None:
+        impl = build_score_implementation_from_resource(resource)
+        all_min_max_scores, all_hist_confs = \
+            impl._unpack_score_defs(resource)  # noqa: SLF001
+
+        if all_min_max_scores:
+            min_max_result = GenomicScoreImplementation._do_min_max(
+                resource,
+                all_min_max_scores,
+                None,
+                None,
+                None,
+            )
+            all_hist_confs = \
+                GenomicScoreImplementation._update_hist_confs(
+                    all_hist_confs, min_max_result)
+        hist_result = GenomicScoreImplementation._do_histogram(
+            resource,
+            all_hist_confs,
+            None,
+            None,
+            None,
+        )
+        GenomicScoreImplementation._save_histograms(
+            resource,
+            hist_result,
+        )
+
     def add_statistics_build_tasks(
         self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         region_size = kwargs.get("region_size", 3_000_000_000)
         grr = kwargs.get("grr")
+
+        if region_size <= 0:
+            # No regions; compute histograms directly.
+            return [
+                task_graph.create_task(
+                    f"{self.resource.get_full_id()}_noregion_histograms",
+                    GenomicScoreImplementation._do_noregion_histograms,
+                    args=[self.resource],
+                    deps=[],
+                ),
+            ]
 
         with self.score.open():
             regions = self._get_chrom_regions(region_size, grr)
