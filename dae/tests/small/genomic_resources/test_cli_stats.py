@@ -484,7 +484,7 @@ def test_reference_genome_usage(
     cli_manage([
         "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
     ])
-    assert ref_genome_length_mock.call_count == 6
+    assert ref_genome_length_mock.call_count == 3
 
     labels_mock = mocker.Mock(return_value={})
     mocker.patch(
@@ -508,8 +508,8 @@ def test_reference_genome_usage(
         "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
     ])
 
-    assert genomic_table_length_mock.call_count == 6
-    assert ref_genome_length_mock.call_count == 6
+    assert genomic_table_length_mock.call_count == 3
+    assert ref_genome_length_mock.call_count == 3
 
 
 def test_stats_categorical(tmp_path: pathlib.Path) -> None:

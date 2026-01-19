@@ -220,19 +220,20 @@ def test_add_statistics_build_tasks_creates_min_max_tasks() -> None:
 
     assert len(tasks) == 1
     save_task = tasks[0]
-    assert save_task.func is GenomicScoreImplementation._save_histograms
+    assert save_task.func is \
+        GenomicScoreImplementation._merge_and_save_histograms
 
     task_ids = {task.task_id for task in graph.tasks}
     assert any("calculate_min_max" in task_id for task_id in task_ids)
     merge_task = next(
         task for task in graph.tasks if task.task_id.endswith("_merge_min_max")
     )
-    update_task = next(
+    calc_task = next(
         task
         for task in graph.tasks
-        if task.task_id.endswith("_update_hist_confs")
+        if task.task_id.startswith("_calculate_histogram")
     )
-    assert merge_task in update_task.deps
+    assert merge_task in calc_task.deps
 
 
 def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
@@ -266,12 +267,12 @@ def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
 
     task_ids = {task.task_id for task in graph.tasks}
     assert not any("merge_min_max" in task_id for task_id in task_ids)
-    update_task = next(
+    calc_task = next(
         task
         for task in graph.tasks
-        if task.task_id.endswith("_update_hist_confs")
+        if task.task_id.startswith("_calculate_histogram")
     )
-    assert update_task.deps == []
+    assert calc_task.deps == []
 
 
 def test_add_min_max_tasks_builds_graph() -> None:
@@ -296,17 +297,15 @@ def test_add_min_max_tasks_builds_graph() -> None:
     impl = build_score_implementation_from_resource(res)
     graph = TaskGraph()
 
-    calc_tasks, merge_task = impl._add_min_max_tasks(
+    calc_tasks = impl.add_statistics_build_tasks(
         graph,
-        ["value"],
         region_size=0,
     )
 
     assert len(calc_tasks) == 1
     calculate_task = calc_tasks[0]
-    assert calculate_task.func is GenomicScoreImplementation._do_min_max
-    assert merge_task.func is GenomicScoreImplementation._merge_min_max
-    assert calculate_task in merge_task.deps
+    assert calculate_task.func is \
+        GenomicScoreImplementation._merge_and_save_histograms
 
 
 def test_add_histogram_tasks_skip_null_histograms_and_link_minmax() -> None:
@@ -331,42 +330,15 @@ def test_add_histogram_tasks_skip_null_histograms_and_link_minmax() -> None:
     impl = build_score_implementation_from_resource(res)
     graph = TaskGraph()
 
-    minmax_task = graph.create_task(
-        "dummy_minmax",
-        lambda: {"value": MinMaxValue("value", 0.1, 0.2)},
-        args=[],
-        deps=[],
-    )
-
-    hist_confs: dict[str, HistogramConfig] = {
-        "value": NumberHistogramConfig((None, None)),
-        "skip": NullHistogramConfig("disabled"),
-    }
-
-    histogram_tasks, merge_task, save_task = impl._add_histogram_tasks(
+    calc_tasks = impl.add_statistics_build_tasks(
         graph,
-        hist_confs,
-        minmax_task,
         region_size=0,
     )
 
-    assert len(histogram_tasks) == 1
-    histogram_task = histogram_tasks[0]
-    assert histogram_task.func is GenomicScoreImplementation._do_histogram
-
-    update_task = next(
-        task
-        for task in graph.tasks
-        if task.task_id.endswith("_update_hist_confs")
-    )
-    assert minmax_task in update_task.deps
-
-    assert merge_task.func is GenomicScoreImplementation._merge_histograms
-    assert histogram_task in merge_task.deps
-    assert update_task in merge_task.deps
-
-    assert save_task.func is GenomicScoreImplementation._save_histograms
-    assert merge_task in save_task.deps
+    assert len(calc_tasks) == 1
+    calculate_task = calc_tasks[0]
+    assert calculate_task.func is \
+        GenomicScoreImplementation._merge_and_save_histograms
 
 
 def test_calc_statistics_hash_includes_expected_fields() -> None:

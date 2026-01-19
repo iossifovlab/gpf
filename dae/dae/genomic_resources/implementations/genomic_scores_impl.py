@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Iterable
 from typing import Any, ClassVar, cast
 
 import numpy as np
@@ -94,16 +93,51 @@ class GenomicScoreImplementation(
         grr = kwargs.get("grr")
 
         with self.score.open():
+            regions = self._get_chrom_regions(region_size, grr)
             all_min_max_scores, all_hist_confs = \
                 self._unpack_score_defs(self.resource)
 
-            min_max_task = None
+            merge_min_max_task: Task | dict[str, HistogramConfig] \
+                = all_hist_confs
             if all_min_max_scores:
-                _, min_max_task = self._add_min_max_tasks(
-                    task_graph, all_min_max_scores, region_size, grr)
+                min_max_tasks = []
+                for region in regions:
+                    chrom = region.chrom
+                    start = region.start
+                    end = region.stop
+                    min_max_tasks.append(task_graph.create_task(
+                        f"{self.resource.get_full_id()}_calculate_min_max"
+                        f"_{chrom}_{start}_{end}",
+                        GenomicScoreImplementation._do_min_max,
+                        args=[self.resource, all_min_max_scores,
+                              chrom, start, end],
+                        deps=[],
+                    ))
+                merge_min_max_task = task_graph.create_task(
+                    f"{self.resource.get_full_id()}_merge_min_max",
+                    GenomicScoreImplementation._merge_min_max,
+                    args=[all_min_max_scores, all_hist_confs, *min_max_tasks],
+                    deps=[],
+                )
 
-            _, _, save_task = self._add_histogram_tasks(
-                task_graph, all_hist_confs, min_max_task, region_size, grr)
+            histogram_tasks = []
+            for region in regions:
+                chrom = region.chrom
+                start = region.start
+                end = region.stop
+                histogram_tasks.append(task_graph.create_task(
+                    f"{self.resource.get_full_id()}_calculate_histogram_"
+                    f"{chrom}_{start}_{end}",
+                    GenomicScoreImplementation._do_histogram,
+                    args=[self.resource, merge_min_max_task, chrom, start, end],
+                    deps=[],
+                ))
+            save_task = task_graph.create_task(
+                f"{self.resource.get_full_id()}_merge_and_save_histograms",
+                GenomicScoreImplementation._merge_and_save_histograms,
+                args=[self.resource, *histogram_tasks],
+                deps=[],
+            )
 
             return [save_task]
 
@@ -228,40 +262,6 @@ class GenomicScoreImplementation(
     def resource_id(self) -> str:
         return self.score.resource_id
 
-    def _add_min_max_tasks(
-        self,
-        graph: TaskGraph,
-        score_ids: Iterable[str],
-        region_size: int,
-        grr: GenomicResourceRepo | None = None,
-    ) -> tuple[list[Task], Task]:
-        """
-        Add and return calculation, merging and saving tasks for min max.
-
-        The tasks are returned in a triple containing a list of calculation
-        tasks, the merge task and the save task.
-        """
-        min_max_tasks = []
-        regions = self._get_chrom_regions(region_size, grr)
-        for region in regions:
-            chrom = region.chrom
-            start = region.start
-            end = region.stop
-            min_max_tasks.append(graph.create_task(
-                f"{self.resource.get_full_id()}_calculate_min_max"
-                f"_{chrom}_{start}_{end}",
-                GenomicScoreImplementation._do_min_max,
-                args=[self.resource, score_ids, chrom, start, end],
-                deps=[],
-            ))
-        merge_task = graph.create_task(
-            f"{self.resource.get_full_id()}_merge_min_max",
-            GenomicScoreImplementation._merge_min_max,
-            args=[score_ids, *min_max_tasks],
-            deps=[],
-        )
-        return min_max_tasks, merge_task
-
     def _min_max_add_value(
         self, statistic: MinMaxValue,
         value: float,
@@ -294,18 +294,20 @@ class GenomicScoreImplementation(
     @staticmethod
     def _merge_min_max(
         score_ids: list[str],
+        all_hist_confs: dict[str, HistogramConfig],
         *calculate_tasks: dict[str, MinMaxValue],
-    ) -> dict[str, Any]:
-        res: dict[str, MinMaxValue | None] = dict.fromkeys(score_ids)
+    ) -> dict[str, HistogramConfig]:
+        res: dict[str, MinMaxValue] = {}
         for score_id in score_ids:
             for min_max_region in calculate_tasks:
-                if res[score_id] is None:
+                if res.get(score_id) is None:
                     res[score_id] = min_max_region[score_id]
                 else:
                     assert res[score_id] is not None
-                    res[score_id].merge(  # type: ignore
+                    res[score_id].merge(
                         min_max_region[score_id])
-        return res
+        return GenomicScoreImplementation._update_hist_confs(
+            all_hist_confs, res)
 
     @staticmethod
     def _update_hist_confs(
@@ -330,50 +332,6 @@ class GenomicScoreImplementation(
                 hist_conf.view_range = (min_max.min, min_max.max)
         logger.info("histogram configs updated: %s", all_hist_confs)
         return all_hist_confs
-
-    def _add_histogram_tasks(
-        self, graph: TaskGraph, all_hist_confs: dict[str, HistogramConfig],
-        minmax_task: Task | None,
-        region_size: int, grr: GenomicResourceRepo | None = None,
-    ) -> tuple[list[Task], Task, Task]:
-        """
-        Add histogram tasks for specific score id.
-
-        The histogram tasks are dependant on the provided minmax task.
-        """
-        regions = self._get_chrom_regions(region_size, grr)
-        update_hist_confs = graph.create_task(
-            f"{self.resource.get_full_id()}_update_hist_confs",
-            GenomicScoreImplementation._update_hist_confs,
-            args=[all_hist_confs, minmax_task],
-            deps=[],
-        )
-
-        histogram_tasks = []
-        for region in regions:
-            chrom = region.chrom
-            start = region.start
-            end = region.stop
-            histogram_tasks.append(graph.create_task(
-                f"{self.resource.get_full_id()}_calculate_histogram_"
-                f"{chrom}_{start}_{end}",
-                GenomicScoreImplementation._do_histogram,
-                args=[self.resource, update_hist_confs, chrom, start, end],
-                deps=[],
-            ))
-        merge_task = graph.create_task(
-            f"{self.resource.get_full_id()}_merge_histograms",
-            GenomicScoreImplementation._merge_histograms,
-            args=[self.resource, update_hist_confs, *histogram_tasks],
-            deps=[],
-        )
-        save_task = graph.create_task(
-            f"{self.resource.get_full_id()}_save_histograms",
-            GenomicScoreImplementation._save_histograms,
-            args=[self.resource, merge_task],
-            deps=[],
-        )
-        return histogram_tasks, merge_task, save_task
 
     def _histogram_add_value(
         self, histogram: Histogram,
@@ -436,40 +394,25 @@ class GenomicScoreImplementation(
 
     @staticmethod
     def _merge_histograms(
-        resource: GenomicResource, all_hist_confs: dict[str, HistogramConfig],
+        resource: GenomicResource,  # noqa: ARG004
         *calculated_histograms: dict[str, Any],
     ) -> dict[str, Histogram]:
         result: dict[str, Histogram] = {}
-        for score_id, hist_conf in all_hist_confs.items():
-            result[score_id] = build_empty_histogram(hist_conf)
 
-        for score_id, hist_conf in all_hist_confs.items():
-            if isinstance(hist_conf, NullHistogramConfig):
-                continue
-            try:
-                for histogram_region in calculated_histograms:
-                    if score_id not in histogram_region:
-                        logger.warning(
-                            "region has no histogram for score %s in %s",
-                            score_id, resource.resource_id)
-                        continue
-                    hist = histogram_region[score_id]
-                    if isinstance(result[score_id], NullHistogram):
-                        continue
-                    if isinstance(hist, NullHistogram):
-                        result[score_id] = NullHistogram(NullHistogramConfig(
-                            f"Empty histogram for {score_id} in a region: "
-                            f"{hist.reason}"))
-                    else:
-                        result[score_id].merge(hist)
+        for histogram_region in calculated_histograms:
+            for score_id, hist in histogram_region.items():
+                if result.get(score_id) is None:
+                    result[score_id] = hist
+                    continue
+                if isinstance(result[score_id], NullHistogram):
+                    continue
+                if isinstance(hist, NullHistogram):
+                    result[score_id] = NullHistogram(NullHistogramConfig(
+                        f"Empty histogram for {score_id} in a region: "
+                        f"{hist.reason}"))
+                else:
+                    result[score_id].merge(hist)
 
-            except HistogramError as err:
-                logger.exception(
-                    "Histogram for %s nullified",
-                    score_id,
-                )
-                result[score_id] = NullHistogram(
-                    NullHistogramConfig(str(err)))
         return result
 
     @staticmethod
@@ -496,6 +439,16 @@ class GenomicScoreImplementation(
                     impl.score.score_definitions[score_id].large_values_desc,
                 )
         return merged_histograms
+
+    @staticmethod
+    def _merge_and_save_histograms(
+        resource: GenomicResource,
+        *calculated_histograms: dict[str, Any],
+    ) -> dict[str, Histogram]:
+        merged_histograms = GenomicScoreImplementation._merge_histograms(
+            resource, *calculated_histograms)
+        return GenomicScoreImplementation._save_histograms(
+            resource, merged_histograms)
 
     def calc_info_hash(self) -> bytes:
         """Compute and return the info hash."""

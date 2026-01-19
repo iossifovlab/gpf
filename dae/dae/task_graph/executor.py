@@ -17,6 +17,7 @@ from types import TracebackType
 from typing import Any, cast
 
 import fsspec
+import matplotlib.pyplot as plt
 import networkx
 import psutil
 from dask.distributed import Client, Future
@@ -96,6 +97,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         started = time.time()
         selected_tasks: list[Task] = []
         di_graph = AbstractTaskGraphExecutor._build_di_graph(self._task_queue)
+
         for task_id in networkx.topological_sort(di_graph):
             if task_id not in self._task_queue:
                 break
@@ -305,6 +307,14 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             for dep in task.deps:
                 di_graph.add_edge(dep.task_id, task.task_id)
         return di_graph
+
+    @staticmethod
+    def _draw_di_graph(di_graph: networkx.DiGraph) -> None:
+        plt.figure(figsize=(30, 15))
+        pos = networkx.spring_layout(di_graph)
+        networkx.draw(di_graph, pos, with_labels=True, arrows=True)
+        plt.savefig("task_graph.png")
+        plt.close()
 
     @staticmethod
     def _toplogical_order(
