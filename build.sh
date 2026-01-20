@@ -266,8 +266,107 @@ EOT
 
   }
 
-  build_stage "DAE tests"
+  build_stage "Run Tests"
   {
+    {
+      # wdae
+      {
+        local -A ctx_wdae
+        build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_wdae
+
+        for d in /wd/dae /wd/wdae; do
+          build_run_container ctx:ctx_wdae bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
+        done
+
+        build_run_detached ctx:ctx_wdae bash -c '
+            cd /wd/wdae;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/wdae-junit.xml \
+              --cov wdae \
+              wdae || true'
+      }
+    }
+    {
+      # demo_annotator
+      {
+        local -A ctx_demo
+        build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_demo
+
+        for d in /wd/dae /wd/wdae /wd/external_demo_annotator; do
+          build_run_container ctx:ctx_demo bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
+        done
+
+        build_run_detached ctx:ctx_demo bash -c '
+            cd /wd/external_demo_annotator;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/demo-annotator-junit.xml \
+              --cov demo_annotator \
+              demo_annotator/ || true'
+      }
+    }
+    {
+      # vep_annotator
+      {
+        local -A ctx_vep
+        build_run_ctx_init ctx:ctx_vep "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
+          --env MINIO_HOST="minio" \
+          --env AWS_ACCESS_KEY_ID="minioadmin" \
+          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_vep
+
+        for d in /wd/dae /wd/wdae /wd/external_vep_annotator; do
+          build_run_container ctx:ctx_vep bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
+        done
+
+        build_run_detached ctx:ctx_vep bash -c '
+            cd /wd/external_vep_annotator;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/vep-annotator-junit.xml \
+              --cov vep_annotator \
+              vep_annotator/ || true'
+      }
+    }    
     {
       # dae
       {
@@ -309,84 +408,10 @@ EOT
         build_run_container ctx:ctx_dae cp ./results/dae-junit.xml ./test-results/
       }
     }
-  }
-
-  build_stage "WDAE tests"
-  {
-    {
-      # wdae
-      {
-        local -A ctx_wdae
-        build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
-          --network "${ctx_network["network_id"]}" \
-          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env HTTP_HOST="apache" \
-          --env MINIO_HOST="minio" \
-          --env AWS_ACCESS_KEY_ID="minioadmin" \
-          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
-          --env WDAE_EMAIL_HOST="mailhog"
-
-        defer_ret build_run_ctx_reset ctx:ctx_wdae
-
-        for d in /wd/dae /wd/wdae; do
-          build_run_container ctx:ctx_wdae bash -c \
-            '/opt/conda/bin/conda run --no-capture-output -n gpf \
-                pip install -e "'"${d}"'"'
-        done
-
-        build_run_detached ctx:ctx_wdae bash -c '
-            cd /wd/wdae;
-            export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              -n 5 \
-              --durations 20 \
-              --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/wdae-junit.xml \
-              --cov wdae \
-              wdae || true'
-      }
-    }
     {
       {
         build_run_container ctx:ctx_wdae wait
         build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
-      }
-    }
-  }
-
-  build_stage "Demo annotator tests"
-  {
-    {
-      # demo_annotator
-      {
-        local -A ctx_demo
-        build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
-          --network "${ctx_network["network_id"]}" \
-          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env HTTP_HOST="apache" \
-          --env MINIO_HOST="minio" \
-          --env AWS_ACCESS_KEY_ID="minioadmin" \
-          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
-          --env WDAE_EMAIL_HOST="mailhog"
-
-        defer_ret build_run_ctx_reset ctx:ctx_demo
-
-        for d in /wd/dae /wd/wdae /wd/external_demo_annotator; do
-          build_run_container ctx:ctx_demo bash -c \
-            '/opt/conda/bin/conda run --no-capture-output -n gpf \
-                pip install -e "'"${d}"'"'
-        done
-
-        build_run_detached ctx:ctx_demo bash -c '
-            cd /wd/external_demo_annotator;
-            export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              -n 5 \
-              --durations 20 \
-              --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/demo-annotator-junit.xml \
-              --cov demo_annotator \
-              demo_annotator/ || true'
       }
     }
     {
@@ -395,51 +420,14 @@ EOT
         build_run_container ctx:ctx_demo cp ./results/demo-annotator-junit.xml ./test-results/
       }
     }
-  }
-
-  build_stage "VEP annotator tests"
-  {
-    {
-      # vep_annotator
-      {
-        local -A ctx_vep
-        build_run_ctx_init ctx:ctx_vep "container" "${gpf_dev_image_ref}" \
-          --network "${ctx_network["network_id"]}" \
-          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env HTTP_HOST="apache" \
-          --env MINIO_HOST="minio" \
-          --env AWS_ACCESS_KEY_ID="minioadmin" \
-          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
-          --env WDAE_EMAIL_HOST="mailhog"
-
-        defer_ret build_run_ctx_reset ctx:ctx_vep
-
-        for d in /wd/dae /wd/wdae /wd/external_vep_annotator; do
-          build_run_container ctx:ctx_vep bash -c \
-            '/opt/conda/bin/conda run --no-capture-output -n gpf \
-                pip install -e "'"${d}"'"'
-        done
-
-        build_run_detached ctx:ctx_vep bash -c '
-            cd /wd/external_vep_annotator;
-            export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              -n 5 \
-              --durations 20 \
-              --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/vep-annotator-junit.xml \
-              --cov vep_annotator \
-              vep_annotator/ || true'
-      }
-    }
     {
       {
         build_run_container ctx:ctx_vep wait
         build_run_container ctx:ctx_vep cp ./results/vep-annotator-junit.xml ./test-results/
       }
     }
-  }
 
+  }
 
   build_stage "Package"
   {
