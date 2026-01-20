@@ -534,7 +534,7 @@ class GeneProfileDBWriter:
             for score_id, score in scores.items():
                 insert_map[f"{category}_{score_id}"] = score
 
-        insert_map.update(dict(gp.variant_counts.items()))
+        insert_map.update(gp.variant_counts.items())
 
         return insert_map
 
