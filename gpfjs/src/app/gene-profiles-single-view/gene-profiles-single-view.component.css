@@ -164,10 +164,6 @@ h2 {
   padding-left: 10px;
 }
 
-:host::ng-deep#values-description {
-  bottom: -16px !important;
-}
-
 .disabled-link {
   color: #777;
   pointer-events: none;

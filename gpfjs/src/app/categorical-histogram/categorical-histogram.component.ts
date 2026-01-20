@@ -342,6 +342,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   }
 
   public get viewBox(): string {
+    if (!this.isInteractive) {
+      return `-8 -8 ${this.width} ${this.height}`;
+    }
     let pos = '-30 -8';
     if (this.labelRotation === 0) {
       pos = '-30 -60';

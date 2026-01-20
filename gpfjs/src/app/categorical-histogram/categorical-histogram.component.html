@@ -1,5 +1,7 @@
 <div class="histogram">
-  <div style="position: relative" [ngStyle]="{ height: labelRotation !== 0 ? '30vh' : '21vh' }">
+  <div
+    style="position: relative"
+    [ngStyle]="{ height: labelRotation !== 0 ? '30vh' : isInteractive ? '21vh' : '130px' }">
     <svg style="min-width: 500px" [attr.width]="width" [attr.height]="height" [attr.viewBox]="viewBox">
       <g [attr.transform]="'translate(' + marginLeft + ',' + marginTop + ')'">
         <g
