@@ -11,7 +11,11 @@ from abc import abstractmethod
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Sequence
 from concurrent.futures import Future as TPFuture
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import (
+    ProcessPoolExecutor,
+    ThreadPoolExecutor,
+    as_completed,
+)
 from copy import copy
 from types import TracebackType
 from typing import Any, cast
@@ -614,7 +618,15 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
     ):
         super().__init__(task_cache, **kwargs)
         max_workers = kwargs.get("n_threads", os.cpu_count() or 1)
-        self._executor = ThreadPoolExecutor(max_workers=max_workers)
+        pool = kwargs.get("pool_type", "thread_pool")
+        self._executor: ThreadPoolExecutor | ProcessPoolExecutor
+        if pool == "process_pool":
+            self._executor = ProcessPoolExecutor(max_workers=max_workers)
+        elif pool == "thread_pool":
+            self._executor = ThreadPoolExecutor(max_workers=max_workers)
+        else:
+            raise ValueError(f"wrong pool type: {pool}")
+
         self._task2future: dict[Task, TPFuture] = {}
         self._future2task: dict[TPFuture, Task] = {}
 
@@ -701,9 +713,6 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
 
         not_completed = self._schedule_tasks(not_completed)
         while not_completed or self._task_queue:
-            logger.info(
-                "executor queue: %d tasks",
-                self._executor._work_queue.qsize())  # noqa: SLF001
             not_completed = self._schedule_tasks(not_completed)
 
             try:

@@ -80,6 +80,7 @@ def test_pheno_import_tool(
         verbose=None,
         jobs=None,
         use_thread_pool=False,
+        use_process_pool=False,
         dask_cluster_name=None,
         dask_cluster_config_file=None,
         task_log_dir=f"{test_dir}/test_out/.task-log/first",
