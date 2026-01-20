@@ -337,6 +337,21 @@ def collect_dvc_entries(
     return result
 
 
+def _do_resource_stats_hash_and_manifest(
+    proto: ReadWriteRepositoryProtocol,
+    res: GenomicResource,
+    dry_run: bool,  # noqa: FBT001
+    force: bool,  # noqa: FBT001
+    use_dvc: bool,  # noqa: FBT001
+) -> bool:
+    _store_stats_hash(proto, res)
+    return _do_resource_manifest_command(
+        proto, res,
+        dry_run=dry_run,
+        force=force,
+        use_dvc=use_dvc)
+
+
 def _do_resource_manifest_command(
     proto: ReadWriteRepositoryProtocol,
     res: GenomicResource,
@@ -506,8 +521,10 @@ def _read_stats_hash(
 
 
 def _store_stats_hash(
-        proto: ReadWriteRepositoryProtocol,
-        resource: GenomicResource) -> bool:
+    proto: ReadWriteRepositoryProtocol,
+    resource: GenomicResource,
+    *args: Any,  # noqa: ARG001
+) -> bool:
 
     impl = build_resource_implementation(resource)
     stats_dir = ResourceStatistics.get_statistics_folder()
@@ -539,17 +556,9 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
     tasks = impl.add_statistics_build_tasks(
         graph, region_size=region_size, grr=grr)
 
-    # This is the hack to update stats_hash without recreaing the histograms.
     graph.create_task(
-        f"{impl.resource.get_full_id()}_store_stats_hash",
-        _store_stats_hash,
-        args=[proto, impl.resource],
-        deps=tasks,
-    )
-
-    graph.create_task(
-        f"{impl.resource.get_full_id()}_manifest_rebuild",
-        _do_resource_manifest_command,
+        f"{impl.resource.get_full_id()}_stats_hash_and_manifest_rebuild",
+        _do_resource_stats_hash_and_manifest,
         args=[proto, impl.resource, dry_run, force, use_dvc],
         deps=tasks,
     )
