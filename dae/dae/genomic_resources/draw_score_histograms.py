@@ -8,7 +8,7 @@ from dae.gene_scores.gene_scores import (
 )
 from dae.genomic_resources.cli import (
     _create_proto,
-    _find_resource,
+    _find_resources,
 )
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import (
@@ -78,45 +78,46 @@ def main(
             f"resource management works with RW protocols; "
             f"{proto.proto_id} ({proto.scheme}) is read only")
 
-    res = _find_resource(proto, repo_url, resource=args.resource)
-    if res is None:
+    resourses = _find_resources(proto, repo_url, resource=args.resource)
+    if not resourses:
         print("Resource not found...")
         sys.exit(1)
 
-    assert res.config is not None
-    if res.config.get("type") == "gene_score":
-        gene_score = build_gene_score_from_resource(res)
-        score_descs = GeneScoresDb.build_descs_from_score(gene_score)
+    for res in resourses:
+        assert res.config is not None
+        if res.config.get("type") == "gene_score":
+            gene_score = build_gene_score_from_resource(res)
+            score_descs = GeneScoresDb.build_descs_from_score(gene_score)
 
-        for score_desc in score_descs:
-            image_filename = gene_score.get_histogram_image_filename(
-                score_desc.score_id)
-            plot_histogram(
-                res,
-                image_filename,
-                score_desc.hist,
-                score_desc.score_id,
-                score_desc.small_values_desc,
-                score_desc.large_values_desc,
-            )
-    else:
-        genomic_score = build_score_from_resource(res)
-        score_ids = genomic_score.get_all_scores()
+            for score_desc in score_descs:
+                image_filename = gene_score.get_histogram_image_filename(
+                    score_desc.score_id)
+                plot_histogram(
+                    res,
+                    image_filename,
+                    score_desc.hist,
+                    score_desc.score_id,
+                    score_desc.small_values_desc,
+                    score_desc.large_values_desc,
+                )
+        else:
+            genomic_score = build_score_from_resource(res)
+            score_ids = genomic_score.get_all_scores()
 
-        for score_id in score_ids:
-            hist = genomic_score.get_score_histogram(score_id)
-            if isinstance(hist, NullHistogram):
-                continue
-            image_filename = genomic_score.get_histogram_image_filename(
-                score_id)
-            score_def = genomic_score.score_definitions[score_id]
-            small_values_desc = score_def.small_values_desc
-            large_values_desc = score_def.large_values_desc
-            plot_histogram(
-                res,
-                image_filename,
-                hist,
-                score_id,
-                small_values_desc,
-                large_values_desc,
-            )
+            for score_id in score_ids:
+                hist = genomic_score.get_score_histogram(score_id)
+                if isinstance(hist, NullHistogram):
+                    continue
+                image_filename = genomic_score.get_histogram_image_filename(
+                    score_id)
+                score_def = genomic_score.score_definitions[score_id]
+                small_values_desc = score_def.small_values_desc
+                large_values_desc = score_def.large_values_desc
+                plot_histogram(
+                    res,
+                    image_filename,
+                    hist,
+                    score_id,
+                    small_values_desc,
+                    large_values_desc,
+                )

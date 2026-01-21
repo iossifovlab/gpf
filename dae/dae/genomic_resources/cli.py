@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import sys
+from collections.abc import Sequence
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -407,7 +408,7 @@ def _do_resource_manifest_command(
 
 def _run_repo_manifest_command_internal(
         proto: ReadWriteRepositoryProtocol,
-        resources: list[GenomicResource],
+        resources: Sequence[GenomicResource],
         **kwargs: bool | int | str) -> dict[str, Any]:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
@@ -430,7 +431,7 @@ def _run_repo_manifest_command_internal(
 
 def _run_repo_manifest_command(
     proto: ReadWriteRepositoryProtocol,
-    resources: list[GenomicResource],
+    resources: Sequence[GenomicResource],
     **kwargs: bool | int | str,
 ) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
@@ -445,10 +446,11 @@ def _run_repo_manifest_command(
     return 0
 
 
-def _find_resource(
-        proto: ReadOnlyRepositoryProtocol,
-        repo_url: str,
-        **kwargs: str | bool | int) -> GenomicResource | None:
+def _find_resources(
+    proto: ReadOnlyRepositoryProtocol,
+    repo_url: str,
+    **kwargs: str | bool | int,
+) -> Sequence[GenomicResource]:
     resource_id = cast(str, kwargs.get("resource"))
     if resource_id is not None:
         res = proto.get_resource(resource_id)
@@ -457,13 +459,13 @@ def _find_resource(
             logger.error(
                 "resource not specified but the repository URL %s "
                 "is not local filesystem repository", repo_url)
-            return None
+            return []
 
         cwd = os.getcwd()
         resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME, cwd)
         if resource_dir is None:
             logger.error("Can't find resource starting from %s", cwd)
-            return None
+            return []
 
         rid_ver = os.path.relpath(resource_dir, repo_url)
         resource_id, version = parse_gr_id_version_token(rid_ver)
@@ -471,7 +473,7 @@ def _find_resource(
         res = proto.get_resource(
             resource_id,
             version_constraint=f"={version_tuple_to_string(version)}")
-    return res
+    return [res]
 
 
 def _read_stats_hash(
@@ -561,7 +563,7 @@ def _stats_need_rebuild(
 def _run_repo_stats_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        resources: list[GenomicResource],
+        resources: Sequence[GenomicResource],
         **kwargs: bool | int | str) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
@@ -620,7 +622,7 @@ def _run_repo_stats_command(
 def _run_repo_repair_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        resources: list[GenomicResource],
+        resources: Sequence[GenomicResource],
         **kwargs: str | bool | int) -> int:
     return _run_repo_info_command(repo, proto, resources, **kwargs)
 
@@ -628,7 +630,7 @@ def _run_repo_repair_command(
 def _run_repo_info_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        resources: list[GenomicResource],
+        resources: Sequence[GenomicResource],
         **kwargs: str | bool | int) -> int:
     status = _run_repo_stats_command(repo, proto, resources, **kwargs)
 
@@ -721,42 +723,8 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
         _run_repo_init_command(**vars(args))
         return
 
-    repo_url = args.repository
-    if repo_url is None:
-        repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
-        if repo_url is None:
-            repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME[:-5])
-        if repo_url is None:
-            logger.error(
-                "Can't find repository starting from: %s", os.getcwd())
-            sys.exit(1)
-        repo_url = str(repo_url)
-        print(f"working with repository: {repo_url}")
-
-    extra_definition_path = args.grr
-    if extra_definition_path:
-        if not os.path.exists(extra_definition_path):
-            raise FileNotFoundError(
-                f"Definition {extra_definition_path} not found!",
-            )
-        extra_definition = load_definition_file(extra_definition_path)
-    else:
-        extra_definition = get_default_grr_definition()
-    grr_definition = {
-        "id": "cli_grr",
-        "type": "group",
-        "children": [
-            {
-                "id": "local",
-                "type": "dir",
-                "directory": repo_url,
-            },
-            extra_definition,
-        ],
-    }
-
-    repo = build_genomic_resource_repository(definition=grr_definition)
-
+    repo_url = _get_repo_url(args)
+    repo = _create_grr_repo(args, repo_url)
     proto = _create_proto(repo_url, args.extra_args)
     if command == "list":
         _run_list_command(proto, args)
@@ -766,6 +734,8 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
         raise TypeError(
             f"resource management works with RW protocols; "
             f"{proto.proto_id} ({proto.scheme}) is read only")
+
+    resources: Sequence[GenomicResource]
 
     if command in {"repo-manifest", "repo-stats", "repo-info", "repo-repair"}:
         status = 0
@@ -805,24 +775,24 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
             "resource-manifest", "resource-stats",
             "resource-info", "resource-repair"}:
         status = 0
-        res = _find_resource(proto, repo_url, **vars(args))
-        if res is None:
+        resources = _find_resources(proto, repo_url, **vars(args))
+        if not resources:
             logger.error("resource not found...")
             sys.exit(1)
-        assert res is not None
+        assert resources
         try:
             if command == "resource-manifest":
                 status = _run_repo_manifest_command(
-                    proto, [res], **vars(args))
+                    proto, resources, **vars(args))
             elif command == "resource-stats":
                 status = _run_repo_stats_command(
-                    repo, proto, [res], **vars(args))
+                    repo, proto, resources, **vars(args))
             elif command == "resource-info":
                 status = _run_repo_info_command(
-                    repo, proto, [res], **vars(args))
+                    repo, proto, resources, **vars(args))
             elif command == "resource-repair":
                 status = _run_repo_repair_command(
-                    repo, proto, [res], **vars(args))
+                    repo, proto, resources, **vars(args))
             else:
                 logger.error(
                     "Unknown command %s.", command)
@@ -841,6 +811,51 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
             "Unknown command %s. The known commands are index, "
             "list and histogram", command)
         sys.exit(1)
+
+
+def _create_grr_repo(
+    args: argparse.Namespace,
+    repo_url: str,
+) -> GenomicResourceRepo:
+    extra_definition_path = args.grr
+    if extra_definition_path:
+        if not os.path.exists(extra_definition_path):
+            raise FileNotFoundError(
+                f"Definition {extra_definition_path} not found!",
+            )
+        extra_definition = load_definition_file(extra_definition_path)
+    else:
+        extra_definition = get_default_grr_definition()
+    grr_definition = {
+        "id": "cli_grr",
+        "type": "group",
+        "children": [
+            {
+                "id": "local",
+                "type": "dir",
+                "directory": repo_url,
+            },
+            extra_definition,
+        ],
+    }
+
+    return build_genomic_resource_repository(definition=grr_definition)
+
+
+def _get_repo_url(args: argparse.Namespace) -> str:
+    repo_url = args.repository
+    if repo_url is None:
+        repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
+        if repo_url is None:
+            repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME[:-5])
+        if repo_url is None:
+            logger.error(
+                "Can't find repository starting from: %s", os.getcwd())
+            sys.exit(1)
+        repo_url = str(repo_url)
+        print(f"working with repository: {repo_url}")
+
+    return cast(str, repo_url)
 
 
 def _create_proto(
