@@ -201,12 +201,12 @@ describe('GeneProfileSingleViewComponent', () => {
   it('should get single score value', () => {
     const mocksScores = [
       { id: 'autismScore', scores: [
-        { id: 'score1', value: 43, format: 'format' },
-        { id: 'score2', value: 12, format: 'format' },
+        { id: 'score1', value: 43, format: '%.2f' },
+        { id: 'score2', value: 12, format: '%.2f' },
       ] as GeneProfilesGeneScoreWithValue[]},
       { id: 'protectionScore', scores: [
-        { id: 'score3', value: 56, format: 'format' },
-        { id: 'score4', value: 39, format: 'format' },
+        { id: 'score3', value: 56, format: '%.2f' },
+        { id: 'score4', value: 39, format: '%.2f' },
       ] as GeneProfilesGeneScoreWithValue[]}
     ];
     expect(component.getSingleScoreValue(
