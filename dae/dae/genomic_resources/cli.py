@@ -407,13 +407,14 @@ def _do_resource_manifest_command(
 
 def _run_repo_manifest_command_internal(
         proto: ReadWriteRepositoryProtocol,
+        resources: list[GenomicResource],
         **kwargs: bool | int | str) -> dict[str, Any]:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
     use_dvc = cast(bool, kwargs.get("use_dvc", True))
 
     updates_needed = {}
-    for res in proto.get_all_resources():
+    for res in resources:
         updates_needed[res.resource_id] = _do_resource_manifest_command(
             proto, res,
             dry_run=dry_run,
@@ -429,6 +430,7 @@ def _run_repo_manifest_command_internal(
 
 def _run_repo_manifest_command(
     proto: ReadWriteRepositoryProtocol,
+    resources: list[GenomicResource],
     **kwargs: bool | int | str,
 ) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
@@ -436,7 +438,8 @@ def _run_repo_manifest_command(
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return 1
-    updates_needed = _run_repo_manifest_command_internal(proto, **kwargs)
+    updates_needed = _run_repo_manifest_command_internal(
+        proto, resources, **kwargs)
     if dry_run:
         return len(updates_needed)
     return 0
@@ -594,6 +597,7 @@ def _stats_need_rebuild(
 def _run_repo_stats_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
+        resources: list[GenomicResource],
         **kwargs: bool | int | str) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
@@ -604,12 +608,13 @@ def _run_repo_stats_command(
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return 0
 
-    updates_needed = _run_repo_manifest_command_internal(proto, **kwargs)
+    updates_needed = _run_repo_manifest_command_internal(
+        proto, resources, **kwargs)
 
     graph = TaskGraph()
 
     status = 0
-    for res in proto.get_all_resources():
+    for res in resources:
         if updates_needed[res.resource_id]:
             status += 1
             logger.info(
@@ -713,8 +718,9 @@ def _run_resource_stats_command(
 def _run_repo_repair_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
+        resources: list[GenomicResource],
         **kwargs: str | bool | int) -> int:
-    return _run_repo_info_command(repo, proto, **kwargs)
+    return _run_repo_info_command(repo, proto, resources, **kwargs)
 
 
 def _run_resource_repair_command(
@@ -728,15 +734,16 @@ def _run_resource_repair_command(
 def _run_repo_info_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
+        resources: list[GenomicResource],
         **kwargs: str | bool | int) -> int:
-    status = _run_repo_stats_command(repo, proto, **kwargs)
+    status = _run_repo_stats_command(repo, proto, resources, **kwargs)
 
     dry_run = cast(bool, kwargs.get("dry_run", False))
     if dry_run:
         return status
 
     proto.build_index_info(repository_template)  # type: ignore
-    for res in proto.get_all_resources():
+    for res in resources:
         try:
             _do_resource_info_command(repo, proto, res)
         except ValueError:
@@ -889,15 +896,24 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
 
     if command in {"repo-manifest", "repo-stats", "repo-info", "repo-repair"}:
         status = 0
+        resources = list(proto.get_all_resources())
+        if len(resources) == 0:
+            logger.info("repository <%s> has no resources", repo_url)
+            sys.exit(0)
+
         try:
             if command == "repo-manifest":
-                status = _run_repo_manifest_command(proto, **vars(args))
+                status = _run_repo_manifest_command(
+                    proto, resources, **vars(args))
             elif command == "repo-stats":
-                status = _run_repo_stats_command(repo, proto, **vars(args))
+                status = _run_repo_stats_command(
+                    repo, proto, resources, **vars(args))
             elif command == "repo-info":
-                status = _run_repo_info_command(repo, proto, **vars(args))
+                status = _run_repo_info_command(
+                    repo, proto, resources, **vars(args))
             elif command == "repo-repair":
-                status = _run_repo_repair_command(repo, proto, **vars(args))
+                status = _run_repo_repair_command(
+                    repo, proto, resources, **vars(args))
             else:
                 logger.error(
                     "Unknown command %s.", command)
