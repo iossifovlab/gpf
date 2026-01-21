@@ -6,10 +6,8 @@ from typing import Any
 import yaml
 from box import Box
 
-from dae.dask.named_cluster import setup_client, setup_client_from_config
 from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import (
-    DaskExecutor,
     SequentialExecutor,
     TaskGraphExecutor,
     ThreadedTaskExecutor,
@@ -112,6 +110,44 @@ class TaskGraphCli:
                 "task_progress_mode must be False if no cache is used"
 
     @staticmethod
+    def _create_dask_executor(
+        task_cache: TaskCache,
+        **kwargs: Any,
+    ) -> TaskGraphExecutor:
+        """Create a task graph executor according to the args specified."""
+        # pylint: disable=import-outside-toplevel
+        from dae.dask.named_cluster import (
+            setup_client,
+            setup_client_from_config,
+        )
+        from dae.task_graph.executor import DaskExecutor
+
+        args = Box(kwargs)
+
+        assert args.dask_cluster_name is None or \
+            args.dask_cluster_config_file is None
+        if args.dask_cluster_config_file is not None:
+            dask_cluster_config_file = args.dask_cluster_config_file
+            assert dask_cluster_config_file is not None
+            with open(dask_cluster_config_file) as conf_file:
+                dask_cluster_config = yaml.safe_load(conf_file)
+            logger.info(
+                "THE CLUSTER CONFIG IS: %s; loaded from: %s",
+                dask_cluster_config,
+                args.dask_cluster_config_file)
+            client, _ = setup_client_from_config(
+                dask_cluster_config,
+                number_of_workers=args.jobs,
+            )
+        else:
+            client, _ = setup_client(
+                args.dask_cluster_name,
+                number_of_workers=args.jobs)
+
+        logger.info("Working with client: %s", client)
+        return DaskExecutor(client, task_cache=task_cache, **kwargs)
+
+    @staticmethod
     def create_executor(
             task_cache: TaskCache | None = None,
             **kwargs: Any) -> TaskGraphExecutor:
@@ -138,28 +174,8 @@ class TaskGraphCli:
                 pool_type=pool_type,
                 **kwargs)
 
-        assert args.dask_cluster_name is None or \
-            args.dask_cluster_config_file is None
-        if args.dask_cluster_config_file is not None:
-            dask_cluster_config_file = args.dask_cluster_config_file
-            assert dask_cluster_config_file is not None
-            with open(dask_cluster_config_file) as conf_file:
-                dask_cluster_config = yaml.safe_load(conf_file)
-            logger.info(
-                "THE CLUSTER CONFIG IS: %s; loaded from: %s",
-                dask_cluster_config,
-                args.dask_cluster_config_file)
-            client, _ = setup_client_from_config(
-                dask_cluster_config,
-                number_of_workers=args.jobs,
-            )
-        else:
-            client, _ = setup_client(
-                args.dask_cluster_name,
-                number_of_workers=args.jobs)
-
-        logger.info("Working with client: %s", client)
-        return DaskExecutor(client, task_cache=task_cache, **kwargs)
+        return TaskGraphCli._create_dask_executor(
+            task_cache=task_cache, **kwargs)
 
     @staticmethod
     def process_graph(

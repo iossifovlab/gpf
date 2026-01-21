@@ -9,8 +9,6 @@ import time
 import traceback
 from abc import abstractmethod
 from collections import defaultdict, deque
-from collections.abc import Callable, Generator, Iterator, Sequence
-from concurrent.futures import Future as TPFuture
 from concurrent.futures import (
     ProcessPoolExecutor,
     ThreadPoolExecutor,
@@ -18,13 +16,11 @@ from concurrent.futures import (
 )
 from copy import copy
 from types import TracebackType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import fsspec
-import matplotlib.pyplot as plt
 import networkx
 import psutil
-from dask.distributed import Client, Future
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
 from dae.task_graph.graph import Task, TaskGraph
@@ -33,6 +29,12 @@ from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator, Iterator, Sequence
+    from concurrent.futures import Future as TPFuture
+
+    from dask.distributed import Client, Future
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +123,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         logger.debug(
             "selecting %s tasks to run took %.2f sec",
             len(selected_tasks), elapsed)
+        del di_graph
         return selected_tasks
 
     def _prune_dependants(self, task_id: str) -> None:
@@ -311,14 +314,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             for dep in task.deps:
                 di_graph.add_edge(dep.task_id, task.task_id)
         return di_graph
-
-    @staticmethod
-    def _draw_di_graph(di_graph: networkx.DiGraph) -> None:
-        plt.figure(figsize=(30, 15))
-        pos = networkx.spring_layout(di_graph)
-        networkx.draw(di_graph, pos, with_labels=True, arrows=True)
-        plt.savefig("task_graph.png")
-        plt.close()
 
     @staticmethod
     def _toplogical_order(
