@@ -1,6 +1,7 @@
 """Provides CLI for management of genomic resources repositories."""
 import argparse
 import copy
+import fnmatch
 import logging
 import os
 import pathlib
@@ -43,7 +44,10 @@ from dae.genomic_resources.resource_implementation import (
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
-from dae.utils.fs_utils import find_directory_with_a_file
+from dae.utils.fs_utils import (
+    find_directory_with_a_file,
+    find_subdirectories_with_a_file,
+)
 from dae.utils.helpers import convert_size
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -451,21 +455,23 @@ def _find_resources(
     repo_url: str,
     **kwargs: str | bool | int,
 ) -> Sequence[GenomicResource]:
-    resource_id = cast(str, kwargs.get("resource"))
-    if resource_id is not None:
-        res = proto.get_resource(resource_id)
-    else:
-        if urlparse(repo_url).scheme not in {"file", ""}:
-            logger.error(
-                "resource not specified but the repository URL %s "
-                "is not local filesystem repository", repo_url)
-            return []
+    resource_pattern = cast(str, kwargs.get("resource"))
 
-        cwd = os.getcwd()
-        resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME, cwd)
-        if resource_dir is None:
-            logger.error("Can't find resource starting from %s", cwd)
-            return []
+    if resource_pattern is not None:
+        return [
+            res for res in proto.get_all_resources()
+            if fnmatch.fnmatch(res.resource_id, resource_pattern)
+        ]
+
+    if urlparse(repo_url).scheme not in {"file", ""}:
+        logger.error(
+            "resource not specified but the repository URL %s "
+            "is not local filesystem repository", repo_url)
+        return []
+
+    cwd = os.getcwd()
+    resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME, cwd)
+    if resource_dir is not None:
 
         rid_ver = os.path.relpath(resource_dir, repo_url)
         resource_id, version = parse_gr_id_version_token(rid_ver)
@@ -473,7 +479,22 @@ def _find_resources(
         res = proto.get_resource(
             resource_id,
             version_constraint=f"={version_tuple_to_string(version)}")
-    return [res]
+        return [res]
+
+    result = []
+    for res_dir in find_subdirectories_with_a_file(GR_CONF_FILE_NAME, cwd):
+        rid_ver = os.path.relpath(res_dir, repo_url)
+        resource_id, version = parse_gr_id_version_token(rid_ver)
+
+        res = proto.get_resource(
+            resource_id,
+            version_constraint=f"={version_tuple_to_string(version)}")
+        result.append(res)
+    if result:
+        return result
+
+    logger.error("Can't find resource starting from %s", cwd)
+    return []
 
 
 def _read_stats_hash(
