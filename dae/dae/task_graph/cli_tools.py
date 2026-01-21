@@ -6,10 +6,8 @@ from typing import Any
 import yaml
 from box import Box
 
-from dae.dask.named_cluster import setup_client, setup_client_from_config
 from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import (
-    DaskExecutor,
     SequentialExecutor,
     TaskGraphExecutor,
     ThreadedTaskExecutor,
@@ -42,10 +40,16 @@ class TaskGraphCli:
             "of processors on the machine")
 
         executor_group.add_argument(
-            "--thread-pool", "--tp", "--threaded",
+            "--thread-pool", "--tp",
             dest="use_thread_pool", action="store_true",
             help="Use a thread pool executor with the specified number of "
             "threads instead of a dask distributed executor.",
+        )
+        executor_group.add_argument(
+            "--process-pool", "--pp",
+            dest="use_process_pool", action="store_true",
+            help="Use a process pool executor with the specified number of "
+            "processes instead of a dask distributed executor.",
         )
         executor_group.add_argument(
             "-N", "--dask-cluster-name", "--dcn",
@@ -106,27 +110,19 @@ class TaskGraphCli:
                 "task_progress_mode must be False if no cache is used"
 
     @staticmethod
-    def create_executor(
-            task_cache: TaskCache | None = None,
-            **kwargs: Any) -> TaskGraphExecutor:
+    def _create_dask_executor(
+        task_cache: TaskCache,
+        **kwargs: Any,
+    ) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
+        # pylint: disable=import-outside-toplevel
+        from dae.dask.named_cluster import (
+            setup_client,
+            setup_client_from_config,
+        )
+        from dae.task_graph.executor import DaskExecutor
+
         args = Box(kwargs)
-
-        if task_cache is None:
-            task_cache = NoTaskCache()
-
-        if args.jobs == 1:
-            assert args.dask_cluster_name is None
-            assert args.dask_cluster_config_file is None
-            return SequentialExecutor(task_cache=task_cache, **kwargs)
-
-        if args.use_thread_pool:
-            assert args.dask_cluster_name is None
-            assert args.dask_cluster_config_file is None
-            return ThreadedTaskExecutor(
-                n_threads=args.jobs,
-                task_cache=task_cache,
-                **kwargs)
 
         assert args.dask_cluster_name is None or \
             args.dask_cluster_config_file is None
@@ -150,6 +146,36 @@ class TaskGraphCli:
 
         logger.info("Working with client: %s", client)
         return DaskExecutor(client, task_cache=task_cache, **kwargs)
+
+    @staticmethod
+    def create_executor(
+            task_cache: TaskCache | None = None,
+            **kwargs: Any) -> TaskGraphExecutor:
+        """Create a task graph executor according to the args specified."""
+        args = Box(kwargs)
+
+        if task_cache is None:
+            task_cache = NoTaskCache()
+
+        if args.jobs == 1:
+            assert args.dask_cluster_name is None
+            assert args.dask_cluster_config_file is None
+            return SequentialExecutor(task_cache=task_cache, **kwargs)
+
+        if args.use_thread_pool or args.use_process_pool:
+            assert args.dask_cluster_name is None
+            assert args.dask_cluster_config_file is None
+            pool_type = "process_pool"
+            if args.use_thread_pool:
+                pool_type = "thread_pool"
+            return ThreadedTaskExecutor(
+                n_threads=args.jobs,
+                task_cache=task_cache,
+                pool_type=pool_type,
+                **kwargs)
+
+        return TaskGraphCli._create_dask_executor(
+            task_cache=task_cache, **kwargs)
 
     @staticmethod
     def process_graph(

@@ -9,18 +9,18 @@ import time
 import traceback
 from abc import abstractmethod
 from collections import defaultdict, deque
-from collections.abc import Callable, Generator, Iterator, Sequence
-from concurrent.futures import Future as TPFuture
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import (
+    ProcessPoolExecutor,
+    ThreadPoolExecutor,
+    as_completed,
+)
 from copy import copy
 from types import TracebackType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import fsspec
-import matplotlib.pyplot as plt
 import networkx
 import psutil
-from dask.distributed import Client, Future
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
 from dae.task_graph.graph import Task, TaskGraph
@@ -29,6 +29,12 @@ from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator, Iterator, Sequence
+    from concurrent.futures import Future as TPFuture
+
+    from dask.distributed import Client, Future
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +123,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         logger.debug(
             "selecting %s tasks to run took %.2f sec",
             len(selected_tasks), elapsed)
+        del di_graph
         return selected_tasks
 
     def _prune_dependants(self, task_id: str) -> None:
@@ -307,14 +314,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             for dep in task.deps:
                 di_graph.add_edge(dep.task_id, task.task_id)
         return di_graph
-
-    @staticmethod
-    def _draw_di_graph(di_graph: networkx.DiGraph) -> None:
-        plt.figure(figsize=(30, 15))
-        pos = networkx.spring_layout(di_graph)
-        networkx.draw(di_graph, pos, with_labels=True, arrows=True)
-        plt.savefig("task_graph.png")
-        plt.close()
 
     @staticmethod
     def _toplogical_order(
@@ -614,7 +613,15 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
     ):
         super().__init__(task_cache, **kwargs)
         max_workers = kwargs.get("n_threads", os.cpu_count() or 1)
-        self._executor = ThreadPoolExecutor(max_workers=max_workers)
+        pool = kwargs.get("pool_type", "thread_pool")
+        self._executor: ThreadPoolExecutor | ProcessPoolExecutor
+        if pool == "process_pool":
+            self._executor = ProcessPoolExecutor(max_workers=max_workers)
+        elif pool == "thread_pool":
+            self._executor = ThreadPoolExecutor(max_workers=max_workers)
+        else:
+            raise ValueError(f"wrong pool type: {pool}")
+
         self._task2future: dict[Task, TPFuture] = {}
         self._future2task: dict[TPFuture, Task] = {}
 
@@ -701,9 +708,6 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
 
         not_completed = self._schedule_tasks(not_completed)
         while not_completed or self._task_queue:
-            logger.info(
-                "executor queue: %d tasks",
-                self._executor._work_queue.qsize())  # noqa: SLF001
             not_completed = self._schedule_tasks(not_completed)
 
             try:

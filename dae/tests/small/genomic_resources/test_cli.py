@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 import pytest_mock
-from dae.genomic_resources.cli import _find_resource, cli_manage
+from dae.genomic_resources.cli import _find_resources, cli_manage
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GR_CONTENTS_FILE_NAME,
@@ -174,7 +174,10 @@ def test_find_resource_with_version(
     cli_manage(["repo-manifest", "-R", str(path)])
     os.chdir(path / "sub" / "two(1.0)" / "gene_models")
 
-    res = _find_resource(repo.proto, str(path))
+    resourses = _find_resources(repo.proto, str(path))
+    assert resourses
+    assert len(resourses) == 1
+    res = resourses[0]
     assert res is not None
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
@@ -187,8 +190,10 @@ def test_find_resource_without_version(
 
     cli_manage(["repo-manifest", "-R", str(path)])
     os.chdir(path / "one")
-
-    res = _find_resource(repo.proto, str(path))
+    resourses = _find_resources(repo.proto, str(path))
+    assert resourses
+    assert len(resourses) == 1
+    res = resourses[0]
     assert res is not None
     assert res.resource_id == "one"
     assert res.version == (0,)
@@ -199,8 +204,11 @@ def test_find_resource_with_resource_id(
 ) -> None:
     path, repo = repo_fixture
 
-    res = _find_resource(
-        repo.proto, str(path), resource="sub/two")
+    resourses = _find_resources(repo.proto, str(path), resource="sub/two")
+    assert resourses
+    assert len(resourses) == 1
+    res = resourses[0]
+
     assert res is not None
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)

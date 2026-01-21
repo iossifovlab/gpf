@@ -1,6 +1,7 @@
 import datetime
 import os
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -53,6 +54,26 @@ def find_directory_with_a_file(
             return work_dir
 
     return None
+
+
+def find_subdirectories_with_a_file(
+    filename: str,
+    cwd: str | Path | None = None,
+) -> Sequence[Path]:
+    """Find a list of subdirectories containing a file.
+
+    Starts from current working directory or from a directory passed.
+    """
+    if cwd is None:
+        curr_dir = Path(os.getcwd()).absolute()
+    else:
+        curr_dir = Path(cwd).absolute()
+
+    result: list[Path] = []
+    for root, _dirs, files in curr_dir.walk(on_error=print):
+        if filename in files:
+            result.append(Path(root))
+    return result
 
 
 def modified(filename: str) -> datetime.datetime:
