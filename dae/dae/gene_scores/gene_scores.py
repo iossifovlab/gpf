@@ -120,6 +120,16 @@ class GeneScore(
             score_def.column_name: score_def.score_id
             for score_def in self.score_definitions.values()
         })
+        records = self.df.to_dict(orient="records")
+
+        self.gene_values: dict[str, dict[str, float]] = {}
+
+        for record in records:
+            gene = record["gene"]
+            self.gene_values[gene] = {
+                score_id: record[score_id]
+                for score_id in self.score_definitions
+            }
 
     def get_min(self, score_id: str) -> float:
         """Return minimal score value."""
@@ -212,8 +222,11 @@ class GeneScore(
     def get_gene_value(
             self, score_id: str, gene_symbol: str) -> float | None:
         """Return the value for a given gene symbol."""
-        symbol_values = self._to_dict(score_id)
-        return symbol_values.get(gene_symbol)
+        if gene_symbol not in self.gene_values:
+            return None
+        if score_id not in self.gene_values[gene_symbol]:
+            return None
+        return self.gene_values[gene_symbol][score_id]
 
     def to_tsv(self, score_id: str | None = None) -> list[str]:
         """Return a TSV version of the gene score data."""

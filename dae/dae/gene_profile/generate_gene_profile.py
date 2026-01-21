@@ -47,10 +47,7 @@ def generate_gp(
             gene_score_name = score["score_name"]
             score_desc = gene_scores_db.get_score_desc(gene_score_name)
             gene_score = gene_scores_db.get_gene_score(score_desc.resource_id)
-            if gene_symbol in gene_score.get_genes(gene_score_name):
-                value = gene_score.get_gene_value(gene_score_name, gene_symbol)
-            else:
-                value = None
+            value = gene_score.get_gene_value(gene_score_name, gene_symbol)
             scores[category_name][gene_score_name] = value
 
     variant_counts: dict[str, Any] = {}
