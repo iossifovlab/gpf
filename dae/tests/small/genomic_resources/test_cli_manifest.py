@@ -45,7 +45,7 @@ def test_resource_manifest_simple(
 
     # Then
     assert (path / "one" / GR_MANIFEST_FILE_NAME).is_file()
-    assert not (path / GR_CONTENTS_FILE_NAME).exists()
+    assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
 def test_resource_manifest_dry_run_simple(

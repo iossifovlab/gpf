@@ -98,7 +98,7 @@ def test_resource_repair_simple(
     # Then
     assert (path / "one/statistics").exists()
     assert (path / "one" / GR_MANIFEST_FILE_NAME).exists()
-    assert not (path / GR_CONTENTS_FILE_NAME).exists()
+    assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
 def test_repo_repair_simple(
