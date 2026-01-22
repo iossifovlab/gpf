@@ -28,7 +28,7 @@ from dae.task_graph.graph import Task, TaskGraph
 from dask.distributed import Client
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def dask_client() -> Generator[Client, None, None]:
     # The client needs to be threaded b/c the global ORDER variable is modified
     client = Client(n_workers=4, threads_per_worker=1, processes=False)
@@ -43,7 +43,7 @@ def executor(
     if request.param == "dask":
         return DaskExecutor(dask_client)
     if request.param == "threaded":
-        return ThreadedTaskExecutor(n_threads=2)
+        return ThreadedTaskExecutor(n_threads=4)
     return SequentialExecutor()
 
 
