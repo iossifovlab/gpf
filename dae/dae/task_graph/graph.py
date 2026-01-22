@@ -317,3 +317,12 @@ class TaskGraph2:
                     self._tasks[dep_id] = dep_task
                 if task_id in self._task_dependants:
                     del self._task_dependants[task_id]
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._tasks)
+
+    def empty(self) -> bool:
+        """Check if the graph is empty."""
+        with self._lock:
+            return len(self._tasks) == 0
