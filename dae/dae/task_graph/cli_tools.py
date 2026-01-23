@@ -120,7 +120,7 @@ class TaskGraphCli:
             setup_client,
             setup_client_from_config,
         )
-        from dae.task_graph.executor import DaskExecutor
+        from dae.task_graph.dask_executor import DaskExecutor2
 
         args = Box(kwargs)
 
@@ -145,7 +145,7 @@ class TaskGraphCli:
                 number_of_workers=args.jobs)
 
         logger.info("Working with client: %s", client)
-        return DaskExecutor(client, task_cache=task_cache, **kwargs)
+        return DaskExecutor2(client, task_cache=task_cache, **kwargs)
 
     @staticmethod
     def create_executor(

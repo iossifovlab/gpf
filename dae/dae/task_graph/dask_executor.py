@@ -3,14 +3,20 @@ from typing import Any
 
 from dask.distributed import Client, Future, as_completed
 
+from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import TaskGraphExecutor
 from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
+
+NO_TASK_CACHE = NoTaskCache()
 
 
 class DaskExecutor2(TaskGraphExecutor):
     """Dask-based task graph executor."""
 
-    def __init__(self, dask_client: Client) -> None:
+    def __init__(
+        self, dask_client: Client,
+        task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         """Initialize the Dask executor.
 
         Args:
