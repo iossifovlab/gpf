@@ -8,7 +8,7 @@ from typing import Any, cast
 import fsspec
 import pytest
 from dae.task_graph import TaskGraph, TaskGraphCli
-from dae.task_graph.executor import AbstractTaskGraphExecutor
+from dae.task_graph.base_executor import TaskGraphExecutorBase
 
 
 def add_to_list(what: int, where: list[int]) -> list[int]:
@@ -43,14 +43,13 @@ def test_exec_without_fork_invokes_internal(
     def fake_internal(
         task_func: Callable[..., object],
         args: list[object],
-        deps: list[object],
         params: dict[str, object],
     ) -> str:
-        captured["call"] = (task_func, args, deps, params)
+        captured["call"] = (task_func, args, params)
         return "sentinel"
 
     monkeypatch.setattr(
-        AbstractTaskGraphExecutor,
+        TaskGraphExecutorBase,
         "_exec_internal",
         staticmethod(fake_internal),
     )
@@ -60,12 +59,12 @@ def test_exec_without_fork_invokes_internal(
 
     params = {"fork_tasks": False, "task_id": "plain"}
 
-    result = AbstractTaskGraphExecutor._exec(
-        sample_task, [21], [], params,
+    result = TaskGraphExecutorBase._exec(
+        sample_task, [21], params,
     )
 
     assert result == "sentinel"
-    assert captured["call"] == (sample_task, [21], [], params)
+    assert captured["call"] == (sample_task, [21], params)
 
 
 def test_exec_with_fork_uses_process_and_reads_result(
@@ -76,14 +75,13 @@ def test_exec_with_fork_uses_process_and_reads_result(
     def fake_internal(
         task_func: Callable[..., object],
         args: list[object],
-        deps: list[object],
         params: dict[str, object],
     ) -> dict[str, int]:
-        calls["internal"] = (task_func, args, deps, params)
+        calls["internal"] = (task_func, args, params)
         return {"value": 42}
 
     monkeypatch.setattr(
-        AbstractTaskGraphExecutor,
+        TaskGraphExecutorBase,
         "_exec_internal",
         staticmethod(fake_internal),
     )
@@ -103,7 +101,7 @@ def test_exec_with_fork_uses_process_and_reads_result(
             calls["join"] = True
 
     monkeypatch.setattr(
-        "dae.task_graph.executor.mp.Process",
+        "dae.task_graph.base_executor.mp.Process",
         FakeProcess,
     )
 
@@ -113,14 +111,14 @@ def test_exec_with_fork_uses_process_and_reads_result(
         "task_status_dir": str(tmp_path),
     }
 
-    result = AbstractTaskGraphExecutor._exec(
-        add_to_list, [5, []], [], params,
+    result = TaskGraphExecutorBase._exec(
+        add_to_list, [5, []], params,
     )
 
     assert calls.get("init")
     assert calls.get("start")
     assert calls.get("join")
-    assert calls["internal"][3] == params
+    assert calls["internal"][2] == params
     assert result == {"value": 42}
     assert (tmp_path / "forked.result").exists()
 
@@ -129,12 +127,12 @@ def test_exec_forked_simple(
     tmp_path: pathlib.Path,
 ) -> None:
 
-    AbstractTaskGraphExecutor._exec_forked(
-        add_to_list, args=[1, []], deps=[],
+    TaskGraphExecutorBase._exec_forked(
+        add_to_list, args=[1, []],
         params={"task_id": "0", "task_status_dir": str(tmp_path)},
     )
 
-    result_fn = AbstractTaskGraphExecutor._result_fn(
+    result_fn = TaskGraphExecutorBase._result_fn(
         {"task_id": "0", "task_status_dir": str(tmp_path)})
     assert pathlib.Path(result_fn).exists()
     with fsspec.open(result_fn, "rb") as infile:
@@ -149,12 +147,12 @@ def test_exec_forked_exception(
     def raise_exception() -> None:
         raise ValueError("Test exception")
 
-    AbstractTaskGraphExecutor._exec_forked(
-        raise_exception, args=[], deps=[],
+    TaskGraphExecutorBase._exec_forked(
+        raise_exception, args=[],
         params={"task_id": "0", "task_status_dir": str(tmp_path)},
     )
 
-    result_fn = AbstractTaskGraphExecutor._result_fn(
+    result_fn = TaskGraphExecutorBase._result_fn(
         {"task_id": "0", "task_status_dir": str(tmp_path)})
     assert pathlib.Path(result_fn).exists()
     with fsspec.open(result_fn, "rb") as infile:

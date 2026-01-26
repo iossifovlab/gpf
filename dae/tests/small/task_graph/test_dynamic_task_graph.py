@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import pytest
-from dae.task_graph.graph import TaskGraph2
+from dae.task_graph.graph import TaskGraph
 
 
 @pytest.mark.parametrize(
@@ -78,7 +78,7 @@ def test_graph_order(
     tasks: list[tuple[str, list[str]]],
     expected_order: list[str],
 ) -> None:
-    graph = TaskGraph2()
+    graph = TaskGraph()
     for task_id, dep_ids in tasks:
         deps = [graph.get_task(dep_id) for dep_id in dep_ids]
         graph.create_task(task_id, lambda: None, args=[], deps=deps)
@@ -164,7 +164,7 @@ def test_graph_ready_tasks(
     tasks: list[tuple[str, list[str]]],
     ready_seq: list[list[str]],
 ) -> None:
-    graph = TaskGraph2()
+    graph = TaskGraph()
     for task_id, dep_ids in tasks:
         deps = [graph.get_task(dep_id) for dep_id in dep_ids]
         graph.create_task(task_id, lambda: None, args=[], deps=deps)

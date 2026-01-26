@@ -3,6 +3,7 @@ import os
 import pickle  # noqa: S403
 import time
 from collections.abc import Generator
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -151,7 +152,8 @@ def test_file_cache_mod_input_file_of_intermediate_node(
     assert int_node is not None
     int_node.input_files.append(dep_fn)
 
-    execute_with_file_cache(graph, str(tmp_path))
+    working_graph = deepcopy(graph)
+    execute_with_file_cache(working_graph, str(tmp_path))
 
     if operation == "touch":
         touch(dep_fn)
@@ -170,7 +172,8 @@ def test_file_cache_mod_input_file_of_intermediate_node(
 def test_file_cache_mod_flag_file_of_intermediate_node(
     graph: TaskGraph, tmp_path: Path, operation: str,
 ) -> None:
-    execute_with_file_cache(graph, str(tmp_path))
+    working_graph = deepcopy(graph)
+    execute_with_file_cache(working_graph, str(tmp_path))
 
     cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))

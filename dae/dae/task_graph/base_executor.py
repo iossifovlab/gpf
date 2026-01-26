@@ -15,7 +15,7 @@ import psutil
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
 from dae.task_graph.executor import TaskGraphExecutor
-from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
+from dae.task_graph.graph import Task, TaskGraph
 from dae.task_graph.logging import (
     configure_task_logging,
     ensure_log_dir,
@@ -133,26 +133,12 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
             result = None
         return result
 
-    def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
+    def execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         assert not self._executing, \
             "Cannot execute a new graph while an old one is still running."
 
         self._executing = True
-        graph = TaskGraph2.from_task_graph(task_graph)
-        yield from self.execute2(graph)
-        self._executing = False
 
-    def execute2(
-        self, graph: TaskGraph2,
-    ) -> Iterator[tuple[Task, Any]]:
-        """Execute the given task graph.
-
-        Args:
-            task_graph: Task graph to execute.
-
-        Yields:
-            Tuples of (task, result) as tasks complete.
-        """
         completed_tasks: dict[Task, Any] = {}
         for task, record in self._task_cache.load(graph):
             if record.type == CacheRecordType.COMPUTED:
@@ -175,8 +161,10 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
             )
             yield task_node, result
 
+        self._executing = False
+
     @abstractmethod
-    def _execute(self, graph: TaskGraph2) -> Iterator[tuple[Task, Any]]:
+    def _execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         """Execute the given task graph.
 
         Args:

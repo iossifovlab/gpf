@@ -6,7 +6,7 @@ from dae.task_graph.dask_executor import DaskExecutor2
 from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
-from dae.task_graph.graph import TaskGraph2
+from dae.task_graph.graph import TaskGraph
 from dae.task_graph.process_pool_executor import ProcessPoolTaskExecutor
 from dae.task_graph.sequential_executor import SequentialExecutor
 from dask.distributed import Client
@@ -114,12 +114,12 @@ def test_dask_executor(
     tasks: list[tuple[str, list[str]]],
     expected_order: list[list[str]],
 ) -> None:
-    graph = TaskGraph2()
+    graph = TaskGraph()
     for task_id, dep_ids in tasks:
         deps = [graph.get_task(dep_id) for dep_id in dep_ids]
         graph.create_task(task_id, noop, args=[], deps=deps)
 
-    executed_tasks = list(executor.execute2(graph))
+    executed_tasks = list(executor.execute(graph))
     executed_task_ids: list[str] = [
         task.task_id for task, _ in executed_tasks]
     index = 0

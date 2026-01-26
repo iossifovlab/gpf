@@ -16,7 +16,7 @@ from typing import Any
 import psutil
 
 from dae.task_graph.base_executor import TaskGraphExecutorBase
-from dae.task_graph.graph import Task, TaskGraph2
+from dae.task_graph.graph import Task, TaskGraph
 from dae.task_graph.logging import (
     safe_task_id,
 )
@@ -78,7 +78,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         return result
 
     def _schedule_tasks(
-        self, graph: TaskGraph2,
+        self, graph: TaskGraph,
     ) -> dict[Future, Task]:
         ready_tasks = list(graph.ready_tasks())
         submitted_tasks: dict[Future, Task] = {}
@@ -90,7 +90,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
 
         return submitted_tasks
 
-    def _execute(self, graph: TaskGraph2) -> Iterator[tuple[Task, Any]]:
+    def _execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         not_completed: set[Future] = set()
         completed: deque[Future] = deque()
         initial_task_count = len(graph)

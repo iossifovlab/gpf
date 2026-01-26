@@ -5,7 +5,7 @@ from typing import Any
 
 from dae.task_graph.base_executor import TaskGraphExecutorBase
 from dae.task_graph.cache import NoTaskCache
-from dae.task_graph.graph import Task, TaskGraph2
+from dae.task_graph.graph import Task, TaskGraph
 from dae.task_graph.logging import (
     safe_task_id,
 )
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class SequentialExecutor(TaskGraphExecutorBase):
     """A Task Graph Executor that executes task in sequential order."""
 
-    def _execute(self, graph: TaskGraph2) -> Iterator[tuple[Task, Any]]:
+    def _execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         finished_tasks = 0
         initial_task_count = len(graph)
 

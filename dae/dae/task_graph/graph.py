@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import multiprocessing as mp
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Sequence
 from copy import copy
 from dataclasses import dataclass
 from typing import Any
@@ -35,85 +35,11 @@ class Task:
         return hash(self.task_id)
 
 
-class TaskGraph:
-    """An object representing a graph of tasks."""
-
-    def __init__(self) -> None:
-        self.tasks: list[Task] = []
-        self.input_files: list[str] = []
-        self._task_ids: set[str] = set()
-
-    def create_task(
-        self, task_id: str, func: Callable[..., Any], *,
-        args: list,
-        deps: list[Task],
-        input_files: list[str] | None = None,
-    ) -> Task:
-        """Create a new task and add it to the graph.
-
-        :param name: Name of the task (used for debugging purposes)
-        :param func: Function to execute
-        :param args: Arguments to that function
-        :param deps: List of TaskNodes on which the current task depends
-        :param input_files: Files that were used to build the graph itself
-        :return TaskNode: The newly created task node in the graph
-        """
-        if len(task_id) > 200:
-            logger.warning("task id is too long %s: %s", len(task_id), task_id)
-            logger.warning("truncating task id to 200 symbols")
-            task_id = task_id[:200]
-
-        if task_id in self._task_ids:
-            raise ValueError(f"Task with id='{task_id}' already in graph")
-
-        # tasks that use the output of other tasks as input should
-        # have those other tasks as dependancies
-        deps = copy(deps)
-        for arg in args:
-            if isinstance(arg, Task):
-                deps.append(arg)
-        node = Task(task_id, func, args, deps, input_files or [])
-        self.tasks.append(node)
-        self._task_ids.add(task_id)
-        return node
-
-    def prune(self, ids_to_keep: Iterable[str]) -> TaskGraph:
-        """Prune tasks which are not in ids_to_keep or in their deps.
-
-        tasks ids which are in ids_to_keep but not in the graph are simply
-        assumed to have already been removed and no error is raised.
-        """
-        ids_to_keep = set(ids_to_keep)
-        ids_not_found = ids_to_keep - self._task_ids
-        if ids_not_found:
-            raise KeyError(ids_not_found)
-
-        tasks_to_keep: set[str] = set()
-        for task in self.tasks:
-            if task.task_id in ids_to_keep:
-                tasks_to_keep.add(task.task_id)
-                self._add_task_deps(task, tasks_to_keep)
-
-        new_tasks = [t for t in self.tasks if t.task_id in tasks_to_keep]
-        res = TaskGraph()
-        res.tasks = new_tasks
-        res.input_files = self.input_files
-        res._task_ids |= tasks_to_keep
-        return res
-
-    @staticmethod
-    def _add_task_deps(task: Task, task_set: set[str]) -> None:
-        for dep in task.deps:
-            if dep.task_id not in task_set:
-                task_set.add(dep.task_id)
-                TaskGraph._add_task_deps(dep, task_set)
-
-
 def sync_tasks() -> None:
     return None
 
 
-class TaskGraph2:
+class TaskGraph:
     """An object representing a graph of tasks."""
 
     def __init__(self) -> None:
@@ -186,16 +112,7 @@ class TaskGraph2:
         for dep in task.deps:
             if dep.task_id not in task_set:
                 task_set.add(dep.task_id)
-                TaskGraph2._collect_task_deps(dep, task_set)
-
-    @staticmethod
-    def from_task_graph(task_graph: TaskGraph) -> TaskGraph2:
-        """Create TaskGraph2 from TaskGraph."""
-        res = TaskGraph2()
-        res.input_files = task_graph.input_files
-        for task in task_graph.tasks:
-            res.add_task(task)
-        return res
+                TaskGraph._collect_task_deps(dep, task_set)
 
     def ready_tasks(self) -> Sequence[Task]:
         """Return tasks which have no dependencies."""
@@ -221,6 +138,8 @@ class TaskGraph2:
         for task in self._tasks.values():
             for dep in task.deps:
                 di_graph.add_edge(dep.task_id, task.task_id)
+        if not networkx.is_directed_acyclic_graph(di_graph):
+            raise ValueError("Cyclic dependencys in task graph detected")
 
         for task_id in networkx.topological_sort(di_graph):
             if task_id not in self._tasks:
@@ -310,3 +229,21 @@ class TaskGraph2:
         """Check if the graph is empty."""
         with self._lock:
             return len(self._tasks) == 0
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> TaskGraph:
+        new_graph = TaskGraph()
+        with self._lock:
+            for task in self._tasks.values():
+                new_deps = [
+                    copy(memo[id(dep)]) if id(dep) in memo else dep
+                    for dep in task.deps]
+                new_task = Task(
+                    task.task_id,
+                    task.func,
+                    copy(task.args),
+                    new_deps,
+                    copy(task.input_files),
+                )
+                memo[id(task)] = new_task
+                new_graph._add_task(new_task)
+        return new_graph

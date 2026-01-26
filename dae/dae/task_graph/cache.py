@@ -13,7 +13,7 @@ from typing import Any, cast
 
 import fsspec
 
-from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
+from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class TaskCache:
 
     @abstractmethod
     def load(
-        self, graph: TaskGraph | TaskGraph2,
+        self, graph: TaskGraph,
     ) -> Iterator[tuple[Task, CacheRecord]]:
         """For task in the `graph` load and yield the cache record."""
 
@@ -78,7 +78,7 @@ class NoTaskCache(dict, TaskCache):
     """Don't check any conditions and just run any task."""
 
     def load(
-        self, graph: TaskGraph | TaskGraph2,
+        self, graph: TaskGraph,
     ) -> Generator[tuple[Task, CacheRecord], None, None]:
         for task in graph.tasks:
             yield task, CacheRecord(CacheRecordType.NEEDS_COMPUTE)
@@ -100,7 +100,7 @@ class FileTaskCache(TaskCache):
         self._mtime_cache: dict[str, datetime.datetime] = {}
 
     def load(
-        self, graph: TaskGraph | TaskGraph2,
+        self, graph: TaskGraph,
     ) -> Generator[tuple[Task, CacheRecord], None, None]:
         assert self._global_dependancies is None
         self._global_dependancies = graph.input_files

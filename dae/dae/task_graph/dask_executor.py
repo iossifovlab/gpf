@@ -9,7 +9,7 @@ from dask.distributed import Client, Future, wait
 
 from dae.task_graph.base_executor import TaskGraphExecutorBase
 from dae.task_graph.cache import NoTaskCache, TaskCache
-from dae.task_graph.graph import Task, TaskGraph2
+from dae.task_graph.graph import Task, TaskGraph
 from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
@@ -106,7 +106,7 @@ class DaskExecutor2(TaskGraphExecutorBase):
                 completed_condition.wait()
 
     def _execute(
-        self, graph: TaskGraph2,
+        self, graph: TaskGraph,
     ) -> Iterator[tuple[Task, Any]]:
         self._executing = True
 
