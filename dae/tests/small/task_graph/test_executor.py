@@ -11,9 +11,7 @@ from dae.task_graph.dask_executor import (
     DaskExecutor2,
 )
 from dae.task_graph.executor import (
-    DaskExecutor,
     TaskGraphExecutor,
-    ThreadedTaskExecutor,
 )
 from dae.task_graph.graph import TaskGraph
 from dae.task_graph.sequential_executor import SequentialExecutor
@@ -28,17 +26,13 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture(params=["dask", "dask2", "sequential", "threaded"])
+@pytest.fixture(params=["dask2", "sequential"])
 def executor(
     dask_client: Client,
     request: pytest.FixtureRequest,
 ) -> TaskGraphExecutor:
-    if request.param == "dask":
-        return DaskExecutor(dask_client)
     if request.param == "dask2":
         return DaskExecutor2(dask_client)
-    if request.param == "threaded":
-        return ThreadedTaskExecutor(n_threads=4)
     return SequentialExecutor()
 
 

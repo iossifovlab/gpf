@@ -6,33 +6,22 @@ import os
 import pickle  # noqa: S403
 import time
 from abc import abstractmethod
-from collections import defaultdict, deque
-from concurrent.futures import (
-    ProcessPoolExecutor,
-    ThreadPoolExecutor,
-    as_completed,
-)
+from collections import defaultdict
+from collections.abc import Callable, Generator, Iterator, Sequence
 from copy import copy
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any
 
 import fsspec
 import networkx
 import psutil
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
 from dae.task_graph.logging import (
     configure_task_logging,
     ensure_log_dir,
-    safe_task_id,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator, Sequence
-    from concurrent.futures import Future as TPFuture
-
-    from dask.distributed import Client, Future
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +31,20 @@ class TaskGraphExecutor:
 
     @abstractmethod
     def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
+        """Start executing the graph.
+
+        Return an iterator that yields the task in the graph
+        after they are executed.
+
+        This is not nessessarily in DFS or BFS order.
+        This is not even the order in which these tasks are executed.
+
+        The only garantee is that when a task is returned its executions
+        is already finished.
+        """
+
+    @abstractmethod
+    def execute2(self, task_graph: TaskGraph2) -> Iterator[tuple[Task, Any]]:
         """Start executing the graph.
 
         Return an iterator that yields the task in the graph
@@ -398,338 +401,3 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
         if task.task_id in self._task_dependants:
             del self._task_dependants[task.task_id]
-
-
-class DaskExecutor(AbstractTaskGraphExecutor):
-    """Execute tasks in parallel using Dask to do the heavy lifting."""
-
-    def __init__(
-        self, client: Client, task_cache: TaskCache = NO_TASK_CACHE,
-        **kwargs: Any,
-    ):
-        super().__init__(task_cache, **kwargs)
-        self._client = client
-        self._task2future: dict[Task, Future] = {}
-        self._future2task: dict[str, Task] = {}
-
-    def _submit_task(self, task: Task) -> Future:
-        assert len(task.deps) == 0
-        assert not any(isinstance(arg, Task) for arg in task.args), \
-            "Task has no dependencies to wait for."
-
-        params = copy(self._params)
-        task_id = safe_task_id(task.task_id)
-        params["task_id"] = task_id
-
-        future = self._client.submit(
-            self._exec, task.func, task.args, [], params,
-            key=task_id,
-            pure=False,
-        )
-        if future is None:
-            raise ValueError(
-                f"unexpected dask executor return None: {task}, {task.args}, "
-                f"{params}")
-        assert future is not None
-
-        self._task2future[task] = future
-        self._future2task[str(future.key)] = task
-        return future
-
-    MIN_QUEUE_SIZE = 700
-
-    def _queue_size(self) -> int:
-        n_workers = cast(
-            int,
-            sum(self._client.ncores().values()))
-        return max(self.MIN_QUEUE_SIZE, 4 * n_workers)
-
-    def _available_slots(self, currently_running: int) -> int:
-        return self._queue_size() - currently_running
-
-    def _schedule_tasks(self, currently_running: set[Future]) -> set[Future]:
-        start = time.time()
-        tasks_to_run = self._select_tasks_to_run(
-            self._available_slots(len(currently_running)))
-        logger.debug("scheduling %d tasks", len(tasks_to_run))
-        scheduled = 0
-        for task in tasks_to_run:
-            del self._task_queue[task.task_id]
-            future = self._submit_task(task)
-            currently_running.add(future)
-            elapsed = time.time() - start
-            scheduled += 1
-            if elapsed > 10.0:
-                logger.debug(
-                    "scheduling took too long (%.2f sec), stopping",
-                    elapsed)
-                break
-
-        elapsed = time.time() - start
-        logger.debug(
-            "scheduling %d tasks took %.2f sec", scheduled, elapsed)
-        logger.debug("currently running %d tasks", len(currently_running))
-        return currently_running
-
-    def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
-        # pylint: disable=import-outside-toplevel
-        from dask.distributed import wait
-
-        not_completed: set[Future] = set()
-        completed: deque[Future] = deque()
-        initial_task_count = len(self._task_queue)
-        finished_tasks = 0
-        process = psutil.Process(os.getpid())
-        current_memory_mb = process.memory_info().rss / (1024 * 1024)
-        logger.info(
-            "executor memory usage: %.2f MB", current_memory_mb)
-
-        not_completed = self._schedule_tasks(not_completed)
-        while not_completed or self._task_queue:
-            if len(completed) < self._queue_size() // 2:
-                not_completed = self._schedule_tasks(not_completed)
-            else:
-                logger.debug(
-                    "too many completed tasks (%d), processing them first",
-                    len(completed))
-
-            if not_completed:
-                try:
-                    new_completed, not_completed = wait(
-                        not_completed,
-                        return_when="FIRST_COMPLETED",
-                        timeout=0.1,
-                    )
-                except TimeoutError:
-                    new_completed = set()
-
-            else:
-                new_completed = set()
-
-            for future in new_completed:
-                completed.append(future)
-
-            start = time.time()
-            processed: list[tuple[Task, Any]] = []
-            logger.debug("going to process %d completed tasks", len(completed))
-            while completed:
-                future = completed.popleft()
-                task = self._future2task[str(future.key)]
-                result_start = time.time()
-                try:
-                    result = future.result()
-                except Exception as ex:  # noqa: BLE001
-                    # pylint: disable=broad-except
-                    result = ex
-                result_elapsed = time.time() - result_start
-                logger.debug(
-                    "retrieving result for task %s took %.2f sec",
-                    task.task_id, result_elapsed)
-
-                self._process_completed_task(task, result)
-
-                finished_tasks += 1
-                processed.append((task, result))
-                logger.info(
-                    "finished %s/%s", finished_tasks,
-                    initial_task_count)
-                # del ref to future in order to make dask gc its resources
-                del self._task2future[task]
-                del self._future2task[future.key]
-
-                elapsed = time.time() - start
-                if elapsed > 2.0:
-                    logger.debug(
-                        "processing completed tasks took too long "
-                        "(%.2f sec), stopping", elapsed)
-                    break
-
-            logger.debug("processed %d completed tasks", len(processed))
-            start = time.time()
-            yield from processed
-            elapsed = time.time() - start
-            logger.debug(
-                "yielding %d completed tasks took %.2f sec",
-                len(processed), elapsed)
-
-        # clean up
-        assert len(self._task2future) == 0, \
-            "[BUG] Dask Executor's future queue is not empty."
-        assert len(self._task_queue) == 0, \
-            "[BUG] Dask Executor's task queue is not empty."
-
-        self._task2future = {}
-        self._future2task = {}
-        assert len(self._task_queue) == 0
-
-    def close(self) -> None:
-        self._client.close()
-
-
-class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
-    """Execute tasks in parallel using Dask to do the heavy lifting."""
-
-    def __init__(
-        self, task_cache: TaskCache = NO_TASK_CACHE,
-        **kwargs: Any,
-    ):
-        super().__init__(task_cache, **kwargs)
-        max_workers = kwargs.get("n_threads", os.cpu_count() or 1)
-        pool = kwargs.get("pool_type", "thread_pool")
-        self._executor: ThreadPoolExecutor | ProcessPoolExecutor
-        if pool == "process_pool":
-            self._executor = ProcessPoolExecutor(max_workers=max_workers)
-        elif pool == "thread_pool":
-            self._executor = ThreadPoolExecutor(max_workers=max_workers)
-        else:
-            raise ValueError(f"wrong pool type: {pool}")
-
-        self._task2future: dict[Task, TPFuture] = {}
-        self._future2task: dict[TPFuture, Task] = {}
-
-    def _submit_task(self, task: Task) -> TPFuture:
-        assert len(task.deps) == 0
-        assert not any(isinstance(arg, Task) for arg in task.args), \
-            "Task has no dependencies to wait for."
-
-        params = copy(self._params)
-        task_id = safe_task_id(task.task_id)
-        params["task_id"] = task_id
-
-        future = self._executor.submit(
-            self._exec_internal, task.func, task.args, [], params,
-        )
-        if future is None:
-            raise ValueError(
-                f"unexpected dask executor return None: {task}, {task.args}, "
-                f"{params}")
-        assert future is not None
-
-        self._task2future[task] = future
-        self._future2task[future] = task
-        return future
-
-    @staticmethod
-    def _exec_internal(
-        task_func: Callable, args: list, _deps: list, params: dict[str, Any],
-    ) -> Any:
-        start = time.time()
-        process = psutil.Process(os.getpid())
-        start_memory_mb = process.memory_info().rss / (1024 * 1024)
-        task_id = params["task_id"]
-
-        logger.info(
-            "worker process memory usage: %.2f MB", start_memory_mb)
-
-        result = task_func(*args)
-        elapsed = time.time() - start
-        logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
-
-        finish_memory_mb = process.memory_info().rss / (1024 * 1024)
-        logger.info(
-            "worker process memory usage: %.2f MB; change: %+0.2f MB",
-            finish_memory_mb, finish_memory_mb - start_memory_mb)
-
-        return result
-
-    def _available_slots(self, currently_running: int) -> int:
-        return max(0, 10_000 - currently_running)
-
-    def _schedule_tasks(
-        self, currently_running: set[TPFuture],
-    ) -> set[TPFuture]:
-        start = time.time()
-        tasks_to_run = self._select_tasks_to_run(
-            self._available_slots(len(currently_running)))
-        if tasks_to_run:
-            logger.debug("scheduling %d tasks", len(tasks_to_run))
-            for task in tasks_to_run:
-                del self._task_queue[task.task_id]
-                future = self._submit_task(task)
-                currently_running.add(future)
-                elapsed = time.time() - start
-                if elapsed > 10.0:
-                    logger.debug(
-                        "scheduling took too long (%.2f sec), stopping",
-                        elapsed)
-                    break
-
-            elapsed = time.time() - start
-            logger.debug("currently running %d tasks", len(currently_running))
-        return currently_running
-
-    def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
-        not_completed: set[TPFuture] = set()
-        completed: deque[TPFuture] = deque()
-        initial_task_count = len(self._task_queue)
-        finished_tasks = 0
-        process = psutil.Process(os.getpid())
-        current_memory_mb = process.memory_info().rss / (1024 * 1024)
-        logger.info(
-            "executor memory usage: %.2f MB", current_memory_mb)
-
-        not_completed = self._schedule_tasks(not_completed)
-        while not_completed or self._task_queue:
-            not_completed = self._schedule_tasks(not_completed)
-
-            try:
-                for future in as_completed(not_completed, timeout=0.25):
-                    not_completed.remove(future)
-                    completed.append(future)
-            except TimeoutError:
-                pass
-
-            start = time.time()
-            processed: list[tuple[Task, Any]] = []
-            logger.debug("going to process %d completed tasks", len(completed))
-            while completed:
-                future = completed.popleft()
-                task = self._future2task[future]
-                result_start = time.time()
-                try:
-                    result = future.result()
-                except Exception as ex:  # noqa: BLE001
-                    # pylint: disable=broad-except
-                    result = ex
-                result_elapsed = time.time() - result_start
-                logger.debug(
-                    "retrieving result for task %s took %.2f sec",
-                    task.task_id, result_elapsed)
-
-                self._process_completed_task(task, result)
-
-                finished_tasks += 1
-                processed.append((task, result))
-                logger.info(
-                    "finished %s/%s", finished_tasks,
-                    initial_task_count)
-                # del ref to future in order to make dask gc its resources
-                del self._task2future[task]
-                del self._future2task[future]
-
-                elapsed = time.time() - start
-                if elapsed > 2.0:
-                    logger.debug(
-                        "processing completed tasks took too long "
-                        "(%.2f sec), stopping", elapsed)
-                    break
-
-            logger.debug("processed %d completed tasks", len(processed))
-            start = time.time()
-            yield from processed
-            elapsed = time.time() - start
-            logger.debug(
-                "yielding %d completed tasks took %.2f sec",
-                len(processed), elapsed)
-        # clean up
-        assert len(self._task2future) == 0, \
-            "[BUG] Dask Executor's future queue is not empty."
-        assert len(self._task_queue) == 0, \
-            "[BUG] Dask Executor's task queue is not empty."
-
-        self._task2future = {}
-        self._future2task = {}
-        assert len(self._task_queue) == 0
-
-    def close(self) -> None:
-        self._executor.shutdown()

@@ -18,13 +18,13 @@ from dae.task_graph.cli_tools import (
     task_graph_run_with_results,
     task_graph_status,
 )
+from dae.task_graph.dask_executor import DaskExecutor2
 from dae.task_graph.executor import (
     AbstractTaskGraphExecutor,
-    DaskExecutor,
     TaskGraphExecutor,
-    ThreadedTaskExecutor,
 )
 from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
+from dae.task_graph.process_pool_executor import ProcessPoolTaskExecutor
 from dae.task_graph.sequential_executor import SequentialExecutor
 from dask.distributed import Client
 
@@ -37,27 +37,30 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture(params=["dask", "sequential", "threaded"])
+@pytest.fixture(params=["dask2", "sequential", "process_pool"])
 def executor(
     dask_client: Client,
     request: pytest.FixtureRequest,
 ) -> TaskGraphExecutor:
-    if request.param == "dask":
-        return DaskExecutor(dask_client)
-    if request.param == "threaded":
-        return ThreadedTaskExecutor(n_threads=4)
+    if request.param == "dask2":
+        return DaskExecutor2(dask_client)
+    if request.param == "process_pool":
+        return ProcessPoolTaskExecutor()
     return SequentialExecutor()
 
 
-def _create_graph_with_result_passing() -> TaskGraph:
-    def add_to_list(what: int, where: list[int]) -> list[int]:
-        return [*where, what]
+def add_to_list(what: int, where: list[int]) -> list[int]:
+    return [*where, what]
 
-    def concat_lists(*lists: list[int]) -> list[int]:
-        res = []
-        for next_list in lists:
-            res.extend(next_list)
-        return res
+
+def concat_lists(*lists: list[int]) -> list[int]:
+    res = []
+    for next_list in lists:
+        res.extend(next_list)
+    return res
+
+
+def _create_graph_with_result_passing() -> TaskGraph:
 
     # create the task graph
     graph = TaskGraph()

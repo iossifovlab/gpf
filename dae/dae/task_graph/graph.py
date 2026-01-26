@@ -239,6 +239,7 @@ class TaskGraph2:
             if dep_id not in self._tasks:
                 continue
             del self._tasks[dep_id]
+            self._prune_dependants(dep_id)
 
     def _reconfigure_task_deps(
         self, task: Task,

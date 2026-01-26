@@ -13,7 +13,6 @@ from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
 from dae.task_graph.executor import (
     AbstractTaskGraphExecutor,
     TaskGraphExecutor,
-    ThreadedTaskExecutor,
 )
 from dae.task_graph.graph import TaskGraph
 from dae.task_graph.sequential_executor import SequentialExecutor
@@ -169,11 +168,8 @@ class TaskGraphCli:
             pool_type = "process_pool"
             if args.use_thread_pool:
                 pool_type = "thread_pool"
-            return ThreadedTaskExecutor(
-                n_threads=args.jobs,
-                task_cache=task_cache,
-                pool_type=pool_type,
-                **kwargs)
+            raise NotImplementedError(
+                f"{pool_type} executor is not implemented yet")
 
         return TaskGraphCli._create_dask_executor(
             task_cache=task_cache, **kwargs)
