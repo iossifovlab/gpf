@@ -9,7 +9,7 @@ from dask.distributed import Client, Future, wait
 
 from dae.task_graph.base_executor import TaskGraphExecutorBase
 from dae.task_graph.cache import NoTaskCache, TaskCache
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskDesc, TaskGraph
 from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
@@ -19,7 +19,7 @@ NO_TASK_CACHE = NoTaskCache()
 logger = logging.getLogger(__name__)
 
 
-class DaskExecutor2(TaskGraphExecutorBase):
+class DaskExecutor(TaskGraphExecutorBase):
     """Dask-based task graph executor."""
 
     def __init__(
@@ -41,7 +41,7 @@ class DaskExecutor2(TaskGraphExecutorBase):
 
     def _submit_worker_func(
         self,
-        submit_queue: list[Task | None],
+        submit_queue: list[TaskDesc | None],
         submit_condition: threading.Condition,
         running: dict[Future, Task],
         running_lock: threading.Lock,
@@ -54,11 +54,11 @@ class DaskExecutor2(TaskGraphExecutorBase):
                         logger.warning(
                             "submit worker received shutdown signal.")
                         return
-                    assert isinstance(task, Task)
+                    assert isinstance(task, TaskDesc)
                     params = copy(self._params)
-                    task_id = safe_task_id(task.task_id)
+                    task_id = safe_task_id(task.task.task_id)
                     params["task_id"] = task_id
-                    logger.info("Submitting task %s to Dask", task_id)
+                    logger.debug("submitting task %s to Dask", task_id)
                     future = self._dask_client.submit(
                         self._exec, task.func, task.args, params,
                         key=task_id,
@@ -71,7 +71,7 @@ class DaskExecutor2(TaskGraphExecutorBase):
                     assert future is not None
 
                     with running_lock:
-                        running[future] = task
+                        running[future] = task.task
                     submit_condition.wait(timeout=0.2)
                 submit_condition.wait()
 
@@ -84,15 +84,14 @@ class DaskExecutor2(TaskGraphExecutorBase):
     ) -> None:
         with completed_condition:
             while True:
-                logger.warning("Waiting for completed task...")
                 while completed_queue:
                     item = completed_queue.pop()
                     if item is None:
                         logger.warning(
-                            "Results worker received shutdown signal.")
+                            "results worker received shutdown signal.")
                         return
                     future, task = item
-                    logger.info("processing completed task %s", task.task_id)
+                    logger.debug("processing completed task %s", task.task_id)
 
                     try:
                         result = future.result()
@@ -110,7 +109,7 @@ class DaskExecutor2(TaskGraphExecutorBase):
     ) -> Iterator[tuple[Task, Any]]:
         self._executing = True
 
-        submit_queue: list[Task | None] = []
+        submit_queue: list[TaskDesc | None] = []
         submit_condition: threading.Condition = threading.Condition()
 
         running_lock: threading.Lock = threading.Lock()
@@ -141,9 +140,13 @@ class DaskExecutor2(TaskGraphExecutorBase):
         not_completed: set[Future] = set()
         is_done: bool = graph.empty()
 
+        finished_tasks = 0
+        initial_task_count = len(graph)
+
         while not is_done:
+
+            ready_tasks = graph.extract_tasks(graph.ready_tasks())
             with submit_condition:
-                ready_tasks = list(graph.ready_tasks())
                 if ready_tasks:
                     submit_queue.extend(ready_tasks)
                     submit_condition.notify_all()
@@ -164,11 +167,6 @@ class DaskExecutor2(TaskGraphExecutorBase):
                 except TimeoutError:
                     completed = set()
 
-            logger.info(
-                "DaskExecutor2: %d running, %d completed tasks",
-                len(running),
-                len(completed),
-            )
             with running_lock, completed_condition:
                 for future in completed:
                     task = running[future]
@@ -180,7 +178,11 @@ class DaskExecutor2(TaskGraphExecutorBase):
                 while results_queue:
                     item = results_queue.pop(0)
                     task, result = item
-                    graph.process_completed_tasks([(task.task_id, result)])
+                    graph.process_completed_tasks([(task, result)])
+                    finished_tasks += 1
+                    logger.info(
+                        "finished %s/%s", finished_tasks,
+                        initial_task_count)
                     yield task, result
 
             is_done = graph.empty()

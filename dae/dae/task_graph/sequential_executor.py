@@ -22,27 +22,25 @@ class SequentialExecutor(TaskGraphExecutorBase):
         initial_task_count = len(graph)
 
         while not graph.empty():
-            ready_tasks = list(graph.ready_tasks())
-            for task in ready_tasks:
+
+            ready_tasks = graph.extract_tasks(graph.ready_tasks())
+
+            for ftask in ready_tasks:
                 # handle tasks that use the output of other tasks
                 params = copy(self._params)
-                task_id = safe_task_id(task.task_id)
+                task_id = safe_task_id(ftask.task.task_id)
                 params["task_id"] = task_id
 
-                try:
-                    result = self._exec(task.func, task.args, params)
-                except Exception as exp:  # noqa: BLE001
-                    # pylint: disable=broad-except
-                    result = exp
-                graph.process_completed_tasks([(task.task_id, result)])
+                result = self._exec(ftask.func, ftask.args, params)
+                graph.process_completed_tasks([(ftask.task, result)])
 
                 finished_tasks += 1
-                logger.debug("clean up task %s", task)
+                logger.debug("clean up task %s", ftask)
                 logger.info(
                     "finished %s/%s", finished_tasks,
                     initial_task_count)
 
-                yield task, result
+                yield ftask.task, result
 
         # all tasks have already executed. Let's clean the state.
         assert len(graph) == 0

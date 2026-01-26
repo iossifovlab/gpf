@@ -55,6 +55,7 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
 
         task_logger = logging.getLogger("task_executor")
         task_logger.info("task <%s> started", task_id)
+
         start = time.time()
 
         process = psutil.Process(os.getpid())
@@ -62,7 +63,12 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
         task_logger.info(
             "worker process memory usage: %.2f MB", start_memory_mb)
 
-        result = task_func(*args)
+        try:
+            result = task_func(*args)
+        except Exception as exp:  # noqa: BLE001
+            # pylint: disable=broad-except
+            result = exp
+
         elapsed = time.time() - start
         task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
 
@@ -81,13 +87,10 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
     ) -> None:
 
         result_fn = TaskGraphExecutorBase._result_fn(params)
-        try:
-            result = TaskGraphExecutorBase._exec_internal(
-                task_func, args, params,
-            )
-        except Exception as exp:  # noqa: BLE001
-            # pylint: disable=broad-except
-            result = exp
+        result = TaskGraphExecutorBase._exec_internal(
+            task_func, args, params,
+        )
+
         try:
             with fsspec.open(result_fn, "wb") as out:
                 pickle.dump(result, out)  # pyright: ignore
@@ -145,9 +148,7 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
                 result = record.result
                 completed_tasks[task] = result
 
-        graph.process_completed_tasks([
-            (task.task_id, result)
-            for task, result in completed_tasks.items()])
+        graph.process_completed_tasks(list(completed_tasks.items()))
 
         for task, result in completed_tasks.items():
             yield task, result

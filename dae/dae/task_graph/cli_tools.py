@@ -14,6 +14,7 @@ from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.task_graph.process_pool_executor import ProcessPoolTaskExecutor
 from dae.task_graph.sequential_executor import SequentialExecutor
 
 logger = logging.getLogger(__name__)
@@ -38,12 +39,6 @@ class TaskGraphCli:
             help="Number of jobs to run in parallel. Defaults to the number "
             "of processors on the machine")
 
-        executor_group.add_argument(
-            "--thread-pool", "--tp",
-            dest="use_thread_pool", action="store_true",
-            help="Use a thread pool executor with the specified number of "
-            "threads instead of a dask distributed executor.",
-        )
         executor_group.add_argument(
             "--process-pool", "--pp",
             dest="use_process_pool", action="store_true",
@@ -119,7 +114,7 @@ class TaskGraphCli:
             setup_client,
             setup_client_from_config,
         )
-        from dae.task_graph.dask_executor import DaskExecutor2
+        from dae.task_graph.dask_executor import DaskExecutor
 
         args = Box(kwargs)
 
@@ -144,7 +139,7 @@ class TaskGraphCli:
                 number_of_workers=args.jobs)
 
         logger.info("Working with client: %s", client)
-        return DaskExecutor2(client, task_cache=task_cache, **kwargs)
+        return DaskExecutor(client, task_cache=task_cache, **kwargs)
 
     @staticmethod
     def create_executor(
@@ -161,14 +156,13 @@ class TaskGraphCli:
             assert args.dask_cluster_config_file is None
             return SequentialExecutor(task_cache=task_cache, **kwargs)
 
-        if args.use_thread_pool or args.use_process_pool:
+        if args.use_process_pool:
             assert args.dask_cluster_name is None
             assert args.dask_cluster_config_file is None
-            pool_type = "process_pool"
-            if args.use_thread_pool:
-                pool_type = "thread_pool"
-            raise NotImplementedError(
-                f"{pool_type} executor is not implemented yet")
+            return ProcessPoolTaskExecutor(
+                max_workers=args.jobs,
+                task_cache=task_cache,
+                **kwargs)
 
         return TaskGraphCli._create_dask_executor(
             task_cache=task_cache, **kwargs)
@@ -186,7 +180,7 @@ class TaskGraphCli:
         args = Box(kwargs)
 
         if args.task_ids:
-            task_graph = task_graph.prune(ids_to_keep=args.task_ids)
+            task_graph.prune(tasks_to_keep=args.task_ids)
 
         force = args.get("force", False)
         task_cache = TaskCache.create(

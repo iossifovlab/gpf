@@ -2,11 +2,11 @@
 from collections.abc import Generator
 
 import pytest
-from dae.task_graph.dask_executor import DaskExecutor2
+from dae.task_graph.dask_executor import DaskExecutor
 from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
-from dae.task_graph.graph import TaskGraph
+from dae.task_graph.graph import Task, TaskGraph
 from dae.task_graph.process_pool_executor import ProcessPoolTaskExecutor
 from dae.task_graph.sequential_executor import SequentialExecutor
 from dask.distributed import Client
@@ -20,13 +20,13 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture(params=["dask2", "sequential", "process_pool"])
+@pytest.fixture(params=["dask", "sequential", "process_pool"])
 def executor(
     dask_client: Client,
     request: pytest.FixtureRequest,
 ) -> TaskGraphExecutor:
-    if request.param == "dask2":
-        return DaskExecutor2(dask_client)
+    if request.param == "dask":
+        return DaskExecutor(dask_client)
     if request.param == "sequential":
         return SequentialExecutor()
     if request.param == "process_pool":
@@ -116,7 +116,7 @@ def test_dask_executor(
 ) -> None:
     graph = TaskGraph()
     for task_id, dep_ids in tasks:
-        deps = [graph.get_task(dep_id) for dep_id in dep_ids]
+        deps = [Task(dep_id) for dep_id in dep_ids]
         graph.create_task(task_id, noop, args=[], deps=deps)
 
     executed_tasks = list(executor.execute(graph))

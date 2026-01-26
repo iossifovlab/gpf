@@ -19,7 +19,7 @@ from dae.task_graph.cli_tools import (
     task_graph_run_with_results,
     task_graph_status,
 )
-from dae.task_graph.dask_executor import DaskExecutor2
+from dae.task_graph.dask_executor import DaskExecutor
 from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
@@ -37,13 +37,13 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture(params=["dask2", "sequential", "process_pool"])
+@pytest.fixture(params=["dask", "sequential", "process_pool"])
 def executor(
     dask_client: Client,
     request: pytest.FixtureRequest,
 ) -> TaskGraphExecutor:
-    if request.param == "dask2":
-        return DaskExecutor2(dask_client)
+    if request.param == "dask":
+        return DaskExecutor(dask_client)
     if request.param == "process_pool":
         return ProcessPoolTaskExecutor()
     return SequentialExecutor()
@@ -278,9 +278,8 @@ def test_task_graph_all_done_returns_false_when_missing_results() -> None:
 
 def test_task_graph_all_done_detects_cycle() -> None:
     graph = TaskGraph()
-    task_a = graph.create_task("A", lambda: None, args=[], deps=[])
-    task_b = graph.create_task("B", lambda: None, args=[], deps=[task_a])
-    task_a.deps.append(task_b)
+    graph.create_task("A", lambda: None, args=[], deps=[Task("B")])
+    graph.create_task("B", lambda: None, args=[], deps=[Task("A")])
 
     cache = DummyCache({})
 

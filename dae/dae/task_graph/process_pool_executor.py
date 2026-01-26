@@ -16,7 +16,7 @@ from typing import Any
 import psutil
 
 from dae.task_graph.base_executor import TaskGraphExecutorBase
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskDesc, TaskGraph
 from dae.task_graph.logging import (
     safe_task_id,
 )
@@ -34,13 +34,13 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         max_workers = kwargs.get("n_threads", os.cpu_count() or 1)
         self._executor = ProcessPoolExecutor(max_workers=max_workers)
 
-    def _submit_task(self, task: Task) -> Future:
+    def _submit_task(self, task: TaskDesc) -> Future:
         assert len(task.deps) == 0
         assert not any(isinstance(arg, Task) for arg in task.args), \
             "Task has no dependencies to wait for."
 
         params = copy(self._params)
-        task_id = safe_task_id(task.task_id)
+        task_id = safe_task_id(task.task.task_id)
         params["task_id"] = task_id
 
         future = self._executor.submit(
@@ -80,13 +80,13 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
     def _schedule_tasks(
         self, graph: TaskGraph,
     ) -> dict[Future, Task]:
-        ready_tasks = list(graph.ready_tasks())
+        ready_tasks = graph.extract_tasks(graph.ready_tasks())
         submitted_tasks: dict[Future, Task] = {}
         if ready_tasks:
             logger.debug("scheduling %d tasks", len(ready_tasks))
             for task in ready_tasks:
                 future = self._submit_task(task)
-                submitted_tasks[future] = task
+                submitted_tasks[future] = task.task
 
         return submitted_tasks
 
@@ -124,7 +124,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
                     # pylint: disable=broad-except
                     result = ex
 
-                graph.process_completed_tasks([(task.task_id, result)])
+                graph.process_completed_tasks([(task, result)])
 
                 finished_tasks += 1
                 processed.append((task, result))
