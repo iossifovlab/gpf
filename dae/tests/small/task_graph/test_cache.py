@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 from dae.task_graph.cache import CacheRecord, CacheRecordType, FileTaskCache
-from dae.task_graph.executor import SequentialExecutor
 from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.sequential_executor import SequentialExecutor
 
 
 def noop(*args: Any, **kwargs: Any) -> None:

@@ -8,12 +8,9 @@ from dae.genomic_resources.genomic_context import (
     get_genomic_context,
 )
 from dae.import_tools.import_tools import ImportProject
-from dae.task_graph import TaskGraphCli
-from dae.task_graph.executor import (
-    AbstractTaskGraphExecutor,
-    SequentialExecutor,
-    task_graph_run,
-)
+from dae.task_graph.cli_tools import TaskGraphCli, task_graph_run
+from dae.task_graph.executor import TaskGraphExecutor
+from dae.task_graph.sequential_executor import SequentialExecutor
 from dae.utils import fs_utils
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -70,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def run_with_project(
     project: ImportProject,
-    executor: AbstractTaskGraphExecutor | None = None,
+    executor: TaskGraphExecutor | None = None,
 ) -> bool:
     """Run import with the given project."""
     if executor is None:

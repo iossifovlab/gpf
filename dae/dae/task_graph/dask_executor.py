@@ -1,15 +1,15 @@
 import logging
 import threading
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from copy import copy
 from typing import Any
 
 from dask.distributed import Client, Future, wait
 
+from dae.task_graph.base_executor import TaskGraphExecutorBase
 from dae.task_graph.cache import NoTaskCache, TaskCache
-from dae.task_graph.executor import TaskGraphExecutor
-from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
+from dae.task_graph.graph import Task, TaskGraph2
 from dae.task_graph.logging import (
     ensure_log_dir,
     safe_task_id,
@@ -19,19 +19,19 @@ NO_TASK_CACHE = NoTaskCache()
 logger = logging.getLogger(__name__)
 
 
-class DaskExecutor2(TaskGraphExecutor):
+class DaskExecutor2(TaskGraphExecutorBase):
     """Dask-based task graph executor."""
 
     def __init__(
         self, dask_client: Client,
-        task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any,  # noqa: ARG002
+        task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any,
     ) -> None:
         """Initialize the Dask executor.
 
         Args:
             dask_client: Dask client to use for task execution.
         """
-        super().__init__()
+        super().__init__(task_cache=task_cache, **kwargs)
         self._executing = False
         self._dask_client = dask_client
 
@@ -60,7 +60,7 @@ class DaskExecutor2(TaskGraphExecutor):
                     params["task_id"] = task_id
                     logger.info("Submitting task %s to Dask", task_id)
                     future = self._dask_client.submit(
-                        self._exec_internal, task.func, task.args, params,
+                        self._exec, task.func, task.args, params,
                         key=task_id,
                     )
                     if future is None:
@@ -105,49 +105,9 @@ class DaskExecutor2(TaskGraphExecutor):
                     completed_condition.wait(timeout=0.2)
                 completed_condition.wait()
 
-    @staticmethod
-    def _exec_internal(
-        task_func: Callable, args: list, params: dict[str, Any],
-    ) -> Any:
-        try:
-            logger.warning("Executing task %s", params["task_id"])
-            logger.info("task %s started with args %s", params["task_id"], args)
-            result = task_func(*args)
-            logger.info("task %s finished", params["task_id"])
-
-        except Exception:
-            logger.exception(
-                "task %s failed with exception", params["task_id"])
-            raise
-
-        return result
-
-    def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
-        """Execute the given task graph using Dask.
-
-        Args:
-            task_graph: Task graph to execute.
-
-        Yields:
-            Tuples of (task, result) as tasks complete.
-        """
-
-        graph = TaskGraph2.from_task_graph(task_graph)
-        yield from self.execute2(graph)
-
-    def execute2(
+    def _execute(
         self, graph: TaskGraph2,
     ) -> Iterator[tuple[Task, Any]]:
-        """Execute the given task graph using Dask.
-
-        Args:
-            task_graph: Task graph to execute.
-
-        Yields:
-            Tuples of (task, result) as tasks complete.
-        """
-        assert not self._executing, \
-            "Cannot execute a new graph while an old one is still running."
         self._executing = True
 
         submit_queue: list[Task | None] = []

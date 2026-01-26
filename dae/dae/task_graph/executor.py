@@ -4,9 +4,7 @@ import logging
 import multiprocessing as mp
 import os
 import pickle  # noqa: S403
-import sys
 import time
-import traceback
 from abc import abstractmethod
 from collections import defaultdict, deque
 from concurrent.futures import (
@@ -402,42 +400,6 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             del self._task_dependants[task.task_id]
 
 
-class SequentialExecutor(AbstractTaskGraphExecutor):
-    """A Task Graph Executor that executes task in sequential order."""
-
-    def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
-        finished_tasks = 0
-        initial_task_count = len(self._task_queue)
-
-        while self._task_queue:
-            selected_tasks = self._select_tasks_to_run(1)
-            for task in selected_tasks:
-                # handle tasks that use the output of other tasks
-                params = copy(self._params)
-                task_id = safe_task_id(task.task_id)
-                params["task_id"] = task_id
-
-                try:
-                    result = self._exec(task.func, task.args, [], params)
-                except Exception as exp:  # noqa: BLE001
-                    # pylint: disable=broad-except
-                    result = exp
-                self._process_completed_task(task, result)
-
-                finished_tasks += 1
-                logger.debug("clean up task %s", task)
-                logger.info(
-                    "finished %s/%s", finished_tasks,
-                    initial_task_count)
-
-                del self._task_queue[task.task_id]
-
-                yield task, result
-
-        # all tasks have already executed. Let's clean the state.
-        assert len(self._task_queue) == 0
-
-
 class DaskExecutor(AbstractTaskGraphExecutor):
     """Execute tasks in parallel using Dask to do the heavy lifting."""
 
@@ -771,91 +733,3 @@ class ThreadedTaskExecutor(AbstractTaskGraphExecutor):
 
     def close(self) -> None:
         self._executor.shutdown()
-
-
-def task_graph_run(
-    task_graph: TaskGraph,
-    executor: TaskGraphExecutor | None = None,
-    *,
-    keep_going: bool = False,
-) -> bool:
-    """Execute (runs) the task_graph with the given executor."""
-    no_errors = True
-    for result_or_error in task_graph_run_with_results(
-            task_graph, executor, keep_going=keep_going):
-        if isinstance(result_or_error, Exception):
-            no_errors = False
-    return no_errors
-
-
-def task_graph_run_with_results(
-    task_graph: TaskGraph, executor: TaskGraphExecutor | None = None,
-    *,
-    keep_going: bool = False,
-) -> Generator[Any, None, None]:
-    """Run a task graph, yielding the results from each task."""
-    if executor is None:
-        executor = SequentialExecutor()
-    tasks_iter = executor.execute(task_graph)
-    for task, result_or_error in tasks_iter:
-        if isinstance(result_or_error, Exception):
-            if keep_going:
-                print(f"Task {task.task_id} failed with:",
-                      file=sys.stderr)
-                traceback.print_exception(
-                    None, value=result_or_error,
-                    tb=result_or_error.__traceback__,
-                    file=sys.stdout,
-                )
-            else:
-                raise result_or_error
-        yield result_or_error
-
-
-def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
-    """Check if the task graph is fully executed.
-
-    When all tasks are already computed, the function returns True.
-    If there are tasks, that need to run, the function returns False.
-    """
-    # pylint: disable=protected-access
-    AbstractTaskGraphExecutor._check_for_cyclic_deps(  # noqa: SLF001
-        task_graph)
-
-    already_computed_tasks = {}
-    for task_node, record in task_cache.load(task_graph):
-        if record.type == CacheRecordType.COMPUTED:
-            already_computed_tasks[task_node] = record.result
-
-    for task_node in AbstractTaskGraphExecutor._in_exec_order(  # noqa: SLF001
-            task_graph):
-        if task_node not in already_computed_tasks:
-            return False
-
-    return True
-
-
-def task_graph_status(
-        task_graph: TaskGraph, task_cache: TaskCache,
-        verbose: int | None) -> bool:
-    """Show the status of each task from the task graph."""
-    id_col_len = max(len(t.task_id) for t in task_graph.tasks)
-    id_col_len = min(120, max(50, id_col_len))
-    columns = ["TaskID", "Status"]
-    print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-    task2record = dict(task_cache.load(task_graph))
-    for task in task_graph.tasks:
-        record = task2record[task]
-        status = record.type.name
-        msg = f"{task.task_id:{id_col_len}s} {status}"
-        is_error = record.type == CacheRecordType.ERROR
-        if is_error and not verbose:
-            msg += " (-v to see exception)"
-        print(msg)
-        if is_error and verbose:
-            traceback.print_exception(
-                None, value=record.error,
-                tb=record.error.__traceback__,
-                file=sys.stdout,
-            )
-    return True

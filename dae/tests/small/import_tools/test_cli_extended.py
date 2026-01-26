@@ -11,7 +11,7 @@ import yaml
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools import cli, import_tools
-from dae.task_graph.executor import SequentialExecutor
+from dae.task_graph.sequential_executor import SequentialExecutor
 from dae.testing.alla_import import alla_gpf
 
 

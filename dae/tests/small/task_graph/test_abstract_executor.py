@@ -12,17 +12,20 @@ from dae.task_graph.cache import (
     FileTaskCache,
     TaskCache,
 )
-from dae.task_graph.executor import (
-    AbstractTaskGraphExecutor,
-    DaskExecutor,
-    SequentialExecutor,
-    ThreadedTaskExecutor,
+from dae.task_graph.cli_tools import (
     task_graph_all_done,
     task_graph_run,
     task_graph_run_with_results,
     task_graph_status,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.executor import (
+    AbstractTaskGraphExecutor,
+    DaskExecutor,
+    TaskGraphExecutor,
+    ThreadedTaskExecutor,
+)
+from dae.task_graph.graph import Task, TaskGraph, TaskGraph2
+from dae.task_graph.sequential_executor import SequentialExecutor
 from dask.distributed import Client
 
 
@@ -38,7 +41,7 @@ def dask_client() -> Generator[Client, None, None]:
 def executor(
     dask_client: Client,
     request: pytest.FixtureRequest,
-) -> AbstractTaskGraphExecutor:
+) -> TaskGraphExecutor:
     if request.param == "dask":
         return DaskExecutor(dask_client)
     if request.param == "threaded":
@@ -76,7 +79,7 @@ class DummyCache(TaskCache):
         self.mapping = mapping
 
     def load(
-        self, graph: TaskGraph,
+        self, graph: TaskGraph | TaskGraph2,
     ) -> Generator[tuple[Task, CacheRecord], None, None]:
         for task in graph.tasks:
             yield task, self.mapping.get(
@@ -105,9 +108,10 @@ def test_calling_execute_twice(executor: AbstractTaskGraphExecutor) -> None:
 
     # cannot execute a graph while executing another one
     tasks_iter = executor.execute(graph)
+    next(tasks_iter)
 
     with pytest.raises(AssertionError):
-        executor.execute(graph)
+        next(executor.execute(graph))
 
     # but ones the original is finished we can execute a new one
     list(tasks_iter)

@@ -124,6 +124,12 @@ class TaskGraph2:
 
         self.input_files: list[str] = []
 
+    @property
+    def tasks(self) -> Sequence[Task]:
+        """Return all tasks in the graph."""
+        with self._lock:
+            return list(self._tasks.values())
+
     def add_task(self, task: Task) -> None:
         """Add a new task to the graph.
 
@@ -277,6 +283,10 @@ class TaskGraph2:
         """
         with self._lock:
             for task_id, result in task_result:
+                if task_id in self._tasks:
+                    task = self._tasks.pop(task_id)
+                    self._done_tasks[task] = result
+
                 if isinstance(result, BaseException):
                     self._prune_dependants(task_id)
                     return

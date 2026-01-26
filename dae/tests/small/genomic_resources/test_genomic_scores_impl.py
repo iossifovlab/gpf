@@ -30,12 +30,12 @@ from dae.genomic_resources.testing import (
     setup_genome,
     setup_vcf,
 )
+from dae.task_graph.cli_tools import task_graph_run
 from dae.task_graph.executor import (
-    AbstractTaskGraphExecutor,
-    SequentialExecutor,
-    task_graph_run,
+    TaskGraphExecutor,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.task_graph.sequential_executor import SequentialExecutor
 
 
 def test_unpack_score_defs_classifies_histograms() -> None:
@@ -587,13 +587,13 @@ chr17  29999999 rs1388869160 TTTGAA               T       .       .       RS=138
 
 
 @pytest.fixture
-def executor() -> AbstractTaskGraphExecutor:
+def executor() -> TaskGraphExecutor:
     return SequentialExecutor()
 
 
 def test_statistics_with_vcf_allele_score(
     vcf_allele_score_resource: GenomicResource,
-    executor: AbstractTaskGraphExecutor,
+    executor: TaskGraphExecutor,
 ) -> None:
 
     impl = build_score_implementation_from_resource(vcf_allele_score_resource)
@@ -610,7 +610,7 @@ def test_statistics_with_vcf_allele_score(
 def test_statistics_with_vcf_allele_score_30_000_000(
     vcf_allele_score_resource: GenomicResource,
     mocker: pytest_mock.MockerFixture,
-    executor: AbstractTaskGraphExecutor,
+    executor: TaskGraphExecutor,
 ) -> None:
 
     mocker.patch(

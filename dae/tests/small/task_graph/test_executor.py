@@ -4,17 +4,19 @@ import time
 from collections.abc import Generator
 
 import pytest
+from dae.task_graph.cli_tools import (
+    task_graph_run_with_results,
+)
 from dae.task_graph.dask_executor import (
     DaskExecutor2,
 )
 from dae.task_graph.executor import (
     DaskExecutor,
-    SequentialExecutor,
     TaskGraphExecutor,
     ThreadedTaskExecutor,
-    task_graph_run_with_results,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.task_graph.sequential_executor import SequentialExecutor
 from dask.distributed import Client
 
 
