@@ -120,6 +120,7 @@ class TaskGraph2:
         self._lock = mp.Lock()
         self._tasks: dict[str, Task] = {}
         self._task_dependants: dict[str, set[str]] = defaultdict(set)
+        self._done_tasks: dict[Task, Any] = {}
 
         self.input_files: list[str] = []
 
@@ -173,34 +174,6 @@ class TaskGraph2:
         task = Task(task_id, func, args, deps, input_files or [])
         self.add_task(task)
         return task
-
-    def prune(self, ids_to_keep: Iterable[str]) -> TaskGraph2:
-        """Prune tasks which are not in ids_to_keep or in their deps.
-
-        tasks ids which are in ids_to_keep but not in the graph are simply
-        assumed to have already been removed and no error is raised.
-        """
-        ids_to_keep = set(ids_to_keep)
-        with self._lock:
-            ids_not_found = ids_to_keep - self._tasks.keys()
-            if ids_not_found:
-                raise KeyError(ids_not_found)
-
-            tasks_to_keep: set[str] = set()
-            for task_id, task in self._tasks.items():
-                if task_id in ids_to_keep:
-                    tasks_to_keep.add(task.task_id)
-                    self._collect_task_deps(task, tasks_to_keep)
-
-            new_tasks = {
-                task_id: task
-                for task_id, task in self._tasks.items()
-                if task_id in tasks_to_keep}
-
-            res = TaskGraph2()
-            res._tasks = new_tasks
-            res.input_files = self.input_files
-            return res
 
     @staticmethod
     def _collect_task_deps(task: Task, task_set: set[str]) -> None:

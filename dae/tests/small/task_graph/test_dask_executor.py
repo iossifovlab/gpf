@@ -63,7 +63,7 @@ def dask_client() -> Generator[Client, None, None]:
                 ("D", ["B"]),
                 ("E", ["C", "D"]),
             ],
-            [["A", "B"], ["C", "D"], ["E"]],
+            [["A", "B", "C", "D"], ["E"]],
         ),
         (
             [  # 5: multiple independent chains
@@ -74,7 +74,7 @@ def dask_client() -> Generator[Client, None, None]:
                 ("B2", ["A2"]),
                 ("C2", ["B2"]),
             ],
-            [["A1", "A2"], ["B1", "B2"], ["C1", "C2"]],
+            [["A1", "A2", "B1", "B2", "C1", "C2"]],
         ),
         (
             [  # 6: simple graph with numeric ids

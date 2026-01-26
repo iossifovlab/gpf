@@ -72,6 +72,7 @@ class DaskExecutor2(TaskGraphExecutor):
 
                     with running_lock:
                         running[future] = task
+                    submit_condition.wait(timeout=0.2)
                 submit_condition.wait()
 
     def _results_worker_func(
@@ -91,7 +92,7 @@ class DaskExecutor2(TaskGraphExecutor):
                             "Results worker received shutdown signal.")
                         return
                     future, task = item
-                    logger.info("Processing completed task %s", task.task_id)
+                    logger.info("processing completed task %s", task.task_id)
 
                     try:
                         result = future.result()
@@ -101,6 +102,7 @@ class DaskExecutor2(TaskGraphExecutor):
 
                     with results_lock:
                         results_queue.append((task, result))
+                    completed_condition.wait(timeout=0.2)
                 completed_condition.wait()
 
     @staticmethod
@@ -220,15 +222,16 @@ class DaskExecutor2(TaskGraphExecutor):
                     task, result = item
                     graph.process_completed_tasks([(task.task_id, result)])
                     yield task, result
-            with results_lock, submit_condition, \
-                    completed_condition, submit_condition:
-                is_done = (
-                    graph.empty()
-                    and not submit_queue
-                    and not running
-                    and not completed_queue
-                    and not results_queue
-                )
+
+            is_done = graph.empty()
+            with results_lock:
+                is_done = is_done and not results_queue
+            with submit_condition:
+                is_done = is_done and not submit_queue
+            with running_lock:
+                is_done = is_done and not running
+            with completed_condition:
+                is_done = is_done and not completed_queue
 
         with submit_condition:
             submit_queue.append(None)
