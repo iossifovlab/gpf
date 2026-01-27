@@ -132,7 +132,7 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                               max: 56.0
                     """),
                     "score.csv": textwrap.dedent("""
-                        gene,gene_score1
+                        gene,gene_score2
                         g1,20.2
                         g2,40.4
                     """),
