@@ -1,5 +1,6 @@
 import logging
 import time
+from collections.abc import Iterable
 from copy import copy
 from typing import Any
 
@@ -533,27 +534,32 @@ class GeneProfileDBWriter:
             for score_id, score in scores.items():
                 insert_map[f"{category}_{score_id}"] = score
 
-        insert_map.update(dict(gp.variant_counts.items()))
+        insert_map.update(gp.variant_counts.items())
 
         return insert_map
 
     def insert_gps(
         self,
-        gps: list[GPStatistic],
+        gps: Iterable[GPStatistic],
     ) -> None:
         """Insert multiple GPStatistics into the DB."""
-        started = time.time()
         with duckdb.connect(f"{self.dbfile}") as connection:
             self._clear_gp_table(connection)
-            gp_count = len(gps)
-            for idx, gp in enumerate(gps, 1):
-                self.insert_gp(gp, connection)
+            cols = None
+            vals = []
+            for gp in gps:
+                insert_map = self._create_insert_map(gp)
+                if cols is None:
+                    cols = list(insert_map.keys())
+                vals.append(tuple(insert_map.values()))
 
-                if idx % 1000 == 0:
-                    elapsed = time.time() - started
-                    logger.info(
-                        "Inserted %s/%s GPs into DB in %.2f seconds",
-                        idx, gp_count, elapsed)
+            query = insert(
+                values(vals),
+                self.table,
+                columns=cols,
+            )
+
+            connection.execute(to_duckdb_transpile(query))
             logger.info("Done!")
             connection.commit()
 

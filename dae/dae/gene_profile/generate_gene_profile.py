@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from collections.abc import Iterable
+from itertools import batched
 from typing import Any, cast
 
 from box import Box
@@ -46,10 +47,7 @@ def generate_gp(
             gene_score_name = score["score_name"]
             score_desc = gene_scores_db.get_score_desc(gene_score_name)
             gene_score = gene_scores_db.get_gene_score(score_desc.resource_id)
-            if gene_symbol in gene_score.get_genes(gene_score_name):
-                value = gene_score.get_gene_value(gene_score_name, gene_symbol)
-            else:
-                value = None
+            value = gene_score.get_gene_value(gene_score_name, gene_symbol)
             scores[category_name][gene_score_name] = value
 
     variant_counts: dict[str, Any] = {}
@@ -112,14 +110,14 @@ def add_variant_count(
 def calculate_table_values(
     instance: GPFInstance,
     variant_counts: dict[str, Any],
+    gene_profiles: dict[str, GPStatistic],
     dataset_id: str,
     filters: Box,
-) -> dict[str, Any]:
+) -> None:
     """Calculate GP variant counts and return a SQLite update mapping."""
     # pylint: disable=invalid-name
-    table_values: dict[str, Any] = {}
     for gs, counts in variant_counts.items():
-        table_values[gs] = {}
+        gp_counts = gene_profiles[gs].variant_counts
         genotype_data = instance.get_genotype_data(dataset_id)
         for ps in filters.person_sets:
             psc = genotype_data.get_person_set_collection(
@@ -139,13 +137,12 @@ def calculate_table_values(
 
                 count = counts[set_name][stat_id]
                 if children_count > 0:
-                    table_values[gs][count_col] = count
-                    table_values[gs][rate_col] = \
+                    gp_counts[count_col] = count
+                    gp_counts[rate_col] = \
                         (count / children_count) * 1000
                 else:
-                    table_values[gs][count_col] = 0
-                    table_values[gs][rate_col] = 0
-    return table_values
+                    gp_counts[count_col] = 0
+                    gp_counts[rate_col] = 0
 
 
 def count_variant(
@@ -379,9 +376,6 @@ def main(
                 "Generated %d/%d GP statistics %.2f secs",
                 idx, gs_count, elapsed)
 
-    logger.info("Inserting statistics into DB")
-    gpdb.insert_gps(list(gps.values()))
-
     generate_end = time.time()
     elapsed = generate_end - start
     logger.info("Took %.2f secs", elapsed)
@@ -472,8 +466,8 @@ def main(
                     genotype_data.query_variants(
                         genes=genes,
                         inheritance=[
-                            "not denovo and "
-                            "not possible_denovo and not possible_omission",
+                            ("not denovo and "
+                             "not possible_denovo and not possible_omission"),
                             "mendelian or missing",
                         ],
                         frequency_filter=[("af_allele_freq", (None, 1.0))],
@@ -494,16 +488,24 @@ def main(
             logger.info("Done counting rare variants")
 
         logger.info("Calculating rates for %s", dataset_id)
-        table_values = calculate_table_values(
+        calculate_table_values(
             gpf_instance,
             variant_counts,
+            gps,
             dataset_id,
             filters,
         )
         logger.info("Done calculating rates for %s", dataset_id)
-        logger.info("Updating GPs for %s", dataset_id)
-        gpdb.update_gps_with_values(table_values)
-        logger.info("Done updating GPs for %s", dataset_id)
+        logger.info("Inserting statistics into DB")
+        batches = batched(gps.values(), 1000)
+        for idx, gene_profiles_batch in enumerate(batches, 1):
+            logger.info("Inserting batch %d", idx)
+            started = time.time()
+            gpdb.insert_gps(gene_profiles_batch)
+            elapsed = time.time() - started
+            logger.info(
+                "Done inserting batch %d, took %.2f seconds", idx, elapsed)
+        logger.info("Done inserting GPs for %s", dataset_id)
 
     elapsed = time.time() - generate_end
     logger.info("Took %.2f secs", elapsed)
