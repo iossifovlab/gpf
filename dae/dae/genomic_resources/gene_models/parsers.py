@@ -686,7 +686,7 @@ def parse_gtf_gene_models_format(
                 raise ValueError(
                     f"{tr_id} of {feature} already in transcript models",
                 )
-            gene = attributes["gene_name"]
+            gene = attributes.get("gene_name") or attributes["gene_id"]
             gene = gene_mapping.get(gene, gene)
 
             transcript_model = TranscriptModel(

@@ -95,7 +95,7 @@ chr1	genPredFile	exon	206237	206597	.	-	.	gene_id "FAM138D"; transcript_id "NR_0
 ###
 # NM_001005221 chr1:450739-451678 (-) CDS: 450739-451678
 #
-chr1	genPredFile	transcript	450740	451678	.	-	.	gene_id "OR4F29"; transcript_id "NM_001005221";  gene_name "OR4F29";
+chr1	genPredFile	transcript	450740	451678	.	-	.	gene_id "OR4F29"; transcript_id "NM_001005221";
 chr1	genPredFile	exon	450740	451678	.	-	.	gene_id "OR4F29"; transcript_id "NM_001005221"; exon_number "1"; exon_id "NM_001005221.1"; gene_name "OR4F29";
 chr1	genPredFile	CDS	450743	451678	.	-	0	gene_id "OR4F29"; transcript_id "NM_001005221"; exon_number "1"; exon_id "NM_001005221.1"; gene_name "OR4F29";
 chr1	genPredFile	start_codon	451676	451678	.	-	0	gene_id "OR4F29"; transcript_id "NM_001005221"; exon_number "1"; exon_id "NM_001005221.1"; gene_name "OR4F29";
