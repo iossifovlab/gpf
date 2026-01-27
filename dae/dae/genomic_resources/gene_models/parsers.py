@@ -715,7 +715,10 @@ def parse_gtf_gene_models_format(
                 )
                 transcript_model.exons.append(exon)
                 continue
-        if feature in {"UTR", "5UTR", "3UTR", "CDS"}:
+        if feature in {
+                "UTR", "5UTR", "3UTR", "five_prime_utr", "three_prime_utr",
+                "CDS",
+            }:
             continue
         if feature in {"start_codon", "stop_codon"}:
             transcript_model = transcript_models[tr_id]
