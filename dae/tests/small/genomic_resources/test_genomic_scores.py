@@ -835,23 +835,23 @@ def test_statistics_build_tasks(tmp_path: pathlib.Path) -> None:
 
     task_graph = TaskGraph()
     tasks = impl.add_statistics_build_tasks(task_graph)
-    save_task = tasks[0]
-    merge_task = save_task.deps[0]
+    save_task = task_graph.get_task_desc(tasks[0])
+    merge_task = task_graph.get_task_desc(save_task.deps[0])
     calc_tasks = merge_task.deps
     assert len(calc_tasks) == 1  # merge_min_max task
 
     task_graph = TaskGraph()
     tasks = impl.add_statistics_build_tasks(task_graph, region_size=20)
-    save_task = tasks[0]
-    merge_task = save_task.deps[0]
+    save_task = task_graph.get_task_desc(tasks[0])
+    merge_task = task_graph.get_task_desc(save_task.deps[0])
     calc_tasks = merge_task.deps
     assert len(calc_tasks) == 1  # merge_min_max task
 
     task_graph = TaskGraph()
     tasks = impl.add_statistics_build_tasks(task_graph, region_size=0)
-    noregion_task = tasks[0]
     assert len(tasks) == 1  # merge_min_max task
-    assert noregion_task.deps == []
+    noregion_task = task_graph.get_task_desc(tasks[0])
+    assert not noregion_task.deps
 
 
 def test_get_score_range_reads_histogram() -> None:

@@ -34,8 +34,8 @@ from dae.task_graph.cache import (
 )
 from dae.task_graph.cli_tools import (
     TaskGraphCli,
+    task_graph_run_with_results,
 )
-from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
 from dae.variants.attributes import Role
 

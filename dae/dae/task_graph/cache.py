@@ -13,7 +13,7 @@ from typing import Any, cast
 
 import fsspec
 
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskGraph, _Task
 from dae.utils import fs_utils
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,9 @@ class TaskCache:
     """Store the result of a task in a file and reuse it if possible."""
 
     @abstractmethod
-    def load(self, graph: TaskGraph) -> Iterator[tuple[Task, CacheRecord]]:
+    def load(
+        self, graph: TaskGraph,
+    ) -> Iterator[tuple[Task, CacheRecord]]:
         """For task in the `graph` load and yield the cache record."""
 
     @abstractmethod
@@ -103,34 +105,39 @@ class FileTaskCache(TaskCache):
         assert self._global_dependancies is None
         self._global_dependancies = graph.input_files
         task2record: dict[Task, CacheRecord] = {}
-        for task in graph.tasks:
-            yield task, self._get_record(task, task2record)
+        with graph as graph_tasks:
+            for task, task_node in graph_tasks.items():
+                yield task, self._get_record(
+                    graph_tasks, task_node, task2record)
         self._global_dependancies = None
         self._mtime_cache = {}
 
     def _get_record(
-            self, task_node: Task, task2record: dict[Task, CacheRecord],
+            self, graph_tasks: dict[Task, _Task],
+            task_node: _Task,
+            task2record: dict[Task, CacheRecord],
     ) -> CacheRecord:
         if self.force:
             return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
-        record = task2record.get(task_node)
+        record = task2record.get(task_node.task)
         if record is not None:
             return record
 
         unsatisfied_deps = False
         for dep in task_node.deps:
-            dep_rec = self._get_record(dep, task2record)
+            dep_rec = self._get_record(
+                graph_tasks, graph_tasks[dep], task2record)
             if dep_rec.type != CacheRecordType.COMPUTED:
                 unsatisfied_deps = True
                 break
 
         if unsatisfied_deps or self._needs_compute(task_node):
             res_record = CacheRecord(CacheRecordType.NEEDS_COMPUTE)
-            task2record[task_node] = res_record
+            task2record[task_node.task] = res_record
             return res_record
 
-        output_fn = self._get_flag_filename(task_node)
+        output_fn = self._get_flag_filename(task_node.task)
         with fsspec.open(output_fn, "rb") as cache_file:
             try:
                 res_record = cast(
@@ -142,21 +149,23 @@ class FileTaskCache(TaskCache):
                     task_node,
                 )
                 res_record = CacheRecord(CacheRecordType.NEEDS_COMPUTE)
-            task2record[task_node] = res_record
+            task2record[task_node.task] = res_record
             return res_record
 
-    def _needs_compute(self, task: Task) -> bool:
+    def _needs_compute(
+        self, task_node: _Task,
+    ) -> bool:
         # check _global_dependancies only for first level task_nodes
-        if len(task.deps) == 0:
+        if len(task_node.deps) == 0:
             in_files = copy(self._global_dependancies)
         else:
             in_files = []
         assert in_files is not None
-        in_files.extend(task.input_files)
-        for dep in task.deps:
+        in_files.extend(task_node.input_files)
+        for dep in task_node.deps:
             in_files.append(self._get_flag_filename(dep))
 
-        output_fn = self._get_flag_filename(task)
+        output_fn = self._get_flag_filename(task_node.task)
         return self._should_recompute_output(in_files, [output_fn])
 
     def cache(self, task_node: Task, *, is_error: bool, result: Any) -> None:

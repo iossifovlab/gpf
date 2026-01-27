@@ -3,13 +3,14 @@ import os
 import pickle  # noqa: S403
 import time
 from collections.abc import Generator
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 import pytest
 from dae.task_graph.cache import CacheRecord, CacheRecordType, FileTaskCache
-from dae.task_graph.executor import SequentialExecutor
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskGraph, _Task
+from dae.task_graph.sequential_executor import SequentialExecutor
 
 
 def noop(*args: Any, **kwargs: Any) -> None:
@@ -42,22 +43,33 @@ def execute_with_file_cache(graph: TaskGraph, work_dir: str) -> None:
         pass
 
 
+def test_graph(graph: TaskGraph) -> None:
+    assert len(graph.tasks) == 14
+    executor = SequentialExecutor()
+    result = list(executor.execute(graph))
+    assert len(result) == 14
+
+
 def test_get_record_force_returns_needs_compute(tmp_path: Path) -> None:
     cache = FileTaskCache(cache_dir=str(tmp_path), force=True)
-    task = TaskGraph().create_task("Task", noop, args=[], deps=[])
-
-    record = cache._get_record(task, {})
+    graph = TaskGraph()
+    task = graph.create_task("Task", noop, args=[], deps=[])
+    with graph as graph_tasks:
+        task_node = graph_tasks[task]
+        record = cache._get_record(graph_tasks, task_node, {})
 
     assert record.type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_get_record_returns_cached_entry(tmp_path: Path) -> None:
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    task = TaskGraph().create_task("Task", noop, args=[], deps=[])
+    graph = TaskGraph()
+    task = graph.create_task("Task", noop, args=[], deps=[])
     cached = CacheRecord(CacheRecordType.COMPUTED, "cached")
     task2record = {task: cached}
-
-    record = cache._get_record(task, task2record)
+    with graph as graph_tasks:
+        task_node = graph_tasks[task]
+        record = cache._get_record(graph_tasks, task_node, task2record)
 
     assert record is cached
 
@@ -73,8 +85,9 @@ def test_get_record_requires_compute_if_deps_not_ready(
     dep = graph.create_task("dep", noop, args=[], deps=[])
     task = graph.create_task("task", noop, args=[], deps=[dep])
     task2record = {dep: CacheRecord(CacheRecordType.NEEDS_COMPUTE)}
-
-    record = cache._get_record(task, task2record)
+    with graph as graph_tasks:
+        task_node = graph_tasks[task]
+        record = cache._get_record(graph_tasks, task_node, task2record)
 
     assert record.type == CacheRecordType.NEEDS_COMPUTE
     assert task2record[task] is record
@@ -100,7 +113,9 @@ def test_get_record_reads_serialized_cache(
         pickle.dump(expected, out)
 
     task2record: dict[Task, CacheRecord] = {}
-    result = cache._get_record(task, task2record)
+    with graph as graph_tasks:
+        task_node = graph_tasks[task]
+        result = cache._get_record(graph_tasks, task_node, task2record)
 
     assert result == expected
     assert task2record[task] == expected
@@ -115,9 +130,12 @@ def test_file_cache_clear_state(
 
 
 def test_file_cache_just_executed(graph: TaskGraph, tmp_path: Path) -> None:
+    working_graph = deepcopy(graph)
+
     executor = SequentialExecutor(FileTaskCache(cache_dir=str(tmp_path)))
-    for _ in executor.execute(graph):
-        pass
+    result = list(executor.execute(working_graph))
+
+    assert len(result) == len(graph.tasks)
 
     cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
@@ -147,11 +165,14 @@ def test_file_cache_mod_input_file_of_intermediate_node(
 ) -> None:
     dep_fn = str(tmp_path / "file-used-by-intermediate-node")
     touch(dep_fn)
-    int_node = get_task_by_id(graph, "Intermediate")
+    with graph as graph_tasks:
+        int_node = graph_tasks[Task("Intermediate")]
+
     assert int_node is not None
     int_node.input_files.append(dep_fn)
 
-    execute_with_file_cache(graph, str(tmp_path))
+    working_graph = deepcopy(graph)
+    execute_with_file_cache(working_graph, str(tmp_path))
 
     if operation == "touch":
         touch(dep_fn)
@@ -161,37 +182,40 @@ def test_file_cache_mod_input_file_of_intermediate_node(
     cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
 
-    assert task2record[int_node].type == CacheRecordType.NEEDS_COMPUTE
-    for task in get_task_descendants(graph, int_node):
-        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
+    assert task2record[int_node.task].type == CacheRecordType.NEEDS_COMPUTE
+    for task in _get_task_descendants(graph, int_node):
+        assert task2record[task.task].type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
 def test_file_cache_mod_flag_file_of_intermediate_node(
     graph: TaskGraph, tmp_path: Path, operation: str,
 ) -> None:
-    execute_with_file_cache(graph, str(tmp_path))
+    working_graph = deepcopy(graph)
+    execute_with_file_cache(working_graph, str(tmp_path))
 
     cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
     for record in task2record.values():
         assert record.type == CacheRecordType.COMPUTED
 
-    first_task = get_task_by_id(graph, "First")
+    with graph as graph_tasks:
+        first_task = graph_tasks[Task("First")]
     assert first_task is not None
 
     if operation == "touch":
-        touch(cache._get_flag_filename(first_task))
+        touch(cache._get_flag_filename(first_task.task))
         task2record = dict(cache.load(graph))
-        assert task2record[first_task].type == CacheRecordType.COMPUTED
+        assert task2record[first_task.task].type == CacheRecordType.COMPUTED
     else:
         assert operation == "remove"
-        os.remove(cache._get_flag_filename(first_task))
+        os.remove(cache._get_flag_filename(first_task.task))
         task2record = dict(cache.load(graph))
-        assert task2record[first_task].type == CacheRecordType.NEEDS_COMPUTE
+        assert task2record[first_task.task].type \
+            == CacheRecordType.NEEDS_COMPUTE
 
-    for task in get_task_descendants(graph, first_task):
-        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
+    for task in _get_task_descendants(graph, first_task):
+        assert task2record[task.task].type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_very_large_task_name(tmp_path: Path) -> None:
@@ -211,24 +235,31 @@ def touch(filename: str) -> None:
     Path(filename).touch()
 
 
-def get_task_by_id(graph: TaskGraph, task_id: str) -> Task | None:
+def _get_task_by_id(graph: TaskGraph, task_id: str) -> Task | None:
     for task in graph.tasks:
         if task.task_id == task_id:
             return task
     return None
 
 
-def get_task_descendants(
-    graph: TaskGraph, parent_task: Task,
-) -> Generator[Task, None, None]:
-    for task in graph.tasks:
-        if is_task_descendant(task, parent_task):
-            yield task
+def _get_task_descendants(
+    graph: TaskGraph, parent_task: _Task,
+) -> Generator[_Task, None, None]:
+    with graph as graph_tasks:
+        for task in graph_tasks.values():
+            if _is_task_descendant(graph_tasks, task, parent_task):
+                yield task
 
 
-def is_task_descendant(child_task: Task, parent_task: Task) -> bool:
+def _is_task_descendant(
+    graph_tasks: dict[Task, _Task],
+    child_task: _Task, parent_task: _Task,
+) -> bool:
     if parent_task in child_task.deps:
         return True
     return any(
-        is_task_descendant(dep, parent_task) for dep in child_task.deps
+        _is_task_descendant(
+            graph_tasks,
+            graph_tasks[dep], parent_task)
+        for dep in child_task.deps
     )

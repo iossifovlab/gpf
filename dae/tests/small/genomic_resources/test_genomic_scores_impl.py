@@ -30,12 +30,12 @@ from dae.genomic_resources.testing import (
     setup_genome,
     setup_vcf,
 )
+from dae.task_graph.cli_tools import task_graph_run
 from dae.task_graph.executor import (
-    AbstractTaskGraphExecutor,
-    SequentialExecutor,
-    task_graph_run,
+    TaskGraphExecutor,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.task_graph.sequential_executor import SequentialExecutor
 
 
 def test_unpack_score_defs_classifies_histograms() -> None:
@@ -219,7 +219,7 @@ def test_add_statistics_build_tasks_creates_min_max_tasks() -> None:
     tasks = impl.add_statistics_build_tasks(graph, region_size=10)
 
     assert len(tasks) == 1
-    save_task = tasks[0]
+    save_task = graph.get_task_desc(tasks[0])
     assert save_task.func is \
         GenomicScoreImplementation._merge_and_save_histograms
 
@@ -233,7 +233,8 @@ def test_add_statistics_build_tasks_creates_min_max_tasks() -> None:
         for task in graph.tasks
         if task.task_id.startswith("_calculate_histogram")
     )
-    assert merge_task in calc_task.deps
+    calc_task_desc = graph.get_task_desc(calc_task)
+    assert merge_task in calc_task_desc.deps
 
 
 def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
@@ -272,7 +273,8 @@ def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
         for task in graph.tasks
         if task.task_id.startswith("_calculate_histogram")
     )
-    assert calc_task.deps == []
+    calc_task_desc = graph.get_task_desc(calc_task)
+    assert not calc_task_desc.deps
 
 
 def test_add_min_max_tasks_builds_graph() -> None:
@@ -303,7 +305,7 @@ def test_add_min_max_tasks_builds_graph() -> None:
     )
 
     assert len(calc_tasks) == 1
-    calculate_task = calc_tasks[0]
+    calculate_task = graph.get_task_desc(calc_tasks[0])
     assert calculate_task.func is \
         GenomicScoreImplementation._merge_and_save_histograms
 
@@ -336,7 +338,7 @@ def test_add_histogram_tasks_skip_null_histograms_and_link_minmax() -> None:
     )
 
     assert len(calc_tasks) == 1
-    calculate_task = calc_tasks[0]
+    calculate_task = graph.get_task_desc(calc_tasks[0])
     assert calculate_task.func is \
         GenomicScoreImplementation._merge_and_save_histograms
 
@@ -587,13 +589,13 @@ chr17  29999999 rs1388869160 TTTGAA               T       .       .       RS=138
 
 
 @pytest.fixture
-def executor() -> AbstractTaskGraphExecutor:
+def executor() -> TaskGraphExecutor:
     return SequentialExecutor()
 
 
 def test_statistics_with_vcf_allele_score(
     vcf_allele_score_resource: GenomicResource,
-    executor: AbstractTaskGraphExecutor,
+    executor: TaskGraphExecutor,
 ) -> None:
 
     impl = build_score_implementation_from_resource(vcf_allele_score_resource)
@@ -610,7 +612,7 @@ def test_statistics_with_vcf_allele_score(
 def test_statistics_with_vcf_allele_score_30_000_000(
     vcf_allele_score_resource: GenomicResource,
     mocker: pytest_mock.MockerFixture,
-    executor: AbstractTaskGraphExecutor,
+    executor: TaskGraphExecutor,
 ) -> None:
 
     mocker.patch(

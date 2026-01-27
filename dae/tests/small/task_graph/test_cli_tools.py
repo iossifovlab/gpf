@@ -212,18 +212,23 @@ def test_process_graph_reports_status(
     assert captured.get("args") == (graph, cache, 5)
 
 
+def noop() -> None:
+    pass
+
+
 def test_process_graph_prunes_requested_tasks(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     graph = TaskGraph()
-    graph.create_task("keep", lambda: None, args=[], deps=[])
+    graph.create_task("keep", noop, args=[], deps=[])
+
     replacement_graph = TaskGraph()
-    replacement_graph.create_task("keep", lambda: None, args=[], deps=[])
+    replacement_graph.create_task("keep", noop, args=[], deps=[])
 
     prune_calls: list[list[str]] = []
 
-    def prune_stub(ids_to_keep: list[str]) -> TaskGraph:
-        prune_calls.append(list(ids_to_keep))
+    def prune_stub(tasks_to_keep: list[str]) -> TaskGraph:
+        prune_calls.append(list(tasks_to_keep))
         return replacement_graph
 
     graph.prune = prune_stub  # type: ignore
@@ -279,7 +284,7 @@ def test_process_graph_prunes_requested_tasks(
 
     assert result_bool is True
     assert prune_calls == [["keep"]]
-    assert run_calls == [(replacement_graph, "executor", False)]
+    assert run_calls == [(graph, "executor", False)]
 
 
 def test_process_graph_unknown_command(

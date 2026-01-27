@@ -32,7 +32,8 @@ from dae.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
 )
-from dae.task_graph.executor import SequentialExecutor, task_graph_run
+from dae.task_graph.cli_tools import task_graph_run
+from dae.task_graph.sequential_executor import SequentialExecutor
 from dae.task_graph.graph import TaskGraph
 
 

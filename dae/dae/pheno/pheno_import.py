@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 import argparse
 import csv
 import glob
@@ -60,8 +61,11 @@ from dae.pheno.prepare.measure_classifier import (
     determine_histogram_type,
     inference_reference_impl,
 )
-from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
-from dae.task_graph.executor import task_graph_run_with_results
+from dae.task_graph.cli_tools import (
+    TaskCache,
+    TaskGraphCli,
+    task_graph_run_with_results,
+)
 from dae.task_graph.graph import TaskGraph
 from dae.utils.sql_utils import to_duckdb_transpile
 from dae.variants.attributes import Status
