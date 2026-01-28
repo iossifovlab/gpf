@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import logging
 import os
 import time
@@ -69,6 +70,11 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         result = task_func(*args)
         elapsed = time.time() - start
         logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
+
+        del args
+        del params
+        del task_func
+        gc.collect()
 
         finish_memory_mb = process.memory_info().rss / (1024 * 1024)
         logger.info(
