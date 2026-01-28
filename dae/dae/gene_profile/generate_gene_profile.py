@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from collections.abc import Iterable
+from concurrent.futures import ProcessPoolExecutor
 from itertools import batched
 from typing import Any, cast
 
@@ -14,6 +15,7 @@ from dae.gene_profile.statistic import GPStatistic
 from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
+from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
@@ -143,6 +145,120 @@ def calculate_table_values(
                 else:
                     gp_counts[count_col] = 0
                     gp_counts[rate_col] = 0
+
+
+def process_region(
+    region: Region,
+    config: Box,
+    gene_symbols: set[str],
+    person_ids: dict[str, Any],
+    genes: list[str] | None,
+    *,
+    has_denovo: bool = False,
+    has_rare: bool = False,
+) -> dict[str, dict[str, Any]]:
+    gpf_instance = GPFInstance.build()
+    for dataset_id, filters in config.datasets.items():
+        variant_counts: dict[str, Any] = {}
+        for gs in gene_symbols:
+            variant_counts[gs] = {}
+            for ps in filters.person_sets:
+                ps_statistics: dict[str, Any] = {}
+                for statistic in filters.statistics:
+                    ps_statistics[statistic.id] = 0
+                variant_counts[gs][ps.set_name] = ps_statistics
+
+        if has_denovo:
+            logger.info("Collecting denovo variants for %s", dataset_id)
+            genotype_data = gpf_instance.get_genotype_data(dataset_id)
+            assert genotype_data is not None, dataset_id
+
+            denovo_variants = \
+                genotype_data.query_variants(
+                    regions=[region],
+                    genes=genes, inheritance="denovo",
+                    unique_family_variants=True,
+                )
+
+            logger.info("Done collecting denovo variants for %s", dataset_id)
+
+            logger.info("Collecting denovo variant counts for %s", dataset_id)
+            collect_variant_counts(
+                variant_counts,
+                denovo_variants,
+                dataset_id,
+                config,
+                person_ids[dataset_id],
+                denovo_flag=True,
+            )
+            logger.info(
+                "Done collecting denovo variant counts for %s", dataset_id,
+            )
+
+        if has_rare:
+            logger.info("Counting rare variants for %s", dataset_id)
+
+            genotype_data = gpf_instance.get_genotype_data(dataset_id)
+            assert genotype_data is not None, dataset_id
+
+            for statistic in filters.statistics:
+                if statistic.category == "denovo":
+                    continue
+                kwargs: dict[str, Any] = {}
+                kwargs["roles"] = "prb or sib or child"
+
+                if statistic.effects is not None:
+                    kwargs["effect_types"] = \
+                        expand_effect_types(statistic.effects)
+
+                if statistic.variant_types:
+                    variant_types = [
+                        # pylint: disable=no-member
+                        allele_type_from_name(
+                            statistic.variant_types).repr(),  # type: ignore
+                    ]
+                    kwargs["variant_type"] = " or ".join(variant_types)
+
+                if statistic.scores:
+                    scores = []
+                    for score in statistic.scores:
+                        min_max = (score.min, score.max)
+                        score_filter = (score.name, min_max)
+                        scores.append(score_filter)
+                    kwargs["real_attr_filter"] = scores
+
+                if statistic.roles:
+                    roles = [
+                        repr(Role.from_name(statistic.roles)),
+                    ]
+                    kwargs["roles"] = " or ".join(roles)
+
+                rare_variants = \
+                    genotype_data.query_variants(
+                        regions=[region],
+                        genes=genes,
+                        inheritance=[
+                            ("not denovo and "
+                             "not possible_denovo and not possible_omission"),
+                            "mendelian or missing",
+                        ],
+                        frequency_filter=[("af_allele_freq", (None, 1.0))],
+                        **kwargs)
+
+                logger.info(
+                    "Counting rare variants for statistic %s", statistic.id,
+                )
+                collect_variant_counts(
+                    variant_counts,
+                    rare_variants,
+                    dataset_id,
+                    config,
+                    person_ids[dataset_id],
+                    denovo_flag=False,
+                )
+
+            logger.info("Done counting rare variants")
+    return variant_counts
 
 
 def count_variant(
@@ -380,8 +496,14 @@ def main(
     elapsed = generate_end - start
     logger.info("Took %.2f secs", elapsed)
 
-    for dataset_id, filters in config.datasets.items():
-        variant_counts: dict[str, Any] = {}
+    chromosomes = gpf_instance.reference_genome.chromosomes
+
+    genes = list(gene_symbols) if args.gene_sets_genes or args.genes else None
+
+    executor = ProcessPoolExecutor()
+
+    variant_counts: dict[str, Any] = {}
+    for filters in config.datasets.values():
         for gs in gene_symbols:
             variant_counts[gs] = {}
             for ps in filters.person_sets:
@@ -390,103 +512,32 @@ def main(
                     ps_statistics[statistic.id] = 0
                 variant_counts[gs][ps.set_name] = ps_statistics
 
-        if has_denovo:
-            logger.info("Collecting denovo variants for %s", dataset_id)
-            genotype_data = gpf_instance.get_genotype_data(dataset_id)
-            assert genotype_data is not None, dataset_id
-            if args.gene_sets_genes or args.genes:
-                genes = list(gene_symbols)
-            else:
-                genes = None
+    tasks = []
+    for chrom in chromosomes:
+        region = Region(chrom)
+        tasks.append(executor.submit(
+            process_region,
+            region, config,
+            gene_symbols, person_ids, genes,
+            has_denovo=has_denovo,
+            has_rare=has_rare,
+        ))
 
-            denovo_variants = \
-                genotype_data.query_variants(
-                    genes=genes, inheritance="denovo",
-                    unique_family_variants=True,
-                )
+    for task in tasks:
+        region_variant_counts = task.result()
 
-            logger.info("Done collecting denovo variants for %s", dataset_id)
+        if len(variant_counts) == 0:
+            variant_counts.update(region_variant_counts)
+        else:
+            for gene_sym, gene_variant_counts in variant_counts.items():
+                for collection_id in gene_variant_counts:
+                    gs_counts = gene_variant_counts[collection_id]
+                    region_gs_counts = region_variant_counts[
+                        gene_sym][collection_id]
+                    for ps in gs_counts:
+                        gs_counts[ps] += region_gs_counts[ps]
 
-            logger.info("Collecting denovo variant counts for %s", dataset_id)
-            collect_variant_counts(
-                variant_counts,
-                denovo_variants,
-                dataset_id,
-                config,
-                person_ids[dataset_id],
-                denovo_flag=True,
-            )
-            logger.info(
-                "Done collecting denovo variant counts for %s", dataset_id,
-            )
-
-        if has_rare:
-            logger.info("Counting rare variants for %s", dataset_id)
-
-            genotype_data = gpf_instance.get_genotype_data(dataset_id)
-            assert genotype_data is not None, dataset_id
-            if args.gene_sets_genes or args.genes:
-                genes = list(gene_symbols)
-            else:
-                genes = None
-
-            for statistic in filters.statistics:
-                if statistic.category == "denovo":
-                    continue
-                kwargs: dict[str, Any] = {}
-                kwargs["roles"] = "prb or sib or child"
-
-                if statistic.effects is not None:
-                    kwargs["effect_types"] = \
-                        expand_effect_types(statistic.effects)
-
-                if statistic.variant_types:
-                    variant_types = [
-                        # pylint: disable=no-member
-                        allele_type_from_name(
-                            statistic.variant_types).repr(),  # type: ignore
-                    ]
-                    kwargs["variant_type"] = " or ".join(variant_types)
-
-                if statistic.scores:
-                    scores = []
-                    for score in statistic.scores:
-                        min_max = (score.min, score.max)
-                        score_filter = (score.name, min_max)
-                        scores.append(score_filter)
-                    kwargs["real_attr_filter"] = scores
-
-                if statistic.roles:
-                    roles = [
-                        repr(Role.from_name(statistic.roles)),
-                    ]
-                    kwargs["roles"] = " or ".join(roles)
-
-                rare_variants = \
-                    genotype_data.query_variants(
-                        genes=genes,
-                        inheritance=[
-                            ("not denovo and "
-                             "not possible_denovo and not possible_omission"),
-                            "mendelian or missing",
-                        ],
-                        frequency_filter=[("af_allele_freq", (None, 1.0))],
-                        **kwargs)
-
-                logger.info(
-                    "Counting rare variants for statistic %s", statistic.id,
-                )
-                collect_variant_counts(
-                    variant_counts,
-                    rare_variants,
-                    dataset_id,
-                    config,
-                    person_ids[dataset_id],
-                    denovo_flag=False,
-                )
-
-            logger.info("Done counting rare variants")
-
+    for dataset_id in config.datasets:
         logger.info("Calculating rates for %s", dataset_id)
         calculate_table_values(
             gpf_instance,
@@ -496,16 +547,16 @@ def main(
             filters,
         )
         logger.info("Done calculating rates for %s", dataset_id)
-        logger.info("Inserting statistics into DB")
-        batches = batched(gps.values(), 1000)
-        for idx, gene_profiles_batch in enumerate(batches, 1):
-            logger.info("Inserting batch %d", idx)
-            started = time.time()
-            gpdb.insert_gps(gene_profiles_batch)
-            elapsed = time.time() - started
-            logger.info(
-                "Done inserting batch %d, took %.2f seconds", idx, elapsed)
-        logger.info("Done inserting GPs for %s", dataset_id)
+    logger.info("Inserting statistics into DB")
+    batches = batched(gps.values(), 1000)
+    for idx, gene_profiles_batch in enumerate(batches, 1):
+        logger.info("Inserting batch %d", idx)
+        started = time.time()
+        gpdb.insert_gps(gene_profiles_batch)
+        elapsed = time.time() - started
+        logger.info(
+            "Done inserting batch %d, took %.2f seconds", idx, elapsed)
+    logger.info("Done inserting GPs for %s", dataset_id)
 
     elapsed = time.time() - generate_end
     logger.info("Took %.2f secs", elapsed)
