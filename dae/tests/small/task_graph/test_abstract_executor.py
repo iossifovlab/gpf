@@ -19,34 +19,10 @@ from dae.task_graph.cli_tools import (
     task_graph_run_with_results,
     task_graph_status,
 )
-from dae.task_graph.dask_executor import DaskExecutor
 from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
 from dae.task_graph.graph import Task, TaskGraph
-from dae.task_graph.process_pool_executor import ProcessPoolTaskExecutor
-from dae.task_graph.sequential_executor import SequentialExecutor
-from dask.distributed import Client
-
-
-@pytest.fixture
-def dask_client() -> Generator[Client, None, None]:
-    # The client needs to be threaded b/c the global ORDER variable is modified
-    client = Client(n_workers=2, threads_per_worker=1, processes=False)
-    yield client
-    client.close()
-
-
-@pytest.fixture(params=["dask", "sequential", "process_pool"])
-def executor(
-    dask_client: Client,
-    request: pytest.FixtureRequest,
-) -> TaskGraphExecutor:
-    if request.param == "dask":
-        return DaskExecutor(dask_client)
-    if request.param == "process_pool":
-        return ProcessPoolTaskExecutor()
-    return SequentialExecutor()
 
 
 def add_to_list(what: int, where: list[int]) -> list[int]:

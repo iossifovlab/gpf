@@ -110,7 +110,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         while not_completed or not graph.empty():
             submitted_tasks.update(self._schedule_tasks(graph))
 
-            not_completed.update(submitted_tasks.keys())
+            not_completed = set(submitted_tasks.keys())
 
             try:
                 for future in as_completed(not_completed, timeout=0.25):

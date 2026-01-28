@@ -231,4 +231,8 @@ class DaskExecutor(TaskGraphExecutorBase):
 
     def close(self) -> None:
         """Close the Dask executor."""
+        logger.info("closing Dask executor")
+        self._dask_client.retire_workers(close_workers=True)
+        self._dask_client.shutdown()
         self._dask_client.close()
+        logger.info("Dask executor closed")
