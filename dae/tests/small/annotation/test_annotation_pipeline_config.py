@@ -406,7 +406,7 @@ def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
 
 def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str("""
-        - position_score: score_*[foo=ALPHA]
+        - position_score: score_*[foo="ALPHA"]
     """, grr=test_grr)
     assert pipeline_config == [
         AnnotatorInfo(
@@ -418,7 +418,7 @@ def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
 
 def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str("""
-        - position_score: "*[foo=ALPHA]"
+        - position_score: "*[foo=\\"ALPHA\\"]"
     """, grr=test_grr)
     assert pipeline_config == [
         AnnotatorInfo(
@@ -435,7 +435,7 @@ def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
 
 def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str("""
-        - position_score: "*[foo=ALPHA and bar=GAMMA]"
+        - position_score: "*[foo=\\"ALPHA\\" and bar=\\"GAMMA\\"]"
     """, grr=test_grr)
     assert pipeline_config == [
         AnnotatorInfo(
@@ -447,7 +447,7 @@ def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
 
 def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str("""
-        - position_score: "*[baz=sub_*]"
+        - position_score: "*[baz=\\"sub_*\\"]"
     """, grr=test_grr)
     assert pipeline_config == [
         AnnotatorInfo(
