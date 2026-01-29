@@ -19,17 +19,20 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture(params=["dask", "sequential"])  # "process_pool"
+@pytest.fixture(params=["dask", "sequential", "process_pool"])  # "process_pool"
 def executor(
     dask_client: Client,
     request: pytest.FixtureRequest,
 ) -> Generator[TaskGraphExecutor, None, None]:
     executor: TaskGraphExecutor
+
     if request.param == "dask":
         executor = DaskExecutor(dask_client)
     elif request.param == "sequential":
         executor = SequentialExecutor()
     elif request.param == "process_pool":
+        if not request.config.getoption("enable_pp"):
+            pytest.skip("process_pool executor not enabled")
         executor = ProcessPoolTaskExecutor()
     else:
         raise ValueError(f"unknown executor type: {request.param}")
