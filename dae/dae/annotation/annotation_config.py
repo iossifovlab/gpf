@@ -290,8 +290,8 @@ class AnnotationConfigParser:
         """Collect resources matching a given query."""
         labels_query: dict[str, Callable[[str], bool]] = {}
 
-        CONFIG_PARSER = Lark(AnnotationConfigParser.ANNOTATION_CONFIG_GRAMMAR)
-        tree = CONFIG_PARSER.parse(resource_id)
+        config_parser = Lark(AnnotationConfigParser.ANNOTATION_CONFIG_GRAMMAR)
+        tree = config_parser.parse(resource_id)
 
         assert len(tree.children) == 2
         resource_id_node = tree.children[0]
