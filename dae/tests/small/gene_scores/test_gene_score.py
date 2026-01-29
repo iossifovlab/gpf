@@ -298,6 +298,8 @@ def test_gene_score_nan(scores_repo: GenomicResourceRepo) -> None:
     df = gene_score.get_score_df("score1")
     assert len(df) == 4
 
+    assert gene_score.get_gene_value("score1", "G3") is None
+
 
 def test_calculate_histogram(scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("LinearHist")
