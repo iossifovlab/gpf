@@ -154,6 +154,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="enable HTTP unit testing")
 
+    parser.addoption(
+        "--enable-process-pool", "--pp",
+        dest="enable_pp",
+        action="store_true",
+        default=False,
+        help="enable process pool unit testing")
+
 
 def pytest_sessionstart(session: pytest.Session) -> None:
     global GENOTYPE_STORAGE_FACTORIES  # pylint: disable=global-statement
