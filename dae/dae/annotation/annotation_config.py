@@ -3,12 +3,14 @@ from __future__ import annotations
 import copy
 import fnmatch
 import logging
-from collections.abc import Iterator, Mapping
+import textwrap
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
 from textwrap import dedent
 from typing import Any, TypedDict
 
 import yaml
+from lark import Lark, Token, Tree
 
 from dae.genomic_resources.repository import (
     GenomicResource,
@@ -213,35 +215,98 @@ class AnnotationPreamble:
 class AnnotationConfigParser:
     """Parser for annotation configuration."""
 
+    ANNOTATION_CONFIG_GRAMMAR = textwrap.dedent("""
+        ?start: resource_id [filter]
+
+        ?resource_id: (resource_name | wildcard)
+
+        wildcard: /[\\w\\d\\/_*]+/
+
+        filter: "[" (equals | and_)+ "]"
+
+        and_: operation "and" operation
+
+        equals: (name"=\\""name"\\"")
+
+        in: ("\\""name"\\"" " in " name)
+
+        resource_name: /[\\w\\d\\/_]+/
+
+        ?name: /[\\w\\d\\/_*]+/
+
+        ?operation: equals | in | and_
+
+        %ignore " "
+    """)
+
     @staticmethod
     def match_labels_query(
-        query: dict[str, str], resource_labels: dict[str, str],
+        query: dict[str, Callable[[str], bool]],
+        resource_labels: dict[str, str],
     ) -> bool:
         """Check if the labels query for a wildcard matches."""
         for k, v in query.items():
-            if k not in resource_labels \
-               or not fnmatch.fnmatch(resource_labels[k], v):
+            if k not in resource_labels:
+                return False
+
+            if not v(resource_labels[k]):
                 return False
         return True
 
     @staticmethod
+    def build_labels_query(
+        node: Any,
+        labels_query: dict[str, Any] | None = None,
+    ) -> dict[str, Callable[[str], bool]]:
+        """Build labels query from parsed tree node."""
+        if labels_query is None:
+            labels_query = {}
+
+        for child in node.children:
+            if child.data.value == "equals":
+                key = child.children[0].value
+                value = child.children[1].value
+
+                labels_query[key] = \
+                    lambda x, v=value: x == v or fnmatch.fnmatch(x, v)
+            elif child.data.value == "in":
+                key = child.children[0].value
+                value = child.children[1].value
+
+                labels_query[key] = lambda x, v=value: v in x
+            elif child.data.value == "and_":
+                AnnotationConfigParser.build_labels_query(
+                    child, labels_query)
+            else:
+                raise AnnotationConfigurationError(
+                    f"Unsupported label query operation: {child.data}",
+                )
+        return labels_query
+
+    @staticmethod
     def query_resources(
-        annotator_type: str, wildcard: str, grr: GenomicResourceRepo,
+        annotator_type: str, resource_id: str, grr: GenomicResourceRepo,
     ) -> list[str]:
         """Collect resources matching a given query."""
-        labels_query: dict[str, str] = {}
-        if wildcard.endswith("]"):
-            assert "[" in wildcard
-            wildcard, raw_labels = wildcard.split("[")
-            labels = raw_labels.strip("]").split(" and ")
-            for label in labels:
-                k, v = label.split("=")
-                labels_query[k] = v
+        labels_query: dict[str, Callable[[str], bool]] = {}
+
+        config_parser = Lark(AnnotationConfigParser.ANNOTATION_CONFIG_GRAMMAR)
+        tree = config_parser.parse(resource_id)
+
+        assert len(tree.children) == 2
+        resource_id_node = tree.children[0]
+        assert isinstance(resource_id_node, Tree)
+        assert isinstance(resource_id_node.children[0], Token)
+        parsed_id = resource_id_node.children[0].value
+
+        if tree.children[1] is not None:
+            labels_query = AnnotationConfigParser.build_labels_query(
+                tree.children[1])
 
         def match(resource: GenomicResource) -> bool:
             return (
                 resource.get_type() == annotator_type
-                and fnmatch.fnmatch(resource.get_id(), wildcard)
+                and fnmatch.fnmatch(resource.get_id(), parsed_id)
                 and AnnotationConfigParser.match_labels_query(
                    labels_query, resource.get_labels()))
         selected_resources: set[str] = set()
@@ -252,6 +317,17 @@ class AnnotationConfigParser:
             if match(resource):
                 selected_resources.add(resource.resource_id)
                 result.append(resource.resource_id)
+                if len(result) > 500:
+                    raise AnnotationConfigurationError(
+                        "Too many resources match the wildcard "
+                        f"'{parsed_id}' for annotator '{annotator_type}'.",
+                    )
+
+        if len(result) == 0:
+            raise AnnotationConfigurationError(
+                f"No resources match the wildcard '{parsed_id}' "
+                f"for annotator type '{annotator_type}'.",
+            )
         return result
 
     @staticmethod
