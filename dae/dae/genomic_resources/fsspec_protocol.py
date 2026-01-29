@@ -1,6 +1,7 @@
 """Provides GRR protocols based on fsspec library."""
 from __future__ import annotations
 
+import copy
 import datetime
 import hashlib
 import json
@@ -136,6 +137,23 @@ def build_inmemory_protocol(
 class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
 
+    def __getnewargs_ex__(self) -> tuple[tuple, dict]:
+        # pylint: disable=invalid-getnewargs-ex-returned
+        args = (self.proto_id, self.url)
+        kwargs: dict[str, Any] = copy.copy(self.kwargs)
+        kwargs["public_url"] = self.public_url
+        return (args, kwargs)
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> FsspecReadOnlyProtocol:
+        proto_id = args[0] if len(args) > 0 else kwargs["proto_id"]
+        url = args[1] if len(args) > 1 else kwargs["url"]
+        key = (proto_id, url)
+        if key in _FSSPEC_PROTOCOLS:
+            return _FSSPEC_PROTOCOLS[key]
+        instance = super().__new__(cls)
+        _FSSPEC_PROTOCOLS[key] = instance
+        return instance
+
     def __init__(
         self, proto_id: str,
         url: str, *,
@@ -159,7 +177,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self.public_url = public_url
 
         self.filesystem = filesystem
-        self.kwargs = kwargs
+        self.kwargs: dict[str, Any] = kwargs
         self._all_resources: list[GenomicResource] | None = None
 
     def __getstate__(self) -> dict[str, Any]:
@@ -701,9 +719,6 @@ def build_local_resource(
     return GenomicResource(".", (0, ), proto, config)
 
 
-FsspecRepositoryProtocol = FsspecReadOnlyProtocol | FsspecReadWriteProtocol
-
-
 def _build_filesystem(
     url: str, **kwargs: Any,
 ) -> fsspec.AbstractFileSystem:
@@ -725,6 +740,12 @@ def _build_filesystem(
         from fsspec.implementations.memory import MemoryFileSystem
         return MemoryFileSystem()
     raise NotImplementedError(f"unsupported schema {parsed_url.scheme}")
+
+
+FsspecRepositoryProtocol = FsspecReadOnlyProtocol | FsspecReadWriteProtocol
+
+
+_FSSPEC_PROTOCOLS: dict[tuple[str, str], FsspecRepositoryProtocol] = {}
 
 
 def build_fsspec_protocol(

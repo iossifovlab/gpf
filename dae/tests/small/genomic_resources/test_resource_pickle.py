@@ -91,7 +91,4 @@ def test_pickle_genomic_score(grr_fixture: GenomicResourceRepo) -> None:
     assert isinstance(res_one.proto, FsspecReadOnlyProtocol)
     assert isinstance(res_one_u.proto, FsspecReadOnlyProtocol)
 
-    assert res_one.proto._all_resources is not None
-    assert len(res_one.proto._all_resources) == 3
-
-    assert res_one_u.proto._all_resources is None
+    assert id(res_one.proto) == id(res_one_u.proto)
