@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import logging
 import os
 import time
@@ -70,6 +71,11 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         elapsed = time.time() - start
         logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
 
+        del args
+        del params
+        del task_func
+        gc.collect()
+
         finish_memory_mb = process.memory_info().rss / (1024 * 1024)
         logger.info(
             "worker process memory usage: %.2f MB; change: %+0.2f MB",
@@ -104,7 +110,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         while not_completed or not graph.empty():
             submitted_tasks.update(self._schedule_tasks(graph))
 
-            not_completed.update(submitted_tasks.keys())
+            not_completed = set(submitted_tasks.keys())
 
             try:
                 for future in as_completed(not_completed, timeout=0.25):

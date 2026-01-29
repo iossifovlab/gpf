@@ -348,9 +348,9 @@ def _do_resource_stats_hash_and_manifest(
     dry_run: bool,  # noqa: FBT001
     force: bool,  # noqa: FBT001
     use_dvc: bool,  # noqa: FBT001
-) -> bool:
+) -> None:
     _store_stats_hash(proto, res)
-    return _do_resource_manifest_command(
+    _do_resource_manifest_command(
         proto, res,
         dry_run=dry_run,
         force=force,

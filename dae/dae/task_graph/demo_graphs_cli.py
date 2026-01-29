@@ -13,8 +13,9 @@ def timeout(seconds: str) -> float:
     return max(random.gauss(t, 0.7 * t), 0.1)
 
 
-def task_part(seconds: str) -> None:
+def task_part(seconds: str) -> str:
     time.sleep(timeout(seconds))
+    return 2_000 * "P"
 
 
 def task_summary(seconds: str) -> None:
@@ -23,7 +24,7 @@ def task_summary(seconds: str) -> None:
 
 def task_part_b(seconds: str) -> str:
     time.sleep(timeout(seconds))
-    return 1000 * "B"
+    return 2_000 * "B"
 
 
 def task_summary_b(seconds: str, *args: str) -> str:
@@ -35,7 +36,7 @@ def task_summary_b(seconds: str, *args: str) -> str:
 
 def task_part_c(seconds: str, *_args: str) -> str:
     time.sleep(timeout(seconds))
-    return 1000 * "B"
+    return 2_000 * "C"
 
 
 def task_summary_c(seconds: str, *args: str) -> str:
@@ -79,14 +80,15 @@ def _build_graph_d(graph_params: list[str] | None) -> TaskGraph:
     if graph_params:
         if len(graph_params) != 4:
             raise ValueError(
-                "The graph D needs three parameters: "
-                "<number of parts>, <seconds for parts>, "
-                "<seconds for summary>")
+                "The graph D needs four parameters: "
+                "<number of clicks>, <number of parts>, "
+                "<seconds for parts>, <seconds for summary>")
         num_of_clicks, num_of_parts, parts_sleep, summary_sleep = graph_params
     print(
-        f"Bulding graph D with {num_of_clicks} clicks, {num_of_parts} parts, "
-        f"{parts_sleep} seconds for each parts, and "
-        f"{summary_sleep} secoconds for the summary")
+        f"Bulding graph D with {num_of_clicks} clicks, "
+        f"with {num_of_parts} parts per click and one summary task per click, "
+        f"{parts_sleep} seconds for each part, and "
+        f"{summary_sleep} seconds for the summary")
 
     for click in range(int(num_of_clicks)):
         parts = [task_graph.create_task(

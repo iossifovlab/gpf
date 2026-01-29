@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import json
 import logging
 from typing import Any, ClassVar, cast
@@ -116,6 +117,8 @@ class GenomicScoreImplementation(
             resource,
             hist_result,
         )
+        del impl
+        gc.collect()
 
     def add_statistics_build_tasks(
         self, task_graph: TaskGraph, **kwargs: Any,
@@ -331,6 +334,7 @@ class GenomicScoreImplementation(
                         result[score_id],
                         rec[score_index],  # type: ignore
                     )
+        del impl
         return result
 
     @staticmethod
@@ -432,6 +436,7 @@ class GenomicScoreImplementation(
                         result[scr_id] = NullHistogram(
                             NullHistogramConfig(str(err)),
                         )
+        del impl
         return result
 
     @staticmethod
@@ -480,6 +485,7 @@ class GenomicScoreImplementation(
                     impl.score.score_definitions[score_id].small_values_desc,
                     impl.score.score_definitions[score_id].large_values_desc,
                 )
+        del impl
         return merged_histograms
 
     @staticmethod

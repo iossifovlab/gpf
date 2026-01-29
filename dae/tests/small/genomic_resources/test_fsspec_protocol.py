@@ -24,7 +24,8 @@ def test_collect_all_resources(
 
 
 def test_resource_paths(
-        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    fsspec_proto: FsspecReadWriteProtocol,
+) -> None:
     proto = fsspec_proto
 
     res = proto.get_resource("one")

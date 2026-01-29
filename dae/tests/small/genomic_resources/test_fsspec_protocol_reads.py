@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import pathlib
 from collections.abc import Generator
 from typing import Any
 
@@ -24,12 +25,12 @@ pytestmark = [pytest.mark.grr_full, pytest.mark.grr_http]
 @pytest.fixture
 def tabix_fsspec_proto(
     content_fixture: dict[str, Any],
-    tmp_path_factory: pytest.TempPathFactory,
+    tmp_path: pathlib.Path,
     grr_scheme: str,
     mocker: pytest_mock.MockerFixture,
 ) -> Generator[RepositoryProtocol, None, None]:
 
-    root_path = tmp_path_factory.mktemp("tabix_fsspec_proto")
+    root_path = tmp_path
 
     setup_directories(root_path, content_fixture)
     setup_tabix(
@@ -249,7 +250,8 @@ def test_open_vcf_file_fetch_all(
 
 @pytest.mark.grr_tabix
 def test_open_vcf_file_fetch_region(
-        tabix_fsspec_proto: RepositoryProtocol) -> None:
+    tabix_fsspec_proto: RepositoryProtocol,
+) -> None:
     # Given
     proto = tabix_fsspec_proto
     res = proto.get_resource("one")

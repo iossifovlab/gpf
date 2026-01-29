@@ -46,6 +46,9 @@ class DaskExecutor(TaskGraphExecutorBase):
         running: dict[Future, Task],
         running_lock: threading.Lock,
     ) -> None:
+        submit_count = 0
+        start = time.time()
+
         with submit_condition:
             while True:
                 while submit_queue:
@@ -58,11 +61,18 @@ class DaskExecutor(TaskGraphExecutorBase):
                     params = copy(self._params)
                     task_id = safe_task_id(task.task.task_id)
                     params["task_id"] = task_id
-                    logger.debug("submitting task %s to Dask", task_id)
                     future = self._dask_client.submit(
                         self._exec, task.func, task.args, params,
                         key=task_id,
                     )
+                    submit_count += 1
+                    elapsed = time.time() - start
+                    if submit_count % 100 == 0:
+                        logger.info(
+                            "submitted %s tasks in %.2f seconds (%.2f tasks/s)",
+                            submit_count, elapsed,
+                            submit_count / elapsed)
+
                     if future is None:
                         raise ValueError(
                             f"unexpected dask executor return None: "
@@ -73,6 +83,7 @@ class DaskExecutor(TaskGraphExecutorBase):
                     with running_lock:
                         running[future] = task.task
                     submit_condition.wait(timeout=0.2)
+
                 submit_condition.wait()
 
     def _results_worker_func(
@@ -82,6 +93,9 @@ class DaskExecutor(TaskGraphExecutorBase):
             results_queue: list[tuple[Task, Any]],
             results_lock: threading.Lock,
     ) -> None:
+        result_count = 0
+        start = time.time()
+
         with completed_condition:
             while True:
                 while completed_queue:
@@ -98,6 +112,14 @@ class DaskExecutor(TaskGraphExecutorBase):
                     except Exception as ex:  # noqa: BLE001
                         # pylint: disable=broad-except
                         result = ex
+                    result_count += 1
+                    elapsed = time.time() - start
+                    if result_count % 100 == 0:
+                        logger.info(
+                            "processed %s results in %.2f seconds "
+                            "(%.2f results/s)",
+                            result_count, elapsed,
+                            result_count / elapsed)
 
                     with results_lock:
                         results_queue.append((task, result))
@@ -209,4 +231,8 @@ class DaskExecutor(TaskGraphExecutorBase):
 
     def close(self) -> None:
         """Close the Dask executor."""
+        logger.info("closing Dask executor")
+        self._dask_client.retire_workers(close_workers=True)
+        self._dask_client.shutdown()
         self._dask_client.close()
+        logger.info("Dask executor closed")

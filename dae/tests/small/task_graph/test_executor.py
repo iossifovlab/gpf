@@ -1,39 +1,15 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import operator
 import time
-from collections.abc import Generator
 
 import pytest
 from dae.task_graph.cli_tools import (
     task_graph_run_with_results,
 )
-from dae.task_graph.dask_executor import (
-    DaskExecutor,
-)
 from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
 from dae.task_graph.graph import TaskGraph
-from dae.task_graph.sequential_executor import SequentialExecutor
-from dask.distributed import Client
-
-
-@pytest.fixture
-def dask_client() -> Generator[Client, None, None]:
-    # The client needs to be threaded b/c the global ORDER variable is modified
-    client = Client(n_workers=2, threads_per_worker=1, processes=False)
-    yield client
-    client.close()
-
-
-@pytest.fixture(params=["dask", "sequential"])
-def executor(
-    dask_client: Client,
-    request: pytest.FixtureRequest,
-) -> TaskGraphExecutor:
-    if request.param == "dask":
-        return DaskExecutor(dask_client)
-    return SequentialExecutor()
 
 
 def do_work(timeout: float) -> None:
@@ -72,12 +48,13 @@ def test_multiple_dependancies(executor: TaskGraphExecutor) -> None:
     assert len(ids_in_finish_order) == 15
 
 
+def add_to_list(what: int, where: list[int]) -> list[int]:
+    where.append(what)
+    return where
+
+
 def test_implicit_dependancies(executor: TaskGraphExecutor) -> None:
     graph = TaskGraph()
-
-    def add_to_list(what: int, where: list[int]) -> list[int]:
-        where.append(what)
-        return where
 
     last_task = graph.create_task("0", add_to_list, args=[0, []], deps=[])
     for i in range(1, 9):
@@ -176,9 +153,13 @@ def test_diamond_graph(executor: TaskGraphExecutor) -> None:
     assert ids_in_finish_order[3] == "D"
 
 
+def return_5() -> int:
+    return 5
+
+
 def test_result_passing_chain(executor: TaskGraphExecutor) -> None:
     graph = TaskGraph()
-    task_a = graph.create_task("A", lambda: 5, args=[], deps=[])
+    task_a = graph.create_task("A", return_5, args=[], deps=[])
     task_b = graph.create_task("B", operator.add, args=[task_a, 3], deps=[])
     graph.create_task("C", operator.mul, args=[task_b, 2], deps=[])
 
@@ -214,9 +195,13 @@ def test_empty_graph(executor: TaskGraphExecutor) -> None:
     assert len(results) == 0
 
 
+def return_42() -> int:
+    return 42
+
+
 def test_single_task_graph(executor: TaskGraphExecutor) -> None:
     graph = TaskGraph()
-    graph.create_task("Only", lambda: 42, args=[], deps=[])
+    graph.create_task("Only", return_42, args=[], deps=[])
 
     results = {
         task.task_id: result for task, result in executor.execute(graph)
@@ -226,6 +211,26 @@ def test_single_task_graph(executor: TaskGraphExecutor) -> None:
     assert results["Only"] == 42
 
 
+def return_1_2() -> list[int]:
+    return [1, 2]
+
+
+def return_3_4() -> list[int]:
+    return [3, 4]
+
+
+def return_5_6() -> list[int]:
+    return [5, 6]
+
+
+def merge_lists(*lists: list[int]) -> list[int]:
+    # Merge results
+    result = []
+    for lst in lists:
+        result.extend(lst)
+    return result
+
+
 def test_complex_result_aggregation(
     executor: TaskGraphExecutor,
 ) -> None:
@@ -233,16 +238,9 @@ def test_complex_result_aggregation(
     graph = TaskGraph()
 
     # Create initial tasks that produce lists
-    task_a = graph.create_task("A", lambda: [1, 2], args=[], deps=[])
-    task_b = graph.create_task("B", lambda: [3, 4], args=[], deps=[])
-    task_c = graph.create_task("C", lambda: [5, 6], args=[], deps=[])
-
-    # Merge results
-    def merge_lists(*lists: list[int]) -> list[int]:
-        result = []
-        for lst in lists:
-            result.extend(lst)
-        return result
+    task_a = graph.create_task("A", return_1_2, args=[], deps=[])
+    task_b = graph.create_task("B", return_3_4, args=[], deps=[])
+    task_c = graph.create_task("C", return_5_6, args=[], deps=[])
 
     graph.create_task(
         "Merge", merge_lists, args=[task_a, task_b, task_c], deps=[])
