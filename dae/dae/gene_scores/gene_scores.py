@@ -226,7 +226,13 @@ class GeneScore(
             return None
         if score_id not in self.gene_values[gene_symbol]:
             return None
-        return self.gene_values[gene_symbol][score_id]
+
+        value = self.gene_values[gene_symbol][score_id]
+
+        if np.isnan(value):
+            return None
+
+        return value
 
     def to_tsv(self, score_id: str | None = None) -> list[str]:
         """Return a TSV version of the gene score data."""
