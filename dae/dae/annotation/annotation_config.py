@@ -252,6 +252,17 @@ class AnnotationConfigParser:
             if match(resource):
                 selected_resources.add(resource.resource_id)
                 result.append(resource.resource_id)
+                if len(result) > 500:
+                    raise AnnotationConfigurationError(
+                        "Too many resources match the wildcard "
+                        f"'{wildcard}' for annotator type '{annotator_type}'.",
+                    )
+
+        if len(result) == 0:
+            raise AnnotationConfigurationError(
+                f"No resources match the wildcard '{wildcard}' "
+                f"for annotator type '{annotator_type}'.",
+            )
         return result
 
     @staticmethod
