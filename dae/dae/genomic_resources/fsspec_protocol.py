@@ -138,13 +138,12 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def __init__(
         self, proto_id: str,
-        url: str,
+        url: str, *,
         filesystem: fsspec.AbstractFileSystem,
         public_url: str | None = None,
+        **kwargs: Any,
     ):
-
         super().__init__(proto_id, url)
-
         parsed = urlparse(url)
         self.scheme = parsed.scheme
         if self.scheme == "":
@@ -160,8 +159,21 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self.public_url = public_url
 
         self.filesystem = filesystem
-
+        self.kwargs = kwargs
         self._all_resources: list[GenomicResource] | None = None
+
+    def __getstate__(self) -> dict[str, Any]:
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state["filesystem"]
+        del state["_all_resources"]
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        self.__dict__.update(state)
+        self.filesystem = _build_filesystem(
+            self.url, **self.kwargs)
+        self._all_resources = None
 
     def get_url(self) -> str:
         return self.url
@@ -313,12 +325,18 @@ class FsspecReadWriteProtocol(
 
     def __init__(
         self, proto_id: str,
-        url: str,
+        url: str, *,
         filesystem: fsspec.AbstractFileSystem,
         public_url: str | None = None,
+        **kwargs: Any,
     ):
 
-        super().__init__(proto_id, url, filesystem, public_url=public_url)
+        super().__init__(
+            proto_id, url,
+            filesystem=filesystem,
+            public_url=public_url,
+            **kwargs,
+        )
 
         self.filesystem.makedirs(self.url, exist_ok=True)
 
@@ -686,43 +704,56 @@ def build_local_resource(
 FsspecRepositoryProtocol = FsspecReadOnlyProtocol | FsspecReadWriteProtocol
 
 
+def _build_filesystem(
+    url: str, **kwargs: Any,
+) -> fsspec.AbstractFileSystem:
+    # pylint: disable=import-outside-toplevel
+    parsed_url = urlparse(url)
+    if parsed_url.scheme in {"file", ""}:
+        from fsspec.implementations.local import LocalFileSystem
+        return LocalFileSystem()
+    if parsed_url.scheme in {"http", "https"}:
+        from fsspec.implementations.http import HTTPFileSystem
+        base_url = kwargs.get("base_url")
+        return HTTPFileSystem(client_kwargs={"base_url": base_url})
+    if parsed_url.scheme == "s3":
+        from s3fs.core import S3FileSystem
+        endpoint_url = kwargs.get("endpoint_url")
+        return S3FileSystem(
+            anon=False, client_kwargs={"endpoint_url": endpoint_url})
+    if parsed_url.scheme == "memory":
+        from fsspec.implementations.memory import MemoryFileSystem
+        return MemoryFileSystem()
+    raise NotImplementedError(f"unsupported schema {parsed_url.scheme}")
+
+
 def build_fsspec_protocol(
     proto_id: str, root_url: str, **kwargs: str | None,
 ) -> FsspecRepositoryProtocol:
     """Create fsspec GRR protocol based on the root url."""
-    url = urlparse(root_url)
     # pylint: disable=import-outside-toplevel
-    public_url = kwargs.get("public_url")
+    public_url = kwargs.pop("public_url", None)
+    read_only = kwargs.pop("read_only", False)
+    filesystem = _build_filesystem(root_url, **kwargs)
 
-    if url.scheme in {"file", ""}:
-        from fsspec.implementations.local import LocalFileSystem
-        filesystem = LocalFileSystem()
-        read_only = kwargs.get("read_only", False)
+    url = urlparse(root_url)
+    if url.scheme in {"file", "", "s3", "memory"}:
         if read_only:
             return FsspecReadOnlyProtocol(
-                proto_id, root_url, filesystem,
-                public_url=public_url)
+                proto_id, root_url,
+                filesystem=filesystem,
+                public_url=public_url,
+                **kwargs)
         return FsspecReadWriteProtocol(
-            proto_id, root_url, filesystem,
-            public_url=public_url)
+            proto_id, root_url,
+            filesystem=filesystem,
+            public_url=public_url,
+            **kwargs)
     if url.scheme in {"http", "https"}:
-        from fsspec.implementations.http import HTTPFileSystem
-        base_url = kwargs.get("base_url")
-        filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
-        return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
-
-    if url.scheme == "s3":
-        from s3fs.core import S3FileSystem
-        filesystem = kwargs.get("filesystem")
-        if filesystem is None:
-            endpoint_url = kwargs.get("endpoint_url")
-            filesystem = S3FileSystem(
-                anon=False, client_kwargs={"endpoint_url": endpoint_url})
-        return FsspecReadWriteProtocol(
-            proto_id, root_url, cast(S3FileSystem, filesystem))
-    if url.scheme == "memory":
-        from fsspec.implementations.memory import MemoryFileSystem
-        filesystem = MemoryFileSystem()
-        return FsspecReadWriteProtocol(proto_id, root_url, filesystem)
+        return FsspecReadOnlyProtocol(
+            proto_id, root_url,
+            filesystem=filesystem,
+            public_url=public_url,
+            **kwargs)
 
     raise NotImplementedError(f"unsupported schema {url.scheme}")
