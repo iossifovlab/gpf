@@ -226,9 +226,9 @@ class AnnotationConfigParser:
 
         and_: operation "and" operation
 
-        equals: (name"=\\""name"\\"")
+        equals: (name"=\\""name"\\"") | (name"='"name"'")
 
-        in: ("\\""name"\\"" " in " name)
+        in: ("\\""name"\\"" " in " name) | ("'"name"'" " in " name)
 
         resource_name: /[\\w\\d\\/_]+/
 

@@ -455,6 +455,22 @@ def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
     ]
 
 
+def test_wildcard_label_single_quotes(test_grr: GenomicResourceRepo) -> None:
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: "*[baz='sub_*']"
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_one"},
+            annotator_id="A0_score_one",
+        ),
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_two"},
+            annotator_id="A0_score_two",
+        ),
+    ]
+
+
 def test_parse_preamble() -> None:
     preamble, _ = AnnotationConfigParser.parse_str("""
         preamble:
