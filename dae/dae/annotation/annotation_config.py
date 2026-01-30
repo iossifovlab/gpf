@@ -230,9 +230,9 @@ class AnnotationConfigParser:
 
         in: ("\\""name"\\"" " in " name) | ("'"name"'" " in " name)
 
-        resource_name: /[\\w\\d\\/_]+/
+        resource_name: /[\\w\\d\\/_\\-!@#$%^<>+]+/
 
-        ?name: /[\\w\\d\\/_*]+/
+        ?name: /[\\w\\d\\/_\\-!@#$%^<>+*]+/
 
         ?operation: equals | in | and_
 
