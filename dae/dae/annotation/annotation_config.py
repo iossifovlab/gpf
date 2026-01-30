@@ -526,6 +526,11 @@ class AnnotationConfigParser:
                 error_mark=error_mark,
             ) from error
 
+        if pipeline_raw_config is None or len(pipeline_raw_config) == 0:
+            raise AnnotationConfigurationError(
+                "The annotation pipeline configuration is empty.",
+            )
+
         return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
 
     @staticmethod

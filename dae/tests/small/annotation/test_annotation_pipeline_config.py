@@ -6,6 +6,7 @@ import textwrap
 import pytest
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
+    AnnotationConfigurationError,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPreamble,
@@ -329,13 +330,6 @@ def test_annotator_config_with_params_and_attributes() -> None:
         }, annotator_id="A0")]
 
 
-def test_empty_config() -> None:
-    _, pipeline_config = AnnotationConfigParser.parse_str("")
-
-    # pylint: disable=use-implicit-booleaness-not-comparison
-    assert pipeline_config == []
-
-
 def test_effect_annotator_extra_attributes() -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str("""
         - effect_annotator:
@@ -526,3 +520,8 @@ def test_wildcard_in_complete_syntax(test_grr: GenomicResourceRepo) -> None:
             annotator_id="A0_score_two",
         ),
     ]
+
+
+def test_empty_pipeline_errors() -> None:
+    with pytest.raises(AnnotationConfigurationError):
+        AnnotationConfigParser.parse_str("# test")
