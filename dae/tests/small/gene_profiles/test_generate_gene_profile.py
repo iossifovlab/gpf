@@ -120,6 +120,10 @@ def gp_gpf_instance(
                     gene_scores_db:
                         gene_scores:
                         - gene_score1
+                    reference_genome:
+                        resource_id: t4c8_genome
+                    gene_models:
+                        resource_id: t4c8_genes
                 """),
             },
             "gene_sets": {

@@ -13,6 +13,9 @@ from dae.effect_annotation.effect import expand_effect_types
 from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_sets.gene_sets_db import GeneSet
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
 from dae.utils.regions import Region
@@ -156,8 +159,14 @@ def process_region(
     *,
     has_denovo: bool = False,
     has_rare: bool = False,
+    gpf_config: str | None = None,
+    grr_definition: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    gpf_instance = GPFInstance.build()
+    if grr_definition is not None:
+        grr = build_genomic_resource_repository(grr_definition)
+    else:
+        grr = None
+    gpf_instance = GPFInstance.build(gpf_config, grr=grr)
     for dataset_id, filters in config.datasets.items():
         variant_counts: dict[str, Any] = {}
         for gs in gene_symbols:
@@ -515,12 +524,16 @@ def main(
     tasks = []
     for chrom in chromosomes:
         region = Region(chrom)
+        grr_definition = gpf_instance.grr.definition \
+            if gpf_instance.grr else None
         tasks.append(executor.submit(
             process_region,
             region, config,
             gene_symbols, person_ids, genes,
             has_denovo=has_denovo,
             has_rare=has_rare,
+            gpf_config=str(gpf_instance.dae_config_path),
+            grr_definition=grr_definition,
         ))
 
     for task in tasks:
