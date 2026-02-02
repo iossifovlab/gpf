@@ -151,8 +151,7 @@ def calculate_table_values(
 
 
 def process_region(
-    region: Region,
-    config: Box,
+    regions: list[Region] | None,
     gene_symbols: set[str],
     person_ids: dict[str, Any],
     genes: list[str] | None,
@@ -162,11 +161,15 @@ def process_region(
     gpf_config: str | None = None,
     grr_definition: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
+    """Process list of regions to collect variant counts."""
     if grr_definition is not None:
         grr = build_genomic_resource_repository(grr_definition)
     else:
         grr = None
     gpf_instance = GPFInstance.build(gpf_config, grr=grr)
+    config = gpf_instance._gene_profile_config  # noqa: SLF001
+    assert config is not None
+
     for dataset_id, filters in config.datasets.items():
         variant_counts: dict[str, Any] = {}
         for gs in gene_symbols:
@@ -184,7 +187,7 @@ def process_region(
 
             denovo_variants = \
                 genotype_data.query_variants(
-                    regions=[region],
+                    regions=regions,
                     genes=genes, inheritance="denovo",
                     unique_family_variants=True,
                 )
@@ -244,7 +247,7 @@ def process_region(
 
                 rare_variants = \
                     genotype_data.query_variants(
-                        regions=[region],
+                        regions=regions,
                         genes=genes,
                         inheritance=[
                             ("not denovo and "
@@ -505,11 +508,21 @@ def main(
     elapsed = generate_end - start
     logger.info("Took %.2f secs", elapsed)
 
-    chromosomes = gpf_instance.reference_genome.chromosomes
+    all_chromosomes = set(gpf_instance.reference_genome.chromosomes)
+    autosomes = [f"chr{i}" for i in range(1, 23)]
+    autosomes_x = [*autosomes, "chrX"]
+    partitions = [
+        [Region(chrom)]
+        for chrom in autosomes_x
+        if chrom in all_chromosomes]
+    if len(all_chromosomes - set(autosomes_x)) > 0:
+        remaining = [
+            Region(chrom) for chrom in (all_chromosomes - set(autosomes_x))]
+        partitions.append(remaining)
 
     genes = list(gene_symbols) if args.gene_sets_genes or args.genes else None
 
-    executor = ProcessPoolExecutor()
+    executor = ProcessPoolExecutor(max_workers=10)
 
     variant_counts: dict[str, Any] = {}
     for filters in config.datasets.values():
@@ -522,13 +535,12 @@ def main(
                 variant_counts[gs][ps.set_name] = ps_statistics
 
     tasks = []
-    for chrom in chromosomes:
-        region = Region(chrom)
+    for regions in partitions:
         grr_definition = gpf_instance.grr.definition \
             if gpf_instance.grr else None
         tasks.append(executor.submit(
             process_region,
-            region, config,
+            regions,
             gene_symbols, person_ids, genes,
             has_denovo=has_denovo,
             has_rare=has_rare,

@@ -7,6 +7,7 @@ import pytest
 import yaml
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.generate_gene_profile import main
+from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
@@ -14,7 +15,7 @@ from dae.genomic_resources.testing import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.import_helpers import vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
+from dae.testing.t4c8_import import t4c8_gpf, t4c8_grr
 
 
 @pytest.fixture
@@ -102,10 +103,10 @@ def gp_config() -> dict:
 
 def gp_gpf_instance(
     gp_config: dict,
-    tmp_path: pathlib.Path,
+    root_path: pathlib.Path,
 ) -> GPFInstance:
     setup_directories(
-        tmp_path,
+        root_path,
         {
             "gpf_instance": {
                 "gp_config.yaml": yaml.dump(
@@ -126,59 +127,61 @@ def gp_gpf_instance(
                         resource_id: t4c8_genes
                 """),
             },
-            "gene_sets": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    type: gene_set
-                    id: gene_sets
-                    format: directory
-                    directory: test_gene_sets
-                    web_label: test gene sets
-                    web_format_str: "key| (|count|): |desc"
-                """),
-                "test_gene_sets": {
-                    "test_gene_set_1.txt": textwrap.dedent("""
-                        test_gene_set_1
-                        contains t4
-                        t4
+            "grr_test": {
+                "gene_sets": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: gene_set_collection
+                        id: gene_sets
+                        format: directory
+                        directory: test_gene_sets
+                        web_label: test gene sets
+                        web_format_str: "key| (|count|): |desc"
                     """),
-                    "test_gene_set_2.txt": textwrap.dedent("""
-                        test_gene_set_2
-                        contains c8
-                        c8
+                    "test_gene_sets": {
+                        "test_gene_set_1.txt": textwrap.dedent("""
+                            test_gene_set_1
+                            contains t4
+                            t4
+                        """),
+                        "test_gene_set_2.txt": textwrap.dedent("""
+                            test_gene_set_2
+                            contains c8
+                            c8
+                        """),
+                        "test_gene_set_3.txt": textwrap.dedent("""
+                            test_gene_set_3
+                            contains t4 and c8
+                            t4
+                            c8
+                        """),
+                    },
+                },
+                "gene_score1": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: gene_score
+                        filename: score.csv
+                        scores:
+                        - id: gene_score1
+                          desc: Test gene score
+                          histogram:
+                            type: number
+                            number_of_bins: 100
+                            view_range:
+                              min: 0.0
+                              max: 30.0
                     """),
-                    "test_gene_set_3.txt": textwrap.dedent("""
-                        test_gene_set_3
-                        contains t4 and c8
-                        t4
-                        c8
+                    "score.csv": textwrap.dedent("""
+                        gene,gene_score1
+                        t4,10
+                        c8,20
                     """),
                 },
-            },
-            "gene_score1": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    type: gene_score
-                    filename: score.csv
-                    scores:
-                    - id: gene_score1
-                      desc: Test gene score
-                      histogram:
-                        type: number
-                        number_of_bins: 100
-                        view_range:
-                          min: 0.0
-                          max: 30.0
-                """),
-                "score.csv": textwrap.dedent("""
-                    gene,gene_score1
-                    t4,10
-                    c8,20
-                """),
             },
         },
     )
 
     ped_path = setup_pedigree(
-        tmp_path / "study_1" / "pedigree" / "in.ped",
+        root_path / "study_1" / "pedigree" / "in.ped",
         """
 familyId personId dadId momId sex status role
 f1.1     mom1     0     0     2   1      mom
@@ -189,7 +192,7 @@ f1.3     dad3     0     0     1   1      dad
 f1.3     ch3      dad3  mom3  2   1      prb
         """)
     vcf_path = setup_vcf(
-        tmp_path / "study_1" / "vcf" / "in.vcf.gz",
+        root_path / "study_1" / "vcf" / "in.vcf.gz",
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -216,15 +219,19 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
         },
     }
 
-    instance = t4c8_gpf(tmp_path)
+    grr = t4c8_grr(root_path / "grr_test")
+    cli_manage(["repo-repair", "--repo", str(root_path), "-j", "1"])
+    grr.invalidate()
+
+    instance = t4c8_gpf(root_path, grr=grr)
 
     vcf_study(
-        tmp_path,
+        root_path,
         "study_1", ped_path, [vcf_path],
         gpf_instance=instance,
         project_config_update=project_config_update,
         study_config_update={
-            "conf_dir": str(tmp_path / "study_1"),
+            "conf_dir": str(root_path / "study_1"),
             "person_set_collections": {
                 "phenotype": {
                     "id": "phenotype",
@@ -269,8 +276,9 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 
 
 def test_generate_gene_profile(
-        gp_config: dict,
-        tmp_path: pathlib.Path) -> None:
+    gp_config: dict,
+    tmp_path: pathlib.Path,
+) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
     argv = [
         "--dbfile",
