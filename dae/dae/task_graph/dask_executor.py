@@ -46,45 +46,51 @@ class DaskExecutor(TaskGraphExecutorBase):
         running: dict[Future, Task],
         running_lock: threading.Lock,
     ) -> None:
-        submit_count = 0
         start = time.time()
+        submit_count = 0
 
-        with submit_condition:
-            while True:
-                while submit_queue:
-                    task = submit_queue.pop()
-                    if task is None:
-                        logger.warning(
-                            "submit worker received shutdown signal.")
-                        return
-                    assert isinstance(task, TaskDesc)
-                    params = copy(self._params)
-                    task_id = safe_task_id(task.task.task_id)
-                    params["task_id"] = task_id
-                    future = self._dask_client.submit(
-                        self._exec, task.func, task.args, params,
-                        key=task_id,
-                    )
+        while True:
+            tasks: list[TaskDesc | None] = []
+
+            with submit_condition:
+                if not submit_queue:
+                    submit_condition.wait()
+                tasks = copy(submit_queue)
+                submit_queue.clear()
+
+            if any(t is None for t in tasks):
+                logger.warning(
+                    "submit worker received shutdown signal; "
+                    "skipping %s tasks...",
+                    len(tasks) - 1)
+                return
+
+            assert all(isinstance(t, TaskDesc) for t in tasks)
+            task_ids = [
+                safe_task_id(task.task.task_id)
+                for task in tasks
+                if task is not None
+            ]
+
+            futures = self._dask_client.map(
+                            self._exec, tasks,
+                            key=task_ids,
+                            pure=False,
+                            params=self._params,
+                        )
+
+            with running_lock:
+                for future, task in zip(futures, tasks, strict=True):
+                    assert task is not None
                     submit_count += 1
+                    running[future] = task.task
+                if submit_count % 100 == 0:
                     elapsed = time.time() - start
-                    if submit_count % 100 == 0:
-                        logger.info(
-                            "submitted %s tasks in %.2f seconds (%.2f tasks/s)",
-                            submit_count, elapsed,
-                            submit_count / elapsed)
-
-                    if future is None:
-                        raise ValueError(
-                            f"unexpected dask executor return None: "
-                            f"{task}, {task.args}, "
-                            f"{params}")
-                    assert future is not None
-
-                    with running_lock:
-                        running[future] = task.task
-                    submit_condition.wait(timeout=0.2)
-
-                submit_condition.wait()
+                    logger.info(
+                        "submitted %s tasks in %.2f seconds; %.2f tasks/s",
+                        submit_count, elapsed, submit_count / elapsed)
+                    logger.info(
+                        "total running tasks: %s", len(running))
 
     def _results_worker_func(
             self,
