@@ -6,7 +6,7 @@ import os
 import pickle  # noqa: S403
 import time
 from abc import abstractmethod
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from copy import copy
 from typing import Any
 
@@ -15,10 +15,11 @@ import psutil
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
 from dae.task_graph.executor import TaskGraphExecutor
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskDesc, TaskGraph
 from dae.task_graph.logging import (
     configure_task_logging,
     ensure_log_dir,
+    safe_task_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,14 +41,17 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
 
     @staticmethod
     def _exec_internal(
-        task_func: Callable, args: list, params: dict[str, Any],
+        task: TaskDesc,
+        params: dict[str, Any],
     ) -> Any:
         verbose = params.get("verbose")
         if verbose is None:  # Dont use .get default in case of a Box
             verbose = 0
 
-        task_id = params["task_id"]
         log_dir = params.get("task_log_dir", ".")
+        task_id = safe_task_id(task.task.task_id)
+        task_func = task.func
+        args = task.args
 
         root_logger = logging.getLogger()
         handler = configure_task_logging(log_dir, task_id, verbose)
@@ -83,13 +87,12 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
 
     @staticmethod
     def _exec_forked(
-        task_func: Callable, args: list, params: dict[str, Any],
+        task: TaskDesc,
+        params: dict[str, Any],
     ) -> None:
-
-        result_fn = TaskGraphExecutorBase._result_fn(params)
-        result = TaskGraphExecutorBase._exec_internal(
-            task_func, args, params,
-        )
+        task_id = safe_task_id(task.task.task_id)
+        result_fn = TaskGraphExecutorBase._result_fn(task_id, params)
+        result = TaskGraphExecutorBase._exec_internal(task, params)
 
         try:
             with fsspec.open(result_fn, "wb") as out:
@@ -101,30 +104,29 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
             )
 
     @staticmethod
-    def _result_fn(params: dict[str, Any]) -> str:
-        task_id = params["task_id"]
+    def _result_fn(task_id: str, params: dict[str, Any]) -> str:
         status_dir = params.get("task_status_dir", ".")
         return os.path.join(status_dir, f"{task_id}.result")
 
     @staticmethod
     def _exec(
-        task_func: Callable, args: list, params: dict[str, Any],
+        task: TaskDesc,
+        params: dict[str, Any],
     ) -> Any:
         fork_tasks = params.get("fork_tasks", False)
         if not fork_tasks:
-            return TaskGraphExecutorBase._exec_internal(
-                task_func, args, params,
-            )
+            return TaskGraphExecutorBase._exec_internal(task, params)
         mp.current_process()._config[  # type: ignore  # noqa: SLF001
             "daemon"] = False
         p = mp.Process(
             target=TaskGraphExecutorBase._exec_forked,
-            args=(task_func, args, params),
+            args=(task, params),
         )
         p.start()
         p.join()
 
-        result_fn = TaskGraphExecutorBase._result_fn(params)
+        task_id = safe_task_id(task.task.task_id)
+        result_fn = TaskGraphExecutorBase._result_fn(task_id, params)
         try:
             with fsspec.open(result_fn, "rb") as infile:
                 result = pickle.load(infile)  # pyright: ignore

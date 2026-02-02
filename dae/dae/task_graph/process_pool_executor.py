@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import gc
 import logging
 import os
 import time
 from collections import deque
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from concurrent.futures import (
     Future,
     ProcessPoolExecutor,
     as_completed,
 )
-from copy import copy
 from typing import Any
 
 import psutil
@@ -38,43 +36,36 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
     def _submit_task(self, task: TaskDesc) -> Future:
         assert len(task.deps) == 0
         assert not any(isinstance(arg, Task) for arg in task.args), \
-            "Task has no dependencies to wait for."
-
-        params = copy(self._params)
-        task_id = safe_task_id(task.task.task_id)
-        params["task_id"] = task_id
+            "Task has dependencies to wait for."
 
         future = self._executor.submit(
-            self._exec_internal, task.func, task.args, params,
+            self._exec_internal, task, self._params,
         )
         if future is None:
             raise ValueError(
-                f"unexpected dask executor return None: {task}, {task.args}, "
-                f"{params}")
+                f"unexpected dask executor return None: {task}, {task.args}")
         assert future is not None
 
         return future
 
     @staticmethod
     def _exec_internal(
-        task_func: Callable, args: list, params: dict[str, Any],
+        task: TaskDesc,
+        params: dict[str, Any],  # noqa: ARG004
     ) -> Any:
         start = time.time()
         process = psutil.Process(os.getpid())
         start_memory_mb = process.memory_info().rss / (1024 * 1024)
-        task_id = params["task_id"]
+        task_id = safe_task_id(task.task.task_id)
 
         logger.info(
             "worker process memory usage: %.2f MB", start_memory_mb)
 
+        task_func = task.func
+        args = task.args
         result = task_func(*args)
         elapsed = time.time() - start
         logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
-
-        del args
-        del params
-        del task_func
-        gc.collect()
 
         finish_memory_mb = process.memory_info().rss / (1024 * 1024)
         logger.info(

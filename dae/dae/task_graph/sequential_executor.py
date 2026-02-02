@@ -1,14 +1,10 @@
 import logging
 from collections.abc import Iterator
-from copy import copy
 from typing import Any
 
 from dae.task_graph.base_executor import TaskGraphExecutorBase
 from dae.task_graph.cache import NoTaskCache
 from dae.task_graph.graph import Task, TaskGraph
-from dae.task_graph.logging import (
-    safe_task_id,
-)
 
 NO_TASK_CACHE = NoTaskCache()
 logger = logging.getLogger(__name__)
@@ -27,11 +23,8 @@ class SequentialExecutor(TaskGraphExecutorBase):
 
             for ftask in ready_tasks:
                 # handle tasks that use the output of other tasks
-                params = copy(self._params)
-                task_id = safe_task_id(ftask.task.task_id)
-                params["task_id"] = task_id
 
-                result = self._exec(ftask.func, ftask.args, params)
+                result = self._exec(ftask, self._params)
                 graph.process_completed_tasks([(ftask.task, result)])
 
                 finished_tasks += 1
