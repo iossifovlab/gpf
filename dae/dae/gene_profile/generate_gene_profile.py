@@ -386,6 +386,31 @@ def collect_variant_counts(
         )
 
 
+def build_partitions(gpf_instance: GPFInstance) -> list[list[Region]]:
+    """Build partitions for processing."""
+    all_chromosomes = set(gpf_instance.reference_genome.chromosomes)
+    autosomes = [f"chr{i}" for i in range(1, 23)]
+    autosomes_xy = [*autosomes, "chrX", "chrY", "X", "Y"]
+    autosomes_xy = [chrom for chrom in autosomes_xy if chrom in all_chromosomes]
+
+    partitions = [
+        [Region(chrom)]
+        for chrom in autosomes_xy
+        if chrom in all_chromosomes]
+    if len(all_chromosomes - set(autosomes_xy)) > 0:
+        gene_models = gpf_instance.gene_models
+        remaining_chromsomes = [
+            chrom for chrom in (all_chromosomes - set(autosomes_xy))
+            if gene_models.has_chromosome(chrom)
+        ]
+        logger.info("Adding remaining chromosomes to partitions: %s; %s",
+                    len(remaining_chromsomes), remaining_chromsomes)
+        remaining = [
+            Region(chrom) for chrom in remaining_chromsomes]
+        partitions.append(remaining)
+    return partitions
+
+
 def main(
     gpf_instance: GPFInstance | None = None,
     argv: list[str] | None = None,
@@ -508,17 +533,7 @@ def main(
     elapsed = generate_end - start
     logger.info("Took %.2f secs", elapsed)
 
-    all_chromosomes = set(gpf_instance.reference_genome.chromosomes)
-    autosomes = [f"chr{i}" for i in range(1, 23)]
-    autosomes_x = [*autosomes, "chrX"]
-    partitions = [
-        [Region(chrom)]
-        for chrom in autosomes_x
-        if chrom in all_chromosomes]
-    if len(all_chromosomes - set(autosomes_x)) > 0:
-        remaining = [
-            Region(chrom) for chrom in (all_chromosomes - set(autosomes_x))]
-        partitions.append(remaining)
+    partitions = build_partitions(gpf_instance)
 
     genes = list(gene_symbols) if args.gene_sets_genes or args.genes else None
 
