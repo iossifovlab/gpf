@@ -39,7 +39,7 @@ default_study_config:
 
 gene_sets_db:
   gene_set_collections:
-    - gene_properties/gene_sets/main
+    - gene_properties/gene_sets/autism
     - gene_properties/gene_sets/sfari
     - gene_properties/gene_sets/spark
     - gene_properties/gene_sets/MSigDB_curated/4.0
