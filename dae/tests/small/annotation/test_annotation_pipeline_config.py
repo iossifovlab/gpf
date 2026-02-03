@@ -131,7 +131,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         meta:
                             labels:
                                 foo: BETA
-                                bar: GAMMA
+                                bar: EPSILON
                                 baz: sub_two
                                 test: "spaced value"
                     """),
