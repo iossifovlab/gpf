@@ -24,20 +24,20 @@ gene_sets:
   display_name: Autism Gene Sets
   sets:
   - set_id: autism candidates from Iossifov PNAS 2015
-    collection_id: main
+    collection_id: autism
   - set_id: autism candidates from Sanders Neuron 2015
-    collection_id: main
+    collection_id: autism
 - category: relevant_gene_sets
   display_name: Relevant Gene Sets
   sets:
   - set_id: CHD8 target genes
-    collection_id: main
+    collection_id: relevant
   - set_id: chromatin modifiers
-    collection_id: main
+    collection_id: relevant
   - set_id: essential genes
-    collection_id: main
+    collection_id: relevant
   - set_id: FMRP Darnell
-    collection_id: main
+    collection_id: relevant
 
 gene_scores:
 - category: autism_scores
