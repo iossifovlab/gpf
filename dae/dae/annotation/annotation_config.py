@@ -226,13 +226,15 @@ class AnnotationConfigParser:
 
         and_: operation "and" operation
 
-        equals: (name"=\\""name"\\"") | (name"='"name"'")
+        equals: (name"=\\""value"\\"") | (name"='"value"'")
 
-        in: ("\\""name"\\"" " in " name) | ("'"name"'" " in " name)
+        in: ("\\""value"\\"" " in " name) | ("'"value"'" " in " name)
 
         resource_name: /[\\w\\d\\/_\\-!@#$%^<>+]+/
 
         ?name: /[\\w\\d\\/_\\-!@#$%^<>+*]+/
+
+        ?value: /[\\w\\d\\/ _\\-!@#$%^<>+*]+/
 
         ?operation: equals | in | and_
 

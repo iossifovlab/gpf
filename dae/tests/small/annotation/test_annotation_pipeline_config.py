@@ -131,8 +131,9 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         meta:
                             labels:
                                 foo: BETA
-                                bar: GAMMA
+                                bar: EPSILON
                                 baz: sub_two
+                                test: "spaced value"
                     """),
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s2
@@ -406,6 +407,18 @@ def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
             annotator_id="A0_score_one",
+        ),
+    ]
+
+
+def test_wildcard_label_spaced(test_grr: GenomicResourceRepo) -> None:
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: score_*[test="spaced value"]
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_two"},
+            annotator_id="A0_score_two",
         ),
     ]
 
