@@ -232,7 +232,7 @@ class AnnotationConfigParser:
 
         resource_name: /[\\w\\d\\/_\\-!@#$%^<>+]+/
 
-        ?name: /[\\w\\d\\/_\\-!@#$%^<>+*]+/
+        ?name: /[\\w\\d\\/ _\\-!@#$%^<>+*]+/
 
         ?operation: equals | in | and_
 
