@@ -42,7 +42,7 @@ gene_sets_db:
     - gene_properties/gene_sets/main
     - gene_properties/gene_sets/sfari
     - gene_properties/gene_sets/spark
-    - gene_properties/gene_sets/MSigDB_curated
+    - gene_properties/gene_sets/MSigDB_curated/4.0
     - gene_properties/gene_sets/miRNA
     - gene_properties/gene_sets/GO
     - gene_properties/gene_sets/PFAM_37.0_domains
