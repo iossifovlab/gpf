@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import time
+from collections import defaultdict
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
 from itertools import batched
@@ -150,6 +151,52 @@ def calculate_table_values(
                     gp_counts[rate_col] = 0
 
 
+def merge_rare_queries(
+    statistics: list[Box],
+) -> dict[str, Any]:
+    """Merge rare variant queries."""
+    merged_query: dict[str, Any] = defaultdict(set)
+
+    for statistic in statistics:
+        if statistic.get("category") != "rare":
+            continue
+
+        if statistic.effects is not None:
+            merged_query["effect_types"].update(
+                expand_effect_types(statistic.effects))
+
+        if statistic.variant_types:
+            variant_types = [
+                # pylint: disable=no-member
+                allele_type_from_name(
+                    statistic.variant_types).repr(),  # type: ignore
+            ]
+            merged_query["variant_type"].update(variant_types)
+
+        if statistic.roles:
+            roles = [
+                repr(Role.from_name(statistic.roles)),
+            ]
+            merged_query["roles"].update(roles)
+
+    kwargs = {
+        "frequency_filter": [("af_allele_freq", (None, 1.0))],
+        "inheritance": [
+            ("not denovo and "
+             "not possible_denovo and not possible_omission"),
+            "mendelian or missing",
+        ],
+    }
+    if "effect_types" in merged_query:
+        kwargs["effect_types"] = list(merged_query["effect_types"])
+    if "variant_type" in merged_query:
+        kwargs["variant_type"] = " or ".join(merged_query["variant_type"])
+    if "roles" in merged_query:
+        kwargs["roles"] = " or ".join(merged_query["roles"])
+
+    return kwargs
+
+
 def process_region(
     regions: list[Region] | None,
     gene_symbols: set[str],
@@ -213,63 +260,27 @@ def process_region(
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
 
-            for statistic in filters.statistics:
-                if statistic.category == "denovo":
-                    continue
-                kwargs: dict[str, Any] = {}
-                kwargs["roles"] = "prb or sib or child"
+            query_kwargs = merge_rare_queries(filters.statistics)
 
-                if statistic.effects is not None:
-                    kwargs["effect_types"] = \
-                        expand_effect_types(statistic.effects)
+            rare_variants = \
+                genotype_data.query_variants(
+                    regions=regions,
+                    genes=genes,
+                    **query_kwargs)
 
-                if statistic.variant_types:
-                    variant_types = [
-                        # pylint: disable=no-member
-                        allele_type_from_name(
-                            statistic.variant_types).repr(),  # type: ignore
-                    ]
-                    kwargs["variant_type"] = " or ".join(variant_types)
+            logger.info(
+                "Counting rare variants for dataset %s", dataset_id)
+            collect_variant_counts(
+                variant_counts,
+                rare_variants,
+                dataset_id,
+                config,
+                person_ids[dataset_id],
+                denovo_flag=False,
+            )
 
-                if statistic.scores:
-                    scores = []
-                    for score in statistic.scores:
-                        min_max = (score.min, score.max)
-                        score_filter = (score.name, min_max)
-                        scores.append(score_filter)
-                    kwargs["real_attr_filter"] = scores
-
-                if statistic.roles:
-                    roles = [
-                        repr(Role.from_name(statistic.roles)),
-                    ]
-                    kwargs["roles"] = " or ".join(roles)
-
-                rare_variants = \
-                    genotype_data.query_variants(
-                        regions=regions,
-                        genes=genes,
-                        inheritance=[
-                            ("not denovo and "
-                             "not possible_denovo and not possible_omission"),
-                            "mendelian or missing",
-                        ],
-                        frequency_filter=[("af_allele_freq", (None, 1.0))],
-                        **kwargs)
-
-                logger.info(
-                    "Counting rare variants for statistic %s", statistic.id,
-                )
-                collect_variant_counts(
-                    variant_counts,
-                    rare_variants,
-                    dataset_id,
-                    config,
-                    person_ids[dataset_id],
-                    denovo_flag=False,
-                )
-
-            logger.info("Done counting rare variants")
+            logger.info(
+                "Done counting rare variants for dataset %s", dataset_id)
     return variant_counts
 
 
