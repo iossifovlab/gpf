@@ -141,7 +141,7 @@ def calculate_table_values(
                 count_col = f"{dataset_id}_{person_set.id}_{stat_id}"
                 rate_col = f"{count_col}_rate"
 
-                count = counts[set_name][stat_id]
+                count = counts.get(set_name, {}).get(stat_id, 0)
                 if children_count > 0:
                     gp_counts[count_col] = count
                     gp_counts[rate_col] = \
@@ -214,10 +214,10 @@ def process_region(
     else:
         grr = None
     gpf_instance = GPFInstance.build(gpf_config, grr=grr)
-    config = gpf_instance._gene_profile_config  # noqa: SLF001
-    assert config is not None
+    gene_profiles_config = gpf_instance._gene_profile_config  # noqa: SLF001
+    assert gene_profiles_config is not None
 
-    for dataset_id, filters in config.datasets.items():
+    for dataset_id, filters in gene_profiles_config.datasets.items():
         variant_counts: dict[str, Any] = {}
         for gs in gene_symbols:
             variant_counts[gs] = {}
@@ -246,7 +246,7 @@ def process_region(
                 variant_counts,
                 denovo_variants,
                 dataset_id,
-                config,
+                gene_profiles_config,
                 person_ids[dataset_id],
                 denovo_flag=True,
             )
@@ -274,7 +274,7 @@ def process_region(
                 variant_counts,
                 rare_variants,
                 dataset_id,
-                config,
+                gene_profiles_config,
                 person_ids[dataset_id],
                 denovo_flag=False,
             )
@@ -288,13 +288,13 @@ def count_variant(
     v: FamilyVariant,
     dataset_id: str,
     variant_counts: dict[str, Any],
-    config: Box,
+    gene_profiles_config: Box,
     person_ids: dict[str, Any], *,
     denovo_flag: bool,
 ) -> None:
     """Count variant."""
     # pylint: disable=invalid-name, too-many-locals, too-many-branches
-    filters = config.datasets[dataset_id]
+    filters = gene_profiles_config.datasets[dataset_id]
     members = set()
 
     for aa in v.alt_alleles:
@@ -378,7 +378,7 @@ def collect_variant_counts(
     variant_counts: dict[str, Any],
     variants: Iterable[FamilyVariant],
     dataset_id: str,
-    config: Box,
+    gene_profiles_config: Box,
     person_ids: dict[str, Any], *,
     denovo_flag: bool,
 ) -> None:
@@ -392,7 +392,7 @@ def collect_variant_counts(
                 dataset_id, idx, dataset_id, elapsed,
             )
         count_variant(
-            v, dataset_id, variant_counts, config, person_ids,
+            v, dataset_id, variant_counts, gene_profiles_config, person_ids,
             denovo_flag=denovo_flag,
         )
 
@@ -453,18 +453,18 @@ def main(
         gpf_instance = GPFInstance.build()
 
     # pylint: disable=protected-access, invalid-name
-    config = gpf_instance._gene_profile_config  # noqa: SLF001
+    gene_profiles_config = gpf_instance._gene_profile_config  # noqa: SLF001
 
-    assert config is not None, "No GP configuration found."
+    assert gene_profiles_config is not None, "No GP configuration found."
 
     collections_gene_sets = []
 
     gpdb = GeneProfileDBWriter(
-        config.to_dict(),
+        gene_profiles_config.to_dict(),
         args.dbfile,
     )
 
-    for gs_category in config.gene_sets:
+    for gs_category in gene_profiles_config.gene_sets:
         for gs in gs_category.sets:
             gs_id = gs["set_id"]
             collection_id = gs["collection_id"]
@@ -494,7 +494,7 @@ def main(
     has_denovo = False
     has_rare = False
     person_ids: dict[str, Any] = {}
-    for dataset_id, filters in config.datasets.items():
+    for dataset_id, filters in gene_profiles_config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         assert genotype_data is not None, dataset_id
         genotype_data_children = {
@@ -551,7 +551,7 @@ def main(
     executor = ProcessPoolExecutor(max_workers=10)
 
     variant_counts: dict[str, Any] = {}
-    for filters in config.datasets.values():
+    for filters in gene_profiles_config.datasets.values():
         for gs in gene_symbols:
             variant_counts[gs] = {}
             for ps in filters.person_sets:
@@ -588,8 +588,9 @@ def main(
                     for ps in gs_counts:
                         gs_counts[ps] += region_gs_counts[ps]
 
-    for dataset_id in config.datasets:
+    for dataset_id in gene_profiles_config.datasets:
         logger.info("Calculating rates for %s", dataset_id)
+        filters = gene_profiles_config.datasets[dataset_id]
         calculate_table_values(
             gpf_instance,
             variant_counts,
