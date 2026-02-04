@@ -46,7 +46,7 @@
     "element-resize-detector": "1.2.4",
     "file-saver": "2.0.5",
     "jquery": "3.6.3",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "ngx-cookie-service": "19.1.2",
     "ngx-markdown": "19.1.1",
     "oboe": "2.1.5",
