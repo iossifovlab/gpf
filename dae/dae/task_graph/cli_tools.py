@@ -143,8 +143,9 @@ class TaskGraphCli:
 
     @staticmethod
     def create_executor(
-            task_cache: TaskCache | None = None,
-            **kwargs: Any) -> TaskGraphExecutor:
+        task_cache: TaskCache | None = None,
+        **kwargs: Any,
+    ) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)
 

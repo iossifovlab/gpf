@@ -63,7 +63,8 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
 
         task_func = task.func
         args = task.args
-        result = task_func(*args)
+        kwargs = task.kwargs
+        result = task_func(*args, **kwargs)
         elapsed = time.time() - start
         logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
 
