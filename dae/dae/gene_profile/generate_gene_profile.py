@@ -117,44 +117,6 @@ def add_variant_count(
         vc[person_set][statistic_id] += 1
 
 
-def calculate_table_values(
-    instance: GPFInstance,
-    variant_counts: dict[str, Any],
-    gene_profiles: dict[str, GPStatistic],
-    dataset_id: str,
-    filters: Box,
-) -> None:
-    """Calculate GP variant counts and return a SQLite update mapping."""
-    # pylint: disable=invalid-name
-    for gs, counts in variant_counts.items():
-        gp_counts = gene_profiles[gs].variant_counts
-        genotype_data = instance.get_genotype_data(dataset_id)
-        for ps in filters.person_sets:
-            psc = genotype_data.get_person_set_collection(
-                ps.collection_name,
-            )
-            assert psc is not None
-            set_name = ps.set_name
-            person_set = psc.person_sets[set_name]
-
-            children_count = person_set.get_children_count()
-
-            for statistic in filters.statistics:
-                stat_id = statistic["id"]
-
-                count_col = f"{dataset_id}_{person_set.id}_{stat_id}"
-                rate_col = f"{count_col}_rate"
-
-                count = counts.get(set_name, {}).get(stat_id, 0)
-                if children_count > 0:
-                    gp_counts[count_col] = count
-                    gp_counts[rate_col] = \
-                        (count / children_count) * 1000
-                else:
-                    gp_counts[count_col] = 0
-                    gp_counts[rate_col] = 0
-
-
 def merge_rare_queries(
     statistics: list[Box],
 ) -> dict[str, Any]:
@@ -205,10 +167,7 @@ def process_region(
     regions: list[Region] | None,
     gene_symbols: set[str],
     person_ids: dict[str, Any],
-    genes: list[str] | None,
     *,
-    has_denovo: bool = False,
-    has_rare: bool = False,
     gpf_config: str | None = None,
     grr_definition: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
@@ -221,6 +180,8 @@ def process_region(
     gene_profiles_config = gpf_instance._gene_profile_config  # noqa: SLF001
     assert gene_profiles_config is not None
 
+    genes = list(gene_symbols) if len(gene_symbols) <= 20 else None
+
     for dataset_id, filters in gene_profiles_config.datasets.items():
         variant_counts: dict[str, Any] = {}
         for gs in gene_symbols:
@@ -230,6 +191,11 @@ def process_region(
                 for statistic in filters.statistics:
                     ps_statistics[statistic.id] = 0
                 variant_counts[gs][ps.set_name] = ps_statistics
+
+        has_denovo = any(
+            stats.category == "denovo" for stats in filters.statistics)
+        has_rare = any(
+            stats.category == "rare" for stats in filters.statistics)
 
         if has_denovo:
             logger.info("Collecting denovo variants for %s", dataset_id)
@@ -412,24 +378,25 @@ def build_partitions(
 
     all_chromosomes = set(gpf_instance.reference_genome.chromosomes)
     autosomes = [f"chr{i}" for i in range(1, 23)]
-    autosomes_xy = [*autosomes, "chrX", "chrY", "X", "Y"]
-    autosomes_xy = [chrom for chrom in autosomes_xy if chrom in all_chromosomes]
+    autosomes_x = [*autosomes, "chrX", "X"]
+    autosomes_x = [chrom for chrom in autosomes_x if chrom in all_chromosomes]
 
     partitions = [
         [Region(chrom)]
-        for chrom in autosomes_xy
+        for chrom in autosomes_x
         if chrom in all_chromosomes]
-    if len(all_chromosomes - set(autosomes_xy)) > 0:
+    if len(all_chromosomes - set(autosomes_x)) > 0:
         gene_models = gpf_instance.gene_models
         remaining_chromsomes = [
-            chrom for chrom in (all_chromosomes - set(autosomes_xy))
+            chrom for chrom in (all_chromosomes - set(autosomes_x))
             if gene_models.has_chromosome(chrom)
         ]
         logger.info("Adding remaining chromosomes to partitions: %s; %s",
                     len(remaining_chromsomes), remaining_chromsomes)
         remaining = [
             Region(chrom) for chrom in remaining_chromsomes]
-        partitions.append(remaining)
+        if remaining:
+            partitions.append(remaining)
     return partitions
 
 
@@ -479,7 +446,6 @@ def main(
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
 
-    start = time.time()
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
@@ -488,42 +454,203 @@ def main(
 
     assert gene_profiles_config is not None, "No GP configuration found."
 
-    collections_gene_sets = []
-
     gpdb = GeneProfileDBWriter(
         gene_profiles_config.to_dict(),
         args.dbfile,
     )
 
-    for gs_category in gene_profiles_config.gene_sets:
-        for gs in gs_category.sets:
-            gs_id = gs["set_id"]
-            collection_id = gs["collection_id"]
-            gene_set = gpf_instance.gene_sets_db.get_gene_set(
-                collection_id, gs_id)
-            if gene_set is None:
-                logger.error("missing gene set: %s, %s", collection_id, gs_id)
-                raise ValueError(
-                    f"missing gene set: {collection_id}: {gs_id}")
+    collections_gene_sets = _collect_gene_sets(
+        gpf_instance, gene_profiles_config)
+    gene_symbols = _collect_gene_symbols(
+        gpf_instance, collections_gene_sets, args)
 
-            collections_gene_sets.append((collection_id, gene_set))
-
-    logger.info("collected gene sets: %d", len(collections_gene_sets))
-
-    gene_symbols: set[str] = set()
-    if args.genes:
-        gene_symbols = {gs.strip() for gs in args.genes.split(",")}
-    elif args.gene_sets_genes:
-        for _, gs in collections_gene_sets:
-            gene_symbols = gene_symbols.union(gs["syms"])
-    else:
-        gene_models = gpf_instance.gene_models
-        gene_symbols = set(gene_models.gene_names())
     gs_count = len(gene_symbols)
-    logger.info("Collected %d gene symbols", gs_count)
+    logger.info("collected %d gene symbols", gs_count)
 
-    has_denovo = False
-    has_rare = False
+    person_ids = _collect_person_set_collections(
+        gpf_instance, gene_profiles_config)
+
+    gene_profiles = _init_gene_profiles(
+        gpf_instance, collections_gene_sets, gene_symbols)
+
+    partitions = build_partitions(gpf_instance, **vars(args))
+
+    variant_counts = _calculate_variant_counts(
+        gpf_instance,
+        gene_profiles_config,
+        gene_symbols,
+        person_ids,
+        partitions,
+        **vars(args),
+    )
+
+    _populate_gene_profile_statistics(
+        gpf_instance,
+        gene_profiles_config,
+        gene_profiles,
+        variant_counts,
+    )
+
+    _insert_gene_profiles_into_db(
+        gpdb,
+        gene_profiles,
+    )
+
+
+def _insert_gene_profiles_into_db(
+    gpdb: GeneProfileDBWriter,
+    gene_profiles: dict[str, GPStatistic],
+) -> None:
+    started = time.time()
+    logger.info("inserting statistics into DB")
+    batches = batched(gene_profiles.values(), 1000)
+    total_batches = (len(gene_profiles) + 999) // 1000
+
+    for idx, gene_profiles_batch in enumerate(batches, 1):
+        logger.info("inserting batch %d/%d", idx, total_batches)
+        gpdb.insert_gps(gene_profiles_batch)
+        elapsed = time.time() - started
+        logger.info(
+            "done inserting batch %d/%d, took %.2f seconds",
+            idx, total_batches, elapsed)
+
+    elapsed = time.time() - started
+    logger.info("done inserting GPs; took %.2f secs", elapsed)
+
+
+def _populate_gene_profile_statistics(
+    gpf_instance: GPFInstance,
+    gene_profiles_config: Box,
+    gene_profiles: dict[str, GPStatistic],
+    variant_counts: dict[str, Any],
+) -> None:
+    for dataset_id in gene_profiles_config.datasets:
+        logger.info("populating gene profile statistics for %s", dataset_id)
+        filters = gene_profiles_config.datasets[dataset_id]
+        for gs, counts in variant_counts.items():
+            gp_counts = gene_profiles[gs].variant_counts
+            genotype_data = gpf_instance.get_genotype_data(dataset_id)
+            for ps in filters.person_sets:
+                psc = genotype_data.get_person_set_collection(
+                    ps.collection_name,
+                )
+                assert psc is not None
+                set_name = ps.set_name
+                person_set = psc.person_sets[set_name]
+
+                children_count = person_set.get_children_count()
+
+                for statistic in filters.statistics:
+                    stat_id = statistic["id"]
+
+                    count_col = f"{dataset_id}_{person_set.id}_{stat_id}"
+                    rate_col = f"{count_col}_rate"
+
+                    count = counts.get(set_name, {}).get(stat_id, 0)
+                    if children_count > 0:
+                        gp_counts[count_col] = count
+                        gp_counts[rate_col] = \
+                            (count / children_count) * 1000
+                    else:
+                        gp_counts[count_col] = 0
+                        gp_counts[rate_col] = 0
+        logger.info(
+            "done populating gene profile statistics for %s", dataset_id)
+
+
+def _calculate_variant_counts(
+    gpf_instance: GPFInstance,
+    gene_profiles_config: Box,
+    gene_symbols: set[str],
+    person_ids: dict[str, Any],
+    partitions: Sequence[list[Region] | None],
+    **kwargs: Any,
+) -> dict[str, Any]:
+    variant_counts: dict[str, Any] = _init_variant_counts(
+        gene_profiles_config, gene_symbols)
+    graph = TaskGraph()
+    for regions in partitions:
+        grr_definition = gpf_instance.grr.definition \
+            if gpf_instance.grr else None
+
+        graph.create_task(
+            f"generate_gene_profiles_{_regions_id(regions)}",
+            process_region,
+            args=(
+                regions,
+                gene_symbols,
+                person_ids,
+            ),
+            kwargs={
+                "gpf_config": str(gpf_instance.dae_config_path),
+                "grr_definition": grr_definition,
+            },
+        )
+
+    executor = TaskGraphCli.create_executor(**kwargs)
+    for result_or_error in task_graph_run_with_results(graph, executor):
+        if isinstance(result_or_error, Exception):
+            raise result_or_error
+        region_variant_counts = result_or_error
+
+        if len(variant_counts) == 0:
+            variant_counts.update(region_variant_counts)
+        else:
+            for gene_sym, gene_variant_counts in variant_counts.items():
+                for collection_id in gene_variant_counts:
+                    gs_counts = gene_variant_counts[collection_id]
+                    region_gs_counts = region_variant_counts[
+                        gene_sym][collection_id]
+                    for ps in gs_counts:
+                        gs_counts[ps] += region_gs_counts[ps]
+    return variant_counts
+
+
+def _init_variant_counts(
+    gene_profiles_config: Box,
+    gene_symbols: set[str],
+) -> dict[str, Any]:
+    variant_counts: dict[str, Any] = {}
+    for filters in gene_profiles_config.datasets.values():
+        for gs in gene_symbols:
+            variant_counts[gs] = {}
+            for ps in filters.person_sets:
+                ps_statistics: dict[str, Any] = {}
+                for statistic in filters.statistics:
+                    ps_statistics[statistic.id] = 0
+                variant_counts[gs][ps.set_name] = ps_statistics
+    return variant_counts
+
+
+def _init_gene_profiles(
+    gpf_instance: GPFInstance,
+    collections_gene_sets: list[tuple[str, GeneSet]],
+    gene_symbols: set[str],
+) -> dict[str, Any]:
+    start = time.time()
+    gene_profiles = {}
+    gene_symbols = set(gene_symbols)
+    gs_count = len(gene_symbols)
+
+    start = time.time()
+    for idx, sym in enumerate(gene_symbols, 1):
+        gs, gp = generate_gp(
+            gpf_instance, sym, collections_gene_sets,
+        )
+        gene_profiles[gs] = gp
+        if idx % 1000 == 0:
+            elapsed = time.time() - start
+            logger.info(
+                "initializing %d/%d GP statistics %.2f secs",
+                idx, gs_count, elapsed)
+
+    return gene_profiles
+
+
+def _collect_person_set_collections(
+    gpf_instance: GPFInstance,
+    gene_profiles_config: Box,
+) -> dict[str, Any]:
     person_ids: dict[str, Any] = {}
     for dataset_id, filters in gene_profiles_config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
@@ -546,106 +673,45 @@ def main(
             children_person_set = set(person_set) & genotype_data_children
 
             person_ids[dataset_id][ps.set_name] = children_person_set
+    return person_ids
 
-        for stat in filters.statistics:
-            if stat.category == "denovo":
-                has_denovo = True
-            elif stat.category == "rare":
-                has_rare = True
 
-    gps = {}
-    gene_symbols = set(gene_symbols)
-    gs_count = len(gene_symbols)
-    elapsed = time.time() - start
-    logger.info("data collected: %.2f secs", elapsed)
+def _collect_gene_sets(
+    gpf_instance: GPFInstance,
+    gene_profiles_config: Box,
+) -> list[tuple[str, GeneSet]]:
+    collections_gene_sets = []
 
-    start = time.time()
-    for idx, sym in enumerate(gene_symbols, 1):
-        gs, gp = generate_gp(
-            gpf_instance, sym, collections_gene_sets,
-        )
-        gps[gs] = gp
-        if idx % 1000 == 0:
-            elapsed = time.time() - start
-            logger.info(
-                "Generated %d/%d GP statistics %.2f secs",
-                idx, gs_count, elapsed)
+    for gs_category in gene_profiles_config.gene_sets:
+        for gs in gs_category.sets:
+            gs_id = gs["set_id"]
+            collection_id = gs["collection_id"]
+            gene_set = gpf_instance.gene_sets_db.get_gene_set(
+                collection_id, gs_id)
+            if gene_set is None:
+                logger.error("missing gene set: %s, %s", collection_id, gs_id)
+                raise ValueError(
+                    f"missing gene set: {collection_id}: {gs_id}")
 
-    generate_end = time.time()
-    elapsed = generate_end - start
-    logger.info("Took %.2f secs", elapsed)
+            collections_gene_sets.append((collection_id, gene_set))
+    logger.info("collected gene sets: %d", len(collections_gene_sets))
 
-    genes = list(gene_symbols) if args.gene_sets_genes or args.genes else None
+    return collections_gene_sets
 
-    variant_counts: dict[str, Any] = {}
-    for filters in gene_profiles_config.datasets.values():
-        for gs in gene_symbols:
-            variant_counts[gs] = {}
-            for ps in filters.person_sets:
-                ps_statistics: dict[str, Any] = {}
-                for statistic in filters.statistics:
-                    ps_statistics[statistic.id] = 0
-                variant_counts[gs][ps.set_name] = ps_statistics
 
-    graph = TaskGraph()
-    partitions = build_partitions(gpf_instance)
-    for regions in partitions:
-        grr_definition = gpf_instance.grr.definition \
-            if gpf_instance.grr else None
+def _collect_gene_symbols(
+    gpf_instance: GPFInstance,
+    collections_gene_sets: list[tuple[str, GeneSet]],
+    args: argparse.Namespace,
+) -> set[str]:
 
-        graph.create_task(
-            f"generate_gene_profiles_{_regions_id(regions)}",
-            process_region,
-            args=(
-                regions,
-                gene_symbols, person_ids, genes,
-            ),
-            kwargs={
-                "has_denovo": has_denovo,
-                "has_rare": has_rare,
-                "gpf_config": str(gpf_instance.dae_config_path),
-                "grr_definition": grr_definition,
-            },
-        )
-
-    executor = TaskGraphCli.create_executor(**vars(args))
-    for result_or_error in task_graph_run_with_results(graph, executor):
-        if isinstance(result_or_error, Exception):
-            raise result_or_error
-        region_variant_counts = result_or_error
-
-        if len(variant_counts) == 0:
-            variant_counts.update(region_variant_counts)
-        else:
-            for gene_sym, gene_variant_counts in variant_counts.items():
-                for collection_id in gene_variant_counts:
-                    gs_counts = gene_variant_counts[collection_id]
-                    region_gs_counts = region_variant_counts[
-                        gene_sym][collection_id]
-                    for ps in gs_counts:
-                        gs_counts[ps] += region_gs_counts[ps]
-
-    for dataset_id in gene_profiles_config.datasets:
-        logger.info("Calculating rates for %s", dataset_id)
-        filters = gene_profiles_config.datasets[dataset_id]
-        calculate_table_values(
-            gpf_instance,
-            variant_counts,
-            gps,
-            dataset_id,
-            filters,
-        )
-        logger.info("Done calculating rates for %s", dataset_id)
-    logger.info("Inserting statistics into DB")
-    batches = batched(gps.values(), 1000)
-    for idx, gene_profiles_batch in enumerate(batches, 1):
-        logger.info("Inserting batch %d", idx)
-        started = time.time()
-        gpdb.insert_gps(gene_profiles_batch)
-        elapsed = time.time() - started
-        logger.info(
-            "Done inserting batch %d, took %.2f seconds", idx, elapsed)
-    logger.info("Done inserting GPs for %s", dataset_id)
-
-    elapsed = time.time() - generate_end
-    logger.info("Took %.2f secs", elapsed)
+    gene_symbols: set[str] = set()
+    if args.genes:
+        gene_symbols = {gs.strip() for gs in args.genes.split(",")}
+    elif args.gene_sets_genes:
+        for _, gs in collections_gene_sets:
+            gene_symbols = gene_symbols.union(gs["syms"])
+    else:
+        gene_models = gpf_instance.gene_models
+        gene_symbols = set(gene_models.gene_names())
+    return gene_symbols

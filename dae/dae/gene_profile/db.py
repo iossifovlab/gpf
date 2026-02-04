@@ -560,7 +560,6 @@ class GeneProfileDBWriter:
             )
 
             connection.execute(to_duckdb_transpile(query))
-            logger.info("Done!")
             connection.commit()
 
     def update_gps_with_values(self, gs_values: dict[str, Any]) -> None:
