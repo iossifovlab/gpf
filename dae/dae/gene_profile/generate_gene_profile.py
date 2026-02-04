@@ -4,7 +4,6 @@ import os
 import time
 from collections import defaultdict
 from collections.abc import Iterable
-from concurrent.futures import ProcessPoolExecutor
 from itertools import batched
 from typing import Any, cast
 
@@ -19,6 +18,11 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
+from dae.task_graph.cli_tools import (
+    TaskGraphCli,
+    task_graph_run_with_results,
+)
+from dae.task_graph.graph import TaskGraph
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.attributes import Role
@@ -422,6 +426,13 @@ def build_partitions(gpf_instance: GPFInstance) -> list[list[Region]]:
     return partitions
 
 
+def _regions_id(regions: list[Region] | None) -> str:
+    """Build regions id."""
+    if regions is None:
+        return "all_regions"
+    return "_".join(f"{r}" for r in regions)
+
+
 def main(
     gpf_instance: GPFInstance | None = None,
     argv: list[str] | None = None,
@@ -444,6 +455,19 @@ def main(
         help="Comma separated list of genes to generate statistics for",
     )
     parser.add_argument("--drop", action="store_true")
+    parser.add_argument(
+        "--split-by-chromosome", "--split", default=True,
+        action="store_true", dest="split_by_chromosome",
+        help="Split processing by chromosome "
+        "(default)")
+    parser.add_argument(
+        "--no-split-by-chromosome", "--no-split", default=True,
+        action="store_false", dest="split_by_chromosome",
+        help="Do not split processing by chromosome "
+        "(default)")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, task_progress_mode=False,
+    )
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
@@ -548,8 +572,6 @@ def main(
 
     genes = list(gene_symbols) if args.gene_sets_genes or args.genes else None
 
-    executor = ProcessPoolExecutor(max_workers=10)
-
     variant_counts: dict[str, Any] = {}
     for filters in gene_profiles_config.datasets.values():
         for gs in gene_symbols:
@@ -560,22 +582,31 @@ def main(
                     ps_statistics[statistic.id] = 0
                 variant_counts[gs][ps.set_name] = ps_statistics
 
-    tasks = []
+    graph = TaskGraph()
     for regions in partitions:
         grr_definition = gpf_instance.grr.definition \
             if gpf_instance.grr else None
-        tasks.append(executor.submit(
-            process_region,
-            regions,
-            gene_symbols, person_ids, genes,
-            has_denovo=has_denovo,
-            has_rare=has_rare,
-            gpf_config=str(gpf_instance.dae_config_path),
-            grr_definition=grr_definition,
-        ))
 
-    for task in tasks:
-        region_variant_counts = task.result()
+        graph.create_task(
+            f"generate_gene_profiles_{_regions_id(regions)}",
+            process_region,
+            args=(
+                regions,
+                gene_symbols, person_ids, genes,
+            ),
+            kwargs={
+                "has_denovo": has_denovo,
+                "has_rare": has_rare,
+                "gpf_config": str(gpf_instance.dae_config_path),
+                "grr_definition": grr_definition,
+            },
+        )
+
+    executor = TaskGraphCli.create_executor(**vars(args))
+    for result_or_error in task_graph_run_with_results(graph, executor):
+        if isinstance(result_or_error, Exception):
+            raise result_or_error
+        region_variant_counts = result_or_error
 
         if len(variant_counts) == 0:
             variant_counts.update(region_variant_counts)

@@ -63,6 +63,7 @@ def test_exec_without_fork_invokes_internal(
         Task("test_task"),
         sample_func,
         [21],
+        {},
         [],
         [],
     )
@@ -82,6 +83,7 @@ def test_exec_forked_simple(
         Task("test_task"),
         add_to_list,
         [1, []],
+        {},
         [],
         [],
     )
@@ -109,6 +111,7 @@ def test_exec_forked_exception(
         Task("test_task"),
         raise_exception,
         [],
+        {},
         [],
         [],
     )
