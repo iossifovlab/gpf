@@ -202,6 +202,24 @@ class AnnotatorInfo:
         params_hash = "".join(str(hash(self.parameters)))
         return hash(f"{self.type}{attrs_hash}{resources_hash}{params_hash}")
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert annotator info to a configuration dictionary."""
+        result = {
+            **self.parameters._data,  # noqa: SLF001
+            "attributes": [
+                {
+                    "name": attr.name,
+                    "source": attr.source,
+                    "internal": attr.internal,
+                    "type": attr.type,
+                }
+                for attr in self.attributes
+            ],
+        }
+        return {
+            self.type: result,
+        }
+
 
 @dataclass
 class AnnotationPreamble:
@@ -559,6 +577,8 @@ class AnnotationConfigParser:
         name = name or source
         source = source or name
 
+        attr_type = attribute_config.get("type", "str")
+
         internal = attribute_config.get("internal")
         if internal is not None:
             internal = bool(internal)
@@ -571,10 +591,13 @@ class AnnotationConfigParser:
 
         parameters = {k: v for k, v in attribute_config.items()
                       if k not in ["name", "source", "internal"]}
+
         return AttributeInfo(
             name, source,
             internal=internal,
-            parameters=parameters)
+            parameters=parameters,
+            _type=attr_type,
+        )
 
     @staticmethod
     def parse_raw_attributes(
