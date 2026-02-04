@@ -35,6 +35,9 @@ test.describe('Enrichment tool tests', () => {
   test('should display alert window when the gene sets textarea is empty', async({ page }) => {
     await page.locator('#gene-sets').click();
     await page.waitForSelector('gpf-gene-sets');
+
+    await page.locator('gpf-gene-sets select').selectOption('Relevant Gene Sets');
+
     await expect(page.getByText('Please select a gene set.')).toBeVisible();
     await page.locator('#search-box').click();
     await page.locator('#search-box').focus();
@@ -53,6 +56,9 @@ test.describe('Enrichment tool tests', () => {
   test('should display "54" and "168" in the affected person\'s observed column ' +
   'of LGDs and missense\'s rows respectively with gene set Main: FMRP Darnell', async({ page }) => {
     await page.locator('#gene-sets').click();
+
+    await page.locator('gpf-gene-sets select').selectOption('Relevant Gene Sets');
+
     await page.waitForSelector('gpf-gene-sets');
     await page.locator('#search-box').click();
     await page.locator('#search-box').focus();
@@ -95,6 +101,4 @@ test.describe('Enrichment tool tests', () => {
     await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.35');
     await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('1.47');
   });
-
-  // add screenshot test for the table
 });

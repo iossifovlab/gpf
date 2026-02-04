@@ -213,7 +213,7 @@ test.describe('Gene profiles navigation to single view tests', () => {
   test('should navigate to single view with url', async({ page }) => {
     await page.goto(`${utils.frontendUrl}/gene-profiles/CHD8`);
 
-    await expect(page.locator('#tabs-wrapper').getByText('CHD8')).toBeVisible();
+    await expect(page.locator('#tabs-wrapper').getByRole('button', { name: 'CHD8 close' })).toBeVisible();
     await expect(page.locator('#table-header')).not.toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view').locator('h2:text("CHD8")')).toBeVisible();

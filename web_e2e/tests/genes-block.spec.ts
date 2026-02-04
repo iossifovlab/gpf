@@ -29,10 +29,19 @@ test.describe('Genes block tests', () => {
     await expect(page.locator('css=.alert-danger')).toBeVisible();
 
     await page.click('input#search-box');
-    await page.fill('input#search-box', 'non-essential genes');
 
-    await page.getByText('non-essential genes').click();
+    await page.locator('mat-option').first().click();
     await expect(page.locator('css=.alert-danger')).not.toBeVisible();
+  });
+
+  test('should display error alert in gene sets panel when the textarea is cleared', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await page.click('input#search-box');
+
+    await page.locator('mat-option').first().click();
+
+    await page.locator('#selected-value').click();
+    await expect(page.locator('css=.alert-danger')).toBeVisible();
   });
 
   test('should display gene weights panel', async({ page }) => {
@@ -236,10 +245,9 @@ test.describe('Genes sets tests', () => {
 
   [
     {
-      collection: 'Main',
-      expectedSearchCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
-        'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)',
-      expectedDownloadCount: '239'
+      collection: 'Protein domains',
+      expectedSearchCondition: '7tm_1 (286): 7 transmembrane receptor (rhodopsin family)',
+      expectedDownloadCount: '286'
     },
     {
       collection: 'SFARI Genes',
@@ -340,7 +348,7 @@ test.beforeEach(async({ page }) => {
 [
     {
       id: 1,
-      collection: 'Main',
+      collection: 'Relevant Gene Sets',
       searchValue: 'synaptic clefts inhibitory',
       geneSet: 'synaptic clefts inhibitory (41): Ken H. Loh, et al. '+
       'Proteomic Analysis of Unbounded Cellular Compartments: Synaptic Clefts. Cell (2016)',

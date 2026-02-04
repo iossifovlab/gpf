@@ -27,6 +27,10 @@ test.describe('Home page tests', () => {
     await page.locator('#edit-icon').click();
     await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
     await page.getByText('Save').click();
+    const response = page.waitForResponse(
+      resp => resp.url().includes('/api/v3/instance/description') && resp.status() === 200
+    );
+    await response;
     await page.reload();
 
     await utils.logout(page);
