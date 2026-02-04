@@ -42,7 +42,7 @@ class AnnotatorBase(Annotator):
         info: AnnotatorInfo,
         attribute_descriptions: Mapping[str, AttributeDesc | tuple],
     ):
-        self.attribute_descriptions = {}
+        self.attribute_descriptions = self.get_all_attribute_descriptions()
         for name, attr_desc in attribute_descriptions.items():
             if isinstance(attr_desc, tuple):
                 self.attribute_descriptions[name] = AttributeDesc(
@@ -70,7 +70,7 @@ class AnnotatorBase(Annotator):
                     info.attributes.append(attr)
 
         for attribute_config in info.attributes:
-            if attribute_config.source not in attribute_descriptions:
+            if attribute_config.source not in self.attribute_descriptions:
                 raise ValueError(
                     f"The attribute source '{attribute_config.source}'"
                     " is not supported for the annotator"
@@ -101,6 +101,10 @@ class AnnotatorBase(Annotator):
         Internal abstract method used for annotation. It should produce
         all source attributes defined for annotator.
         """
+
+    @abc.abstractmethod
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        """Get descriptions of all attributes provided by the annotator."""
 
     def annotate(
         self, annotatable: Annotatable | None, context: dict[str, Any],

@@ -59,8 +59,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
             "intergenic",
         ]
 
-    @staticmethod
-    def _attribute_descriptors() -> dict[str, AttributeDesc]:
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         gene_lists = {}
         for effect in SimpleEffectAnnotator.effect_types()[:-1]:
             gene_lists[f"{effect}_gene_list"] = AttributeDesc(
@@ -156,7 +155,7 @@ Simple effect annotator.
         super().__init__(
             pipeline,
             info,
-            self._attribute_descriptors(),
+            {},
         )
 
         self.gene_models = gene_models

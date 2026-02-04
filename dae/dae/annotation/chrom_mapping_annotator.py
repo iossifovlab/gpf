@@ -5,7 +5,7 @@ from typing import Any
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.annotator_base import AnnotatorBase, AttributeDesc
 from dae.genomic_resources.utils import build_chrom_mapping
 
 
@@ -49,11 +49,16 @@ Annotator that maps chromsomes from one naming convention to another.
 
 """)  # noqa
 
-        super().__init__(pipeline, info, {
-            "renamed_chromosome": (
-                "annotatable", "Allele with renamed chromosome.",
+        super().__init__(pipeline, info, {})
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
+            "renamed_chromosome": AttributeDesc(
+                name="renamed_chromosome",
+                type="annotatable",
+                description="Allele with renamed chromosome.",
             ),
-        })
+        }
 
     def _do_annotate(
         self,

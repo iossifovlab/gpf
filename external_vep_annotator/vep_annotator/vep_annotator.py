@@ -16,6 +16,7 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
     AnnotatorInfo,
 )
+from dae.annotation.annotator_base import AttributeDesc
 from dae.annotation.docker_annotator import DockerAnnotator
 from dae.annotation.utils import (
     find_annotator_gene_models,
@@ -298,8 +299,11 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
 
         """)  # noqa
 
-    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
-        return full_attributes
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
+            k: AttributeDesc(name=k, type=v[0], description=v[1])
+            for k, v in full_attributes.items()
+        }
 
     def _do_batch_annotate(
         self,
@@ -413,8 +417,11 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         """Find genome from info, resource label or genomic context."""
         return cast(GenomicResource, self.genome_resource)
 
-    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
-        return effect_attributes
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
+            k: AttributeDesc(name=k, type=v[0], description=v[1])
+            for k, v in effect_attributes.items()
+        }
 
     def _do_batch_annotate(
         self,
