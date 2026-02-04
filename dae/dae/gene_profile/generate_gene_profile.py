@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from itertools import batched
 from typing import Any, cast
 
@@ -401,8 +401,15 @@ def collect_variant_counts(
         )
 
 
-def build_partitions(gpf_instance: GPFInstance) -> list[list[Region]]:
+def build_partitions(
+    gpf_instance: GPFInstance,
+    **kwargs: Any,
+) -> Sequence[list[Region] | None]:
     """Build partitions for processing."""
+    split_by_chromosome = kwargs.get("split_by_chromosome", True)
+    if not split_by_chromosome:
+        return [None]
+
     all_chromosomes = set(gpf_instance.reference_genome.chromosomes)
     autosomes = [f"chr{i}" for i in range(1, 23)]
     autosomes_xy = [*autosomes, "chrX", "chrY", "X", "Y"]
@@ -568,8 +575,6 @@ def main(
     elapsed = generate_end - start
     logger.info("Took %.2f secs", elapsed)
 
-    partitions = build_partitions(gpf_instance)
-
     genes = list(gene_symbols) if args.gene_sets_genes or args.genes else None
 
     variant_counts: dict[str, Any] = {}
@@ -583,6 +588,7 @@ def main(
                 variant_counts[gs][ps.set_name] = ps_statistics
 
     graph = TaskGraph()
+    partitions = build_partitions(gpf_instance)
     for regions in partitions:
         grr_definition = gpf_instance.grr.definition \
             if gpf_instance.grr else None

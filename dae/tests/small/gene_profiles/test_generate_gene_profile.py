@@ -284,6 +284,8 @@ def test_generate_gene_profile(
         "--dbfile",
         gpdb_filename,
         "-vv",
+        "-j", "1",
+        "--no-split",
     ]
 
     gpf_instance = gp_gpf_instance(gp_config, tmp_path)
@@ -385,6 +387,8 @@ def test_generate_gene_profile_with_incomplete_config(
         "--dbfile",
         gpdb_filename,
         "-vv",
+        "-j", "1",
+        "--no-split",
     ]
     del gp_config["order"]
     del gp_config["default_dataset"]
@@ -407,6 +411,8 @@ def test_generate_gene_profile_with_incomplete_config_order(
         "--dbfile",
         gpdb_filename,
         "-vv",
+        "-j", "1",
+        "--no-split",
     ]
 
     gp_config["order"] = [
