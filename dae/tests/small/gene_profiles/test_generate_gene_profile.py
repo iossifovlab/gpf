@@ -18,91 +18,8 @@ from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_gpf, t4c8_grr
 
 
-@pytest.fixture
-def gp_config() -> dict:
-    return {
-        "gene_links": [
-            {
-                "name": "Link with prefix",
-                "url": "{gpf_prefix}/datasets/{gene}",
-            },
-            {
-                "name": "Link with gene info",
-                "url": (
-                    "https://site.com/{gene}?db={genome}&"
-                    "position={chromosome_prefix}{chromosome}"
-                    "/{gene_start_position}-{gene_stop_position}"
-                ),
-            },
-        ],
-        "order": [
-            "gene_set_rank",
-            "gene_score",
-            "study_1",
-        ],
-        "default_dataset": "study_1",
-        "gene_sets": [
-            {
-                "category": "gene_set",
-                "display_name": "test gene sets",
-                "sets": [
-                    {
-                        "set_id": "test_gene_set_1",
-                        "collection_id": "gene_sets",
-                    },
-                    {
-                        "set_id": "test_gene_set_2",
-                        "collection_id": "gene_sets",
-                    },
-                    {
-                        "set_id": "test_gene_set_3",
-                        "collection_id": "gene_sets",
-                    },
-                ],
-            },
-        ],
-        "gene_scores": [
-            {
-                "category": "gene_score",
-                "display_name": "Test gene score",
-                "scores": [
-                    {"score_name": "gene_score1", "format": "%%s"},
-                ],
-            },
-        ],
-        "datasets": {
-            "study_1": {
-                "statistics": [
-                    {
-                        "id": "lgds",
-                        "display_name": "LGDs",
-                        "effects": ["LGDs"],
-                        "category": "denovo",
-                    },
-                    {
-                        "id": "denovo_missense",
-                        "display_name": "missense",
-                        "effects": ["missense"],
-                        "category": "denovo",
-                    },
-                ],
-                "person_sets": [
-                    {
-                        "set_name": "autism",
-                        "collection_name": "phenotype",
-                    },
-                    {
-                        "set_name": "unaffected",
-                        "collection_name": "phenotype",
-                    },
-                ],
-            },
-        },
-    }
-
-
 def gp_gpf_instance(
-    gp_config: dict,
+    gp_config_1: dict,
     root_path: pathlib.Path,
 ) -> GPFInstance:
     setup_directories(
@@ -110,7 +27,7 @@ def gp_gpf_instance(
         {
             "gpf_instance": {
                 "gp_config.yaml": yaml.dump(
-                    gp_config, default_flow_style=False),
+                    gp_config_1, default_flow_style=False),
                 "gpf_instance.yaml": textwrap.dedent("""
                     instance_id: test_instance
                     gene_profiles_config:
@@ -276,7 +193,7 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 
 
 def test_generate_gene_profile(
-    gp_config: dict,
+    gp_config_1: dict,
     tmp_path: pathlib.Path,
 ) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
@@ -288,7 +205,7 @@ def test_generate_gene_profile(
         "--no-split",
     ]
 
-    gpf_instance = gp_gpf_instance(gp_config, tmp_path)
+    gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
     main(gpf_instance, argv)
     gpdb = GeneProfileDB(
         gpf_instance._gene_profile_config,
@@ -380,7 +297,7 @@ def test_generate_gene_profile(
 
 
 def test_generate_gene_profile_with_incomplete_config(
-        gp_config: dict,
+        gp_config_1: dict,
         tmp_path: pathlib.Path) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
     argv = [
@@ -390,10 +307,10 @@ def test_generate_gene_profile_with_incomplete_config(
         "-j", "1",
         "--no-split",
     ]
-    del gp_config["order"]
-    del gp_config["default_dataset"]
+    del gp_config_1["order"]
+    del gp_config_1["default_dataset"]
 
-    gpf_instance = gp_gpf_instance(gp_config, tmp_path)
+    gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
         "['required field'], 'order': ['required field']}")
@@ -404,7 +321,7 @@ def test_generate_gene_profile_with_incomplete_config(
 
 
 def test_generate_gene_profile_with_incomplete_config_order(
-        gp_config: dict,
+        gp_config_1: dict,
         tmp_path: pathlib.Path) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
     argv = [
@@ -415,12 +332,12 @@ def test_generate_gene_profile_with_incomplete_config_order(
         "--no-split",
     ]
 
-    gp_config["order"] = [
+    gp_config_1["order"] = [
         "gene_set_rank",
         "gene_scr",
         "study_1",
     ]
-    gpf_instance = gp_gpf_instance(gp_config, tmp_path)
+    gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
 
     with pytest.raises(
             AssertionError,
