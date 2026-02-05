@@ -384,8 +384,9 @@ def build_partitions(
             chrom for chrom in (all_chromosomes - set(autosomes_x))
             if gene_models.has_chromosome(chrom)
         ]
-        logger.info("Adding remaining chromosomes to partitions: %s; %s",
-                    len(remaining_chromsomes), remaining_chromsomes)
+        logger.info(
+            "Adding remaining %s chromosomes to partition %s; %s",
+            len(remaining_chromsomes), len(partitions), remaining_chromsomes)
         remaining = [
             Region(chrom) for chrom in remaining_chromsomes]
         if remaining:
@@ -581,21 +582,17 @@ def _calculate_variant_counts(
         )
 
     executor = TaskGraphCli.create_executor(**kwargs)
+
     for result_or_error in task_graph_run_with_results(graph, executor):
         if isinstance(result_or_error, Exception):
             raise result_or_error
         region_variant_counts = result_or_error
 
-        if len(variant_counts) == 0:
-            variant_counts.update(region_variant_counts)
-        else:
-            for gene_sym, gene_variant_counts in variant_counts.items():
-                for collection_id in gene_variant_counts:
-                    gs_counts = gene_variant_counts[collection_id]
-                    region_gs_counts = region_variant_counts[
-                        gene_sym][collection_id]
-                    for ps in gs_counts:
-                        gs_counts[ps].update(region_gs_counts[ps])
+        variant_counts = _merge_variant_counts(
+            gene_profiles_config, gene_symbols,
+            variant_counts,
+            region_variant_counts,
+        )
     return variant_counts
 
 
@@ -615,6 +612,33 @@ def _init_variant_counts(
                     ps_statistics[statistic.id] = set()
                 variant_counts[dataset_id][gs][ps.set_name] = ps_statistics
     return variant_counts
+
+
+def _merge_variant_counts(
+    gene_profiles_config: Box,
+    gene_symbols: set[str],
+    variant_counts1: dict[str, Any],
+    variant_counts2: dict[str, Any],
+) -> dict[str, Any]:
+    merged_counts: dict[str, Any] = {}
+
+    for dataset_id, filters in gene_profiles_config.datasets.items():
+        counts1 = variant_counts1.get(dataset_id, {})
+        counts2 = variant_counts2.get(dataset_id, {})
+        merged_counts[dataset_id] = {}
+        for gs in gene_symbols:
+            merged_counts[dataset_id][gs] = {}
+            gs_counts1 = counts1[gs]
+            gs_counts2 = counts2[gs]
+            for ps in filters.person_sets:
+                ps_statistics: dict[str, Any] = {}
+                for statistic in filters.statistics:
+                    stats_count1 = gs_counts1[ps.set_name][statistic.id]
+                    stats_count2 = gs_counts2[ps.set_name][statistic.id]
+                    ps_statistics[statistic.id] = stats_count1 | stats_count2
+                merged_counts[dataset_id][gs][ps.set_name] = ps_statistics
+
+    return merged_counts
 
 
 def _init_gene_profiles(
