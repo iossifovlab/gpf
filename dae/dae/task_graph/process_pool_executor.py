@@ -30,7 +30,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         self, **kwargs: Any,
     ):
         super().__init__(**kwargs)
-        max_workers = kwargs.get("n_threads", os.cpu_count() or 1)
+        max_workers = kwargs.get("max_workers")
         self._executor = ProcessPoolExecutor(max_workers=max_workers)
 
     def _submit_task(self, task: TaskDesc) -> Future:
