@@ -100,46 +100,52 @@ def setup_t4c8_grr(
 
 def setup_t4c8_instance(
     root_path: pathlib.Path,
+    grr: GenomicResourceRepo | None = None,
 ) -> GPFInstance:
     """Setup a t4c8 based GPF instance for testing."""
-    t4c8_grr = setup_t4c8_grr(root_path / "t4c8_grr")
+    if grr is None:
+        grr = setup_t4c8_grr(root_path / "t4c8_grr")
 
     instance_path = root_path / "gpf_instance"
 
     _t4c8_default_study_config(instance_path)
 
-    setup_directories(
-        instance_path, {
-            "gpf_instance.yaml": textwrap.dedent(f"""
-                instance_id: t4c8_instance
-                grr:
-                    id: t4c8_grr
-                    type: directory
-                    directory: {root_path / "t4c8_grr"}
-                reference_genome:
-                    resource_id: t4c8_genome
-                gene_models:
-                    resource_id: t4c8_genes
-                gene_scores_db:
-                    gene_scores:
-                    - "gene_scores/t4c8_score"
-                default_study_config:
-                  conf_file: default_study_configuration.yaml
-                genotype_storage:
-                  default: duckdb_wgpf_test
-                  storages:
-                  - id: duckdb_wgpf_test
-                    storage_type: duckdb_parquet
-                    memory_limit: 16GB
-                    base_dir: '%(wd)s/duckdb_storage'
-                gpfjs:
-                  visible_datasets:
-                    - t4c8_dataset
-                    - t4c8_study_1
-                    - nonexistend_dataset
-            """),
-        },
-    )
+    assert grr is not None
+    assert grr.definition is not None
+
+    if not (instance_path / "gpf_instance.yaml").exists():
+        setup_directories(
+            instance_path, {
+                "gpf_instance.yaml": textwrap.dedent(f"""
+                    instance_id: t4c8_instance
+                    grr:
+                      type: {grr.definition['type']}
+                      id: {grr.definition['id']}
+                      directory: {grr.definition['directory']}
+                    reference_genome:
+                      resource_id: t4c8_genome
+                    gene_models:
+                      resource_id: t4c8_genes
+                    gene_scores_db:
+                      gene_scores:
+                      - "gene_scores/t4c8_score"
+                    default_study_config:
+                      conf_file: default_study_configuration.yaml
+                    genotype_storage:
+                      default: duckdb_gpf_test
+                      storages:
+                      - id: duckdb_gpf_test
+                        storage_type: duckdb_parquet
+                        memory_limit: 16GB
+                        base_dir: '%(wd)s/duckdb_storage'
+                    gpfjs:
+                      visible_datasets:
+                      - t4c8_dataset
+                      - t4c8_study_1
+                      - nonexistent_dataset
+                """),
+            },
+        )
 
     _study_1_pheno(
         root_path,
@@ -148,7 +154,7 @@ def setup_t4c8_instance(
 
     gpf_instance = setup_gpf_instance(
         instance_path,
-        grr=t4c8_grr,
+        grr=grr,
     )
 
     _t4c8_study_1(root_path, gpf_instance)
