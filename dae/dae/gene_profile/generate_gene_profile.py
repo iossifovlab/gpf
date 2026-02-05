@@ -82,7 +82,7 @@ def add_variant_count(
     variant_counts: dict[str, Any],
     person_set: str,
     statistic_id: str,
-    effect_types: set[str] | None,
+    statistic_effect_types: set[str] | None,
 ) -> None:
     """Increment count for specific variant."""
     # pylint: disable=invalid-name
@@ -91,22 +91,17 @@ def add_variant_count(
             continue
 
         skip = False
-        if effect_types is not None:
+        if statistic_effect_types is not None:
             skip = True
             for allele in variant.alt_alleles:
-                allele_gene_effects: dict[str, set[str]] = {}
+                allele_gene_effects: dict[str, set[str]] = defaultdict(set)
                 for eg in allele.effect_genes:
                     if eg.symbol is None or eg.effect is None:
                         continue
+                    allele_gene_effects[eg.symbol].add(eg.effect)
 
-                    if eg.symbol in allele_gene_effects:
-                        allele_gene_effects[eg.symbol].add(eg.effect)
-                    else:
-                        allele_gene_effects[eg.symbol] = {eg.effect}
-
-                allele_effects = allele_gene_effects.get(gs)
-                if allele_effects \
-                        and allele_effects.intersection(effect_types):
+                allele_effects = allele_gene_effects[gs]
+                if allele_effects.intersection(statistic_effect_types):
                     skip = False
                     break
 
@@ -114,7 +109,10 @@ def add_variant_count(
             continue
 
         vc = variant_counts[gs]
-        vc[person_set][statistic_id] += 1
+        vc[person_set][statistic_id].add(variant.fvuid)
+
+
+RARE_FREQUENCY_THRESHOLD = 1.0
 
 
 def merge_rare_queries(
@@ -140,13 +138,13 @@ def merge_rare_queries(
             merged_query["variant_type"].update(variant_types)
 
         if statistic.roles:
-            roles = [
-                repr(Role.from_name(statistic.roles)),
-            ]
+            roles = {
+                repr(Role.from_name(r)) for r in statistic.roles}
             merged_query["roles"].update(roles)
 
     kwargs = {
-        "frequency_filter": [("af_allele_freq", (None, 1.0))],
+        "frequency_filter": [
+            ("af_allele_freq", (None, RARE_FREQUENCY_THRESHOLD))],
         "inheritance": [
             ("not denovo and "
              "not possible_denovo and not possible_omission"),
@@ -183,14 +181,8 @@ def process_region(
     genes = list(gene_symbols) if len(gene_symbols) <= 20 else None
 
     for dataset_id, filters in gene_profiles_config.datasets.items():
-        variant_counts: dict[str, Any] = {}
-        for gs in gene_symbols:
-            variant_counts[gs] = {}
-            for ps in filters.person_sets:
-                ps_statistics: dict[str, Any] = {}
-                for statistic in filters.statistics:
-                    ps_statistics[statistic.id] = 0
-                variant_counts[gs][ps.set_name] = ps_statistics
+        variant_counts = _init_variant_counts(
+            gene_profiles_config, gene_symbols)
 
         has_denovo = any(
             stats.category == "denovo" for stats in filters.statistics)
@@ -283,7 +275,7 @@ def count_variant(
 
             stat_id = statistic.id
 
-            in_members = len(pids.intersection(members)) > 0
+            in_members = pids.intersection(members)
 
             if not in_members:
                 continue
@@ -311,7 +303,7 @@ def count_variant(
                 for aa in v.alt_alleles:
                     freq = aa.get_attribute("af_allele_freq")
 
-                    if freq is not None and freq <= 1.0:
+                    if freq is not None and freq <= RARE_FREQUENCY_THRESHOLD:
                         match = True
                 if not match:
                     continue
@@ -335,12 +327,13 @@ def count_variant(
                 if not len(v_roles.intersection(roles)) > 0:
                     continue
 
-            ets = None
+            statistic_effect_types = None
             if statistic.get("effects"):
-                ets = set(expand_effect_types(statistic.effects))
+                statistic_effect_types = set(
+                    expand_effect_types(statistic.effects))
 
             add_variant_count(
-                v, variant_counts, ps.set_name, stat_id, ets,
+                v, variant_counts, ps.set_name, stat_id, statistic_effect_types,
             )
 
 
@@ -546,7 +539,7 @@ def _populate_gene_profile_statistics(
                     count_col = f"{dataset_id}_{person_set.id}_{stat_id}"
                     rate_col = f"{count_col}_rate"
 
-                    count = counts.get(set_name, {}).get(stat_id, 0)
+                    count = len(counts.get(set_name, {}).get(stat_id, set()))
                     if children_count > 0:
                         gp_counts[count_col] = count
                         gp_counts[rate_col] = \
@@ -602,7 +595,7 @@ def _calculate_variant_counts(
                     region_gs_counts = region_variant_counts[
                         gene_sym][collection_id]
                     for ps in gs_counts:
-                        gs_counts[ps] += region_gs_counts[ps]
+                        gs_counts[ps].update(region_gs_counts[ps])
     return variant_counts
 
 
@@ -617,7 +610,7 @@ def _init_variant_counts(
             for ps in filters.person_sets:
                 ps_statistics: dict[str, Any] = {}
                 for statistic in filters.statistics:
-                    ps_statistics[statistic.id] = 0
+                    ps_statistics[statistic.id] = set()
                 variant_counts[gs][ps.set_name] = ps_statistics
     return variant_counts
 

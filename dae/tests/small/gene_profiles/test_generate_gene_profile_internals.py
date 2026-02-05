@@ -3,9 +3,18 @@ import pathlib
 import textwrap
 
 import pytest
+import pytest_mock
 import yaml
 from box import Box
-from dae.gene_profile.generate_gene_profile import main as gp_main
+from dae.gene_profile.generate_gene_profile import (
+    _collect_person_set_collections,
+    _init_variant_counts,
+    collect_variant_counts,
+    merge_rare_queries,
+)
+from dae.gene_profile.generate_gene_profile import (
+    main as gp_main,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     setup_directories,
@@ -237,6 +246,7 @@ def test_generate_gene_profile_internals(
     tmp_path: pathlib.Path,
 ) -> None:
     assert gp_t4c8_instance is not None
+
     # pylint: disable=protected-access, invalid-name
     gp_config = gp_t4c8_instance._gene_profile_config
     assert gp_config is not None
@@ -252,3 +262,113 @@ def test_generate_gene_profile_internals(
 
     gp_main(gp_t4c8_instance, argv)
     assert gpdb_path.exists()
+
+
+def test_collect_denovo_variant_counts(
+    gp_t4c8_instance: GPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    assert gp_t4c8_instance is not None
+    mocker.patch(
+        "dae.gene_profile.generate_gene_profile."
+        "RARE_FREQUENCY_THRESHOLD", return_value=50.0)
+
+    # pylint: disable=protected-access, invalid-name
+    gp_config = gp_t4c8_instance._gene_profile_config
+    assert gp_config is not None
+    dataset = gp_t4c8_instance.get_dataset("t4c8_dataset")
+    assert dataset is not None
+    gene_symbols = {"t4", "c8"}
+
+    denovo_variants = list(
+        dataset.query_variants(
+            regions=None,
+            genes=["t4", "c8"],
+            inheritance="denovo",
+            unique_family_variants=True,
+        ))
+    person_ids = _collect_person_set_collections(
+        gp_t4c8_instance, gp_config)
+
+    variant_counts = _init_variant_counts(
+        gp_config, gene_symbols)
+
+    collect_variant_counts(
+        variant_counts,
+        denovo_variants,
+        "t4c8_dataset",
+        gp_config,
+        person_ids["t4c8_dataset"],
+        denovo_flag=True,
+    )
+    collect_variant_counts(
+        variant_counts,
+        denovo_variants,
+        "t4c8_dataset",
+        gp_config,
+        person_ids["t4c8_dataset"],
+        denovo_flag=True,
+    )
+
+    assert variant_counts["c8"]["autism"] == {
+        "lgds": {"f1.3.chr1:122.A.C,AC"},
+        "denovo_missense": {"f1.1.chr1:119.A.C"},
+        "rare_lgds": set(),
+        "rare_missense": set(),
+    }
+
+
+def test_collect_rare_variant_counts(
+    gp_t4c8_instance: GPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    assert gp_t4c8_instance is not None
+    mocker.patch(
+        "dae.gene_profile.generate_gene_profile."
+        "RARE_FREQUENCY_THRESHOLD", 100.0)
+
+    # pylint: disable=protected-access, invalid-name
+    gp_config = gp_t4c8_instance._gene_profile_config
+    assert gp_config is not None
+    dataset = gp_t4c8_instance.get_dataset("t4c8_dataset")
+    assert dataset is not None
+    gene_symbols = {"t4", "c8"}
+    person_ids = _collect_person_set_collections(
+        gp_t4c8_instance, gp_config)
+
+    statistics = gp_config.datasets["t4c8_dataset"].statistics
+    query_kwargs = merge_rare_queries(statistics)
+
+    rare_variants = list(
+        dataset.query_variants(
+            regions=None,
+            genes=["t4", "c8"],
+            **query_kwargs,
+        ))
+
+    variant_counts = _init_variant_counts(
+        gp_config, gene_symbols)
+
+    collect_variant_counts(
+        variant_counts,
+        rare_variants,
+        "t4c8_dataset",
+        gp_config,
+        person_ids["t4c8_dataset"],
+        denovo_flag=False,
+    )
+    collect_variant_counts(
+        variant_counts,
+        rare_variants,
+        "t4c8_dataset",
+        gp_config,
+        person_ids["t4c8_dataset"],
+        denovo_flag=False,
+    )
+
+    assert variant_counts["c8"]["autism"] == {
+        "lgds": set(),
+        "denovo_missense": set(),
+        "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
+        "rare_missense": {"f1.3.chr1:119.A.G,C"},
+    }
