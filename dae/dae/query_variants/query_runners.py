@@ -101,6 +101,7 @@ class QueryRunner(abc.ABC):
         while True:
             try:
                 self._result_queue.put(val, timeout=QUEUE_TIMEOUT)
+                no_interest = 0
                 break
             except queue.Full:
                 no_interest += 1

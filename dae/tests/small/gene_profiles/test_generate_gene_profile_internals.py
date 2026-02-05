@@ -2,11 +2,13 @@
 import pathlib
 import textwrap
 
+import duckdb
 import pytest
 import pytest_mock
 import yaml
 from box import Box
 from dae.gene_profile.generate_gene_profile import (
+    GeneProfileDBWriter,
     _collect_person_set_collections,
     _init_variant_counts,
     collect_variant_counts,
@@ -108,6 +110,7 @@ def gp_config() -> dict:
             "gene_set_rank",
             "gene_score",
             "t4c8_dataset",
+            "t4c8_study_3",
         ],
         "default_dataset": "t4c8_dataset",
         "gene_sets": [
@@ -173,6 +176,48 @@ def gp_config() -> dict:
                         "collection_name": "phenotype",
                     },
                     {
+                        "set_name": "epilepsy",
+                        "collection_name": "phenotype",
+                    },
+                    {
+                        "set_name": "unaffected",
+                        "collection_name": "phenotype",
+                    },
+                ],
+            },
+            "t4c8_study_3": {
+                "statistics": [
+                    {
+                        "id": "lgds",
+                        "display_name": "LGDs",
+                        "effects": ["LGDs"],
+                        "category": "denovo",
+                    },
+                    {
+                        "id": "denovo_missense",
+                        "display_name": "missense",
+                        "effects": ["missense"],
+                        "category": "denovo",
+                    },
+                    {
+                        "id": "rare_lgds",
+                        "display_name": "rare LGDs",
+                        "effects": ["LGDs"],
+                        "category": "rare",
+                    },
+                    {
+                        "id": "rare_missense",
+                        "display_name": "rare missense",
+                        "effects": ["missense"],
+                        "category": "rare",
+                    },
+                ],
+                "person_sets": [
+                    {
+                        "set_name": "autism",
+                        "collection_name": "phenotype",
+                    },
+                    {
                         "set_name": "unaffected",
                         "collection_name": "phenotype",
                     },
@@ -199,9 +244,9 @@ def gp_t4c8_instance(
             "gpf_instance.yaml": textwrap.dedent(f"""
                 instance_id: t4c8_instance
                 grr:
-                    type: {gp_grr.definition['type']}
-                    id: {gp_grr.definition['id']}
-                    directory: {gp_grr.definition['directory']}
+                    type: {gp_grr.definition["type"]}
+                    id: {gp_grr.definition["id"]}
+                    directory: {gp_grr.definition["directory"]}
                 reference_genome:
                   resource_id: t4c8_genome
                 gene_models:
@@ -223,7 +268,7 @@ def gp_t4c8_instance(
                   - id: duckdb_gpf_test
                     storage_type: duckdb_parquet
                     memory_limit: 16GB
-                    base_dir: '%(wd)s/duckdb_storage'
+                    base_dir: "%(wd)s/duckdb_storage"
                 gpfjs:
                   visible_datasets:
                   - t4c8_dataset
@@ -263,6 +308,65 @@ def test_generate_gene_profile_internals(
     gp_main(gp_t4c8_instance, argv)
     assert gpdb_path.exists()
 
+    gpdb = GeneProfileDBWriter(gp_config, str(gpdb_path))
+
+    cols = []
+    with duckdb.connect(str(gpdb_path), read_only=True) as connection:
+        cols = [
+            row["column_name"] for row in connection.execute(
+                f"DESCRIBE {gpdb.table.alias_or_name}",
+            ).df().to_dict("records")
+        ]
+
+    assert set(cols) == {
+            "symbol_name",
+            "gene_set_rank",
+            "gene_sets_test_gene_set_1",
+            "gene_sets_test_gene_set_2",
+            "gene_sets_test_gene_set_3",
+            "gene_score_gene_score1",
+            "t4c8_dataset_autism_lgds",
+            "t4c8_dataset_autism_lgds_rate",
+            "t4c8_dataset_autism_denovo_missense",
+            "t4c8_dataset_autism_denovo_missense_rate",
+            "t4c8_dataset_autism_rare_lgds",
+            "t4c8_dataset_autism_rare_lgds_rate",
+            "t4c8_dataset_autism_rare_missense",
+            "t4c8_dataset_autism_rare_missense_rate",
+            "t4c8_dataset_epilepsy_lgds",
+            "t4c8_dataset_epilepsy_lgds_rate",
+            "t4c8_dataset_epilepsy_denovo_missense",
+            "t4c8_dataset_epilepsy_denovo_missense_rate",
+            "t4c8_dataset_epilepsy_rare_lgds",
+            "t4c8_dataset_epilepsy_rare_lgds_rate",
+            "t4c8_dataset_epilepsy_rare_missense",
+            "t4c8_dataset_epilepsy_rare_missense_rate",
+            "t4c8_dataset_unaffected_lgds",
+            "t4c8_dataset_unaffected_lgds_rate",
+            "t4c8_dataset_unaffected_denovo_missense",
+            "t4c8_dataset_unaffected_denovo_missense_rate",
+            "t4c8_dataset_unaffected_rare_lgds",
+            "t4c8_dataset_unaffected_rare_lgds_rate",
+            "t4c8_dataset_unaffected_rare_missense",
+            "t4c8_dataset_unaffected_rare_missense_rate",
+            "t4c8_study_3_autism_lgds",
+            "t4c8_study_3_autism_lgds_rate",
+            "t4c8_study_3_autism_denovo_missense",
+            "t4c8_study_3_autism_denovo_missense_rate",
+            "t4c8_study_3_autism_rare_lgds",
+            "t4c8_study_3_autism_rare_lgds_rate",
+            "t4c8_study_3_autism_rare_missense",
+            "t4c8_study_3_autism_rare_missense_rate",
+            "t4c8_study_3_unaffected_lgds",
+            "t4c8_study_3_unaffected_lgds_rate",
+            "t4c8_study_3_unaffected_denovo_missense",
+            "t4c8_study_3_unaffected_denovo_missense_rate",
+            "t4c8_study_3_unaffected_rare_lgds",
+            "t4c8_study_3_unaffected_rare_lgds_rate",
+            "t4c8_study_3_unaffected_rare_missense",
+            "t4c8_study_3_unaffected_rare_missense_rate",
+        }
+
 
 def test_collect_denovo_variant_counts(
     gp_t4c8_instance: GPFInstance,
@@ -294,7 +398,7 @@ def test_collect_denovo_variant_counts(
         gp_config, gene_symbols)
 
     collect_variant_counts(
-        variant_counts,
+        variant_counts["t4c8_dataset"],
         denovo_variants,
         "t4c8_dataset",
         gp_config,
@@ -302,7 +406,7 @@ def test_collect_denovo_variant_counts(
         denovo_flag=True,
     )
     collect_variant_counts(
-        variant_counts,
+        variant_counts["t4c8_dataset"],
         denovo_variants,
         "t4c8_dataset",
         gp_config,
@@ -310,7 +414,7 @@ def test_collect_denovo_variant_counts(
         denovo_flag=True,
     )
 
-    assert variant_counts["c8"]["autism"] == {
+    assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
         "lgds": {"f1.3.chr1:122.A.C,AC"},
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": set(),
@@ -350,7 +454,7 @@ def test_collect_rare_variant_counts(
         gp_config, gene_symbols)
 
     collect_variant_counts(
-        variant_counts,
+        variant_counts["t4c8_dataset"],
         rare_variants,
         "t4c8_dataset",
         gp_config,
@@ -358,7 +462,7 @@ def test_collect_rare_variant_counts(
         denovo_flag=False,
     )
     collect_variant_counts(
-        variant_counts,
+        variant_counts["t4c8_dataset"],
         rare_variants,
         "t4c8_dataset",
         gp_config,
@@ -366,7 +470,7 @@ def test_collect_rare_variant_counts(
         denovo_flag=False,
     )
 
-    assert variant_counts["c8"]["autism"] == {
+    assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
         "lgds": set(),
         "denovo_missense": set(),
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},

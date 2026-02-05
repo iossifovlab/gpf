@@ -829,7 +829,7 @@ f3.1     s3.1     dad3.1 mom3.1 1   1      sib  unaffected
 ##contig=<ID=chr1>
 ##contig=<ID=chr2>
 ##contig=<ID=chr3>
-#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom4.1 dad4.1 p4.1 s4.1
+#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom3.1 dad3.1 p3.1 s3.1
 chr1   52  MIS  C   A   .    .      .    GT     0/1    0/0    0/1  0/0
 chr1   54  SYN  T   C   .    .      .    GT     0/1    0/0    0/0  0/0
 chr1   57  SYN  A   C   .    .      .    GT     0/1    0/0    0/1  0/0

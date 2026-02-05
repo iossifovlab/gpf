@@ -178,11 +178,11 @@ def process_region(
     gene_profiles_config = gpf_instance._gene_profile_config  # noqa: SLF001
     assert gene_profiles_config is not None
 
-    genes = list(gene_symbols) if len(gene_symbols) <= 20 else None
+    query_genes = list(gene_symbols) if len(gene_symbols) <= 20 else None
+
+    variant_counts = _init_variant_counts(gene_profiles_config, gene_symbols)
 
     for dataset_id, filters in gene_profiles_config.datasets.items():
-        variant_counts = _init_variant_counts(
-            gene_profiles_config, gene_symbols)
 
         has_denovo = any(
             stats.category == "denovo" for stats in filters.statistics)
@@ -197,15 +197,15 @@ def process_region(
             denovo_variants = \
                 genotype_data.query_variants(
                     regions=regions,
-                    genes=genes, inheritance="denovo",
-                    unique_family_variants=True,
+                    genes=query_genes,
+                    inheritance="denovo",
                 )
 
             logger.info("Done collecting denovo variants for %s", dataset_id)
 
             logger.info("Collecting denovo variant counts for %s", dataset_id)
             collect_variant_counts(
-                variant_counts,
+                variant_counts[dataset_id],
                 denovo_variants,
                 dataset_id,
                 gene_profiles_config,
@@ -227,13 +227,13 @@ def process_region(
             rare_variants = \
                 genotype_data.query_variants(
                     regions=regions,
-                    genes=genes,
+                    genes=query_genes,
                     **query_kwargs)
 
             logger.info(
                 "Counting rare variants for dataset %s", dataset_id)
             collect_variant_counts(
-                variant_counts,
+                variant_counts[dataset_id],
                 rare_variants,
                 dataset_id,
                 gene_profiles_config,
@@ -520,7 +520,7 @@ def _populate_gene_profile_statistics(
     for dataset_id in gene_profiles_config.datasets:
         logger.info("populating gene profile statistics for %s", dataset_id)
         filters = gene_profiles_config.datasets[dataset_id]
-        for gs, counts in variant_counts.items():
+        for gs, counts in variant_counts[dataset_id].items():
             gp_counts = gene_profiles[gs].variant_counts
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             for ps in filters.person_sets:
@@ -604,14 +604,16 @@ def _init_variant_counts(
     gene_symbols: set[str],
 ) -> dict[str, Any]:
     variant_counts: dict[str, Any] = {}
-    for filters in gene_profiles_config.datasets.values():
+
+    for dataset_id, filters in gene_profiles_config.datasets.items():
+        variant_counts[dataset_id] = {}
         for gs in gene_symbols:
-            variant_counts[gs] = {}
+            variant_counts[dataset_id][gs] = {}
             for ps in filters.person_sets:
                 ps_statistics: dict[str, Any] = {}
                 for statistic in filters.statistics:
                     ps_statistics[statistic.id] = set()
-                variant_counts[gs][ps.set_name] = ps_statistics
+                variant_counts[dataset_id][gs][ps.set_name] = ps_statistics
     return variant_counts
 
 
