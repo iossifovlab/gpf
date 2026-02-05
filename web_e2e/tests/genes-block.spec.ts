@@ -260,8 +260,9 @@ test.describe('Genes sets tests', () => {
       data.collection + '" collection, and the counts should match', async({ page }) => {
         await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
         await page.getByRole('tab', { name: 'Gene Sets' }).click();
+        const geneSetsRequest = page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
         await page.locator('select#selected-collection').selectOption(data.collection);
-        await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
+        await geneSetsRequest;
         await page.getByPlaceholder('Select or start typing to search').click();
 
         const expectedSetName = data.expectedSearchCondition;
