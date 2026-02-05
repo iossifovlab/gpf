@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe('Home page tests', () => {
+test.describe('Home page description tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
     await utils.login(page);
@@ -12,7 +12,11 @@ test.describe('Home page tests', () => {
     await page.locator('#edit-icon').click();
     await expect(page.locator('.editor')).toBeVisible();
     await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
+    const descriptionResponse = page.waitForResponse(
+      resp => resp.url().includes('/api/v3/instance/description') && resp.status() === 200
+    );
     await page.getByText('Save').click();
+    await descriptionResponse;
 
     await expect(page.locator('.editor')).not.toBeVisible();
     await page.reload();
@@ -20,18 +24,20 @@ test.describe('Home page tests', () => {
 
     await page.locator('#edit-icon').click();
     await page.locator('gpf-markdown-editor').locator('textarea').clear();
+
     await page.getByText('Save').click();
+    await descriptionResponse;
+    await expect(page.locator('#empty-description')).toBeVisible();
   });
 
   test('should check if editing description is disabled when no access rights', async({ page }) => {
     await page.locator('#edit-icon').click();
     await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    await page.getByText('Save').click();
-    const response = page.waitForResponse(
+    const descriptionResponse = page.waitForResponse(
       resp => resp.url().includes('/api/v3/instance/description') && resp.status() === 200
     );
-    await response;
-    await page.reload();
+    await page.getByText('Save').click();
+    await descriptionResponse;
 
     await utils.logout(page);
     await page.waitForSelector('gpf-home');
@@ -40,16 +46,16 @@ test.describe('Home page tests', () => {
 
     await utils.login(page);
     await page.waitForSelector('gpf-home');
+
     await page.locator('#edit-icon').click();
     await page.locator('gpf-markdown-editor').locator('textarea').clear();
-    await page.getByText('Save').click();
 
-    await page.reload();
-    await page.waitForSelector('gpf-home');
+    await page.getByText('Save').click();
+    await descriptionResponse;
     await expect(page.locator('#empty-description')).toBeVisible();
   });
 
-  test('should no show empty description with no access rights', async({ page }) => {
+  test('should not show empty description with no access rights', async({ page }) => {
     await utils.logout(page);
     await page.waitForSelector('gpf-home');
     await expect(page.locator('gpf-markdown-editor')).not.toBeVisible();
@@ -57,6 +63,14 @@ test.describe('Home page tests', () => {
     await utils.login(page);
     await page.waitForSelector('gpf-home');
     await expect(page.locator('gpf-markdown-editor')).toBeVisible();
+  });
+});
+
+test.describe('Home page tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
+    await utils.login(page);
+    await page.waitForSelector('gpf-home');
   });
 
   test('should navigate to Gene profiles', async({ page }) => {
