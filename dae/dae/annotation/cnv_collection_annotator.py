@@ -5,6 +5,7 @@ from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    AttributeDesc,
 )
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.genomic_scores import CnvCollection
@@ -45,29 +46,26 @@ class CnvCollectionAnnotator(Annotator):
                 "count", "count",
                 internal=False, parameters={})]
 
-        source_type_desc = {
-            "count": ("int", "The number of CNVs overlapping with "
-                      "the annotatable."),
-        }
-
         self.cnv_attributes = {}
+        all_attributes = self.get_all_attribute_descriptions()
         for attribute_def in info.attributes:
+            if attribute_def.source not in all_attributes:
+                raise ValueError(f"The source {attribute_def.source} "
+                                 " is not supported for the annotator "
+                                 f"{info.type}")
+
+            attribute = all_attributes[attribute_def.source]
             if attribute_def.source.startswith("attribute."):
-                attribute = attribute_def.source[len("attribute."):]
-                if attribute not in self.cnv_collection.score_definitions:
-                    raise ValueError(f"The attribute {attribute} is not "
-                                     "supported for the cnvs in the"
-                                     "cnv_collection "
-                                     f"{cnv_collection_resrouce_id}")
+                attribute_name = attribute_def.source[len("attribute."):]
                 res_attribute_def = self.cnv_collection\
-                    .get_score_definition(attribute)
+                    .get_score_definition(attribute_name)
                 assert res_attribute_def is not None
                 if "aggregator" in attribute_def.parameters:
                     aggregator = attribute_def.parameters["aggregator"]
                 else:
-                    aggregator = res_attribute_def.allele_aggregator
-                attribute_def.type = res_attribute_def.value_type
-                attribute_def.description = res_attribute_def.desc
+                    aggregator = attribute.params["aggregator"]
+                attribute_def.type = attribute.type
+                attribute_def.description = attribute.description
                 attribute_def._documentation = f"""
                     {attribute_def.description}
 
@@ -78,16 +76,31 @@ class CnvCollectionAnnotator(Annotator):
 
                 self.cnv_attributes[attribute_def.name] = \
                     (attribute, aggregator)
-            elif attribute_def.source in source_type_desc:
-                att_type, att_desc = source_type_desc[attribute_def.source]
-                attribute_def.type = att_type
-                attribute_def.description = att_desc
             else:
-                raise ValueError(f"The source {attribute_def.source} "
-                                 " is not supported for the annotator "
-                                 f"{info.type}")
+                attribute_def.type = attribute.type
+                attribute_def.description = attribute.description
 
         super().__init__(pipeline, info)
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        attributes = {
+            "count": AttributeDesc(
+                name="count",
+                type="int",
+                description="The number of CNVs overlapping with the "
+                "annotatable.",
+            ),
+        }
+        for score_id, score_def in \
+                self.cnv_collection.score_definitions.items():
+            score_id = f"attribute.{score_id}"
+            attributes[score_id] = AttributeDesc(
+                name=score_id,
+                type=score_def.value_type,
+                description=score_def.desc,
+                params={"aggregator": score_def.allele_aggregator},
+            )
+        return attributes
 
     def open(self) -> Annotator:
         self.cnv_collection.open()
@@ -116,7 +129,8 @@ class CnvCollectionAnnotator(Annotator):
 
         for cnv in cnvs:
             for name, (attribute, _) in self.cnv_attributes.items():
-                aggregators[name].add(cnv.attributes[attribute])
+                attribute_name = attribute.name[len("attribute."):]
+                aggregators[name].add(cnv.attributes[attribute_name])
 
         ret = {}
         for attribute_config in self._info.attributes:

@@ -79,7 +79,7 @@ class GeneSetAnnotator(AnnotatorBase):
             f"gene set collection."
         )
         self._info = info
-        super().__init__(pipeline, info, {})
+        super().__init__(pipeline, info)
 
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         gene_sets_list = self.gene_set_collection \

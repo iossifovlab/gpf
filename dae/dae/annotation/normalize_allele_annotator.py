@@ -48,7 +48,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
         assert isinstance(genome, ReferenceGenome)
 
         info.resources += [genome.resource]
-        super().__init__(pipeline, info, {})
+        super().__init__(pipeline, info)
 
         self.genome = genome
 

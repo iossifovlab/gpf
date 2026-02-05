@@ -152,11 +152,7 @@ Simple effect annotator.
 """)  # noqa
 
         info.resources.append(gene_models.resource)
-        super().__init__(
-            pipeline,
-            info,
-            {},
-        )
+        super().__init__(pipeline, info)
 
         self.gene_models = gene_models
         self.gene_list_aggregators: dict[str, Aggregator] = {}

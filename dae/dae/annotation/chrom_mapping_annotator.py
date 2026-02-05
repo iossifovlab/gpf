@@ -49,7 +49,7 @@ Annotator that maps chromsomes from one naming convention to another.
 
 """)  # noqa
 
-        super().__init__(pipeline, info, {})
+        super().__init__(pipeline, info)
 
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {

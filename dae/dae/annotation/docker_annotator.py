@@ -21,7 +21,7 @@ class DockerAnnotator(AnnotatorBase):
         overridable methods to customize how the docker client,
         images and containers are managed.
         """
-        super().__init__(pipeline, info, {})
+        super().__init__(pipeline, info)
         self.client = self._create_client()
 
     @staticmethod

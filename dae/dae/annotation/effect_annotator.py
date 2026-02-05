@@ -55,7 +55,7 @@ Annotator to identify the effect of the variant on protein coding.
 
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
-        super().__init__(pipeline, info, {})
+        super().__init__(pipeline, info)
 
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes

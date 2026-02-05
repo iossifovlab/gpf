@@ -97,7 +97,7 @@ Annotator to lift over a variant from one reference genome to another.
 """)  # noqa
         info.resources += [
             chain.resource, source_genome.resource, target_genome.resource]
-        super().__init__(pipeline, info, {})
+        super().__init__(pipeline, info)
         self.chain = chain
         self.source_genome = source_genome
         self.target_genome = target_genome
