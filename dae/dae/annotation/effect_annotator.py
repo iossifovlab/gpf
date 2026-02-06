@@ -55,7 +55,7 @@ Annotator to identify the effect of the variant on protein coding.
 
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
-        super().__init__(pipeline, info, self._attributes_descriptions())
+        super().__init__(pipeline, info)
 
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes
@@ -89,8 +89,7 @@ Annotator to identify the effect of the variant on protein coding.
             promoter_len=self._promoter_len,
         )
 
-    @staticmethod
-    def _attributes_descriptions() -> dict[str, AttributeDesc]:
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         effect_gene_lists = {}
         effect_genes = {}
         for group in [

@@ -48,7 +48,12 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
         assert isinstance(genome, ReferenceGenome)
 
         info.resources += [genome.resource]
-        super().__init__(pipeline, info, {
+        super().__init__(pipeline, info)
+
+        self.genome = genome
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
             "normalized_allele": AttributeDesc(
                 name="normalized_allele",
                 type="annotatable",
@@ -56,9 +61,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
                 internal=True,
                 default=True,
             ),
-        })
-
-        self.genome = genome
+        }
 
     def close(self) -> None:
         self.genome.close()

@@ -97,15 +97,7 @@ Annotator to lift over a variant from one reference genome to another.
 """)  # noqa
         info.resources += [
             chain.resource, source_genome.resource, target_genome.resource]
-        super().__init__(pipeline, info, {
-            "liftover_annotatable": AttributeDesc(
-                name="liftover_annotatable",
-                type="annotatable",
-                description="The lifted over annotatable",
-                internal=True,
-                default=True,
-            ),
-        })
+        super().__init__(pipeline, info)
         self.chain = chain
         self.source_genome = source_genome
         self.target_genome = target_genome
@@ -120,6 +112,17 @@ Annotator to lift over a variant from one reference genome to another.
         self.target_genome.open()
         self.chain.open()
         return super().open()
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
+            "liftover_annotatable": AttributeDesc(
+                name="liftover_annotatable",
+                type="annotatable",
+                description="The lifted over annotatable",
+                internal=True,
+                default=True,
+            ),
+        }
 
     def _do_annotate(
         self, annotatable: Annotatable,

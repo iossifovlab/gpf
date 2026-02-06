@@ -6,6 +6,7 @@ from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    AttributeDesc,
 )
 
 
@@ -24,6 +25,16 @@ class HelloWorldAnnotator(Annotator):
             assert attribute_config.source == "hi"
             result[attribute_config.name] = "hello world"
         return result
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
+            "hi": AttributeDesc(
+                name="hi",
+                type="str",
+                description="Test attribute",
+                internal=False,
+            ),
+        }
 
 
 def build_annotator(pipeline: AnnotationPipeline,

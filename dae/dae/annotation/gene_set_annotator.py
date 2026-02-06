@@ -78,11 +78,10 @@ class GeneSetAnnotator(AnnotatorBase):
             f"**{self.gene_set_collection.collection_id}** "
             f"gene set collection."
         )
-        super().__init__(pipeline, info, self._build_attribute_desc(info))
+        self._info = info
+        super().__init__(pipeline, info)
 
-    def _build_attribute_desc(
-        self, info: AnnotatorInfo,
-    ) -> dict[str, AttributeDesc]:
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         gene_sets_list = self.gene_set_collection \
             .get_gene_sets_list_statistics()
         if gene_sets_list is None:
@@ -105,10 +104,10 @@ class GeneSetAnnotator(AnnotatorBase):
                 "which have at least one gene from the input gene "
                 "list"
             ))
-        if info.attributes:
+        if self._info.attributes:
             gene_sets_desc = {gs["name"]: gs["desc"] for gs in gene_sets_list}
             source_type_desc: dict[str, AttributeDesc] = {}
-            for attr in info.attributes:
+            for attr in self._info.attributes:
                 if attr.source == "in_sets":
                     source_type_desc["in_sets"] = in_sets_desc
                     continue
@@ -131,9 +130,10 @@ class GeneSetAnnotator(AnnotatorBase):
                 for gs in gene_sets_list[:20]
             }
             source_type_desc["in_sets"] = in_sets_desc
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                *source_type_desc.keys(),
-            ])
+            self._info.attributes = \
+                AnnotationConfigParser.parse_raw_attributes([
+                    *source_type_desc.keys(),
+                ])
         return source_type_desc
 
     @property

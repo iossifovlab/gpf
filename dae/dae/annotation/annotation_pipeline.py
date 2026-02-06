@@ -6,6 +6,7 @@ import abc
 import itertools
 import logging
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Any
 
@@ -101,6 +102,18 @@ def _get_deleted_attributes(
     return result
 
 
+@dataclass
+class AttributeDesc:
+    """Holds default attribute configuration for annotators."""
+
+    name: str
+    type: str
+    description: str
+    default: bool = True
+    internal: bool = False
+    params: dict[str, Any] = field(default_factory=dict)
+
+
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
@@ -157,6 +170,10 @@ class Annotator(abc.ABC):
     def _empty_result(self) -> dict[str, Any]:
         return {attribute_info.name: None
                 for attribute_info in self._info.attributes}
+
+    @abc.abstractmethod
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        """Get descriptions of all attributes provided by the annotator."""
 
 
 class AnnotationPipeline:
@@ -335,6 +352,9 @@ class AnnotatorDecorator(Annotator):
     def __init__(self, child: Annotator):
         super().__init__(child.pipeline, child.get_info())
         self.child = child
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return self.child.get_all_attribute_descriptions()
 
     def close(self) -> None:
         self.child.close()

@@ -35,6 +35,9 @@ class DummyAnnotator(Annotator):
         super().__init__(None, info)
         self.index = 0
 
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeInfo]:
+        return {}
+
     @property
     def used_context_attributes(self) -> tuple[str, ...]:
         return self.dependencies

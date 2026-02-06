@@ -19,6 +19,7 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
+from dae.annotation.annotator_base import AttributeDesc
 from dae.genomic_resources.aggregators import validate_aggregator
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,
@@ -55,10 +56,8 @@ class GenomicScoreAnnotatorBase(Annotator):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo,
                  score: GenomicScore):
-
-        super().__init__(pipeline, info)
-
         self.score = score
+        super().__init__(pipeline, info)
         self._region_length_cutoff = info.parameters.get(
             "region_length_cutoff", 500_000)
 
@@ -94,6 +93,21 @@ class GenomicScoreAnnotatorBase(Annotator):
     def close(self) -> None:
         self.score.close()
         super().close()
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        attributes = self.score.get_default_annotation_attributes()
+        result = {}
+        for attr in attributes:
+            score_def = self.score.get_score_definition(attr.source)
+            assert score_def is not None
+            result[attr.source] = AttributeDesc(
+                name=attr.source,
+                type=score_def.value_type,
+                description=score_def.desc,
+                default=True,
+                internal=False,
+            )
+        return result
 
     def _build_score_aggregator_documentation(
         self, attribute_info: AttributeInfo,

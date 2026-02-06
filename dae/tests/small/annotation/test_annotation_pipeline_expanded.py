@@ -9,6 +9,7 @@ from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    AttributeDesc,
     InputAnnotableAnnotatorDecorator,
     ReannotationPipeline,
     ValueTransformAnnotatorDecorator,
@@ -690,6 +691,20 @@ def test_value_transform_decorator_annotate() -> None:
                 parameters={},
             )
             super().__init__(None, info)
+
+        def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+            return {
+                "doubled": AttributeDesc(
+                    name="doubled",
+                    type="int",
+                    description="Doubled value",
+                ),
+                "normal": AttributeDesc(
+                    name="normal",
+                    type="int",
+                    description="Normal value",
+                ),
+            }
 
         def annotate(
             self,

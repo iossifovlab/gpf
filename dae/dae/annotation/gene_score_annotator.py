@@ -11,6 +11,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    AttributeDesc,
 )
 from dae.gene_scores.gene_scores import build_gene_score_from_resource
 from dae.genomic_resources import GenomicResource
@@ -69,24 +70,25 @@ class GeneScoreAnnotator(Annotator):
 
         self.aggregators: list[str] = []
 
+        all_attributes = self.get_all_attribute_descriptions()
+
         for attribute_config in info.attributes:
-            score_def = self.score.score_definitions.get(
-                attribute_config.source,
-            )
-            if score_def is None:
-                message = (
-                    f"The gene score {attribute_config.source} is "
-                    f"unknown in {gene_score_resource.get_id()} "
-                    "resource!"
-                )
-                raise ValueError(message)
-            attribute_config.type = "float"
-            attribute_config.description = score_def.desc
+            if attribute_config.source not in all_attributes:
+                raise ValueError(
+                    "The gene score annotator attribute "
+                    f"{attribute_config.source} is not "
+                    f"available in the {gene_score_resource.get_id()} "
+                    "gene score annotator!")
+            default_attribute = all_attributes[attribute_config.source]
+            attribute_config.type = default_attribute.type
+            attribute_config.description = default_attribute.description
 
             aggregator_type = \
                 attribute_config.parameters.get("gene_aggregator")
             if aggregator_type is None:
-                aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
+                aggregator_type = default_attribute.params.get(
+                    "gene_aggregator")
+                assert aggregator_type is not None
             else:
                 validate_aggregator(aggregator_type)
 
@@ -105,6 +107,17 @@ class GeneScoreAnnotator(Annotator):
 
         self.input_gene_list = input_gene_list
         super().__init__(pipeline, info)
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        attributes = {}
+        for score_id, score_def in self.score.score_definitions.items():
+            attributes[score_id] = AttributeDesc(
+                name=score_id,
+                type="float",
+                description=score_def.desc,
+                params={"gene_aggregator": self.DEFAULT_AGGREGATOR_TYPE},
+            )
+        return attributes
 
     @property
     def used_context_attributes(self) -> tuple[str, ...]:

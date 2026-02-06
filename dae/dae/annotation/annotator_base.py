@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import abc
 import os
-from collections.abc import Mapping, Sequence
-from dataclasses import (
-    dataclass,
-    field,
-)
+from collections.abc import Sequence
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
@@ -17,19 +13,11 @@ from dae.annotation.annotation_config import (
     AnnotatorInfo,
     AttributeInfo,
 )
-from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
-
-
-@dataclass
-class AttributeDesc:
-    """Holds default attribute configuration for annotators."""
-
-    name: str
-    type: str
-    description: str
-    default: bool = True
-    internal: bool = False
-    params: dict[str, Any] = field(default_factory=dict)
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AttributeDesc,
+)
 
 
 class AnnotatorBase(Annotator):
@@ -40,9 +28,9 @@ class AnnotatorBase(Annotator):
     def __init__(
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
-        attribute_descriptions: Mapping[str, AttributeDesc | tuple],
     ):
         self.attribute_descriptions = {}
+        attribute_descriptions = self.get_all_attribute_descriptions()
         for name, attr_desc in attribute_descriptions.items():
             if isinstance(attr_desc, tuple):
                 self.attribute_descriptions[name] = AttributeDesc(
@@ -70,7 +58,7 @@ class AnnotatorBase(Annotator):
                     info.attributes.append(attr)
 
         for attribute_config in info.attributes:
-            if attribute_config.source not in attribute_descriptions:
+            if attribute_config.source not in self.attribute_descriptions:
                 raise ValueError(
                     f"The attribute source '{attribute_config.source}'"
                     " is not supported for the annotator"
