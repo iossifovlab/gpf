@@ -7,7 +7,6 @@ from collections.abc import Generator
 from typing import Any
 
 import yaml
-from box import Box
 
 from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
 from dae.task_graph.executor import (
@@ -116,27 +115,25 @@ class TaskGraphCli:
         )
         from dae.task_graph.dask_executor import DaskExecutor
 
-        args = Box(kwargs)
-
-        assert args.dask_cluster_name is None or \
-            args.dask_cluster_config_file is None
-        if args.dask_cluster_config_file is not None:
-            dask_cluster_config_file = args.dask_cluster_config_file
+        assert kwargs.get("dask_cluster_name") is None or \
+            kwargs.get("dask_cluster_config_file") is None
+        if kwargs.get("dask_cluster_config_file") is not None:
+            dask_cluster_config_file = kwargs.get("dask_cluster_config_file")
             assert dask_cluster_config_file is not None
             with open(dask_cluster_config_file) as conf_file:
                 dask_cluster_config = yaml.safe_load(conf_file)
             logger.info(
                 "THE CLUSTER CONFIG IS: %s; loaded from: %s",
                 dask_cluster_config,
-                args.dask_cluster_config_file)
+                kwargs.get("dask_cluster_config_file"))
             client, _ = setup_client_from_config(
                 dask_cluster_config,
-                number_of_workers=args.jobs,
+                number_of_workers=kwargs.get("jobs"),
             )
         else:
             client, _ = setup_client(
-                args.dask_cluster_name,
-                number_of_workers=args.jobs)
+                kwargs.get("dask_cluster_name"),
+                number_of_workers=kwargs.get("jobs"))
 
         logger.info("Working with client: %s", client)
         return DaskExecutor(client, task_cache=task_cache, **kwargs)
@@ -147,21 +144,19 @@ class TaskGraphCli:
         **kwargs: Any,
     ) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
-        args = Box(kwargs)
-
         if task_cache is None:
             task_cache = NoTaskCache()
 
-        if args.jobs == 1:
-            assert args.dask_cluster_name is None
-            assert args.dask_cluster_config_file is None
+        if kwargs.get("jobs", 1) == 1:
+            assert kwargs.get("dask_cluster_name") is None
+            assert kwargs.get("dask_cluster_config_file") is None
             return SequentialExecutor(task_cache=task_cache, **kwargs)
 
-        if args.use_process_pool:
-            assert args.dask_cluster_name is None
-            assert args.dask_cluster_config_file is None
+        if kwargs.get("use_process_pool"):
+            assert kwargs.get("dask_cluster_name") is None
+            assert kwargs.get("dask_cluster_config_file") is None
             return ProcessPoolTaskExecutor(
-                max_workers=args.jobs,
+                max_workers=kwargs.get("jobs"),
                 task_cache=task_cache,
                 **kwargs)
 
@@ -178,31 +173,31 @@ class TaskGraphCli:
 
         Return true if the graph get's successfully processed.
         """
-        args = Box(kwargs)
+        if kwargs.get("task_ids") is not None:
+            task_graph.prune(tasks_to_keep=kwargs["task_ids"])
 
-        if args.task_ids:
-            task_graph.prune(tasks_to_keep=args.task_ids)
-
-        force = args.get("force", False)
+        force = kwargs.get("force", False)
         task_cache = TaskCache.create(
             task_progress_mode=task_progress_mode,
             force=force,
-            cache_dir=args.get("task_status_dir"),
+            cache_dir=kwargs.get("task_status_dir"),
         )
 
-        if args.command is None or args.command == "run":
+        if kwargs.get("command") is None or kwargs.get("command") == "run":
             if task_graph_all_done(task_graph, task_cache):
                 logger.warning(
                     "All tasks are already COMPUTED; nothing to compute")
                 return True
             with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
                 return task_graph_run(
-                    task_graph, xtor, keep_going=args.keep_going)
+                    task_graph, xtor,
+                    keep_going=kwargs.get("keep_going", False))
 
-        if args.command in {"list", "status"}:
-            return task_graph_status(task_graph, task_cache, args.verbose)
+        if kwargs.get("command") in {"list", "status"}:
+            return task_graph_status(
+                task_graph, task_cache, kwargs.get("verbose"))
 
-        raise ValueError(f"Unknown command {args.command}")
+        raise ValueError(f"Unknown command {kwargs.get('command')}")
 
 
 def task_graph_run(
