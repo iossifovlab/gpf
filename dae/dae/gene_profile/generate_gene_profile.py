@@ -372,7 +372,26 @@ def build_partitions(
     if not split_by_chromosome:
         return [None]
 
-    all_chromosomes = set(reference_genome.chromosomes)
+    gene_symbols = kwargs.get("gene_symbols")
+    if gene_symbols is None:
+        all_chromosomes = set(reference_genome.chromosomes)
+    else:
+        all_chromosomes = set()
+        for gene in gene_symbols:
+            if gene not in gene_models.gene_models:
+                logger.warning(
+                    "Gene symbol %s not found in gene models; skipping",
+                    gene,
+                )
+                continue
+            gene_chromosomes = {
+                tr.chrom for tr in gene_models.gene_models[gene]}
+            all_chromosomes = all_chromosomes.union(gene_chromosomes)
+
+        logger.info(
+            "Collected chromosomes from gene symbols: %s", all_chromosomes,
+        )
+
     autosomes = [f"chr{i}" for i in range(1, 23)]
     autosomes_x = [*autosomes, "chrX", "X"]
     autosomes_x = [chrom for chrom in autosomes_x if chrom in all_chromosomes]
@@ -472,6 +491,7 @@ def main(
     partitions = build_partitions(
         gpf_instance.reference_genome,
         gene_models=gpf_instance.gene_models,
+        gene_symbols=gene_symbols,
         **vars(args))
 
     variant_counts = _calculate_variant_counts(
@@ -586,18 +606,19 @@ def _calculate_variant_counts(
             },
         )
 
-    executor = TaskGraphCli.create_executor(**kwargs)
+    with TaskGraphCli.create_executor(**kwargs) as executor:
+        for result_or_error in task_graph_run_with_results(graph, executor):
+            if isinstance(result_or_error, Exception):
+                raise result_or_error
+            region_variant_counts = result_or_error
 
-    for result_or_error in task_graph_run_with_results(graph, executor):
-        if isinstance(result_or_error, Exception):
-            raise result_or_error
-        region_variant_counts = result_or_error
+            variant_counts = _merge_variant_counts(
+                gene_profiles_config,
+                gene_symbols,
+                variant_counts,
+                region_variant_counts,
+            )
 
-        variant_counts = _merge_variant_counts(
-            gene_profiles_config, gene_symbols,
-            variant_counts,
-            region_variant_counts,
-        )
     return variant_counts
 
 
@@ -628,18 +649,20 @@ def _merge_variant_counts(
     merged_counts: dict[str, Any] = {}
 
     for dataset_id, filters in gene_profiles_config.datasets.items():
-        counts1 = variant_counts1.get(dataset_id, {})
-        counts2 = variant_counts2.get(dataset_id, {})
+        counts1 = variant_counts1[dataset_id]
+        counts2 = variant_counts2[dataset_id]
         merged_counts[dataset_id] = {}
         for gs in gene_symbols:
             merged_counts[dataset_id][gs] = {}
-            gs_counts1 = counts1[gs]
-            gs_counts2 = counts2[gs]
+            gs_counts1 = counts1.get(gs, {})
+            gs_counts2 = counts2.get(gs, {})
             for ps in filters.person_sets:
                 ps_statistics: dict[str, Any] = {}
                 for statistic in filters.statistics:
-                    stats_count1 = gs_counts1[ps.set_name][statistic.id]
-                    stats_count2 = gs_counts2[ps.set_name][statistic.id]
+                    stats_count1 = gs_counts1.get(
+                        ps.set_name, {}).get(statistic.id, set())
+                    stats_count2 = gs_counts2.get(
+                        ps.set_name, {}).get(statistic.id, set())
                     ps_statistics[statistic.id] = stats_count1 | stats_count2
                 merged_counts[dataset_id][gs][ps.set_name] = ps_statistics
 

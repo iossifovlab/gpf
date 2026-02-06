@@ -12,6 +12,7 @@ from dae.gene_profile.generate_gene_profile import (
     _calculate_variant_counts,
     _collect_person_set_collections,
     _init_variant_counts,
+    _merge_variant_counts,
     build_partitions,
     collect_variant_counts,
     merge_rare_queries,
@@ -93,8 +94,8 @@ def gp_grr(
 
 
 @pytest.fixture(scope="module")
-def gp_config() -> dict:
-    return {
+def gp_config() -> Box:
+    return Box({
         "gene_links": [
             {
                 "name": "Link with prefix",
@@ -149,7 +150,7 @@ def gp_config() -> dict:
             "t4c8_dataset": {
                 "statistics": [
                     {
-                        "id": "lgds",
+                        "id": "denovo_lgds",
                         "display_name": "LGDs",
                         "effects": ["LGDs"],
                         "category": "denovo",
@@ -191,7 +192,7 @@ def gp_config() -> dict:
             "t4c8_study_3": {
                 "statistics": [
                     {
-                        "id": "lgds",
+                        "id": "denovo_lgds",
                         "display_name": "LGDs",
                         "effects": ["LGDs"],
                         "category": "denovo",
@@ -227,7 +228,7 @@ def gp_config() -> dict:
                 ],
             },
         },
-    }
+    })
 
 
 @pytest.fixture(scope="module")
@@ -281,7 +282,8 @@ def gp_t4c8_instance(
         },
     )
 
-    (instance_path / "gp_config.yaml").write_text(yaml.safe_dump(gp_config))
+    (instance_path / "gp_config.yaml").write_text(
+        yaml.safe_dump(gp_config.to_dict()))
 
     return setup_t4c8_instance(
         root_path,
@@ -328,40 +330,40 @@ def test_generate_gene_profile_internals(
             "gene_sets_test_gene_set_2",
             "gene_sets_test_gene_set_3",
             "gene_score_gene_score1",
-            "t4c8_dataset_autism_lgds",
-            "t4c8_dataset_autism_lgds_rate",
+            "t4c8_dataset_autism_denovo_lgds",
+            "t4c8_dataset_autism_denovo_lgds_rate",
             "t4c8_dataset_autism_denovo_missense",
             "t4c8_dataset_autism_denovo_missense_rate",
             "t4c8_dataset_autism_rare_lgds",
             "t4c8_dataset_autism_rare_lgds_rate",
             "t4c8_dataset_autism_rare_missense",
             "t4c8_dataset_autism_rare_missense_rate",
-            "t4c8_dataset_epilepsy_lgds",
-            "t4c8_dataset_epilepsy_lgds_rate",
+            "t4c8_dataset_epilepsy_denovo_lgds",
+            "t4c8_dataset_epilepsy_denovo_lgds_rate",
             "t4c8_dataset_epilepsy_denovo_missense",
             "t4c8_dataset_epilepsy_denovo_missense_rate",
             "t4c8_dataset_epilepsy_rare_lgds",
             "t4c8_dataset_epilepsy_rare_lgds_rate",
             "t4c8_dataset_epilepsy_rare_missense",
             "t4c8_dataset_epilepsy_rare_missense_rate",
-            "t4c8_dataset_unaffected_lgds",
-            "t4c8_dataset_unaffected_lgds_rate",
+            "t4c8_dataset_unaffected_denovo_lgds",
+            "t4c8_dataset_unaffected_denovo_lgds_rate",
             "t4c8_dataset_unaffected_denovo_missense",
             "t4c8_dataset_unaffected_denovo_missense_rate",
             "t4c8_dataset_unaffected_rare_lgds",
             "t4c8_dataset_unaffected_rare_lgds_rate",
             "t4c8_dataset_unaffected_rare_missense",
             "t4c8_dataset_unaffected_rare_missense_rate",
-            "t4c8_study_3_autism_lgds",
-            "t4c8_study_3_autism_lgds_rate",
+            "t4c8_study_3_autism_denovo_lgds",
+            "t4c8_study_3_autism_denovo_lgds_rate",
             "t4c8_study_3_autism_denovo_missense",
             "t4c8_study_3_autism_denovo_missense_rate",
             "t4c8_study_3_autism_rare_lgds",
             "t4c8_study_3_autism_rare_lgds_rate",
             "t4c8_study_3_autism_rare_missense",
             "t4c8_study_3_autism_rare_missense_rate",
-            "t4c8_study_3_unaffected_lgds",
-            "t4c8_study_3_unaffected_lgds_rate",
+            "t4c8_study_3_unaffected_denovo_lgds",
+            "t4c8_study_3_unaffected_denovo_lgds_rate",
             "t4c8_study_3_unaffected_denovo_missense",
             "t4c8_study_3_unaffected_denovo_missense_rate",
             "t4c8_study_3_unaffected_rare_lgds",
@@ -418,7 +420,7 @@ def test_collect_denovo_variant_counts(
     )
 
     assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
-        "lgds": {"f1.3.chr1:122.A.C,AC"},
+        "denovo_lgds": {"f1.3.chr1:122.A.C,AC"},
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": set(),
         "rare_missense": set(),
@@ -474,7 +476,7 @@ def test_collect_rare_variant_counts(
     )
 
     assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
-        "lgds": set(),
+        "denovo_lgds": set(),
         "denovo_missense": set(),
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
@@ -509,20 +511,20 @@ def test_calculate_variant_counts(
     )
 
     assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
-        "lgds": {"f1.3.chr1:122.A.C,AC"},
+        "denovo_lgds": {"f1.3.chr1:122.A.C,AC"},
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
     }
     assert variant_counts["t4c8_dataset"]["c8"]["unaffected"] == {
-        "lgds": {"f1.3.chr1:122.A.C,AC"},
+        "denovo_lgds": {"f1.3.chr1:122.A.C,AC"},
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
     }
 
     assert variant_counts["t4c8_study_3"]["c8"]["autism"] == {
-        "lgds": set(),
+        "denovo_lgds": set(),
         "denovo_missense": set(),
         "rare_lgds": set(),
         "rare_missense": {"f3.1.chr1:117.T.G"},
@@ -564,3 +566,139 @@ def test_build_partitions(
         **kwargs,
     )
     assert partitions == expected_partitions
+
+
+def test_merge_variant_counts(
+    gp_config: Box,
+) -> None:
+    gene_symbols = {"t4", "c8"}
+    variant_counts1 = {
+        "t4c8_dataset": {
+            "t4": {
+                "autism": {
+                    "denovo_lgds": {"v1", "v2"},
+                    "denovo_missense": {"v3"},
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+            },
+            "c8": {
+                "autism": {
+                    "denovo_lgds": {"v7"},
+                    "denovo_missense": {"v8"},
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+            },
+        },
+        "t4c8_study_3": {
+            "t4": {
+                "autism": {
+                    "denovo_lgds": {"v4"},
+                    "denovo_missense": {"v5"},
+                    "rare_lgds": set(),
+                    "rare_missense": {"v6"},
+                },
+            },
+        },
+    }
+    variant_counts2 = {
+        "t4c8_dataset": {
+            "t4": {
+                "autism": {
+                    "denovo_lgds": {"v2", "v4"},
+                    "denovo_missense": {"v3", "v5"},
+                    "rare_lgds": {"v6"},
+                    "rare_missense": set(),
+                },
+            },
+        },
+        "t4c8_study_3": {
+            "t4": {
+                "autism": {
+                    "denovo_lgds": {"v4", "v7"},
+                    "denovo_missense": {"v5", "v8"},
+                    "rare_lgds": set(),
+                    "rare_missense": {"v6", "v9"},
+                },
+            },
+        },
+    }
+
+    merged_counts = _merge_variant_counts(
+            gp_config, gene_symbols, variant_counts1, variant_counts2)
+
+    assert merged_counts == {
+        "t4c8_dataset": {
+            "t4": {
+                "autism": {
+                    "denovo_lgds": {"v1", "v2", "v4"},
+                    "denovo_missense": {"v3", "v5"},
+                    "rare_lgds": {"v6"},
+                    "rare_missense": set(),
+                },
+                "epilepsy": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+                "unaffected": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+            },
+            "c8": {
+                "autism": {
+                    "denovo_lgds": {"v7"},
+                    "denovo_missense": {"v8"},
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+                "epilepsy": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+                "unaffected": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+            },
+        },
+        "t4c8_study_3": {
+            "t4": {
+                "autism": {
+                    "denovo_lgds": {"v4", "v7"},
+                    "denovo_missense": {"v5", "v8"},
+                    "rare_lgds": set(),
+                    "rare_missense": {"v6", "v9"},
+                },
+                "unaffected": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+            },
+            "c8": {
+                "autism": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+                "unaffected": {
+                    "denovo_lgds": set(),
+                    "denovo_missense": set(),
+                    "rare_lgds": set(),
+                    "rare_missense": set(),
+                },
+            },
+        },
+    }
