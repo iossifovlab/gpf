@@ -8,6 +8,7 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     AnnotatorInfo,
+    AttributeDesc,
     AttributeInfo,
 )
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
@@ -311,6 +312,16 @@ class DummyAnnotator(Annotator):
         """Reset the annotator state."""
         self.index = 0
         return self
+
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+        return {
+            "index": AttributeDesc(
+                name="index",
+                type="int",
+                description="dummy",
+                internal=False,
+            ),
+        }
 
     def annotate(
         self, annotatable: Annotatable | None,
