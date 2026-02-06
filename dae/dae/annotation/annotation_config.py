@@ -233,6 +233,8 @@ class AnnotationPreamble:
 class AnnotationConfigParser:
     """Parser for annotation configuration."""
 
+    WILDCARD_LIMIT = 500
+
     ANNOTATION_CONFIG_GRAMMAR = textwrap.dedent("""
         ?start: resource_id [filter]
 
@@ -337,9 +339,11 @@ class AnnotationConfigParser:
             if match(resource):
                 selected_resources.add(resource.resource_id)
                 result.append(resource.resource_id)
-                if len(result) > 500:
+                if len(result) > AnnotationConfigParser.WILDCARD_LIMIT:
                     raise AnnotationConfigurationError(
-                        "Too many resources match the wildcard "
+                        f"Too many resources ({len(result)}/"
+                        f"{AnnotationConfigParser.WILDCARD_LIMIT}) "
+                        "match the wildcard "
                         f"'{parsed_id}' for annotator '{annotator_type}'.",
                     )
 
