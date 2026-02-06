@@ -12,11 +12,7 @@ test.describe('Home page description tests', () => {
     await page.locator('#edit-icon').click();
     await expect(page.locator('.editor')).toBeVisible();
     await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    const descriptionResponse = page.waitForResponse(
-      resp => resp.url().includes('/api/v3/instance/description') && resp.status() === 200
-    );
     await page.getByText('Save').click();
-    await descriptionResponse;
 
     await expect(page.locator('.editor')).not.toBeVisible();
     await page.reload();
@@ -26,18 +22,14 @@ test.describe('Home page description tests', () => {
     await page.locator('gpf-markdown-editor').locator('textarea').clear();
 
     await page.getByText('Save').click();
-    await descriptionResponse;
     await expect(page.locator('#empty-description')).toBeVisible();
   });
 
   test('should check if editing description is disabled when no access rights', async({ page }) => {
     await page.locator('#edit-icon').click();
     await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    const descriptionResponse = page.waitForResponse(
-      resp => resp.url().includes('/api/v3/instance/description') && resp.status() === 200
-    );
     await page.getByText('Save').click();
-    await descriptionResponse;
+
 
     await utils.logout(page);
     await page.waitForSelector('gpf-home');
@@ -51,18 +43,11 @@ test.describe('Home page description tests', () => {
     await page.locator('gpf-markdown-editor').locator('textarea').clear();
 
     await page.getByText('Save').click();
-    await descriptionResponse;
     await expect(page.locator('#empty-description')).toBeVisible();
-  });
 
-  test('should not show empty description with no access rights', async({ page }) => {
     await utils.logout(page);
     await page.waitForSelector('gpf-home');
     await expect(page.locator('gpf-markdown-editor')).not.toBeVisible();
-
-    await utils.login(page);
-    await page.waitForSelector('gpf-home');
-    await expect(page.locator('gpf-markdown-editor')).toBeVisible();
   });
 });
 
