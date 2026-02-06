@@ -16,8 +16,6 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-)
-from dae.annotation.annotator_base import (
     AttributeDesc,
 )
 from dae.annotation.docker_annotator import DockerAnnotator
@@ -41,7 +39,7 @@ class DemoAnnotatorAdapter(DockerAnnotator):
         )
         self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
 
-    def _attribute_type_descs(self) -> dict[str, AttributeDesc]:
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "annotatable_length": AttributeDesc(
                 name="annotatable_length",
