@@ -9,8 +9,10 @@ import yaml
 from box import Box
 from dae.gene_profile.generate_gene_profile import (
     GeneProfileDBWriter,
+    _calculate_variant_counts,
     _collect_person_set_collections,
     _init_variant_counts,
+    build_partitions,
     collect_variant_counts,
     merge_rare_queries,
 )
@@ -22,6 +24,7 @@ from dae.genomic_resources.testing import (
     setup_directories,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.regions import Region
 from dae.utils.testing import (
     setup_t4c8_grr,
     setup_t4c8_instance,
@@ -476,3 +479,88 @@ def test_collect_rare_variant_counts(
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
     }
+
+
+def test_calculate_variant_counts(
+    gp_t4c8_instance: GPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    assert gp_t4c8_instance is not None
+    mocker.patch(
+        "dae.gene_profile.generate_gene_profile."
+        "RARE_FREQUENCY_THRESHOLD", 100.0)
+
+    # pylint: disable=protected-access, invalid-name
+    gp_config = gp_t4c8_instance._gene_profile_config
+    assert gp_config is not None
+    dataset = gp_t4c8_instance.get_dataset("t4c8_dataset")
+    assert dataset is not None
+    gene_symbols = {"t4", "c8"}
+    person_ids = _collect_person_set_collections(
+        gp_t4c8_instance, gp_config)
+
+    variant_counts = _calculate_variant_counts(
+        gp_t4c8_instance,
+        gp_config,
+        gene_symbols,
+        person_ids,
+        [None],
+        jobs=1,
+    )
+
+    assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
+        "lgds": {"f1.3.chr1:122.A.C,AC"},
+        "denovo_missense": {"f1.1.chr1:119.A.C"},
+        "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
+        "rare_missense": {"f1.3.chr1:119.A.G,C"},
+    }
+    assert variant_counts["t4c8_dataset"]["c8"]["unaffected"] == {
+        "lgds": {"f1.3.chr1:122.A.C,AC"},
+        "denovo_missense": {"f1.1.chr1:119.A.C"},
+        "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
+        "rare_missense": {"f1.3.chr1:119.A.G,C"},
+    }
+
+    assert variant_counts["t4c8_study_3"]["c8"]["autism"] == {
+        "lgds": set(),
+        "denovo_missense": set(),
+        "rare_lgds": set(),
+        "rare_missense": {"f3.1.chr1:117.T.G"},
+    }
+
+
+@pytest.mark.parametrize(
+    "chromsomes,gm_chromosomes,kwargs,expected_partitions", [
+        ({"chr1", "chr2", "chrY"},
+         {"chr1", "chr2", "chrY"},
+         {},
+         [[Region("chr1")], [Region("chr2")], [Region("chrY")]]),
+        ({"chr1", "chr2", "chrY"},
+         {"chr1", "chr2", "chrY"},
+         {"split_by_chromosome": False},
+         [None]),
+        ({"chr1", "chrY", "GL1", "GL2"},
+         {"chr1", "chrY", "GL1"},
+         {},
+         [[Region("chr1")], [Region("GL1"), Region("chrY")]]),
+    ],
+)
+def test_build_partitions(
+    mocker: pytest_mock.MockFixture,
+    chromsomes: set,
+    gm_chromosomes: set,
+    kwargs: dict,
+    expected_partitions: list[list[Region] | None],
+) -> None:
+
+    reference_genome = mocker.Mock()
+    gene_models = mocker.Mock()
+    reference_genome.chromosomes = chromsomes
+    gene_models.has_chromosome = lambda chrom: chrom in gm_chromosomes
+
+    partitions = build_partitions(
+        reference_genome,
+        gene_models,
+        **kwargs,
+    )
+    assert partitions == expected_partitions

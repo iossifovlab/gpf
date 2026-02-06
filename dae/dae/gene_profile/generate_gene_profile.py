@@ -13,6 +13,8 @@ from dae.effect_annotation.effect import expand_effect_types
 from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_sets.gene_sets_db import GeneSet
+from dae.genomic_resources.gene_models.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -361,7 +363,8 @@ def collect_variant_counts(
 
 
 def build_partitions(
-    gpf_instance: GPFInstance,
+    reference_genome: ReferenceGenome,
+    gene_models: GeneModels,
     **kwargs: Any,
 ) -> Sequence[list[Region] | None]:
     """Build partitions for processing."""
@@ -369,7 +372,7 @@ def build_partitions(
     if not split_by_chromosome:
         return [None]
 
-    all_chromosomes = set(gpf_instance.reference_genome.chromosomes)
+    all_chromosomes = set(reference_genome.chromosomes)
     autosomes = [f"chr{i}" for i in range(1, 23)]
     autosomes_x = [*autosomes, "chrX", "X"]
     autosomes_x = [chrom for chrom in autosomes_x if chrom in all_chromosomes]
@@ -379,7 +382,6 @@ def build_partitions(
         for chrom in autosomes_x
         if chrom in all_chromosomes]
     if len(all_chromosomes - set(autosomes_x)) > 0:
-        gene_models = gpf_instance.gene_models
         remaining_chromsomes = [
             chrom for chrom in (all_chromosomes - set(autosomes_x))
             if gene_models.has_chromosome(chrom)
@@ -456,7 +458,7 @@ def main(
     collections_gene_sets = _collect_gene_sets(
         gpf_instance, gene_profiles_config)
     gene_symbols = _collect_gene_symbols(
-        gpf_instance, collections_gene_sets, args)
+        gpf_instance, collections_gene_sets, **vars(args))
 
     gs_count = len(gene_symbols)
     logger.info("collected %d gene symbols", gs_count)
@@ -467,7 +469,10 @@ def main(
     gene_profiles = _init_gene_profiles(
         gpf_instance, collections_gene_sets, gene_symbols)
 
-    partitions = build_partitions(gpf_instance, **vars(args))
+    partitions = build_partitions(
+        gpf_instance.reference_genome,
+        gene_models=gpf_instance.gene_models,
+        **vars(args))
 
     variant_counts = _calculate_variant_counts(
         gpf_instance,
@@ -721,13 +726,13 @@ def _collect_gene_sets(
 def _collect_gene_symbols(
     gpf_instance: GPFInstance,
     collections_gene_sets: list[tuple[str, GeneSet]],
-    args: argparse.Namespace,
+    **kwargs: Any,
 ) -> set[str]:
 
     gene_symbols: set[str] = set()
-    if args.genes:
-        gene_symbols = {gs.strip() for gs in args.genes.split(",")}
-    elif args.gene_sets_genes:
+    if kwargs.get("genes"):
+        gene_symbols = {gs.strip() for gs in kwargs["genes"].split(",")}
+    elif kwargs.get("gene_sets_genes"):
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
     else:
