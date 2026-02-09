@@ -78,7 +78,6 @@ variant_statistic_schema = {
                 "type": "string",
                 "allowed": roles,
             },
-            "default": ["prb", "sib", "child"],
         },
     },
 }

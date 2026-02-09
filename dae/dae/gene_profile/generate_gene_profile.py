@@ -152,7 +152,7 @@ def merge_rare_queries(
         "inheritance": [
             ("not denovo and "
              "not possible_denovo and not possible_omission"),
-            "mendelian or missing",
+            "any([mendelian,unknown])",
         ],
     }
     if "effect_types" in merged_query:
@@ -161,6 +161,8 @@ def merge_rare_queries(
         kwargs["variant_type"] = " or ".join(merged_query["variant_type"])
     if "roles" in merged_query:
         kwargs["roles"] = " or ".join(merged_query["roles"])
+    else:
+        kwargs["roles"] = "(prb or sib or child) and (mom or dad)"
 
     return kwargs
 
@@ -194,7 +196,7 @@ def process_region(
             stats.category == "rare" for stats in filters.statistics)
 
         if has_denovo:
-            logger.info("Collecting denovo variants for %s", dataset_id)
+            logger.debug("collecting denovo variants for %s", dataset_id)
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
 
@@ -205,9 +207,9 @@ def process_region(
                     inheritance="denovo",
                 )
 
-            logger.info("Done collecting denovo variants for %s", dataset_id)
+            logger.debug("done collecting denovo variants for %s", dataset_id)
 
-            logger.info("Collecting denovo variant counts for %s", dataset_id)
+            logger.debug("collecting denovo variant counts for %s", dataset_id)
             collect_variant_counts(
                 variant_counts[dataset_id],
                 denovo_variants,
@@ -216,12 +218,12 @@ def process_region(
                 person_ids[dataset_id],
                 denovo_flag=True,
             )
-            logger.info(
-                "Done collecting denovo variant counts for %s", dataset_id,
+            logger.debug(
+                "done collecting denovo variant counts for %s", dataset_id,
             )
 
         if has_rare:
-            logger.info("Counting rare variants for %s", dataset_id)
+            logger.debug("counting rare variants for %s", dataset_id)
 
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
@@ -234,8 +236,8 @@ def process_region(
                     genes=query_genes,
                     **query_kwargs)
 
-            logger.info(
-                "Counting rare variants for dataset %s", dataset_id)
+            logger.debug(
+                "counting rare variants for dataset %s", dataset_id)
             collect_variant_counts(
                 variant_counts[dataset_id],
                 rare_variants,
@@ -245,8 +247,8 @@ def process_region(
                 denovo_flag=False,
             )
 
-            logger.info(
-                "Done counting rare variants for dataset %s", dataset_id)
+            logger.debug(
+                "done counting rare variants for dataset %s", dataset_id)
     return variant_counts
 
 
@@ -368,8 +370,8 @@ def collect_variant_counts(
     for idx, v in enumerate(variants, 1):
         if idx % 1000 == 0:
             elapsed = time.time() - started
-            logger.info(
-                "%s: Counted %s variants from %s in %.2f seconds",
+            logger.debug(
+                "%s: counted %s variants from %s in %.2f seconds",
                 dataset_id, idx, dataset_id, elapsed,
             )
         count_variant(
@@ -404,8 +406,8 @@ def build_partitions(
                 tr.chrom for tr in gene_models.gene_models[gene]}
             all_chromosomes = all_chromosomes.union(gene_chromosomes)
 
-        logger.info(
-            "Collected chromosomes from gene symbols: %s", all_chromosomes,
+        logger.debug(
+            "collected chromosomes from gene symbols: %s", all_chromosomes,
         )
 
     autosomes = [f"chr{i}" for i in range(1, 23)]
@@ -421,8 +423,8 @@ def build_partitions(
             chrom for chrom in (all_chromosomes - set(autosomes_x))
             if gene_models.has_chromosome(chrom)
         ]
-        logger.info(
-            "Adding remaining %s chromosomes to partition %s; %s",
+        logger.debug(
+            "adding remaining %s chromosomes to partition %s; %s",
             len(remaining_chromsomes), len(partitions), remaining_chromsomes)
         remaining = [
             Region(chrom) for chrom in remaining_chromsomes]
@@ -506,7 +508,7 @@ def main(
         gpf_instance, collections_gene_sets, **vars(args))
 
     gs_count = len(gene_symbols)
-    logger.info("collected %d gene symbols", gs_count)
+    logger.debug("collected %d gene symbols", gs_count)
 
     person_ids = _collect_person_set_collections(
         gpf_instance, gene_profiles_config)
@@ -550,21 +552,21 @@ def _insert_gene_profiles_into_db(
     gene_profiles: dict[str, GPStatistic],
 ) -> None:
     started = time.time()
-    logger.info("inserting statistics into DB")
+    logger.debug("inserting statistics into DB")
     batches = batched(gene_profiles.values(), _INSERT_GP_BATCH_SIZE)
     total_batches = (
         len(gene_profiles) + _INSERT_GP_BATCH_SIZE - 1) // _INSERT_GP_BATCH_SIZE
 
     for idx, gene_profiles_batch in enumerate(batches, 1):
-        logger.info("inserting batch %d/%d", idx, total_batches)
+        logger.debug("inserting batch %d/%d", idx, total_batches)
         gpdb.insert_gps(gene_profiles_batch)
         elapsed = time.time() - started
-        logger.info(
+        logger.debug(
             "done inserting batch %d/%d, took %.2f seconds",
             idx, total_batches, elapsed)
 
     elapsed = time.time() - started
-    logger.info("done inserting GPs; took %.2f secs", elapsed)
+    logger.debug("done inserting GPs; took %.2f secs", elapsed)
 
 
 def _populate_gene_profile_statistics(
@@ -574,7 +576,7 @@ def _populate_gene_profile_statistics(
     variant_counts: dict[str, Any],
 ) -> None:
     for dataset_id in gene_profiles_config.datasets:
-        logger.info("populating gene profile statistics for %s", dataset_id)
+        logger.debug("populating gene profile statistics for %s", dataset_id)
         filters = gene_profiles_config.datasets[dataset_id]
         for gs, counts in variant_counts[dataset_id].items():
             gp_counts = gene_profiles[gs].variant_counts
@@ -603,7 +605,7 @@ def _populate_gene_profile_statistics(
                     else:
                         gp_counts[count_col] = 0
                         gp_counts[rate_col] = 0
-        logger.info(
+        logger.debug(
             "done populating gene profile statistics for %s", dataset_id)
 
 
@@ -717,7 +719,7 @@ def _init_gene_profiles(
         gene_profiles[gs] = gp
         if idx % 1000 == 0:
             elapsed = time.time() - start
-            logger.info(
+            logger.debug(
                 "initializing %d/%d GP statistics %.2f secs",
                 idx, gs_count, elapsed)
 
@@ -732,10 +734,6 @@ def _collect_person_set_collections(
     for dataset_id, filters in gene_profiles_config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         assert genotype_data is not None, dataset_id
-        genotype_data_children = {
-            p.person_id
-            for p in genotype_data.families.persons_with_parents()
-        }
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = {}
         for ps in filters.person_sets:
@@ -747,7 +745,7 @@ def _collect_person_set_collections(
             assert psc is not None
             person_set = psc.query_person_ids(psc_query)
             assert person_set is not None, psc_query
-            children_person_set = set(person_set) & genotype_data_children
+            children_person_set = set(person_set)
 
             person_ids[dataset_id][ps.set_name] = children_person_set
     return person_ids
@@ -771,7 +769,7 @@ def _collect_gene_sets(
                     f"missing gene set: {collection_id}: {gs_id}")
 
             collections_gene_sets.append((collection_id, gene_set))
-    logger.info("collected gene sets: %d", len(collections_gene_sets))
+    logger.debug("collected gene sets: %d", len(collections_gene_sets))
 
     return collections_gene_sets
 

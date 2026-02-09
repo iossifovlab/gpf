@@ -543,7 +543,7 @@ class GeneProfileDBWriter:
                 connection.execute(to_duckdb_transpile(query))
                 if idx % 1000 == 0:
                     elapsed = time.time() - started
-                    logger.info(
-                        "Updated %s/%s GP statistics in %.2f seconds",
+                    logger.debug(
+                        "updated %s/%s GP statistics in %.2f seconds",
                         idx, len(gs_values), elapsed)
             connection.commit()
