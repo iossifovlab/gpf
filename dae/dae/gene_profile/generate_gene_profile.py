@@ -1,6 +1,8 @@
 import argparse
 import logging
 import os
+import pathlib
+import sys
 import time
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -282,21 +284,8 @@ def count_variant(
             if not in_members:
                 continue
 
-            if statistic.get("scores"):
-                do_count = True
-                for score in statistic.scores:
-                    score_name = score["name"]
-                    score_min = score.get("min")
-                    score_max = score.get("max")
-                    score_value = v.get_attribute(score_name)[0]
-
-                    if score_value is None:
-                        do_count = False
-
-                    if score_min:
-                        do_count = do_count and score_value >= score_min
-                    if score_max:
-                        do_count = do_count and score_value <= score_max
+            if statistic.get("genomic_scores"):
+                do_count = _check_variant_genomic_scores(v, statistic)
                 if not do_count:
                     continue
 
@@ -337,6 +326,33 @@ def count_variant(
             add_variant_count(
                 v, variant_counts, ps.set_name, stat_id, statistic_effect_types,
             )
+
+
+def _check_variant_genomic_scores(
+    v: FamilyVariant,
+    statistic: Box,
+) -> bool:
+    do_count = True
+    for score in statistic.genomic_scores:
+
+        score_name = score["name"]
+        score_min = score.get("min")
+        score_max = score.get("max")
+        score_values: list[float] = list(
+                        filter(None, v.get_attribute(score_name)))
+
+        if not score_values:
+            return False
+        if score_min is not None and score_max is not None:
+            if not any(score_min <= sv <= score_max for sv in score_values):
+                return False
+        elif score_min is not None:
+            if not any(sv >= score_min for sv in score_values):
+                return False
+        elif score_max is not None:  # noqa: SIM102
+            if not any(sv <= score_max for sv in score_values):
+                return False
+    return do_count
 
 
 def collect_variant_counts(
@@ -427,7 +443,6 @@ def main(
     argv: list[str] | None = None,
 ) -> None:
     """Entry point for the generate GP script."""
-    # flake8: noqa: C901
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Generate gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
@@ -469,10 +484,21 @@ def main(
 
     assert gene_profiles_config is not None, "No GP configuration found."
 
+    if pathlib.Path(args.dbfile).exists() and not args.drop:
+        logger.error(
+            "gene profiles DB file %s already exists; "
+            "use --drop to drop and recreate the table",
+            args.dbfile,
+        )
+        sys.exit(1)
+
     gpdb = GeneProfileDBWriter(
         gene_profiles_config.to_dict(),
         args.dbfile,
     )
+    if args.drop:
+        gpdb.drop_gp_table()
+        gpdb.create_gp_table()
 
     collections_gene_sets = _collect_gene_sets(
         gpf_instance, gene_profiles_config)
@@ -516,14 +542,18 @@ def main(
     )
 
 
+_INSERT_GP_BATCH_SIZE = 1000
+
+
 def _insert_gene_profiles_into_db(
     gpdb: GeneProfileDBWriter,
     gene_profiles: dict[str, GPStatistic],
 ) -> None:
     started = time.time()
     logger.info("inserting statistics into DB")
-    batches = batched(gene_profiles.values(), 1000)
-    total_batches = (len(gene_profiles) + 999) // 1000
+    batches = batched(gene_profiles.values(), _INSERT_GP_BATCH_SIZE)
+    total_batches = (
+        len(gene_profiles) + _INSERT_GP_BATCH_SIZE - 1) // _INSERT_GP_BATCH_SIZE
 
     for idx, gene_profiles_batch in enumerate(batches, 1):
         logger.info("inserting batch %d/%d", idx, total_batches)

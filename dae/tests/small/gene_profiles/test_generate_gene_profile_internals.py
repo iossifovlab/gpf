@@ -173,6 +173,15 @@ def gp_config() -> Box:
                         "effects": ["missense"],
                         "category": "rare",
                     },
+                    {
+                        "id": "rare_score_one_06",
+                        "display_name": "rare big score one",
+                        "genomic_scores": [{
+                           "name": "score_one",
+                           "min": 0.06,
+                        }],
+                        "category": "rare",
+                    },
                 ],
                 "person_sets": [
                     {
@@ -213,6 +222,15 @@ def gp_config() -> Box:
                         "id": "rare_missense",
                         "display_name": "rare missense",
                         "effects": ["missense"],
+                        "category": "rare",
+                    },
+                    {
+                        "id": "rare_score_one_06",
+                        "display_name": "rare big score one",
+                        "genomic_scores": [{
+                           "name": "score_one",
+                           "min": 0.06,
+                        }],
                         "category": "rare",
                     },
                 ],
@@ -264,6 +282,8 @@ def gp_t4c8_instance(
                   - gene_score1
                 gene_profiles_config:
                   conf_file: "gp_config.yaml"
+                annotation:
+                    conf_file: 'annotation.yaml'
                 default_study_config:
                   conf_file: default_study_configuration.yaml
                 genotype_storage:
@@ -278,6 +298,9 @@ def gp_t4c8_instance(
                   - t4c8_dataset
                   - t4c8_study_1
                   - nonexistent_dataset
+            """),
+            "annotation.yaml": textwrap.dedent("""
+                - position_score: genomic_scores/score_one
             """),
         },
     )
@@ -338,6 +361,8 @@ def test_generate_gene_profile_internals(
             "t4c8_dataset_autism_rare_lgds_rate",
             "t4c8_dataset_autism_rare_missense",
             "t4c8_dataset_autism_rare_missense_rate",
+            "t4c8_dataset_autism_rare_score_one_06",
+            "t4c8_dataset_autism_rare_score_one_06_rate",
             "t4c8_dataset_epilepsy_denovo_lgds",
             "t4c8_dataset_epilepsy_denovo_lgds_rate",
             "t4c8_dataset_epilepsy_denovo_missense",
@@ -346,6 +371,8 @@ def test_generate_gene_profile_internals(
             "t4c8_dataset_epilepsy_rare_lgds_rate",
             "t4c8_dataset_epilepsy_rare_missense",
             "t4c8_dataset_epilepsy_rare_missense_rate",
+            "t4c8_dataset_epilepsy_rare_score_one_06",
+            "t4c8_dataset_epilepsy_rare_score_one_06_rate",
             "t4c8_dataset_unaffected_denovo_lgds",
             "t4c8_dataset_unaffected_denovo_lgds_rate",
             "t4c8_dataset_unaffected_denovo_missense",
@@ -354,6 +381,8 @@ def test_generate_gene_profile_internals(
             "t4c8_dataset_unaffected_rare_lgds_rate",
             "t4c8_dataset_unaffected_rare_missense",
             "t4c8_dataset_unaffected_rare_missense_rate",
+            "t4c8_dataset_unaffected_rare_score_one_06",
+            "t4c8_dataset_unaffected_rare_score_one_06_rate",
             "t4c8_study_3_autism_denovo_lgds",
             "t4c8_study_3_autism_denovo_lgds_rate",
             "t4c8_study_3_autism_denovo_missense",
@@ -362,6 +391,8 @@ def test_generate_gene_profile_internals(
             "t4c8_study_3_autism_rare_lgds_rate",
             "t4c8_study_3_autism_rare_missense",
             "t4c8_study_3_autism_rare_missense_rate",
+            "t4c8_study_3_autism_rare_score_one_06",
+            "t4c8_study_3_autism_rare_score_one_06_rate",
             "t4c8_study_3_unaffected_denovo_lgds",
             "t4c8_study_3_unaffected_denovo_lgds_rate",
             "t4c8_study_3_unaffected_denovo_missense",
@@ -370,6 +401,8 @@ def test_generate_gene_profile_internals(
             "t4c8_study_3_unaffected_rare_lgds_rate",
             "t4c8_study_3_unaffected_rare_missense",
             "t4c8_study_3_unaffected_rare_missense_rate",
+            "t4c8_study_3_unaffected_rare_score_one_06",
+            "t4c8_study_3_unaffected_rare_score_one_06_rate",
         }
 
 
@@ -424,6 +457,7 @@ def test_collect_denovo_variant_counts(
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": set(),
         "rare_missense": set(),
+        "rare_score_one_06": set(),
     }
 
 
@@ -480,6 +514,9 @@ def test_collect_rare_variant_counts(
         "denovo_missense": set(),
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
+        "rare_score_one_06": {
+            "f1.3.chr1:122.A.C,AC",
+        },
     }
 
 
@@ -515,12 +552,18 @@ def test_calculate_variant_counts(
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
+        "rare_score_one_06": {
+            "f1.3.chr1:122.A.C,AC",
+        },
     }
     assert variant_counts["t4c8_dataset"]["c8"]["unaffected"] == {
         "denovo_lgds": {"f1.3.chr1:122.A.C,AC"},
         "denovo_missense": {"f1.1.chr1:119.A.C"},
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
+        "rare_score_one_06": {
+            "f1.3.chr1:122.A.C,AC",
+        },
     }
 
     assert variant_counts["t4c8_study_3"]["c8"]["autism"] == {
@@ -528,6 +571,7 @@ def test_calculate_variant_counts(
         "denovo_missense": set(),
         "rare_lgds": set(),
         "rare_missense": {"f3.1.chr1:117.T.G"},
+        "rare_score_one_06": set(),
     }
 
 
@@ -636,18 +680,21 @@ def test_merge_variant_counts(
                     "denovo_missense": {"v3", "v5"},
                     "rare_lgds": {"v6"},
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
                 "epilepsy": {
                     "denovo_lgds": set(),
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
                 "unaffected": {
                     "denovo_lgds": set(),
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
             },
             "c8": {
@@ -656,18 +703,21 @@ def test_merge_variant_counts(
                     "denovo_missense": {"v8"},
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
                 "epilepsy": {
                     "denovo_lgds": set(),
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
                 "unaffected": {
                     "denovo_lgds": set(),
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
             },
         },
@@ -678,12 +728,14 @@ def test_merge_variant_counts(
                     "denovo_missense": {"v5", "v8"},
                     "rare_lgds": set(),
                     "rare_missense": {"v6", "v9"},
+                    "rare_score_one_06": set(),
                 },
                 "unaffected": {
                     "denovo_lgds": set(),
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
             },
             "c8": {
@@ -692,12 +744,14 @@ def test_merge_variant_counts(
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
                 "unaffected": {
                     "denovo_lgds": set(),
                     "denovo_missense": set(),
                     "rare_lgds": set(),
                     "rare_missense": set(),
+                    "rare_score_one_06": set(),
                 },
             },
         },

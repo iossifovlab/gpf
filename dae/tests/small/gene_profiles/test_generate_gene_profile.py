@@ -4,6 +4,7 @@ import re
 import textwrap
 
 import pytest
+import pytest_mock
 import yaml
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.generate_gene_profile import main
@@ -195,6 +196,7 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 def test_generate_gene_profile(
     gp_config_1: dict,
     tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockFixture,
 ) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
     argv = [
@@ -204,6 +206,9 @@ def test_generate_gene_profile(
         "-j", "1",
         "--no-split",
     ]
+    mocker.patch(
+        "dae.gene_profile.generate_gene_profile."
+        "_INSERT_GP_BATCH_SIZE", return_value=1)
 
     gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
     main(gpf_instance, argv)
