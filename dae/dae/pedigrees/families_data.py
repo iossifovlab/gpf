@@ -333,6 +333,15 @@ class FamiliesData(Mapping[str, Family]):
             if fam.member_has_both_parents(person.person_id)
         ]
 
+    def persons_with_parent(self) -> list[Person]:
+        """Return list of persons with at least one parent."""
+        return [
+            person
+            for fam in self._families.values()
+            for person in fam.members_in_order
+            if fam.member_has_parent(person.person_id)
+        ]
+
     def families_of_persons(self, person_ids: set[str]) -> set[str]:
         family_ids: set[str] = set()
         for person_id in person_ids:
