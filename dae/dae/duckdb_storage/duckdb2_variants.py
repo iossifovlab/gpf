@@ -352,6 +352,20 @@ class DuckDb2Variants(QueryVariantsBase):
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
+        logger.info(
+            "building family variants query runner with parameters: "
+            "regions=%s, genes=%s, effect_types=%s, family_ids=%s, "
+            "person_ids=%s, inheritance=%s, roles=%s, sexes=%s, "
+            "affected_statuses=%s, variant_type=%s, real_attr_filter=%s, "
+            "categorical_attr_filter=%s, ultra_rare=%s, frequency_filter=%s, "
+            "return_reference=%s, return_unknown=%s, limit=%s, "
+            "tags_query=%s",
+            regions, genes, effect_types, family_ids, person_ids,
+            inheritance, roles, sexes, affected_statuses, variant_type,
+            real_attr_filter, categorical_attr_filter, ultra_rare,
+            frequency_filter, return_reference, return_unknown, limit,
+            tags_query)
+
         if self.layout.summary is None or self.layout.family is None:
             logger.warning(
                 "no summary of family table defined in the layout: %s",
