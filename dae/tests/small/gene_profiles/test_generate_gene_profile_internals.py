@@ -14,8 +14,8 @@ from dae.gene_profile.generate_gene_profile import (
     _init_variant_counts,
     _merge_variant_counts,
     build_partitions,
+    build_rare_query,
     collect_variant_counts,
-    merge_rare_queries,
 )
 from dae.gene_profile.generate_gene_profile import (
     main as gp_main,
@@ -480,34 +480,36 @@ def test_collect_rare_variant_counts(
         gp_t4c8_instance, gp_config)
 
     statistics = gp_config.datasets["t4c8_dataset"].statistics
-    query_kwargs = merge_rare_queries(statistics)
-
-    rare_variants = list(
-        dataset.query_variants(
-            regions=None,
-            genes=["t4", "c8"],
-            **query_kwargs,
-        ))
 
     variant_counts = _init_variant_counts(
         gp_config, gene_symbols)
 
-    collect_variant_counts(
-        variant_counts["t4c8_dataset"],
-        rare_variants,
-        "t4c8_dataset",
-        gp_config,
-        person_ids["t4c8_dataset"],
-        denovo_flag=False,
-    )
-    collect_variant_counts(
-        variant_counts["t4c8_dataset"],
-        rare_variants,
-        "t4c8_dataset",
-        gp_config,
-        person_ids["t4c8_dataset"],
-        denovo_flag=False,
-    )
+    for statistic in statistics:
+        if statistic.category != "rare":
+            continue
+        query_kwargs = build_rare_query(statistic)
+        rare_variants = list(
+            dataset.query_variants(
+                regions=None,
+                genes=["t4", "c8"],
+                **query_kwargs,
+            ))
+        collect_variant_counts(
+            variant_counts["t4c8_dataset"],
+            rare_variants,
+            "t4c8_dataset",
+            gp_config,
+            person_ids["t4c8_dataset"],
+            denovo_flag=False,
+        )
+        collect_variant_counts(
+            variant_counts["t4c8_dataset"],
+            rare_variants,
+            "t4c8_dataset",
+            gp_config,
+            person_ids["t4c8_dataset"],
+            denovo_flag=False,
+        )
 
     assert variant_counts["t4c8_dataset"]["c8"]["autism"] == {
         "denovo_lgds": set(),
@@ -515,6 +517,7 @@ def test_collect_rare_variant_counts(
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
         "rare_score_one_06": {
+            "f1.1.chr1:122.A.C",
             "f1.3.chr1:122.A.C,AC",
         },
     }
@@ -553,6 +556,7 @@ def test_calculate_variant_counts(
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
         "rare_score_one_06": {
+            "f1.1.chr1:122.A.C",
             "f1.3.chr1:122.A.C,AC",
         },
     }
@@ -562,6 +566,7 @@ def test_calculate_variant_counts(
         "rare_lgds": {"f1.3.chr1:122.A.C,AC"},
         "rare_missense": {"f1.3.chr1:119.A.G,C"},
         "rare_score_one_06": {
+            "f1.1.chr1:122.A.C",
             "f1.3.chr1:122.A.C,AC",
         },
     }

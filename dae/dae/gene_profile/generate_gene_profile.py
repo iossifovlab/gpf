@@ -119,52 +119,48 @@ def add_variant_count(
 RARE_FREQUENCY_THRESHOLD = 1.0
 
 
-def merge_rare_queries(
-    statistics: list[Box],
+def build_rare_query(
+    statistic: Box,
 ) -> dict[str, Any]:
-    """Merge rare variant queries."""
-    merged_query: dict[str, Any] = defaultdict(set)
+    """Build rare variant query."""
+    assert statistic.get("category") == "rare"
 
-    for statistic in statistics:
-        if statistic.get("category") != "rare":
-            continue
-
-        if statistic.effects is not None:
-            merged_query["effect_types"].update(
-                expand_effect_types(statistic.effects))
-
-        if statistic.variant_types:
-            variant_types = [
-                # pylint: disable=no-member
-                allele_type_from_name(
-                    statistic.variant_types).repr(),  # type: ignore
-            ]
-            merged_query["variant_type"].update(variant_types)
-
-        if statistic.roles:
-            roles = {
-                repr(Role.from_name(r)) for r in statistic.roles}
-            merged_query["roles"].update(roles)
-
-    kwargs = {
+    query: dict[str, Any] = {
         "frequency_filter": [
             ("af_allele_freq", (None, RARE_FREQUENCY_THRESHOLD))],
         "inheritance": [
             ("not denovo and "
-             "not possible_denovo and not possible_omission"),
+                "not possible_denovo and not possible_omission"),
             "any([mendelian,unknown])",
         ],
     }
-    if "effect_types" in merged_query:
-        kwargs["effect_types"] = list(merged_query["effect_types"])
-    if "variant_type" in merged_query:
-        kwargs["variant_type"] = " or ".join(merged_query["variant_type"])
-    if "roles" in merged_query:
-        kwargs["roles"] = " or ".join(merged_query["roles"])
+    if statistic.effects is not None:
+        query["effect_types"] = list(
+            expand_effect_types(statistic.effects))
+    if statistic.variant_types:
+        query["variant_type"] = " or ".join(
+            allele_type_from_name(
+                statistic.variant_types).repr()  # type: ignore
+            for t in statistic.variant_types)
+    if statistic.roles:
+        query["roles"] = " or ".join(
+            repr(Role.from_name(r)) for r in statistic.roles)
     else:
-        kwargs["roles"] = "(prb or sib or child) and (mom or dad)"
+        query["roles"] = "(prb or sib or child) and (mom or dad)"
 
-    return kwargs
+    if statistic.genomic_scores:
+        real_attr_query = []
+        for score in statistic.genomic_scores:
+            score_name = score["name"]
+            score_min = score.get("min")
+            score_max = score.get("max")
+            assert score_min is not None or score_max is not None
+
+            real_attr_query.append(
+                (score_name, (score_min, score_max)))
+        query["real_attr_filter"] = real_attr_query
+
+    return query
 
 
 def process_region(
@@ -227,25 +223,26 @@ def process_region(
 
             genotype_data = gpf_instance.get_genotype_data(dataset_id)
             assert genotype_data is not None, dataset_id
+            for statistic in filters.statistics:
+                if statistic.category != "rare":
+                    continue
+                query_kwargs = build_rare_query(statistic)
+                rare_variants = \
+                    genotype_data.query_variants(
+                        regions=regions,
+                        genes=query_genes,
+                        **query_kwargs)
 
-            query_kwargs = merge_rare_queries(filters.statistics)
-
-            rare_variants = \
-                genotype_data.query_variants(
-                    regions=regions,
-                    genes=query_genes,
-                    **query_kwargs)
-
-            logger.debug(
-                "counting rare variants for dataset %s", dataset_id)
-            collect_variant_counts(
-                variant_counts[dataset_id],
-                rare_variants,
-                dataset_id,
-                gene_profiles_config,
-                person_ids[dataset_id],
-                denovo_flag=False,
-            )
+                logger.debug(
+                    "counting rare variants for dataset %s", dataset_id)
+                collect_variant_counts(
+                    variant_counts[dataset_id],
+                    rare_variants,
+                    dataset_id,
+                    gene_profiles_config,
+                    person_ids[dataset_id],
+                    denovo_flag=False,
+                )
 
             logger.debug(
                 "done counting rare variants for dataset %s", dataset_id)
