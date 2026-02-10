@@ -173,7 +173,7 @@ models to predict splice site variant effects.
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
 
-        super().__init__(pipeline, info, self._attribute_descs())
+        super().__init__(pipeline, info)
 
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes
@@ -213,7 +213,7 @@ models to predict splice site variant effects.
             self._max_insertion_length = self.DEFAULT_MAX_INSERTION_LENGTH
         self._models: list | None = None
 
-    def _attribute_descs(self) -> dict[str, AttributeDesc]:
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "gene": AttributeDesc(
                 name="gene",
@@ -359,15 +359,16 @@ models to predict splice site variant effects.
     ) -> list[_AttrDef]:
         """Collect attributes configuration."""
         result = []
+        attribute_descriptions = self.get_all_attribute_descriptions()
         for attr in attributes:
-            if attr.source not in self._attribute_descs():
+            if attr.source not in attribute_descriptions:
                 logger.error(
                     "Attribute %s is not supported by SpliceAI annotator",
                     attr.source,
                 )
                 continue
 
-            attr_config = self._attribute_descs()[attr.source]
+            attr_config = attribute_descriptions[attr.source]
             aggregator = attr.parameters.get("aggregator")
             if aggregator is not None:
                 documenation = (
