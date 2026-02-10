@@ -28,7 +28,7 @@ def test_get_genotype_storage_ids(
     assert len(genotype_storage_ids) == 2
     assert genotype_storage_ids == [
         "internal",
-        "duckdb_wgpf_test",
+        "duckdb_gpf_test",
     ]
 
 
@@ -36,10 +36,10 @@ def test_get_genotype_storage_duckdb(
     genotype_storage_registry: GenotypeStorageRegistry,
 ) -> None:
     storage = genotype_storage_registry.get_genotype_storage(
-        "duckdb_wgpf_test",
+        "duckdb_gpf_test",
     )
 
-    assert storage.storage_id == "duckdb_wgpf_test"
+    assert storage.storage_id == "duckdb_gpf_test"
 
 
 def test_get_genotype_storage_filesystem(
@@ -63,7 +63,7 @@ def test_get_default_genotype_storage(
 
     assert isinstance(genotype_storage, DuckDbParquetStorage)
     assert (
-        genotype_storage.storage_id == "duckdb_wgpf_test"
+        genotype_storage.storage_id == "duckdb_gpf_test"
     )
 
 

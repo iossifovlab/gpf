@@ -52,6 +52,7 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
         task_id = safe_task_id(task.task.task_id)
         task_func = task.func
         args = task.args
+        kwargs = task.kwargs
 
         root_logger = logging.getLogger()
         handler = configure_task_logging(log_dir, task_id, verbose)
@@ -68,7 +69,7 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
             "worker process memory usage: %.2f MB", start_memory_mb)
 
         try:
-            result = task_func(*args)
+            result = task_func(*args, **kwargs)
         except Exception as exp:  # noqa: BLE001
             # pylint: disable=broad-except
             result = exp

@@ -30,7 +30,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         self, **kwargs: Any,
     ):
         super().__init__(**kwargs)
-        max_workers = kwargs.get("n_threads", os.cpu_count() or 1)
+        max_workers = kwargs.get("max_workers")
         self._executor = ProcessPoolExecutor(max_workers=max_workers)
 
     def _submit_task(self, task: TaskDesc) -> Future:
@@ -63,7 +63,8 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
 
         task_func = task.func
         args = task.args
-        result = task_func(*args)
+        kwargs = task.kwargs
+        result = task_func(*args, **kwargs)
         elapsed = time.time() - start
         logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
 

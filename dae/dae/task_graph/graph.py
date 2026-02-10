@@ -25,6 +25,7 @@ class TaskDesc:
     task: Task
     func: Callable
     args: list[Any]
+    kwargs: dict[str, Any]
     deps: list[Task]
     input_files: list[str]
 
@@ -34,26 +35,30 @@ class TaskDesc:
             task=task_node.task,
             func=task_node.func,
             args=task_node.args,
+            kwargs=task_node.kwargs,
             deps=task_node.deps,
             input_files=task_node.input_files,
         )
 
 
 class _Task:
-    __slots__ = ("args", "deps", "func", "input_files", "task")
+    __slots__ = ("args", "deps", "func", "input_files", "kwargs", "task")
 
     def __init__(
         self, task_id: str | Task,
         func: Callable,
         args: list[Any],
+        kwargs: dict[str, Any],
         deps: list[Task],
         input_files: list[str],
     ) -> None:
+        # pylint: disable=too-many-positional-arguments
         if isinstance(task_id, str):
             task_id = Task(task_id)
         self.task: Task = task_id
         self.func = func
         self.args = args
+        self.kwargs = kwargs
         self.deps: list[Task] = deps
         self.input_files: list[str] = input_files
 
@@ -61,7 +66,8 @@ class _Task:
         result = [
             f"id={self.task.task_id}, "
             f"func={self.func}, "
-            f"args={self.args}",
+            f"args={self.args}, "
+            f"kwargs={self.kwargs}",
         ]
         if self.deps:
             result.append(f"deps={[dep.task_id for dep in self.deps]})")
@@ -110,7 +116,8 @@ class TaskGraph:
     def create_task(
         self, task_id: str, func: Callable[..., Any], *,
         args: Sequence,
-        deps: Sequence[Task],
+        kwargs: dict[str, Any] | None = None,
+        deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,
     ) -> Task:
         """Create a new task and add it to the graph.
@@ -134,12 +141,18 @@ class TaskGraph:
 
         # tasks that use the output of other tasks as input should
         # have those other tasks as dependancies
-        deps = list(deps)
+        deps = list(deps) if deps is not None else []
+        kwargs = kwargs if kwargs is not None else {}
         for arg in args:
             if isinstance(arg, Task):
                 deps.append(arg)
+        for arg in kwargs.values():
+            if isinstance(arg, Task):
+                deps.append(arg)
         self._add_task(_Task(
-            task, func, list(args), deps,
+            task, func, list(args),
+            kwargs,
+            deps,
             list(input_files) if input_files is not None else []))
         return task
 
@@ -285,6 +298,7 @@ class TaskGraph:
                     task.task,
                     task.func,
                     copy(task.args),
+                    copy(task.kwargs),
                     new_deps,
                     copy(task.input_files),
                 )

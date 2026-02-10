@@ -15,7 +15,6 @@ from sqlglot.expressions import (
     DataType,
     PrimaryKeyColumnConstraint,
     Schema,
-    delete,
     insert,
     table_,
     update,
@@ -306,9 +305,8 @@ class GeneProfileDBWriter:
         self.dbfile = dbfile
         self.configuration = \
             GeneProfileDBWriter.build_configuration(configuration)
-        self._create_gp_table()
+        self.create_gp_table()
         self.gene_sets_categories = {}
-        self._clear_gp_table()
         if len(self.configuration.keys()):
             for category in self.configuration["gene_sets"]:
                 category_name = category["category"]
@@ -356,27 +354,6 @@ class GeneProfileDBWriter:
         with duckdb.connect(f"{self.dbfile}") as connection:
             connection.execute("DROP TABLE IF EXISTS gene_profile")
             connection.commit()
-
-    def gp_table_exists(self) -> bool:
-        """Checks if gp table exists"""
-        duckdb_tables = "duckdb_tables"
-        query = select(
-            column(
-                "table_name",
-                table=duckdb_tables,
-            ),
-        ).from_(duckdb_tables).where(
-            column(
-                "table_name",
-                table=duckdb_tables,
-            ).like("gene_profile"),
-        ).limit(1)
-        with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
-            rows = connection.execute(
-                to_duckdb_transpile(query),
-            ).df().to_dict("records")
-
-            return len(rows) == 1
 
     def _gp_table_columns(
         self, *,
@@ -462,7 +439,8 @@ class GeneProfileDBWriter:
                     )
         return columns
 
-    def _create_gp_table(self) -> None:
+    def create_gp_table(self) -> None:
+        """Create the gene profile table in the DB."""
         self.table = table_("gene_profile")
         self.schema = Schema(
             this=self.table,
@@ -472,18 +450,6 @@ class GeneProfileDBWriter:
         query = Create(this=self.schema, kind="TABLE", exists=True)
         with duckdb.connect(f"{self.dbfile}") as connection:
             connection.execute(to_duckdb_transpile(query))
-
-    def _clear_gp_table(
-        self,
-        connection: duckdb.DuckDBPyConnection | None = None,
-    ) -> None:
-        query = delete(self.table)
-        if connection is not None:
-            connection.execute(to_duckdb_transpile(query))
-            return
-
-        with duckdb.connect(f"{self.dbfile}") as conn:
-            conn.execute(to_duckdb_transpile(query))
 
     def insert_gp(
         self,
@@ -544,7 +510,6 @@ class GeneProfileDBWriter:
     ) -> None:
         """Insert multiple GPStatistics into the DB."""
         with duckdb.connect(f"{self.dbfile}") as connection:
-            self._clear_gp_table(connection)
             cols = None
             vals = []
             for gp in gps:
@@ -560,7 +525,6 @@ class GeneProfileDBWriter:
             )
 
             connection.execute(to_duckdb_transpile(query))
-            logger.info("Done!")
             connection.commit()
 
     def update_gps_with_values(self, gs_values: dict[str, Any]) -> None:
@@ -579,7 +543,7 @@ class GeneProfileDBWriter:
                 connection.execute(to_duckdb_transpile(query))
                 if idx % 1000 == 0:
                     elapsed = time.time() - started
-                    logger.info(
-                        "Updated %s/%s GP statistics in %.2f seconds",
+                    logger.debug(
+                        "updated %s/%s GP statistics in %.2f seconds",
                         idx, len(gs_values), elapsed)
             connection.commit()

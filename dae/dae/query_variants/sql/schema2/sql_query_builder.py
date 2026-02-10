@@ -652,6 +652,9 @@ class SqlQueryBuilder(QueryBuilderBase):
     @staticmethod
     def regions(regions: list[Region]) -> Condition:
         """Create regions condition."""
+        if len(regions) == 0:
+            return condition("1 = 0")
+
         assert len(regions) > 0
 
         result = SqlQueryBuilder._region_to_condition(regions[0])
