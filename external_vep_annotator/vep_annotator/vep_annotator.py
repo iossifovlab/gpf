@@ -331,7 +331,7 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
 
         with out_path.open("r") as out_file:
             self.read_output(
-                out_file, contexts, self._attribute_type_descs(),
+                out_file, contexts, self.get_all_attribute_descriptions(),
             )
 
         self.aggregate_attributes(contexts)
@@ -464,7 +464,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
         with out_path.open("r") as out_file:
             self.read_output(
-                out_file, contexts, self._attribute_type_descs(),
+                out_file, contexts, self.get_all_attribute_descriptions(),
             )
 
         self.aggregate_attributes(contexts)
