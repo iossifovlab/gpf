@@ -89,8 +89,13 @@ function main() {
     defer_ret build_run_ctx_reset
 
     build_run git config --global --add safe.directory /wd
+    build_run rm -f /gpf_version.txt
+    build_run bash -c '
+        /opt/conda/bin/conda run --no-capture-output -n build \
+            invoke -r /release_management current-version > /gpf_version.txt'
+
     if [ "$gpf_version" == "" ]; then
-        version="$(build_run invoke -r /release_management current-version)"
+        version="$(build_run cat /gpf_version.txt)"
         # version="$(build_run git describe)"
         if [ "$version" != "" ]; then
             gpf_version=${version}
@@ -102,6 +107,7 @@ function main() {
 
   }
 
+exit 1
 
   local gpf_dev_image="gpf-dev"
   local gpf_dev_image_ref
