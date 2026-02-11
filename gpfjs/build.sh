@@ -53,8 +53,13 @@ function main() {
   {
 
     build_run git config --global --add safe.directory /wd
+    build_run rm -f /gpfjs_version.txt
+    build_run bash -c '
+        /opt/conda/bin/conda run --no-capture-output -n build \
+            invoke -r /release_management current-version > /gpfjs_version.txt'
+
     if [ "$gpfjs_version" == "" ]; then
-        version="$(build_run invoke -r /release_management current-version)"
+        version="$(build_run cat /gpfjs_version.txt)"
         if [ "$version" != "" ]; then
             gpfjs_version=${version}
             ee_set "gpfjs_version" "$gpfjs_version"
