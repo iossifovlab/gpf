@@ -107,8 +107,6 @@ function main() {
 
   }
 
-exit 1
-
   local gpf_dev_image="gpf-dev"
   local gpf_dev_image_ref
   # create gpf docker image

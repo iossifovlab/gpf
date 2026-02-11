@@ -176,10 +176,15 @@ def _run_repo_init_command(**kwargs: str) -> None:
     repository: str | None = kwargs.get("repository")
     if repository is None:
         repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
+        if repo_url is None:
+            repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME[:-3])
     else:
         assert repository is not None
         repo_url = find_directory_with_a_file(
             GR_CONTENTS_FILE_NAME, repository)
+        if repo_url is None:
+            repo_url = find_directory_with_a_file(
+                GR_CONTENTS_FILE_NAME[:-3], repository)
 
     if repo_url is not None:
         logger.error(
@@ -868,7 +873,7 @@ def _get_repo_url(args: argparse.Namespace) -> str:
     if repo_url is None:
         repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
         if repo_url is None:
-            repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME[:-5])
+            repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME[:-3])
         if repo_url is None:
             logger.error(
                 "Can't find repository starting from: %s", os.getcwd())
