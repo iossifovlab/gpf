@@ -215,16 +215,16 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self._all_resources = []
             content_filename = os.path.join(
                 self.url, GR_CONTENTS_FILE_NAME)
+            compression: str | None = "gzip"
             if not self.filesystem.exists(content_filename):
-                content_filename = content_filename[:-5]
+                content_filename = content_filename[:-3]
+                compression = None
 
-            with self.filesystem.open(content_filename, "rt") as infile:
+            with self.filesystem.open(
+                    content_filename, "rt", compression=compression) as infile:
                 data = infile.read()
 
-            if content_filename.endswith(".json"):
-                contents = json.loads(data)
-            else:
-                contents = yaml.safe_load(data)
+            contents = json.loads(data)
 
             for entry in contents:
                 version = tuple(map(int, entry["version"].split(".")))
@@ -680,11 +680,14 @@ class FsspecReadWriteProtocol(
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
         with self.filesystem.open(
-                content_filepath, "wt", encoding="utf8") as outfile:
+                content_filepath,
+                "wt", encoding="utf8", compression="gzip") as outfile:
             json.dump(content, outfile)
+
         with self.filesystem.open(
-                content_filepath[:-5], "wt", encoding="utf8") as outfile:
-            yaml.safe_dump(content, outfile)
+                content_filepath[:-3],
+                "wt", encoding="utf8") as outfile:
+            json.dump(content, outfile)
 
         return content
 

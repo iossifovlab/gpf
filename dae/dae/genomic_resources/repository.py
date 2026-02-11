@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 
 GR_CONF_FILE_NAME = "genomic_resource.yaml"
 GR_MANIFEST_FILE_NAME = ".MANIFEST"
-GR_CONTENTS_FILE_NAME = ".CONTENTS.json"
+GR_CONTENTS_FILE_NAME = ".CONTENTS.json.gz"
 GR_INDEX_FILE_NAME = "index.html"
 
 GR_ENCODING = "utf-8"

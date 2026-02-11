@@ -220,12 +220,14 @@ def test_repo_init(
     # Given
     path, _repo = repo_fixture
     (path / GR_CONTENTS_FILE_NAME).unlink(missing_ok=True)
+    (path / GR_CONTENTS_FILE_NAME[:-3]).unlink(missing_ok=True)
 
     # When
     cli_manage(["repo-init", "-R", str(path)])
 
     # Then
     assert (path / GR_CONTENTS_FILE_NAME).exists()
+    assert (path / GR_CONTENTS_FILE_NAME[:-3]).exists()
 
 
 def test_repo_init_inside_repo(
@@ -234,6 +236,8 @@ def test_repo_init_inside_repo(
     # Given
     path, _repo = repo_fixture
     (path / GR_CONTENTS_FILE_NAME).unlink(missing_ok=True)
+    (path / GR_CONTENTS_FILE_NAME[:-3]).unlink(missing_ok=True)
+
     (path / "inside").mkdir()
     cli_manage(["repo-init", "-R", str(path)])
 
@@ -243,3 +247,4 @@ def test_repo_init_inside_repo(
 
     # Then
     assert not (path / "inside" / GR_CONTENTS_FILE_NAME).exists()
+    assert not (path / "inside" / GR_CONTENTS_FILE_NAME[:-3]).exists()
