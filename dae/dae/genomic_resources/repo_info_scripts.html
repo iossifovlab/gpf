@@ -1,0 +1,169 @@
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nearley@2.20.1/lib/nearley.min.js "></script>
+    <script src="https://cdn.jsdelivr.net/npm/nearley@2.20.1/lib/compile.min.js "></script>
+    <script src="https://cdn.jsdelivr.net/npm/nearley@2.20.1/lib/generate.min.js "></script>
+    <script type="module">
+        // Generated automatically by nearley, version 2.20.1
+        // http://github.com/Hardmath123/nearley
+        (function () {
+            function id(x) { return x[0]; }
+            var grammar = {
+                Lexer: undefined,
+                ParserRules: [
+                {"name": "expression", "symbols": ["token"]},
+                {"name": "expression", "symbols": ["or"]},
+                {"name": "expression", "symbols": ["and"], "postprocess": id},
+                {"name": "and$string$1", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "and", "symbols": ["token", "_", "and$string$1", "_", "token"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
+                {"name": "and$string$2", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "and", "symbols": ["and", "_", "and$string$2", "_", "token"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
+                {"name": "and$string$3", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "and", "symbols": ["token", "_", "and$string$3", "_", "and"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
+                {"name": "and$string$4", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "and", "symbols": ["or", "_", "and$string$4", "_", "or"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
+                {"name": "and$string$5", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "and", "symbols": ["or", "_", "and$string$5", "_", "token"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
+                {"name": "and$string$6", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "and", "symbols": ["token", "_", "and$string$6", "_", "or"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
+                {"name": "or$string$1", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "or", "symbols": ["token", "_", "or$string$1", "_", "token"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "or$string$2", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "or", "symbols": ["or", "_", "or$string$2", "_", "token"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "or$string$3", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "or", "symbols": ["token", "_", "or$string$3", "_", "or"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "or$string$4", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "or", "symbols": ["and", "_", "or$string$4", "_", "and"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "or$string$5", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "or", "symbols": ["and", "_", "or$string$5", "_", "token"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "or$string$6", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
+                {"name": "or", "symbols": ["token", "_", "or$string$6", "_", "and"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "token", "symbols": ["word"], "postprocess":  
+                    function(d, l, reject) {
+                        const word = d[0]
+                        if(word[0] === "-") {
+                            return reject
+                        }
+                        return word
+                    } 
+                            },
+                {"name": "token", "symbols": [{"literal":"-"}, "word"], "postprocess": function(d) {return {"not": d[1]}}},
+                {"name": "word$ebnf$1", "symbols": [/[a-zA-Z0-9!@#$%^&*()\[\]\./\\'";:<>?\-_=+]/]},
+                {"name": "word$ebnf$1", "symbols": ["word$ebnf$1", /[a-zA-Z0-9!@#$%^&*()\[\]\./\\'";:<>?\-_=+]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word", "symbols": ["word$ebnf$1"], "postprocess": function(d) { return d[0].join("") }},
+                {"name": "word$ebnf$2", "symbols": []},
+                {"name": "word$ebnf$2", "symbols": ["word$ebnf$2", "_"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word$ebnf$3", "symbols": []},
+                {"name": "word$ebnf$3", "symbols": ["word$ebnf$3", "_"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word", "symbols": [{"literal":"\""}, "word$ebnf$2", "word", "word$ebnf$3", {"literal":"\""}], "postprocess": function(d) { return d[2] }},
+                {"name": "_$ebnf$1", "symbols": [/[\s]/]},
+                {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "_", "symbols": ["_$ebnf$1"], "postprocess": function(d) {return d[0]}}
+            ], ParserStart: "expression"
+            }
+            window.grammar = grammar;
+        })();
+    </script>
+    <script>
+      const getDb = async () => {
+        const duckdb = window.duckdbduckdbWasm;
+        // @ts-ignore
+        if (window._db) return window._db;
+        const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+
+        // Select a bundle based on browser checks
+        const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+
+        const worker_url = URL.createObjectURL(
+          new Blob([`importScripts("${bundle.mainWorker}");`], {
+            type: "text/javascript",
+          })
+        );
+
+        // Instantiate the asynchronous version of DuckDB-wasm
+        const worker = new Worker(worker_url);
+        // const logger = null //new duckdb.ConsoleLogger();
+        const logger = new duckdb.ConsoleLogger();
+        const db = new duckdb.AsyncDuckDB(logger, worker);
+        await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+        URL.revokeObjectURL(worker_url);
+        window._db = db;
+        return db;
+      };
+    </script>
+    <script type="module">
+        import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.1-dev106.0/+esm";
+        window.duckdbduckdbWasm = duckdbduckdbWasm;
+        const db = await getDb();
+
+        const conn = await db.connect()
+        await conn.query("INSTALL fts; LOAD fts;")
+        await conn.query("CREATE OR REPLACE TABLE contents AS SELECT id, config.meta.description AS description FROM read_json_auto('http://shifu:8000/.CONTENTS.json');");
+        await conn.query('PRAGMA create_fts_index("contents", "id", "id", "description")')
+        window.duckdbConn = conn;
+
+        const all_ids_result = await conn.query("SELECT id FROM contents;")
+        window.all_ids = new Set(all_ids_result.toArray().map((row) => row.toJSON().id))
+
+        $("#input-field").on("change", async (e) => {
+            const parser = new nearley.Parser(nearley.Grammar.fromCompiled(window.grammar));
+            parser.feed(e.target.value)
+            if (parser.results.length === 0) {
+                $("tbody > tr").show()
+                return;
+            }
+            const tree = Array.isArray(parser.results[0]) ? parser.results[0][0] : parser.results[0];
+
+            const result = {}
+            const addQueries = (read_node, out_node) => {
+                if (typeof read_node === "string") {
+                    out_node.query = `SELECT id, description, fts_main_contents.match_bm25(id, '${read_node}') AS score FROM contents WHERE score IS NOT NULL ORDER BY score desc;`
+                }
+                else if (read_node.and) {
+                    out_node.and = [{}, {}]
+                    addQueries(read_node.and[0], out_node.and[0])
+                    addQueries(read_node.and[1], out_node.and[1])
+                }
+                else if (read_node.or) {
+                    out_node.or = [{}, {}]
+                    addQueries(read_node.or[0], out_node.or[0])
+                    addQueries(read_node.or[1], out_node.or[1])
+                }
+                else if (read_node.not) {
+                    out_node.not = {}
+                    addQueries(read_node.not, out_node.not)
+                }
+            }
+            addQueries(tree, result);
+
+
+            $("tbody > tr").hide()
+
+            const ids = new Set();
+
+            const executeQuery = (async (node, collected_ids) => {
+                if (node.query) {
+                    const result = await conn.query(node.query);
+                    const query_ids = new Set(result.toArray().map((row) => row.toJSON().id));
+                    return query_ids;
+                }
+                else if (node.and) {
+                    const l_ids = await executeQuery(node.and[0]);
+                    const r_ids = await executeQuery(node.and[1]);
+                    return l_ids.intersection(r_ids);
+                }
+                else if (node.or) {
+                    const l_ids = await executeQuery(node.or[0]);
+                    const r_ids = await executeQuery(node.or[1]);
+                    return l_ids.union(r_ids);
+                }
+                else if (node.not) {
+                    return window.all_ids.difference(await executeQuery(node.not));
+                }
+            });
+
+            const displayIds = await executeQuery(result, ids);
+
+            displayIds.forEach((id) => {$(`tbody > tr:contains("${id}")`).show()})
+
+        });
+    </script>
