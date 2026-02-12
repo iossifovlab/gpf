@@ -958,7 +958,12 @@ def cli_browse(cli_args: list[str] | None = None) -> None:
     _run_list_command(repo, args)
 
 
-repository_template = Template("""
+def get_scripts_for_template() -> str:
+    scripts_file = pathlib.Path(__file__).parent / "repo_info_scripts.html"
+    return scripts_file.read_text()
+
+
+template_string = """
 <html>
  <head>
     <style>
@@ -984,8 +989,15 @@ repository_template = Template("""
             white-space: nowrap
         }
     </style>
- </head>
+ </head>"""
+
+template_string += get_scripts_for_template()
+
+template_string += """
  <body>
+     <span>Search: </span>
+     <input type="text" id="input-field">
+     <br>
      <table>
         <thead>
             <tr>
@@ -1014,4 +1026,6 @@ repository_template = Template("""
      </table>
  </body>
 </html>
-""")
+"""
+
+repository_template = Template(template_string)
