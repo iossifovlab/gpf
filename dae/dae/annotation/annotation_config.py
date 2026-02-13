@@ -211,7 +211,6 @@ class AnnotatorInfo:
                     "name": attr.name,
                     "source": attr.source,
                     "internal": attr.internal,
-                    "type": attr.type,
                 }
                 for attr in self.attributes
             ],

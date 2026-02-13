@@ -551,6 +551,29 @@ def test_wildcard_in_complete_syntax(test_grr: GenomicResourceRepo) -> None:
     ]
 
 
+def test_annotator_info_to_dict() -> None:
+    annotator_info = AnnotatorInfo(
+        "sample_annotator", [
+            AttributeInfo("attribute_1", "att1", internal=None, parameters={}),
+            AttributeInfo("attribute_2", "att2", internal=None, parameters={}),
+        ], {
+            "resource_id": "resource",
+            "param_1": "val1",
+        }, annotator_id="A0",
+    )
+    expected_dict = {
+        "sample_annotator": {
+            "resource_id": "resource",
+            "param_1": "val1",
+            "attributes": [
+                {"name": "attribute_1", "source": "att1", "internal": None},
+                {"name": "attribute_2", "source": "att2", "internal": None},
+            ],
+        },
+    }
+    assert annotator_info.to_dict() == expected_dict
+
+
 def test_empty_pipeline_errors() -> None:
     with pytest.raises(AnnotationConfigurationError):
         AnnotationConfigParser.parse_str("# test")
