@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import datetime
+import gzip
 import hashlib
 import json
 import logging
@@ -679,15 +680,18 @@ class FsspecReadWriteProtocol(
 
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
-        with self.filesystem.open(
-                content_filepath,
-                "wt", encoding="utf8", compression="gzip") as outfile:
-            json.dump(content, outfile)
+
+        with self.filesystem.open(content_filepath, "wb") as outfile:
+            outfile.write(
+                gzip.compress(
+                    json.dumps(
+                        content, indent=2, sort_keys=True).encode("utf8"),
+                    mtime=0))
 
         with self.filesystem.open(
                 content_filepath[:-3],
                 "wt", encoding="utf8") as outfile:
-            json.dump(content, outfile)
+            json.dump(content, outfile, indent=2, sort_keys=True)
 
         return content
 
