@@ -97,7 +97,7 @@
 
         const conn = await db.connect()
         await conn.query("INSTALL fts; LOAD fts;")
-        await conn.query("CREATE OR REPLACE TABLE contents AS SELECT id, config.meta.description AS description FROM read_json_auto('http://shifu:8000/.CONTENTS.json');");
+        await conn.query(`CREATE OR REPLACE TABLE contents AS SELECT id, config.meta.description AS description FROM read_json_auto('${window.location.origin}/.CONTENTS.json');`);
         await conn.query('PRAGMA create_fts_index("contents", "id", "id", "description")')
         window.duckdbConn = conn;
 
