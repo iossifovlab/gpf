@@ -976,17 +976,45 @@ template_string = """
         }
         table {
             border: 3px inset;
-            max-width: 60%;
+            width: 100%;
         }
         table, td, th {
             border-collapse: collapse;
         }
+
+        table.search-table {
+            border: none;
+            width:100%;
+            max-width: none;
+        }
+        table.search-table td {
+            border: none;
+            padding: none;
+        }
+        .input-cell {
+            display: flex
+        }
+        #input-field {
+            flex-grow: 1;
+        }
+        #search-label {
+            width: 50px;
+        }
+
         .meta-div {
             max-height: 250px;
             overflow: scroll;
         }
         .nowrap {
             white-space: nowrap
+        }
+
+        .hints {
+            text-align: center;
+            font-size: smaller;
+            color: gray;
+            margin-top: 0px;
+            margin-bottom: 0px;
         }
     </style>
  </head>"""
@@ -995,35 +1023,47 @@ template_string += get_scripts_for_template()
 
 template_string += """
  <body>
-     <span>Search: </span>
-     <input type="text" id="input-field">
-     <br>
-     <table>
-        <thead>
-            <tr>
-                <th>Type</th>
-                <th>ID</th>
-                <th>Version</th>
-                <th>Number of files</th>
-                <th>Size in bytes (total)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            {%- for key, value in data.items() recursive%}
-            <tr>
-                <td class="nowrap">{{value['type']}}</td>
-                <td class="nowrap">
-                    <a href='{{key}}/index.html'>{{key}}</a>
-                </td>
-                <td class="nowrap">{{value['res_version']}}</td>
-                <td class="nowrap">{{value['res_files']}}</td>
-                <td class="nowrap">{{value['res_size']}}</td>
-                <td class="nowrap">{{value['res_summary']}}</td>
-            </tr>
-            {%- endfor %}
-        </tbody>
-     </table>
+     <div>
+         <table class="search-table">
+             <tr>
+                 <td id="search-label"d>Search:</td>
+                 <td class="input-cell">
+                 <input type="text" id="input-field">
+                 </td>
+             </tr>
+         </table>
+         <p class="hints">
+            Use spaces and & to perform AND,
+             use | to perform OR, surround strings in "" to
+             use spaces inside the string
+         </p>
+         <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>ID</th>
+                    <th>Version</th>
+                    <th>Number of files</th>
+                    <th>Size in bytes (total)</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%- for key, value in data.items() recursive%}
+                <tr>
+                    <td class="nowrap">{{value['type']}}</td>
+                    <td class="nowrap">
+                        <a href='{{key}}/index.html'>{{key}}</a>
+                    </td>
+                    <td class="nowrap">{{value['res_version']}}</td>
+                    <td class="nowrap">{{value['res_files']}}</td>
+                    <td class="nowrap">{{value['res_size']}}</td>
+                    <td class="nowrap">{{value['res_summary']}}</td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+         </table>
+     </div>
  </body>
 </html>
 """

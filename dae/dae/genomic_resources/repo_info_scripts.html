@@ -47,21 +47,20 @@
                     } 
                             },
                 {"name": "token", "symbols": [{"literal":"-"}, "word"], "postprocess": function(d) {return {"not": d[1]}}},
-                {"name": "word$ebnf$1", "symbols": [/[a-zA-Z0-9!@#$%^&*()\[\]\./\\'";:<>?\-_=+]/]},
-                {"name": "word$ebnf$1", "symbols": ["word$ebnf$1", /[a-zA-Z0-9!@#$%^&*()\[\]\./\\'";:<>?\-_=+]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word$ebnf$1", "symbols": [/[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+]/]},
+                {"name": "word$ebnf$1", "symbols": ["word$ebnf$1", /[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
                 {"name": "word", "symbols": ["word$ebnf$1"], "postprocess": function(d) { return d[0].join("") }},
-                {"name": "word$ebnf$2", "symbols": []},
-                {"name": "word$ebnf$2", "symbols": ["word$ebnf$2", "_"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-                {"name": "word$ebnf$3", "symbols": []},
-                {"name": "word$ebnf$3", "symbols": ["word$ebnf$3", "_"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-                {"name": "word", "symbols": [{"literal":"\""}, "word$ebnf$2", "word", "word$ebnf$3", {"literal":"\""}], "postprocess": function(d) { return d[2] }},
+                {"name": "word$ebnf$2", "symbols": [/[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+ ]/]},
+                {"name": "word$ebnf$2", "symbols": ["word$ebnf$2", /[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+ ]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word", "symbols": [{"literal":"\""}, "word$ebnf$2", {"literal":"\""}], "postprocess": function(d) { return d[1].join("") }},
                 {"name": "_$ebnf$1", "symbols": [/[\s]/]},
                 {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
                 {"name": "_", "symbols": ["_$ebnf$1"], "postprocess": function(d) {return d[0]}}
-            ], ParserStart: "expression"
+            ]
+              , ParserStart: "expression"
             }
-            window.grammar = grammar;
-        })();
+               window.grammar = grammar;
+            })();
     </script>
     <script>
       const getDb = async () => {
@@ -97,8 +96,10 @@
 
         const conn = await db.connect()
         await conn.query("INSTALL fts; LOAD fts;")
-        await conn.query(`CREATE OR REPLACE TABLE contents AS SELECT id, config.meta.description AS description FROM read_json_auto('${window.location.origin}/.CONTENTS.json');`);
-        await conn.query('PRAGMA create_fts_index("contents", "id", "id", "description")')
+        await conn.query(`CREATE OR REPLACE TABLE contents AS SELECT id, config.meta.description AS description, config.meta.summary AS summary, unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json');`);
+        const label_cols = (await conn.query(`DESCRIBE (SELECT unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json'))`)).toArray().map((row) => row.toJSON().column_name);
+        const label_cols_str = label_cols.map((val) => {return `"${val}"`}).join(", ")
+        await conn.query(`PRAGMA create_fts_index("contents", "id", "id", "description", "summary", ${label_cols_str})`)
         window.duckdbConn = conn;
 
         const all_ids_result = await conn.query("SELECT id FROM contents;")
@@ -142,8 +143,14 @@
 
             const executeQuery = (async (node, collected_ids) => {
                 if (node.query) {
-                    const result = await conn.query(node.query);
-                    const query_ids = new Set(result.toArray().map((row) => row.toJSON().id));
+                    const result = (await conn.query(node.query)).toArray().map((row) => row.toJSON());
+                    const lower = Math.min(...result.map((row) => row.score));
+                    const upper = Math.max(...result.map((row) => row.score));
+                    const threshold = lower + (0.75 * (upper - lower));
+                    const filtered = result.filter((row) => {
+                        return row.score >= threshold
+                    })
+                    const query_ids = new Set(filtered.map((row) => row.id));
                     return query_ids;
                 }
                 else if (node.and) {
