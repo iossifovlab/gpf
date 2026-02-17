@@ -44,7 +44,7 @@ def build_gene_set_annotator(
     if input_gene_list_info is None:
         raise ValueError(f"The {input_gene_list} is not privided by the "
                          "pipeline.")
-    if input_gene_list_info.type != "object":
+    if input_gene_list_info.value_type != "object":
         raise ValueError(f"The {input_gene_list} privided by the pipeline "
                          "is not of type object.")
     return GeneSetAnnotator(

@@ -60,6 +60,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
                 description="Normalized allele.",
                 internal=True,
                 default=True,
+                attribute_type="annotatable",
             ),
         }
 

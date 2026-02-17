@@ -121,6 +121,7 @@ Annotator to lift over a variant from one reference genome to another.
                 description="The lifted over annotatable",
                 internal=True,
                 default=True,
+                attribute_type="annotatable",
             ),
         }
 

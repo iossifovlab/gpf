@@ -42,7 +42,7 @@ def build_gene_score_annotator(pipeline: AnnotationPipeline,
     if input_gene_list_info is None:
         raise ValueError(f"The {input_gene_list} is not provided by the "
                          "pipeline.")
-    if input_gene_list_info.type != "object":
+    if input_gene_list_info.value_type != "object":
         raise ValueError(f"The {input_gene_list} provided by the pipeline "
                          "is not of type object.")
     return GeneScoreAnnotator(pipeline, info,
@@ -80,7 +80,7 @@ class GeneScoreAnnotator(Annotator):
                     f"available in the {gene_score_resource.get_id()} "
                     "gene score annotator!")
             default_attribute = all_attributes[attribute_config.source]
-            attribute_config.type = default_attribute.type
+            attribute_config.value_type = default_attribute.type
             attribute_config.description = default_attribute.description
 
             aggregator_type = \
@@ -98,7 +98,7 @@ class GeneScoreAnnotator(Annotator):
 
             if aggregator_type == "dict":
                 aggregator_doc = f"{aggregator_doc} [default]"
-                attribute_config.type = "object"
+                attribute_config.value_type = "object"
 
             attribute_config._documentation = (  # noqa: SLF001
                 f"{attribute_config.documentation}\n\n"
