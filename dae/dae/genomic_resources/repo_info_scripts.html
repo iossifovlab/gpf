@@ -96,10 +96,67 @@
 
         const conn = await db.connect()
         await conn.query("INSTALL fts; LOAD fts;")
-        await conn.query(`CREATE OR REPLACE TABLE contents AS SELECT id, config.meta.description AS description, config.meta.summary AS summary, unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json');`);
-        const label_cols = (await conn.query(`DESCRIBE (SELECT unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json'))`)).toArray().map((row) => row.toJSON().column_name);
-        const label_cols_str = label_cols.map((val) => {return `"${val}"`}).join(", ")
-        await conn.query(`PRAGMA create_fts_index("contents", "id", "id", "description", "summary", ${label_cols_str})`)
+
+        let hasDescriptions = false;
+        let hasSummaries = false;
+        let hasLabels = false;
+
+        try {
+            await conn.query(`SELECT config.meta.description FROM read_json_auto('${window.location.origin}/.CONTENTS.json') LIMIT 1;`)
+            hasDescriptions = true;
+        }
+        catch (e) {
+            console.warn("No descriptions found in contents")
+        }
+
+        try {
+            await conn.query(`SELECT config.meta.summary FROM read_json_auto('${window.location.origin}/.CONTENTS.json') LIMIT 1;`)
+            hasSummaries = true;
+        }
+        catch (e) {
+            console.warn("No summaries found in contents")
+        }
+
+        try {
+            await conn.query(`SELECT unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json') LIMIT 1;`)
+            hasLabels = true;
+        }
+        catch (e) {
+            console.warn("No labels found in contents")
+        }
+
+        console.log(`Has labels: ${hasLabels}, has summaries: ${hasSummaries}`)
+
+        const columns = ["id"]
+
+        if (hasDescriptions) {
+            columns.push("config.meta.description AS description")
+        }
+
+        if (hasSummaries) {
+            columns.push("config.meta.summary AS summary")
+        }
+
+        if (hasLabels) {
+             columns.push("unnest(config.meta.labels)")
+        }
+
+        await conn.query(`CREATE OR REPLACE TABLE contents AS SELECT ${columns.join(", ")} FROM read_json_auto('${window.location.origin}/.CONTENTS.json');`);
+
+        const fts_cols = ["id"]
+        if (hasDescriptions) {
+            fts_cols.push("description")
+        }
+        if (hasSummaries) {
+            fts_cols.push("summary")
+        }
+        if (hasLabels) {
+            const label_cols = (await conn.query(`DESCRIBE (SELECT unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json'))`)).toArray().map((row) => row.toJSON().column_name);
+             fts_cols.push(...label_cols)
+        }
+
+        const fts_cols_str = fts_cols.map((val) => {return `"${val}"`}).join(", ")
+        await conn.query(`PRAGMA create_fts_index("contents", "id", ${fts_cols_str}, stemmer='none', ignore='(\\.|[^a-z0-9])+');`)
         window.duckdbConn = conn;
 
         const all_ids_result = await conn.query("SELECT id FROM contents;")
@@ -109,7 +166,7 @@
             const parser = new nearley.Parser(nearley.Grammar.fromCompiled(window.grammar));
             parser.feed(e.target.value)
             if (parser.results.length === 0) {
-                $("tbody > tr").show()
+                $(".contents > tbody > tr").show()
                 return;
             }
             const tree = Array.isArray(parser.results[0]) ? parser.results[0][0] : parser.results[0];
@@ -137,7 +194,8 @@
             addQueries(tree, result);
 
 
-            $("tbody > tr").hide()
+            $(".contents > tbody > tr").hide()
+            $(".searching").show()
 
             const ids = new Set();
 
@@ -150,6 +208,7 @@
                     const filtered = result.filter((row) => {
                         return row.score >= threshold
                     })
+                    console.log(filtered)
                     const query_ids = new Set(filtered.map((row) => row.id));
                     return query_ids;
                 }
@@ -171,6 +230,9 @@
             const displayIds = await executeQuery(result, ids);
 
             displayIds.forEach((id) => {$(`tbody > tr:contains("${id}")`).show()})
+            $(".searching").hide()
 
         });
+        $(".loading").hide()
+        $(".search-table").show()
     </script>

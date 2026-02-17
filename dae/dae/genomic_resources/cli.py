@@ -1016,6 +1016,10 @@ template_string = """
             margin-top: 0px;
             margin-bottom: 0px;
         }
+        .loading, .searching {
+            text-align: center;
+            font-size: larger;
+        }
     </style>
  </head>"""
 
@@ -1024,7 +1028,8 @@ template_string += get_scripts_for_template()
 template_string += """
  <body>
      <div>
-         <table class="search-table">
+         <p class="loading">Loading search</p>
+         <table class="search-table" style="display: none;">
              <tr>
                  <td id="search-label"d>Search:</td>
                  <td class="input-cell">
@@ -1037,7 +1042,7 @@ template_string += """
              use | to perform OR, surround strings in "" to
              use spaces inside the string
          </p>
-         <table>
+         <table class="contents">
             <thead>
                 <tr>
                     <th>Type</th>
@@ -1063,6 +1068,7 @@ template_string += """
                 {%- endfor %}
             </tbody>
          </table>
+         <p class="searching" style="display: none;">Searching</p>
      </div>
  </body>
 </html>
