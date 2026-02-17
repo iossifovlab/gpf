@@ -135,7 +135,7 @@ def test_input_annotatable_decorator_used_context_attributes(
     dummy_annotatable_provider.attributes.append(
         AttributeInfo("dummy_annotatable", "dummy_annotatable",
                       internal=False, parameters={},
-                      _type="annotatable"),
+                      _type="annotatable", attribute_type="annotatable"),
     )
     dummy_annotatable_provider.pipeline = pipeline
     pipeline.add_annotator(dummy_annotatable_provider)

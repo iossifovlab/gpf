@@ -57,6 +57,7 @@ Annotator that maps chromsomes from one naming convention to another.
                 name="renamed_chromosome",
                 type="annotatable",
                 description="Allele with renamed chromosome.",
+                attribute_type="annotatable",
             ),
         }
 

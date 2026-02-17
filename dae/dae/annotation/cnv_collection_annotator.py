@@ -64,7 +64,7 @@ class CnvCollectionAnnotator(Annotator):
                     aggregator = attribute_def.parameters["aggregator"]
                 else:
                     aggregator = attribute.params["aggregator"]
-                attribute_def.type = attribute.type
+                attribute_def.value_type = attribute.type
                 attribute_def.description = attribute.description
                 attribute_def._documentation = f"""
                     {attribute_def.description}
@@ -77,7 +77,7 @@ class CnvCollectionAnnotator(Annotator):
                 self.cnv_attributes[attribute_def.name] = \
                     (attribute, aggregator)
             else:
-                attribute_def.type = attribute.type
+                attribute_def.value_type = attribute.type
                 attribute_def.description = attribute.description
 
         super().__init__(pipeline, info)

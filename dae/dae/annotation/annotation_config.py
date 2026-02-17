@@ -126,7 +126,9 @@ class AttributeInfo:
                  internal: bool | None,
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  _type: str = "str", description: str = "",
-                 documentation: str | None = None):
+                 documentation: str | None = None,
+                 attribute_type: str = "attribute",
+                 default: bool = True):
         self.name = name
         self.source = source
         self.internal = internal
@@ -134,15 +136,19 @@ class AttributeInfo:
             self.parameters = parameters
         else:
             self.parameters = ParamsUsageMonitor(parameters)
-        self.type = _type
+        self.value_type = _type
         self.description = description
         self._documentation = documentation
+        self.attribute_type = attribute_type
+        self.default = default
 
     name: str
     source: str
     internal: bool | None
     parameters: ParamsUsageMonitor
-    type: str = "str"           # str, int, float, annotatable, or object
+    value_type: str = "str"           # str, int, float, or object
+    default: bool = True
+    attribute_type: str = "attribute"  # attrbute, annotatable or gene_list
     description: str = ""       # interpreted as md
     _documentation: str | None = None
 

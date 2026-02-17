@@ -54,6 +54,8 @@ class AnnotatorBase(Annotator):
                         parameters={},
                         _type=attr_desc.type,
                         description=attr_desc.description,
+                        attribute_type=attr_desc.attribute_type,
+                        default=attr_desc.default,
                     )
                     info.attributes.append(attr)
 
@@ -64,7 +66,8 @@ class AnnotatorBase(Annotator):
                     " is not supported for the annotator"
                     f" {info.type}")
             attr_desc = self.attribute_descriptions[attribute_config.source]
-            attribute_config.type = attr_desc.type
+            attribute_config.value_type = attr_desc.type
+            attribute_config.attribute_type = attr_desc.type
             attribute_config.description = attr_desc.description
             if attribute_config.internal is None:
                 attribute_config.internal = attr_desc.internal

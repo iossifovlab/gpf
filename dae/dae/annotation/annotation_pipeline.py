@@ -112,6 +112,7 @@ class AttributeDesc:
     default: bool = True
     internal: bool = False
     params: dict[str, Any] = field(default_factory=dict)
+    attribute_type: str = "attribute"
 
 
 class Annotator(abc.ABC):
@@ -233,6 +234,14 @@ class AnnotationPipeline:
             context.update(attributes)
 
         return context
+
+    def get_attributes_by_type(
+        self, attribute_type: str,
+    ) -> list[AttributeInfo]:
+        return [
+            attribute_info for attribute_info in self.get_attributes()
+            if attribute_info.attribute_type == attribute_type
+        ]
 
     def batch_annotate(
         self, annotatables: Sequence[Annotatable | None],
@@ -393,13 +402,13 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
             self.input_annotatable_name)
         if att_info is None:
             available_attributes = \
-                ",".join([f"'{att.name}' [{att.type}]"
+                ",".join([f"'{att.name}' [{att.attribute_type}]"
                           for att in self.pipeline.get_attributes()])
             raise ValueError(f"The attribute '{self.input_annotatable_name}' "
                              "has not been defined before its use. The "
                              "available attributes are: "
                              f"{available_attributes}")
-        if att_info.type != "annotatable":
+        if att_info.attribute_type != "annotatable":
             raise ValueError(f"The attribute '{self.input_annotatable_name}' "
                              "is expected to be of type annotatable.")
         self.child._info.documentation += (  # noqa: SLF001
