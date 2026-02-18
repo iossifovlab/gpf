@@ -32,6 +32,7 @@ class AnnotatorBase(Annotator):
         self.attribute_descriptions = {}
         attribute_descriptions = self.get_all_attribute_descriptions()
         for name, attr_desc in attribute_descriptions.items():
+
             if isinstance(attr_desc, tuple):
                 self.attribute_descriptions[name] = AttributeDesc(
                     name=name,

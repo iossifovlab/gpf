@@ -89,7 +89,7 @@ def test_allele_score_annotator_attributes(
     assert len(attributes) == 1
     assert attributes[0].name == "allele_freq"
     assert attributes[0].source == "freq"
-    assert attributes[0].type == "float"
+    assert attributes[0].value_type == "float"
     assert attributes[0].description == ""
 
 

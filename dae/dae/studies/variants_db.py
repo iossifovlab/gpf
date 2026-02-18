@@ -280,7 +280,7 @@ class VariantsDb:
                 "name": attribute.name,
                 "source": attribute.name,
             }
-            if attribute.type == "float":
+            if attribute.value_type == "float":
                 column["format"] = "%.5f"
             result.append(column)
         return result

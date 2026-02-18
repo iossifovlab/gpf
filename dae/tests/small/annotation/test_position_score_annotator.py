@@ -92,7 +92,7 @@ def test_position_score_annotator_all_attributes(
     attribute = annotator.attributes[0]
 
     assert attribute.name == "test100"
-    assert attribute.type == "float"
+    assert attribute.value_type == "float"
     assert attribute.description == "test values"
 
 
@@ -177,7 +177,7 @@ def test_position_annotator_info(
     assert annotator_info.parameters["resource_id"] == "position_score1"
 
     assert attribute_info.name == "test100"
-    assert attribute_info.type == "float"
+    assert attribute_info.value_type == "float"
     assert attribute_info.source == "test100way"
 
     attributes2 = pipeline.get_attributes()
@@ -223,12 +223,12 @@ def test_position_annotator_schema_one_source_two_dest_schema(
 
     assert attributes[0].name == "test100"
     assert attributes[0].source == "test100way"
-    assert attributes[0].type == "float"
+    assert attributes[0].value_type == "float"
     assert attributes[0].description == "test values"
 
     assert attributes[1].name == "test100max"
     assert attributes[1].source == "test100way"
-    assert attributes[1].type == "float"
+    assert attributes[1].value_type == "float"
     assert attributes[1].description == "test values"
 
 

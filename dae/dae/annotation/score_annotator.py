@@ -74,7 +74,7 @@ class GenomicScoreAnnotatorBase(Annotator):
                     f"unknown in '{score.resource.get_id()}' "
                     "resource!")
                 raise ValueError(message)
-            attribute_info.type = score_def.value_type
+            attribute_info.value_type = score_def.value_type
             attribute_info.description = score_def.desc
 
         self.simple_score_queries: list[str] = [
