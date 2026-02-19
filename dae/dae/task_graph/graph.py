@@ -127,8 +127,22 @@ class TaskGraph:
         :param args: Arguments to that function
         :param deps: List of TaskNodes on which the current task depends
         :param input_files: Files that were used to build the graph itself
-        :return TaskNode: The newly created task node in the graph
+        :return Task: The newly created task node ID in the graph
         """
+        task_desc = self.make_task(
+            task_id, func, args=args, kwargs=kwargs,
+            deps=deps, input_files=input_files)
+        return self.add_task(task_desc)
+
+    def make_task(
+        self, task_id: str,
+        func: Callable[..., Any], *,
+        args: Sequence,
+        kwargs: dict[str, Any] | None = None,
+        deps: Sequence[Task] | None = None,
+        input_files: Sequence[str] | None = None,
+    ) -> TaskDesc:
+        """Build a task with the given id and function."""
         if len(task_id) > 200:
             logger.warning("task id is too long %s: %s", len(task_id), task_id)
             logger.warning("truncating task id to 200 symbols")
@@ -149,12 +163,26 @@ class TaskGraph:
         for arg in kwargs.values():
             if isinstance(arg, Task):
                 deps.append(arg)
-        self._add_task(_Task(
+        return TaskDesc(
             task, func, list(args),
             kwargs,
             deps,
-            list(input_files) if input_files is not None else []))
-        return task
+            list(input_files) if input_files is not None else [],
+        )
+
+    def add_task(self, task_desc: TaskDesc) -> Task:
+        """Add a task to the graph."""
+        with self._lock:
+            if task_desc.task in self._tasks:
+                raise ValueError(
+                    f"Task with id='{task_desc.task.task_id}' "
+                    f"already in graph")
+            self._add_task(_Task(
+                task_desc.task, task_desc.func, list(task_desc.args),
+                task_desc.kwargs,
+                task_desc.deps,
+                task_desc.input_files))
+        return task_desc.task
 
     def _collect_task_deps(
         self,
