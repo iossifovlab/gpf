@@ -18,7 +18,7 @@ def test_default_attributes() -> None:
     assert len(info[0].attributes) == 1
     assert info[0].attributes[0].name == "hi"
     assert info[0].attributes[0].source == "hi"
-    assert info[0].attributes[0].type == "str"
+    assert info[0].attributes[0].value_type == "str"
 
     annotation = pipeline.annotate(Position("1", 3))
     assert annotation["hi"] == "hello world"
@@ -43,7 +43,7 @@ def test_default_remapping() -> None:
     assert len(info[0].attributes) == 3
     assert info[0].attributes[1].name == "hi2"
     assert info[0].attributes[1].source == "hi"
-    assert info[0].attributes[1].type == "str"
+    assert info[0].attributes[1].value_type == "str"
 
     annotation = pipeline.annotate(Position("1", 3))
     assert annotation["hi"] == "hello world"
@@ -73,7 +73,7 @@ def test_str_value_trasform() -> None:
     assert info[0].attributes[1].name == "hi_gosho"
     assert info[0].attributes[1].parameters["value_transform"] == \
         "value + ' gosho'"
-    assert info[0].attributes[1].type == "str"
+    assert info[0].attributes[1].value_type == "str"
 
     annotation = pipeline.annotate(Position("1", 3))
     assert annotation["hi"] == "hello world"
