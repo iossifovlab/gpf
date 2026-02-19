@@ -146,7 +146,8 @@ Annotator to identify the effect of the variant on protein coding.
                 "worst_effect_gene_list",
                 "object", "list of genes with worst effect.",
                 internal=True,
-                default=False),
+                default=False,
+                attribute_type="gene_list"),
             "gene_effects": AttributeDesc(
                 "gene_effects",
                 "str", "`<gene_1>:<effect_1>|...` A gene can be repeated.",

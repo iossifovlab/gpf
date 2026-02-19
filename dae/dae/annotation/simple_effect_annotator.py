@@ -68,6 +68,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
                     internal=False,
                     default=False,
                     params={"effect_type": effect, "gene_list": True},
+                    attribute_type="gene_list",
                 )
             gene_lists[f"{effect}_genes"] = AttributeDesc(
                     name=f"{effect}_genes", type="str",
@@ -97,6 +98,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 internal=False,
                 default=False,
                 params={"gene_list": True},
+                attribute_type="gene_list",
             ),
             "gene_list": AttributeDesc(
                 name="gene_list", type="object",
@@ -104,6 +106,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 internal=True,
                 default=True,
                 params={"gene_list": True},
+                attribute_type="gene_list",
             ),
             "genes": AttributeDesc(
                 name="genes", type="str",
