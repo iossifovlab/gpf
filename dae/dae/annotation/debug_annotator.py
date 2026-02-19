@@ -51,7 +51,7 @@ def build_annotator(pipeline: AnnotationPipeline,
             raise ValueError(f"The {info.type} does not provide the source "
                              f"{attribute_info.source}. The only source "
                              "provided is 'hi'")
-        attribute_info.type = "str"
+        attribute_info.value_type = "str"
         attribute_info.description = \
             "The attribute 'hi' has as constant value of 'hello world.'"
     return HelloWorldAnnotator(pipeline, info)
