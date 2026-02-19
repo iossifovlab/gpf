@@ -105,6 +105,7 @@ Annotator to identify the effect of the variant on protein coding.
                     "effect_type": group,
                     "gene_list": True,
                 },
+                attribute_type="gene_list",
             )
             effect_genes[f"{group}_genes"] = AttributeDesc(
                 f"{group}_genes",
@@ -125,6 +126,7 @@ Annotator to identify the effect of the variant on protein coding.
                 "effect_type": "LGDs",
                 "gene_list": True,
             },
+            attribute_type="gene_list",
         )
         return {
             "worst_effect": AttributeDesc(
@@ -171,7 +173,8 @@ Annotator to identify the effect of the variant on protein coding.
                 default=True,
                 params={
                     "gene_list": True,
-                }),
+                },
+                attribute_type="gene_list"),
             "genes": AttributeDesc(
                 "genes",
                 "str", "Comma separated list of all affected genes.",

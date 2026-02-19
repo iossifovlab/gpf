@@ -68,7 +68,7 @@ class AnnotatorBase(Annotator):
                     f" {info.type}")
             attr_desc = self.attribute_descriptions[attribute_config.source]
             attribute_config.value_type = attr_desc.type
-            attribute_config.attribute_type = attr_desc.type
+            attribute_config.attribute_type = attr_desc.attribute_type
             attribute_config.description = attr_desc.description
             if attribute_config.internal is None:
                 attribute_config.internal = attr_desc.internal
