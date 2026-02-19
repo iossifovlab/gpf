@@ -99,38 +99,61 @@ class DaskExecutor(TaskGraphExecutorBase):
             results_queue: list[tuple[Task, Any]],
             results_lock: threading.Lock,
     ) -> None:
-        result_count = 0
-        start = time.time()
+        shutdown_signal = False
+        processed_results = 0
 
         with completed_condition:
             while True:
-                while completed_queue:
-                    item = completed_queue.pop()
-                    if item is None:
+                if shutdown_signal and len(completed_queue) == 0:
+                    break
+
+                if completed_queue:
+                    if len(completed_queue) > 1:
+                        logger.debug(
+                            "results worker processing %s completed tasks",
+                            len(completed_queue))
+
+                    if any(i is None for i in completed_queue):
                         logger.warning(
-                            "results worker received shutdown signal.")
-                        return
-                    future, task = item
-                    logger.debug("processing completed task %s", task.task_id)
+                            "results worker received shutdown signal; ")
+                        shutdown_signal = True
+                        completed_queue = [
+                            i for i in completed_queue if i is not None]
+                    if not completed_queue:
+                        continue
 
-                    try:
-                        result = future.result()
-                    except Exception as ex:  # noqa: BLE001
-                        # pylint: disable=broad-except
-                        result = ex
-                    result_count += 1
-                    elapsed = time.time() - start
-                    if result_count % 100 == 0:
-                        logger.info(
-                            "processed %s results in %.2f seconds "
-                            "(%.2f results/s)",
-                            result_count, elapsed,
-                            result_count / elapsed)
+                    futures, tasks = zip(*completed_queue, strict=True)
+                    completed_queue.clear()
 
-                    with results_lock:
-                        results_queue.append((task, result))
-                    completed_condition.wait(timeout=0.2)
-                completed_condition.wait()
+                    results = self._dask_client.gather(futures, errors="skip")
+
+                    if len(results) == len(tasks):
+                        with results_lock:
+                            results_queue.extend(
+                                zip(tasks, results, strict=True))
+                        processed_results += len(results)
+                        for future in futures:
+                            future.release()
+
+                    else:
+                        logger.error(
+                            "failed to gather results for all %s tasks; "
+                            "looking for exceptions in futures...",
+                            len(tasks))
+                        for future, task in zip(futures, tasks, strict=True):
+                            try:
+                                result = future.result()
+                            except Exception as ex:  # noqa: BLE001
+                                # pylint: disable=broad-except
+                                result = ex
+                            with results_lock:
+                                results_queue.append((task, result))
+                            future.release()
+                            processed_results += 1
+
+                completed_condition.wait(timeout=0.05)
+
+        logger.info("results worker processed %s results", processed_results)
 
     def _execute(
         self, graph: TaskGraph,
@@ -214,14 +237,16 @@ class DaskExecutor(TaskGraphExecutorBase):
                     yield task, result
 
             is_done = graph.empty()
-            with results_lock:
-                is_done = is_done and not results_queue
-            with submit_condition:
-                is_done = is_done and not submit_queue
-            with running_lock:
-                is_done = is_done and not running
-            with completed_condition:
-                is_done = is_done and not completed_queue
+            if is_done:
+                for _ in range(3):
+                    with submit_condition:
+                        is_done = is_done and not submit_queue
+                    with running_lock:
+                        is_done = is_done and not running
+                    with results_lock:
+                        is_done = is_done and not results_queue
+                    with completed_condition:
+                        is_done = is_done and not completed_queue
 
         with submit_condition:
             submit_queue.append(None)
