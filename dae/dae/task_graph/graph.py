@@ -114,32 +114,32 @@ def _reconfigure_task_deps(
     return args, kwargs, deps
 
 
+def _chain_func(task1: TaskDesc, task2: TaskDesc) -> Any:
+    res = task1.func(*task1.args, **task1.kwargs)
+    if task2.deps:
+        args, kwargs, deps = _reconfigure_task_deps(task2, task1.task, res)
+        task2 = TaskDesc(
+            task=task2.task,
+            func=task2.func,
+            args=args,
+            kwargs=kwargs,
+            deps=deps,
+            input_files=task2.input_files,
+        )
+    return task2.func(*task2.args, **task2.kwargs)
+
+
 def _chain_2_tasks(task1: TaskDesc, task2: TaskDesc) -> TaskDesc:
     """Chain tasks together so that they execute sequentially."""
     if task2.deps:
         if len(task2.deps) > 1:
             raise ValueError("task2 should have at most one dependency")
-        if task2.deps[0] != task1.task:
+        if len(task2.deps) == 1 and task2.deps[0] != task1.task:
             raise ValueError("task2 should depend on task1")
 
-    def func(task1: TaskDesc, task2: TaskDesc) -> Any:
-        res = task1.func(*task1.args, **task1.kwargs)
-        if task2.deps:
-
-            args, kwargs, deps = _reconfigure_task_deps(task2, task1.task, res)
-            task2 = TaskDesc(
-                task=task2.task,
-                func=task2.func,
-                args=args,
-                kwargs=kwargs,
-                deps=deps,
-                input_files=task2.input_files,
-            )
-        return task2.func(*task2.args, **task2.kwargs)
-
     return TaskDesc(
-        task=Task(f"{task1.task.task_id}_then_{task2.task.task_id}"),
-        func=func,
+        task=task2.task,
+        func=_chain_func,
         args=[task1, task2],
         kwargs={},
         deps=task1.deps,
@@ -147,10 +147,11 @@ def _chain_2_tasks(task1: TaskDesc, task2: TaskDesc) -> TaskDesc:
     )
 
 
-def chain_tasks(*tasks: TaskDesc) -> TaskDesc | None:
+def chain_tasks(*tasks: TaskDesc) -> TaskDesc:
     """Chain tasks together so that they execute sequentially."""
     if not tasks:
-        return None
+        raise ValueError("At least one task should be provided")
+
     result = tasks[0]
     for task in tasks[1:]:
         result = _chain_2_tasks(result, task)
@@ -203,8 +204,9 @@ class TaskGraph:
             deps=deps, input_files=input_files)
         return self.add_task(task_desc)
 
+    @staticmethod
     def make_task(
-        self, task_id: str,
+        task_id: str,
         func: Callable[..., Any], *,
         args: Sequence,
         kwargs: dict[str, Any] | None = None,
@@ -218,9 +220,6 @@ class TaskGraph:
             task_id = task_id[:200]
 
         task = Task(task_id)
-        with self._lock:
-            if task in self._tasks:
-                raise ValueError(f"Task with id='{task_id}' already in graph")
 
         # tasks that use the output of other tasks as input should
         # have those other tasks as dependancies
@@ -252,6 +251,22 @@ class TaskGraph:
                 task_desc.deps,
                 task_desc.input_files))
         return task_desc.task
+
+    def add_tasks(self, task_descs: Sequence[TaskDesc]) -> list[Task]:
+        """Add multiple tasks to the graph."""
+        with self._lock:
+            for task_desc in task_descs:
+                if task_desc.task in self._tasks:
+                    raise ValueError(
+                        f"Task with id='{task_desc.task.task_id}' "
+                        f"already in graph")
+            for task_desc in task_descs:
+                self._add_task(_Task(
+                    task_desc.task, task_desc.func, list(task_desc.args),
+                    task_desc.kwargs,
+                    task_desc.deps,
+                    task_desc.input_files))
+        return [task_desc.task for task_desc in task_descs]
 
     def _collect_task_deps(
         self,
