@@ -88,6 +88,75 @@ def sync_tasks() -> None:
     return None
 
 
+def _reconfigure_task_deps(
+    task: _Task | TaskDesc,
+    completed_task_id: Task,
+    completed_result: Any,
+) -> tuple[list[Any], dict[str, Any], list[Task]]:
+    args = []
+    for arg in task.args:
+        if isinstance(arg, Task) and arg == completed_task_id:
+            arg = completed_result
+        args.append(arg)
+
+    kwargs = {}
+    for key, value in task.kwargs.items():
+        if isinstance(value, Task) and value == completed_task_id:
+            value = completed_result
+        kwargs[key] = value
+
+    deps = []
+    for dep in task.deps:
+        if dep == completed_task_id:
+            continue
+        deps.append(dep)
+
+    return args, kwargs, deps
+
+
+def _chain_2_tasks(task1: TaskDesc, task2: TaskDesc) -> TaskDesc:
+    """Chain tasks together so that they execute sequentially."""
+    if task2.deps:
+        if len(task2.deps) > 1:
+            raise ValueError("task2 should have at most one dependency")
+        if task2.deps[0] != task1.task:
+            raise ValueError("task2 should depend on task1")
+
+    def func(task1: TaskDesc, task2: TaskDesc) -> Any:
+        res = task1.func(*task1.args, **task1.kwargs)
+        if task2.deps:
+
+            args, kwargs, deps = _reconfigure_task_deps(task2, task1.task, res)
+            task2 = TaskDesc(
+                task=task2.task,
+                func=task2.func,
+                args=args,
+                kwargs=kwargs,
+                deps=deps,
+                input_files=task2.input_files,
+            )
+        return task2.func(*task2.args, **task2.kwargs)
+
+    return TaskDesc(
+        task=Task(f"{task1.task.task_id}_then_{task2.task.task_id}"),
+        func=func,
+        args=[task1, task2],
+        kwargs={},
+        deps=task1.deps,
+        input_files=task1.input_files + task2.input_files,
+    )
+
+
+def chain_tasks(*tasks: TaskDesc) -> TaskDesc | None:
+    """Chain tasks together so that they execute sequentially."""
+    if not tasks:
+        return None
+    result = tasks[0]
+    for task in tasks[1:]:
+        result = _chain_2_tasks(result, task)
+    return result
+
+
 class TaskGraph:
     """An object representing a graph of tasks."""
 
@@ -155,18 +224,18 @@ class TaskGraph:
 
         # tasks that use the output of other tasks as input should
         # have those other tasks as dependancies
-        deps = list(deps) if deps is not None else []
+        task_deps = set(deps) if deps is not None else set()
         kwargs = kwargs if kwargs is not None else {}
         for arg in args:
             if isinstance(arg, Task):
-                deps.append(arg)
+                task_deps.add(arg)
         for arg in kwargs.values():
             if isinstance(arg, Task):
-                deps.append(arg)
+                task_deps.add(arg)
         return TaskDesc(
             task, func, list(args),
             kwargs,
-            deps,
+            list(task_deps),
             list(input_files) if input_files is not None else [],
         )
 
@@ -260,26 +329,6 @@ class TaskGraph:
             del self._tasks[dep_id]
             self._prune_dependants(dep_id)
 
-    def _reconfigure_task_deps(
-        self, task: _Task,
-        completed_task_id: Task,
-        completed_result: Any,
-    ) -> None:
-        args = []
-        for arg in task.args:
-            if isinstance(arg, Task) and arg == completed_task_id:
-                arg = completed_result
-            args.append(arg)
-
-        deps = []
-        for dep in task.deps:
-            if dep == completed_task_id:
-                continue
-            deps.append(dep)
-
-        task.args = args
-        task.deps = deps
-
     def process_completed_tasks(
         self, task_result: Sequence[tuple[Task, Any]],
     ) -> None:
@@ -300,8 +349,12 @@ class TaskGraph:
                     if dep_id not in self._tasks:
                         continue
                     dep_task = self._tasks[dep_id]
-                    self._reconfigure_task_deps(
+                    args, kwargs, deps = _reconfigure_task_deps(
                         dep_task, task_id, result)
+                    dep_task.args = args
+                    dep_task.kwargs = kwargs
+                    dep_task.deps = deps
+
                     self._tasks[dep_id] = dep_task
                 if task_id in self._task_dependants:
                     del self._task_dependants[task_id]
