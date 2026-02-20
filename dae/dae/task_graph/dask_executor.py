@@ -155,6 +155,8 @@ class DaskExecutor(TaskGraphExecutorBase):
 
         logger.info("results worker processed %s results", processed_results)
 
+    MAX_SUBMIT_TASKS = 500
+
     def _execute(
         self, graph: TaskGraph,
     ) -> Iterator[tuple[Task, Any]]:
@@ -196,7 +198,8 @@ class DaskExecutor(TaskGraphExecutorBase):
 
         while not is_done:
 
-            ready_tasks = graph.extract_tasks(graph.ready_tasks())
+            ready_tasks = graph.extract_tasks(
+                graph.ready_tasks(limit=self.MAX_SUBMIT_TASKS))
             with submit_condition:
                 if ready_tasks:
                     submit_queue.extend(ready_tasks)

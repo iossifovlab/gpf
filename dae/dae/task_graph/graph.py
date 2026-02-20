@@ -279,7 +279,7 @@ class TaskGraph:
                 dep_task = self._tasks[dep]
                 self._collect_task_deps(dep_task, task_set)
 
-    def ready_tasks(self) -> Sequence[Task]:
+    def ready_tasks(self, limit: int = 0) -> Sequence[Task]:
         """Return tasks which have no dependencies."""
         result = []
         with self._lock:
@@ -287,6 +287,8 @@ class TaskGraph:
                 if t.deps:
                     break
                 result.append(t.task)
+                if limit and len(result) >= limit:
+                    break
         return result
 
     def get_task_desc(self, task: Task) -> TaskDesc:
