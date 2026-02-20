@@ -83,80 +83,24 @@
         // const logger = null //new duckdb.ConsoleLogger();
         const logger = new duckdb.ConsoleLogger();
         const db = new duckdb.AsyncDuckDB(logger, worker);
+        db.config.path = `${window.location.origin}/.CONTENTS.duckdb`
         await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+        await db.open({path: `${window.location.origin}/.CONTENTS.duckdb`, accessMode: duckdb.DuckDBAccessMode.READ_ONLY});
         URL.revokeObjectURL(worker_url);
         window._db = db;
         return db;
       };
     </script>
     <script type="module">
-        import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.1-dev106.0/+esm";
+        //import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.1-dev106.0/+esm";
+        import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.33.1-dev18.0/+esm";
         window.duckdbduckdbWasm = duckdbduckdbWasm;
         const db = await getDb();
 
-        const conn = await db.connect()
+        const conn = await db.connect();
         await conn.query("INSTALL fts; LOAD fts;")
+        //await conn.query(`ATTACH '${window.location.origin}/.CONTENTS.duckdb' (READ_ONLY);`)
 
-        let hasDescriptions = false;
-        let hasSummaries = false;
-        let hasLabels = false;
-
-        try {
-            await conn.query(`SELECT config.meta.description FROM read_json_auto('${window.location.origin}/.CONTENTS.json') LIMIT 1;`)
-            hasDescriptions = true;
-        }
-        catch (e) {
-            console.warn("No descriptions found in contents")
-        }
-
-        try {
-            await conn.query(`SELECT config.meta.summary FROM read_json_auto('${window.location.origin}/.CONTENTS.json') LIMIT 1;`)
-            hasSummaries = true;
-        }
-        catch (e) {
-            console.warn("No summaries found in contents")
-        }
-
-        try {
-            await conn.query(`SELECT unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json') LIMIT 1;`)
-            hasLabels = true;
-        }
-        catch (e) {
-            console.warn("No labels found in contents")
-        }
-
-        console.log(`Has labels: ${hasLabels}, has summaries: ${hasSummaries}`)
-
-        const columns = ["id"]
-
-        if (hasDescriptions) {
-            columns.push("config.meta.description AS description")
-        }
-
-        if (hasSummaries) {
-            columns.push("config.meta.summary AS summary")
-        }
-
-        if (hasLabels) {
-             columns.push("unnest(config.meta.labels)")
-        }
-
-        await conn.query(`CREATE OR REPLACE TABLE contents AS SELECT ${columns.join(", ")} FROM read_json_auto('${window.location.origin}/.CONTENTS.json');`);
-
-        const fts_cols = ["id"]
-        if (hasDescriptions) {
-            fts_cols.push("description")
-        }
-        if (hasSummaries) {
-            fts_cols.push("summary")
-        }
-        if (hasLabels) {
-            const label_cols = (await conn.query(`DESCRIBE (SELECT unnest(config.meta.labels) FROM read_json_auto('${window.location.origin}/.CONTENTS.json'))`)).toArray().map((row) => row.toJSON().column_name);
-             fts_cols.push(...label_cols)
-        }
-
-        const fts_cols_str = fts_cols.map((val) => {return `"${val}"`}).join(", ")
-        await conn.query(`PRAGMA create_fts_index("contents", "id", ${fts_cols_str}, stemmer='none', ignore='(\\.|[^a-z0-9])+');`)
         window.duckdbConn = conn;
 
         const all_ids_result = await conn.query("SELECT id FROM contents;")
@@ -174,7 +118,7 @@
             const result = {}
             const addQueries = (read_node, out_node) => {
                 if (typeof read_node === "string") {
-                    out_node.query = `SELECT id, description, fts_main_contents.match_bm25(id, '${read_node}') AS score FROM contents WHERE score IS NOT NULL ORDER BY score desc;`
+                    out_node.query = `SELECT id, description, fts_main_contents.match_bm25(id, '${read_node}') AS imprecise_score, fts_main_contents_first.match_bm25(id, '${read_node}') as precise_score, (fts_main_contents.match_bm25(id, '${read_node}') + fts_main_contents_first.match_bm25(id, '${read_node}')) as score FROM contents WHERE imprecise_score IS NOT NULL ORDER BY imprecise_score desc;`
                 }
                 else if (read_node.and) {
                     out_node.and = [{}, {}]
@@ -199,15 +143,37 @@
 
             const ids = new Set();
 
+            const filterBySum = ((results) => {
+                const lower = Math.min(...results.map((row) => row.score));
+                const upper = Math.max(...results.map((row) => row.score));
+                const threshold = lower + (0.75 * (upper - lower));
+                return results.filter((row) => {
+                    return row.score >= threshold
+                })
+            })
+
+            const filterByPrecise = ((results) => {
+                const imprecise_lower = Math.min(...results.map((row) => row.imprecise_score));
+                const imprecise_upper = Math.max(...results.map((row) => row.imprecise_score));
+                const imprecise_threshold = imprecise_lower + (0.75 * (imprecise_upper - imprecise_lower));
+                const precise_lower = Math.min(...results.map((row) => row.precise_score));
+                const precise_upper = Math.max(...results.map((row) => row.precise_score));
+                const precise_threshold = precise_lower + (0.75 * (precise_upper - precise_lower));
+                return results.filter((row) => {
+                    let score = row.precise_score;
+                    let threshold = precise_threshold;
+                    if (score === null) {
+                        score = row.imprecise_score;
+                        threshold = imprecise_threshold;
+                    }
+                    return score >= threshold
+                })
+            })
+
             const executeQuery = (async (node, collected_ids) => {
                 if (node.query) {
                     const result = (await conn.query(node.query)).toArray().map((row) => row.toJSON());
-                    const lower = Math.min(...result.map((row) => row.score));
-                    const upper = Math.max(...result.map((row) => row.score));
-                    const threshold = lower + (0.75 * (upper - lower));
-                    const filtered = result.filter((row) => {
-                        return row.score >= threshold
-                    })
+                    const filtered = filterBySum(result);
                     console.log(filtered)
                     const query_ids = new Set(filtered.map((row) => row.id));
                     return query_ids;

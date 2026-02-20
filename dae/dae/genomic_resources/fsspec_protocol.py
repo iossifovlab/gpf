@@ -705,6 +705,9 @@ class FsspecReadWriteProtocol(
 
         return content
 
+    def get_content_file_path(self) -> str:
+        return os.path.join(self.url, GR_CONTENTS_FILE_NAME[:-3])
+
     def build_index_info(self, repository_template: jinja2.Template) -> dict:
         """Build info dict for the repository."""
         result = {}

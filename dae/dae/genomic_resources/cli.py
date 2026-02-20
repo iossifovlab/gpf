@@ -10,13 +10,18 @@ from collections.abc import Sequence
 from typing import Any, cast
 from urllib.parse import urlparse
 
+import duckdb
 import yaml
 from cerberus.schema import SchemaError
 from jinja2 import Template
 
 from dae import __version__  # type: ignore
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.fsspec_protocol import (
+    FsspecReadWriteProtocol,
+    FsspecRepositoryProtocol,
+    build_fsspec_protocol,
+)
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -197,7 +202,9 @@ def _run_repo_init_command(**kwargs: str) -> None:
         cwd = pathlib.Path(repository).absolute()
 
     proto = _create_proto(str(cwd))
-    proto.build_content_file()
+    assert isinstance(proto, FsspecRepositoryProtocol)
+
+    _create_contents_file(proto)
 
 
 def _configure_repo_manifest_subparser(
@@ -432,10 +439,86 @@ def _run_repo_manifest_command_internal(
             use_dvc=use_dvc,
         )
 
-    if not dry_run:
-        proto.build_content_file()
+    if dry_run:
+        return updates_needed
+
+    assert isinstance(proto, FsspecReadWriteProtocol)
+    _create_contents_file(proto)
 
     return updates_needed
+
+
+def _create_contents_file(proto: FsspecReadWriteProtocol) -> None:
+    contents = proto.build_content_file()
+
+    has_description = False
+    has_summary = False
+    has_labels = False
+    for res_info in contents:
+        if "meta" not in res_info["config"]:
+            continue
+        res_meta = res_info["config"]["meta"]
+        if "description" in res_meta:
+            has_description = True
+        if "summary" in res_meta:
+            has_summary = True
+        if res_meta.get("labels"):
+            has_labels = True
+
+    table_columns = ["id"]
+    fts_columns = ["id"]
+    if has_description:
+        table_columns.append(
+            "config.meta.description AS description")
+        fts_columns.append("description")
+    if has_summary:
+        table_columns.append(
+            "config.meta.summary AS summary")
+        fts_columns.append("summary")
+
+    if has_labels:
+        table_columns.append(
+            "unnest(config.meta.labels)")
+
+    duckdb.register_filesystem(proto.filesystem)
+
+    db_filepath = os.path.join(proto.url, ".CONTENTS.duckdb")
+
+    with duckdb.connect(db_filepath) as conn:
+        conn.query("INSTALL fts")
+        conn.query("LOAD fts")
+        conn.query(
+            "CREATE OR REPLACE TABLE contents_first AS "  # noqa: S608
+            f"SELECT {', '.join(table_columns)} "
+            f"FROM read_json_auto('{proto.get_content_file_path()}');",
+        )
+        conn.query("DROP TABLE IF EXISTS contents;")
+        if has_labels:
+            result = conn.query(
+                "DESCRIBE (SELECT unnest(config.meta.labels) "  # noqa: S608
+                "FROM read_json_auto("
+                f"'{proto.get_content_file_path()}'));",
+            )
+            fts_columns.extend([r[0] for r in result.fetchall()])
+
+        conn.query("PRAGMA drop_fts_index(contents_first)")
+        conn.query(
+            "PRAGMA create_fts_index("
+            "contents_first, "
+            "id, "
+            f"{', '.join(fts_columns)})",
+        )
+
+        conn.query("CREATE TABLE contents AS SELECT * FROM contents_first;")
+
+        conn.query("PRAGMA drop_fts_index(contents)")
+        conn.query(
+            "PRAGMA create_fts_index("
+            "contents, "
+            "id, "
+            f"{', '.join(fts_columns)}, "
+            "stemmer='none', ignore='(\\\\.|[^a-z0-9])+');",
+        )
 
 
 def _run_repo_manifest_command(
@@ -648,7 +731,6 @@ def _run_repo_stats_command(
         TaskGraphCli.process_graph(
             graph, task_progress_mode=False, **modified_kwargs)
 
-    proto.build_content_file()
     return 0
 
 
