@@ -279,7 +279,7 @@ class BaseQueryBuilder(ABC):
                 continue
             assert attr_name in self.variants_columns
             assert (
-                self.variants_columns[attr_name].type in ("float", "int")
+                self.variants_columns[attr_name].value_type in ("float", "int")
             ), self.variants_columns[attr_name]
             left, right = attr_range
             attr_name = self.where_accessors[attr_name]
