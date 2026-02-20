@@ -91,7 +91,7 @@ def collect_summary_schema(impala_variants: ImpalaVariants) -> dict[str, str]:
         field_name = attr_info.name
         if field_name in family_fields:
             continue
-        field_type = attr_info.type
+        field_type = attr_info.value_type
         schema[field_name] = type_map[field_type]
 
     schema["seen_in_status"] = "tinyint"
