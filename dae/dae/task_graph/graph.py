@@ -297,6 +297,11 @@ class TaskGraph:
             task_node = self._tasks[task]
             return TaskDesc._from_task_node(task_node)  # noqa: SLF001
 
+    def has_task(self, task: Task) -> bool:
+        """Check if the graph contains a task."""
+        with self._lock:
+            return task in self._tasks
+
     def extract_tasks(
             self, selected_tasks: Sequence[Task],
     ) -> Sequence[TaskDesc]:

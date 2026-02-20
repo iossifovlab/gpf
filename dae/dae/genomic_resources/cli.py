@@ -42,7 +42,7 @@ from dae.genomic_resources.resource_implementation import (
     ResourceStatistics,
 )
 from dae.task_graph.cli_tools import TaskGraphCli
-from dae.task_graph.graph import TaskGraph
+from dae.task_graph.graph import Task, TaskGraph, chain_tasks
 from dae.utils import fs_utils
 from dae.utils.fs_utils import (
     find_directory_with_a_file,
@@ -548,15 +548,22 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
     region_size: int,
 ) -> None:
 
-    tasks = impl.add_statistics_build_tasks(
-        graph, region_size=region_size, grr=grr)
+    tasks = impl.create_statistics_build_tasks(
+        region_size=region_size, grr=grr)
 
-    graph.create_task(
+    last_task: list[Task] = [tasks[-1].task] if len(tasks) > 0 else []
+    manifest_task = graph.make_task(
         f"{impl.resource.get_full_id()}_stats_hash_and_manifest_rebuild",
         _do_resource_stats_hash_and_manifest,
         args=[proto, impl.resource, dry_run, force, use_dvc],
-        deps=tasks,
+        deps=last_task,
     )
+    if len(tasks) == 1:
+        merged_task = chain_tasks(tasks[0], manifest_task)
+        graph.add_task(merged_task)
+    else:
+        graph.add_tasks(tasks)
+        graph.add_task(manifest_task)
 
 
 def _stats_need_rebuild(

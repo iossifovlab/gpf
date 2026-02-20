@@ -55,8 +55,9 @@ chr19  HAVANA  UTR          408362  408401  .  -  .  gene_id||"ENSG00000183186.7
     assert gene_models_impl is not None
 
     graph = TaskGraph()
-    tasks = gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
     assert len(tasks) == 1
+    graph.add_tasks(tasks)
 
     task_graph_run(graph)
     assert gene_models_impl.get_statistics() is not None
@@ -114,8 +115,9 @@ def test_gene_models_impl_statistics_calculation() -> None:
     gene_models_impl = GeneModelsImpl(res)
 
     graph = TaskGraph()
-    tasks = gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
     assert len(tasks) == 1
+    graph.add_tasks(tasks)
 
     task_graph_run(graph)
     stats = gene_models_impl.get_statistics()
@@ -228,7 +230,8 @@ def test_gene_models_impl_get_info() -> None:
 
     # Build statistics first
     graph = TaskGraph()
-    gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
+    graph.add_tasks(tasks)
     task_graph_run(graph)
 
     info = gene_models_impl.get_info()
@@ -250,7 +253,8 @@ def test_gene_models_impl_get_statistics_info() -> None:
 
     # Build statistics first
     graph = TaskGraph()
-    gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
+    graph.add_tasks(tasks)
     task_graph_run(graph)
 
     stats_info = gene_models_impl.get_statistics_info()
@@ -323,7 +327,8 @@ def test_gene_models_impl_statistics_caching() -> None:
 
     # Build statistics
     graph = TaskGraph()
-    gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
+    graph.add_tasks(tasks)
     task_graph_run(graph)
 
     # First call
@@ -368,7 +373,8 @@ LINC2     tx2  2     -      200     300   300      300    1         200        3
     gene_models_impl = GeneModelsImpl(res)
 
     graph = TaskGraph()
-    gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
+    graph.add_tasks(tasks)
     task_graph_run(graph)
 
     stats = gene_models_impl.get_statistics()
@@ -395,7 +401,8 @@ def test_gene_models_impl_empty_gene_models() -> None:
     gene_models_impl = GeneModelsImpl(res)
 
     graph = TaskGraph()
-    gene_models_impl.add_statistics_build_tasks(graph)
+    tasks = gene_models_impl.create_statistics_build_tasks()
+    graph.add_tasks(tasks)
     task_graph_run(graph)
 
     stats = gene_models_impl.get_statistics()

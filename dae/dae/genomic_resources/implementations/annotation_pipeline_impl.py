@@ -14,7 +14,7 @@ from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class AnnotationPipelineImplementation(
     def calc_info_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(
-            self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
+    def create_statistics_build_tasks(
+            self, **kwargs: Any,  # noqa: ARG002
+    ) -> list[TaskDesc]:
         return []

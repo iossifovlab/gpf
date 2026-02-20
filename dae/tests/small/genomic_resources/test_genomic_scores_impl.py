@@ -214,27 +214,26 @@ def test_add_statistics_build_tasks_creates_min_max_tasks() -> None:
     })
 
     impl = build_score_implementation_from_resource(res)
-    graph = TaskGraph()
 
-    tasks = impl.add_statistics_build_tasks(graph, region_size=10)
+    tasks = impl.create_statistics_build_tasks(region_size=10)
 
-    assert len(tasks) == 1
-    save_task = graph.get_task_desc(tasks[0])
+    assert len(tasks) == 6
+    save_task = tasks[-1]
     assert save_task.func is \
         GenomicScoreImplementation._merge_and_save_histograms
 
-    task_ids = {task.task_id for task in graph.tasks}
+    task_ids = {t.task.task_id for t in tasks}
     assert any("calculate_min_max" in task_id for task_id in task_ids)
     merge_task = next(
-        task for task in graph.tasks if task.task_id.endswith("_merge_min_max")
+        t for t in tasks if t.task.task_id.endswith("_merge_min_max")
     )
     calc_task = next(
-        task
-        for task in graph.tasks
-        if task.task_id.startswith("_calculate_histogram")
+        t
+        for t in tasks
+        if t.task.task_id.startswith("_calculate_histogram")
     )
-    calc_task_desc = graph.get_task_desc(calc_task)
-    assert merge_task in calc_task_desc.deps
+
+    assert merge_task.task in calc_task.deps
 
 
 def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
@@ -262,19 +261,17 @@ def test_add_statistics_tasks_skip_min_max_when_hist_has_range() -> None:
     })
 
     impl = build_score_implementation_from_resource(res)
-    graph = TaskGraph()
 
-    impl.add_statistics_build_tasks(graph, region_size=10)
+    tasks = impl.create_statistics_build_tasks(region_size=10)
 
-    task_ids = {task.task_id for task in graph.tasks}
+    task_ids = {t.task.task_id for t in tasks}
     assert not any("merge_min_max" in task_id for task_id in task_ids)
     calc_task = next(
-        task
-        for task in graph.tasks
-        if task.task_id.startswith("_calculate_histogram")
+        t
+        for t in tasks
+        if t.task.task_id.startswith("_calculate_histogram")
     )
-    calc_task_desc = graph.get_task_desc(calc_task)
-    assert not calc_task_desc.deps
+    assert not calc_task.deps
 
 
 def test_add_min_max_tasks_builds_graph() -> None:
@@ -297,15 +294,13 @@ def test_add_min_max_tasks_builds_graph() -> None:
     })
 
     impl = build_score_implementation_from_resource(res)
-    graph = TaskGraph()
 
-    calc_tasks = impl.add_statistics_build_tasks(
-        graph,
+    calc_tasks = impl.create_statistics_build_tasks(
         region_size=10,
     )
 
-    assert len(calc_tasks) == 1
-    calculate_task = graph.get_task_desc(calc_tasks[0])
+    assert len(calc_tasks) == 4
+    calculate_task = calc_tasks[-1]
     assert calculate_task.func is \
         GenomicScoreImplementation._merge_and_save_histograms
 
@@ -330,15 +325,13 @@ def test_add_histogram_tasks_skip_null_histograms_and_link_minmax() -> None:
     })
 
     impl = build_score_implementation_from_resource(res)
-    graph = TaskGraph()
 
-    calc_tasks = impl.add_statistics_build_tasks(
-        graph,
+    calc_tasks = impl.create_statistics_build_tasks(
         region_size=10,
     )
 
-    assert len(calc_tasks) == 1
-    calculate_task = graph.get_task_desc(calc_tasks[0])
+    assert len(calc_tasks) == 4
+    calculate_task = calc_tasks[-1]
     assert calculate_task.func is \
         GenomicScoreImplementation._merge_and_save_histograms
 
@@ -601,11 +594,11 @@ def test_statistics_with_vcf_allele_score(
     impl = build_score_implementation_from_resource(vcf_allele_score_resource)
     graph = TaskGraph()
 
-    impl.add_statistics_build_tasks(graph, region_size=30_000_000)
+    tasks = impl.create_statistics_build_tasks(region_size=30_000_000)
 
-    task_ids = {task.task_id for task in graph.tasks}
+    task_ids = {t.task.task_id for t in tasks}
     assert any("calculate_min_max" in task_id for task_id in task_ids)
-
+    graph.add_tasks(tasks)
     task_graph_run(graph, executor)
 
 
@@ -623,9 +616,10 @@ def test_statistics_with_vcf_allele_score_30_000_000(
     impl = build_score_implementation_from_resource(vcf_allele_score_resource)
     graph = TaskGraph()
 
-    impl.add_statistics_build_tasks(graph, region_size=30_000_000)
+    tasks = impl.create_statistics_build_tasks(region_size=30_000_000)
 
-    task_ids = {task.task_id for task in graph.tasks}
+    task_ids = {t.task.task_id for t in tasks}
     assert any("calculate_min_max" in task_id for task_id in task_ids)
 
+    graph.add_tasks(tasks)
     task_graph_run(graph, executor)

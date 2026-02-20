@@ -15,7 +15,7 @@ from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ class EnrichmentBackgroundResourceImplementation(
         res.add(self.resource.get_config()["filename"])
         return res
 
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
+    def create_statistics_build_tasks(
+        self, **kwargs: Any,  # noqa: ARG002
+    ) -> list[TaskDesc]:
         return []
 
     def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002

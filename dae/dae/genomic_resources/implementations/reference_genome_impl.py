@@ -21,7 +21,7 @@ from dae.genomic_resources.resource_implementation import (
     ResourceStatistics,
 )
 from dae.genomic_resources.statistics.base_statistic import Statistic
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc, TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -475,9 +475,9 @@ class ReferenceGenomeImplementation(
             "score_file": manifest[genome_filename].md5,
         }, sort_keys=True, indent=2).encode()
 
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,
-    ) -> list[Task]:
+    def create_statistics_build_tasks(
+        self, **kwargs: Any,
+    ) -> list[TaskDesc]:
         tasks = []
         chrom_save_tasks = []
         region_size = kwargs.get("region_size", 3_000_000_000)
@@ -486,22 +486,29 @@ class ReferenceGenomeImplementation(
 
         with self.reference_genome.open():
             for chrom in self.reference_genome.chromosomes:
-                _, _, chrom_save_task = self._add_chrom_stats_tasks(
-                    task_graph, chrom, region_size,
+                chrom_tasks, chrom_save_task = self._create_chrom_stats_tasks(
+                    chrom, region_size,
                 )
-                chrom_save_tasks.append(chrom_save_task)
-        tasks.extend(chrom_save_tasks)
-        tasks.append(self._add_global_stat_task(task_graph, chrom_save_tasks))
+                chrom_save_tasks.append(chrom_save_task.task)
+                tasks.extend(chrom_tasks)
+
+        global_task = TaskGraph.make_task(
+            f"{self.resource.resource_id}_global_statistics",
+            ReferenceGenomeImplementation._do_global_statistic,
+            args=[self.resource, *chrom_save_tasks],
+            deps=[],
+        )
+        tasks.append(global_task)
 
         return tasks
 
-    def _add_chrom_stats_tasks(
-        self, task_graph: TaskGraph, chrom: str, region_size: int,
-    ) -> tuple[list[Task], Task, Task]:
-        chrom_tasks = []
+    def _create_chrom_stats_tasks(
+        self, chrom: str, region_size: int,
+    ) -> tuple[list[TaskDesc], TaskDesc]:
+        tasks = []
         regions = self.reference_genome.split_into_regions(region_size, chrom)
-        chrom_tasks = [
-            task_graph.create_task(
+        tasks = [
+            TaskGraph.make_task(
                 f"{self.resource.resource_id}_count_nucleotides_"
                 f"{reg}",
                 ReferenceGenomeImplementation._do_chrom_statistic,
@@ -511,30 +518,22 @@ class ReferenceGenomeImplementation(
             for reg in regions
         ]
 
-        merge_task = task_graph.create_task(
+        merge_task = TaskGraph.make_task(
             f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._merge_chrom_statistics,
-            args=[*chrom_tasks],
+            args=[t.task for t in tasks],
             deps=[],
         )
-        save_task = task_graph.create_task(
+        tasks.append(merge_task)
+        save_task = TaskGraph.make_task(
             f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._save_chrom_statistic,
-            args=[self.resource, chrom, merge_task],
+            args=[self.resource, chrom, merge_task.task],
             deps=[],
         )
+        tasks.append(save_task)
 
-        return chrom_tasks, merge_task, save_task
-
-    def _add_global_stat_task(
-        self, task_graph: TaskGraph, chrom_stats_save_tasks: list[Task],
-    ) -> Task:
-        return task_graph.create_task(
-            f"{self.resource.resource_id}_save_chrom_statistics",
-            ReferenceGenomeImplementation._do_global_statistic,
-            args=[self.resource, *chrom_stats_save_tasks],
-            deps=[],
-        )
+        return tasks, save_task
 
     @staticmethod
     def _do_chrom_statistic(

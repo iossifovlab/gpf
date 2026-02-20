@@ -184,8 +184,10 @@ def test_cnv_collection_implementation(
 ) -> None:
     assert cnvs_impl is not None
     task_graph = TaskGraph()
-    tasks = cnvs_impl.add_statistics_build_tasks(task_graph)
-    assert len(tasks) == 1
+    tasks = cnvs_impl.create_statistics_build_tasks()
+    assert len(tasks) == 4
+    task_graph.add_tasks(tasks)
+
     executor = SequentialExecutor()
     task_graph_run(task_graph, executor)
 

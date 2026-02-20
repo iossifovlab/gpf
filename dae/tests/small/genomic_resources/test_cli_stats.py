@@ -22,7 +22,7 @@ from dae.genomic_resources.testing import (
     setup_directories,
     setup_tabix,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc, TaskGraph
 
 
 class SomeTestImplementation(GenomicResourceImplementation):
@@ -39,11 +39,11 @@ class SomeTestImplementation(GenomicResourceImplementation):
         """
         return b"somehash"
 
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
+    def create_statistics_build_tasks(
+        self, **kwargs: Any,  # noqa: ARG002
+    ) -> list[TaskDesc]:
         """Add tasks for calculating resource statistics to a task graph."""
-        task = task_graph.create_task(
+        task = TaskGraph.make_task(
             "test_resource_sample_statistic",
             self._do_sample_statistic,
             args=[],
@@ -485,6 +485,7 @@ def test_reference_genome_usage(
         "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
     ])
     assert ref_genome_length_mock.call_count == 3
+    assert (tmp_path / "one" / "statistics" / "stats_hash").exists()
 
     labels_mock = mocker.Mock(return_value={})
     mocker.patch(

@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 """Expanded tests for annotation_pipeline_impl module."""
 import pathlib
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from dae.genomic_resources.genomic_scores import build_score_from_resource
@@ -13,7 +13,6 @@ from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     setup_directories,
 )
-from dae.task_graph.graph import TaskGraph
 
 
 @pytest.fixture
@@ -510,8 +509,7 @@ def test_add_statistics_build_tasks_returns_empty_list(
     impl = AnnotationPipelineImplementation(
         grr_fixture.get_resource("pipeline"),
     )
-    task_graph = Mock(spec=TaskGraph)
-    tasks = impl.add_statistics_build_tasks(task_graph)
+    tasks = impl.create_statistics_build_tasks()
     assert not tasks
 
 
@@ -522,9 +520,7 @@ def test_add_statistics_build_tasks_with_kwargs(
     impl = AnnotationPipelineImplementation(
         grr_fixture.get_resource("pipeline"),
     )
-    task_graph = Mock(spec=TaskGraph)
-    tasks = impl.add_statistics_build_tasks(
-        task_graph,
+    tasks = impl.create_statistics_build_tasks(
         some_arg="value",
         another_arg=123,
     )

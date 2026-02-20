@@ -834,23 +834,28 @@ def test_statistics_build_tasks(tmp_path: pathlib.Path) -> None:
     impl = build_score_implementation_from_resource(res)
 
     task_graph = TaskGraph()
-    tasks = impl.add_statistics_build_tasks(task_graph)
-    save_task = task_graph.get_task_desc(tasks[0])
+    tasks = impl.create_statistics_build_tasks()
+    assert len(tasks) == 8
+    task_graph.add_tasks(tasks)
+
+    save_task = tasks[-1]
     merge_task = task_graph.get_task_desc(save_task.deps[0])
     calc_tasks = merge_task.deps
     assert len(calc_tasks) == 1  # merge_min_max task
 
     task_graph = TaskGraph()
-    tasks = impl.add_statistics_build_tasks(task_graph, region_size=20)
-    save_task = task_graph.get_task_desc(tasks[0])
+    tasks = impl.create_statistics_build_tasks(region_size=20)
+    assert len(tasks) == 20
+
+    task_graph.add_tasks(tasks)
+    save_task = tasks[-1]
     merge_task = task_graph.get_task_desc(save_task.deps[0])
     calc_tasks = merge_task.deps
     assert len(calc_tasks) == 1  # merge_min_max task
 
-    task_graph = TaskGraph()
-    tasks = impl.add_statistics_build_tasks(task_graph, region_size=0)
+    tasks = impl.create_statistics_build_tasks(region_size=0)
     assert len(tasks) == 1  # merge_min_max task
-    noregion_task = task_graph.get_task_desc(tasks[0])
+    noregion_task = tasks[0]
     assert not noregion_task.deps
 
 

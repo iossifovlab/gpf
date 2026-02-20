@@ -25,7 +25,7 @@ from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc, TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +56,11 @@ class GeneScoreImplementation(
     def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_statistics_info(self)
 
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph,
+    def create_statistics_build_tasks(
+        self,
         **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
-        save_tasks = []
+    ) -> list[TaskDesc]:
+        tasks = []
         for score_id, score_def in self.gene_score.score_definitions.items():
             hist_conf = score_def.hist_conf
             if hist_conf is None or isinstance(hist_conf, NullHistogramConfig):
@@ -69,20 +69,21 @@ class GeneScoreImplementation(
                     score_id, self.resource.resource_id,
                 )
                 continue
-            create_task = task_graph.create_task(
+            create_task = TaskGraph.make_task(
                 f"{self.resource.resource_id}_{score_id}_calc_histogram",
                 self._calc_histogram,
                 args=[self.resource, score_id],
                 deps=[],
             )
-            save_task = task_graph.create_task(
+            tasks.append(create_task)
+            save_task = TaskGraph.make_task(
                 f"{self.resource.resource_id}_{score_id}_save_histogram",
                 self._save_histogram,
-                args=[create_task, self.resource, score_id],
-                deps=[create_task],
+                args=[create_task.task, self.resource, score_id],
+                deps=[create_task.task],
             )
-            save_tasks.append(save_task)
-        return save_tasks
+            tasks.append(save_task)
+        return tasks
 
     @staticmethod
     def _calc_histogram(
