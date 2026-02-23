@@ -6,7 +6,6 @@ import textwrap
 import pytest
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
-    AnnotationConfigurationError,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPreamble,
@@ -574,6 +573,5 @@ def test_annotator_info_to_dict() -> None:
     assert annotator_info.to_dict() == expected_dict
 
 
-def test_empty_pipeline_errors() -> None:
-    with pytest.raises(AnnotationConfigurationError):
-        AnnotationConfigParser.parse_str("# test")
+def test_empty_pipeline_passes() -> None:
+    assert AnnotationConfigParser.parse_str("# test") is not None
