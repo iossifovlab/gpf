@@ -22,7 +22,7 @@ from dae.genomic_resources.resource_implementation import (
     InfoImplementationMixin,
     ResourceConfigValidationMixin,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc, TaskGraph
 
 
 class GeneSetCollectionImpl(
@@ -111,11 +111,11 @@ class GeneSetCollectionImpl(
 
         return info
 
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
+    def create_statistics_build_tasks(
+        self, **kwargs: Any,  # noqa: ARG002
+    ) -> list[TaskDesc]:
         return [
-            task_graph.create_task(
+            TaskGraph.make_task(
                 f"{self.resource.resource_id}_compute_and_save_all_statistics",
                 self._compute_and_save_all_statistics,
                 args=[],

@@ -39,9 +39,11 @@ task_d = TaskGraph.make_task(
 
 @pytest.mark.parametrize(
     "tasks, expected", [
+        ([task_a, task_d], "result D"),
         ([task_a, task_b], "result B with (result A)"),
         ([task_a, task_b, task_c], "result C with (result B with (result A))"),
         ([task_a, task_b, task_c, task_d], "result D"),
+        ([task_a, task_b, task_d], "result D"),
         ([task_d, task_a, task_b, task_c],
          "result C with (result B with (result A))"),
     ],
@@ -60,6 +62,7 @@ def test_chain_tasks(
 
 @pytest.mark.parametrize(
     "tasks, task_id, expected", [
+        ([task_a, task_d], "D", "result D"),
         ([task_a, task_b],
          "B", "result B with (result A)"),
         ([task_a, task_b, task_c],

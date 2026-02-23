@@ -23,7 +23,7 @@ from dae.genomic_resources.resource_implementation import (
     InfoImplementationMixin,
     ResourceStatistics,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc, TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -192,11 +192,11 @@ class GeneModelsImpl(
                 for file_name in sorted(self.files)},
         }, indent=2).encode()
 
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
-        task = task_graph.create_task(
-            f"{self.resource_id}_cals_stats",
+    def create_statistics_build_tasks(
+        self, **kwargs: Any,  # noqa: ARG002
+    ) -> list[TaskDesc]:
+        task = TaskGraph.make_task(
+            f"{self.resource_id}_calc_stats",
             self._do_statistics,
             args=[self.resource], deps=[])
         return [task]

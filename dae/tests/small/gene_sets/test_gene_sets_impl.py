@@ -12,7 +12,6 @@ from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     setup_directories,
 )
-from dae.task_graph.graph import TaskGraph
 
 
 @pytest.fixture
@@ -44,11 +43,8 @@ def test_add_statistics_build_tasks(
     gene_sets_collection_impl = GeneSetCollectionImpl(res)
     assert gene_sets_collection_impl is not None
 
-    graph = TaskGraph()
-    assert len(graph.tasks) == 0
-
-    gene_sets_collection_impl.add_statistics_build_tasks(graph)
-    assert len(graph.tasks) == 1
+    tasks = gene_sets_collection_impl.create_statistics_build_tasks()
+    assert len(tasks) == 1
 
 
 def test_compute_and_save_statistics(

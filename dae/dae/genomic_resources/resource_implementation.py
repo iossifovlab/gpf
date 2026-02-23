@@ -10,7 +10,7 @@ from cerberus import Validator
 from jinja2 import Template
 from markdown2 import markdown
 
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import TaskDesc
 from dae.utils.helpers import convert_size
 
 from .repository import GenomicResource
@@ -84,9 +84,10 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def add_statistics_build_tasks(self, task_graph: TaskGraph,
-                                   **kwargs: Any) -> list[Task]:
-        """Add tasks for calculating resource statistics to a task graph."""
+    def create_statistics_build_tasks(
+        self, **kwargs: Any,
+    ) -> list[TaskDesc]:
+        """Create tasks for calculating resource statistics for task graph."""
         raise NotImplementedError
 
     @abstractmethod

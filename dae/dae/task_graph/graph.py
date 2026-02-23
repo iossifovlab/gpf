@@ -114,16 +114,22 @@ def _reconfigure_task_deps(
     return args, kwargs, deps
 
 
-def _chain_func(task1: TaskDesc, task2: TaskDesc) -> Any:
+def _chain_func(*args: Any, **kwargs: Any) -> Any:  # noqa: ARG001
+    task1 = kwargs.pop("task1")
+    task2 = kwargs.pop("task2")
+
     res = task1.func(*task1.args, **task1.kwargs)
+
     if task2.deps:
-        args, kwargs, deps = _reconfigure_task_deps(task2, task1.task, res)
+        t2args, t2kwargs, t2deps = _reconfigure_task_deps(
+            task2, task1.task, res)
+        assert len(t2deps) == 0
         task2 = TaskDesc(
             task=task2.task,
             func=task2.func,
-            args=args,
-            kwargs=kwargs,
-            deps=deps,
+            args=t2args,
+            kwargs=t2kwargs,
+            deps=[],
             input_files=task2.input_files,
         )
     return task2.func(*task2.args, **task2.kwargs)
@@ -137,11 +143,15 @@ def _chain_2_tasks(task1: TaskDesc, task2: TaskDesc) -> TaskDesc:
         if len(task2.deps) == 1 and task2.deps[0] != task1.task:
             raise ValueError("task2 should depend on task1")
 
+    kwargs = task1.kwargs.copy()
+    kwargs["task1"] = task1
+    kwargs["task2"] = task2
+
     return TaskDesc(
         task=task2.task,
         func=_chain_func,
-        args=[task1, task2],
-        kwargs={},
+        args=task1.args,
+        kwargs=kwargs,
         deps=task1.deps,
         input_files=task1.input_files + task2.input_files,
     )
@@ -279,7 +289,7 @@ class TaskGraph:
                 dep_task = self._tasks[dep]
                 self._collect_task_deps(dep_task, task_set)
 
-    def ready_tasks(self) -> Sequence[Task]:
+    def ready_tasks(self, limit: int = 0) -> Sequence[Task]:
         """Return tasks which have no dependencies."""
         result = []
         with self._lock:
@@ -287,6 +297,8 @@ class TaskGraph:
                 if t.deps:
                     break
                 result.append(t.task)
+                if limit and len(result) >= limit:
+                    break
         return result
 
     def get_task_desc(self, task: Task) -> TaskDesc:
@@ -296,6 +308,11 @@ class TaskGraph:
                 raise ValueError(f"task {task} not in graph")
             task_node = self._tasks[task]
             return TaskDesc._from_task_node(task_node)  # noqa: SLF001
+
+    def has_task(self, task: Task) -> bool:
+        """Check if the graph contains a task."""
+        with self._lock:
+            return task in self._tasks
 
     def extract_tasks(
             self, selected_tasks: Sequence[Task],
