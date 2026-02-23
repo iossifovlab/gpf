@@ -84,13 +84,13 @@ class DaskExecutor(TaskGraphExecutorBase):
                     assert task is not None
                     submit_count += 1
                     running[future] = task.task
-                if submit_count % 100 == 0:
-                    elapsed = time.time() - start
-                    logger.info(
-                        "submitted %s tasks in %.2f seconds; %.2f tasks/s",
-                        submit_count, elapsed, submit_count / elapsed)
-                    logger.info(
-                        "total running tasks: %s", len(running))
+                    total_running = len(running)
+            elapsed = time.time() - start
+            logger.debug(
+                "submitted %s tasks in %.2f seconds; %.2f tasks/s",
+                submit_count, elapsed, submit_count / elapsed)
+            logger.debug(
+                "total running tasks: %s", total_running)
 
     def _results_worker_func(
             self,
@@ -155,7 +155,8 @@ class DaskExecutor(TaskGraphExecutorBase):
 
         logger.info("results worker processed %s results", processed_results)
 
-    MAX_SUBMIT_TASKS = 500
+    SUBMIT_TASKS_BATCH = 500
+    MAX_RUNNING_TASKS = 2500
 
     def _execute(
         self, graph: TaskGraph,
@@ -197,13 +198,15 @@ class DaskExecutor(TaskGraphExecutorBase):
         initial_task_count = len(graph)
 
         while not is_done:
-
-            ready_tasks = graph.extract_tasks(
-                graph.ready_tasks(limit=self.MAX_SUBMIT_TASKS))
-            with submit_condition:
-                if ready_tasks:
-                    submit_queue.extend(ready_tasks)
-                    submit_condition.notify_all()
+            with running_lock:
+                total_running = len(running)
+            if total_running < self.MAX_RUNNING_TASKS:
+                ready_tasks = graph.extract_tasks(
+                    graph.ready_tasks(limit=self.SUBMIT_TASKS_BATCH))
+                with submit_condition:
+                    if ready_tasks:
+                        submit_queue.extend(ready_tasks)
+                        submit_condition.notify_all()
 
             with running_lock:
                 not_completed = set(running.keys())
