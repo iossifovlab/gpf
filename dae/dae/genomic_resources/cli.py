@@ -486,7 +486,10 @@ def _build_contents_db(
     has_summary: bool = False,
     has_labels: bool = False,
 ) -> None:
-    table_columns = ["id", "config.type AS type"]
+    table_columns = [
+        "concat(id, COALESCE(version, '')) as full_id",
+        "id", "config.type AS type",
+    ]
     fts_columns = ["id", "type"]
     if has_description:
         table_columns.append(
@@ -526,11 +529,11 @@ def _build_contents_db(
         label_names = [r[0] for r in result.fetchall()]
         fts_columns.extend(label_names)
 
-    for label in label_names:
-        conn.query(
-            f"CREATE OR REPLACE VIEW {label}_values "  # noqa: S608
-            f"AS SELECT DISTINCT({label}) FROM contents;",
-        )
+        for label in label_names:
+            conn.query(
+                f"CREATE OR REPLACE VIEW {label}_values "  # noqa: S608
+                f"AS SELECT DISTINCT({label}) FROM contents;",
+            )
 
     _build_fts_indexes(conn, fts_columns)
 
@@ -547,7 +550,7 @@ def _build_fts_indexes(
     conn.query(
         "PRAGMA create_fts_index("
         "contents_first, "
-        "id, "
+        "full_id, "
         f"{', '.join(fts_columns)})",
     )
 
@@ -559,7 +562,7 @@ def _build_fts_indexes(
     conn.query(
         "PRAGMA create_fts_index("
         "contents, "
-        "id, "
+        "full_id, "
         f"{', '.join(fts_columns)}, "
         "stemmer='none', ignore='(\\\\.|[^a-z0-9])+');",
     )
