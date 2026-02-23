@@ -13,30 +13,21 @@
                 {"name": "expression", "symbols": ["token"]},
                 {"name": "expression", "symbols": ["or"]},
                 {"name": "expression", "symbols": ["and"], "postprocess": id},
-                {"name": "and$string$1", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "and", "symbols": ["token", "_", "and$string$1", "_", "token"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
-                {"name": "and$string$2", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "and", "symbols": ["and", "_", "and$string$2", "_", "token"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
-                {"name": "and$string$3", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "and", "symbols": ["token", "_", "and$string$3", "_", "and"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
-                {"name": "and$string$4", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "and", "symbols": ["or", "_", "and$string$4", "_", "or"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
-                {"name": "and$string$5", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "and", "symbols": ["or", "_", "and$string$5", "_", "token"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
-                {"name": "and$string$6", "symbols": [{"literal":"a"}, {"literal":"n"}, {"literal":"d"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "and", "symbols": ["token", "_", "and$string$6", "_", "or"], "postprocess": function(d) { return {"and": [d[0], d[4]]} }},
-                {"name": "or$string$1", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "or", "symbols": ["token", "_", "or$string$1", "_", "token"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
-                {"name": "or$string$2", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "or", "symbols": ["or", "_", "or$string$2", "_", "token"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
-                {"name": "or$string$3", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "or", "symbols": ["token", "_", "or$string$3", "_", "or"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
-                {"name": "or$string$4", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "or", "symbols": ["and", "_", "or$string$4", "_", "and"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
-                {"name": "or$string$5", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "or", "symbols": ["and", "_", "or$string$5", "_", "token"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
-                {"name": "or$string$6", "symbols": [{"literal":"o"}, {"literal":"r"}], "postprocess": function joiner(d) {return d.join('');}},
-                {"name": "or", "symbols": ["token", "_", "or$string$6", "_", "and"], "postprocess": function(d) { return {"or": [d[0], d[4]]} }},
+                {"name": "and", "symbols": ["token", "and_identifier", "token"], "postprocess": function(d) { return {"and": [d[0], d[2]]} }},
+                {"name": "and", "symbols": ["and", "and_identifier", "token"], "postprocess": function(d) { return {"and": [d[0], d[2]]} }},
+                {"name": "and", "symbols": ["token", "and_identifier", "and"], "postprocess": function(d) { return {"and": [d[0], d[2]]} }},
+                {"name": "and", "symbols": ["or", "and_identifier", "or"], "postprocess": function(d) { return {"and": [d[0], d[2]]} }},
+                {"name": "and", "symbols": ["or", "and_identifier", "token"], "postprocess": function(d) { return {"and": [d[0], d[2]]} }},
+                {"name": "and", "symbols": ["token", "and_identifier", "or"], "postprocess": function(d) { return {"and": [d[0], d[2]]} }},
+                {"name": "and_identifier", "symbols": ["_", {"literal":"&"}, "_"], "postprocess": id},
+                {"name": "and_identifier", "symbols": ["_"], "postprocess": id},
+                {"name": "or", "symbols": ["token", "or_identifier", "token"], "postprocess": function(d) { return {"or": [d[0], d[2]]} }},
+                {"name": "or", "symbols": ["or", "or_identifier", "token"], "postprocess": function(d) { return {"or": [d[0], d[2]]} }},
+                {"name": "or", "symbols": ["token", "or_identifier", "or"], "postprocess": function(d) { return {"or": [d[0], d[2]]} }},
+                {"name": "or", "symbols": ["and", "or_identifier", "and"], "postprocess": function(d) { return {"or": [d[0], d[2]]} }},
+                {"name": "or", "symbols": ["and", "or_identifier", "token"], "postprocess": function(d) { return {"or": [d[0], d[2]]} }},
+                {"name": "or", "symbols": ["token", "or_identifier", "and"], "postprocess": function(d) { return {"or": [d[0], d[2]]} }},
+                {"name": "or_identifier", "symbols": ["_", {"literal":"|"}, "_"], "postprocess": id},
                 {"name": "token", "symbols": ["word"], "postprocess":  
                     function(d, l, reject) {
                         const word = d[0]
@@ -47,11 +38,11 @@
                     } 
                             },
                 {"name": "token", "symbols": [{"literal":"-"}, "word"], "postprocess": function(d) {return {"not": d[1]}}},
-                {"name": "word$ebnf$1", "symbols": [/[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+]/]},
-                {"name": "word$ebnf$1", "symbols": ["word$ebnf$1", /[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word$ebnf$1", "symbols": [/[a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+]/]},
+                {"name": "word$ebnf$1", "symbols": ["word$ebnf$1", /[a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
                 {"name": "word", "symbols": ["word$ebnf$1"], "postprocess": function(d) { return d[0].join("") }},
-                {"name": "word$ebnf$2", "symbols": [/[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+ ]/]},
-                {"name": "word$ebnf$2", "symbols": ["word$ebnf$2", /[a-zA-Z0-9!@#$%^&*()\[\]\./\\';:<>?\-_=+ ]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+                {"name": "word$ebnf$2", "symbols": [/[a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+ ]/]},
+                {"name": "word$ebnf$2", "symbols": ["word$ebnf$2", /[a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+ ]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
                 {"name": "word", "symbols": [{"literal":"\""}, "word$ebnf$2", {"literal":"\""}], "postprocess": function(d) { return d[1].join("") }},
                 {"name": "_$ebnf$1", "symbols": [/[\s]/]},
                 {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
@@ -59,8 +50,8 @@
             ]
               , ParserStart: "expression"
             }
-               window.grammar = grammar;
-            })();
+            window.grammar = grammar;
+        })();
     </script>
     <script>
       const getDb = async () => {

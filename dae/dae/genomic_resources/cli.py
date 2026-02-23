@@ -465,8 +465,29 @@ def _create_contents_file(proto: FsspecReadWriteProtocol) -> None:
         if res_meta.get("labels"):
             has_labels = True
 
-    table_columns = ["id"]
-    fts_columns = ["id"]
+    duckdb.register_filesystem(proto.filesystem)
+
+    db_filepath = os.path.join(proto.url, ".CONTENTS.duckdb")
+
+    with duckdb.connect(db_filepath) as conn:
+        _build_contents_db(
+            conn, proto,
+            has_description=has_description,
+            has_summary=has_summary,
+            has_labels=has_labels,
+        )
+
+
+def _build_contents_db(
+    conn: duckdb.DuckDBPyConnection,
+    proto: FsspecReadWriteProtocol,
+    *,
+    has_description: bool = False,
+    has_summary: bool = False,
+    has_labels: bool = False,
+) -> None:
+    table_columns = ["id", "config.type AS type"]
+    fts_columns = ["id", "type"]
     if has_description:
         table_columns.append(
             "config.meta.description AS description")
@@ -480,53 +501,68 @@ def _create_contents_file(proto: FsspecReadWriteProtocol) -> None:
         table_columns.append(
             "unnest(config.meta.labels)")
 
-    duckdb.register_filesystem(proto.filesystem)
-
-    db_filepath = os.path.join(proto.url, ".CONTENTS.duckdb")
-
-    with duckdb.connect(db_filepath) as conn:
-        conn.query("INSTALL fts")
-        conn.query("LOAD fts")
-        conn.query(
-            "CREATE OR REPLACE TABLE contents_first AS "  # noqa: S608
-            f"SELECT {', '.join(table_columns)} "
-            f"FROM read_json_auto('{proto.get_content_file_path()}');",
+    conn.query("INSTALL fts")
+    conn.query("LOAD fts")
+    conn.query(
+        "CREATE OR REPLACE TABLE contents_first AS "  # noqa: S608
+        f"SELECT {', '.join(table_columns)} "
+        f"FROM read_json_auto('{proto.get_content_file_path()}');",
+    )
+    conn.query(
+        "CREATE OR REPLACE TABLE contents AS SELECT * FROM contents_first;")
+    if has_labels:
+        result = conn.query(
+            "DESCRIBE (SELECT unnest(config.meta.labels) "  # noqa: S608
+            "FROM read_json_auto("
+            f"'{proto.get_content_file_path()}'));",
         )
-        conn.query("DROP TABLE IF EXISTS contents;")
-        if has_labels:
-            result = conn.query(
-                "DESCRIBE (SELECT unnest(config.meta.labels) "  # noqa: S608
-                "FROM read_json_auto("
-                f"'{proto.get_content_file_path()}'));",
-            )
-            fts_columns.extend([r[0] for r in result.fetchall()])
-
-        try:
-            conn.query("PRAGMA drop_fts_index(contents_first)")
-        except duckdb.CatalogException:
-            logger.info(
-                "No existing FTS index to drop for first table, skipping...")
         conn.query(
-            "PRAGMA create_fts_index("
-            "contents_first, "
-            "id, "
-            f"{', '.join(fts_columns)})",
+            "CREATE OR REPLACE TABLE labels AS "  # noqa: S608
+            "SELECT column_name as label_name FROM "
+            "(DESCRIBE (SELECT unnest(config.meta.labels) "
+            "FROM read_json_auto("
+            f"'{proto.get_content_file_path()}')));",
+        )
+        label_names = [r[0] for r in result.fetchall()]
+        fts_columns.extend(label_names)
+
+    for label in label_names:
+        conn.query(
+            f"CREATE OR REPLACE VIEW {label}_values "  # noqa: S608
+            f"AS SELECT DISTINCT({label}) FROM contents;",
         )
 
-        conn.query("CREATE TABLE contents AS SELECT * FROM contents_first;")
+    _build_fts_indexes(conn, fts_columns)
 
-        try:
-            conn.query("PRAGMA drop_fts_index(contents)")
-        except duckdb.CatalogException:
-            logger.info(
-                "No existing FTS index to drop for second table, skipping...")
-        conn.query(
-            "PRAGMA create_fts_index("
-            "contents, "
-            "id, "
-            f"{', '.join(fts_columns)}, "
-            "stemmer='none', ignore='(\\\\.|[^a-z0-9])+');",
-        )
+
+def _build_fts_indexes(
+    conn: duckdb.DuckDBPyConnection,
+    fts_columns: list[str],
+) -> None:
+    try:
+        conn.query("PRAGMA drop_fts_index(contents_first)")
+    except duckdb.CatalogException:
+        logger.info(
+            "No existing FTS index to drop for first table, skipping...")
+    conn.query(
+        "PRAGMA create_fts_index("
+        "contents_first, "
+        "id, "
+        f"{', '.join(fts_columns)})",
+    )
+
+    try:
+        conn.query("PRAGMA drop_fts_index(contents)")
+    except duckdb.CatalogException:
+        logger.info(
+            "No existing FTS index to drop for second table, skipping...")
+    conn.query(
+        "PRAGMA create_fts_index("
+        "contents, "
+        "id, "
+        f"{', '.join(fts_columns)}, "
+        "stemmer='none', ignore='(\\\\.|[^a-z0-9])+');",
+    )
 
 
 def _run_repo_manifest_command(
