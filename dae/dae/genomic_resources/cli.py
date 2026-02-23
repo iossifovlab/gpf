@@ -501,7 +501,11 @@ def _create_contents_file(proto: FsspecReadWriteProtocol) -> None:
             )
             fts_columns.extend([r[0] for r in result.fetchall()])
 
-        conn.query("PRAGMA drop_fts_index(contents_first)")
+        try:
+            conn.query("PRAGMA drop_fts_index(contents_first)")
+        except duckdb.CatalogException:
+            logger.info(
+                "No existing FTS index to drop for first table, skipping...")
         conn.query(
             "PRAGMA create_fts_index("
             "contents_first, "
@@ -511,7 +515,11 @@ def _create_contents_file(proto: FsspecReadWriteProtocol) -> None:
 
         conn.query("CREATE TABLE contents AS SELECT * FROM contents_first;")
 
-        conn.query("PRAGMA drop_fts_index(contents)")
+        try:
+            conn.query("PRAGMA drop_fts_index(contents)")
+        except duckdb.CatalogException:
+            logger.info(
+                "No existing FTS index to drop for second table, skipping...")
         conn.query(
             "PRAGMA create_fts_index("
             "contents, "
