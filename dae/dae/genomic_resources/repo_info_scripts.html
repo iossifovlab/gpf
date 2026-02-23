@@ -118,7 +118,7 @@
             const result = {}
             const addQueries = (read_node, out_node) => {
                 if (typeof read_node === "string") {
-                    out_node.query = `SELECT id, description, fts_main_contents.match_bm25(id, '${read_node}') AS imprecise_score, fts_main_contents_first.match_bm25(id, '${read_node}') as precise_score, (fts_main_contents.match_bm25(id, '${read_node}') + fts_main_contents_first.match_bm25(id, '${read_node}')) as score FROM contents WHERE imprecise_score IS NOT NULL ORDER BY imprecise_score desc;`
+                    out_node.query = `SELECT id, description, fts_main_contents.match_bm25(id, '${read_node}') AS imprecise_score, fts_main_contents_first.match_bm25(id, '${read_node}') as precise_score, (COALESCE(fts_main_contents.match_bm25(id, '${read_node}'), 0) + COALESCE(fts_main_contents_first.match_bm25(id, '${read_node}'), 0)) as score FROM contents WHERE score IS NOT NULL ORDER BY score desc;`
                 }
                 else if (read_node.and) {
                     out_node.and = [{}, {}]
@@ -173,6 +173,7 @@
             const executeQuery = (async (node, collected_ids) => {
                 if (node.query) {
                     const result = (await conn.query(node.query)).toArray().map((row) => row.toJSON());
+                    console.log(result)
                     const filtered = filterBySum(result);
                     console.log(filtered)
                     const query_ids = new Set(filtered.map((row) => row.id));
