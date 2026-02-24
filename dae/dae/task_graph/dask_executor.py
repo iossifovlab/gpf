@@ -108,10 +108,9 @@ class DaskExecutor(TaskGraphExecutorBase):
                     break
 
                 if completed_queue:
-                    if len(completed_queue) > 1:
-                        logger.debug(
-                            "results worker processing %s completed tasks",
-                            len(completed_queue))
+                    logger.debug(
+                        "results worker processing %s completed tasks",
+                        len(completed_queue))
 
                     if any(i is None for i in completed_queue):
                         logger.warning(
@@ -221,6 +220,9 @@ class DaskExecutor(TaskGraphExecutorBase):
                         return_when="FIRST_COMPLETED",
                         timeout=0.05,
                     )
+                    logger.debug(
+                        "waited for completed tasks return %s futures",
+                        len(completed))
                 except TimeoutError:
                     completed = set()
 
