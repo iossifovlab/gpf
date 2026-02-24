@@ -343,7 +343,7 @@ class GenomicScoreImplementation(
             for scr_id in score_ids
         }
         with impl.score.open() as score:
-            for _left, _right, rec in score._fetch_region_values(  # noqa
+            for _left, _right, rec in score.fetch_region_values(
                     chrom, start, end, score_ids):
                 for score_index, score_id in enumerate(score_ids):
                     impl._min_max_add_value(  # noqa: SLF001
@@ -425,7 +425,7 @@ class GenomicScoreImplementation(
 
         score_ids = list(result.keys())
         with impl.score.open() as score:
-            for left, right, rec in score._fetch_region_values(  # noqa
+            for left, right, rec in score.fetch_region_values(
                     chrom, start, end, score_ids):
                 for scr_index, scr_id in enumerate(score_ids):
 
