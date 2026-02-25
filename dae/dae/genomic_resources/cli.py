@@ -203,8 +203,8 @@ def _run_repo_init_command(**kwargs: str) -> None:
 
     proto = _create_proto(str(cwd))
     assert isinstance(proto, FsspecRepositoryProtocol)
-
-    _create_contents_file(proto)
+    contents = proto.build_content_file()
+    _create_contents_db(proto, contents)
 
 
 def _configure_repo_manifest_subparser(
@@ -443,13 +443,16 @@ def _run_repo_manifest_command_internal(
         return updates_needed
 
     assert isinstance(proto, FsspecReadWriteProtocol)
-    _create_contents_file(proto)
+    contents = proto.build_content_file()
+    _create_contents_db(proto, contents)
 
     return updates_needed
 
 
-def _create_contents_file(proto: FsspecReadWriteProtocol) -> None:
-    contents = proto.build_content_file()
+def _create_contents_db(
+    proto: FsspecReadWriteProtocol,
+    contents: list[dict[str, Any]],
+) -> None:
 
     has_description = False
     has_summary = False
@@ -1092,7 +1095,7 @@ def get_scripts_for_template() -> str:
     return scripts_file.read_text()
 
 
-template_string = """
+TEMPLATE_STRING = """
 <html>
  <head>
     <style>
@@ -1152,9 +1155,9 @@ template_string = """
     </style>
  </head>"""
 
-template_string += get_scripts_for_template()
+TEMPLATE_STRING += get_scripts_for_template()
 
-template_string += """
+TEMPLATE_STRING += """
  <body>
      <div>
          <p class="loading">Loading search</p>
@@ -1203,4 +1206,4 @@ template_string += """
 </html>
 """
 
-repository_template = Template(template_string)
+repository_template = Template(TEMPLATE_STRING)

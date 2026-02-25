@@ -218,24 +218,28 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         """Close the genomic resource."""
         self.invalidate()
 
+    def load_contents(self) -> list[dict[str, Any]]:
+        """Load the content of the repository (i.e '.CONTENTS.json.gz' file)."""
+        content_filename = os.path.join(
+            self.url, GR_CONTENTS_FILE_NAME)
+        compression: str | None = "gzip"
+        if not self.filesystem.exists(content_filename):
+            content_filename = content_filename[:-3]
+            compression = None
+
+        with self.filesystem.open(
+                content_filename, "rt", compression=compression) as infile:
+            data = infile.read()
+
+        return cast(list[dict[str, Any]], json.loads(data))
+
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
         with self._all_resources_lock:
             if self._all_resources is None:
                 all_resources = []
-                content_filename = os.path.join(
-                    self.url, GR_CONTENTS_FILE_NAME)
-                compression: str | None = "gzip"
-                if not self.filesystem.exists(content_filename):
-                    content_filename = content_filename[:-3]
-                    compression = None
 
-                with self.filesystem.open(
-                        content_filename, "rt",
-                        compression=compression) as infile:
-                    data = infile.read()
-
-                contents = json.loads(data)
+                contents = self.load_contents()
 
                 for entry in contents:
                     version = tuple(map(int, entry["version"].split(".")))
@@ -248,6 +252,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                         self.proto_id,
                         resource.resource_id)
                     all_resources.append(resource)
+
                 self._all_resources = sorted(
                     all_resources,
                     key=lambda r: r.get_genomic_resource_id_version())
