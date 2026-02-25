@@ -144,6 +144,27 @@ def load_pipeline_from_grr(
     return load_pipeline_from_yaml(raw, grr)
 
 
+def build_pipeline_annotator(
+    pipeline: AnnotationPipeline, annotator_config: AnnotatorInfo,
+) -> Annotator:
+    """Build an annotator for the pipeline."""
+    try:
+        builder = get_annotator_factory(annotator_config.type)
+        annotator = builder(pipeline, annotator_config)
+        annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
+        annotator = ValueTransformAnnotatorDecorator.decorate(annotator)
+        check_for_unused_parameters(annotator_config)
+        check_for_repeated_attributes_in_annotator(annotator_config)
+    except (ValueError, FileNotFoundError) as value_error:
+        assert annotator_config is not None
+        raise AnnotationConfigurationError(
+            f"The {annotator_config.annotator_id} annotator"
+            f" configuration is incorrect: ",
+            value_error) from value_error
+
+    return annotator
+
+
 def build_annotation_pipeline(
     config: RawPipelineConfig,
     grr: GenomicResourceRepo,
@@ -171,12 +192,7 @@ def build_annotation_pipeline(
                     params._data["work_dir"] = Path("./work")  # noqa: SLF001
             params._used_keys.add("work_dir")  # noqa: SLF001
 
-            builder = get_annotator_factory(annotator_config.type)
-            annotator = builder(pipeline, annotator_config)
-            annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
-            annotator = ValueTransformAnnotatorDecorator.decorate(annotator)
-            check_for_unused_parameters(annotator_config)
-            check_for_repeated_attributes_in_annotator(annotator_config)
+            annotator = build_pipeline_annotator(pipeline, annotator_config)
             pipeline.add_annotator(annotator)
     except (ValueError, FileNotFoundError) as value_error:
         assert annotator_config is not None
@@ -208,9 +224,13 @@ def check_for_repeated_attributes_in_annotator(
 
 def check_for_repeated_attributes_in_pipeline(
     pipeline: AnnotationPipeline, *, allow_repeated_attributes: bool = False,
+    annotator_config: AnnotatorInfo | None = None,
 ) -> None:
     """Check for repeated attributes in pipeline configuration."""
-    pipeline_names_set = Counter(att.name for att in pipeline.get_attributes())
+    attributes = [attr.name for attr in pipeline.get_attributes()]
+    if annotator_config is not None:
+        attributes.extend([att.name for att in annotator_config.attributes])
+    pipeline_names_set = Counter(attributes)
     repeated_attributes = {
         att for att, cnt in Counter(pipeline_names_set).items() if cnt > 1
     }
