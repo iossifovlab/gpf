@@ -108,10 +108,9 @@ class DaskExecutor(TaskGraphExecutorBase):
                     break
 
                 if completed_queue:
-                    if len(completed_queue) > 1:
-                        logger.debug(
-                            "results worker processing %s completed tasks",
-                            len(completed_queue))
+                    logger.debug(
+                        "results worker processing %s completed tasks",
+                        len(completed_queue))
 
                     if any(i is None for i in completed_queue):
                         logger.warning(
@@ -155,8 +154,7 @@ class DaskExecutor(TaskGraphExecutorBase):
 
         logger.info("results worker processed %s results", processed_results)
 
-    SUBMIT_TASKS_BATCH = 500
-    MAX_RUNNING_TASKS = 2500
+    MAX_RUNNING_TASKS = 700
 
     def _execute(
         self, graph: TaskGraph,
@@ -201,8 +199,9 @@ class DaskExecutor(TaskGraphExecutorBase):
             with running_lock:
                 total_running = len(running)
             if total_running < self.MAX_RUNNING_TASKS:
+                limit = max(self.MAX_RUNNING_TASKS - total_running, 1)
                 ready_tasks = graph.extract_tasks(
-                    graph.ready_tasks(limit=self.SUBMIT_TASKS_BATCH))
+                    graph.ready_tasks(limit=limit))
                 with submit_condition:
                     if ready_tasks:
                         submit_queue.extend(ready_tasks)
@@ -221,6 +220,9 @@ class DaskExecutor(TaskGraphExecutorBase):
                         return_when="FIRST_COMPLETED",
                         timeout=0.05,
                     )
+                    logger.debug(
+                        "waited for completed tasks return %s futures",
+                        len(completed))
                 except TimeoutError:
                     completed = set()
 

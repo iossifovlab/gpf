@@ -82,6 +82,12 @@ class TaskGraphCli:
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error",
         )
+        execution_mode_group.add_argument(
+            "--fork-tasks", "--fork-task", "--fork",
+            dest="fork_tasks", action="store_true",
+            help="Whether to fork a new worker process for each task",
+        )
+
         if task_progress_mode:
             execution_mode_group.add_argument(
                 "--force", "-f", default=False, action="store_true",
@@ -91,11 +97,6 @@ class TaskGraphCli:
                 "-d", "--task-status-dir", "--tsd",
                 default=default_task_status_dir,
                 type=str, help="Directory to store the task progress.",
-            )
-            execution_mode_group.add_argument(
-                "--fork-tasks", "--fork-task", "--fork",
-                dest="fork_tasks", action="store_true",
-                help="Whether to fork a new worker process for each task",
             )
 
         else:
