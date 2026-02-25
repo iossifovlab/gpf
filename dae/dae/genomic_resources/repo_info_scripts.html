@@ -109,7 +109,7 @@
             const result = {}
             const addQueries = (read_node, out_node) => {
                 if (typeof read_node === "string") {
-                    out_node.query = `SELECT id, description, fts_main_contents.match_bm25(id, '${read_node}') AS imprecise_score, fts_main_contents_first.match_bm25(id, '${read_node}') as precise_score, (COALESCE(fts_main_contents.match_bm25(id, '${read_node}'), 0) + COALESCE(fts_main_contents_first.match_bm25(id, '${read_node}'), 0)) as score FROM contents WHERE score IS NOT NULL ORDER BY score desc;`
+                    out_node.query = `SELECT id FROM (SELECT id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score = 0 ORDER BY score desc)`
                 }
                 else if (read_node.and) {
                     out_node.and = [{}, {}]
@@ -122,7 +122,7 @@
                     addQueries(read_node.or[1], out_node.or[1])
                 }
                 else if (read_node.not) {
-                    out_node.not = {}
+                    out_node.not = `SELECT id FROM (SELECT id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) + COALESCE(fts_main_contents_first.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score > 0 ORDER BY score desc)`
                     addQueries(read_node.not, out_node.not)
                 }
             }
@@ -161,31 +161,27 @@
                 })
             })
 
-            const executeQuery = (async (node, collected_ids) => {
+            const combineQuery = (async (node) => {
                 if (node.query) {
-                    const result = (await conn.query(node.query)).toArray().map((row) => row.toJSON());
-                    console.log(result)
-                    const filtered = filterBySum(result);
-                    console.log(filtered)
-                    const query_ids = new Set(filtered.map((row) => row.id));
-                    return query_ids;
+                    return node.query
                 }
                 else if (node.and) {
-                    const l_ids = await executeQuery(node.and[0]);
-                    const r_ids = await executeQuery(node.and[1]);
-                    return l_ids.intersection(r_ids);
+                    const q1 = await combineQuery(node.and[0]);
+                    const q2 = await combineQuery(node.and[1]);
+                    return `${q1} INTERSECT ${q2}`
                 }
                 else if (node.or) {
-                    const l_ids = await executeQuery(node.or[0]);
-                    const r_ids = await executeQuery(node.or[1]);
-                    return l_ids.union(r_ids);
+                    const q1 = await combineQuery(node.or[0]);
+                    const q2 = await combineQuery(node.or[1]);
+                    return `${q1} UNION ${q2}`
                 }
                 else if (node.not) {
-                    return window.all_ids.difference(await executeQuery(node.not));
+                    return node.not
                 }
             });
 
-            const displayIds = await executeQuery(result, ids);
+            const query = await combineQuery(result)
+            const displayIds = (await conn.query(query)).toArray().map((row) => row.toJSON().id);
 
             displayIds.forEach((id) => {$(`tbody > tr:contains("${id}")`).show()})
             $(".searching").hide()
