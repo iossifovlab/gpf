@@ -146,9 +146,14 @@ def load_pipeline_from_grr(
 
 def build_pipeline_annotator(
     pipeline: AnnotationPipeline, annotator_config: AnnotatorInfo,
+    work_dir: Path,
 ) -> Annotator:
     """Build an annotator for the pipeline."""
     try:
+        params = annotator_config.parameters
+        if "work_dir" not in params:
+            params._data["work_dir"] = str(work_dir)  # noqa: SLF001
+        params._used_keys.add("work_dir")  # noqa: SLF001
         builder = get_annotator_factory(annotator_config.type)
         annotator = builder(pipeline, annotator_config)
         annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
@@ -182,17 +187,12 @@ def build_annotation_pipeline(
     annotator_config = None
     try:
         for idx, annotator_config in enumerate(pipeline_config):
-            params = annotator_config.parameters
-            if "work_dir" not in params:
-                if work_dir is not None:
-                    params._data["work_dir"] = (  # noqa: SLF001
-                        work_dir / f"A{idx}_{annotator_config.type}"
-                    )
-                else:
-                    params._data["work_dir"] = Path("./work")  # noqa: SLF001
-            params._used_keys.add("work_dir")  # noqa: SLF001
-
-            annotator = build_pipeline_annotator(pipeline, annotator_config)
+            if work_dir is None:
+                work_dir = Path("./work")
+            annotator = build_pipeline_annotator(
+                pipeline, annotator_config,
+                work_dir / f"A{idx}_{annotator_config.type}",
+            )
             pipeline.add_annotator(annotator)
     except (ValueError, FileNotFoundError) as value_error:
         assert annotator_config is not None
