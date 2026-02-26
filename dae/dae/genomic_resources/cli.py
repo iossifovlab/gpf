@@ -2,6 +2,7 @@
 import argparse
 import copy
 import fnmatch
+import json
 import logging
 import os
 import pathlib
@@ -203,8 +204,7 @@ def _run_repo_init_command(**kwargs: str) -> None:
 
     proto = _create_proto(str(cwd))
     assert isinstance(proto, FsspecRepositoryProtocol)
-    contents = proto.build_content_file()
-    _create_contents_db(proto, contents)
+    proto.build_content_file()
 
 
 def _configure_repo_manifest_subparser(
@@ -323,6 +323,16 @@ def _configure_resource_info_subparser(
     TaskGraphCli.add_arguments(
         parser, use_commands=False, task_progress_mode=False,
     )
+
+
+def _configure_build_fts_db_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
+    parser = subparsers.add_parser(
+        "build-fts-db", help="Build the index.html for the specific resource",
+    )
+    _add_repository_resource_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
 
 def collect_dvc_entries(
@@ -447,6 +457,18 @@ def _run_repo_manifest_command_internal(
     _create_contents_db(proto, contents)
 
     return updates_needed
+
+
+def _run_build_fts_db_command(
+    proto: FsspecReadWriteProtocol,
+) -> None:
+    content_filepath = os.path.join(
+        proto.url, GR_CONTENTS_FILE_NAME)
+    with proto.filesystem.open(
+        content_filepath, mode="r", compression="gzip",
+    ) as contents_file:
+        contents = json.loads(contents_file.read())
+        _create_contents_db(proto, contents)
 
 
 def _create_contents_db(
@@ -870,6 +892,7 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
     _configure_resource_info_subparser(commands_parser)
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
+    _configure_build_fts_db_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
@@ -970,7 +993,10 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
             status = 1
         logger.warning("inconsistent GRR <%s> state", repo_url)
         sys.exit(status)
-
+    elif command == "build-fts-db":
+        assert isinstance(proto, FsspecReadWriteProtocol)
+        _run_build_fts_db_command(proto)
+        return
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
