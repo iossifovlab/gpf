@@ -512,7 +512,7 @@ def _build_contents_db(
     has_labels: bool = False,
 ) -> None:
     table_columns = [
-        "concat(id, COALESCE(version, '')) as full_id",
+        "concat(id, COALESCE(version, '0')) as full_id",
         "id", "config.type AS type",
     ]
     fts_columns = ["id", "type"]
@@ -1213,7 +1213,7 @@ TEMPLATE_STRING += """
             </thead>
             <tbody>
                 {%- for key, value in data.items() recursive%}
-                <tr>
+                <tr id="{{key}}{{value['res_version']}}">
                     <td class="nowrap">{{value['type']}}</td>
                     <td class="nowrap">
                         <a href='{{key}}/index.html'>{{key}}</a>
