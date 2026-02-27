@@ -453,8 +453,7 @@ def _run_repo_manifest_command_internal(
         return updates_needed
 
     assert isinstance(proto, FsspecReadWriteProtocol)
-    contents = proto.build_content_file()
-    _create_contents_db(proto, contents)
+    proto.build_content_file()
 
     return updates_needed
 
