@@ -328,7 +328,7 @@ def _configure_resource_info_subparser(
 def _configure_build_fts_db_subparser(
         subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
-        "build-fts-db", help="Build the index.html for the specific resource",
+        "repo-build-fts", help="Build the FTS index for the whole GRR",
     )
     _add_repository_resource_parameters_group(parser)
     _add_dvc_parameters_group(parser)
@@ -992,7 +992,7 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
             status = 1
         logger.warning("inconsistent GRR <%s> state", repo_url)
         sys.exit(status)
-    elif command == "build-fts-db":
+    elif command == "repo-build-fts":
         assert isinstance(proto, FsspecReadWriteProtocol)
         _run_build_fts_db_command(proto)
         return
