@@ -94,14 +94,47 @@
 
         window.duckdbConn = conn;
 
-        const all_ids_result = await conn.query("SELECT id FROM contents;")
-        window.all_ids = new Set(all_ids_result.toArray().map((row) => row.toJSON().id))
+        const all_ids_result = await conn.query("SELECT full_id FROM contents;")
+        window.all_ids = new Set(all_ids_result.toArray().map((row) => row.toJSON().full_id))
+        const columns = await conn.query("DESCRIBE contents;")
+        window.contents_columns = all_ids_result.toArray().map((row) => row.toJSON().column_name)
+        const rowData = {}
+        $(".contents > tbody > tr").each((index, row) => {
+            const id = $(row).attr("id");
+            const children = $(row).find("td");
+            rowData[id] = {
+                "type": children[0].textContent.trim(),
+                "id": children[1].textContent.trim(),
+                "version": children[2].textContent.trim(),
+                "numberOfFiles": children[3].textContent.trim(),
+                "sizeInBytes": children[4].textContent.trim(),
+                "summary": children[5].textContent.trim(),
+                "url": $(children[1]).children("a").attr("href").trim(),
+            };
+        })
+        window.rowData = rowData;
+
+        function populateRows(ids) {
+            const rows = $(".contents > tbody > tr")
+            for (const [index, rowId] of ids.entries()) {
+                let row = $(rows[index]);
+                let rowData = window.rowData[rowId];
+                let cells = row.children("td");
+                cells[0].textContent = rowData.type;
+                $(cells[1]).children("a").attr("href", rowData.url).text(rowData.id);
+                cells[2].textContent = rowData.version;
+                cells[3].textContent = rowData.numberOfFiles;
+                cells[4].textContent = rowData.sizeInBytes;
+                cells[5].textContent = rowData.summary;
+                row.show();
+            }
+        }
 
         $("#input-field").on("change", async (e) => {
             const parser = new nearley.Parser(nearley.Grammar.fromCompiled(window.grammar));
             parser.feed(e.target.value)
             if (parser.results.length === 0) {
-                $(".contents > tbody > tr").show()
+                populateRows(Array.from(window.all_ids))
                 return;
             }
             const tree = Array.isArray(parser.results[0]) ? parser.results[0][0] : parser.results[0];
@@ -109,7 +142,7 @@
             const result = {}
             const addQueries = (read_node, out_node) => {
                 if (typeof read_node === "string") {
-                    out_node.query = `SELECT id FROM (SELECT id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score = 0 ORDER BY score desc)`
+                    out_node.query = `SELECT full_id FROM (SELECT full_id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) + COALESCE(fts_main_contents_first.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score > 0 ORDER BY score desc)`
                 }
                 else if (read_node.and) {
                     out_node.and = [{}, {}]
@@ -122,7 +155,7 @@
                     addQueries(read_node.or[1], out_node.or[1])
                 }
                 else if (read_node.not) {
-                    out_node.not = `SELECT id FROM (SELECT id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) + COALESCE(fts_main_contents_first.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score > 0 ORDER BY score desc)`
+                    out_node.not = `SELECT full_id FROM (SELECT full_id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score = 0 ORDER BY score desc)`
                     addQueries(read_node.not, out_node.not)
                 }
             }
@@ -181,12 +214,14 @@
             });
 
             const query = await combineQuery(result)
-            const displayIds = (await conn.query(query)).toArray().map((row) => row.toJSON().id);
+            const displayIds = (await conn.query(query)).toArray().map((row) => row.toJSON().full_id);
 
-            displayIds.forEach((id) => {$(`tbody > tr:contains("${id}")`).show()})
+            populateRows(displayIds);
+
             $(".searching").hide()
 
         });
+
         $(".loading").hide()
         $(".search-table").show()
     </script>
