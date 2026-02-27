@@ -1212,7 +1212,7 @@ TEMPLATE_STRING += """
             </thead>
             <tbody>
                 {%- for key, value in data.items() recursive%}
-                <tr id="{{key}}{{value['res_version']}}">
+                <tr id="{{value['res_id']}}{{value['res_version']}}">
                     <td class="nowrap">{{value['type']}}</td>
                     <td class="nowrap">
                         <a href='{{key}}/index.html'>{{key}}</a>

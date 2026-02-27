@@ -31,6 +31,6 @@ token -> word {%
     | "-" word {% function(d) {return {"not": d[1]}} %}
 
 word -> [a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+]:+ {% function(d) { return d[0].join("") } %}
-    | "\"" [a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+ ]:+ "\"" {% function(d) { return d[1].join("") } %}
+    | "\"" [a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+ ]:+ "\"" {% function(d) { return { "precise": d[1].join("") } } %}
 
 _ -> [\s]:+ {% function(d) {return d[0]} %}

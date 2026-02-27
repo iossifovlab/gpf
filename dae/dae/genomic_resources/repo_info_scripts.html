@@ -43,7 +43,7 @@
                 {"name": "word", "symbols": ["word$ebnf$1"], "postprocess": function(d) { return d[0].join("") }},
                 {"name": "word$ebnf$2", "symbols": [/[a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+ ]/]},
                 {"name": "word$ebnf$2", "symbols": ["word$ebnf$2", /[a-zA-Z0-9!@#$%^*()\[\]\./\\';:<>?\-_=+ ]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-                {"name": "word", "symbols": [{"literal":"\""}, "word$ebnf$2", {"literal":"\""}], "postprocess": function(d) { return d[1].join("") }},
+                {"name": "word", "symbols": [{"literal":"\""}, "word$ebnf$2", {"literal":"\""}], "postprocess": function(d) { return { "precise": d[1].join("") } }},
                 {"name": "_$ebnf$1", "symbols": [/[\s]/]},
                 {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", /[\s]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
                 {"name": "_", "symbols": ["_$ebnf$1"], "postprocess": function(d) {return d[0]}}
@@ -143,6 +143,9 @@
             const addQueries = (read_node, out_node) => {
                 if (typeof read_node === "string") {
                     out_node.query = `SELECT full_id FROM (SELECT full_id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node}'), 0) + COALESCE(fts_main_contents_first.match_bm25(full_id, '${read_node}'), 0) as score FROM contents WHERE score > 0 ORDER BY score desc)`
+                }
+                else if (read_node.precise) {
+                    out_node.query = `SELECT full_id FROM (SELECT full_id, COALESCE(fts_main_contents.match_bm25(full_id, '${read_node.precise}'), 0) as score FROM contents WHERE score > 0 ORDER BY score desc)`
                 }
                 else if (read_node.and) {
                     out_node.and = [{}, {}]

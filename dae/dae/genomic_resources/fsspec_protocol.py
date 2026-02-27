@@ -722,6 +722,7 @@ class FsspecReadWriteProtocol(
             )
             assert res.config is not None
             result[res.get_full_id()] = {
+                "res_id": res.resource_id,
                 **res.config,
                 "res_version": res.get_version_str(),
                 "res_files": len(list(res.get_manifest().get_files())),
