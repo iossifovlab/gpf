@@ -1176,6 +1176,21 @@ TEMPLATE_STRING = """
             text-align: center;
             font-size: larger;
         }
+        .pageButton {
+            border: none;
+            background: none;
+            color: blue;
+            cursor: pointer;
+            padding: 3px;
+            margin: 0px 3px;
+        }
+        .pageButton.active {
+            color: black;
+            cursor: default;
+        }
+        .pageButton.hide {
+            display: none;
+        }
     </style>
  </head>"""
 
@@ -1226,6 +1241,7 @@ TEMPLATE_STRING += """
          </table>
          <p class="searching" style="display: none;">Searching</p>
      </div>
+     <div class="pagination"></div>
  </body>
 </html>
 """
