@@ -85,6 +85,37 @@
     <script type="module">
         //import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.1-dev106.0/+esm";
         import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.33.1-dev18.0/+esm";
+        import * from "https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-wasm@3.51.2-build6/dist/index.mjs";
+
+        const start = (sqlite3) => {
+          fetch(`${window.location.origin}/.CONTENTS.sqlite3`)
+            .then((response) => response.arrayBuffer())
+            .then((arrayBuffer) => {
+              const p = sqlite3.wasm.allocFromTypedArray(arrayBuffer)
+              const db = new sqlite3.oo1.DB();
+              let deserialize_flags = sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE;
+              const rc = sqlite3.capi.sqlite3_deserialize(db.pointer, 'main', p, arrayBuffer.byteLength, arrayBuffer.byteLength, deserialize_flags);
+              db.checkRc(rc);
+              window.sqlite3db = db;
+            })
+            .catch((error) => {
+              console.error("Error fetching or processing the database file:", error);
+            });
+        };
+
+        const initializeSQLite = async () => {
+          try {
+            console.log('Loading and initializing SQLite3 module...');
+            const sqlite3 = await sqlite3InitModule();
+            console.log('Done initializing. Running demo...');
+            start(sqlite3);
+          } catch (err) {
+            console.error('Initialization error:', err.name, err.message);
+          }
+        };
+
+        initializeSQLite();
+
         window.duckdbduckdbWasm = duckdbduckdbWasm;
         const db = await getDb();
 
@@ -114,8 +145,13 @@
         })
         window.rowData = rowData;
 
-        function populateRows(ids) {
+        function selectPage(page) {
+            if (page === window.currentPage) {
+                return;
+            }
             const rows = $(".contents > tbody > tr")
+            rows.hide();
+            let ids = window.pages[page]
             for (const [index, rowId] of ids.entries()) {
                 let row = $(rows[index]);
                 let rowData = window.rowData[rowId];
@@ -128,13 +164,59 @@
                 cells[5].textContent = rowData.summary;
                 row.show();
             }
+            window.currentPage = page;
+            updateButtons();
+        }
+
+        function updateButtons() {
+            $(".pageButton").removeClass("active");
+            $(".pageButton").removeClass("hide");
+            $(`#${window.currentPage}`).addClass("active");
+            if (window.currentPage === 0) {
+                $("#prev").addClass("hide");
+            }
+            if (window.currentPage === window.pages.length - 1) {
+                $("#next").addClass("hide");
+            }
+
+        }
+
+        function refreshData(ids) {
+            window.pages = []
+            const pageSize = 20;
+            for (let progress = 0; progress < ids.length; progress += pageSize) {
+                window.pages.push(ids.slice(progress, progress + pageSize))
+            }
+            refreshPaginationButtons();
+            selectPage(0);
+        }
+
+        function clearPaginationButtons() {
+            const pagination = $(".pagination");
+            pagination.empty();
+        }
+
+        function refreshPaginationButtons() {
+            clearPaginationButtons();
+            const pagination = $(".pagination");
+            const previousButton = $('<button class="pageButton" id="prev"> < </button>');
+            previousButton.on("click", () => selectPage(Math.max(0, window.currentPage - 1)));
+            pagination.append(previousButton);
+            for (let i = 0; i < window.pages.length; i++) {
+                const button = $(`<button class="pageButton" id="${i}">${i + 1}</button>`);
+                button.on("click", () => selectPage(i));
+                pagination.append(button);
+            }
+            const nextButton = $(`<button class="pageButton" id="next"> > </button>`);
+            nextButton.on("click", () => selectPage(Math.min(window.pages.length - 1, window.currentPage + 1)));
+            pagination.append(nextButton);
         }
 
         $("#input-field").on("change", async (e) => {
             const parser = new nearley.Parser(nearley.Grammar.fromCompiled(window.grammar));
             parser.feed(e.target.value)
             if (parser.results.length === 0) {
-                populateRows(Array.from(window.all_ids))
+                refreshData(Array.from(window.all_ids))
                 return;
             }
             const tree = Array.isArray(parser.results[0]) ? parser.results[0][0] : parser.results[0];
@@ -163,7 +245,7 @@
             }
             addQueries(tree, result);
 
-
+            clearPaginationButtons();
             $(".contents > tbody > tr").hide()
             $(".searching").show()
 
@@ -218,11 +300,13 @@
             const query = await combineQuery(result)
             const displayIds = (await conn.query(query)).toArray().map((row) => row.toJSON().full_id);
 
-            populateRows(displayIds);
+            refreshData(displayIds);
 
             $(".searching").hide()
 
         });
+
+        refreshData(Array.from(window.all_ids))
 
         $(".loading").hide()
         $(".search-table").show()

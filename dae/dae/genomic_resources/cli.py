@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import pathlib
+import sqlite3
 import sys
 from collections.abc import Sequence
 from typing import Any, cast
@@ -475,31 +476,27 @@ def _create_contents_db(
     contents: list[dict[str, Any]],
 ) -> None:
 
-    has_description = False
-    has_summary = False
-    has_labels = False
-    for res_info in contents:
-        if "meta" not in res_info["config"]:
-            continue
-        res_meta = res_info["config"]["meta"]
-        if "description" in res_meta:
-            has_description = True
-        if "summary" in res_meta:
-            has_summary = True
-        if res_meta.get("labels"):
-            has_labels = True
-
-    duckdb.register_filesystem(proto.filesystem)
-
-    db_filepath = os.path.join(proto.url, ".CONTENTS.duckdb")
-
-    with duckdb.connect(db_filepath) as conn:
-        _build_contents_db(
-            conn, proto,
-            has_description=has_description,
-            has_summary=has_summary,
-            has_labels=has_labels,
+    sqlite_filepath = proto.filesystem.expand_path(".CONTENTS.sqlite3")[0]
+    with sqlite3.connect(sqlite_filepath) as conn:
+        conn.execute(
+            "CREATE VIRTUAL TABLE contents "
+            "USING fts5(full_id, id, type, description, summary)",
         )
+
+        for res_info in contents:
+            res_id = res_info["id"]
+            res_type = res_info["config"]["type"]
+            res_description = res_info["config"].get("meta", {}).get(
+                "description", "")
+            res_summary = res_info["config"].get("meta", {}).get(
+                "summary", "")
+
+            conn.execute(
+                "INSERT INTO contents "
+                "(full_id, id, type, description, summary) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (res_id, res_id, res_type, res_description, res_summary),
+            )
 
 
 def _build_contents_db(
