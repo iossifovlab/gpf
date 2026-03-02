@@ -477,6 +477,8 @@ def _create_contents_db(
 ) -> None:
 
     sqlite_filepath = proto.filesystem.expand_path(".CONTENTS.sqlite3")[0]
+    if os.path.exists(sqlite_filepath):
+        os.remove(sqlite_filepath)
     with sqlite3.connect(sqlite_filepath) as conn:
         conn.execute(
             "CREATE VIRTUAL TABLE contents "
