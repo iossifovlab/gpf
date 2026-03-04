@@ -12,6 +12,7 @@ import os
 from collections.abc import Generator
 from contextlib import AbstractContextManager
 from dataclasses import asdict
+from threading import Lock
 from types import TracebackType
 from typing import (
     IO,
@@ -150,6 +151,10 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         url = args[1] if len(args) > 1 else kwargs["url"]
         key = (proto_id, url)
         if key in _FSSPEC_PROTOCOLS:
+            logger.warning(
+                "protocol with id %s and url %s already exists, "
+                "returning the existing instance",
+                proto_id, url)
             return _FSSPEC_PROTOCOLS[key]
         instance = super().__new__(cls)
         _FSSPEC_PROTOCOLS[key] = instance
@@ -179,6 +184,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         self.filesystem = filesystem
         self.kwargs: dict[str, Any] = kwargs
+        self._all_resources_lock = Lock()
         self._all_resources: list[GenomicResource] | None = None
 
     def __getstate__(self) -> dict[str, Any]:
@@ -186,6 +192,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         # Remove the unpicklable entries.
         del state["filesystem"]
         del state["_all_resources"]
+        del state["_all_resources_lock"]
         return state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
@@ -193,6 +200,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self.filesystem = _build_filesystem(
             self.url, **self.kwargs)
         self._all_resources = None
+        self._all_resources_lock = Lock()
 
     def get_url(self) -> str:
         return self.url
@@ -212,35 +220,37 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
-        if self._all_resources is None:
-            self._all_resources = []
-            content_filename = os.path.join(
-                self.url, GR_CONTENTS_FILE_NAME)
-            compression: str | None = "gzip"
-            if not self.filesystem.exists(content_filename):
-                content_filename = content_filename[:-3]
-                compression = None
+        with self._all_resources_lock:
+            if self._all_resources is None:
+                all_resources = []
+                content_filename = os.path.join(
+                    self.url, GR_CONTENTS_FILE_NAME)
+                compression: str | None = "gzip"
+                if not self.filesystem.exists(content_filename):
+                    content_filename = content_filename[:-3]
+                    compression = None
 
-            with self.filesystem.open(
-                    content_filename, "rt", compression=compression) as infile:
-                data = infile.read()
+                with self.filesystem.open(
+                        content_filename, "rt",
+                        compression=compression) as infile:
+                    data = infile.read()
 
-            contents = json.loads(data)
+                contents = json.loads(data)
 
-            for entry in contents:
-                version = tuple(map(int, entry["version"].split(".")))
-                manifest = Manifest.from_manifest_entries(entry["manifest"])
-                resource = self.build_genomic_resource(
-                    entry["id"], version, config=entry["config"],
-                    manifest=manifest)
-                logger.debug(
-                    "repo %s loaded resource %s",
-                    self.proto_id,
-                    resource.resource_id)
-                self._all_resources.append(resource)
-            self._all_resources = sorted(
-                self._all_resources,
-                key=lambda r: r.get_genomic_resource_id_version())
+                for entry in contents:
+                    version = tuple(map(int, entry["version"].split(".")))
+                    manifest = Manifest.from_manifest_entries(entry["manifest"])
+                    resource = self.build_genomic_resource(
+                        entry["id"], version, config=entry["config"],
+                        manifest=manifest)
+                    logger.debug(
+                        "repo %s loaded resource %s",
+                        self.proto_id,
+                        resource.resource_id)
+                    all_resources.append(resource)
+                self._all_resources = sorted(
+                    all_resources,
+                    key=lambda r: r.get_genomic_resource_id_version())
 
         yield from self._all_resources
 
