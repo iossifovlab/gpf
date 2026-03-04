@@ -6,7 +6,7 @@ import os
 from collections.abc import Sequence
 from itertools import starmap
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
@@ -76,7 +76,7 @@ class AnnotatorBase(Annotator):
         if info.parameters.get("work_dir") is None:
             raise ValueError(
                 f"Missing a 'work_dir' parameter in annotator {info}.")
-        self.work_dir: Path = cast(Path, info.parameters["work_dir"])
+        self.work_dir = Path(info.parameters["work_dir"])
         super().__init__(pipeline, info)
 
     def open(self) -> Annotator:
