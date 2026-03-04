@@ -35,7 +35,7 @@ dependencies:
   - python-box=7.1
   - setuptools=70.3
   - pip=24.1
-  - sqlite=3.48.0
+  - sqlite=3.51
   - django=5.2.5
   - django-cors-headers=4.7.0
   - djangorestframework=3.16.1
@@ -46,7 +46,7 @@ dependencies:
   - jinja2=3.1.5
   - toolz=0.12
   - markdown2=2.4
-  - python-duckdb=1.4.2
+  - python-duckdb=1.4.4
   - sqlglot=28
   - sentry-sdk=2.12
   - gunicorn=22.0

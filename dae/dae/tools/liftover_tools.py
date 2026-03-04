@@ -293,7 +293,7 @@ class CNVLiftoverTool(LiftoverTool):
                     cast(CNVAllele, result.get("target_annotatable"))
 
                 if liftover_annotatable is None:
-                    logger.error("can't liftover %s", aa)
+                    logger.warning("can't liftover %s", aa)
                     continue
 
                 for fv in fvs:
@@ -418,7 +418,7 @@ class DaeLiftoverTool(LiftoverTool):
                 liftover_annotatable: VCFAllele = \
                     cast(VCFAllele, result.get("target_annotatable"))
                 if liftover_annotatable is None:
-                    logger.error("can't liftover %s", aa)
+                    logger.warning("can't liftover %s", aa)
                     continue
                 liftover_cshl_variant = VariantDetails.from_vcf(
                     liftover_annotatable.chrom, liftover_annotatable.pos,
@@ -544,7 +544,7 @@ class DenovoLiftoverTool(LiftoverTool):
                     cast(VCFAllele, result.get("target_annotatable"))
 
                 if liftover_annotatable is None:
-                    logger.error("can't liftover %s", aa)
+                    logger.warning("can't liftover %s", aa)
                     continue
 
                 for fv in fvs:
