@@ -487,6 +487,7 @@ def _create_contents_db(
 
         for res_info in contents:
             res_id = res_info["id"]
+            res_version = res_info["version"]
             res_type = res_info["config"]["type"]
             res_description = res_info["config"].get("meta", {}).get(
                 "description", "")
@@ -497,7 +498,13 @@ def _create_contents_db(
                 "INSERT INTO contents "
                 "(full_id, id, type, description, summary) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (res_id, res_id, res_type, res_description, res_summary),
+                (
+                    f"{res_id}{res_version}",
+                     res_id,
+                     res_type,
+                     res_description,
+                     res_summary,
+                ),
             )
 
 
