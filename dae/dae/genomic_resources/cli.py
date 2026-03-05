@@ -12,7 +12,6 @@ from collections.abc import Sequence
 from typing import Any, cast
 from urllib.parse import urlparse
 
-import duckdb
 import yaml
 from cerberus.schema import SchemaError
 from jinja2 import Template
@@ -480,9 +479,25 @@ def _create_contents_db(
     if os.path.exists(sqlite_filepath):
         os.remove(sqlite_filepath)
     with sqlite3.connect(sqlite_filepath) as conn:
+
+        labels = set()
+
+        for res_info in contents:
+            res_labels = res_info["config"].get("meta", {}).get("labels", {})
+            if res_labels is None:
+                res_labels = {}
+            labels.update(res_labels.keys())
+
+        print(
+            "CREATE VIRTUAL TABLE contents "
+            "USING fts5(full_id, id, type, description, summary, "
+            f"{', '.join(labels)})",
+        )
+
         conn.execute(
             "CREATE VIRTUAL TABLE contents "
-            "USING fts5(full_id, id, type, description, summary)",
+            "USING fts5(full_id, id, type, description, summary, "
+            f"{', '.join(labels)})",
         )
 
         for res_info in contents:
@@ -494,108 +509,30 @@ def _create_contents_db(
             res_summary = res_info["config"].get("meta", {}).get(
                 "summary", "")
 
+            res_labels = res_info["config"].get(
+                "meta", {}).get("labels", {})
+
+            if res_labels is None:
+                res_labels = {}
+
+            row = [
+                f"{res_id}{res_version}",
+                res_id,
+                res_type,
+                res_description,
+                res_summary,
+                *[res_labels.get(label, "") for label in labels],
+            ]
+
             conn.execute(
-                "INSERT INTO contents "
-                "(full_id, id, type, description, summary) "
-                "VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO contents "  # noqa: S608
+                "(full_id, id, type, description, summary, "
+                f"{', '.join(labels)}) "
+                f"VALUES ({', '.join(['?' for _ in range(len(row))])})",
                 (
-                    f"{res_id}{res_version}",
-                     res_id,
-                     res_type,
-                     res_description,
-                     res_summary,
+                    *row,
                 ),
             )
-
-
-def _build_contents_db(
-    conn: duckdb.DuckDBPyConnection,
-    proto: FsspecReadWriteProtocol,
-    *,
-    has_description: bool = False,
-    has_summary: bool = False,
-    has_labels: bool = False,
-) -> None:
-    table_columns = [
-        "concat(id, COALESCE(version, '0')) as full_id",
-        "id", "config.type AS type",
-    ]
-    fts_columns = ["id", "type"]
-    if has_description:
-        table_columns.append(
-            "config.meta.description AS description")
-        fts_columns.append("description")
-    if has_summary:
-        table_columns.append(
-            "config.meta.summary AS summary")
-        fts_columns.append("summary")
-
-    if has_labels:
-        table_columns.append(
-            "unnest(config.meta.labels)")
-
-    conn.query("INSTALL fts")
-    conn.query("LOAD fts")
-    conn.query(
-        "CREATE OR REPLACE TABLE contents_first AS "  # noqa: S608
-        f"SELECT {', '.join(table_columns)} "
-        f"FROM read_json_auto('{proto.get_content_file_path()}');",
-    )
-    conn.query(
-        "CREATE OR REPLACE TABLE contents AS SELECT * FROM contents_first;")
-    if has_labels:
-        result = conn.query(
-            "DESCRIBE (SELECT unnest(config.meta.labels) "  # noqa: S608
-            "FROM read_json_auto("
-            f"'{proto.get_content_file_path()}'));",
-        )
-        conn.query(
-            "CREATE OR REPLACE TABLE labels AS "  # noqa: S608
-            "SELECT column_name as label_name FROM "
-            "(DESCRIBE (SELECT unnest(config.meta.labels) "
-            "FROM read_json_auto("
-            f"'{proto.get_content_file_path()}')));",
-        )
-        label_names = [r[0] for r in result.fetchall()]
-        fts_columns.extend(label_names)
-
-        for label in label_names:
-            conn.query(
-                f"CREATE OR REPLACE VIEW {label}_values "  # noqa: S608
-                f"AS SELECT DISTINCT({label}) FROM contents;",
-            )
-
-    _build_fts_indexes(conn, fts_columns)
-
-
-def _build_fts_indexes(
-    conn: duckdb.DuckDBPyConnection,
-    fts_columns: list[str],
-) -> None:
-    try:
-        conn.query("PRAGMA drop_fts_index(contents_first)")
-    except duckdb.CatalogException:
-        logger.info(
-            "No existing FTS index to drop for first table, skipping...")
-    conn.query(
-        "PRAGMA create_fts_index("
-        "contents_first, "
-        "full_id, "
-        f"{', '.join(fts_columns)})",
-    )
-
-    try:
-        conn.query("PRAGMA drop_fts_index(contents)")
-    except duckdb.CatalogException:
-        logger.info(
-            "No existing FTS index to drop for second table, skipping...")
-    conn.query(
-        "PRAGMA create_fts_index("
-        "contents, "
-        "full_id, "
-        f"{', '.join(fts_columns)}, "
-        "stemmer='none', ignore='(\\\\.|[^a-z0-9])+');",
-    )
 
 
 def _run_repo_manifest_command(
