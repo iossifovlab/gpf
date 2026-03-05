@@ -98,10 +98,10 @@ class GenomicScoreAnnotatorBase(Annotator):
         attributes = self.score.get_default_annotation_attributes()
         result = {}
         for attr in attributes:
-            score_def = self.score.get_score_definition(attr.source)
+            score_def = self.score.get_score_definition(attr["source"])
             assert score_def is not None
-            result[attr.source] = AttributeDesc(
-                name=attr.source,
+            result[attr["source"]] = AttributeDesc(
+                name=attr["source"],
                 type=score_def.value_type,
                 description=score_def.desc,
                 default=True,
