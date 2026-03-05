@@ -368,7 +368,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
     ):
-        self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
+        super().__init__(pipeline, info)
 
         assert pipeline is not None
 
@@ -393,7 +393,6 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         info.resources.append(self.gene_models_resource)
         info.resources.append(self.genome_resource)
 
-        super().__init__(pipeline, info)
 
         info.documentation += textwrap.dedent(f"""
 
