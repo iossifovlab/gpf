@@ -655,9 +655,11 @@ class SqlQueryBuilder(QueryBuilderBase):
         if len(regions) == 0:
             return condition("1 = 0")
 
-        assert len(regions) > 0
-
         result = SqlQueryBuilder._region_to_condition(regions[0])
+        if len(regions) == 1:
+            return result
+
+        assert len(regions) > 0
         for reg in regions[1:]:
             result = or_(
                 result,
