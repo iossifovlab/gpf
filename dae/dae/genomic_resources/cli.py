@@ -1160,7 +1160,9 @@ TEMPLATE_STRING += """
          </p>
          <p class="hints">
              The search uses
-             <a href="https://sqlite.org/fts5.html#full_text_query_syntax">
+             <a
+              href="https://sqlite.org/fts5.html#full_text_query_syntax"
+              target="_blank">
               SQLite's FTS syntax.</a>
          </p>
          <table class="contents">
