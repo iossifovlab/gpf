@@ -126,8 +126,9 @@ class GeneSetAnnotator(AnnotatorBase):
                     name=gs["name"],
                     type="bool",
                     description=gs["desc"],
+                    default=False,
                 )
-                for gs in gene_sets_list[:20]
+                for gs in gene_sets_list
             }
             source_type_desc["in_sets"] = in_sets_desc
             self._info.attributes = \
