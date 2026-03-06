@@ -3,7 +3,6 @@ from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
     AnnotatorInfo,
 )
 from dae.annotation.annotation_pipeline import (
@@ -104,37 +103,16 @@ class GeneSetAnnotator(AnnotatorBase):
                 "which have at least one gene from the input gene "
                 "list"
             ))
-        if self._info.attributes:
-            gene_sets_desc = {gs["name"]: gs["desc"] for gs in gene_sets_list}
-            source_type_desc: dict[str, AttributeDesc] = {}
-            for attr in self._info.attributes:
-                if attr.source == "in_sets":
-                    source_type_desc["in_sets"] = in_sets_desc
-                    continue
-                if attr.source not in gene_sets_desc:
-                    raise ValueError(
-                        f"The attribute {attr.source} is not found in the "
-                        f"gene set collection "
-                        f"{self.gene_set_collection.collection_id}.")
-                source_type_desc[attr.source] = AttributeDesc(
-                    name=attr.source,
-                    type="bool",
-                    description=gene_sets_desc[attr.source])
-        else:
-            source_type_desc = {
-                gs["name"]: AttributeDesc(
-                    name=gs["name"],
-                    type="bool",
-                    description=gs["desc"],
-                    default=False,
-                )
-                for gs in gene_sets_list
-            }
-            source_type_desc["in_sets"] = in_sets_desc
-            self._info.attributes = \
-                AnnotationConfigParser.parse_raw_attributes([
-                    *source_type_desc.keys(),
-                ])
+        source_type_desc = {
+            gs["name"]: AttributeDesc(
+                name=gs["name"],
+                type="bool",
+                description=gs["desc"],
+                default=False,
+            )
+            for gs in gene_sets_list
+        }
+        source_type_desc["in_sets"] = in_sets_desc
         return source_type_desc
 
     @property
