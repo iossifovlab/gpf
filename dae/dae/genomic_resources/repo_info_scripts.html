@@ -139,12 +139,18 @@
 
             const ids = new Set();
 
-            const displayIds = window.sqlite3.query(`SELECT full_id FROM contents WHERE contents MATCH '${newValue}'`).map((row) => row[0]);
-
-            refreshData(displayIds);
-
-            $(".searching").hide()
-
+            try {
+                const displayIds = window.sqlite3.query(`SELECT full_id FROM contents WHERE contents MATCH '${newValue}'`).map((row) => row[0]);
+                refreshData(displayIds);
+            }
+            catch (error) {
+                console.error("Error during search:", error);
+                alert("Search query failed during execution. Debug details are in the console.")
+                refreshData(Array.from(window.all_ids))
+            }
+            finally {
+                $(".searching").hide()
+            }
         });
 
     </script>

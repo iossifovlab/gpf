@@ -1153,9 +1153,15 @@ TEMPLATE_STRING += """
              </tr>
          </table>
          <p class="hints">
-            Use spaces and & to perform AND,
-             use | to perform OR, surround strings in "" to
-             use spaces inside the string
+            Use AND to perform and,
+             use OR to perform or, spaces separate strings,
+             surround strings in "" to
+             use spaces inside the string.
+         </p>
+         <p class="hints">
+             The search uses
+             <a href="https://sqlite.org/fts5.html#full_text_query_syntax">
+              SQLite's FTS syntax.</a>
          </p>
          <table class="contents">
             <thead>
