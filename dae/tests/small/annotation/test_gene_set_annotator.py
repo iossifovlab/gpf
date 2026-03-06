@@ -89,25 +89,16 @@ def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
 
     result = annotator.annotate(annotatable, {"gene_list": ["g1"]})
     assert result == {
-        "set_0": True,
-        "set_1": True,
-        "set_2": False,
         "in_sets": ["set_0", "set_1"],
     }
 
     result = annotator.annotate(annotatable, {"gene_list": ["g3"]})
     assert result == {
-        "set_0": False,
-        "set_1": False,
-        "set_2": False,
         "in_sets": [],
     }
 
     result = annotator.annotate(annotatable, {"gene_list": ["g3", "g2"]})
     assert result == {
-        "set_0": True,
-        "set_1": False,
-        "set_2": True,
         "in_sets": ["set_0", "set_2"],
     }
 
@@ -152,6 +143,10 @@ def test_gene_set_annotator_in_pipeline(
         - gene_set_annotator:
             resource_id: foobar_gene_set_collection
             input_gene_list: gene_list
+            attributes:
+                - set_0
+                - set_1
+                - set_2
         """),
         test_grr)
 
