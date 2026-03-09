@@ -104,6 +104,10 @@ class GeneSetAnnotator(AnnotatorBase):
                 "list"
             ))
         source_type_desc = {
+            "in_sets": in_sets_desc,
+        }
+        source_type_desc["in_sets"] = in_sets_desc
+        source_type_desc.update({
             gs["name"]: AttributeDesc(
                 source=gs["name"],
                 type="bool",
@@ -111,8 +115,7 @@ class GeneSetAnnotator(AnnotatorBase):
                 default=False,
             )
             for gs in gene_sets_list
-        }
-        source_type_desc["in_sets"] = in_sets_desc
+        })
         return source_type_desc
 
     @property
