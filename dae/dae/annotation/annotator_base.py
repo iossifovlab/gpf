@@ -35,7 +35,7 @@ class AnnotatorBase(Annotator):
 
             if isinstance(attr_desc, tuple):
                 self.attribute_descriptions[name] = AttributeDesc(
-                    name=name,
+                    source=name,
                     type=attr_desc[0],
                     description=attr_desc[1],
                 )
