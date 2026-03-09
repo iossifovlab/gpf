@@ -54,7 +54,7 @@ Annotator that maps chromsomes from one naming convention to another.
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "renamed_chromosome": AttributeDesc(
-                name="renamed_chromosome",
+                source="renamed_chromosome",
                 type="annotatable",
                 description="Allele with renamed chromosome.",
                 attribute_type="annotatable",

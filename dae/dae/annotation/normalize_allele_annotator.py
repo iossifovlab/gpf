@@ -55,7 +55,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "normalized_allele": AttributeDesc(
-                name="normalized_allele",
+                source="normalized_allele",
                 type="annotatable",
                 description="Normalized allele.",
                 internal=True,

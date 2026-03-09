@@ -95,18 +95,39 @@ class GenomicScoreAnnotatorBase(Annotator):
         super().close()
 
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
-        attributes = self.score.get_default_annotation_attributes()
+        attribute_defs = self.score.score_definitions
         result = {}
-        for attr in attributes:
-            score_def = self.score.get_score_definition(attr["source"])
-            assert score_def is not None
-            result[attr["source"]] = AttributeDesc(
-                name=attr["source"],
-                type=score_def.value_type,
-                description=score_def.desc,
+        for attr_source, attr_def in attribute_defs.items():
+            result[attr_source] = AttributeDesc(
+                source=attr_def.score_id,
+                name=attr_def.score_id,
+                type=attr_def.value_type,
+                description=attr_def.desc,
                 default=True,
                 internal=False,
             )
+
+        default_annotation = self.score.get_config().get("default_annotation")
+        if default_annotation:
+            for desc in result.values():
+                desc.default = False
+            for attr in default_annotation:
+                default_attr = \
+                    AnnotationConfigParser.parse_raw_attribute_config(attr)
+                if default_attr.source not in result:
+                    raise ValueError(
+                        f"Default annotation attribute '{attr}' is not "
+                        "defined in the score resource!")
+                result[default_attr.source] = AttributeDesc(
+                    source=default_attr.source,
+                    name=default_attr.name,
+                    type=default_attr.value_type,
+                    attribute_type=default_attr.attribute_type,
+                    description=default_attr.description,
+                    params=cast(dict, default_attr.parameters),
+                    default=True,
+                    internal=False,
+                )
         return result
 
     def _build_score_aggregator_documentation(

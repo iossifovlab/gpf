@@ -116,7 +116,7 @@ Annotator to lift over a variant from one reference genome to another.
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "liftover_annotatable": AttributeDesc(
-                name="liftover_annotatable",
+                source="liftover_annotatable",
                 type="annotatable",
                 description="The lifted over annotatable",
                 internal=True,

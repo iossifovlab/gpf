@@ -30,7 +30,7 @@ class DemoAnnotateGenomeAdapter(AnnotatorBase):
         super().__init__(
             pipeline, info, {
                 "ref_sequence": AttributeDesc(
-                    name="ref_sequence",
+                    source="ref_sequence",
                     type="object",
                     description="Sequence in the reference genome",
                     internal=False,

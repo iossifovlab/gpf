@@ -85,7 +85,7 @@ class CnvCollectionAnnotator(Annotator):
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         attributes = {
             "count": AttributeDesc(
-                name="count",
+                source="count",
                 type="int",
                 description="The number of CNVs overlapping with the "
                 "annotatable.",
@@ -95,7 +95,7 @@ class CnvCollectionAnnotator(Annotator):
                 self.cnv_collection.score_definitions.items():
             score_id = f"attribute.{score_id}"
             attributes[score_id] = AttributeDesc(
-                name=score_id,
+                source=score_id,
                 type=score_def.value_type,
                 description=score_def.desc,
                 params={"aggregator": score_def.allele_aggregator},

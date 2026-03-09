@@ -42,7 +42,7 @@ class DemoAnnotatorAdapter(DockerAnnotator):
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "annotatable_length": AttributeDesc(
-                name="annotatable_length",
+                source="annotatable_length",
                 type="int",
                 description="Positional length of the annotatable",
             ),
