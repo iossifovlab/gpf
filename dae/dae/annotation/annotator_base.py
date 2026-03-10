@@ -50,7 +50,7 @@ class AnnotatorBase(Annotator):
                 if attr_desc.default:
                     attr = AttributeInfo(
                         name=attr_desc.name,
-                        source=attr_desc.name,
+                        source=attr_desc.source,
                         internal=attr_desc.internal,
                         parameters={},
                         _type=attr_desc.type,
