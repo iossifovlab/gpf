@@ -63,7 +63,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
         gene_lists = {}
         for effect in SimpleEffectAnnotator.effect_types()[:-1]:
             gene_lists[f"{effect}_gene_list"] = AttributeDesc(
-                    name=f"{effect}_gene_list", type="object",
+                    source=f"{effect}_gene_list", type="object",
                     description=f"list of genes with {effect} effect.",
                     internal=False,
                     default=False,
@@ -71,7 +71,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
                     attribute_type="gene_list",
                 )
             gene_lists[f"{effect}_genes"] = AttributeDesc(
-                    name=f"{effect}_genes", type="str",
+                    source=f"{effect}_genes", type="str",
                     description=f"comma separated list of genes with "
                     f"{effect} effect.",
                     internal=False,
@@ -81,19 +81,19 @@ class SimpleEffectAnnotator(AnnotatorBase):
 
         return {
             "worst_effect": AttributeDesc(
-                name="worst_effect", type="str",
+                source="worst_effect", type="str",
                 description="The worst effect.",
                 internal=False,
                 default=True,
             ),
             "worst_effect_genes": AttributeDesc(
-                name="worst_effect_genes", type="str",
+                source="worst_effect_genes", type="str",
                 description="comma separated list of genes with worst effect.",
                 internal=False,
                 default=True,
             ),
             "worst_effect_gene_list": AttributeDesc(
-                name="worst_effect_gene_list", type="object",
+                source="worst_effect_gene_list", type="object",
                 description="list of genes with worst effect.",
                 internal=False,
                 default=False,
@@ -101,7 +101,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 attribute_type="gene_list",
             ),
             "gene_list": AttributeDesc(
-                name="gene_list", type="object",
+                source="gene_list", type="object",
                 description="List of all affected genes.",
                 internal=True,
                 default=True,
@@ -109,19 +109,19 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 attribute_type="gene_list",
             ),
             "genes": AttributeDesc(
-                name="genes", type="str",
+                source="genes", type="str",
                 description="Comma separated list of all affected genes.",
                 internal=False,
                 default=False,
             ),
             "gene_effects": AttributeDesc(
-                name="gene_effects", type="str",
+                source="gene_effects", type="str",
                 description="list of gene:effect pairs.",
                 internal=False,
                 default=False,
             ),
             "effect_details": AttributeDesc(
-                name="effect_details", type="str",
+                source="effect_details", type="str",
                 description="list of transcript:gene:effect tuples.",
                 internal=False,
                 default=False,

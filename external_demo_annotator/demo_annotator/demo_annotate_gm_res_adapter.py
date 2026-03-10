@@ -30,7 +30,7 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
         super().__init__(
             pipeline, info, {
                 "gene_symbols": AttributeDesc(
-                    name="gene_symbols",
+                    source="gene_symbols",
                     type="object",
                     description="Gene symbols overlapping with the "
                     "annotatable",

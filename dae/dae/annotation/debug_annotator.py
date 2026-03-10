@@ -29,7 +29,7 @@ class HelloWorldAnnotator(Annotator):
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "hi": AttributeDesc(
-                name="hi",
+                source="hi",
                 type="str",
                 description="Test attribute",
                 internal=False,

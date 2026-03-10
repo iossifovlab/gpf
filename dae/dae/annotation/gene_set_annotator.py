@@ -98,21 +98,24 @@ class GeneSetAnnotator(AnnotatorBase):
                 )
             ]
         in_sets_desc = AttributeDesc(
-            name="in_sets", type="object", description=(
+            source="in_sets", type="object", description=(
                 "List of the gene sets of the collection, "
                 "which have at least one gene from the input gene "
                 "list"
             ))
         source_type_desc = {
+            "in_sets": in_sets_desc,
+        }
+        source_type_desc["in_sets"] = in_sets_desc
+        source_type_desc.update({
             gs["name"]: AttributeDesc(
-                name=gs["name"],
+                source=gs["name"],
                 type="bool",
                 description=gs["desc"],
                 default=False,
             )
             for gs in gene_sets_list
-        }
-        source_type_desc["in_sets"] = in_sets_desc
+        })
         return source_type_desc
 
     @property

@@ -301,7 +301,7 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
 
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
-            k: AttributeDesc(name=k, type=v[0], description=v[1])
+            k: AttributeDesc(source=k, type=v[0], description=v[1])
             for k, v in full_attributes.items()
         }
 
@@ -418,7 +418,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
-            k: AttributeDesc(name=k, type=v[0], description=v[1])
+            k: AttributeDesc(source=k, type=v[0], description=v[1])
             for k, v in effect_attributes.items()
         }
 

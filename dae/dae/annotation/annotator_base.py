@@ -6,7 +6,7 @@ import os
 from collections.abc import Sequence
 from itertools import starmap
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
@@ -35,7 +35,7 @@ class AnnotatorBase(Annotator):
 
             if isinstance(attr_desc, tuple):
                 self.attribute_descriptions[name] = AttributeDesc(
-                    name=name,
+                    source=name,
                     type=attr_desc[0],
                     description=attr_desc[1],
                 )
@@ -49,8 +49,8 @@ class AnnotatorBase(Annotator):
             for attr_desc in self.attribute_descriptions.values():
                 if attr_desc.default:
                     attr = AttributeInfo(
-                        name=attr_desc.name,
-                        source=attr_desc.name,
+                        name=cast(str, attr_desc.name),
+                        source=attr_desc.source,
                         internal=attr_desc.internal,
                         parameters={},
                         _type=attr_desc.type,

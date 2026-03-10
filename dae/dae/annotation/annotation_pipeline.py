@@ -106,13 +106,17 @@ def _get_deleted_attributes(
 class AttributeDesc:
     """Holds default attribute configuration for annotators."""
 
-    name: str
+    source: str
     type: str
     description: str
+    name: str | None = None
     default: bool = True
     internal: bool = False
     params: dict[str, Any] = field(default_factory=dict)
     attribute_type: str = "attribute"
+
+    def __post_init__(self) -> None:
+        self.name = self.name or self.source
 
 
 class Annotator(abc.ABC):

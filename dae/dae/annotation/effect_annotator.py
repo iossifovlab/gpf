@@ -96,9 +96,9 @@ Annotator to identify the effect of the variant on protein coding.
                 *EffectTypesMixin.EFFECT_GROUPS,
                 *EffectTypesMixin.EFFECT_TYPES]:
             effect_gene_lists[f"{group}_gene_list"] = AttributeDesc(
-                f"{group}_gene_list",
-                "object",
-                f"List of all {group} genes",
+                source=f"{group}_gene_list",
+                type="object",
+                description=f"List of all {group} genes",
                 internal=True,
                 default=False,
                 params={
@@ -108,8 +108,9 @@ Annotator to identify the effect of the variant on protein coding.
                 attribute_type="gene_list",
             )
             effect_genes[f"{group}_genes"] = AttributeDesc(
-                f"{group}_genes",
-                "str", f"Comma separated list of {group} genes",
+                source=f"{group}_genes",
+                type="str",
+                description=f"Comma separated list of {group} genes",
                 internal=False,
                 default=False,
                 params={
@@ -117,9 +118,11 @@ Annotator to identify the effect of the variant on protein coding.
                 },
             )
         effect_gene_lists["LGD_gene_list"] = AttributeDesc(
-            "LGD_gene_list",
-            "object",
-            "List of all LGD genes (deprecated, use LGDs_gene_list)",
+            source="LGD_gene_list",
+            type="object",
+            description=(
+                "List of all LGD genes (deprecated, use LGDs_gene_list)"
+            ),
             internal=True,
             default=False,
             params={
@@ -130,46 +133,57 @@ Annotator to identify the effect of the variant on protein coding.
         )
         return {
             "worst_effect": AttributeDesc(
-                "worst_effect",
-                "str", "Worst effect accross all transcripts.",
+                source="worst_effect",
+                type="str",
+                description="Worst effect accross all transcripts.",
                 default=True,
                 internal=False),
             "worst_effect_genes": AttributeDesc(
-                "worst_effect_genes",
-                "str", "comma separated list of genes with worst effect.",
+                source="worst_effect_genes",
+                type="str",
+                description="comma separated list of genes with worst effect.",
                 internal=False,
                 default=True,
                 params={
                     "gene_list": True,
                 }),
             "worst_effect_gene_list": AttributeDesc(
-                "worst_effect_gene_list",
-                "object", "list of genes with worst effect.",
+                source="worst_effect_gene_list",
+                type="object",
+                description="list of genes with worst effect.",
                 internal=True,
                 default=False,
                 attribute_type="gene_list"),
             "gene_effects": AttributeDesc(
-                "gene_effects",
-                "str", "`<gene_1>:<effect_1>|...` A gene can be repeated.",
+                source="gene_effects",
+                type="str",
+                description=(
+                    "`<gene_1>:<effect_1>|...` A gene can be repeated."
+                ),
                 internal=False,
                 default=True),
             "effect_details": AttributeDesc(
-                "effect_details",
-                "str", "Effect details for each affected "
-                "transcript. Format: `< transcript 1 >:"
-                "<gene 1>:<effect 1>:<details 1>|...`",
+                source="effect_details",
+                type="str",
+                description=(
+                    "Effect details for each affected "
+                    "transcript. Format: `< transcript 1 >:"
+                    "<gene 1>:<effect 1>:<details 1>|...`"
+                ),
                 internal=False,
                 default=True),
             "allele_effects": AttributeDesc(
-                "allele_effects",
-                "object", "The a list of a python objects with "
+                source="allele_effects",
+                type="object",
+                description=("The a list of a python objects with "
                 "details of the effects for each "
-                "affected transcript.",
+                "affected transcript."),
                 internal=True,
                 default=False),
             "gene_list": AttributeDesc(
-                "gene_list",
-                "object", "List of all genes",
+                source="gene_list",
+                type="object",
+                description="List of all genes",
                 internal=True,
                 default=True,
                 params={
@@ -177,8 +191,9 @@ Annotator to identify the effect of the variant on protein coding.
                 },
                 attribute_type="gene_list"),
             "genes": AttributeDesc(
-                "genes",
-                "str", "Comma separated list of all affected genes.",
+                source="genes",
+                type="str",
+                description="Comma separated list of all affected genes.",
                 internal=False,
                 default=False),
             **effect_gene_lists,
