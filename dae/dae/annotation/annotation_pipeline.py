@@ -107,29 +107,16 @@ class AttributeDesc:
     """Holds default attribute configuration for annotators."""
 
     source: str
-    name: str
     type: str
     description: str
+    name: str | None = None
     default: bool = True
     internal: bool = False
     params: dict[str, Any] = field(default_factory=dict)
     attribute_type: str = "attribute"
 
-    def __init__(
-        self, *, source: str, type: str, description: str,  # noqa: A002
-        name: str | None = None,
-        default: bool = True, internal: bool = False,
-        params: dict[str, Any] | None = None,
-        attribute_type: str = "attribute",
-    ):
-        self.source = source
-        self.name = name or source
-        self.type = type
-        self.description = description
-        self.default = default
-        self.internal = internal
-        self.params = params or {}
-        self.attribute_type = attribute_type
+    def __post_init__(self) -> None:
+        self.name = self.name or self.source
 
 
 class Annotator(abc.ABC):
