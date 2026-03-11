@@ -135,7 +135,7 @@ Annotator to identify the effect of the variant on protein coding.
             "worst_effect": AttributeDesc(
                 source="worst_effect",
                 type="str",
-                description="Worst effect accross all transcripts.",
+                description="Worst effect across all transcripts.",
                 default=True,
                 internal=False),
             "worst_effect_genes": AttributeDesc(
