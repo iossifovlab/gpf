@@ -1,3 +1,4 @@
+import copy
 import logging
 from collections.abc import Callable
 from functools import wraps
@@ -27,8 +28,8 @@ def log_filter(
     # Headers
     meta: dict[str, Any] = getattr(request, "META", {})
     remote_addr: str = meta.get("REMOTE_ADDR", "-")
-    data: Any = getattr(request, "data", "-")
-    query_params: Any = getattr(request, "query_params", "-")
+    data: Any = copy.deepcopy(getattr(request, "data", "-"))
+    query_params: Any = copy.deepcopy(getattr(request, "query_params", "-"))
     if "password" in data:
         data["password"] = "******"  # noqa: S105
     if "password" in query_params:
