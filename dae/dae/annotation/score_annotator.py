@@ -108,7 +108,7 @@ class GenomicScoreAnnotatorBase(Annotator):
             )
 
         default_annotation = self.score.get_config().get("default_annotation")
-        if default_annotation:
+        if default_annotation is not None:
             for desc in result.values():
                 desc.default = False
             for attr in default_annotation:

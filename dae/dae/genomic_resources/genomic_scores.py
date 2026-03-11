@@ -653,7 +653,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     def get_default_annotation_attributes(self) -> list[Any]:
         """Collect default annotation attributes."""
         default_annotation = self.get_config().get("default_annotation")
-        if not default_annotation:
+        if default_annotation is None:
             return [
                 {"source": attr, "name": attr}
                 for attr in self.score_definitions
