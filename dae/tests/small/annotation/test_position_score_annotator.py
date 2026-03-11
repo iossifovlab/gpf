@@ -57,6 +57,37 @@ def position_score_repo() -> GenomicResourceRepo:
                 1      14976      14977    0.4      4    40
             """,
         },
+        "position_score1_empty_default": {
+            "genomic_resource.yaml":
+            """\
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+            - id: test100way
+              type: float
+              desc: "test values"
+              name: 100way
+            - id: t1
+              type: float
+              desc: "test score 1"
+              name: t1
+            - id: t2
+              type: float
+              desc: "test score 2"
+              name: t2
+            default_annotation: []
+            """,
+            "data.mem": """
+                chrom  pos_begin  pos_end  100way   t1   t2
+                1      14966      14967    0.02     -2   -20
+                1      14968      14969    0.01     -1   -10
+                1      14970      14971    0.1      1    10
+                1      14972      14973    0.2      2    20
+                1      14974      14975    0.3      3    30
+                1      14976      14977    0.4      4    40
+            """,
+        },
     })
 
 
@@ -94,6 +125,21 @@ def test_position_score_annotator_all_attributes(
     assert attribute.name == "test100"
     assert attribute.value_type == "float"
     assert attribute.description == "test values"
+
+
+def test_position_score_annotator_empty_default_annotation(
+        position_score_repo: GenomicResourceRepo) -> None:
+
+    pipeline_config = textwrap.dedent("""
+        - position_score: position_score1_empty_default
+    """)
+
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
+
+    annotator = pipeline.annotators[0]
+    assert len(annotator.attributes) == 0
+    attr_descs = annotator.get_all_attribute_descriptions().values()
+    assert all(attr_desc.default is False for attr_desc in attr_descs)
 
 
 #  hg19
