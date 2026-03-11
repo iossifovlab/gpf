@@ -216,7 +216,7 @@ models to predict splice site variant effects.
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "gene": AttributeDesc(
-                name="gene",
+                source="gene",
                 type="str",
                 description="Gene symbol",
                 params={"aggregator": "join(,)"},
@@ -224,7 +224,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "transcript_ids": AttributeDesc(
-                name="transcript_ids",
+                source="transcript_ids",
                 type="str",
                 description="Transcript IDs",
                 params={"aggregator": "join(,)"},
@@ -232,7 +232,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DS_AG": AttributeDesc(
-                name="DS_AG",
+                source="DS_AG",
                 type="float",
                 description="Delta score for acceptor gain",
                 params={"aggregator": "max"},
@@ -240,7 +240,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DS_AL": AttributeDesc(
-                name="DS_AL",
+                source="DS_AL",
                 type="float",
                 description="Delta score for acceptor loss",
                 params={"aggregator": "max"},
@@ -248,7 +248,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DS_DG": AttributeDesc(
-                name="DS_DG",
+                source="DS_DG",
                 type="float",
                 description="Delta score for donor gain",
                 params={"aggregator": "max"},
@@ -256,7 +256,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DS_DL": AttributeDesc(
-                name="DS_DL",
+                source="DS_DL",
                 type="float",
                 description="Delta score for donor loss",
                 params={"aggregator": "max"},
@@ -264,7 +264,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DS_MAX": AttributeDesc(
-                name="DS_MAX",
+                source="DS_MAX",
                 type="float",
                 description="Maximum delta score",
                 params={"aggregator": "max"},
@@ -272,7 +272,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DP_AG": AttributeDesc(
-                name="DP_AG",
+                source="DP_AG",
                 type="int",
                 description="Delta position for acceptor gain",
                 params={"aggregator": "join(;)"},
@@ -280,7 +280,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DP_AL": AttributeDesc(
-                name="DP_AL",
+                source="DP_AL",
                 type="int",
                 description="Delta position for acceptor loss",
                 params={"aggregator": "join(;)"},
@@ -288,7 +288,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DP_DG": AttributeDesc(
-                name="DP_DG",
+                source="DP_DG",
                 type="int",
                 description="Delta position for donor gain",
                 params={"aggregator": "join(;)"},
@@ -296,7 +296,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "DP_DL": AttributeDesc(
-                name="DP_DL",
+                source="DP_DL",
                 type="int",
                 description="Delta position for donor loss",
                 params={"aggregator": "join(;)"},
@@ -304,7 +304,7 @@ models to predict splice site variant effects.
                 internal=False,
             ),
             "ref_A_p": AttributeDesc(
-                name="ref_A_p",
+                source="ref_A_p",
                 type="str",
                 description="Reference acceptor probabilities",
                 params={"aggregator": "join(;)"},
@@ -312,7 +312,7 @@ models to predict splice site variant effects.
                 internal=True,
             ),
             "ref_D_p": AttributeDesc(
-                name="ref_D_p",
+                source="ref_D_p",
                 type="str",
                 description="Reference donor probabilities",
                 params={"aggregator": "join(;)"},
@@ -320,7 +320,7 @@ models to predict splice site variant effects.
                 internal=True,
             ),
             "alt_A_p": AttributeDesc(
-                name="alt_A_p",
+                source="alt_A_p",
                 type="str",
                 description="Alternative acceptor probabilities",
                 params={"aggregator": "join(;)"},
@@ -328,7 +328,7 @@ models to predict splice site variant effects.
                 internal=True,
             ),
             "alt_D_p": AttributeDesc(
-                name="alt_D_p",
+                source="alt_D_p",
                 type="str",
                 description="Alternative donor probabilities",
                 params={"aggregator": "join(;)"},
@@ -336,7 +336,7 @@ models to predict splice site variant effects.
                 internal=True,
             ),
             "delta_score": AttributeDesc(
-                name="delta_score",
+                source="delta_score",
                 type="str",
                 description="Delta score calculated using SpliceAI models."
                 "These include delta scores (DS) and "
