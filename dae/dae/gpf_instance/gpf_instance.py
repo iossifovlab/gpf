@@ -64,7 +64,10 @@ class GPFInstance:
             config_filename = Path(config_filename)
             dae_dir = config_filename.parent
         else:
-            if os.environ.get("DAE_DB_DIR"):
+            if os.environ.get("GPF_CONF_DIR"):
+                dae_dir = Path(os.environ["GPF_CONF_DIR"])
+                config_filename = Path(dae_dir) / "gpf_instance.yaml"
+            elif os.environ.get("DAE_DB_DIR"):
                 dae_dir = Path(os.environ["DAE_DB_DIR"])
                 config_filename = Path(dae_dir) / "gpf_instance.yaml"
             else:
