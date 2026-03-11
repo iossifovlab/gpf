@@ -129,6 +129,9 @@ class CnvCollectionAnnotator(Annotator):
 
         for cnv in cnvs:
             for name, (attribute, _) in self.cnv_attributes.items():
+                assert attribute.name is not None
+                assert attribute.name.startswith("attribute.")
+
                 attribute_name = attribute.name[len("attribute."):]
                 aggregators[name].add(cnv.attributes[attribute_name])
 
