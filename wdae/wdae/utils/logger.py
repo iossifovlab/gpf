@@ -29,6 +29,10 @@ def log_filter(
     remote_addr: str = meta.get("REMOTE_ADDR", "-")
     data: Any = getattr(request, "data", "-")
     query_params: Any = getattr(request, "query_params", "-")
+    if "password" in data:
+        data["password"] = "******"  # noqa: S105
+    if "password" in query_params:
+        query_params["password"] = "******"  # noqa: S105
 
     return (
         f"user: {username}; remote addr: {remote_addr}; "
