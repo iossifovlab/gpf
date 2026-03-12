@@ -2,6 +2,7 @@
 import argparse
 import copy
 import fnmatch
+import gzip
 import json
 import logging
 import os
@@ -476,8 +477,11 @@ def _create_contents_db(
 ) -> None:
 
     sqlite_filepath = proto.filesystem.expand_path(".CONTENTS.sqlite3")[0]
+    gzip_sqlite_filepath = f"{sqlite_filepath}.gz"
     if os.path.exists(sqlite_filepath):
         os.remove(sqlite_filepath)
+    if os.path.exists(gzip_sqlite_filepath):
+        os.remove(gzip_sqlite_filepath)
     with sqlite3.connect(sqlite_filepath) as conn:
 
         labels = set()
@@ -533,6 +537,11 @@ def _create_contents_db(
                     *row,
                 ),
             )
+
+    raw_data = pathlib.Path(sqlite_filepath).read_bytes()
+    with gzip.open(gzip_sqlite_filepath, mode="wb") as gzip_out:
+        gzip_out.write(raw_data)
+    os.remove(sqlite_filepath)
 
 
 def _run_repo_manifest_command(
@@ -1097,8 +1106,16 @@ TEMPLATE_STRING = """
         #input-field {
             flex-grow: 1;
         }
+        #type-label {
+            width: 100px;
+            text-align: right;
+        }
         #search-label {
-            width: 50px;
+            width: 60px;
+            text-align: right;
+        }
+        #type-cell {
+            width: 200px;
         }
 
         .meta-div {
@@ -1111,7 +1128,7 @@ TEMPLATE_STRING = """
 
         .hints {
             text-align: center;
-            font-size: smaller;
+            font-size: 0.9em;
             color: gray;
             margin-top: 0px;
             margin-bottom: 0px;
@@ -1135,6 +1152,16 @@ TEMPLATE_STRING = """
         .pageButton.hide {
             display: none;
         }
+
+        #status, #status-error {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+        #status-error {
+            color: red;
+        }
     </style>
  </head>"""
 
@@ -1146,7 +1173,55 @@ TEMPLATE_STRING += """
          <p class="loading">Loading search</p>
          <table class="search-table" style="display: none;">
              <tr>
-                 <td id="search-label"d>Search:</td>
+                 <td id="type-label">Resource type:</td>
+                 <td id="type-cell">
+                     <select id="type-filter">
+                         <option value="all">All</option>
+                         <option value="gene_set_collection">
+                            Gene set collection
+                         </option>
+                         <option value="gene_set">
+                            Gene set
+                         </option>
+                         <option value="gene_score">
+                            Gene score
+                         </option>
+                         <option value="position_score">
+                            Position score
+                         </option>
+                         <option value="np_score">
+                            NP score
+                         </option>
+                         <option value="allele_score">
+                            Allele score
+                         </option>
+                         <option value="liftover_chain">
+                            Liftover chain
+                         </option>
+                         <option value="genome">
+                            Genome
+                         </option>
+                         <option value="vcf_info">
+                            VCF info
+                         </option>
+                         <option value="gene_models">
+                            Gene models
+                         </option>
+                         <option value="cnv_collection">
+                            CNV collection
+                         </option>
+                         <option value="gene_weights_enrichment_background">
+                            Gene weights enrichment background
+                         </option>
+                         <option value="samocha_enrichment_background">
+                            Samocha enrichment background
+                         </option>
+                         <option value="annotation_pipeline">
+                            Annotation pipeline
+                         </option>
+                     </select>
+                 </td>
+                 <td id="search-label">Search:</td>
                  <td class="input-cell">
                  <input type="text" id="input-field">
                  </td>
@@ -1165,13 +1240,14 @@ TEMPLATE_STRING += """
               target="_blank">
               SQLite's FTS syntax.</a>
          </p>
+         <p id="status-error"></p>
+         <p id="status"></p>
          <table class="contents">
             <thead>
                 <tr>
                     <th>Type</th>
                     <th>ID</th>
                     <th>Version</th>
-                    <th>Number of files</th>
                     <th>Size in bytes (total)</th>
                     <th>Summary</th>
                 </tr>
@@ -1184,7 +1260,6 @@ TEMPLATE_STRING += """
                         <a href='{{key}}/index.html'>{{key}}</a>
                     </td>
                     <td class="nowrap">{{value['res_version']}}</td>
-                    <td class="nowrap">{{value['res_files']}}</td>
                     <td class="nowrap">{{value['res_size']}}</td>
                     <td class="nowrap">{{value['res_summary']}}</td>
                 </tr>
