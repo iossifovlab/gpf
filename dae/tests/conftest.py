@@ -45,6 +45,7 @@ def _default_genotype_storage_configs(
         "duckdb_legacy": {
             "id": "duckdb_legacy",
             "storage_type": "duckdb_legacy",
+            "memory_limit": "125MB",
             "db": "duckdb_storage/storage.db",
             "base_dir": str(root_path),
             "read_only": False,
@@ -54,6 +55,7 @@ def _default_genotype_storage_configs(
         "duckdb_parquet": {
             "id": "duckdb_parquet",
             "storage_type": "duckdb_parquet",
+            "memory_limit": "125MB",
             "base_dir": str(root_path / "duckdb_parquet"),
         },
 
@@ -61,6 +63,7 @@ def _default_genotype_storage_configs(
         "duckdb_s3_parquet": {
             "id": "duckdb_s3_parquet",
             "storage_type": "duckdb_s3_parquet",
+            "memory_limit": "125MB",
             "bucket_url": f"s3://test-bucket{root_path}/duckdb-s3-parquet",
             "endpoint_url": f"http://{minio_host}:9000/",
             "use_ssl": False,
@@ -70,6 +73,7 @@ def _default_genotype_storage_configs(
         "duckdb": {
             "id": "duckdb",
             "storage_type": "duckdb",
+            "memory_limit": "125MB",
             "db": "duckdb2_storage/storage2.db",
             "base_dir": str(root_path),
         },
@@ -78,6 +82,7 @@ def _default_genotype_storage_configs(
         "duckdb_s3": {
             "id": "duckdb_s3",
             "storage_type": "duckdb_s3",
+            "memory_limit": "125MB",
             "db": "storage_s3.db",
             "bucket_url": f"s3://test-bucket{root_path}/duckdb-s3",
             "endpoint_url": f"http://{minio_host}:9000/",
