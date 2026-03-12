@@ -1177,47 +1177,38 @@ TEMPLATE_STRING += """
                  <td id="type-cell">
                      <select id="type-filter">
                          <option value="all">All</option>
-                         <option value="gene_set_collection">
-                            Gene set collection
-                         </option>
-                         <option value="gene_set">
-                            Gene set
-                         </option>
-                         <option value="gene_score">
-                            Gene score
-                         </option>
-                         <option value="position_score">
-                            Position score
-                         </option>
-                         <option value="np_score">
-                            NP score
-                         </option>
                          <option value="allele_score">
-                            Allele score
-                         </option>
-                         <option value="liftover_chain">
-                            Liftover chain
-                         </option>
-                         <option value="genome">
-                            Genome
-                         </option>
-                         <option value="vcf_info">
-                            VCF info
-                         </option>
-                         <option value="gene_models">
-                            Gene models
-                         </option>
-                         <option value="cnv_collection">
-                            CNV collection
-                         </option>
-                         <option value="gene_weights_enrichment_background">
-                            Gene weights enrichment background
-                         </option>
-                         <option value="samocha_enrichment_background">
-                            Samocha enrichment background
+                            allele_score
                          </option>
                          <option value="annotation_pipeline">
-                            Annotation pipeline
+                            annotation_pipeline
+                         </option>
+                         <option value="cnv_collection">
+                            cnv_collection
+                         </option>
+                         <option value="gene_models">
+                            gene_models
+                         </option>
+                         <option value="gene_set_collection">
+                            gene_set_collection
+                         </option>
+                         <option value="gene_score">
+                            gene_score
+                         </option>
+                         <option value="genome">
+                            genome
+                         </option>
+                         <option value="liftover_chain">
+                            liftover_chain
+                         </option>
+                         <option value="np_score">
+                            np_score
+                         </option>
+                         <option value="position_score">
+                            position_score
+                         </option>
+                         <option value="samocha_enrichment_background">
+                            samocha_enrichment_background
                          </option>
                      </select>
                  </td>
