@@ -244,7 +244,7 @@ variants_file = {
             "vcf_multi_loader_fill_in_mode": {"type": "string"},
             "vcf_denovo_mode": {"type": "string"},
             "vcf_omission_mode": {"type": "string"},
-            "vcf_chromosomes": {"type": "string"},
+            "vcf_vcsubst": {"type": "string"},
             "vcf_pedigree_mode": {"type": "string"},
         },
         "default": {},

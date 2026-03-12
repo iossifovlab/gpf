@@ -290,10 +290,18 @@ class ImportProject:
             f"No input config for loader {loader_type}"
 
         loader_config = self.import_config["input"][loader_type]
-        if loader_type == "vcf" and "chromosomes" in loader_config:
+        if loader_type == "vcf" and "vcsubst" in loader_config:
             # vcf loader expects chromosomes to be in a string separated by ;
             loader_config = deepcopy(loader_config)
-            loader_config["chromosomes"] = ";".join(
+            loader_config["vcsubst"] = ";".join(
+                loader_config["vcsubst"].split(","))
+        elif loader_type == "vcf" and "chromosomes" in loader_config:
+            # vcf loader expects chromosomes to be in a string separated by ;
+            logger.warning(
+                "argument `chromosomes` is deprecated for vcf loader; "
+                "use `vcsubst` instead")
+            loader_config = deepcopy(loader_config)
+            loader_config["vcsubst"] = ";".join(
                 loader_config["chromosomes"])
         variants_params = self._add_loader_prefix(loader_config,
                                                   loader_type + "_")

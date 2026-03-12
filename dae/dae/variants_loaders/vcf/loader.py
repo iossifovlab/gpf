@@ -875,9 +875,21 @@ class VcfLoader(VariantsGenotypesLoader):
             "[default: 'fixed']",
         ))
         arguments.append(CLIArgument(
-            "--vcf-chromosomes",
+            "--vcf-vcsubst",
             value_type=str,
             help_text="specifies a list of filename template "
+            "substitutions; then specified variant filename(s) are treated "
+            "as templates and each occurent of `[vc]` is replaced "
+            "consecutively by elements of VCF wildcards list; "
+            "by default the list is empty and no substitution "
+            "takes place. "
+            "[default: None]",
+        ))
+
+        arguments.append(CLIArgument(
+            "--vcf-chromosomes",
+            value_type=str,
+            help_text="(deprecated) specifies a list of filename template "
             "substitutions; then specified variant filename(s) are treated "
             "as templates and each occurent of `[vc]` is replaced "
             "consecutively by elements of VCF wildcards list; "
@@ -904,19 +916,29 @@ class VcfLoader(VariantsGenotypesLoader):
     def _collect_filenames(
         params: dict[str, Any], vcf_files: list[str],
     ) -> tuple[list[str], list[list[str]]]:
-        if params.get("vcf_chromosomes"):
-            vcf_chromosomes = [
-                wc.strip() for wc in params["vcf_chromosomes"].split(";")
+        vc_subst_param = None
+        if params.get("vcf_vcsubst") is not None:
+            vc_subst_param = params.get("vcf_vcsubst")
+        elif params.get("vcf_chromosomes") is not None:
+            logger.warning(
+                "argument `--vcf-chromosomes` is deprecated; "
+                "use `--vcf-vcsubst` instead",
+            )
+            vc_subst_param = params.get("vcf_chromosomes")
+
+        if vc_subst_param is not None:
+            vcf_vcsubst = [
+                wc.strip() for wc in vc_subst_param.split(";")
             ]
             if all("[vc]" in vcf_file for vcf_file in vcf_files):
                 glob_filenames = [
                     [vcf_file.replace("[vc]", vc) for vcf_file in vcf_files]
-                    for vc in vcf_chromosomes
+                    for vc in vcf_vcsubst
                 ]
             elif all("[vc]" not in vcf_file for vcf_file in vcf_files):
                 logger.warning(
                     "VCF files %s does not contain '[vc]' pattern, "
-                    "but '--vcf-chromosomes' argument is passed; skipping...",
+                    "but '--vcf-vcsubst' argument is passed; skipping...",
                     vcf_files)
                 glob_filenames = [vcf_files]
             else:
@@ -1002,6 +1024,12 @@ class VcfLoader(VariantsGenotypesLoader):
             "intersection", "union", "fixed",
         }, argv.vcf_pedigree_mode
 
+        if argv.vcf_chromosomes is not None:
+            logger.warning(
+                "argument `--vcf-chromosomes` is deprecated; "
+                "use `--vcf-vcsubst` instead",
+            )
+
         params = {
             "vcf_include_reference_genotypes": str2bool(
                 argv.vcf_include_reference_genotypes,
@@ -1017,6 +1045,7 @@ class VcfLoader(VariantsGenotypesLoader):
             "vcf_denovo_mode": argv.vcf_denovo_mode,
             "vcf_omission_mode": argv.vcf_omission_mode,
             "vcf_pedigree_mode": argv.vcf_pedigree_mode,
+            "vcf_vcsubst": argv.vcf_vcsubst,
             "vcf_chromosomes": argv.vcf_chromosomes,
             "add_chrom_prefix": argv.add_chrom_prefix,
             "del_chrom_prefix": argv.del_chrom_prefix,

@@ -125,7 +125,7 @@ def full_study_config() -> dict[str, Any]:
                             "vcf_multi_loader_fill_in_mode": "test",
                             "vcf_denovo_mode": "test",
                             "vcf_omission_mode": "test",
-                            "vcf_chromosomes": "test",
+                            "vcf_vcsubst": "test",
                             "vcf_pedigree_mode": "test",
                         },
                     },

@@ -398,7 +398,7 @@ def test_import_wild_multivcf_into_genotype_storage(
         "--vcf-files",
         str(root_path / "vcf_data" / "multivcf_f1_[vc].vcf.gz"),
         str(root_path / "vcf_data" / "multivcf_f2_[vc].vcf.gz"),
-        "--vcf-chromosomes", "foo;bar",
+        "--vcf-vcsubst", "foo;bar",
         "--genotype-storage", genotype_storage.storage_id,
         "-o", str(root_path / "output"),
     ]
