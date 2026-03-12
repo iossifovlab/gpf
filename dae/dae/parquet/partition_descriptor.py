@@ -94,6 +94,26 @@ class Partition:
         return f"partition_{'_'.join(partition_parts)}"
 
 
+DEFAULT_CODING_EFFECT_TYPES = {
+    "splice-site",
+    "frame-shift",
+    "nonsense",
+    "no-frame-shift-newStop",
+    "noStart",
+    "noEnd",
+    "missense",
+    "no-frame-shift",
+    "CDS",
+    "synonymous",
+    "coding_unknown",
+    "regulatory",
+    "3'UTR",
+    "5'UTR",
+    "CNV+",
+    "CNV-",
+}
+
+
 class PartitionDescriptor:
     """Class to represent partition of a genotype dataset."""
 
@@ -236,10 +256,13 @@ class PartitionDescriptor:
             coding_effect_types = \
                 config_dict["coding_bin"]["coding_effect_types"]
             if isinstance(coding_effect_types, str):
-                result = {
-                    s.strip()
-                    for s in coding_effect_types.split(",")
-                }
+                if coding_effect_types.strip() == "default":
+                    result = DEFAULT_CODING_EFFECT_TYPES
+                else:
+                    result = {
+                        s.strip()
+                        for s in coding_effect_types.split(",")
+                    }
             else:
                 assert isinstance(coding_effect_types, list)
                 result = set(coding_effect_types)
