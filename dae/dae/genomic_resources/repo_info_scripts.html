@@ -1,0 +1,151 @@
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script type="module">
+        import sqlite3 from "https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-wasm@3.51.2-build6/dist/index.mjs";
+
+
+        const start = async (sqlite3) => {
+          const response = await fetch(`${window.location.origin}/.CONTENTS.sqlite3.gz`)
+          const ds = new DecompressionStream('gzip');
+          const decompressedResponse = new Response(response.body.pipeThrough(ds));
+          const arrayBuffer = await decompressedResponse.arrayBuffer()
+          const p = await sqlite3.wasm.allocFromTypedArray(arrayBuffer)
+          const db = new sqlite3.oo1.DB();
+          let deserialize_flags = sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE;
+          const rc = await sqlite3.capi.sqlite3_deserialize(db.pointer, 'main', p, arrayBuffer.byteLength, arrayBuffer.byteLength, deserialize_flags);
+          await db.checkRc(rc);
+          window.sqlite3 = db;
+          window.sqlite3.query = (sql) => {
+            const rows =  window.sqlite3.exec({sql: sql, returnValue: "resultRows"});
+            console.log(`Executed query: ${sql}, got ${rows.length} rows`);
+            console.log(rows);
+            return rows;
+          }
+          // window.sqlite3.query = (sql) => {
+          //  return window.sqlite3.exec({sql: sql, returnValue: "resultRows"})
+          //}
+        };
+
+        const initializeSQLite = async () => {
+          try {
+            console.log('Loading and initializing SQLite3 module...');
+            const sqlite3 = await sqlite3InitModule();
+            console.log('Done initializing.');
+            await start(sqlite3);
+          } catch (err) {
+            console.error('Initialization error:', err.name, err.message);
+          }
+        };
+
+
+        const rowData = {}
+        $(".contents > tbody > tr").each((index, row) => {
+            const id = $(row).attr("id");
+            const children = $(row).find("td");
+            rowData[id] = {
+                "type": children[0].textContent.trim(),
+                "id": children[1].textContent.trim(),
+                "version": children[2].textContent.trim(),
+                "sizeInBytes": children[3].textContent.trim(),
+                "summary": children[4].textContent.trim(),
+                "url": $(children[1]).children("a").attr("href").trim(),
+            };
+        })
+        window.rowData = rowData;
+
+
+        function UpdateStatus() {
+            const status = $(`#status`);
+            const statusError = $(`#status-error`);
+            if (window.last_error) {
+                statusError.show();
+                statusError.text(`Query failed due to syntax error, debugging information is in the console.`);
+            }
+            else {
+                statusError.text("");
+                statusError.hide();
+            }
+            status.text(`Showing ${window.currentIds.length} resources.`);
+        }
+
+        function refreshData(ids) {
+            window.currentIds = ids;
+
+            const rows = $(".contents > tbody > tr")
+            rows.hide();
+            for (const [index, rowId] of ids.entries()) {
+                let row = $(rows[index]);
+                let rowData = window.rowData[rowId];
+                let cells = row.children("td");
+                cells[0].textContent = rowData.type;
+                $(cells[1]).children("a").attr("href", rowData.url).text(rowData.id);
+                cells[2].textContent = rowData.version;
+                cells[3].textContent = rowData.sizeInBytes;
+                cells[4].textContent = rowData.summary;
+                row.show();
+            }
+
+            UpdateStatus();
+        }
+
+        window.dbLoaded = new Promise(async (resolve) => {
+            await initializeSQLite()
+            const all_ids_result = await window.sqlite3.query("SELECT full_id FROM contents;")
+            window.all_ids = new Set(all_ids_result.map((row) => row[0]))
+            refreshData(Array.from(window.all_ids))
+
+            resolve(window.sqlite3)
+        });
+
+        $(".loading").hide()
+
+        $(".search-table").show()
+
+        async function doSearch() {
+            await window.dbLoaded;
+            const searchValue = $("#input-field").val().trim();
+            const typeFilter = $("#type-filter").val();
+            if (searchValue === "" && typeFilter === "all") {
+                refreshData(Array.from(window.all_ids))
+                return;
+            }
+
+            $(".contents > tbody > tr").hide()
+            $(".searching").show()
+
+            const ids = new Set();
+
+            let query = "";;
+            if (searchValue !== "" && typeFilter !== "all") {
+                query = `SELECT full_id FROM contents WHERE contents MATCH '${searchValue}' AND type = '${typeFilter}'`
+            }
+            else if (searchValue !== "") {
+                query = `SELECT full_id FROM contents WHERE contents MATCH '${searchValue}'`
+            }
+            else {
+                query = `SELECT full_id FROM contents WHERE type = '${typeFilter}'`
+            }
+
+            try {
+                const displayIds = window.sqlite3.query(query).map((row) => row[0]);
+                refreshData(displayIds);
+                window.last_error = null;
+            }
+            catch (error) {
+                window.last_error = error;
+                console.error("Error during search:", error);
+                refreshData(Array.from(window.all_ids))
+            }
+            finally {
+                $(".searching").hide()
+            }
+        }
+
+        $("#type-filter").on("change", (e) => {
+            doSearch();
+        })
+
+        $("#input-field").on("change", async (e) => {
+            doSearch();
+        });
+
+    </script>

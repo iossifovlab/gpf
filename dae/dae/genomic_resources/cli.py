@@ -2,9 +2,12 @@
 import argparse
 import copy
 import fnmatch
+import gzip
+import json
 import logging
 import os
 import pathlib
+import sqlite3
 import sys
 from collections.abc import Sequence
 from typing import Any, cast
@@ -16,7 +19,11 @@ from jinja2 import Template
 
 from dae import __version__  # type: ignore
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.fsspec_protocol import (
+    FsspecReadWriteProtocol,
+    FsspecRepositoryProtocol,
+    build_fsspec_protocol,
+)
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -197,6 +204,7 @@ def _run_repo_init_command(**kwargs: str) -> None:
         cwd = pathlib.Path(repository).absolute()
 
     proto = _create_proto(str(cwd))
+    assert isinstance(proto, FsspecRepositoryProtocol)
     proto.build_content_file()
 
 
@@ -318,6 +326,16 @@ def _configure_resource_info_subparser(
     )
 
 
+def _configure_build_fts_db_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
+    parser = subparsers.add_parser(
+        "repo-build-fts", help="Build the FTS index for the whole GRR",
+    )
+    _add_repository_resource_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    VerbosityConfiguration.set_arguments(parser)
+
+
 def collect_dvc_entries(
         proto: ReadWriteRepositoryProtocol,
         res: GenomicResource) -> dict[str, ManifestEntry]:
@@ -432,10 +450,98 @@ def _run_repo_manifest_command_internal(
             use_dvc=use_dvc,
         )
 
-    if not dry_run:
-        proto.build_content_file()
+    if dry_run:
+        return updates_needed
+
+    assert isinstance(proto, FsspecReadWriteProtocol)
+    proto.build_content_file()
 
     return updates_needed
+
+
+def _run_build_fts_db_command(
+    proto: FsspecReadWriteProtocol,
+) -> None:
+    content_filepath = os.path.join(
+        proto.url, GR_CONTENTS_FILE_NAME)
+    with proto.filesystem.open(
+        content_filepath, mode="r", compression="gzip",
+    ) as contents_file:
+        contents = json.loads(contents_file.read())
+        _create_contents_db(proto, contents)
+
+
+def _create_contents_db(
+    proto: FsspecReadWriteProtocol,
+    contents: list[dict[str, Any]],
+) -> None:
+
+    sqlite_filepath = proto.filesystem.expand_path(".CONTENTS.sqlite3")[0]
+    gzip_sqlite_filepath = f"{sqlite_filepath}.gz"
+    if os.path.exists(sqlite_filepath):
+        os.remove(sqlite_filepath)
+    if os.path.exists(gzip_sqlite_filepath):
+        os.remove(gzip_sqlite_filepath)
+    with sqlite3.connect(sqlite_filepath) as conn:
+
+        labels = set()
+
+        for res_info in contents:
+            res_labels = res_info["config"].get("meta", {}).get("labels", {})
+            if res_labels is None:
+                res_labels = {}
+            labels.update(res_labels.keys())
+
+        print(
+            "CREATE VIRTUAL TABLE contents "
+            "USING fts5(full_id, id, type, description, summary, "
+            f"{', '.join(labels)})",
+        )
+
+        conn.execute(
+            "CREATE VIRTUAL TABLE contents "
+            "USING fts5(full_id, id, type, description, summary, "
+            f"{', '.join(labels)})",
+        )
+
+        for res_info in contents:
+            res_id = res_info["id"]
+            res_version = res_info["version"]
+            res_type = res_info["config"]["type"]
+            res_description = res_info["config"].get("meta", {}).get(
+                "description", "")
+            res_summary = res_info["config"].get("meta", {}).get(
+                "summary", "")
+
+            res_labels = res_info["config"].get(
+                "meta", {}).get("labels", {})
+
+            if res_labels is None:
+                res_labels = {}
+
+            row = [
+                f"{res_id}{res_version}",
+                res_id,
+                res_type,
+                res_description,
+                res_summary,
+                *[res_labels.get(label, "") for label in labels],
+            ]
+
+            conn.execute(
+                "INSERT INTO contents "  # noqa: S608
+                "(full_id, id, type, description, summary, "
+                f"{', '.join(labels)}) "
+                f"VALUES ({', '.join(['?' for _ in range(len(row))])})",
+                (
+                    *row,
+                ),
+            )
+
+    raw_data = pathlib.Path(sqlite_filepath).read_bytes()
+    with gzip.open(gzip_sqlite_filepath, mode="wb") as gzip_out:
+        gzip_out.write(raw_data)
+    os.remove(sqlite_filepath)
 
 
 def _run_repo_manifest_command(
@@ -648,7 +754,6 @@ def _run_repo_stats_command(
         TaskGraphCli.process_graph(
             graph, task_progress_mode=False, **modified_kwargs)
 
-    proto.build_content_file()
     return 0
 
 
@@ -738,6 +843,7 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
     _configure_resource_info_subparser(commands_parser)
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
+    _configure_build_fts_db_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
@@ -838,7 +944,10 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
             status = 1
         logger.warning("inconsistent GRR <%s> state", repo_url)
         sys.exit(status)
-
+    elif command == "repo-build-fts":
+        assert isinstance(proto, FsspecReadWriteProtocol)
+        _run_build_fts_db_command(proto)
+        return
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -958,7 +1067,12 @@ def cli_browse(cli_args: list[str] | None = None) -> None:
     _run_list_command(repo, args)
 
 
-repository_template = Template("""
+def get_scripts_for_template() -> str:
+    scripts_file = pathlib.Path(__file__).parent / "repo_info_scripts.html"
+    return scripts_file.read_text()
+
+
+TEMPLATE_STRING = """
 <html>
  <head>
     <style>
@@ -971,11 +1085,39 @@ repository_template = Template("""
         }
         table {
             border: 3px inset;
-            max-width: 60%;
+            width: 100%;
         }
         table, td, th {
             border-collapse: collapse;
         }
+
+        table.search-table {
+            border: none;
+            width:100%;
+            max-width: none;
+        }
+        table.search-table td {
+            border: none;
+            padding: none;
+        }
+        .input-cell {
+            display: flex
+        }
+        #input-field {
+            flex-grow: 1;
+        }
+        #type-label {
+            width: 100px;
+            text-align: right;
+        }
+        #search-label {
+            width: 60px;
+            text-align: right;
+        }
+        #type-cell {
+            width: 200px;
+        }
+
         .meta-div {
             max-height: 250px;
             overflow: scroll;
@@ -983,35 +1125,143 @@ repository_template = Template("""
         .nowrap {
             white-space: nowrap
         }
+
+        .hints {
+            text-align: center;
+            font-size: 0.9em;
+            color: gray;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        .loading, .searching {
+            text-align: center;
+            font-size: larger;
+        }
+        .pageButton {
+            border: none;
+            background: none;
+            color: blue;
+            cursor: pointer;
+            padding: 3px;
+            margin: 0px 3px;
+        }
+        .pageButton.active {
+            color: black;
+            cursor: default;
+        }
+        .pageButton.hide {
+            display: none;
+        }
+
+        #status, #status-error {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+        #status-error {
+            color: red;
+        }
     </style>
- </head>
+ </head>"""
+
+TEMPLATE_STRING += get_scripts_for_template()
+
+TEMPLATE_STRING += """
  <body>
-     <table>
-        <thead>
-            <tr>
-                <th>Type</th>
-                <th>ID</th>
-                <th>Version</th>
-                <th>Number of files</th>
-                <th>Size in bytes (total)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            {%- for key, value in data.items() recursive%}
-            <tr>
-                <td class="nowrap">{{value['type']}}</td>
-                <td class="nowrap">
-                    <a href='{{key}}/index.html'>{{key}}</a>
-                </td>
-                <td class="nowrap">{{value['res_version']}}</td>
-                <td class="nowrap">{{value['res_files']}}</td>
-                <td class="nowrap">{{value['res_size']}}</td>
-                <td class="nowrap">{{value['res_summary']}}</td>
-            </tr>
-            {%- endfor %}
-        </tbody>
-     </table>
+     <div>
+         <p class="loading">Loading search</p>
+         <table class="search-table" style="display: none;">
+             <tr>
+                 <td id="type-label">Resource type:</td>
+                 <td id="type-cell">
+                     <select id="type-filter">
+                         <option value="all">All</option>
+                         <option value="allele_score">
+                            allele_score
+                         </option>
+                         <option value="annotation_pipeline">
+                            annotation_pipeline
+                         </option>
+                         <option value="cnv_collection">
+                            cnv_collection
+                         </option>
+                         <option value="gene_models">
+                            gene_models
+                         </option>
+                         <option value="gene_set_collection">
+                            gene_set_collection
+                         </option>
+                         <option value="gene_score">
+                            gene_score
+                         </option>
+                         <option value="genome">
+                            genome
+                         </option>
+                         <option value="liftover_chain">
+                            liftover_chain
+                         </option>
+                         <option value="np_score">
+                            np_score
+                         </option>
+                         <option value="position_score">
+                            position_score
+                         </option>
+                         <option value="samocha_enrichment_background">
+                            samocha_enrichment_background
+                         </option>
+                     </select>
+                 </td>
+                 <td id="search-label">Search:</td>
+                 <td class="input-cell">
+                 <input type="text" id="input-field">
+                 </td>
+             </tr>
+         </table>
+         <p class="hints">
+            Use AND to perform and,
+             use OR to perform or, spaces separate strings,
+             surround strings in "" to
+             use spaces inside the string.
+         </p>
+         <p class="hints">
+             The search uses
+             <a
+              href="https://sqlite.org/fts5.html#full_text_query_syntax"
+              target="_blank">
+              SQLite's FTS syntax.</a>
+         </p>
+         <p id="status-error"></p>
+         <p id="status"></p>
+         <table class="contents">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>ID</th>
+                    <th>Version</th>
+                    <th>Size in bytes (total)</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%- for key, value in data.items() recursive%}
+                <tr id="{{value['res_id']}}{{value['res_version']}}">
+                    <td class="nowrap">{{value['type']}}</td>
+                    <td class="nowrap">
+                        <a href='{{key}}/index.html'>{{key}}</a>
+                    </td>
+                    <td class="nowrap">{{value['res_version']}}</td>
+                    <td class="nowrap">{{value['res_size']}}</td>
+                    <td class="nowrap">{{value['res_summary']}}</td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+         </table>
+         <p class="searching" style="display: none;">Searching</p>
+     </div>
+     <div class="pagination"></div>
  </body>
 </html>
-""")
+"""
+
+repository_template = Template(TEMPLATE_STRING)

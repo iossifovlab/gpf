@@ -218,24 +218,28 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         """Close the genomic resource."""
         self.invalidate()
 
+    def load_contents(self) -> list[dict[str, Any]]:
+        """Load the content of the repository (i.e '.CONTENTS.json.gz' file)."""
+        content_filename = os.path.join(
+            self.url, GR_CONTENTS_FILE_NAME)
+        compression: str | None = "gzip"
+        if not self.filesystem.exists(content_filename):
+            content_filename = content_filename[:-3]
+            compression = None
+
+        with self.filesystem.open(
+                content_filename, "rt", compression=compression) as infile:
+            data = infile.read()
+
+        return cast(list[dict[str, Any]], json.loads(data))
+
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
         with self._all_resources_lock:
             if self._all_resources is None:
                 all_resources = []
-                content_filename = os.path.join(
-                    self.url, GR_CONTENTS_FILE_NAME)
-                compression: str | None = "gzip"
-                if not self.filesystem.exists(content_filename):
-                    content_filename = content_filename[:-3]
-                    compression = None
 
-                with self.filesystem.open(
-                        content_filename, "rt",
-                        compression=compression) as infile:
-                    data = infile.read()
-
-                contents = json.loads(data)
+                contents = self.load_contents()
 
                 for entry in contents:
                     version = tuple(map(int, entry["version"].split(".")))
@@ -248,6 +252,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                         self.proto_id,
                         resource.resource_id)
                     all_resources.append(resource)
+
                 self._all_resources = sorted(
                     all_resources,
                     key=lambda r: r.get_genomic_resource_id_version())
@@ -705,6 +710,9 @@ class FsspecReadWriteProtocol(
 
         return content
 
+    def get_content_file_path(self) -> str:
+        return os.path.join(self.url, GR_CONTENTS_FILE_NAME[:-3])
+
     def build_index_info(self, repository_template: jinja2.Template) -> dict:
         """Build info dict for the repository."""
         result = {}
@@ -714,6 +722,7 @@ class FsspecReadWriteProtocol(
             )
             assert res.config is not None
             result[res.get_full_id()] = {
+                "res_id": res.resource_id,
                 **res.config,
                 "res_version": res.get_version_str(),
                 "res_files": len(list(res.get_manifest().get_files())),
