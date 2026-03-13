@@ -105,6 +105,7 @@
             const searchValue = $("#input-field").val().trim();
             const typeFilter = $("#type-filter").val();
             if (searchValue === "" && typeFilter === "all") {
+                window.last_error = null;
                 refreshData(Array.from(window.all_ids))
                 return;
             }
