@@ -222,6 +222,13 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                         remote_resource.resource_id, version_constraint))
         yield from self._all_resources
 
+    def search_resources(
+        self,
+        search_term: str | None = None,
+        resource_type: str | None = None,
+    ) -> Generator[GenomicResource, None, None]:
+        yield from self.child.search_resources(search_term, resource_type)
+
     def _get_or_create_cache_proto(
             self, proto: ReadOnlyRepositoryProtocol) -> CachingProtocol:
         proto_id = proto.proto_id
