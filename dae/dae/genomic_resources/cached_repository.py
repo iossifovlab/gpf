@@ -5,8 +5,9 @@ import logging
 import os
 from collections.abc import Generator, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import IO, Any
+from typing import IO, Any, cast
 
+import apsw
 import pysam
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
@@ -51,7 +52,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         self.local_protocol = local_protocol
         super().__init__(local_protocol.proto_id, local_protocol.get_url())
         self.public_url = public_url or remote_protocol.get_public_url()
-        self._all_resources: list[CacheResource] | None = None
+        self._all_resources: dict[str, CacheResource] | None = None
 
     def get_url(self) -> str:
         return self.remote_protocol.get_url()
@@ -65,13 +66,16 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         self._all_resources = None
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
+        yield from self.get_all_resources_dict().values()
+
+    def get_all_resources_dict(self) -> dict[str, GenomicResource]:
         if self._all_resources is None:
-            self._all_resources = []
-            for remote_resource in self.remote_protocol.get_all_resources():
-                self._all_resources.append(
-                    self._create_cache_resource(remote_resource))
+            self._all_resources = {
+                resource.get_full_id(): self._create_cache_resource(resource)
+                for resource in self.remote_protocol.get_all_resources()
+            }
             self.local_protocol.invalidate()
-        yield from self._all_resources
+        return cast(dict[str, GenomicResource], self._all_resources)
 
     def _create_cache_resource(
             self, remote_resource: GenomicResource) -> CacheResource:
@@ -178,6 +182,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
     def load_manifest(self, resource: GenomicResource) -> Manifest:
         self.refresh_cached_resource_file(resource, GR_CONF_FILE_NAME)
         return self.remote_protocol.load_manifest(resource)
+
+    def open_repository_sqlite3_metadata_db(self) -> apsw.Connection:
+        return self.remote_protocol.open_repository_sqlite3_metadata_db()
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):

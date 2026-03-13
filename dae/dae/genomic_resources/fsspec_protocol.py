@@ -21,6 +21,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import apsw
 import fsspec
 import jinja2
 import pyBigWig  # type: ignore
@@ -33,6 +34,7 @@ from dae.genomic_resources.repository import (
     GR_CONTENTS_FILE_NAME,
     GR_INDEX_FILE_NAME,
     GR_MANIFEST_FILE_NAME,
+    GR_SQLITE_META_FILE_NAME,
     GenomicResource,
     Manifest,
     ManifestEntry,
@@ -185,7 +187,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self.filesystem = filesystem
         self.kwargs: dict[str, Any] = kwargs
         self._all_resources_lock = Lock()
-        self._all_resources: list[GenomicResource] | None = None
+        self._all_resources: dict[str, GenomicResource] | None = None
 
     def __getstate__(self) -> dict[str, Any]:
         state = self.__dict__.copy()
@@ -219,7 +221,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self.invalidate()
 
     def load_contents(self) -> list[dict[str, Any]]:
-        """Load the content of the repository (i.e '.CONTENTS.json.gz' file)."""
+        """Load the content JSON of the repository."""
         content_filename = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
         compression: str | None = "gzip"
@@ -233,8 +235,25 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         return cast(list[dict[str, Any]], json.loads(data))
 
+    def md5_contents(self) -> str:
+        """Calculate md5 hash of the repository content."""
+        content_filename = os.path.join(
+            self.url, GR_CONTENTS_FILE_NAME)
+        if not self.filesystem.exists(content_filename):
+            content_filename = content_filename[:-3]
+
+        with self.filesystem.open(content_filename, "rb") as infile:
+            data = infile.read()
+
+        assert isinstance(data, bytes)
+
+        return hashlib.md5(data).hexdigest()  # noqa: S324
+
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
+        yield from self.get_all_resources_dict().values()
+
+    def get_all_resources_dict(self) -> dict[str, GenomicResource]:
         with self._all_resources_lock:
             if self._all_resources is None:
                 all_resources = []
@@ -243,7 +262,8 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
                 for entry in contents:
                     version = tuple(map(int, entry["version"].split(".")))
-                    manifest = Manifest.from_manifest_entries(entry["manifest"])
+                    manifest = Manifest.from_manifest_entries(
+                        entry["manifest"])
                     resource = self.build_genomic_resource(
                         entry["id"], version, config=entry["config"],
                         manifest=manifest)
@@ -253,11 +273,15 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                         resource.resource_id)
                     all_resources.append(resource)
 
-                self._all_resources = sorted(
-                    all_resources,
-                    key=lambda r: r.get_genomic_resource_id_version())
+                self._all_resources = {
+                    res.get_full_id(): res
+                    for res in sorted(
+                        all_resources,
+                        key=lambda r: r.get_full_id(),
+                    )
+                }
 
-        yield from self._all_resources
+        return self._all_resources
 
     def file_exists(
             self, resource: GenomicResource, filename: str) -> bool:
@@ -272,7 +296,6 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
             mode: str = "rt", **kwargs: str | bool | None) -> IO:
-
         filepath = self.get_resource_file_url(resource, filename)
         if "w" in mode:
             if self.mode() == Mode.READONLY:
@@ -295,6 +318,21 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self.filesystem.open(
                 filepath, mode=mode,
                 compression=compression))
+
+    def open_repository_sqlite3_metadata_db(self) -> apsw.Connection:
+        sqlite_filepath = os.path.join(
+            self.url, GR_SQLITE_META_FILE_NAME)
+        if not self.filesystem.exists(sqlite_filepath):
+            raise ValueError(
+                "Repository contents SQLite metadata DB not found!")
+
+        connection = apsw.Connection(":memory:")
+        with self.filesystem.open(
+                sqlite_filepath, "rb", compression="gzip") as decompressed_db:
+            raw_db = decompressed_db.read()
+            assert isinstance(raw_db, bytes)
+            connection.deserialize("main", raw_db)
+        return connection
 
     def _get_file_url(self, resource: GenomicResource, filename: str) -> str:
         def process_file_url(url: str) -> str:
@@ -514,12 +552,20 @@ class FsspecReadWriteProtocol(
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
-        if self._all_resources is None:
-            self._all_resources = sorted(
-                self.collect_all_resources(),
-                key=lambda r: r.get_genomic_resource_id_version())
 
-        yield from self._all_resources
+        yield from self.get_all_resources_dict().values()
+
+    def get_all_resources_dict(self) -> dict[str, GenomicResource]:
+        with self._all_resources_lock:
+            if self._all_resources is None:
+                self._all_resources = {
+                    res.get_full_id(): res
+                    for res in sorted(
+                        self.collect_all_resources(),
+                        key=lambda r: r.get_full_id(),
+                    )
+                }
+        return self._all_resources
 
     def _get_resource_file_state_path(
             self, resource: GenomicResource, filename: str) -> str:
@@ -685,6 +731,7 @@ class FsspecReadWriteProtocol(
         """Build the content of the repository (i.e '.CONTENTS.json' file)."""
         content = [
             {
+                "full_id": res.get_full_id(),
                 "id": res.resource_id,
                 "version": res.get_version_str(),
                 "config": res.get_config(),
@@ -722,6 +769,7 @@ class FsspecReadWriteProtocol(
             )
             assert res.config is not None
             result[res.get_full_id()] = {
+                "res_full_id": res.get_full_id(),
                 "res_id": res.resource_id,
                 **res.config,
                 "res_version": res.get_version_str(),

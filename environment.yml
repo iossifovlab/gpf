@@ -35,7 +35,7 @@ dependencies:
   - python-box=7.1
   - setuptools=70.3
   - pip=24.1
-  - sqlite=3.51
+  - apsw=3.52
   - django=5.2.5
   - django-cors-headers=4.7.0
   - djangorestframework=3.16.1
