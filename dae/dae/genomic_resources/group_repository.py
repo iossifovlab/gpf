@@ -41,6 +41,14 @@ class GenomicResourceGroupRepo(GenomicResourceRepo):
 
         return None
 
+    def search_resources(
+        self,
+        search_term: str | None = None,
+        resource_type: str | None = None,
+    ) -> Generator[GenomicResource, None, None]:
+        for child_repo in self.children:
+            yield from child_repo.search_resources(search_term, resource_type)
+
     def get_resource(
             self, resource_id: str, version_constraint: str | None = None,
             repository_id: str | None = None) -> GenomicResource:
