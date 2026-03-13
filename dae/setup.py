@@ -28,6 +28,7 @@ setuptools.setup(
         "dae": ["py.typed"],
         "dae.dask": ["named_cluster.yaml"],
         "dae.annotation": ["templates/annotate_doc_pipeline_template.jinja"],
+        "dae.genomic_resources": ["repo_info_scripts.html"],
     },
     scripts=[
     ],
