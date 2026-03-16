@@ -212,7 +212,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def invalidate(self) -> None:
         if self._all_resources is not None:
-            for resource in self._all_resources:
+            for resource in self._all_resources.values():
                 resource.proto = None  # type: ignore
         self._all_resources = None
 
