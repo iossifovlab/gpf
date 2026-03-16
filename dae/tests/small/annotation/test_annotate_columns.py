@@ -33,7 +33,10 @@ from dae.annotation.processing_pipeline import (
     Annotation,
     AnnotationsWithSource,
 )
-from dae.annotation.record_to_annotatable import build_record_to_annotatable
+from dae.annotation.record_to_annotatable import (
+    build_annotatable_from_dict,
+    build_record_to_annotatable,
+)
 from dae.genomic_resources.genomic_context_base import (
     GenomicContext,
     SimpleGenomicContext,
@@ -173,6 +176,52 @@ def test_build_record(
     annotatable = build_record_to_annotatable(
         {}, set(record.keys()), ref_genome,
     ).build(record)
+    assert str(annotatable) == str(expected)
+
+
+@pytest.mark.parametrize(
+    "record,expected", [
+        ({"chrom": "chr1", "pos": "3"},
+         Position("chr1", 3)),
+
+        ({"chrom": "chr1", "pos": "4", "ref": "C", "alt": "CT"},
+         VCFAllele("chr1", 4, "C", "CT")),
+
+        ({"vcf_like": "chr1:4:C:CT"},
+         VCFAllele("chr1", 4, "C", "CT")),
+
+        ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
+         Region("chr1", 4, 30)),
+
+        ({"location": "chr1:13", "variant": "sub(A->T)"},
+         VCFAllele("chr1", 13, "A", "T")),
+
+        ({"location": "chr1:14", "variant": "ins(A)"},
+         VCFAllele("chr1", 13, "A", "AA")),
+
+        ({"location": "chr1:13", "variant": "del(1)"},
+         VCFAllele("chr1", 12, "TA", "T")),
+
+        ({"location": "chr1:3-13", "variant": "duplication"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
+
+        ({"location": "chr1:3-13", "variant": "CNV+"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
+
+        ({"location": "chr1:3-13", "variant": "deletion"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DELETION)),
+
+        ({"location": "chr1:3-13", "variant": "CNV-"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DELETION)),
+    ],
+)
+def test_build_annotatable(
+    record: dict[str, str],
+    expected: Annotatable,
+    gc_fixture: GenomicContext,
+) -> None:
+    ref_genome = gc_fixture.get_reference_genome()
+    annotatable = build_annotatable_from_dict(record, ref_genome)
     assert str(annotatable) == str(expected)
 
 
