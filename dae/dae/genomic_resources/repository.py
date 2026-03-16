@@ -694,6 +694,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             search_term: str | None = None,
             resource_type: str | None = None,
     ) -> Generator[GenomicResource, None, None]:
+        """Search for resources using SQLite full-text search."""
         if search_term is None and resource_type is None:
             yield from self.get_all_resources()
 
