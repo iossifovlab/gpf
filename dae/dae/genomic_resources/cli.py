@@ -7,12 +7,12 @@ import json
 import logging
 import os
 import pathlib
-import sqlite3
 import sys
 from collections.abc import Sequence
 from typing import Any, cast
 from urllib.parse import urlparse
 
+import apsw
 import yaml
 from cerberus.schema import SchemaError
 from jinja2 import Template
@@ -482,7 +482,7 @@ def _create_contents_db(
         os.remove(sqlite_filepath)
     if os.path.exists(gzip_sqlite_filepath):
         os.remove(gzip_sqlite_filepath)
-    with sqlite3.connect(sqlite_filepath) as conn:
+    with apsw.Connection(sqlite_filepath) as conn:
 
         labels = set()
 
@@ -492,10 +492,12 @@ def _create_contents_db(
                 res_labels = {}
             labels.update(res_labels.keys())
 
-        print(
-            "CREATE VIRTUAL TABLE contents "
-            "USING fts5(full_id, id, type, description, summary, "
-            f"{', '.join(labels)})",
+        conn.execute(
+            "CREATE TABLE contents_metadata (key TEXT PRIMARY KEY, value TEXT)",
+        )
+        conn.execute(
+            "INSERT INTO contents_metadata (key, value) VALUES (?, ?)",
+            ("contents_md5", proto.md5_contents()),
         )
 
         conn.execute(
@@ -505,8 +507,8 @@ def _create_contents_db(
         )
 
         for res_info in contents:
+            res_full_id = res_info["full_id"]
             res_id = res_info["id"]
-            res_version = res_info["version"]
             res_type = res_info["config"]["type"]
             res_description = res_info["config"].get("meta", {}).get(
                 "description", "")
@@ -520,7 +522,7 @@ def _create_contents_db(
                 res_labels = {}
 
             row = [
-                f"{res_id}{res_version}",
+                res_full_id,
                 res_id,
                 res_type,
                 res_description,
@@ -1177,39 +1179,6 @@ TEMPLATE_STRING += """
                  <td id="type-cell">
                      <select id="type-filter">
                          <option value="all">All</option>
-                         <option value="allele_score">
-                            allele_score
-                         </option>
-                         <option value="annotation_pipeline">
-                            annotation_pipeline
-                         </option>
-                         <option value="cnv_collection">
-                            cnv_collection
-                         </option>
-                         <option value="gene_models">
-                            gene_models
-                         </option>
-                         <option value="gene_set_collection">
-                            gene_set_collection
-                         </option>
-                         <option value="gene_score">
-                            gene_score
-                         </option>
-                         <option value="genome">
-                            genome
-                         </option>
-                         <option value="liftover_chain">
-                            liftover_chain
-                         </option>
-                         <option value="np_score">
-                            np_score
-                         </option>
-                         <option value="position_score">
-                            position_score
-                         </option>
-                         <option value="samocha_enrichment_background">
-                            samocha_enrichment_background
-                         </option>
                      </select>
                  </td>
                  <td id="search-label">Search:</td>
@@ -1245,7 +1214,7 @@ TEMPLATE_STRING += """
             </thead>
             <tbody>
                 {%- for key, value in data.items() recursive%}
-                <tr id="{{value['res_id']}}{{value['res_version']}}">
+                <tr id="{{value['res_full_id']}}">
                     <td class="nowrap">{{value['type']}}</td>
                     <td class="nowrap">
                         <a href='{{key}}/index.html'>{{key}}</a>

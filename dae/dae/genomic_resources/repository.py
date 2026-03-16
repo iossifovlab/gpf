@@ -56,6 +56,7 @@ from collections.abc import Generator, Iterator
 from dataclasses import asdict, dataclass
 from typing import IO, Any, cast
 
+import apsw
 import pysam
 import yaml
 
@@ -65,6 +66,7 @@ logger = logging.getLogger(__name__)
 GR_CONF_FILE_NAME = "genomic_resource.yaml"
 GR_MANIFEST_FILE_NAME = ".MANIFEST"
 GR_CONTENTS_FILE_NAME = ".CONTENTS.json.gz"
+GR_SQLITE_META_FILE_NAME = ".CONTENTS.sqlite3.gz"
 GR_INDEX_FILE_NAME = "index.html"
 
 GR_ENCODING = "utf-8"
@@ -656,6 +658,10 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator for all resources in the repository."""
 
+    @abc.abstractmethod
+    def get_all_resources_dict(self) -> dict[str, GenomicResource]:
+        """Return dictionary for all resources in the repository."""
+
     def find_resource(
         self, resource_id: str,
         version_constraint: str | None = None,
@@ -682,6 +688,34 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         return max(
             matching_resources,
             key=get_resource_version)
+
+    def search_resources(
+            self,
+            search_term: str | None = None,
+            resource_type: str | None = None,
+    ) -> Generator[GenomicResource, None, None]:
+        """Search for resources using SQLite full-text search."""
+        if search_term is None and resource_type is None:
+            yield from self.get_all_resources()
+
+        conn = self.open_repository_sqlite3_metadata_db()
+        with conn:
+            cursor = conn.cursor()
+            query = "SELECT full_id FROM contents WHERE "
+            conditions = []
+            params: list[Any] = []
+            if search_term is not None:
+                conditions.append("contents MATCH ?")
+                params.append(search_term)
+            if resource_type is not None:
+                conditions.append("type = ?")
+                params.append(resource_type)
+            if conditions:
+                query += " AND ".join(conditions)
+            rows = cursor.execute(query, params)
+            all_resources = self.get_all_resources_dict()
+            for row in rows:
+                yield all_resources[row[0]]
 
     def get_resource(
             self, resource_id: str,
@@ -774,6 +808,10 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.
         """
+
+    @abc.abstractmethod
+    def open_repository_sqlite3_metadata_db(self) -> apsw.Connection:
+        """Open the db file for repo metadata and return the connection."""
 
     def compute_md5_sum(self, resource: GenomicResource, filename: str) -> str:
         """Compute a md5 hash for a file in the resource."""
@@ -1259,6 +1297,14 @@ class GenomicResourceRepo(abc.ABC):
         """
 
     @abc.abstractmethod
+    def search_resources(
+        self,
+        search_term: str | None = None,
+        resource_type: str | None = None,
+    ) -> Generator[GenomicResource, None, None]:
+        """Search resources using FTS."""
+
+    @abc.abstractmethod
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return a generator over all resource in the repository."""
 
@@ -1298,6 +1344,13 @@ class GenomicResourceProtocolRepo(GenomicResourceRepo):
             return None
 
         return self.proto.find_resource(resource_id, version_constraint)
+
+    def search_resources(
+        self,
+        search_term: str | None = None,
+        resource_type: str | None = None,
+    ) -> Generator[GenomicResource, None, None]:
+        yield from self.proto.search_resources(search_term, resource_type)
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         return self.proto.get_all_resources()

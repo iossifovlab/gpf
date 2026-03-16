@@ -91,6 +91,15 @@
             await initializeSQLite()
             const all_ids_result = await window.sqlite3.query("SELECT full_id FROM contents;")
             window.all_ids = new Set(all_ids_result.map((row) => row[0]))
+            const all_types_result = await window.sqlite3.query("SELECT DISTINCT type FROM contents ORDER BY type ASC;")
+            const typeFilter = $("#type-filter");
+            for (const row of all_types_result) {
+                const type = row[0];
+                const option = document.createElement("option");
+                option.value = type;
+                option.textContent = type;
+                typeFilter.append(option);
+            }
             refreshData(Array.from(window.all_ids))
 
             resolve(window.sqlite3)
@@ -105,6 +114,7 @@
             const searchValue = $("#input-field").val().trim();
             const typeFilter = $("#type-filter").val();
             if (searchValue === "" && typeFilter === "all") {
+                window.last_error = null;
                 refreshData(Array.from(window.all_ids))
                 return;
             }

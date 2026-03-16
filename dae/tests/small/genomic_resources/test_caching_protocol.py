@@ -209,7 +209,7 @@ def test_get_all_resources_caches_list(
 
     # Second call uses cached list
     resources2 = list(caching_proto.get_all_resources())
-    assert resources2 == caching_proto._all_resources
+    assert resources2 == list(caching_proto._all_resources.values())
 
 
 @pytest.mark.grr_full
