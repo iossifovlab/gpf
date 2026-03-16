@@ -135,10 +135,10 @@
                 query = `SELECT full_id FROM contents WHERE type = '${typeFilter}'`
             }
 
+            window.last_error = null;
             try {
                 const displayIds = window.sqlite3.query(query).map((row) => row[0]);
                 refreshData(displayIds);
-                window.last_error = null;
             }
             catch (error) {
                 window.last_error = error;
@@ -156,6 +156,32 @@
 
         $("#input-field").on("change", async (e) => {
             doSearch();
+        });
+
+        function debounce(func, wait, immediate) {
+            var timeout;
+            return function() {
+                var context = this, args = arguments;
+                var later = function() {
+                    timeout = null;
+                    if (!immediate) func.apply(context, args);
+                };
+                var callNow = immediate && !timeout;
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+                if (callNow) func.apply(context, args);
+            };
+        };
+
+        var debouncedSearch = debounce(doSearch, 150, false);
+
+        $("#input-field").on("keydown", (e) => {
+            if (e.key === "Enter") {
+                doSearch();
+            }
+            else {
+                debouncedSearch();
+            }
         });
 
     </script>

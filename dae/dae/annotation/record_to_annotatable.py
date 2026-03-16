@@ -204,3 +204,14 @@ def build_record_to_annotatable(
                 tuple(columns), ref_genome,
             )
     raise ValueError("no record to annotatable could be found.")
+
+
+def build_annotatable_from_dict(
+    obj: dict[str, str],
+    ref_genome: ReferenceGenome | None = None,
+) -> Annotatable:
+    """Build an annotatable from a dictionary of string values."""
+    record_to_annotatable = build_record_to_annotatable(
+        {}, set(obj.keys()), ref_genome)
+
+    return record_to_annotatable.build(obj)
