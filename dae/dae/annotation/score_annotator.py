@@ -118,16 +118,20 @@ class GenomicScoreAnnotatorBase(Annotator):
                     raise ValueError(
                         f"Default annotation attribute '{attr}' is not "
                         "defined in the score resource!")
-                result[default_attr.source] = AttributeDesc(
-                    source=default_attr.source,
-                    name=default_attr.name,
-                    type=default_attr.value_type,
-                    attribute_type=default_attr.attribute_type,
-                    description=default_attr.description,
-                    params=cast(dict, default_attr.parameters),
-                    default=True,
-                    internal=False,
-                )
+
+                result[default_attr.source].source = default_attr.source
+                if default_attr.name:
+                    result[default_attr.source].name = default_attr.name
+                if default_attr.description:
+                    result[default_attr.source].description = \
+                        default_attr.description
+                if len(default_attr.parameters) > 0:
+                    result[default_attr.source].params = cast(
+                        dict, default_attr.parameters)
+                result[default_attr.source].default = True
+                if default_attr.internal is not None:
+                    result[default_attr.source].internal = \
+                        default_attr.internal
         return result
 
     def _build_score_aggregator_documentation(
