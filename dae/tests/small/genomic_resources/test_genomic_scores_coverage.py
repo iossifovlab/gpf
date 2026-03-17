@@ -252,7 +252,7 @@ def test_position_score_multiple_values_for_position() -> None:
     score.open()
 
     with pytest.raises(ValueError, match="multiple values"):
-        list(score._fetch_region_values("1", 10, 20, ["score"]))
+        list(score.fetch_region_values("1", 10, 20, ["score"]))
 
 
 def test_position_score_fetch_scores_multiple_lines() -> None:
