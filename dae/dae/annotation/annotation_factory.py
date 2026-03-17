@@ -101,7 +101,7 @@ def load_pipeline_from_file(
     path = Path(raw_path)
     if not path.exists():
         raise OSError(f"{raw_path} does not exist!")
-    if path.suffix == ".yaml":
+    if path.suffix in {".yaml", ".yml"}:
         return load_pipeline_from_yaml(
             path.read_text(), grr,
             allow_repeated_attributes=allow_repeated_attributes,

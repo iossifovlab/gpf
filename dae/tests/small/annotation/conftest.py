@@ -8,7 +8,11 @@ from typing import Any
 import pytest
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
-from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import Annotator, AttributeDesc
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
@@ -35,7 +39,7 @@ class DummyAnnotator(Annotator):
         super().__init__(None, info)
         self.index = 0
 
-    def get_all_attribute_descriptions(self) -> dict[str, AttributeInfo]:
+    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {}
 
     @property
@@ -244,3 +248,11 @@ def annotate_directory_fixture(
         """))
 
     return root_path
+
+
+@pytest.fixture(scope="module")
+def annotation_grr(
+    annotate_directory_fixture: pathlib.Path,
+) -> GenomicResourceRepo:
+    return build_genomic_resource_repository(
+        file_name=str(annotate_directory_fixture / "grr.yaml"))
