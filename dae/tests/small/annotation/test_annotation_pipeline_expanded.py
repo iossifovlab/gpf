@@ -695,12 +695,12 @@ def test_value_transform_decorator_annotate() -> None:
         def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
             return {
                 "doubled": AttributeDesc(
-                    name="doubled",
+                    source="doubled",
                     type="int",
                     description="Doubled value",
                 ),
                 "normal": AttributeDesc(
-                    name="normal",
+                    source="normal",
                     type="int",
                     description="Normal value",
                 ),
