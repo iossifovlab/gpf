@@ -57,8 +57,11 @@ setuptools.setup(
 
     [dae.annotation.annotators]
     allele_score=dae.annotation.score_annotator:build_allele_score_annotator
+    allele_score_annotator=dae.annotation.score_annotator:build_allele_score_annotator
     np_score=dae.annotation.score_annotator:build_np_score_annotator
+    np_score_annotator=dae.annotation.score_annotator:build_np_score_annotator
     position_score=dae.annotation.score_annotator:build_position_score_annotator
+    position_score_annotator=dae.annotation.score_annotator:build_position_score_annotator
     effect_annotator=dae.annotation.effect_annotator:build_effect_annotator
     gene_set_annotator=dae.annotation.gene_set_annotator:build_gene_set_annotator
     liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
@@ -68,6 +71,7 @@ setuptools.setup(
     gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
     simple_effect_annotator=dae.annotation.simple_effect_annotator:build_simple_effect_annotator
     cnv_collection=dae.annotation.cnv_collection_annotator:build_cnv_collection_annotator
+    cnv_collection_annotator=dae.annotation.cnv_collection_annotator:build_cnv_collection_annotator
     chrom_mapping=dae.annotation.chrom_mapping_annotator:build_chrom_mapping_annotator
     debug_annotator=dae.annotation.debug_annotator:build_annotator
 

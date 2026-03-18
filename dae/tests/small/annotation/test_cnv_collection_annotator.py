@@ -125,10 +125,7 @@ def test_cnv_filter(
         textwrap.dedent("""
             - cnv_collection:
                 resource_id: cnvs
-                cnv_filter: >
-                  (cnv.attributes["frequency"] < 0.05 or
-                  cnv.attributes["collection"] == "SSC") and
-                  cnv.size > 2
+                cnv_filter: frequency < 0.05 or collection == "SSC"
             """),
         grr)
 
@@ -152,9 +149,7 @@ def test_cnv_filter_and_attribute(
         textwrap.dedent("""
             - cnv_collection:
                 resource_id: cnvs
-                cnv_filter: >
-                  cnv.attributes["frequency"] < 0.05 or
-                  cnv.attributes["collection"] == "AGRE"
+                cnv_filter: frequency < 0.05 or collection == "AGRE"
                 attributes:
                 - count
                 - name: status

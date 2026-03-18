@@ -1,4 +1,8 @@
+import textwrap
+from collections.abc import Callable
 from typing import Any
+
+from lark import Lark, Token, Tree
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
@@ -8,7 +12,7 @@ from dae.annotation.annotation_pipeline import (
     AttributeDesc,
 )
 from dae.genomic_resources.aggregators import build_aggregator
-from dae.genomic_resources.genomic_scores import CnvCollection
+from dae.genomic_resources.genomic_scores import CNV, CnvCollection
 
 
 def build_cnv_collection_annotator(pipeline: AnnotationPipeline,
@@ -19,8 +23,39 @@ def build_cnv_collection_annotator(pipeline: AnnotationPipeline,
 class CnvCollectionAnnotator(Annotator):
     """Simple effect annotator class."""
 
-    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
+    CNV_FILTER_GRAMMAR = textwrap.dedent("""
+        ?start: filter | and_ | or
 
+        and_: filter "and" filter
+
+        or: filter "or" filter
+
+        ?filter: subject operator subject | or | and_
+
+        ?subject: variable | value
+
+        value: "\\"" word "\\"" | number
+
+        variable: word
+
+        operator: equals | greater_than | less_than | in
+
+        equals: "=="
+
+        greater_than: ">"
+
+        less_than: "<"
+
+        in: "in"
+
+        word: /[a-zA-Z!@#$%^&*()_+]+/
+
+        number: /[0-9\\.]+/
+
+        %ignore " "
+    """)
+
+    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         cnv_collection_resrouce_id = info.parameters.get("resource_id")
         if cnv_collection_resrouce_id is None:
             raise ValueError(f"Can't create {info.type}: "
@@ -29,17 +64,13 @@ class CnvCollectionAnnotator(Annotator):
         self.cnv_collection = CnvCollection(resource)
         info.resources.append(resource)
 
+        self.filter_parser = Lark(self.CNV_FILTER_GRAMMAR)
+
         self.cnv_filter = None
         cnv_filter_str = info.parameters.get("cnv_filter")
         if cnv_filter_str is not None:
-            try:
-                # pylint: disable=eval-used
-                self.cnv_filter = eval(  # noqa: S307
-                    f"lambda cnv: { cnv_filter_str }")
-            except Exception as error:
-                raise ValueError(
-                    f"The cnv_filter |{cnv_filter_str}| is "
-                    f"sytactically invalid.", error) from error
+            self.cnv_filter = self._build_cnv_filter_func(
+                self.filter_parser.parse(cnv_filter_str))
 
         if not info.attributes:
             info.attributes = [AttributeInfo(
@@ -101,6 +132,87 @@ class CnvCollectionAnnotator(Annotator):
                 params={"aggregator": score_def.allele_aggregator},
             )
         return attributes
+
+    @classmethod
+    def _build_cnv_filter_func(
+        cls, tree: Tree,
+    ) -> Callable[[CNV], bool]:
+        if tree.data == "and_":
+            assert isinstance(tree.children[0], Tree)
+            assert isinstance(tree.children[1], Tree)
+            left_func = cls._build_cnv_filter_func(tree.children[0])
+            right_func = cls._build_cnv_filter_func(tree.children[1])
+            return lambda cnv: left_func(cnv) and right_func(cnv)
+        if tree.data == "or":
+            left_func = cls._build_cnv_filter_func(tree.children[0])
+            right_func = cls._build_cnv_filter_func(tree.children[1])
+            return lambda cnv: left_func(cnv) or right_func(cnv)
+
+        left = tree.children[0]
+        assert isinstance(left, Tree)
+        assert isinstance(left.data, Token)
+        left_type = left.data.value
+        if left_type == "variable":
+            assert isinstance(left.children[0], Tree)
+            assert isinstance(left.children[0].data, Token)
+            assert left.children[0].data.value == "word"
+            assert isinstance(left.children[0].children[0], Token)
+            left_value = left.children[0].children[0].value
+
+            def left_accessor(_cnv: CNV) -> Any:
+                return _cnv.attributes.get(left_value)
+        else:
+            assert isinstance(left.children[0], Tree)
+            assert isinstance(left.children[0].data, Token)
+            is_number = left.children[0].data.value == "number"
+            assert isinstance(left.children[0].children[0], Token)
+            left_value = left.children[0].children[0].value
+            if is_number:
+                left_value = float(left_value)
+
+            def left_accessor(
+                    _cnv: CNV) -> Any:  # pylint: disable=unused-argument
+                return left_value
+        assert isinstance(tree.children[1], Tree)
+        assert isinstance(tree.children[1].children[0], Tree)
+        assert isinstance(tree.children[1].children[0].data, Token)
+        operator = tree.children[1].children[0].data.value
+        right = tree.children[2]
+        assert isinstance(right, Tree)
+        assert isinstance(right.data, Token)
+        right_type = right.data.value
+        if right_type == "variable":
+            assert isinstance(right.children[0], Tree)
+            assert isinstance(right.children[0].data, Token)
+            assert right.children[0].data.value == "word"
+            assert isinstance(right.children[0].children[0], Token)
+            right_value = right.children[0].children[0].value
+
+            def right_accessor(_cnv: CNV) -> Any:
+                return _cnv.attributes.get(right_value)
+        else:
+            assert isinstance(right.children[0], Tree)
+            assert isinstance(right.children[0].data, Token)
+            is_number = right.children[0].data.value == "number"
+            assert isinstance(right.children[0].children[0], Token)
+            right_value = right.children[0].children[0].value
+            if is_number:
+                right_value = float(right_value)
+
+            def right_accessor(
+                    _cnv: CNV) -> Any:  # pylint: disable=unused-argument
+                return right_value
+
+        if operator == "equals":
+            return lambda cnv: left_accessor(cnv) == right_accessor(cnv)
+        if operator == "greater_than":
+            return lambda cnv: left_accessor(cnv) > right_accessor(cnv)
+        if operator == "less_than":
+            return lambda cnv: left_accessor(cnv) < right_accessor(cnv)
+        if operator == "in":
+            return lambda cnv: left_accessor(cnv) in right_accessor(cnv)
+
+        raise ValueError(f"Unsupported operator {operator.data}")
 
     def open(self) -> Annotator:
         self.cnv_collection.open()

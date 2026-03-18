@@ -122,6 +122,9 @@ class Position(Annotatable):
     def __repr__(self) -> str:
         return f"Position({self.chrom},{self.pos})"
 
+    def __str__(self) -> str:
+        return f"{self.chrom}:{self.pos}"
+
     @staticmethod
     def from_string(value: str) -> Position:
         a_type, args = Annotatable.tokenize(value)
@@ -141,6 +144,9 @@ class Region(Annotatable):
 
     def __repr__(self) -> str:
         return f"Region({self.chrom},{self.pos},{self.pos_end})"
+
+    def __str__(self) -> str:
+        return f"{self.chrom}:{self.pos}-{self.pos_end}"
 
     @staticmethod
     def from_string(value: str) -> Region:
@@ -199,6 +205,9 @@ class VCFAllele(Annotatable):
             f"VCFAllele({self.chrom},{self.pos}"
             f",{self.ref},{self.alt})"
         )
+
+    def __str__(self) -> str:
+        return f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
 
     def __eq__(self, other: object) -> bool:
         if not super().__eq__(other):
