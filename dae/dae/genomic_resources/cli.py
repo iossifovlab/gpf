@@ -1076,94 +1076,175 @@ def get_scripts_for_template() -> str:
 
 TEMPLATE_STRING = """
 <html>
- <head>
+   <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <head>
     <style>
+        * {
+          font-family: sans-serif
+        }
+
         th {
-            background: lightgray;
+          background: #ecf1f6;
         }
+
         td, th {
-            border: 1px solid black;
-            padding: 5px;
+          border: 1px solid #cfd8df;
+          padding: 5px;
+          max-width: 100px;
         }
-        table {
-            border: 3px inset;
-            width: 100%;
+
+        tr {
+          height: 38px;
         }
+
         table, td, th {
-            border-collapse: collapse;
+          border-collapse: collapse;
         }
 
-        table.search-table {
-            border: none;
-            width:100%;
-            max-width: none;
+        a {
+          text-decoration: none;
+          color: #24699E;
         }
-        table.search-table td {
-            border: none;
-            padding: none;
+
+        a:hover {
+          color: #4C93C9;
         }
-        .input-cell {
-            display: flex
+
+        a:visited {
+          color: #829dbe;
         }
-        #input-field {
-            flex-grow: 1;
+
+        a:visited:hover {
+          color: #a1bddf;
         }
+
+        #search-container {
+          margin-top: 80px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 15px;
+          position: sticky;
+          top: 0;
+          background-color: white;
+          height: 70px;
+        }
+
         #type-label {
-            width: 100px;
-            text-align: right;
-        }
-        #search-label {
-            width: 60px;
-            text-align: right;
-        }
-        #type-cell {
-            width: 200px;
+          color: #5b778c;
         }
 
-        .meta-div {
-            max-height: 250px;
-            overflow: scroll;
+        #type-filter {
+          border: 1px solid #85a2b9;
+          height: 40px;
+          border-radius: 5px;
+          font-size: 18px;
+          padding-left: 10px;
+          background: white;
         }
+
+        #type-filter:hover {
+          cursor: pointer;
+        }
+
+        #search-field {
+          width: 40%;
+          border: 1px solid #85a2b9;
+          height: 40px;
+          border-radius: 5px;
+          font-size: 18px;
+          padding: 0 10px;
+        }
+
+        input::placeholder {
+          color: #ababab;
+        }
+
+        #type-filter:focus-visible,
+        #search-field:focus-visible,
+        #type-filter:focus,
+        #search-field:focus {
+          outline-color: #85a2b9;
+        }
+
         .nowrap {
-            white-space: nowrap
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .info {
+          color: #5b778c;
+        }
+
+        .info:hover {
+          color: #85a2b9;
+          cursor: pointer;
         }
 
         .hints {
-            text-align: center;
-            font-size: 0.9em;
-            color: gray;
-            margin-top: 0px;
-            margin-bottom: 0px;
-        }
-        .loading, .searching {
-            text-align: center;
-            font-size: larger;
-        }
-        .pageButton {
-            border: none;
-            background: none;
-            color: blue;
-            cursor: pointer;
-            padding: 3px;
-            margin: 0px 3px;
-        }
-        .pageButton.active {
-            color: black;
-            cursor: default;
-        }
-        .pageButton.hide {
-            display: none;
+          text-align: center;
+          font-size: 0.9em;
+          color: #ababab;
+          font-style: italic;
         }
 
-        #status, #status-error {
-            text-align: center;
-            font-size: 1.2em;
-            margin-top: 2px;
-            margin-bottom: 2px;
+        .loading,
+        .searching {
+          text-align: center;
+          font-size: larger;
         }
+
+        .pageButton {
+          border: none;
+          background: none;
+          color: blue;
+          cursor: pointer;
+          padding: 3px;
+          margin: 0px 3px;
+        }
+
+        .pageButton.active {
+          color: black;
+          cursor: default;
+        }
+        
+        .pageButton.hide {
+          display: none;
+        }
+
+        #status,
         #status-error {
-            color: red;
+          margin-left: 10%;
+          margin-top: 15px;
+          color: #5b778c;
         }
+
+        #status-error {
+          color: #d74b59;
+          text-align: center;
+        }
+        
+        #resource-table {
+          margin: 10px 10%;
+          width: 80%;
+          border: 1px solid black;
+        }
+
+      .version-cell {
+        width: 5%;
+      }
+
+      .size-cell,
+      .type-cell {
+        width: 10%;
+      }
+
+      .id-cell {
+        width: 30%;
+      }
     </style>
  </head>"""
 
@@ -1172,61 +1253,54 @@ TEMPLATE_STRING += get_scripts_for_template()
 TEMPLATE_STRING += """
  <body>
      <div>
-         <p class="loading">Loading search</p>
-         <table class="search-table" style="display: none;">
-             <tr>
-                 <td id="type-label">Resource type:</td>
-                 <td id="type-cell">
-                     <select id="type-filter">
-                         <option value="all">All</option>
-                     </select>
-                 </td>
-                 <td id="search-label">Search:</td>
-                 <td class="input-cell">
-                 <input type="text" id="input-field">
-                 </td>
-             </tr>
-         </table>
-         <p class="hints">
-            Use AND to perform and,
-             use OR to perform or, spaces separate strings,
-             surround strings in "" to
-             use spaces inside the string.
-         </p>
-         <p class="hints">
-             The search uses
-             <a
-              href="https://sqlite.org/fts5.html#full_text_query_syntax"
-              target="_blank">
-              SQLite's FTS syntax.</a>
-         </p>
-         <p id="status-error"></p>
-         <p id="status"></p>
-         <table class="contents">
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>ID</th>
-                    <th>Version</th>
-                    <th>Size in bytes (total)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {%- for key, value in data.items() recursive%}
-                <tr id="{{value['res_full_id']}}">
-                    <td class="nowrap">{{value['type']}}</td>
-                    <td class="nowrap">
-                        <a href='{{key}}/index.html'>{{key}}</a>
-                    </td>
-                    <td class="nowrap">{{value['res_version']}}</td>
-                    <td class="nowrap">{{value['res_size']}}</td>
-                    <td class="nowrap">{{value['res_summary']}}</td>
-                </tr>
-                {%- endfor %}
-            </tbody>
-         </table>
-         <p class="searching" style="display: none;">Searching</p>
+        <p class="loading">Loading search</p>
+        <div id="search-container" style="display: none;">
+          <span id="type-label">Resource type</span>
+          <div id="type-cell">
+            <select id="type-filter">
+                <option value="all">All</option>
+            </select>
+          </div>
+          <input type="text" id="search-field" placeholder="Search">
+          <span
+            class="material-symbols-outlined info"
+            title='use AND to perform and\nuse OR to perform or\nspaces separate strings\nsurround strings in "" to use spaces inside the string'
+            >info</span>
+        </div>
+        <div class="hints">
+          The search uses
+          <a
+            href="https://sqlite.org/fts5.html#full_text_query_syntax"
+            target="_blank">
+            SQLite's FTS syntax.</a>
+        </div>
+        <p id="status-error"></p>
+        <div id="status"></div>
+        <table id="resource-table" class="contents">
+          <thead>
+            <tr>
+              <th class="nowrap type-cell">Type</th>
+              <th class="nowrap id-cell">ID</th>
+              <th class="nowrap version-cell">Version</th>
+              <th class="nowrap size-cell" title="Total size (bytes)">Total size (bytes)</th>
+              <th class="nowrap">Summary</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%- for key, value in data.items() recursive%}
+            <tr id="{{value['res_full_id']}}">
+              <td class="nowrap type-cell" title="{{value['type']}}">{{value['type']}}</td>
+              <td class="nowrap id-cell" title="{{key}}">
+                <a href='{{key}}/index.html'>{{key}}</a>
+              </td>
+              <td class="nowrap version-cell">{{value['res_version']}}</td>
+              <td class="nowrap size-cell">{{value['res_size']}}</td>
+              <td class="nowrap" title="{{value['res_summary']}}">{{value['res_summary']}}</td>
+              </tr>
+            {%- endfor %}
+          </tbody>
+        </table>
+        <p class="searching" style="display: none;">Searching</p>
      </div>
      <div class="pagination"></div>
  </body>
