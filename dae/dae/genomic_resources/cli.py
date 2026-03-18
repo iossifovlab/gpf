@@ -1078,7 +1078,9 @@ TEMPLATE_STRING = """
 <html>
    <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+      href=
+        "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      />
     <head>
     <style>
         * {
@@ -1210,7 +1212,7 @@ TEMPLATE_STRING = """
           color: black;
           cursor: default;
         }
-        
+
         .pageButton.hide {
           display: none;
         }
@@ -1226,7 +1228,7 @@ TEMPLATE_STRING = """
           color: #d74b59;
           text-align: center;
         }
-        
+
         #resource-table {
           margin: 10px 10%;
           width: 80%;
@@ -1264,7 +1266,11 @@ TEMPLATE_STRING += """
           <input type="text" id="search-field" placeholder="Search">
           <span
             class="material-symbols-outlined info"
-            title='use AND to perform and\nuse OR to perform or\nspaces separate strings\nsurround strings in "" to use spaces inside the string'
+            title=
+            'use AND to perform and
+use OR to perform or
+spaces separate
+surround strings in "" to use spaces inside the string'
             >info</span>
         </div>
         <div class="hints">
@@ -1282,20 +1288,29 @@ TEMPLATE_STRING += """
               <th class="nowrap type-cell">Type</th>
               <th class="nowrap id-cell">ID</th>
               <th class="nowrap version-cell">Version</th>
-              <th class="nowrap size-cell" title="Total size (bytes)">Total size (bytes)</th>
+              <th
+                class="nowrap size-cell"
+                title="Total size (bytes)"
+              >Total size (bytes)</th>
               <th class="nowrap">Summary</th>
             </tr>
           </thead>
           <tbody>
             {%- for key, value in data.items() recursive%}
             <tr id="{{value['res_full_id']}}">
-              <td class="nowrap type-cell" title="{{value['type']}}">{{value['type']}}</td>
+              <td
+                class="nowrap type-cell"
+                title="{{value['type']}}"
+              >{{value['type']}}</td>
               <td class="nowrap id-cell" title="{{key}}">
                 <a href='{{key}}/index.html'>{{key}}</a>
               </td>
               <td class="nowrap version-cell">{{value['res_version']}}</td>
               <td class="nowrap size-cell">{{value['res_size']}}</td>
-              <td class="nowrap" title="{{value['res_summary']}}">{{value['res_summary']}}</td>
+              <td
+                class="nowrap"
+                title="{{value['res_summary']}}"
+              >{{value['res_summary']}}</td>
               </tr>
             {%- endfor %}
           </tbody>
