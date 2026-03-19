@@ -133,6 +133,27 @@ def test_cnv_filter(
     assert atts["count"] == cnv_count
 
 
+@pytest.mark.parametrize("annotatable, cnv_count", [
+    (Position("1", 15), 1),
+    (Region("1", 15, 60), 1),
+    (Region("1", 30, 40), 0),
+])
+def test_cnv_filter_on_newline(
+        annotatable: Annotatable, cnv_count: int,
+        grr: GenomicResourceRepo) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - cnv_collection:
+                resource_id: cnvs
+                cnv_filter: >
+                    frequency < 0.05 or collection == "SSC"
+            """),
+        grr)
+
+    atts = pipeline.annotate(annotatable)
+    assert atts["count"] == cnv_count
+
+
 @pytest.mark.parametrize(
     "annotatable, cnv_count, status, status2, collection", [
         (Position("1", 15), 1, "affected", "affected", "SSC"),
