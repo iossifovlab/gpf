@@ -64,7 +64,7 @@
                 statusError.text("");
                 statusError.hide();
             }
-            status.text(`Showing ${window.currentIds.length} resources.`);
+            status.text(`${window.currentIds.length} resources`);
         }
 
         function refreshData(ids) {
@@ -107,11 +107,11 @@
 
         $(".loading").hide()
 
-        $(".search-table").show()
+        $("#search-container").show()
 
         async function doSearch() {
             await window.dbLoaded;
-            const searchValue = $("#input-field").val().trim();
+            const searchValue = $("#search-field").val().trim();
             const typeFilter = $("#type-filter").val();
             if (searchValue === "" && typeFilter === "all") {
                 window.last_error = null;
@@ -154,7 +154,7 @@
             doSearch();
         })
 
-        $("#input-field").on("change", async (e) => {
+        $("#search-field").on("change", async (e) => {
             doSearch();
         });
 
@@ -173,9 +173,9 @@
             };
         };
 
-        var debouncedSearch = debounce(doSearch, 150, false);
+        var debouncedSearch = debounce(doSearch, 400, false);
 
-        $("#input-field").on("keydown", (e) => {
+        $("#search-field").on("keydown", (e) => {
             if (e.key === "Enter") {
                 doSearch();
             }
