@@ -1076,11 +1076,6 @@ def get_scripts_for_template() -> str:
 
 TEMPLATE_STRING = """
 <html>
-   <link
-      rel="stylesheet"
-      href=
-        "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
-      />
     <head>
     <style>
         * {
@@ -1177,20 +1172,13 @@ TEMPLATE_STRING = """
           text-overflow: ellipsis;
         }
 
-        .info {
-          color: #5b778c;
-        }
-
-        .info:hover {
-          color: #85a2b9;
-          cursor: pointer;
-        }
-
-        .hints {
+        .search-info {
           text-align: center;
           font-size: 0.9em;
           color: #ababab;
           font-style: italic;
+          word-break: break-word;
+          margin: 0 10%;
         }
 
         .loading,
@@ -1264,16 +1252,14 @@ TEMPLATE_STRING += """
             </select>
           </div>
           <input type="text" id="search-field" placeholder="Search">
-          <span
-            class="material-symbols-outlined info"
-            title=
-            'use AND to perform and
-use OR to perform or
-spaces separate
-surround strings in "" to use spaces inside the string'
-            >info</span>
         </div>
-        <div class="hints">
+        <div class="search-info">
+          <div>
+            use AND to perform 'and',
+            use OR to perform 'or',
+            use spaces to separate strings,
+            surround strings in "" to use spaces inside the string
+          </div>
           The search uses
           <a
             href="https://sqlite.org/fts5.html#full_text_query_syntax"

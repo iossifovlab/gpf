@@ -173,7 +173,7 @@
             };
         };
 
-        var debouncedSearch = debounce(doSearch, 150, false);
+        var debouncedSearch = debounce(doSearch, 400, false);
 
         $("#search-field").on("keydown", (e) => {
             if (e.key === "Enter") {
