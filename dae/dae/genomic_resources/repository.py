@@ -701,7 +701,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         conn = self.open_repository_sqlite3_metadata_db()
         with conn:
             cursor = conn.cursor()
-            query = "SELECT full_id FROM contents WHERE "
+            query = "SELECT full_id FROM contents "
             conditions = []
             params: list[Any] = []
             if search_term is not None:
@@ -711,6 +711,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
                 conditions.append("type = ?")
                 params.append(resource_type)
             if conditions:
+                query += " WHERE "
                 query += " AND ".join(conditions)
             rows = cursor.execute(query, params)
             all_resources = self.get_all_resources_dict()

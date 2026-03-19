@@ -492,6 +492,13 @@ def _create_contents_db(
                 res_labels = {}
             labels.update(res_labels.keys())
 
+        label_list = list(labels)  # switch to list for ordered access
+        if len(label_list) > 0:
+            # Empty label is added for more convenient support of queries
+            # without labels. ", ".join(labels) would start with a "," when
+            # labes are present and without when they are not.
+            label_list.insert(0, "")
+
         conn.execute(
             "CREATE TABLE contents_metadata (key TEXT PRIMARY KEY, value TEXT)",
         )
@@ -502,7 +509,7 @@ def _create_contents_db(
 
         conn.execute(
             "CREATE VIRTUAL TABLE contents "
-            "USING fts5(full_id, id, type, description, summary, "
+            "USING fts5(full_id, id, type, description, summary"
             f"{', '.join(labels)})",
         )
 
@@ -532,7 +539,7 @@ def _create_contents_db(
 
             conn.execute(
                 "INSERT INTO contents "  # noqa: S608
-                "(full_id, id, type, description, summary, "
+                "(full_id, id, type, description, summary"
                 f"{', '.join(labels)}) "
                 f"VALUES ({', '.join(['?' for _ in range(len(row))])})",
                 (
