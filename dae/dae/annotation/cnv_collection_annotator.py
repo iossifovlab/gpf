@@ -69,6 +69,10 @@ class CnvCollectionAnnotator(Annotator):
         self.cnv_filter = None
         cnv_filter_str = info.parameters.get("cnv_filter")
         if cnv_filter_str is not None:
+            assert isinstance(cnv_filter_str, str)
+
+            cnv_filter_str = cnv_filter_str.replace(
+                "\n", " ").replace("\t", " ").strip()
             self.cnv_filter = self._build_cnv_filter_func(
                 self.filter_parser.parse(cnv_filter_str))
 
