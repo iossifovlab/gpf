@@ -40,19 +40,23 @@ class CacheRecord:
         assert self.type == CacheRecordType.ERROR
         return self.result_or_error
 
+    def invalidate(self) -> CacheRecord:
+        """Return a new instance that needs to be recomputed."""
+        return CacheRecord(CacheRecordType.NEEDS_COMPUTE, self.result_or_error)
+
 
 class TaskCache:
     """Store the result of a task in a file and reuse it if possible."""
 
     @abstractmethod
     def get_record(
-        self, task_node: TaskDesc,
+        self, task_desc: TaskDesc,
     ) -> CacheRecord:
         """For task in the `graph` load and yield the cache record."""
 
     @abstractmethod
     def cache(
-        self, task_node: Task, *,
+        self, task: Task, *,
         is_error: bool, result: Any,
     ) -> None:
         """Cache the result or exception of a task."""
@@ -75,12 +79,12 @@ class NoTaskCache(dict, TaskCache):
     """Don't check any conditions and just run any task."""
 
     def get_record(
-        self, task_node: TaskDesc,  # noqa: ARG002
+        self, task_desc: TaskDesc,  # noqa: ARG002
     ) -> CacheRecord:
         return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
     def cache(
-        self, task_node: Task, *,
+        self, task: Task, *,
         is_error: bool, result: Any,
     ) -> None:
         pass
@@ -92,9 +96,9 @@ class FileTaskCache(TaskCache):
     def __init__(self, cache_dir: str):
         self.cache_dir = cache_dir
 
-    def get_record(self, task_node: TaskDesc) -> CacheRecord:
+    def get_record(self, task_desc: TaskDesc) -> CacheRecord:
         """Get the cache record for a task."""
-        flag_filename = self._get_flag_filename(task_node.task)
+        flag_filename = self._get_flag_filename(task_desc.task)
         with fsspec.open(flag_filename, "rb") as cache_file:
             try:
                 task_record = cast(
@@ -103,14 +107,14 @@ class FileTaskCache(TaskCache):
             except Exception:  # pylint: disable=broad-except
                 logger.exception(
                     "Cannot read status for task %s. Ignoring and continuing.",
-                    task_node,
+                    task_desc,
                 )
                 return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
         if task_record.type != CacheRecordType.COMPUTED:
             return task_record
 
-        if self._needs_recompute(task_node):
+        if self._needs_recompute(task_desc):
             task_record = CacheRecord(
                 CacheRecordType.NEEDS_COMPUTE,
                 result_or_error=task_record.result,
@@ -118,7 +122,7 @@ class FileTaskCache(TaskCache):
 
         return task_record
 
-    def cache(self, task_node: Task, *, is_error: bool, result: Any) -> None:
+    def cache(self, task: Task, *, is_error: bool, result: Any) -> None:
         record_type = (
             CacheRecordType.ERROR if is_error else CacheRecordType.COMPUTED
         )
@@ -126,18 +130,18 @@ class FileTaskCache(TaskCache):
             record_type,
             result,
         )
-        cache_fn = self._get_flag_filename(task_node)
+        cache_fn = self._get_flag_filename(task)
         try:
             with fsspec.open(cache_fn, "wb") as cache_file:
                 pickle.dump(record, cache_file)  # pyright: ignore
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Cannot write cache for task %s. Ignoring and continuing.",
-                task_node,
+                task,
             )
 
-    def _get_flag_filename(self, task_node: Task) -> str:
-        return fs_utils.join(self.cache_dir, f"{task_node.task_id}.flag")
+    def _get_flag_filename(self, task: Task) -> str:
+        return fs_utils.join(self.cache_dir, f"{task.task_id}.flag")
 
     def _needs_recompute(
         self, task: TaskDesc,

@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Any
 
+import networkx
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +30,7 @@ class TaskDesc:
     kwargs: dict[str, Any]
     deps: list[Task]
     input_files: list[str]
+    output_files: list[str]
 
     @staticmethod
     def _from_task_node(task_node: _Task) -> TaskDesc:
@@ -38,11 +41,20 @@ class TaskDesc:
             kwargs=task_node.kwargs,
             deps=task_node.deps,
             input_files=task_node.input_files,
+            output_files=task_node.output_files,
         )
 
 
 class _Task:
-    __slots__ = ("args", "deps", "func", "input_files", "kwargs", "task")
+    __slots__ = (
+        "args",
+        "deps",
+        "func",
+        "input_files",
+        "kwargs",
+        "output_files",
+        "task",
+    )
 
     def __init__(
         self, task_id: str | Task,
@@ -51,6 +63,7 @@ class _Task:
         kwargs: dict[str, Any],
         deps: list[Task],
         input_files: list[str],
+        output_files: list[str],
     ) -> None:
         # pylint: disable=too-many-positional-arguments
         if isinstance(task_id, str):
@@ -61,18 +74,21 @@ class _Task:
         self.kwargs = kwargs
         self.deps: list[Task] = deps
         self.input_files: list[str] = input_files
+        self.output_files: list[str] = output_files
 
     def __repr__(self) -> str:
         result = [
-            f"id={self.task.task_id}, "
-            f"func={self.func}, "
-            f"args={self.args}, "
+            f"id={self.task.task_id}",
+            f"func={self.func}",
+            f"args={self.args}",
             f"kwargs={self.kwargs}",
         ]
         if self.deps:
             result.append(f"deps={[dep.task_id for dep in self.deps]})")
         if self.input_files:
             result.append(f"input_files={self.input_files})")
+        if self.output_files:
+            result.append(f"output_files={self.output_files})")
         return f"Task({', '.join(result)})"
 
     def __eq__(self, other: Any) -> bool:
@@ -131,6 +147,7 @@ def _chain_func(*args: Any, **kwargs: Any) -> Any:  # noqa: ARG001
             kwargs=t2kwargs,
             deps=[],
             input_files=task2.input_files,
+            output_files=task2.output_files,
         )
     return task2.func(*task2.args, **task2.kwargs)
 
@@ -154,6 +171,7 @@ def _chain_2_tasks(task1: TaskDesc, task2: TaskDesc) -> TaskDesc:
         kwargs=kwargs,
         deps=task1.deps,
         input_files=task1.input_files + task2.input_files,
+        output_files=task1.output_files + task2.output_files,
     )
 
 
@@ -172,7 +190,7 @@ class TaskGraph:
     """An object representing a graph of tasks."""
 
     def __init__(self) -> None:
-        self._lock = mp.Lock()
+        self._lock = mp.RLock()
         self._tasks: dict[Task, _Task] = {}
         self._task_dependants: dict[Task, set[Task]] = defaultdict(set)
 
@@ -199,6 +217,7 @@ class TaskGraph:
         kwargs: dict[str, Any] | None = None,
         deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,
+        output_files: Sequence[str] | None = None,
     ) -> Task:
         """Create a new task and add it to the graph.
 
@@ -211,7 +230,8 @@ class TaskGraph:
         """
         task_desc = self.make_task(
             task_id, func, args=args, kwargs=kwargs,
-            deps=deps, input_files=input_files)
+            deps=deps, input_files=input_files,
+            output_files=output_files)
         return self.add_task(task_desc)
 
     @staticmethod
@@ -222,6 +242,7 @@ class TaskGraph:
         kwargs: dict[str, Any] | None = None,
         deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,
+        output_files: Sequence[str] | None = None,
     ) -> TaskDesc:
         """Build a task with the given id and function."""
         if len(task_id) > 200:
@@ -246,6 +267,7 @@ class TaskGraph:
             kwargs,
             list(task_deps),
             list(input_files) if input_files is not None else [],
+            list(output_files) if output_files is not None else [],
         )
 
     def add_task(self, task_desc: TaskDesc) -> Task:
@@ -255,11 +277,15 @@ class TaskGraph:
                 raise ValueError(
                     f"Task with id='{task_desc.task.task_id}' "
                     f"already in graph")
-            self._add_task(_Task(
-                task_desc.task, task_desc.func, list(task_desc.args),
-                task_desc.kwargs,
-                task_desc.deps,
-                task_desc.input_files))
+            self._add_task(
+                _Task(
+                    task_desc.task, task_desc.func, list(task_desc.args),
+                    task_desc.kwargs,
+                    task_desc.deps,
+                    task_desc.input_files,
+                    task_desc.output_files,
+                ),
+            )
         return task_desc.task
 
     def add_tasks(self, task_descs: Sequence[TaskDesc]) -> list[Task]:
@@ -271,11 +297,15 @@ class TaskGraph:
                         f"Task with id='{task_desc.task.task_id}' "
                         f"already in graph")
             for task_desc in task_descs:
-                self._add_task(_Task(
-                    task_desc.task, task_desc.func, list(task_desc.args),
-                    task_desc.kwargs,
-                    task_desc.deps,
-                    task_desc.input_files))
+                self._add_task(
+                    _Task(
+                        task_desc.task, task_desc.func, list(task_desc.args),
+                        task_desc.kwargs,
+                        task_desc.deps,
+                        task_desc.input_files,
+                        task_desc.output_files,
+                    ),
+                )
         return [task_desc.task for task_desc in task_descs]
 
     def _collect_task_deps(
@@ -324,23 +354,28 @@ class TaskGraph:
                 if task not in self._tasks:
                     raise ValueError(f"task {task} not in graph")
                 result.append(
-                    TaskDesc._from_task_node(self._tasks[task]))  # noqa: SLF001
+                    TaskDesc._from_task_node(  # noqa: SLF001
+                        self._tasks[task]))
                 del self._tasks[task]
         return result
 
+    def as_directed_graph(self) -> networkx.DiGraph:
+        with self._lock:
+            di_graph = networkx.DiGraph()
+            nodes: list[Task] = list(self._tasks.keys())
+            di_graph.add_nodes_from(sorted(nodes))
+
+            for task in self._tasks.values():
+                for dep in task.deps:
+                    di_graph.add_edge(dep, task.task)
+            if not networkx.is_directed_acyclic_graph(di_graph):
+                raise ValueError("Cyclic dependencys in task graph detected")
+
+        return di_graph
+
     def _topological_order(self) -> Generator[_Task, None, None]:
         """Return tasks in topological order."""
-        # pylint: disable=import-outside-toplevel
-        import networkx
-        di_graph = networkx.DiGraph()
-        nodes: list[Task] = list(self._tasks.keys())
-        di_graph.add_nodes_from(sorted(nodes))
-
-        for task in self._tasks.values():
-            for dep in task.deps:
-                di_graph.add_edge(dep, task.task)
-        if not networkx.is_directed_acyclic_graph(di_graph):
-            raise ValueError("Cyclic dependencys in task graph detected")
+        di_graph = self.as_directed_graph()
 
         for task_id in networkx.topological_sort(di_graph):
             if task_id not in self._tasks:
@@ -414,6 +449,7 @@ class TaskGraph:
                     copy(task.kwargs),
                     new_deps,
                     copy(task.input_files),
+                    copy(task.output_files),
                 )
                 memo[id(task)] = new_task
                 new_graph._add_task(new_task)
