@@ -13,7 +13,12 @@ from typing import Any
 import fsspec
 import psutil
 
-from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
+from dae.task_graph.cache import (
+    CacheRecord,
+    CacheRecordType,
+    NoTaskCache,
+    TaskCache,
+)
 from dae.task_graph.executor import TaskGraphExecutor
 from dae.task_graph.graph import Task, TaskDesc, TaskGraph
 from dae.task_graph.logging import (
@@ -145,11 +150,27 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
 
         self._executing = True
 
-        completed_tasks: dict[Task, Any] = {}
-        for task, record in self._task_cache.load(graph):
-            if record.type == CacheRecordType.COMPUTED:
-                result = record.result
-                completed_tasks[task] = result
+        cached_tasks: dict[Task, CacheRecord] = {}
+        uncomputed_tasks: set[Task] = set()
+
+        with graph as tasks:
+            di_graph = graph.as_directed_graph()
+            for task in tasks:
+                task_desc = graph.get_task_desc(task)
+                record = self._task_cache.get_record(task_desc)
+                if record.type != CacheRecordType.COMPUTED:
+                    uncomputed_tasks.add(task)
+            for task in uncomputed_tasks:
+                predecessors = di_graph.predecessors(task)
+                for predecessor_task in predecessors:
+                    cached_tasks[predecessor_task] = \
+                        cached_tasks[predecessor_task].invalidate()
+
+        completed_tasks = {
+            task: record.result_or_error
+            for task, record in cached_tasks.items()
+            if record.type == CacheRecordType.COMPUTED
+        }
 
         graph.process_completed_tasks(list(completed_tasks.items()))
 
