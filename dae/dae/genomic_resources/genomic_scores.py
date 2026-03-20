@@ -577,14 +577,24 @@ class GenomicScore(ResourceConfigValidationMixin):
         for score, config_scoredef in config_scoredefs.items():
             vcf_scoredef = vcf_scoredefs[score]
 
-            if config_scoredef.desc:
-                vcf_scoredef.desc = config_scoredef.desc
-            if config_scoredef.value_type:
-                vcf_scoredef.value_type = config_scoredef.value_type
-            vcf_scoredef.value_parser = config_scoredef.value_parser
-            vcf_scoredef.na_values = config_scoredef.na_values
-            vcf_scoredef.hist_conf = config_scoredef.hist_conf
-            scoredefs[score] = vcf_scoredef
+            scoredef = _ScoreDef(
+                score_id=vcf_scoredef.score_id,
+                desc=config_scoredef.desc or vcf_scoredef.desc,
+                value_type=config_scoredef.value_type
+                    or vcf_scoredef.value_type,
+
+                pos_aggregator=config_scoredef.pos_aggregator,
+                allele_aggregator=config_scoredef.allele_aggregator,
+
+                small_values_desc=config_scoredef.small_values_desc,
+                large_values_desc=config_scoredef.large_values_desc,
+                col_name=vcf_scoredef.col_name,
+                col_index=vcf_scoredef.col_index,
+                hist_conf=config_scoredef.hist_conf,
+                value_parser=config_scoredef.value_parser,
+                na_values=config_scoredef.na_values or vcf_scoredef.na_values,
+            )
+            scoredefs[score] = scoredef
 
         if merge:
             for score, vcf_scoredef in vcf_scoredefs.items():
@@ -1378,6 +1388,7 @@ class AlleleScore(GenomicScore):
         score_aggs = []
         for squery in score_queries:
             scr_def = self.score_definitions[squery.score]
+
             if squery.position_aggregator is not None:
                 aggregator_type = squery.position_aggregator
             else:
