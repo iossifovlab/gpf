@@ -158,7 +158,7 @@ def test_cnv_filter_on_newline(
     "annotatable, cnv_count, status, status2, collection", [
         (Position("1", 15), 1, "affected", "affected", "SSC"),
         (Region("1", 15, 60), 2,
-         "affected,affected", "affected", "SSCAGRE"),
+         "affected,affected", "affected", "SSC,AGRE"),
         (Region("1", 30, 40), 0, None, None, None),
     ])
 def test_cnv_filter_and_attribute(
@@ -201,7 +201,7 @@ def test_cnv_filter_and_attribute(
 
     assert "aggregator: join(,)" in status_info.documentation
     assert "aggregator: max" in status2_info.documentation
-    assert "aggregator: concatenate" in collection_info.documentation
+    assert "aggregator: join(,)" in collection_info.documentation
 
 
 def test_cnv_aggregators(

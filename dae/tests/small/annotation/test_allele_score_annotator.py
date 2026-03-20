@@ -3,7 +3,7 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotatable import Annotatable, Region, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.score_annotator import AlleleScoreAnnotator
@@ -48,18 +48,20 @@ def annotation_pipeline(tmp_path: pathlib.Path) -> AnnotationPipeline:
                     default_annotation:
                     - source: freq
                       name: allele_freq
+                    - source: ID
+                      name: variant_id
 
                 """,
                 "data.txt": convert_to_tab_separated("""
-                    chrom  pos_begin  reference  alternative ID  freq
-                    1      10         A          G           ag  0.02
-                    1      10         A          C           ac  0.03
-                    1      10         A          T           at  0.04
-                    1      16         CA         G           .   0.03
-                    1      16         C          T           ct  0.04
-                    1      16         C          A           ca  0.05
-                    1      16         C          CA          ca  1.0
-                    1      16         C          CG          ca  2.0
+                    chrom  pos_begin  reference  alternative ID   freq
+                    1      10         A          G           ag   0.02
+                    1      10         A          C           ac   0.03
+                    1      10         A          T           at   0.04
+                    1      16         CA         G           cag  0.03
+                    1      16         C          T           ct   0.04
+                    1      16         C          A           ca   0.05
+                    1      16         C          CA          cca  1.0
+                    1      16         C          CG          ccg  2.0
                 """),
             },
         })
@@ -86,11 +88,15 @@ def test_allele_score_annotator_attributes(
     assert not annotator.is_open()
 
     attributes = annotator.get_info().attributes
-    assert len(attributes) == 1
+    assert len(attributes) == 2
     assert attributes[0].name == "allele_freq"
     assert attributes[0].source == "freq"
     assert attributes[0].value_type == "float"
     assert attributes[0].description == ""
+    assert attributes[1].name == "variant_id"
+    assert attributes[1].source == "ID"
+    assert attributes[1].value_type == "str"
+    assert attributes[1].description == "variant ID"
 
 
 @pytest.mark.parametrize("variant, expected", [
@@ -132,7 +138,6 @@ def test_allele_score_with_default_score_annotation(
                     default_annotation:
                     - source: freq
                       name: allele_freq
-
                 """,
                 "data.txt": convert_to_tab_separated("""
                     chrom  pos_begin  reference  alternative ID  freq
@@ -224,3 +229,26 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
 
         print(annotatable, result)
         assert result.get("test100way") == pytest.approx(expected, rel=1e-3)
+
+
+@pytest.mark.parametrize("annotatable, expected", [
+    (VCFAllele("1", 10, "A", "G"), (0.02, "ag")),
+    (VCFAllele("1", 10, "A", "C"), (0.03, "ac")),
+    (VCFAllele("1", 10, "A", "T"), (0.04, "at")),
+    (VCFAllele("1", 16, "C", "T"), (0.04, "ct")),
+    (VCFAllele("1", 16, "C", "A"), (0.05, "ca")),
+    (VCFAllele("1", 16, "CA", "G"), (0.03, "cag")),
+    (VCFAllele("1", 16, "C", "CG"), (2.0, "ccg")),
+    (VCFAllele("1", 16, "C", "CA"), (1.0, "cca")),
+    (Region("1", 10, 20), (1.02, "ac,ag,at,ca,cca,ccg,ct,cag")),
+])
+def test_allele_score_annotator_with_default_annotation(
+    annotation_pipeline: AnnotationPipeline,
+    annotatable: Annotatable, expected: tuple,
+) -> None:
+    pipeline = annotation_pipeline
+    with pipeline.open() as work_pipeline:
+        result = work_pipeline.annotate(annotatable)
+        assert len(result) == 2
+        assert result["allele_freq"] == expected[0]
+        assert result["variant_id"] == expected[1]
