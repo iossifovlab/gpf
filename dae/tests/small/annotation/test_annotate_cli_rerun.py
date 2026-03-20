@@ -1,12 +1,10 @@
 import pathlib
 import textwrap
 
-import pytest
 from dae.annotation.annotate_columns import cli
 from dae.genomic_resources.testing import setup_tabix
 
 
-@pytest.mark.xfail(reason="This test is currently .")
 def test_annotate_columns_rerun(
     annotate_directory_fixture: pathlib.Path,
     tmp_path: pathlib.Path,

@@ -177,10 +177,8 @@ class TaskGraphCli:
         if kwargs.get("task_ids") is not None:
             task_graph.prune(tasks_to_keep=kwargs["task_ids"])
 
-        force = kwargs.get("force", False)
         task_cache = TaskCache.create(
             task_progress_mode=task_progress_mode,
-            force=force,
             cache_dir=kwargs.get("task_status_dir"),
         )
 
@@ -246,16 +244,11 @@ def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
     When all tasks are already computed, the function returns True.
     If there are tasks, that need to run, the function returns False.
     """
-    # pylint: disable=protected-access
-    already_computed_tasks = {}
-    for task_node, record in task_cache.load(task_graph):
-        if record.type == CacheRecordType.COMPUTED:
-            already_computed_tasks[task_node] = record.result
-
-    for task_node in task_graph.topological_order():
-        if task_node not in already_computed_tasks:
-            return False
-
+    with task_graph as tasks:
+        for task in tasks:
+            record = task_cache.get_record(task_graph.get_task_desc(task))
+            if record.type != CacheRecordType.COMPUTED:
+                return False
     return True
 
 

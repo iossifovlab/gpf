@@ -99,17 +99,17 @@ class FileTaskCache(TaskCache):
     def get_record(self, task_desc: TaskDesc) -> CacheRecord:
         """Get the cache record for a task."""
         flag_filename = self._get_flag_filename(task_desc.task)
-        with fsspec.open(flag_filename, "rb") as cache_file:
-            try:
+        try:
+            with fsspec.open(flag_filename, "rb") as cache_file:
                 task_record = cast(
                     CacheRecord,
                     pickle.load(cache_file))  # pyright: ignore
-            except Exception:  # pylint: disable=broad-except
-                logger.exception(
-                    "Cannot read status for task %s. Ignoring and continuing.",
-                    task_desc,
-                )
-                return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Cannot read status for task %s. Ignoring and continuing.",
+                task_desc,
+            )
+            return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
         if task_record.type != CacheRecordType.COMPUTED:
             return task_record

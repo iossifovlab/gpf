@@ -6,7 +6,7 @@ import os
 import pickle  # noqa: S403
 import time
 from abc import abstractmethod
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from copy import copy
 from typing import Any
 
@@ -35,10 +35,16 @@ NO_TASK_CACHE = NoTaskCache()
 class TaskGraphExecutorBase(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
 
-    def __init__(self, task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any):
+    def __init__(
+        self, task_cache: TaskCache = NO_TASK_CACHE,
+        *,
+        force: bool = False,
+        **kwargs: Any,
+    ):
         super().__init__()
         self._task_cache = task_cache
         self._executing = False
+        self._force = force
 
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
@@ -144,12 +150,22 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
             result = None
         return result
 
-    def execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
-        assert not self._executing, \
-            "Cannot execute a new graph while an old one is still running."
+    def _preprocess_cached_tasks(
+        self, graph: TaskGraph,
+    ) -> Generator[tuple[Task, Any], None, None]:
+        """
+        Return cached tasks and their results.
 
-        self._executing = True
+        All tasks that depend on uncomputed tasks are invalidated and
+        will not be returned, even if they have a cached result.
 
+        All the tasks that are returned will be preprocessed and removed
+        by the graph internally, so that they are not executed again.
+
+        Will not do anything is the executor is in force mode.
+        """
+        if self._force:
+            return
         cached_tasks: dict[Task, CacheRecord] = {}
         uncomputed_tasks: set[Task] = set()
 
@@ -176,6 +192,14 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
 
         for task, result in completed_tasks.items():
             yield task, result
+
+    def execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
+        assert not self._executing, \
+            "Cannot execute a new graph while an old one is still running."
+
+        self._executing = True
+
+        self._preprocess_cached_tasks(graph)
 
         for task_node, result in self._execute(graph):
             is_error = isinstance(result, BaseException)

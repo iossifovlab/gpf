@@ -556,18 +556,22 @@ def _add_tasks_tabixed(
 
     annotation_tasks = []
     for region, path in zip(regions, file_paths, strict=True):
-        annotation_tasks.append(task_graph.create_task(
-            f"part-{str(region).replace(':', '-')}",
-            _annotate_csv,
-            args=[
-                path,
-                pipeline_config,
-                grr_definition,
-                ref_genome_id,
-                region,
-                args,
-            ],
-            deps=[]))
+        annotation_tasks.append(
+            task_graph.create_task(
+                f"part-{str(region).replace(':', '-')}",
+                _annotate_csv,
+                args=[
+                    path,
+                    pipeline_config,
+                    grr_definition,
+                    ref_genome_id,
+                    region,
+                    args,
+                ],
+                deps=[],
+                output_files=[path],
+            ),
+        )
 
     annotation_sync = task_graph.create_task(
         "sync_csv_write",
@@ -580,19 +584,25 @@ def _add_tasks_tabixed(
         "concat",
         _concat,
         args=[file_paths, output_path, args["keep_parts"]],
-        deps=[annotation_sync])
+        deps=[annotation_sync],
+        output_files=[output_path],
+    )
 
     compress_task = task_graph.create_task(
         "tabix_compress",
         _tabix_compress,
         args=[output_path],
-        deps=[concat_task])
+        deps=[concat_task],
+        output_files=[f"{output_path}.gz"],
+    )
 
     task_graph.create_task(
         "tabix_index",
         _tabix_index,
         args=[f"{output_path}.gz", args["columns_args"]],
-        deps=[compress_task])
+        deps=[compress_task],
+        output_files=[f"{output_path}.gz.tbi"],
+    )
 
 
 def _add_tasks_plaintext(
@@ -614,13 +624,17 @@ def _add_tasks_plaintext(
             None,
             args,
         ],
-        deps=[])
+        deps=[],
+        output_files=[output_path],
+    )
     if is_compressed_filename(args["input"]):
         task_graph.create_task(
             "tabix_compress",
             _tabix_compress,
             args=[output_path],
-            deps=[annotate_task])
+            deps=[annotate_task],
+            output_files=[f"{output_path}.gz"],
+        )
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:
