@@ -510,7 +510,7 @@ def _create_contents_db(
         conn.execute(
             "CREATE VIRTUAL TABLE contents "
             "USING fts5(full_id, id, type, description, summary"
-            f"{', '.join(labels)})",
+            f"{', '.join(label_list)})",
         )
 
         for res_info in contents:
@@ -540,7 +540,7 @@ def _create_contents_db(
             conn.execute(
                 "INSERT INTO contents "  # noqa: S608
                 "(full_id, id, type, description, summary"
-                f"{', '.join(labels)}) "
+                f"{', '.join(label_list)}) "
                 f"VALUES ({', '.join(['?' for _ in range(len(row))])})",
                 (
                     *row,
