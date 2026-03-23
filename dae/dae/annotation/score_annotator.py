@@ -144,12 +144,12 @@ class GenomicScoreAnnotatorBase(Annotator):
             "position_aggregator": {
                 "float": "mean",
                 "int": "mean",
-                "str": "concatenate",
+                "str": "join(,)",
             },
             "allele_aggregator": {
                 "float": "max",
                 "int": "max",
-                "str": "concatenate",
+                "str": "join(,)",
             },
         }
         aggregators_score_def_att: \
