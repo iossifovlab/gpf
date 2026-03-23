@@ -1240,7 +1240,8 @@ TEMPLATE_STRING = """
       }
 
       .id-cell {
-        width: 30%;
+        min-width: 50%;
+        width: 50%;
       }
     </style>
  </head>"""
