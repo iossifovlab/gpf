@@ -51,12 +51,11 @@ def test_graph(graph: TaskGraph) -> None:
 
 
 def test_get_record_force_returns_needs_compute(tmp_path: Path) -> None:
-    cache = FileTaskCache(cache_dir=str(tmp_path), force=True)
+    cache = FileTaskCache(cache_dir=str(tmp_path))
     graph = TaskGraph()
     task = graph.create_task("Task", noop, args=[], deps=[])
-    with graph as graph_tasks:
-        task_node = graph_tasks[task]
-        record = cache._get_record(graph_tasks, task_node, {})
+    with graph:
+        record = cache.get_record(graph.get_task_desc(task))
 
     assert record.type == CacheRecordType.NEEDS_COMPUTE
 
@@ -66,39 +65,17 @@ def test_get_record_returns_cached_entry(tmp_path: Path) -> None:
     graph = TaskGraph()
     task = graph.create_task("Task", noop, args=[], deps=[])
     cached = CacheRecord(CacheRecordType.COMPUTED, "cached")
-    task2record = {task: cached}
-    with graph as graph_tasks:
-        task_node = graph_tasks[task]
-        record = cache._get_record(graph_tasks, task_node, task2record)
+    cache.cache(task, is_error=False, result=cached.result_or_error)
+    with graph:
+        record = cache.get_record(graph.get_task_desc(task))
 
-    assert record is cached
-
-
-def test_get_record_requires_compute_if_deps_not_ready(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    cache = FileTaskCache(cache_dir=str(tmp_path))
-    cache._global_dependancies = []
-    monkeypatch.setattr(cache, "_needs_compute", lambda _task: False)
-
-    graph = TaskGraph()
-    dep = graph.create_task("dep", noop, args=[], deps=[])
-    task = graph.create_task("task", noop, args=[], deps=[dep])
-    task2record = {dep: CacheRecord(CacheRecordType.NEEDS_COMPUTE)}
-    with graph as graph_tasks:
-        task_node = graph_tasks[task]
-        record = cache._get_record(graph_tasks, task_node, task2record)
-
-    assert record.type == CacheRecordType.NEEDS_COMPUTE
-    assert task2record[task] is record
+    assert record == cached
 
 
 def test_get_record_reads_serialized_cache(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    cache._global_dependancies = []
-    monkeypatch.setattr(cache, "_needs_compute", lambda _task: False)
 
     graph = TaskGraph()
     task = graph.create_task("task", noop, args=[], deps=[])
@@ -112,21 +89,19 @@ def test_get_record_reads_serialized_cache(
     with open(flag_path, "wb") as out:
         pickle.dump(expected, out)
 
-    task2record: dict[Task, CacheRecord] = {}
     with graph as graph_tasks:
         task_node = graph_tasks[task]
-        result = cache._get_record(graph_tasks, task_node, task2record)
+        result = cache.get_record(graph.get_task_desc(task_node.task))
 
     assert result == expected
-    assert task2record[task] == expected
 
 
 def test_file_cache_clear_state(
         graph: TaskGraph, tmp_path: Path) -> None:
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    task2record = dict(cache.load(graph))
     for task in graph.tasks:
-        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
+        assert cache.get_record(
+            graph.get_task_desc(task)).type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_just_executed(graph: TaskGraph, tmp_path: Path) -> None:
@@ -138,9 +113,10 @@ def test_file_cache_just_executed(graph: TaskGraph, tmp_path: Path) -> None:
     assert len(result) == len(graph.tasks)
 
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    task2record = dict(cache.load(graph))
     for task in graph.tasks:
-        assert task2record[task].type == CacheRecordType.COMPUTED
+        assert cache.get_record(
+            graph.get_task_desc(task),
+        ).type == CacheRecordType.COMPUTED
 
 
 def test_file_cache_touch_input_file(graph: TaskGraph, tmp_path: Path) -> None:
@@ -154,9 +130,10 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmp_path: Path) -> None:
 
     touch(config_fn)
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    task2record = dict(cache.load(graph))
     for task in graph.tasks:
-        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
+        assert cache.get_record(
+            graph.get_task_desc(task),
+        ).type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
@@ -180,11 +157,13 @@ def test_file_cache_mod_input_file_of_intermediate_node(
         assert operation == "remove"
         os.remove(dep_fn)
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    task2record = dict(cache.load(graph))
+    int_record = cache.get_record(graph.get_task_desc(int_node.task))
 
-    assert task2record[int_node.task].type == CacheRecordType.NEEDS_COMPUTE
+    assert int_record.type == CacheRecordType.NEEDS_COMPUTE
     for task in _get_task_descendants(graph, int_node):
-        assert task2record[task.task].type == CacheRecordType.NEEDS_COMPUTE
+        assert cache.get_record(
+            graph.get_task_desc(task.task),
+        ).type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
@@ -195,9 +174,10 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
     execute_with_file_cache(working_graph, str(tmp_path))
 
     cache = FileTaskCache(cache_dir=str(tmp_path))
-    task2record = dict(cache.load(graph))
-    for record in task2record.values():
-        assert record.type == CacheRecordType.COMPUTED
+    with graph as graph_tasks:
+        for task in graph_tasks.values():
+            record = cache.get_record(graph.get_task_desc(task.task))
+            assert record.type == CacheRecordType.COMPUTED
 
     with graph as graph_tasks:
         first_task = graph_tasks[Task("First")]
@@ -205,17 +185,19 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
 
     if operation == "touch":
         touch(cache._get_flag_filename(first_task.task))
-        task2record = dict(cache.load(graph))
-        assert task2record[first_task.task].type == CacheRecordType.COMPUTED
+        first_task_record = cache.get_record(
+            graph.get_task_desc(first_task.task))
+        assert first_task_record.type == CacheRecordType.COMPUTED
     else:
         assert operation == "remove"
         os.remove(cache._get_flag_filename(first_task.task))
-        task2record = dict(cache.load(graph))
-        assert task2record[first_task.task].type \
-            == CacheRecordType.NEEDS_COMPUTE
+        first_task_record = cache.get_record(
+            graph.get_task_desc(first_task.task))
+        assert first_task_record.type == CacheRecordType.NEEDS_COMPUTE
 
     for task in _get_task_descendants(graph, first_task):
-        assert task2record[task.task].type == CacheRecordType.NEEDS_COMPUTE
+        record = cache.get_record(graph.get_task_desc(task.task))
+        assert record.type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_very_large_task_name(tmp_path: Path) -> None:

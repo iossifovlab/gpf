@@ -260,9 +260,8 @@ def task_graph_status(
     id_col_len = min(120, max(50, id_col_len))
     columns = ["TaskID", "Status"]
     print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-    task2record = dict(task_cache.load(task_graph))
     for task in task_graph.tasks:
-        record = task2record[task]
+        record = task_cache.get_record(task_graph.get_task_desc(task))
         status = record.type.name
         msg = f"{task.task_id:{id_col_len}s} {status}"
         is_error = record.type == CacheRecordType.ERROR

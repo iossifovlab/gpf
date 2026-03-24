@@ -150,7 +150,7 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
             result = None
         return result
 
-    def _preprocess_cached_tasks(
+    def get_completed_tasks(
         self, graph: TaskGraph,
     ) -> Generator[tuple[Task, Any], None, None]:
         """
@@ -176,19 +176,18 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
                 record = self._task_cache.get_record(task_desc)
                 if record.type != CacheRecordType.COMPUTED:
                     uncomputed_tasks.add(task)
+                cached_tasks[task] = record
             for task in uncomputed_tasks:
-                predecessors = di_graph.predecessors(task)
-                for predecessor_task in predecessors:
-                    cached_tasks[predecessor_task] = \
-                        cached_tasks[predecessor_task].invalidate()
+                successors = di_graph.successors(task)
+                for successor_task in successors:
+                    cached_tasks[successor_task] = \
+                        cached_tasks[successor_task].invalidate()
 
         completed_tasks = {
             task: record.result_or_error
             for task, record in cached_tasks.items()
             if record.type == CacheRecordType.COMPUTED
         }
-
-        graph.process_completed_tasks(list(completed_tasks.items()))
 
         for task, result in completed_tasks.items():
             yield task, result
@@ -199,7 +198,8 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
 
         self._executing = True
 
-        self._preprocess_cached_tasks(graph)
+        completed_tasks = list(self.get_completed_tasks(graph))
+        graph.process_completed_tasks(completed_tasks)
 
         for task_node, result in self._execute(graph):
             is_error = isinstance(result, BaseException)

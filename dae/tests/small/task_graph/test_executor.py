@@ -1,8 +1,11 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import operator
 import time
+from pathlib import Path
+from typing import Any
 
 import pytest
+from dae.task_graph.cache import FileTaskCache
 from dae.task_graph.cli_tools import (
     task_graph_run_with_results,
 )
@@ -10,6 +13,7 @@ from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.task_graph.sequential_executor import SequentialExecutor
 
 
 def do_work(timeout: float) -> None:
@@ -21,6 +25,10 @@ def double(x: int) -> int:
     return x * 2
 
 
+def noop(*args: Any, **kwargs: Any) -> None:
+    pass
+
+
 def test_dependency_chain(executor: TaskGraphExecutor) -> None:
     graph = TaskGraph()
     task_1 = graph.create_task("Task 1", do_work, args=[0.01], deps=[])
@@ -29,6 +37,26 @@ def test_dependency_chain(executor: TaskGraphExecutor) -> None:
     tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
     assert ids_in_finish_order == ["Task 1", "Task 2"]
+
+
+def test_dependent_task_recalculation(
+    tmp_path: Path,
+) -> None:
+    graph = TaskGraph()
+    dep = graph.create_task("dep", noop, args=[], deps=[])
+    task = graph.create_task("task", noop, args=[], deps=[dep])
+    cache = FileTaskCache(cache_dir=str(tmp_path))
+    cache.cache(task, is_error=False, result="test")
+
+    executor = SequentialExecutor(task_cache=cache)
+
+    completed_tasks = list(executor.get_completed_tasks(graph))
+    assert len(completed_tasks) == 0
+
+    cache.cache(dep, is_error=False, result="test")
+
+    completed_tasks = list(executor.get_completed_tasks(graph))
+    assert len(completed_tasks) == 2
 
 
 def test_multiple_dependancies(executor: TaskGraphExecutor) -> None:
