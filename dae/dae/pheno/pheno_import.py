@@ -453,7 +453,6 @@ def import_pheno_data(  # pylint: disable=R0912
     task_graph = TaskGraph()
 
     task_cache = TaskCache.create(
-        force=task_graph_args.force,
         cache_dir=task_graph_args.task_status_dir,
         task_progress_mode=False,
     )

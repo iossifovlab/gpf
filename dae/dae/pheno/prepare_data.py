@@ -375,7 +375,6 @@ class PreparePhenoBrowserBase:
                 )
 
         task_cache = TaskCache.create(
-            force=kwargs.get("force", False),
             cache_dir=kwargs.get("task_status_dir"),
         )
 
