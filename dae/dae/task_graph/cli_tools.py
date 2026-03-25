@@ -183,10 +183,6 @@ class TaskGraphCli:
         )
 
         if kwargs.get("command") is None or kwargs.get("command") == "run":
-            if task_graph_all_done(task_graph, task_cache):
-                logger.warning(
-                    "All tasks are already COMPUTED; nothing to compute")
-                return True
             with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
                 return task_graph_run(
                     task_graph, xtor,

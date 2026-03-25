@@ -630,7 +630,7 @@ def test_reannotate_in_place(
         [0.21, 0.22, 0.23, 0.24, 0.25, 0.26], rel=1e-3)
 
 
-def test_reannotate_in_place_increment_backup_filenames(
+def test_same_reannotate_in_place_no_backup_filenames(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
@@ -650,6 +650,43 @@ def test_reannotate_in_place_increment_backup_filenames(
             "--grr", grr_file,
             "-j", "1",
             "--in-place",
+            "-i", str(
+                pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+        ])
+
+    date = datetime.today().strftime("%Y%m%d")
+
+    assert pathlib.Path(study, "summary").exists()
+    for i in range(times - 1):
+        assert not pathlib.Path(study, f"summary_{date}-{i + 1}").exists()
+
+    assert pathlib.Path(study, "meta", "meta.parquet").exists()
+    for i in range(times - 1):
+        assert not pathlib.Path(
+            study, "meta", f"meta_{date}-{i + 1}.parquet").exists()
+
+
+def test_reannotate_in_place_force_increment_backup_filenames(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    times = 5
+
+    for _ in range(times):
+        clear_registered_contexts()
+        cli([
+            study, annotation_file_new,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", "1",
+            "--in-place",
+            "--force",
             "-i", str(
                 pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
         ])
@@ -807,7 +844,7 @@ def test_data_removal_func_preserves_other_files(
     }
 
     clear_registered_contexts()
-    cli([*cli_args, "--force"])
+    cli([*cli_args])
 
     assert some_file.exists()
     assert some_dir.exists()

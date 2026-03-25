@@ -201,6 +201,12 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
         completed_tasks = list(self.get_completed_tasks(graph))
         graph.process_completed_tasks(completed_tasks)
 
+        if len(graph) == 0:
+            self._executing = False
+            logger.warning(
+                "All tasks are already COMPUTED; nothing to compute")
+            return
+
         for task_node, result in self._execute(graph):
             is_error = isinstance(result, BaseException)
             self._task_cache.cache(

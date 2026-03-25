@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from types import TracebackType
 from typing import Any
 
@@ -26,6 +26,15 @@ class TaskGraphExecutor:
 
         The only guarantee is that when a task is returned its execution
         is already finished.
+        """
+
+    @abstractmethod
+    def get_completed_tasks(
+        self, graph: TaskGraph,
+    ) -> Generator[tuple[Task, Any], None, None]:
+        """Return an iterator that yields already completed tasks in the graph.
+
+        This is not necessarily in DFS or BFS order.
         """
 
     def __enter__(self) -> TaskGraphExecutor:
