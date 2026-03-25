@@ -1328,6 +1328,6 @@ TEMPLATE_STRING += """
      <div class="pagination"></div>
  </body>
 </html>
-"""
+""" # noqa: E501
 
 repository_template = Template(TEMPLATE_STRING)
