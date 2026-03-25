@@ -1255,7 +1255,7 @@ TEMPLATE_STRING = """
         color: #85A2B9;
       }
     </style>
- </head>"""
+ </head>"""  # noqa: E501
 
 TEMPLATE_STRING += get_scripts_for_template()
 
@@ -1328,6 +1328,6 @@ TEMPLATE_STRING += """
      <div class="pagination"></div>
  </body>
 </html>
-""" # noqa: E501
+"""  # noqa: E501
 
 repository_template = Template(TEMPLATE_STRING)
