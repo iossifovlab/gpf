@@ -11,6 +11,7 @@ from copy import copy
 from typing import Any
 
 import fsspec
+import networkx
 import psutil
 
 from dae.task_graph.cache import (
@@ -178,10 +179,10 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
                     uncomputed_tasks.add(task)
                 cached_tasks[task] = record
             for task in uncomputed_tasks:
-                successors = di_graph.successors(task)
-                for successor_task in successors:
-                    cached_tasks[successor_task] = \
-                        cached_tasks[successor_task].invalidate()
+                descendants = networkx.descendants(di_graph, task)
+                for descendant_task in descendants:
+                    cached_tasks[descendant_task] = \
+                        cached_tasks[descendant_task].invalidate()
 
         completed_tasks = {
             task: record.result_or_error
