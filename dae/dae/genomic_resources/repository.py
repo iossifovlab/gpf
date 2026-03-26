@@ -697,6 +697,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         """Search for resources using SQLite full-text search."""
         if search_term is None and resource_type is None:
             yield from self.get_all_resources()
+            return
 
         conn = self.open_repository_sqlite3_metadata_db()
         with conn:
