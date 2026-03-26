@@ -339,7 +339,7 @@ td {
                         <template shadowrootmode="open">
                             {%- set summary = resource.get_summary() -%}
                             {{
-                                markdown(summary, extras=["tables"]) if summary else "N/A"
+                                summary if summary else "N/A"
                             }}
                         </template>
                     </div>
