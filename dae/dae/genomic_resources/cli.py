@@ -1084,6 +1084,9 @@ def get_scripts_for_template() -> str:
 TEMPLATE_STRING = """
 <html>
     <head>
+     <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         * {
           font-family: sans-serif
@@ -1114,14 +1117,6 @@ TEMPLATE_STRING = """
 
         a:hover {
           color: #4C93C9;
-        }
-
-        a:visited {
-          color: #829dbe;
-        }
-
-        a:visited:hover {
-          color: #a1bddf;
         }
 
         #search-container {
@@ -1239,11 +1234,28 @@ TEMPLATE_STRING = """
         width: 10%;
       }
 
+      .id-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
       .id-cell {
-        width: 30%;
+        min-width: 50%;
+        width: 50%;
+      }
+
+      .copy-icon {
+        font-size: 20px;
+        color: #B9D3E7;
+      }
+
+      .copy-icon:hover {
+        cursor: pointer;
+        color: #85A2B9;
       }
     </style>
- </head>"""
+ </head>"""  # noqa: E501
 
 TEMPLATE_STRING += get_scripts_for_template()
 
@@ -1295,8 +1307,11 @@ TEMPLATE_STRING += """
                 class="nowrap type-cell"
                 title="{{value['type']}}"
               >{{value['type']}}</td>
-              <td class="nowrap id-cell" title="{{key}}">
-                <a href='{{key}}/index.html'>{{key}}</a>
+              <td class="id-cell" title="{{key}}">
+                <div class="id-wrapper">
+                  <a class="nowrap" href='{{key}}/index.html'>{{key}}</a>
+                  <span class="material-symbols-outlined copy-icon {{key}}">content_copy</span>
+                </div>
               </td>
               <td class="nowrap version-cell">{{value['res_version']}}</td>
               <td class="nowrap size-cell">{{value['res_size']}}</td>
@@ -1313,6 +1328,6 @@ TEMPLATE_STRING += """
      <div class="pagination"></div>
  </body>
 </html>
-"""
+"""  # noqa: E501
 
 repository_template = Template(TEMPLATE_STRING)

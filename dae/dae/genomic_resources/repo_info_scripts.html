@@ -43,11 +43,11 @@
             const children = $(row).find("td");
             rowData[id] = {
                 "type": children[0].textContent.trim(),
-                "id": children[1].textContent.trim(),
+                "id": children[1].getElementsByTagName("a")[0].textContent.trim(),
                 "version": children[2].textContent.trim(),
                 "sizeInBytes": children[3].textContent.trim(),
                 "summary": children[4].textContent.trim(),
-                "url": $(children[1]).children("a").attr("href").trim(),
+                "url": $(children[1].getElementsByTagName("a")[0]).attr("href").trim(),
             };
         })
         window.rowData = rowData;
@@ -77,8 +77,9 @@
                 let rowData = window.rowData[rowId];
                 let cells = row.children("td");
                 cells[0].textContent = rowData.type;
-                $(cells[1]).children("a").attr("href", rowData.url).text(rowData.id);
-                cells[2].textContent = rowData.version;
+                cells[1].title = rowData.id;
+                $(cells[1]).children("div").children("a").attr("href", rowData.url).text(rowData.id);
+                $(cells[1]).children("div").children("span")[0].className = `material-symbols-outlined copy-icon ${rowData.id}`;                cells[2].textContent = rowData.version;
                 cells[3].textContent = rowData.sizeInBytes;
                 cells[4].textContent = rowData.summary;
                 row.show();
@@ -182,6 +183,19 @@
             else {
                 debouncedSearch();
             }
+        });
+        
+        $(".copy-icon").on("click", (e) => {
+          navigator.clipboard.writeText(e.target.classList[2]).then(
+            () => {
+              // reset all icons
+              document.querySelectorAll('.copy-icon').forEach(i => i.textContent = 'content_copy')
+              e.target.textContent = 'check'
+              setTimeout(function(){
+                e.target.textContent = 'content_copy'
+              }, 5000);
+            }
+          )
         });
 
     </script>
