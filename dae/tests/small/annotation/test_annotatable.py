@@ -148,3 +148,36 @@ def test_annotatable_from_string_cnv(
     expected: Annotatable,
 ) -> None:
     assert Annotatable.from_string(value) == expected
+
+
+@pytest.mark.parametrize(
+    "annotatable,expected", [
+        (
+            Position("chr1", 123),
+            {"type": "POSITION", "chrom": "chr1", "pos": 123},
+        ),
+        (
+            Region("chr1", 123, 456),
+            {
+                "type": "REGION", "chrom": "chr1",
+                "pos_begin": 123, "pos_end": 456,
+            },
+        ),
+        (
+            VCFAllele("chr1", 123, "A", "G"),
+            {
+                "type": "SUBSTITUTION", "chrom": "chr1",
+                "pos": 123, "ref": "A", "alt": "G",
+            },
+        ),
+        (
+            CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DUPLICATION),
+            {
+                "type": "LARGE_DUPLICATION", "chrom": "X",
+                "pos_begin": 123, "pos_end": 345,
+            },
+        ),
+    ],
+)
+def test_annotatable_to_dict(annotatable: Annotatable, expected: dict) -> None:
+    assert annotatable.to_dict() == expected
