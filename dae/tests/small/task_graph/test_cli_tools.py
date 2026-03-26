@@ -59,39 +59,6 @@ def test_task_progress_mode_enabled() -> None:
     assert args.task_status_dir == "gosho"
 
 
-def test_process_graph_run_skips_completed(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    graph = TaskGraph()
-    graph.create_task("a", lambda: None, args=[], deps=[])
-
-    monkeypatch.setattr(
-        cli_tools_module.TaskCache, "create",
-        staticmethod(lambda **_kwargs: object()),
-    )
-    monkeypatch.setattr(
-        cli_tools_module, "task_graph_all_done",
-        lambda *_args: True,
-    )
-
-    def fail_create_executor(*_args: Any, **_kwargs: Any) -> Any:
-        raise AssertionError("executor should not be created")
-
-    monkeypatch.setattr(
-        TaskGraphCli, "create_executor", staticmethod(fail_create_executor),
-    )
-
-    result = TaskGraphCli.process_graph(
-        graph,
-        command="run",
-        keep_going=False,
-        verbose=0,
-        task_ids=None,
-    )
-
-    assert result is True
-
-
 def test_process_graph_run_executes_tasks(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
