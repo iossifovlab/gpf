@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+from abc import abstractmethod
 
 
 class Annotatable:
@@ -111,6 +112,11 @@ class Annotatable:
             return CNVAllele.from_string(value)
         raise ValueError("No matching Annotatable type found for: ", value)
 
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """Serialize the annotatable to a dictionary."""
+        raise NotImplementedError
+
 
 class Position(Annotatable):
     """Annotatable class representing a single position in a chromosome."""
@@ -134,6 +140,13 @@ class Position(Annotatable):
             raise ValueError
         return Position(args[0], int(args[1]))
 
+    def to_dict(self) -> dict:
+        return {
+            "type": self.type.name,
+            "chrom": self.chrom,
+            "pos": self.pos,
+        }
+
 
 class Region(Annotatable):
     """Annotatable class representing a region in a chromosome."""
@@ -156,6 +169,14 @@ class Region(Annotatable):
         if len(args) != 3:
             raise ValueError
         return Region(args[0], int(args[1]), int(args[2]))
+
+    def to_dict(self) -> dict:
+        return {
+            "type": self.type.name,
+            "chrom": self.chrom,
+            "pos_begin": self.pos,
+            "pos_end": self.pos_end,
+        }
 
 
 class VCFAllele(Annotatable):
@@ -226,6 +247,15 @@ class VCFAllele(Annotatable):
             raise ValueError
         return VCFAllele(args[0], int(args[1]), args[2], args[3])
 
+    def to_dict(self) -> dict:
+        return {
+            "type": self.type.name,
+            "chrom": self.chrom,
+            "pos": self.pos,
+            "ref": self.ref,
+            "alt": self.alt,
+        }
+
 
 class CNVAllele(Annotatable):
     """Defines copy number variants annotatable."""
@@ -257,3 +287,11 @@ class CNVAllele(Annotatable):
         else:
             raise ValueError
         return CNVAllele(args[0], int(args[1]), int(args[2]), cnv_type)
+
+    def to_dict(self) -> dict:
+        return {
+            "type": self.type.name,
+            "chrom": self.chrom,
+            "pos_begin": self.pos,
+            "pos_end": self.pos_end,
+        }
