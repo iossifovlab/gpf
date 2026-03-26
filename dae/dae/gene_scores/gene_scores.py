@@ -39,6 +39,7 @@ class ScoreDef:
     score_id: str
     column_name: str
     desc: str
+    value_type: str
 
     hist_conf: NumberHistogramConfig | CategoricalHistogramConfig | None
     small_values_desc: str | None
@@ -74,7 +75,10 @@ class GeneScore(
 
         with resource.open_raw_file(
                 self.filename, compression=compression) as file:
-            self.df = pd.read_csv(file, sep=self.config["separator"])
+            sep = self.config.get("separator", None)
+            if sep is None:
+                sep = "\t" if self.filename.endswith(".tsv") else ","
+            self.df = pd.read_csv(file, sep=sep)
 
         if self.config.get("scores") is None:
             raise ValueError(f"missing scores config in {resource.get_id()}")
@@ -112,6 +116,7 @@ class GeneScore(
                 score_id,
                 score_name,
                 score_conf.get("desc", ""),
+                score_conf.get("type", "float"),
                 hist_conf,
                 score_conf.get("small_values_desc"),
                 score_conf.get("large_values_desc"),
@@ -257,7 +262,7 @@ class GeneScore(
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
-            "separator": {"type": "string", "default": ","},
+            "separator": {"type": "string"},
             "scores": {"type": "list", "schema": {
                 "type": "dict",
                 "schema": {
