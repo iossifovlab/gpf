@@ -68,6 +68,12 @@
         }
 
         function refreshData(ids) {
+            let newIds = new Set(ids)
+            let currentIds = new Set(window.currentIds)
+            if (newIds.size === currentIds.size && newIds.isSubsetOf(currentIds)) {
+                UpdateStatus();
+                return;
+            }
             window.currentIds = ids;
 
             const rows = $(".contents > tbody > tr")
@@ -77,9 +83,8 @@
                 let rowData = window.rowData[rowId];
                 let cells = row.children("td");
                 cells[0].textContent = rowData.type;
-                cells[1].title = rowData.id;
-                $(cells[1]).children("div").children("a").attr("href", rowData.url).text(rowData.id);
-                $(cells[1]).children("div").children("span")[0].className = `material-symbols-outlined copy-icon ${rowData.id}`;                cells[2].textContent = rowData.version;
+                $(cells[1]).children("a").attr("href", rowData.url).text(rowData.id);
+                cells[2].textContent = rowData.version;
                 cells[3].textContent = rowData.sizeInBytes;
                 cells[4].textContent = rowData.summary;
                 row.show();
@@ -154,10 +159,6 @@
         $("#type-filter").on("change", (e) => {
             doSearch();
         })
-
-        $("#search-field").on("change", async (e) => {
-            doSearch();
-        });
 
         function debounce(func, wait, immediate) {
             var timeout;
