@@ -30,6 +30,7 @@ def scores_repo() -> GenomicResourceRepo:
                 filename: linear.csv
                 scores:
                 - id: linear score
+                  type: float
                   column_name: linear_score
                   desc: linear gene score
                   histogram:
@@ -72,6 +73,7 @@ def scores_repo() -> GenomicResourceRepo:
                 filename: log.csv
                 scores:
                 - id: log
+                  type: float
                   column_name: log_score
                   desc: log gene score
                   histogram:
@@ -174,6 +176,7 @@ def scores_repo() -> GenomicResourceRepo:
                 filename: oops.csv
                 scores:
                 - id: linear
+                  type: int
                   desc: linear gene score
                 """,
             "oops.csv": textwrap.dedent("""

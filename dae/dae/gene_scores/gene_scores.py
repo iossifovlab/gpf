@@ -269,6 +269,7 @@ class GeneScore(
                     "id": {"type": "string"},
                     "name": {"type": "string"},
                     "column_name": {"type": "string"},
+                    "type": {"type": "string"},
                     "desc": {"type": "string"},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
