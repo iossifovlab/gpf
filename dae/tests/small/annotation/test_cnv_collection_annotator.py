@@ -174,27 +174,27 @@ def test_cnv_filter_and_attribute(
                 attributes:
                 - count
                 - name: status
-                  source: "attribute.affected_status"
+                  source: "affected_status"
                 - name: status2
-                  source: "attribute.affected_status"
+                  source: "affected_status"
                   aggregator: max
-                - source: "attribute.collection"
+                - source: "collection"
             """),
         grr)
 
     atts = pipeline.annotate(annotatable)
     assert "status" in atts
     assert "status2" in atts
-    assert "attribute.collection" in atts
+    assert "collection" in atts
 
     assert atts["count"] == cnv_count
     assert atts["status"] == status
     assert atts["status2"] == status2
-    assert atts["attribute.collection"] == collection
+    assert atts["collection"] == collection
 
     status_info = pipeline.get_attribute_info("status")
     status2_info = pipeline.get_attribute_info("status2")
-    collection_info = pipeline.get_attribute_info("attribute.collection")
+    collection_info = pipeline.get_attribute_info("collection")
     assert status_info is not None
     assert status2_info is not None
     assert collection_info is not None
@@ -214,25 +214,25 @@ def test_cnv_aggregators(
                 attributes:
                 - count
                 - name: size_max
-                  source: "attribute.size"
+                  source: "size"
                   aggregator: max
                 - name: affected_status_count
-                  source: "attribute.affected_status"
+                  source: "affected_status"
                   aggregator: count
                 - name: size_median
-                  source: "attribute.size"
+                  source: "size"
                   aggregator: median
                 - name: frequency_median
-                  source: "attribute.frequency"
+                  source: "frequency"
                   aggregator: median
                 - name: frequency_list
-                  source: "attribute.frequency"
+                  source: "frequency"
                   aggregator: list
                 - name: size_mode
-                  source: "attribute.size"
+                  source: "size"
                   aggregator: mode
                 - name: collection_join
-                  source: "attribute.collection"
+                  source: "collection"
                   aggregator: join(;)
             """),
         larger_grr)
