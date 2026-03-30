@@ -5,7 +5,11 @@ from typing import Any
 from lark import Lark, Token, Tree
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotation_config import (
+    AnnotationConfigurationError,
+    AnnotatorInfo,
+    AttributeInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
@@ -73,16 +77,27 @@ class CnvCollectionAnnotator(Annotator):
 
             cnv_filter_str = cnv_filter_str.replace(
                 "\n", " ").replace("\t", " ").strip()
-            self.cnv_filter = self._build_cnv_filter_func(
-                self.filter_parser.parse(cnv_filter_str))
+            try:
+                self.cnv_filter = self._build_cnv_filter_func(
+                    self.filter_parser.parse(cnv_filter_str))
+            except Exception as e:
+                raise AnnotationConfigurationError(
+                    f"Error parsing cnv_filter: {e}") from e
+
+        all_attributes = self.get_all_attribute_descriptions()
 
         if not info.attributes:
+            for attr in all_attributes.values():
+                info.attributes.append(AttributeInfo(
+                    attr.name or attr.source, attr.source,
+                    internal=attr.internal, parameters=attr.params,
+                    _type=attr.type, description=attr.description,
+                    attribute_type=attr.attribute_type))
             info.attributes = [AttributeInfo(
                 "count", "count",
                 internal=False, parameters={})]
 
         self.cnv_attributes = {}
-        all_attributes = self.get_all_attribute_descriptions()
         for attribute_def in info.attributes:
             if attribute_def.source not in all_attributes:
                 raise ValueError(f"The source {attribute_def.source} "
@@ -90,17 +105,16 @@ class CnvCollectionAnnotator(Annotator):
                                  f"{info.type}")
 
             attribute = all_attributes[attribute_def.source]
-            if attribute_def.source.startswith("attribute."):
-                attribute_name = attribute_def.source[len("attribute."):]
-                res_attribute_def = self.cnv_collection\
-                    .get_score_definition(attribute_name)
-                assert res_attribute_def is not None
-                if "aggregator" in attribute_def.parameters:
-                    aggregator = attribute_def.parameters["aggregator"]
-                else:
-                    aggregator = attribute.params["aggregator"]
-                attribute_def.value_type = attribute.type
-                attribute_def.description = attribute.description
+            attribute_name = attribute_def.source
+            if "aggregator" in attribute_def.parameters:
+                aggregator = attribute_def.parameters["aggregator"]
+            else:
+                aggregator = attribute.params.get("aggregator")
+            attribute_def.value_type = attribute.type
+            attribute_def.description = attribute.description
+            res_attribute_def = self.cnv_collection\
+                .get_score_definition(attribute_name)
+            if res_attribute_def is not None:
                 attribute_def._documentation = f"""
                     {attribute_def.description}
 
@@ -109,11 +123,8 @@ class CnvCollectionAnnotator(Annotator):
                     aggregator: {aggregator}
                 """  # noqa: SLF001
 
-                self.cnv_attributes[attribute_def.name] = \
-                    (attribute, aggregator)
-            else:
-                attribute_def.value_type = attribute.type
-                attribute_def.description = attribute.description
+            self.cnv_attributes[attribute_def.name] = \
+                (attribute, aggregator)
 
         super().__init__(pipeline, info)
 
@@ -128,7 +139,6 @@ class CnvCollectionAnnotator(Annotator):
         }
         for score_id, score_def in \
                 self.cnv_collection.score_definitions.items():
-            score_id = f"attribute.{score_id}"
             attributes[score_id] = AttributeDesc(
                 source=score_id,
                 type=score_def.value_type,
@@ -239,24 +249,26 @@ class CnvCollectionAnnotator(Annotator):
         if self.cnv_filter:
             cnvs = [cnv for cnv in cnvs if self.cnv_filter(cnv)]
 
-        aggregators = {name: build_aggregator(aggregator)
-                       for name, (_, aggregator)
-                       in self.cnv_attributes.items()}
+        aggregators = {
+            name: build_aggregator(aggregator)
+            for name, (_, aggregator)
+            in self.cnv_attributes.items()
+            if aggregator is not None
+        }
 
         for cnv in cnvs:
             for name, (attribute, _) in self.cnv_attributes.items():
+                if name not in aggregators:
+                    continue
                 assert attribute.name is not None
-                assert attribute.name.startswith("attribute.")
-
-                attribute_name = attribute.name[len("attribute."):]
-                aggregators[name].add(cnv.attributes[attribute_name])
+                aggregators[name].add(cnv.attributes[attribute.name])
 
         ret = {}
         for attribute_config in self._info.attributes:
-            if attribute_config.name in self.cnv_attributes:
+            if attribute_config.name in aggregators:
                 ret[attribute_config.name] = \
                     aggregators[attribute_config.name].get_final()
-            elif attribute_config.source == "count":
+            else:
                 ret[attribute_config.name] = len(cnvs)
 
         return ret
