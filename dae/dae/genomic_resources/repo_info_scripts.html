@@ -83,7 +83,7 @@
                 let rowData = window.rowData[rowId];
                 let cells = row.children("td");
                 cells[0].textContent = rowData.type;
-                $(cells[1]).children("a").attr("href", rowData.url).text(rowData.id);
+                $(cells[1]).find("a").attr("href", rowData.url).text(rowData.id);
                 cells[2].textContent = rowData.version;
                 cells[3].textContent = rowData.sizeInBytes;
                 cells[4].textContent = rowData.summary;
@@ -125,7 +125,6 @@
                 return;
             }
 
-            $(".contents > tbody > tr").hide()
             $(".searching").show()
 
             const ids = new Set();
