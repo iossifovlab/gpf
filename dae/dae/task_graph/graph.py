@@ -31,6 +31,7 @@ class TaskDesc:
     deps: list[Task]
     input_files: list[str]
     output_files: list[str]
+    intermediate_output_files: list[str]
 
     @staticmethod
     def _from_task_node(task_node: _Task) -> TaskDesc:
@@ -42,6 +43,7 @@ class TaskDesc:
             deps=task_node.deps,
             input_files=task_node.input_files,
             output_files=task_node.output_files,
+            intermediate_output_files=task_node.intermediate_output_files,
         )
 
 
@@ -51,6 +53,7 @@ class _Task:
         "deps",
         "func",
         "input_files",
+        "intermediate_output_files",
         "kwargs",
         "output_files",
         "task",
@@ -64,6 +67,7 @@ class _Task:
         deps: list[Task],
         input_files: list[str],
         output_files: list[str],
+        intermediate_output_files: list[str],
     ) -> None:
         # pylint: disable=too-many-positional-arguments
         if isinstance(task_id, str):
@@ -75,6 +79,7 @@ class _Task:
         self.deps: list[Task] = deps
         self.input_files: list[str] = input_files
         self.output_files: list[str] = output_files
+        self.intermediate_output_files: list[str] = intermediate_output_files
 
     def __repr__(self) -> str:
         result = [
@@ -89,6 +94,9 @@ class _Task:
             result.append(f"input_files={self.input_files})")
         if self.output_files:
             result.append(f"output_files={self.output_files})")
+        if self.intermediate_output_files:
+            result.append(
+                f"intermediate_output_files={self.intermediate_output_files})")
         return f"Task({', '.join(result)})"
 
     def __eq__(self, other: Any) -> bool:
@@ -148,6 +156,7 @@ def _chain_func(*args: Any, **kwargs: Any) -> Any:  # noqa: ARG001
             deps=[],
             input_files=task2.input_files,
             output_files=task2.output_files,
+            intermediate_output_files=task2.intermediate_output_files,
         )
     return task2.func(*task2.args, **task2.kwargs)
 
@@ -172,6 +181,9 @@ def _chain_2_tasks(task1: TaskDesc, task2: TaskDesc) -> TaskDesc:
         deps=task1.deps,
         input_files=task1.input_files + task2.input_files,
         output_files=task1.output_files + task2.output_files,
+        intermediate_output_files=(
+            task1.intermediate_output_files + task2.intermediate_output_files
+        ),
     )
 
 
@@ -218,6 +230,7 @@ class TaskGraph:
         deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,
         output_files: Sequence[str] | None = None,
+        intermediate_output_files: Sequence[str] | None = None,
     ) -> Task:
         """Create a new task and add it to the graph.
 
@@ -226,12 +239,16 @@ class TaskGraph:
         :param args: Arguments to that function
         :param deps: List of TaskNodes on which the current task depends
         :param input_files: Files that were used to build the graph itself
+        :param output_files: Final output files; if missing the task recomputes
+        :param intermediate_output_files: Pipeline-consumed outputs; if missing
+            falls through to the flag-file check instead of forcing recompute
         :return Task: The newly created task node ID in the graph
         """
         task_desc = self.make_task(
             task_id, func, args=args, kwargs=kwargs,
             deps=deps, input_files=input_files,
-            output_files=output_files)
+            output_files=output_files,
+            intermediate_output_files=intermediate_output_files)
         return self.add_task(task_desc)
 
     @staticmethod
@@ -243,6 +260,7 @@ class TaskGraph:
         deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,
         output_files: Sequence[str] | None = None,
+        intermediate_output_files: Sequence[str] | None = None,
     ) -> TaskDesc:
         """Build a task with the given id and function."""
         if len(task_id) > 200:
@@ -268,6 +286,8 @@ class TaskGraph:
             list(task_deps),
             list(input_files) if input_files is not None else [],
             list(output_files) if output_files is not None else [],
+            list(intermediate_output_files)
+            if intermediate_output_files is not None else [],
         )
 
     def add_task(self, task_desc: TaskDesc) -> Task:
@@ -284,6 +304,7 @@ class TaskGraph:
                     task_desc.deps,
                     task_desc.input_files,
                     task_desc.output_files,
+                    task_desc.intermediate_output_files,
                 ),
             )
         return task_desc.task
@@ -304,6 +325,7 @@ class TaskGraph:
                         task_desc.deps,
                         task_desc.input_files,
                         task_desc.output_files,
+                        task_desc.intermediate_output_files,
                     ),
                 )
         return [task_desc.task for task_desc in task_descs]
@@ -337,7 +359,16 @@ class TaskGraph:
             if task not in self._tasks:
                 raise ValueError(f"task {task} not in graph")
             task_node = self._tasks[task]
-            return TaskDesc._from_task_node(task_node)  # noqa: SLF001
+            return TaskDesc(
+                task=task_node.task,
+                func=task_node.func,
+                args=task_node.args,
+                kwargs=task_node.kwargs,
+                deps=task_node.deps,
+                input_files=self.input_files + task_node.input_files,
+                output_files=task_node.output_files,
+                intermediate_output_files=task_node.intermediate_output_files,
+            )
 
     def has_task(self, task: Task) -> bool:
         """Check if the graph contains a task."""
@@ -450,6 +481,7 @@ class TaskGraph:
                     new_deps,
                     copy(task.input_files),
                     copy(task.output_files),
+                    copy(task.intermediate_output_files),
                 )
                 memo[id(task)] = new_task
                 new_graph._add_task(new_task)

@@ -104,6 +104,8 @@ class FileTaskCache(TaskCache):
                 task_record = cast(
                     CacheRecord,
                     pickle.load(cache_file))  # pyright: ignore
+        except FileNotFoundError:
+            return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Cannot read status for task %s. Ignoring and continuing.",
@@ -149,20 +151,50 @@ class FileTaskCache(TaskCache):
         """
         Determine if a task needs to be recomputed.
 
-        A task needs to be recomputed if the newest input_file is newer than
-        the newest output file. If any of the output files do not exist,
-        the task will also need to be recomputed.
+        Phase 1 — output_files (final outputs the user may delete):
+          If any are missing → recompute. If all exist, compare against inputs.
+
+        Phase 2 — intermediate_output_files (consumed by downstream tasks):
+          If all exist, compare against inputs. If missing → fall through to
+          the flag-file check so the task is not needlessly recomputed.
+
+        Phase 3 — flag-file check (fallback when no output files are declared
+          or when intermediate outputs are missing).
         """
         input_files = task.input_files
-        output_files = [self._get_flag_filename(task.task), *task.output_files]
+
+        if task.output_files:
+            out_mtime = self._get_oldest_mod_time(task.output_files)
+            if out_mtime is None:
+                return True  # missing final output → recompute
+            in_mtime = self._get_newest_mod_time(input_files)
+            if len(input_files) == 0:
+                return False  # no inputs, outputs exist
+            if in_mtime is None:
+                return True  # missing input file
+            return in_mtime > out_mtime
+
+        if task.intermediate_output_files:
+            out_mtime = self._get_oldest_mod_time(
+                task.intermediate_output_files)
+            if out_mtime is not None:
+                in_mtime = self._get_newest_mod_time(input_files)
+                if len(input_files) == 0:
+                    return False  # no inputs, outputs exist
+                if in_mtime is None:
+                    return True  # missing input file
+                return in_mtime > out_mtime
+            # files missing (consumed by downstream) → fall through
+
+        output_files = [self._get_flag_filename(task.task)]
         input_mtime = self._get_newest_mod_time(input_files)
         output_mtime = self._get_oldest_mod_time(output_files)
         if len(input_files) == 0 and output_mtime is not None:
-            return False  # No input, but output file exists, don't recompute
+            return False  # no inputs, flag exists
         if input_mtime is None or output_mtime is None:
-            return True  # cannot determine mod times. Always run.
-        should_run: bool = input_mtime > output_mtime
-        return should_run
+            return True  # cannot determine mod times
+
+        return input_mtime > output_mtime
 
     def _get_oldest_mod_time(
         self, filenames: list[str],

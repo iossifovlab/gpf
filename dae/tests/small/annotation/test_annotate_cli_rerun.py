@@ -53,4 +53,5 @@ def test_annotate_columns_rerun(
             "-j", 1,
         ]
     ])
+    assert out_file.exists()
     assert out_file.is_file()

@@ -281,3 +281,95 @@ def test_complex_result_aggregation(
     assert results["B"] == [3, 4]
     assert results["C"] == [5, 6]
     assert results["Merge"] == [1, 2, 3, 4, 5, 6]
+
+
+def _touch(filename: str) -> None:
+    Path(filename).touch()
+
+
+def test_output_files_skip_recompute(tmp_path: Path) -> None:
+    config_fn = str(tmp_path / "config.yaml")
+    out_fn = str(tmp_path / "result.txt")
+    call_count: list[int] = [0]
+
+    def write_output() -> None:
+        call_count[0] += 1
+        Path(out_fn).write_text("done")
+
+    _touch(config_fn)
+
+    graph = TaskGraph()
+    graph.input_files.append(config_fn)
+    graph.create_task(
+        "A", write_output, args=[],
+        output_files=[out_fn],
+    )
+
+    cache_dir = str(tmp_path / "cache")
+    Path(cache_dir).mkdir()
+
+    executor = SequentialExecutor(FileTaskCache(cache_dir=cache_dir))
+    list(executor.execute(graph))
+    assert call_count[0] == 1
+    assert Path(out_fn).exists()
+
+    graph2 = TaskGraph()
+    graph2.input_files.append(config_fn)
+    graph2.create_task(
+        "A", write_output, args=[],
+        output_files=[out_fn],
+    )
+    executor2 = SequentialExecutor(FileTaskCache(cache_dir=cache_dir))
+    list(executor2.execute(graph2))
+
+    assert call_count[0] == 1  # not called again
+
+
+def test_output_files_deleted_by_later_task(tmp_path: Path) -> None:
+    config_fn = str(tmp_path / "config.yaml")
+    intermediate_fn = str(tmp_path / "intermediate.txt")
+    count_a: list[int] = [0]
+    count_b: list[int] = [0]
+
+    def task_a_func() -> None:
+        count_a[0] += 1
+        Path(intermediate_fn).write_text("intermediate")
+
+    def task_b_func() -> None:
+        count_b[0] += 1
+        Path(intermediate_fn).unlink(missing_ok=True)
+
+    _touch(config_fn)
+
+    graph = TaskGraph()
+    graph.input_files.append(config_fn)
+    task_a = graph.create_task(
+        "A", task_a_func, args=[],
+        intermediate_output_files=[intermediate_fn],
+    )
+    graph.create_task("B", task_b_func, args=[], deps=[task_a])
+
+    cache_dir = str(tmp_path / "cache")
+    Path(cache_dir).mkdir()
+
+    executor = SequentialExecutor(FileTaskCache(cache_dir=cache_dir))
+    list(executor.execute(graph))
+    assert count_a[0] == 1
+    assert count_b[0] == 1
+    assert not Path(intermediate_fn).exists()
+
+    # Second run: intermediate file was deleted by B, but both tasks should
+    # still be considered cached (A via flag file, B normally).
+    graph2 = TaskGraph()
+    graph2.input_files.append(config_fn)
+    task_a2 = graph2.create_task(
+        "A", task_a_func, args=[],
+        intermediate_output_files=[intermediate_fn],
+    )
+    graph2.create_task("B", task_b_func, args=[], deps=[task_a2])
+
+    executor2 = SequentialExecutor(FileTaskCache(cache_dir=cache_dir))
+    list(executor2.execute(graph2))
+
+    assert count_a[0] == 1  # not called again
+    assert count_b[0] == 1  # not called again

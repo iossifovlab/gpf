@@ -569,7 +569,7 @@ def _add_tasks_tabixed(
                     args,
                 ],
                 deps=[],
-                output_files=[path],
+                intermediate_output_files=[path],
             ),
         )
 
@@ -585,7 +585,7 @@ def _add_tasks_tabixed(
         _concat,
         args=[file_paths, output_path, args["keep_parts"]],
         deps=[annotation_sync],
-        output_files=[output_path],
+        intermediate_output_files=[output_path],
     )
 
     compress_task = task_graph.create_task(
@@ -593,6 +593,7 @@ def _add_tasks_tabixed(
         _tabix_compress,
         args=[output_path],
         deps=[concat_task],
+        input_files=[output_path],
         output_files=[f"{output_path}.gz"],
     )
 
@@ -601,6 +602,7 @@ def _add_tasks_tabixed(
         _tabix_index,
         args=[f"{output_path}.gz", args["columns_args"]],
         deps=[compress_task],
+        input_files=[f"{output_path}.gz"],
         output_files=[f"{output_path}.gz.tbi"],
     )
 
@@ -613,27 +615,42 @@ def _add_tasks_plaintext(
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
 ) -> None:
-    annotate_task = task_graph.create_task(
-        "annotate_all",
-        _annotate_csv,
-        args=[
-            output_path,
-            pipeline_config,
-            grr_definition,
-            ref_genome_id,
-            None,
-            args,
-        ],
-        deps=[],
-        output_files=[output_path],
-    )
     if is_compressed_filename(args["input"]):
+        annotate_task = task_graph.create_task(
+            "annotate_all",
+            _annotate_csv,
+            args=[
+                output_path,
+                pipeline_config,
+                grr_definition,
+                ref_genome_id,
+                None,
+                args,
+            ],
+            deps=[],
+            intermediate_output_files=[output_path],
+        )
         task_graph.create_task(
             "tabix_compress",
             _tabix_compress,
             args=[output_path],
             deps=[annotate_task],
             output_files=[f"{output_path}.gz"],
+        )
+    else:
+        task_graph.create_task(
+            "annotate_all",
+            _annotate_csv,
+            args=[
+                output_path,
+                pipeline_config,
+                grr_definition,
+                ref_genome_id,
+                None,
+                args,
+            ],
+            deps=[],
+            output_files=[output_path],
         )
 
 
