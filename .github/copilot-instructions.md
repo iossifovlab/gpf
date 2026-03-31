@@ -13,22 +13,22 @@ Collection with ~2,600 autism families).
 
 ### Core Packages
 
-- **gain/** — Genomic Annotation Infrastructure (Python package: `gain`)
-  - `gain/gain/` — annotation pipeline engine, genomic resource repository
-    (GRR), effect annotation, task graph, gene scores/sets
-  - Foundation layer; no dependency on `gpf` or `wdae`
+- **gain_core/** — Genomic Annotation Infrastructure (Python package: `gain`)
+  - `gain_core/gain/` — annotation pipeline engine, genomic resource
+    repository (GRR), effect annotation, task graph, gene scores/sets
+  - Foundation layer; no dependency on `gpf_core` or `gpf_web`
 
-- **gpf/** — GPF core library (Python package: `gpf`, setup name: `gpf_dae`)
-  - `gpf/gpf/` — genotype storage, variants, studies, pedigrees, pheno,
+- **gpf_core/** — GPF core library (Python package: `gpf`)
+  - `gpf_core/gpf/` — genotype storage, variants, studies, pedigrees, pheno,
     enrichment tool, import tools, query API
   - Depends on `gain` for annotation and genomic resources
 
-- **wdae/** — Web Django Application (Python package: `wdae`)
-  - `wdae/wdae/` — Django REST API (28+ apps: `datasets_api`,
+- **gpf_web/** — Web Django Application (Python package: `gpf_web`)
+  - `gpf_web/gpf_web/` — Django REST API (28+ apps: `datasets_api`,
     `genotype_browser`, `users_api`, `gene_profiles_api`, etc.)
   - Depends on both `gain` and `gpf`
 
-**Dependency order:** `gain` → `gpf` → `wdae`
+**Dependency order:** `gain_core` → `gpf_core` → `gpf_web`
 
 ### Optional Storage Backends
 
@@ -51,9 +51,9 @@ mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
 conda activate gpf
 
-pip install -e gain
-pip install -e gpf
-pip install -e wdae
+pip install -e gain_core
+pip install -e gpf_core
+pip install -e gpf_web
 ```
 
 ### Optional Storage Modules
@@ -87,30 +87,44 @@ pip install -e federation
 
 ```bash
 # Single test file
-cd gpf && pytest -v tests/small/path/to/test_file.py
+cd gpf_core && pytest -v tests/small/path/to/test_file.py
 
 # Single test module
-cd gpf && pytest -v tests/small/module/
+cd gpf_core && pytest -v tests/small/module/
 
 # GAIN tests (parallel)
-cd gain && pytest -v -n 10 tests/
+cd gain_core && pytest -v -n 10 tests/
 
 # GPF core tests (parallel, ~10-15 min)
-cd gpf && pytest -v -n 10 tests/
+cd gpf_core && pytest -v -n 10 tests/
 
-# WDAE tests (parallel, ~5-10 min)
-cd wdae && pytest -v -n 5 wdae/
+# GPF Web tests (parallel, ~5-10 min)
+cd gpf_web && pytest -v -n 5 gpf_web/
 
 # Skip storage-specific tests locally
 pytest -m "not gs_impala and not gs_gcp"
 ```
 
-**Test markers** (in `gpf/pytest.ini` and `gain/pytest.ini`):
+**Test markers** (in `gpf_core/pytest.ini` and `gain_core/pytest.ini`):
 - Storage: `gs_impala`, `gs_impala2`, `gs_inmemory`, `gs_gcp`, `gs_duckdb`,
   `gs_duckdb_parquet`, `gs_schema2`, `gs_parquet` (and `no_gs_*` negations)
 - GRR protocols: `grr_rw`, `grr_ro`, `grr_full`, `grr_http`, `grr_tabix`
 - Tests run with `PYTHONHASHSEED=0` for deterministic behavior
-- Both `gpf/pytest.ini` and `gain/pytest.ini` set `addopts = -p no:django`
+- Both `gpf_core/pytest.ini` and `gain_core/pytest.ini` set `addopts = -p no:django`
+
+### Test Infrastructure (Docker)
+
+Some tests require external services. Start them with:
+
+```bash
+docker compose up -d
+```
+
+Services defined in `docker-compose.yaml`:
+- **MinIO** (ports 9000/9001) — S3-compatible storage for GCP/S3 tests;
+  credentials `minioadmin/minioadmin`, bucket `test-bucket`
+- **Apache httpd** (port 28080) — HTTP fixture server for `grr_http` tests;
+  serves `gain_core/tests/.test_grr/`
 
 ### Linting
 
@@ -124,12 +138,12 @@ ruff check --exclude impala_storage --exclude impala2_storage \
   --exclude versioneer.py --exclude _version.py --exclude "*.ipynb" .
 
 # Type checking (2-5 minutes each)
-mypy gain --exclude gain/docs/
-mypy gpf --exclude gpf/docs/
-mypy wdae --exclude wdae/docs/ --exclude wdae/conftest.py
+mypy gain --exclude gain_core/docs/ --exclude gain_core/gain/docs/
+mypy gpf --exclude gpf_core/docs/
+mypy gpf_web --exclude gpf_web/docs/ --exclude gpf_web/conftest.py
 
 # Pylint (secondary, legacy)
-pylint gpf/gpf -f parseable --reports=no -j 4
+pylint gpf_core/gpf -f parseable --reports=no -j 4
 ```
 
 Config: `ruff.toml` (line-length: 80, target: py310), `mypy.ini` (strict,
@@ -147,15 +161,15 @@ cp pre-commit .git/hooks/
 ### Plugin System
 
 GPF uses Python entry points for extensibility. **All entry point group names
-use the `dae.*` prefix** for backward compatibility, even in `gain`.
+use the `dae.*` prefix** for backward compatibility, even in `gain_core`.
 
 | Group | Defined in | Purpose |
 |---|---|---|
-| `dae.genomic_resources.plugins` | gain, gpf | GRR context providers |
-| `dae.genomic_resources.implementations` | gain, gpf | Resource type handlers (scores, genome, gene models, etc.) |
-| `dae.annotation.annotators` | gain | Annotator factories (score, effect, gene set, liftover, etc.) |
-| `dae.genotype_storage.factories` | gpf | Storage backends (duckdb, parquet, inmemory, etc.) |
-| `dae.import_tools.storages` | gpf | Import storage backends |
+| `dae.genomic_resources.plugins` | gain_core, gpf_core | GRR context providers |
+| `dae.genomic_resources.implementations` | gain_core, gpf_core | Resource type handlers (scores, genome, gene models, etc.) |
+| `dae.annotation.annotators` | gain_core | Annotator factories (score, effect, gene set, liftover, etc.) |
+| `dae.genotype_storage.factories` | gpf_core | Storage backends (duckdb, parquet, inmemory, etc.) |
+| `dae.import_tools.storages` | gpf_core | Import storage backends |
 
 Plugins are lazily loaded at runtime via `importlib.metadata.entry_points()`.
 To add a new storage backend, register a factory in the
@@ -163,7 +177,7 @@ To add a new storage backend, register a factory in the
 
 ### Genotype Storage Factory Pattern
 
-`gpf/gpf/genotype_storage/` uses a registry loaded from entry points:
+`gpf_core/gpf/genotype_storage/` uses a registry loaded from entry points:
 
 ```python
 # All storage backends registered as entry points:
@@ -179,7 +193,7 @@ class GenotypeStorage(abc.ABC):
 Built-in storage types: `inmemory`, `duckdb`, `duckdb_parquet`,
 `duckdb_s3`, `duckdb_s3_parquet`, `parquet`, `duckdb_legacy`.
 
-### WDAE API Pattern
+### GPF Web API Pattern
 
 All variant query endpoints extend `QueryBaseView`:
 
@@ -192,16 +206,16 @@ class QueryBaseView(views.APIView):
 ```
 
 `WGPFInstance` is the web-layer wrapper around the core `GPFInstance`.
-Django settings files in `wdae/wdae/wdae/`: `settings.py`,
+Django settings files in `gpf_web/gpf_web/gpf_web/`: `settings.py`,
 `test_settings.py`, `default_settings.py`, `gunicorn_settings.py`,
 `mypy_settings.py`.
 
 ### Data Flow
 
 ```
-REST Request → WDAE Django App
+REST Request → GPF Web Django App
                 → QueryTransformer (request normalization)
-                → GPFInstance / study (gpf core)
+                → GPF Core (GPFInstance / study)
                     → Genotype Storage (DuckDB / Parquet / Impala)
                     → Annotation Engine (gain)
                     → Genomic Resource Repository (gain)
@@ -211,7 +225,7 @@ REST Request → WDAE Django App
 
 ## Key Conventions
 
-- **Type hints:** Mandatory for `gain/`, `gpf/`, and `wdae/`. Mypy strict mode enforced.
+- **Type hints:** Mandatory for `gain_core/`, `gpf_core/`, and `gpf_web/`. Mypy strict mode enforced.
 - **Imports:** Sorted via Ruff's `I` rule.
 - **Quotes:** Use double quotes (`"`) for strings, docstrings, and multiline strings.
 - **Line length:** 80 characters (configured in `ruff.toml`).
@@ -230,28 +244,30 @@ REST Request → WDAE Django App
 
 3. **After code changes**, re-install the affected package:
    ```bash
-   pip install -e gain   # if you changed gain/
-   pip install -e gpf    # if you changed gpf/
-   pip install -e wdae   # if you changed wdae/
+   pip install -e gain_core   # if you changed gain_core/
+   pip install -e gpf_core    # if you changed gpf_core/
+   pip install -e gpf_web     # if you changed gpf_web/
    ```
 
 4. **Parallel test flakiness:** Reduce `-n 10` to `-n 5` or drop `-n` for
    debugging.
 
-5. **GCP tests** require `gcloud auth application-default login`.
+5. **GCP / S3 tests** need Docker services running: `docker compose up -d`
 
-6. **Impala tests** require a running Impala instance; skip locally with
+6. **`grr_http` tests** need the Apache httpd container: `docker compose up -d`
+
+7. **Impala tests** require a running Impala instance; skip locally with
    `-m "not gs_impala"`.
 
-7. **DO NOT run `build.sh` locally** — it requires Docker and a private
+8. **DO NOT run `build.sh` locally** — it requires Docker and a private
    `build-scripts` submodule (CI/Jenkins only).
 
 ## CI/CD
 
 Jenkins pipeline (`Jenkinsfile`) via `build.sh`:
 - Uses Docker images based on `condaforge/mambaforge`
-- Spins up localstack (S3) and Apache (HTTP) containers for integration tests
+- Spins up MinIO (S3) and Apache (HTTP) containers for integration tests
 - Runs ruff, pylint, mypy diagnostics in parallel
-- Runs gain, gpf, wdae, and annotator tests in parallel (`-n 10`/`-n 5`)
+- Runs gain_core, gpf_core, gpf_web, and annotator tests in parallel (`-n 10`/`-n 5`)
 - Env vars: `GRR_DEFINITION_FILE`, `HTTP_HOST`, `LOCALSTACK_HOST`
-- Coverage combined from `gain/.coverage`, `gpf/.coverage`, `wdae/.coverage`
+- Coverage combined from `gain_core/.coverage`, `gpf_core/.coverage`, `gpf_web/.coverage`

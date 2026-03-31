@@ -52,8 +52,9 @@ function main() {
     build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
 
-    build_run rm -f ./dae/dae/__build__.py
-    build_run rm -f ./wdae/wdae/__build__.py
+    build_run rm -f ./gain_core/gain/__build__.py
+    build_run rm -f ./gpf_core/gpf/__build__.py
+    build_run rm -f ./gpf_web/gpf_web/__build__.py
 
     build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run_local mkdir -p ./data/ ./import/ ./downloads ./results ./cache
@@ -72,7 +73,7 @@ function main() {
       ./integration/local/data/wdae
 
     build_run rm -rf \
-        dae/.coverage*
+        gain_core/.coverage* gpf_core/.coverage* gpf_web/.coverage*
   }
 
   local gpf_version
@@ -178,7 +179,7 @@ EOT
         build_run_ctx_init ctx:ctx_apache "persistent" "container" "httpd:latest" \
            "cmd-from-image" "no-def-mounts" \
            --hostname apache --network "${ctx_network["network_id"]}" \
-           -v ./dae/tests/.test_grr:/usr/local/apache2/htdocs/
+           -v ./gain_core/tests/.test_grr:/usr/local/apache2/htdocs/
 
         defer_ret build_run_ctx_reset ctx:ctx_apache
         build_run_ctx_persist ctx:ctx_apache
@@ -190,7 +191,7 @@ EOT
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    for d in dae wdae; do
+    for d in gain_core gpf_core gpf_web; do
       build_run_container bash -c \
         'cd /wd/'"${d}"';
         /opt/conda/bin/conda run --no-capture-output -n gpf \
@@ -200,25 +201,35 @@ EOT
 
     # mypy
     build_run_detached bash -c '
-      cd /wd/dae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
-          --exclude dae/docs/ \
-          --exclude dae/docs/conf.py \
+      cd /wd/gain_core;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy gain \
+          --exclude gain_core/docs/ \
+          --exclude gain_core/docs/conf.py \
           --pretty \
           --show-error-context \
           --no-incremental \
-          > /wd/results/mypy_dae_report || true'
+          > /wd/results/mypy_gain_report || true'
 
     build_run_detached bash -c '
-      cd /wd/wdae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
-          --exclude wdae/docs/ \
-          --exclude wdae/docs/conf.py \
-          --exclude wdae/conftest.py \
+      cd /wd/gpf_core;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy gpf \
+          --exclude gpf_core/docs/ \
+          --exclude gpf_core/docs/conf.py \
           --pretty \
           --show-error-context \
           --no-incremental \
-          > /wd/results/mypy_wdae_report || true'
+          > /wd/results/mypy_gpf_report || true'
+
+    build_run_detached bash -c '
+      cd /wd/gpf_web;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy gpf_web \
+          --exclude gpf_web/docs/ \
+          --exclude gpf_web/docs/conf.py \
+          --exclude gpf_web/conftest.py \
+          --pretty \
+          --show-error-context \
+          --no-incremental \
+          > /wd/results/mypy_gpf_web_report || true'
 
     # ruff
     build_run_detached bash -c '
@@ -230,6 +241,7 @@ EOT
         --exclude migrations \
         --exclude docs \
         --exclude wdae_tests \
+        --exclude gpf_web_tests \
         --exclude versioneer.py \
         --exclude _version.py \
         --exclude *.ipynb \
@@ -240,26 +252,33 @@ EOT
     # pylint
     build_run_detached bash -c '
       cd /wd/;
-      wdae_files=$(find wdae/wdae -name "*.py" -not -path "**/migrations/*");
-      /opt/conda/bin/conda run --no-capture-output -n gpf
-      pylint dae/dae  $wdae_files -f parseable --reports=no -j 4 \
+      gpf_web_files=$(find gpf_web/gpf_web -name "*.py" -not -path "**/migrations/*");
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+      pylint gpf_core/gpf gain_core/gain $gpf_web_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_report || true'
     build_run_container wait
 
     build_run bash -c '
       cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_mypy_output.py \
-          results/mypy_dae_report > results/mypy_dae_pylint_report || true'
+          results/mypy_gain_report > results/mypy_gain_pylint_report || true'
 
     build_run bash -c '
       cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_mypy_output.py \
-          results/mypy_wdae_report > results/mypy_wdae_pylint_report || true'
+          results/mypy_gpf_report > results/mypy_gpf_pylint_report || true'
 
-    build_run_local cp ./results/mypy_dae_report \
-        ./results/mypy_dae_pylint_report \
-        ./results/mypy_wdae_report \
-        ./results/mypy_wdae_pylint_report \
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_mypy_output.py \
+          results/mypy_gpf_web_report > results/mypy_gpf_web_pylint_report || true'
+
+    build_run_local cp ./results/mypy_gain_report \
+        ./results/mypy_gain_pylint_report \
+        ./results/mypy_gpf_report \
+        ./results/mypy_gpf_pylint_report \
+        ./results/mypy_gpf_web_report \
+        ./results/mypy_gpf_web_pylint_report \
         ./results/ruff_report \
         ./results/pylint_report \
         ./test-results/
@@ -268,12 +287,12 @@ EOT
 
   build_stage "Tests"
   {
-    # run dae, wdae, dae integration, demo annotator and vep annotator tests asynchronously
+    # run gain_core, gpf_core, gpf_web, demo annotator and vep annotator tests asynchronously
     {
-      # dae
+      # gain_core
       {
-        local -A ctx_dae
-        build_run_ctx_init ctx:ctx_dae "container" "${gpf_dev_image_ref}" \
+        local -A ctx_gain
+        build_run_ctx_init ctx:ctx_gain "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
@@ -282,31 +301,31 @@ EOT
           --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
-        defer_ret build_run_ctx_reset ctx:ctx_dae
+        defer_ret build_run_ctx_reset ctx:ctx_gain
 
-        for d in /wd/dae /wd/wdae; do
-          build_run_container ctx:ctx_dae bash -c \
+        for d in /wd/gain_core /wd/gpf_core /wd/gpf_web; do
+          build_run_container ctx:ctx_gain bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_dae bash -c '
-            cd /wd/dae;
+        build_run_detached ctx:ctx_gain bash -c '
+            cd /wd/gain_core;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
               --s3 --http \
               -n 10 \
               --durations 20 \
               --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/dae-junit.xml \
-              --cov dae \
+              --junitxml=/wd/results/gain-junit.xml \
+              --cov gain \
               tests/ || true'
       }
 
-      # wdae
+      # gpf_core
       {
-        local -A ctx_wdae
-        build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
+        local -A ctx_gpf
+        build_run_ctx_init ctx:ctx_gpf "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
@@ -315,30 +334,30 @@ EOT
           --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
-        defer_ret build_run_ctx_reset ctx:ctx_wdae
+        defer_ret build_run_ctx_reset ctx:ctx_gpf
 
-        for d in /wd/dae /wd/wdae; do
-          build_run_container ctx:ctx_wdae bash -c \
+        for d in /wd/gain_core /wd/gpf_core /wd/gpf_web; do
+          build_run_container ctx:ctx_gpf bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_wdae bash -c '
-            cd /wd/wdae;
+        build_run_detached ctx:ctx_gpf bash -c '
+            cd /wd/gpf_core;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              -n 5 \
+              -n 10 \
               --durations 20 \
               --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/wdae-junit.xml \
-              --cov wdae \
-              wdae || true'
+              --junitxml=/wd/results/gpf-junit.xml \
+              --cov gpf \
+              tests/ || true'
       }
 
-      # demo_annotator
+      # gpf_web
       {
-        local -A ctx_demo
-        build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
+        local -A ctx_gpf_web
+        build_run_ctx_init ctx:ctx_gpf_web "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env HTTP_HOST="apache" \
@@ -347,88 +366,52 @@ EOT
           --env AWS_SECRET_ACCESS_KEY="minioadmin" \
           --env WDAE_EMAIL_HOST="mailhog"
 
-        defer_ret build_run_ctx_reset ctx:ctx_demo
+        defer_ret build_run_ctx_reset ctx:ctx_gpf_web
 
-        for d in /wd/dae /wd/wdae /wd/external_demo_annotator; do
-          build_run_container ctx:ctx_demo bash -c \
+        for d in /wd/gain_core /wd/gpf_core /wd/gpf_web; do
+          build_run_container ctx:ctx_gpf_web bash -c \
             '/opt/conda/bin/conda run --no-capture-output -n gpf \
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_demo bash -c '
-            cd /wd/external_demo_annotator;
+        build_run_detached ctx:ctx_gpf_web bash -c '
+            cd /wd/gpf_web;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
               -n 5 \
               --durations 20 \
               --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/demo-annotator-junit.xml \
-              --cov demo_annotator \
-              demo_annotator/ || true'
+              --junitxml=/wd/results/gpf-web-junit.xml \
+              --cov gpf_web \
+              gpf_web || true'
       }
-      # vep_annotator
-      {
-        local -A ctx_vep
-        build_run_ctx_init ctx:ctx_vep "container" "${gpf_dev_image_ref}" \
-          --network "${ctx_network["network_id"]}" \
-          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env HTTP_HOST="apache" \
-          --env MINIO_HOST="minio" \
-          --env AWS_ACCESS_KEY_ID="minioadmin" \
-          --env AWS_SECRET_ACCESS_KEY="minioadmin" \
-          --env WDAE_EMAIL_HOST="mailhog"
-
-        defer_ret build_run_ctx_reset ctx:ctx_vep
-
-        for d in /wd/dae /wd/wdae /wd/external_vep_annotator; do
-          build_run_container ctx:ctx_vep bash -c \
-            '/opt/conda/bin/conda run --no-capture-output -n gpf \
-                pip install -e "'"${d}"'"'
-        done
-
-        build_run_detached ctx:ctx_vep bash -c '
-            cd /wd/external_vep_annotator;
-            export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              -n 5 \
-              --durations 20 \
-              --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/vep-annotator-junit.xml \
-              --cov vep_annotator \
-              vep_annotator/ || true'
-      }
-    }
 
     # wait for the asynchronously ran tests to finish and copy their results
     {
       {
-        build_run_container ctx:ctx_dae wait
-        build_run_container ctx:ctx_dae cp ./results/dae-junit.xml ./test-results/
+        build_run_container ctx:ctx_gain wait
+        build_run_container ctx:ctx_gain cp ./results/gain-junit.xml ./test-results/
       }
 
       {
-        build_run_container ctx:ctx_wdae wait
-        build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
+        build_run_container ctx:ctx_gpf wait
+        build_run_container ctx:ctx_gpf cp ./results/gpf-junit.xml ./test-results/
       }
 
       {
-        build_run_container ctx:ctx_demo wait
-        build_run_container ctx:ctx_demo cp ./results/demo-annotator-junit.xml ./test-results/
+        build_run_container ctx:ctx_gpf_web wait
+        build_run_container ctx:ctx_gpf_web cp ./results/gpf-web-junit.xml ./test-results/
       }
 
-      {
-        build_run_container ctx:ctx_vep wait
-        build_run_container ctx:ctx_vep cp ./results/vep-annotator-junit.xml ./test-results/
-      }
     }
 
-    # create cobertura report for jenkins and coverage html report for dae, wdae, dae_integ, wdae_integ
+    # create cobertura report for jenkins and coverage html report
     {
-      # the commands are run in the ctx_wdae_integ context to not rely on host to have the 'coverage' commandline tool
-      build_run_container ctx:ctx_wdae coverage combine dae/.coverage wdae/.coverage
-      build_run_container ctx:ctx_wdae coverage xml
-      build_run_container ctx:ctx_wdae cp coverage.xml ./test-results/
-      build_run_container ctx:ctx_wdae coverage html --title GPF -d ./test-results/coverage-html
+      build_run_container ctx:ctx_gpf_web coverage combine \
+          gain_core/.coverage gpf_core/.coverage gpf_web/.coverage
+      build_run_container ctx:ctx_gpf_web coverage xml
+      build_run_container ctx:ctx_gpf_web cp coverage.xml ./test-results/
+      build_run_container ctx:ctx_gpf_web coverage html --title GPF -d ./test-results/coverage-html
     }
   }
 
@@ -441,7 +424,7 @@ EOT
     build_run_ctx_init "container" "${docker_img_iossifovlab_mamba_base}"
     defer_ret build_run_ctx_reset
 
-    build_run rm -rf dae/.coverage*
+    build_run rm -rf gain_core/.coverage* gpf_core/.coverage* gpf_web/.coverage*
 
     local gpf_tag=$(e gpf_tag)
     local __gpf_build_no=$(e __gpf_build_no)
@@ -465,8 +448,9 @@ EOT
       echo "" >> BUILD
     '
 
-    build_run cp BUILD dae/dae/__build__.py
-    build_run cp BUILD wdae/wdae/wdae/__build__.py
+    build_run cp BUILD gain_core/gain/__build__.py
+    build_run cp BUILD gpf_core/gpf/__build__.py
+    build_run cp BUILD gpf_web/gpf_web/__build__.py
     build_run cp BUILD impala_storage/impala_storage/__build__.py
     build_run cp BUILD impala2_storage/impala2_storage/__build__.py
     build_run cp BUILD rest_client/rest_client/__build__.py
@@ -481,14 +465,18 @@ EOT
           --exclude .pytest_cache \
           --exclude .coverage \
           --exclude .vscode \
+          --exclude .task-log \
           --exclude results \
           --exclude .gitignore \
-          --exclude gpf_dae.egg-info \
-          --exclude dae/tmp \
-          --exclude dae/build \
-          --exclude wdae/build \
+          --exclude gain_core.egg-info \
+          --exclude gpf_core.egg-info \
+          --exclude gpf_web.egg-info \
+          --exclude gain_core/build \
+          --exclude gpf_core/build \
+          --exclude gpf_web/build \
           --exclude tests \
           --exclude wdae_tests \
+          --exclude gpf_web_tests \
           --exclude dask-worker-space \
           --exclude demo-scripts \
           --exclude TESTphastCons100way.bedGraph.gz.tbi \
@@ -497,10 +485,9 @@ EOT
           --exclude dist \
           --exclude .DS_Store \
           --exclude conftest.py \
-          --exclude gpf_wdae.egg-info \
           --exclude pylintrc \
           --transform "s,^,gpf/," \
-          dae/ wdae/ \
+          gain_core/ gpf_core/ gpf_web/ \
           impala_storage \
           impala2_storage \
           gcp_storage \
@@ -518,7 +505,7 @@ EOT
     build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
     build_run rm -rf ./data/ ./import/ ./downloads ./results
-    build_run rm -rf dae/dae/__build__.py wdae/wdae/__build__.py VERSION
+    build_run rm -rf gain_core/gain/__build__.py gpf_core/gpf/__build__.py gpf_web/gpf_web/__build__.py VERSION
     build_run rm -rf impala_storage/impala_storage/__build__.py BUILD
     build_run rm -rf impala2_storage/impala2_storage/__build__.py BUILD
   }
