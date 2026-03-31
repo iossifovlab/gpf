@@ -6,7 +6,7 @@ import time
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 from dae.studies.study import GenotypeData
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_common_reports")
 

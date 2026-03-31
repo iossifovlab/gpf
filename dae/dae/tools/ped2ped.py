@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
@@ -13,7 +13,7 @@ from dae.genomic_resources.genomic_context import (
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader, PedigreeIO
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger("ped2ped")

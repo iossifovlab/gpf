@@ -9,7 +9,7 @@ from typing import Any, cast
 
 import pysam
 
-from dae.effect_annotation.effect import AlleleEffects, EffectGene
+from gain.effect_annotation.effect import AlleleEffects, EffectGene
 from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
 from dae.variants import core
 from dae.variants.attributes import TransmissionType

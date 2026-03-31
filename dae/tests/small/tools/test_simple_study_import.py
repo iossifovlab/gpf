@@ -5,7 +5,7 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_dae_transmitted,
     setup_denovo,
     setup_directories,

@@ -3,8 +3,8 @@ import pathlib
 
 import pysam
 import pytest
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.vcf.serializer import VcfSerializer

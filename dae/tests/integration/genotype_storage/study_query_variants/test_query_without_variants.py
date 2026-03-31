@@ -3,7 +3,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree,
 )
 from dae.genotype_storage.genotype_storage import GenotypeStorage

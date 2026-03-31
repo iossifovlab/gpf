@@ -20,12 +20,12 @@ from dae.duckdb_storage.duckdb2_variants import (
     DuckDbConnectionFactory,
 )
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

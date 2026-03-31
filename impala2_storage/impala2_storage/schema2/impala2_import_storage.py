@@ -10,7 +10,7 @@ from dae.schema2_storage.schema2_import_storage import (
 from dae.schema2_storage.schema2_layout import (
     load_schema2_dataset_layout,
 )
-from dae.task_graph.graph import TaskGraph
+from gain.task_graph.graph import TaskGraph
 
 from impala2_storage.schema2.impala2_genotype_storage import (
     HdfsStudyLayout,

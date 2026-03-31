@@ -4,11 +4,11 @@ import textwrap
 from typing import TextIO, cast
 
 import pytest
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.testing import convert_to_tab_separated
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.testing import convert_to_tab_separated
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.core import Allele
 from dae.variants.family_variant import FamilyAllele

@@ -16,9 +16,9 @@ import jinja2
 import toml
 import yaml
 
-from dae.effect_annotation.effect import expand_effect_types
-from dae.utils import fs_utils
-from dae.utils.regions import (
+from gain.effect_annotation.effect import expand_effect_types
+from gain.utils import fs_utils
+from gain.utils.regions import (
     Region,
     calc_bin_begin,
     calc_bin_end,

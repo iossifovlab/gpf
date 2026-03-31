@@ -10,8 +10,8 @@ import yaml
 from dae.duckdb_storage.duckdb_connection_factory import (
     DuckDbConnectionFactory,
 )
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
@@ -25,7 +25,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
     TagsQuery,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant

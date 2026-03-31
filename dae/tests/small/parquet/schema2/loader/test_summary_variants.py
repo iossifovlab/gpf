@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 def test_fetch_summary_variants_nonpartitioned(

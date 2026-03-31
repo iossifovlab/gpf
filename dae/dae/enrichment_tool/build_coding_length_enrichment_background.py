@@ -5,16 +5,16 @@ from collections import defaultdict
 
 import pandas as pd
 
-from dae.genomic_resources.gene_models import (
+from gain.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.utils.regions import collapse
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.regions import collapse
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

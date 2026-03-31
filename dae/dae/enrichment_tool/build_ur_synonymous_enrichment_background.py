@@ -6,7 +6,7 @@ from collections import Counter
 import pandas as pd
 
 from dae.gpf_instance import GPFInstance
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("build_ur_synonymous_enrichment_background")
 

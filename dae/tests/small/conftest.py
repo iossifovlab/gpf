@@ -4,23 +4,23 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources.gene_models.gene_models import (
+from gain.genomic_resources.gene_models.gene_models import (
     GeneModels,
 )
-from dae.genomic_resources.gene_models.gene_models_factory import (
+from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource_id,
 )
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
 )
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.repository import (
     GenomicResourceRepo,
 )
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     build_filesystem_test_repository,
     convert_to_tab_separated,
     setup_directories,

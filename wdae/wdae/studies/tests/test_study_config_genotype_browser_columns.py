@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 import yaml
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )

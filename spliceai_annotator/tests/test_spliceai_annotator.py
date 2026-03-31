@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,R0917
 import pytest
 import pytest_mock
-from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from gain.annotation.annotatable import VCFAllele
+from gain.annotation.annotation_pipeline import AnnotationPipeline
 
 from spliceai_annotator.spliceai_annotator import SpliceAIAnnotator
 

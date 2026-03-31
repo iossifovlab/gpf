@@ -4,7 +4,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.cli import run_with_project

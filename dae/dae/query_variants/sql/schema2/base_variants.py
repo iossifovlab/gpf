@@ -4,7 +4,7 @@ from typing import Any
 
 import pandas as pd
 
-from dae.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
@@ -14,7 +14,7 @@ from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 

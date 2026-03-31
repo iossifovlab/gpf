@@ -3,10 +3,10 @@ import pathlib
 
 import pytest
 import pytest_mock
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.annotation.annotation_pipeline import AnnotationPipeline
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from dae.pedigrees.loader import FamiliesLoader

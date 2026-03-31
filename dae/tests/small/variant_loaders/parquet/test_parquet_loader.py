@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 import yaml
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
     setup_vcf,
@@ -12,7 +12,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
 from dae.testing.import_helpers import vcf_study
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 

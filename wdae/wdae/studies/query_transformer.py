@@ -6,8 +6,8 @@ from functools import reduce
 from threading import Lock
 from typing import Any, ClassVar, cast
 
-from dae.effect_annotation.effect import EffectTypesMixin
-from dae.gene_scores.gene_scores import GeneScoresDb
+from gain.effect_annotation.effect import EffectTypesMixin
+from gain.gene_scores.gene_scores import GeneScoresDb
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
@@ -22,7 +22,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
 )
 from dae.studies.study import GenotypeDataStudy
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance, Zygosity
 from dae.variants.core import Allele
 

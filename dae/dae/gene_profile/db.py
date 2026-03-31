@@ -22,7 +22,7 @@ from sqlglot.expressions import (
 )
 
 from dae.gene_profile.statistic import GPStatistic
-from dae.utils.sql_utils import to_duckdb_transpile
+from gain.utils.sql_utils import to_duckdb_transpile
 
 logger = logging.getLogger(__name__)
 

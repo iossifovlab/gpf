@@ -16,8 +16,8 @@ from dae.pheno.pheno_data import (
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
-from dae.task_graph.cli_tools import TaskGraphCli
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

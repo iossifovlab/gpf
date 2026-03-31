@@ -13,7 +13,7 @@ from typing import cast
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AttributeInfo,
 )
 from dae.parquet.helpers import url_to_pyarrow_fs
@@ -24,8 +24,8 @@ from dae.parquet.schema2.serializers import (
     SummaryAlleleParquetSerializer,
     VariantsDataSerializer,
 )
-from dae.utils import fs_utils
-from dae.utils.processing_pipeline import Filter
+from gain.utils import fs_utils
+from gain.utils.processing_pipeline import Filter
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
     is_unknown_genotype,

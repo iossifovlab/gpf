@@ -5,7 +5,7 @@ import yaml
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_convert_study_config")
 

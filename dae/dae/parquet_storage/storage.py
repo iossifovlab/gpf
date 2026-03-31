@@ -9,11 +9,11 @@ from dae.configuration.utils import validate_path
 from dae.duckdb_storage.duckdb_import_storage import (
     DuckDbLegacyImportStorage,
 )
-from dae.genomic_resources.gene_models.gene_models import (
+from gain.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
 )
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.import_tools.import_tools import ImportProject
 from dae.inmemory_storage.raw_variants import (
@@ -34,9 +34,9 @@ from dae.schema2_storage.schema2_layout import (
     create_schema2_dataset_layout,
     load_schema2_dataset_layout,
 )
-from dae.task_graph.graph import TaskGraph
-from dae.utils import fs_utils
-from dae.utils.regions import Region
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
+from gain.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 

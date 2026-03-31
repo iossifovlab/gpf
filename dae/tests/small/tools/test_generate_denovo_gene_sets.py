@@ -5,7 +5,7 @@ import textwrap
 
 import pytest
 from dae.common_reports.common_report import CommonReport
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.testing.import_helpers import setup_dataset, vcf_study

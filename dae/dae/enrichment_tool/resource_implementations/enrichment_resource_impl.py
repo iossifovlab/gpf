@@ -10,12 +10,12 @@ from dae.enrichment_tool.gene_weights_background import (
     GeneWeightsEnrichmentBackground,
 )
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import (
+from gain.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
-from dae.task_graph.graph import TaskDesc
+from gain.task_graph.graph import TaskDesc
 
 logger = logging.getLogger(__name__)
 

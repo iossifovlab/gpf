@@ -25,7 +25,7 @@ import sqlglot.expressions as exp
 import yaml
 from pydantic import BaseModel
 
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
     HistogramConfig,
@@ -61,13 +61,13 @@ from dae.pheno.prepare.measure_classifier import (
     determine_histogram_type,
     inference_reference_impl,
 )
-from dae.task_graph.cli_tools import (
+from gain.task_graph.cli_tools import (
     TaskCache,
     TaskGraphCli,
     task_graph_run_with_results,
 )
-from dae.task_graph.graph import TaskGraph
-from dae.utils.sql_utils import to_duckdb_transpile
+from gain.task_graph.graph import TaskGraph
+from gain.utils.sql_utils import to_duckdb_transpile
 from dae.variants.attributes import Status
 
 logger = logging.getLogger(__name__)

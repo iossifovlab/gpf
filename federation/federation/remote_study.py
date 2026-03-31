@@ -10,7 +10,7 @@ from dae.person_sets import (
 )
 from dae.person_sets.person_sets import parse_person_set_collection_config
 from dae.studies.study import GenotypeDataStudy
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 

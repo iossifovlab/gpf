@@ -3,7 +3,7 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )

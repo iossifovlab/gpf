@@ -4,7 +4,7 @@ import sys
 
 from dae import __version__  # type: ignore
 from dae.gpf_instance import GPFInstance
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gp_exporter")
 

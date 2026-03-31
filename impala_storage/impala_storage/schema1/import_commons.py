@@ -17,8 +17,8 @@ from dae.import_tools.import_tools import construct_import_annotation_pipeline
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.dict_utils import recursive_dict_update
-from dae.utils.regions import Region
+from gain.utils.dict_utils import recursive_dict_update
+from gain.utils.regions import Region
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (

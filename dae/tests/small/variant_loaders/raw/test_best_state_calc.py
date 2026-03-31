@@ -5,12 +5,12 @@ from io import StringIO
 
 import numpy as np
 import pytest
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.repository import GR_CONF_FILE_NAME
+from gain.genomic_resources.testing import (
     build_filesystem_test_resource,
     setup_directories,
     setup_genome,

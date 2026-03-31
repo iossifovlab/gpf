@@ -8,11 +8,11 @@ import time
 from contextlib import closing
 from typing import Any
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeDataStudy
-from dae.utils.regions import Region
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.regions import Region
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from impala_storage.schema1.impala_variants import ImpalaVariants
 

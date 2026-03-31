@@ -6,19 +6,19 @@ from collections.abc import Iterable, Sequence
 from types import TracebackType
 from typing import cast
 
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
-from dae.annotation.processing_pipeline import (
+from gain.annotation.processing_pipeline import (
     Annotation,
     AnnotationPipelineAnnotatablesBatchFilter,
     AnnotationPipelineAnnotatablesFilter,
     AnnotationsWithSource,
 )
-from dae.effect_annotation.effect import AlleleEffects
+from gain.effect_annotation.effect import AlleleEffects
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.utils.processing_pipeline import Filter, Source
-from dae.utils.regions import Region
+from gain.utils.processing_pipeline import Filter, Source
+from gain.utils.regions import Region
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import (
     FullVariant,

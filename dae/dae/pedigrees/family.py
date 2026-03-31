@@ -7,7 +7,7 @@ import logging
 from collections.abc import Iterable
 from typing import Any, cast
 
-from dae.utils.helpers import isnan
+from gain.utils.helpers import isnan
 from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)

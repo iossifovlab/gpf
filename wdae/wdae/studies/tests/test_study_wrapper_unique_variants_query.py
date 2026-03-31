@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from dae.duckdb_storage.duckdb_genotype_storage import duckdb_storage_factory
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.testing.alla_import import alla_gpf
 from dae.testing.import_helpers import setup_dataset, vcf_study
 from gpf_instance.gpf_instance import WGPFInstance

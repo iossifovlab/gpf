@@ -20,7 +20,7 @@ from box import Box
 from dae.common_reports.common_report import CommonReport
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
     Histogram,
@@ -41,7 +41,7 @@ from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import IMPORT_METADATA_TABLE, ImportManifest, MeasureType
 from dae.pheno.db import PhenoDb
 from dae.studies.study import CommonStudyMixin
-from dae.utils.helpers import isnan
+from gain.utils.helpers import isnan
 from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)

@@ -11,24 +11,24 @@ from typing import Any, cast
 
 from box import Box
 
-from dae.effect_annotation.effect import expand_effect_types
+from gain.effect_annotation.effect import expand_effect_types
 from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
-from dae.gene_sets.gene_sets_db import GeneSet
-from dae.genomic_resources.gene_models.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository_factory import (
+from gain.gene_sets.gene_sets_db import GeneSet
+from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
-from dae.task_graph.cli_tools import (
+from gain.task_graph.cli_tools import (
     TaskGraphCli,
     task_graph_run_with_results,
 )
-from dae.task_graph.graph import TaskGraph
-from dae.utils.regions import Region
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.task_graph.graph import TaskGraph
+from gain.utils.regions import Region
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import allele_type_from_name

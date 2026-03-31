@@ -10,31 +10,31 @@ from functools import cached_property
 from typing import Any
 
 import numpy as np
-from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_config import (
+from gain.annotation.annotatable import Annotatable, VCFAllele
+from gain.annotation.annotation_config import (
     AnnotatorInfo,
     AttributeInfo,
 )
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
-from dae.annotation.annotator_base import (
+from gain.annotation.annotator_base import (
     AnnotatorBase,
     AttributeDesc,
 )
-from dae.genomic_resources.aggregators import (
+from gain.genomic_resources.aggregators import (
     Aggregator,
     build_aggregator,
 )
-from dae.genomic_resources.gene_models.gene_models import (
+from gain.genomic_resources.gene_models.gene_models import (
     GeneModels,
 )
-from dae.genomic_resources.gene_models.gene_models_factory import (
+from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
-from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.genomic_context import get_genomic_context
+from gain.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
 )

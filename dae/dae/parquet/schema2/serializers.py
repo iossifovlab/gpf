@@ -10,7 +10,7 @@ from typing import Any, cast
 
 import pyarrow as pa
 
-from dae.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_pipeline import AttributeInfo
 from dae.variants.attributes import (
     Inheritance,
     Role,

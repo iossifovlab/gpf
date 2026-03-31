@@ -26,7 +26,7 @@ from dae.person_sets.person_sets import PSCQuery
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeData
 from dae.studies.study import GenotypeData
-from dae.utils.dae_utils import join_line
+from gain.utils.dae_utils import join_line
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant

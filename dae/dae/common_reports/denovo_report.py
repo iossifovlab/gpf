@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import numpy as np
 
-from dae.effect_annotation.effect import EffectTypesMixin
+from gain.effect_annotation.effect import EffectTypesMixin
 from dae.person_sets import PersonSet, PersonSetCollection
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 

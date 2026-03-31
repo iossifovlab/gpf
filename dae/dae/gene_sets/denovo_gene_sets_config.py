@@ -9,7 +9,7 @@ from pydantic import (
 )
 from pydantic.functional_validators import AfterValidator
 
-from dae.effect_annotation.annotation_effects import (
+from gain.effect_annotation.annotation_effects import (
     get_effect_types,
     get_effect_types_set,
 )

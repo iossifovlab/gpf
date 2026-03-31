@@ -1,13 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_gene_models,
     setup_genome,
 )

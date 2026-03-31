@@ -7,7 +7,7 @@ import pytest_mock
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )

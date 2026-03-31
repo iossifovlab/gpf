@@ -22,7 +22,7 @@ from dae.duckdb_storage.duckdb_storage_config import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 PARQUET_SCAN = re.compile(r"parquet_scan\('(?P<parquet_path>.+)'\)")

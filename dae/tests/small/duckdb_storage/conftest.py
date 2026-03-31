@@ -7,7 +7,7 @@ import pytest
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     build_s3_test_bucket,
     build_s3_test_filesystem,
     s3_test_server_endpoint,
@@ -23,7 +23,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing.foobar_import import foobar_gpf
 from dae.testing.import_helpers import vcf_study
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:

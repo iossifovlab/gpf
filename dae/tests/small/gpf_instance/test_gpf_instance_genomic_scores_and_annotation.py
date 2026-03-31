@@ -3,8 +3,8 @@ import textwrap
 from collections.abc import Callable
 
 import pytest
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import (
     setup_directories,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance

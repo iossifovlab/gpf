@@ -2,13 +2,13 @@
 import pathlib
 
 import pytest
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     GenomicResourceRepo,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
     setup_vcf,

@@ -4,14 +4,14 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
     register_context,
     register_context_provider,
 )
-from dae.genomic_resources.genomic_context_base import (
+from gain.genomic_resources.genomic_context_base import (
     SimpleGenomicContext,
 )
 from dae.genotype_storage.genotype_storage_genomic_context_cli import (

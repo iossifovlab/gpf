@@ -7,7 +7,7 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import save_study_config
-from dae.utils.dict_utils import recursive_dict_update
+from gain.utils.dict_utils import recursive_dict_update
 
 
 def parse_cli_arguments(

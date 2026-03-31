@@ -12,18 +12,18 @@ from typing import (
     cast,
 )
 
-from dae.effect_annotation.effect import (
+from gain.effect_annotation.effect import (
     gd2str,
     ge2str,
     gene_effect_get_genes,
     gene_effect_get_genes_worst,
     gene_effect_get_worst_effect,
 )
-from dae.gene_scores.gene_scores import GeneScoresDb
+from gain.gene_scores.gene_scores import GeneScoresDb
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.family import Person
 from dae.person_sets import PersonSetCollection
-from dae.utils.dae_utils import join_line, split_iterable
+from gain.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import fgt2str, mat2str
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant

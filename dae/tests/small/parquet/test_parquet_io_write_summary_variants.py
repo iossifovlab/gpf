@@ -6,7 +6,7 @@ import pytest
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbStorage,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
@@ -17,7 +17,7 @@ from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="module")

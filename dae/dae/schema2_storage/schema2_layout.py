@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
@@ -12,7 +12,7 @@ from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing.alla_import import alla_gpf
 from dae.testing.import_helpers import vcf_study
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele
 

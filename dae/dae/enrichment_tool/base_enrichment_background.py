@@ -9,8 +9,8 @@ from dae.enrichment_tool.event_counters import (
     EnrichmentResult,
     EventCountersResult,
 )
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import (
+from gain.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
 )

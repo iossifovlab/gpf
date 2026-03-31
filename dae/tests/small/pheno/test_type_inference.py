@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 import yaml
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,
 )

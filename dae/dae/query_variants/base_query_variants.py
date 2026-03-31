@@ -13,7 +13,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
     ZygosityQuery,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory

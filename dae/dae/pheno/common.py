@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlglot import insert, select
 from sqlglot.expressions import Table, table_
 
-from dae.utils.sql_utils import to_duckdb_transpile
+from gain.utils.sql_utils import to_duckdb_transpile
 
 IMPORT_METADATA_TABLE = table_("import_metadata")
 

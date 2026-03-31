@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, ClassVar, cast
 
-from dae.effect_annotation.effect import expand_effect_types
+from gain.effect_annotation.effect import expand_effect_types
 from dae.enrichment_tool.base_enrichment_background import (
     BaseEnrichmentBackground,
     EnrichmentResult,
@@ -26,7 +26,7 @@ from dae.enrichment_tool.gene_weights_background import (
 )
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.repository import (
     GenomicResourceRepo,
     parse_resource_id_version,
 )

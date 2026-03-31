@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import numpy as np
 import pytest
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.testing import (
     setup_genome,
     setup_pedigree,
     setup_vcf,
 )
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 

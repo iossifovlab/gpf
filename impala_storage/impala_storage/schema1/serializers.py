@@ -12,7 +12,7 @@ from typing import Any, ClassVar, cast
 
 import numpy as np
 import pyarrow as pa
-from dae.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_pipeline import AttributeInfo
 from dae.pedigrees.family import Family
 from dae.variants.attributes import (
     GeneticModel,

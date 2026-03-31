@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 
 from studies.query_transformer import QueryTransformer

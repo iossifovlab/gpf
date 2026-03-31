@@ -3,7 +3,7 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
     NumberHistogram,

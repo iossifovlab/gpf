@@ -13,12 +13,12 @@ import numpy as np
 import pysam
 from fsspec.core import url_to_fs
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
-from dae.utils import fs_utils
-from dae.utils.helpers import str2bool
-from dae.utils.regions import Region
+from gain.utils import fs_utils
+from gain.utils.helpers import str2bool
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory

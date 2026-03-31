@@ -2,15 +2,15 @@ import argparse
 import logging
 import sys
 
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     GenomicResourceRepo,
     build_genomic_resource_repository,
 )
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger("vcf2tsv")

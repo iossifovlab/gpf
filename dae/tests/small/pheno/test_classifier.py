@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 import pytest
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     Histogram,
     NullHistogram,

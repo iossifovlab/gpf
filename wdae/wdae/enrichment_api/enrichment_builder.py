@@ -3,7 +3,7 @@ from abc import abstractmethod
 from collections.abc import Iterable
 from typing import Any, cast
 
-from dae.gene_scores.gene_scores import GeneScoresDb
+from gain.gene_scores.gene_scores import GeneScoresDb
 from dae.person_sets import PersonSetCollection
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy

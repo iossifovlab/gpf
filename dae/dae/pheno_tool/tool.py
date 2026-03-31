@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind
 
-from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
+from gain.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.utils.lin_regress import LinearRegression

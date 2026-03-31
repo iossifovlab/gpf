@@ -4,7 +4,7 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
-from dae.effect_annotation.effect import expand_effect_types
+from gain.effect_annotation.effect import expand_effect_types
 from dae.enrichment_tool.enrichment_utils import (
     EnrichmentEventCounts,
     get_enrichment_cache_path,
@@ -17,7 +17,7 @@ from dae.enrichment_tool.event_counters import (
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("enrichment_cache_builder")
 

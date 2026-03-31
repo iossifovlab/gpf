@@ -15,8 +15,8 @@ from dae.import_tools.import_tools import (
 )
 from dae.parquet.parquet_writer import merge_variants_parquets
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.task_graph.graph import TaskGraph
-from dae.utils import fs_utils
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 from impala_storage.schema1.annotation_decorator import (

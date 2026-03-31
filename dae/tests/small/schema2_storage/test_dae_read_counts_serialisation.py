@@ -4,11 +4,11 @@ import textwrap
 from typing import Any
 
 import pytest
-from dae.genomic_resources.testing import setup_dae_transmitted, setup_pedigree
+from gain.genomic_resources.testing import setup_dae_transmitted, setup_pedigree
 from dae.studies.study import GenotypeData
 from dae.testing.foobar_import import foobar_gpf
 from dae.testing.import_helpers import dae_study
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 @pytest.fixture

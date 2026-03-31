@@ -2,10 +2,10 @@ import logging
 from collections.abc import Iterable
 from typing import Any, Callable, Dict, List
 
-from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.genomic_resources.gene_models.gene_models import GeneModels
+from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.genomic_resources.gene_models.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.variant import SummaryVariant
 
 from impala_storage.schema1.base_query_builder import (

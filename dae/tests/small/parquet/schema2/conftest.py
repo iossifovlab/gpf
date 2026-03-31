@@ -3,7 +3,7 @@ import pathlib
 from typing import Any
 
 import pytest
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     Annotatable,
     AnnotationPipeline,
     Annotator,
@@ -11,9 +11,9 @@ from dae.annotation.annotation_pipeline import (
     AttributeDesc,
     AttributeInfo,
 )
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository import GenomicResourceRepo
+from gain.annotation.effect_annotator import EffectAnnotatorAdapter
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.repository import GenomicResourceRepo
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 from dae.variants_loaders.raw.loader import (

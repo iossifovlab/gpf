@@ -9,7 +9,7 @@ from dae.enrichment_tool.enrichment_cache_builder import (
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
-from dae.genomic_resources.testing import setup_denovo, setup_pedigree
+from gain.genomic_resources.testing import setup_denovo, setup_pedigree
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing.import_helpers import denovo_study

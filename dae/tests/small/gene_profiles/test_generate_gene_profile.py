@@ -8,8 +8,8 @@ import pytest_mock
 import yaml
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.generate_gene_profile import main
-from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.cli import cli_manage
+from gain.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
     setup_vcf,

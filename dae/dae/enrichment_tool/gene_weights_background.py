@@ -17,10 +17,10 @@ from dae.enrichment_tool.event_counters import (
     EnrichmentSingleResult,
     EventCountersResult,
 )
-from dae.gene_scores.gene_scores import (
+from gain.gene_scores.gene_scores import (
     build_gene_score_from_resource,
 )
-from dae.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.repository import GenomicResource
 
 logger = logging.getLogger(__name__)
 

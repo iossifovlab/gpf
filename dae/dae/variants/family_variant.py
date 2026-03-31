@@ -5,7 +5,7 @@ from typing import Any, cast
 import numpy as np
 from deprecation import deprecated
 
-from dae.effect_annotation.effect import AlleleEffects
+from gain.effect_annotation.effect import AlleleEffects
 from dae.pedigrees.family import Family
 from dae.utils.variant_utils import (
     BitmaskEnumTranslator,

@@ -3,7 +3,7 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.genomic_resources.testing import setup_pedigree
+from gain.genomic_resources.testing import setup_pedigree
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
     PersonSetCollection,

@@ -6,7 +6,7 @@ from typing import Any, cast
 import numpy as np
 from pydantic import BaseModel
 
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     Histogram,
     NullHistogram,

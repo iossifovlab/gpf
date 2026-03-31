@@ -5,7 +5,7 @@ import pathlib
 import sys
 from typing import Any, cast
 
-from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from gain.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbParquetStorage,
@@ -13,7 +13,7 @@ from dae.duckdb_storage.duckdb_genotype_storage import (
 from dae.duckdb_storage.duckdb_storage_helpers import (
     PARQUET_SCAN,
 )
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
@@ -22,8 +22,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet_storage.storage import ParquetLoaderVariants
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
 from dae.studies.study import GenotypeData, GenotypeDataStudy
-from dae.task_graph.cli_tools import TaskGraphCli
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

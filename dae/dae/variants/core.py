@@ -4,7 +4,7 @@ import logging
 from enum import Enum
 from typing import ClassVar
 
-from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
+from gain.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.utils.variant_utils import trim_parsimonious
 
 logger = logging.getLogger(__name__)

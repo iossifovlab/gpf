@@ -17,8 +17,8 @@ import yaml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-from dae.utils.regions import Region
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.regions import Region
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 logger = logging.getLogger("gpf_validation_runner")

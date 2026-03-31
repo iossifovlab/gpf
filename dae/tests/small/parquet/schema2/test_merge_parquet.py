@@ -10,7 +10,7 @@ import pytest
 import pytest_mock
 from dae.parquet.schema2 import merge_parquet
 from dae.parquet.schema2.merge_parquet import merge_parquet_directory
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 
 
 @pytest.fixture
@@ -128,7 +128,7 @@ def test_merge_multi_parquets_randomized(
         return sorted(files, key=lambda _: random.random())  # noqa: S311
 
     mocker.patch(
-        "dae.utils.fs_utils.glob",
+        "gain.utils.fs_utils.glob",
         return_value=randomized_glob())
 
     out_file = str(multi_parquet_dir / "merged.parquet")

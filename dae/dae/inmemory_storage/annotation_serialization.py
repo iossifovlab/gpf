@@ -9,8 +9,8 @@ import time
 import numpy as np
 import pandas as pd
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.effect_annotation.effect import AlleleEffects
+from gain.annotation.annotation_pipeline import AnnotationPipeline
+from gain.effect_annotation.effect import AlleleEffects
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.raw.loader import (

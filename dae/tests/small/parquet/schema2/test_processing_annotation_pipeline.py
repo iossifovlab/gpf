@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from types import TracebackType
 
 import pytest
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from dae.parquet.schema2.processing_pipeline import (
@@ -13,7 +13,7 @@ from dae.parquet.schema2.processing_pipeline import (
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
 )
-from dae.utils.processing_pipeline import Filter, PipelineProcessor
+from gain.utils.processing_pipeline import Filter, PipelineProcessor
 from dae.variants_loaders.raw.loader import (
     FullVariant,
     VariantsGenotypesLoader,

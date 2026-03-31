@@ -16,7 +16,7 @@ from dae.tools.generate_denovo_gene_sets import (
     main as generate_denovo_gene_sets,
 )
 from dae.tools.reannotate_instance import ReannotateInstanceTool
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from django.conf import settings
 from django.core.management import execute_from_command_line
 from gpf_instance.gpf_instance import WGPFInstance

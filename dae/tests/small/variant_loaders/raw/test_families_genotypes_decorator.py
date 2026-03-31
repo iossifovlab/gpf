@@ -3,12 +3,12 @@ import textwrap
 
 import numpy as np
 import pytest
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.repository import GR_CONF_FILE_NAME
+from gain.genomic_resources.testing import (
     build_filesystem_test_resource,
     setup_directories,
     setup_genome,
@@ -17,7 +17,7 @@ from dae.genomic_resources.testing import (
 )
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import GeneticModel
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader

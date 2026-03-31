@@ -10,36 +10,36 @@ from typing import cast
 
 import pysam
 
-from dae.annotation.annotatable import (
+from gain.annotation.annotatable import (
     CNVAllele,
     VCFAllele,
 )
-from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.liftover_annotator import (
+from gain.annotation.annotation_factory import load_pipeline_from_yaml
+from gain.annotation.annotation_pipeline import AnnotationPipeline
+from gain.annotation.liftover_annotator import (
     basic_liftover_variant,
     bcf_liftover_variant,
 )
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
 )
-from dae.genomic_resources.liftover_chain import (
+from gain.genomic_resources.liftover_chain import (
     LiftoverChain,
     build_liftover_chain_from_resource,
 )
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     GenomicResourceRepo,
 )
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.utils.variant_utils import mat2str
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import VariantDetails
 from dae.variants_loaders.cnv.loader import CNVLoader

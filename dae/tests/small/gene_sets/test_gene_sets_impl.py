@@ -4,11 +4,11 @@ import pathlib
 
 import pytest
 from dae.gene_sets.implementations.gene_sets_impl import GeneSetCollectionImpl
-from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.cli import cli_manage
+from gain.genomic_resources.repository import (
     GenomicResourceRepo,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     build_filesystem_test_repository,
     setup_directories,
 )

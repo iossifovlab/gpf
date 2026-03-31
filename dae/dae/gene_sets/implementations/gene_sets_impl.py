@@ -6,23 +6,23 @@ from typing import Any
 from jinja2 import Template
 from markdown2 import markdown
 
-from dae.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
-from dae.genomic_resources.histogram import (
+from gain.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
     plot_histogram,
 )
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.repository import (
     GenomicResource,
 )
-from dae.genomic_resources.resource_implementation import (
+from gain.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
     ResourceConfigValidationMixin,
 )
-from dae.task_graph.graph import TaskDesc, TaskGraph
+from gain.task_graph.graph import TaskDesc, TaskGraph
 
 
 class GeneSetCollectionImpl(

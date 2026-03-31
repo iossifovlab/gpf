@@ -3,7 +3,7 @@
 def genome_from_a_file(file_name: str) -> None:
     """Example usage of reference genome from file name."""
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.reference_genome import (
+    from gain.genomic_resources.reference_genome import (
         build_reference_genome_from_file,
     )
     file_genome = build_reference_genome_from_file(file_name)
@@ -13,10 +13,10 @@ def genome_from_a_file(file_name: str) -> None:
 def genome_from_a_genomic_resource_repository(resource_id: str) -> None:
     """Example usage of reference genome from GRR."""
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.reference_genome import (
+    from gain.genomic_resources.reference_genome import (
         build_reference_genome_from_resource_id,
     )
-    from dae.genomic_resources.repository_factory import (
+    from gain.genomic_resources.repository_factory import (
         build_genomic_resource_repository,
     )
 

@@ -4,7 +4,7 @@ import textwrap
 
 import pandas as pd
 import pytest
-from dae.genomic_resources.testing import setup_pedigree
+from gain.genomic_resources.testing import setup_pedigree
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
 

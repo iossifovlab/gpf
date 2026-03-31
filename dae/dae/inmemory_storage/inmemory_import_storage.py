@@ -13,7 +13,7 @@ from dae.inmemory_storage.annotation_serialization import (
     build_annotation_filename,
     variants_loader_annotate_and_save,
 )
-from dae.task_graph.graph import TaskGraph
+from gain.task_graph.graph import TaskGraph
 
 logger = logging.getLogger(__name__)
 

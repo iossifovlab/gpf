@@ -6,7 +6,7 @@ import shutil
 import pytest
 import pytest_mock
 import yaml
-from dae.genomic_resources.genomic_context import GenomicContext
+from gain.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools import cli, import_tools
 from dae.testing.alla_import import alla_gpf

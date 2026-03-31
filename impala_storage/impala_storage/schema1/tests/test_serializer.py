@@ -3,7 +3,7 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from dae.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import AttributeInfo
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,

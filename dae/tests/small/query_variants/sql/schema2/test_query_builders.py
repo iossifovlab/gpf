@@ -10,7 +10,7 @@ from dae.query_variants.sql.schema2.base_query_builder import (
 )
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
 
 FAMILY_VARIANT_SCHEMA = {

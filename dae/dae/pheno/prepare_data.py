@@ -29,14 +29,14 @@ from dae.pheno.pheno_data import (
 )
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorageRegistry
-from dae.task_graph.cache import (
+from gain.task_graph.cache import (
     TaskCache,
 )
-from dae.task_graph.cli_tools import (
+from gain.task_graph.cli_tools import (
     TaskGraphCli,
     task_graph_run_with_results,
 )
-from dae.task_graph.graph import TaskGraph
+from gain.task_graph.graph import TaskGraph
 from dae.variants.attributes import Role
 
 mpl.use("PS")

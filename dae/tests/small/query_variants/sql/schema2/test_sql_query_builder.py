@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.genomic_resources.gene_models.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.sql.schema2.sql_query_builder import (
@@ -10,7 +10,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     RealAttrFilterType,
     SqlQueryBuilder,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from sqlglot import diff, exp, parse_one
 from sqlglot.diff import Keep
 from sqlglot.executor import execute

@@ -3,7 +3,7 @@ import pathlib
 
 import numpy as np
 import pytest
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing.acgt_import import acgt_gpf

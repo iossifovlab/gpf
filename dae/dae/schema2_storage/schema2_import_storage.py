@@ -53,10 +53,10 @@ from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from dae.task_graph.graph import Task, TaskGraph, sync_tasks
-from dae.utils import fs_utils
-from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
-from dae.utils.regions import Region
+from gain.task_graph.graph import Task, TaskGraph, sync_tasks
+from gain.utils import fs_utils
+from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
+from gain.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 

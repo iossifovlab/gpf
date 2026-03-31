@@ -9,11 +9,11 @@ from typing import cast
 
 import pytest
 import pytest_mock
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
 )

@@ -15,7 +15,7 @@ from dae.gene_sets.denovo_gene_sets_config import (
     parse_denovo_gene_sets_study_config,
     parse_dgsc_query,
 )
-from dae.gene_sets.gene_sets_db import GeneSet
+from gain.gene_sets.gene_sets_db import GeneSet
 from dae.pedigrees.family import Person
 from dae.person_sets import (
     PersonSetCollection,

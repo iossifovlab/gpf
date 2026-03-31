@@ -17,18 +17,18 @@ from sqlglot.expressions import (
 )
 from sqlglot.schema import Schema, ensure_schema
 
-from dae.genomic_resources.gene_models.gene_models import (
+from gain.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
 )
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from dae.variants.core import Allele
 

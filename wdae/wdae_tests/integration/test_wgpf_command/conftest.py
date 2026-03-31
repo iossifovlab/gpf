@@ -2,10 +2,10 @@
 import textwrap
 
 import pytest
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_directories,
     setup_empty_gene_models,
     setup_genome,

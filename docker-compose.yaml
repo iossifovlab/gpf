@@ -34,4 +34,4 @@ services:
     ports:
     - '28080:80'
     volumes:
-      - ./dae/tests/.test_grr:/usr/local/apache2/htdocs/
+      - ./gain/tests/.test_grr:/usr/local/apache2/htdocs/

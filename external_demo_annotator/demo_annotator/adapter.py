@@ -8,17 +8,17 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, TextIO, cast
 
-from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import (
+from gain.annotation.annotatable import Annotatable
+from gain.annotation.annotation_config import (
     AnnotationConfigParser,
     AnnotatorInfo,
 )
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     AttributeDesc,
 )
-from dae.annotation.docker_annotator import DockerAnnotator
+from gain.annotation.docker_annotator import DockerAnnotator
 
 # ruff: noqa: S607
 

@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.testing import setup_denovo, setup_pedigree
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.testing import setup_denovo, setup_pedigree
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
 

@@ -12,7 +12,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
 )
 from dae.studies.study import GenotypeDataStudy
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 @pytest.fixture

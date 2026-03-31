@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 from box import Box
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.testing.import_helpers import vcf_study

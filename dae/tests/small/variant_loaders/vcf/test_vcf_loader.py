@@ -2,8 +2,8 @@
 from typing import Literal
 
 import pytest
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Inheritance
 from dae.variants_loaders.vcf.loader import VcfLoader

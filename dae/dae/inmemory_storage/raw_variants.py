@@ -15,7 +15,7 @@ from dae.query_variants.base_query_variants import (
 )
 from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from dae.variants.core import Allele
 from dae.variants.family_variant import FamilyAllele, FamilyVariant

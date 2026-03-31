@@ -4,9 +4,9 @@ from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
     GeneWeightsEnrichmentBackground,
 )
-from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.testing import (
+from gain.genomic_resources import GenomicResource
+from gain.genomic_resources.repository import GR_CONF_FILE_NAME
+from gain.genomic_resources.testing import (
     build_inmemory_test_resource,
     convert_to_tab_separated,
 )

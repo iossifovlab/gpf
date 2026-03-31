@@ -24,8 +24,8 @@ from dae.parquet.parquet_writer import fill_family_bins, save_ped_df_to_parquet
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
-from dae.utils import fs_utils
-from dae.utils.regions import Region
+from gain.utils import fs_utils
+from gain.utils.regions import Region
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.family_variant import (
     FamilyAllele,

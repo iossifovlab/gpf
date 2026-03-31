@@ -5,7 +5,7 @@ import pytest
 from box import Box
 from dae.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
-from dae.gene_sets.gene_sets_db import GeneSet
+from gain.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance import GPFInstance
 from dae.testing.alla_import import alla_gpf
 from pytest_mock import MockerFixture

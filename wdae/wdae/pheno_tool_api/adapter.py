@@ -4,7 +4,7 @@ from collections.abc import Generator
 from io import StringIO
 from typing import Any, cast
 
-from dae.effect_annotation.effect import EffectTypesMixin
+from gain.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
 from gpf_instance.extension import GPFTool

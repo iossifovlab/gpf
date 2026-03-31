@@ -14,11 +14,11 @@ from typing import (
 
 import numpy as np
 
-from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.utils.variant_utils import best2gt, get_locus_ploidy
 from dae.variants.attributes import GeneticModel, Sex, TransmissionType
 from dae.variants.family_variant import (

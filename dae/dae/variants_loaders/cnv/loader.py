@@ -82,9 +82,9 @@ from typing import Any, TextIO
 import numpy as np
 import pandas as pd
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory

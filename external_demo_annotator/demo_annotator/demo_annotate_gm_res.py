@@ -3,8 +3,8 @@ import csv
 import sys
 from pathlib import Path
 
-from dae.annotation.annotatable import Annotatable
-from dae.genomic_resources.gene_models import (
+from gain.annotation.annotatable import Annotatable
+from gain.genomic_resources.gene_models import (
     build_gene_models_from_file,
 )
 

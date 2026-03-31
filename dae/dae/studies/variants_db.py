@@ -7,11 +7,11 @@ import toml
 from box import Box
 from deprecation import deprecated
 
-from dae.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import AttributeInfo
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )

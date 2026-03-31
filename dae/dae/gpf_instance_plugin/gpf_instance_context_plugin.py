@@ -2,7 +2,7 @@ import argparse
 import logging
 from typing import Any
 
-from dae.genomic_resources.genomic_context_base import (
+from gain.genomic_resources.genomic_context_base import (
     GC_ANNOTATION_PIPELINE_KEY,
     GC_GENE_MODELS_KEY,
     GC_GRR_KEY,

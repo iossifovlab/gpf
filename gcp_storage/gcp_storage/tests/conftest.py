@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 import yaml
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )

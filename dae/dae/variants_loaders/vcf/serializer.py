@@ -7,7 +7,7 @@ from types import TracebackType
 
 import pysam
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant

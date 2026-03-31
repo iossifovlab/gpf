@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Any, cast
 
-from dae.genomic_scores.scores import ScoreDesc
+from gain.genomic_scores.scores import ScoreDesc
 from gpf_instance.extension import GPFExtensionBase
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 

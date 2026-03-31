@@ -9,11 +9,11 @@ from glob import glob
 import dae.parquet.schema2.annotate_schema2_parquet
 import pytest
 import pytest_mock
-from dae.annotation.score_annotator import PositionScoreAnnotator
-from dae.genomic_resources.genomic_context import (
+from gain.annotation.score_annotator import PositionScoreAnnotator
+from gain.genomic_resources.genomic_context import (
     clear_registered_contexts,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
     setup_pedigree,

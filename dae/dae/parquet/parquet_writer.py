@@ -7,13 +7,13 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_pipeline import AttributeInfo
 from dae.parquet import helpers as parquet_helpers
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import build_summary_schema
 from dae.pedigrees.families_data import FamiliesData
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)

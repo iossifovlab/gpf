@@ -13,7 +13,7 @@ import yaml
 from box import Box
 from cerberus import Validator
 
-from dae.utils.dict_utils import recursive_dict_update
+from gain.utils.dict_utils import recursive_dict_update
 
 logger = logging.getLogger(__name__)
 

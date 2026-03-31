@@ -15,8 +15,8 @@ from dae.enrichment_tool.event_counters import (
     EnrichmentSingleResult,
     EventCountersResult,
 )
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import (
+from gain.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.resource_implementation import (
     get_base_resource_schema,
 )
 from dae.person_sets import ChildrenStats

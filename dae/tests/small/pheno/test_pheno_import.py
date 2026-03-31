@@ -6,7 +6,7 @@ from pathlib import Path
 
 import duckdb
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
 )

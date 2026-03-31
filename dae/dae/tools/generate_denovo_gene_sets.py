@@ -3,7 +3,7 @@ import logging
 import sys
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_denovo_gene_sets")
 

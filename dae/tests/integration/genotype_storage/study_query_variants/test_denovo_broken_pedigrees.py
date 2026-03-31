@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )

@@ -8,7 +8,7 @@ import yaml
 
 from dae.pheno.common import PhenoImportConfig
 from dae.pheno.pheno_import import get_gpf_instance, import_pheno_data
-from dae.task_graph.cli_tools import TaskGraphCli
+from gain.task_graph.cli_tools import TaskGraphCli
 
 logger = logging.getLogger(__name__)
 

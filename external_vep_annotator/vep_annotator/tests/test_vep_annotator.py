@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from gain.annotation.annotatable import Annotatable, VCFAllele
+from gain.annotation.annotation_factory import load_pipeline_from_yaml
 from pytest_mock import MockerFixture
 
 from vep_annotator.vep_annotator import VEPCacheAnnotator

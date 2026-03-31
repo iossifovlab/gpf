@@ -2,7 +2,7 @@
 import pathlib
 import textwrap
 
-from dae.genomic_resources.testing import setup_directories
+from gain.genomic_resources.testing import setup_directories
 from dae.import_tools.import_tools import ImportProject
 from dae.testing.foobar_import import foobar_gpf
 

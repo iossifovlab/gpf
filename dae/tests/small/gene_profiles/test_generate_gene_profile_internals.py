@@ -20,12 +20,12 @@ from dae.gene_profile.generate_gene_profile import (
 from dae.gene_profile.generate_gene_profile import (
     main as gp_main,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import (
     setup_directories,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.utils.testing import (
     setup_t4c8_grr,
     setup_t4c8_instance,

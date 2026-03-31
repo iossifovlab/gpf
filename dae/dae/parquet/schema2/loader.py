@@ -18,7 +18,7 @@ from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     load_schema2_dataset_layout,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory

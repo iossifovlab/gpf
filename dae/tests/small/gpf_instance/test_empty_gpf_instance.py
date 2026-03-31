@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_empty_gene_models,
     setup_genome,
 )

@@ -20,7 +20,7 @@ from dae.gpf_instance.adjustments.adjust_duckdb_storage import (
 from dae.gpf_instance.adjustments.adjust_impala_storage import (
     AdjustImpalaStorageCommand,
 )
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_instance_adjustments")
 

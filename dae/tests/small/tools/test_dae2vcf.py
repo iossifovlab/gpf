@@ -4,10 +4,10 @@ import textwrap
 
 import pysam
 import pytest
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     GenomicResourceRepo,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_dae_transmitted,
     setup_pedigree,
 )

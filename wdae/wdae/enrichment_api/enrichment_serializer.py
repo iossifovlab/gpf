@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from dae.effect_annotation.effect import EffectTypesMixin
+from gain.effect_annotation.effect import EffectTypesMixin
 from dae.enrichment_tool.event_counters import EnrichmentSingleResult
 
 

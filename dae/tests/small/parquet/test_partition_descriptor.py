@@ -6,12 +6,12 @@ import sys
 import textwrap
 
 import pytest
-from dae.genomic_resources.testing import setup_directories
+from gain.genomic_resources.testing import setup_directories
 from dae.parquet.partition_descriptor import (
     Partition,
     PartitionDescriptor,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:

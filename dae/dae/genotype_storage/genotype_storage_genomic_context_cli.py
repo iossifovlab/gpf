@@ -14,7 +14,7 @@ GC_GENOTYPE_STORAGES_KEY : str
 
 See Also
 --------
-dae.genomic_resources.genomic_context
+gain.genomic_resources.genomic_context
     High-level orchestration and provider registration functions.
 dae.genotype_storage.genotype_storage_registry.GenotypeStorageRegistry
     The registry implementation for managing multiple genotype storages.
@@ -28,7 +28,7 @@ from typing import Any
 
 import yaml
 
-from dae.genomic_resources.genomic_context_base import (
+from gain.genomic_resources.genomic_context_base import (
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
@@ -169,7 +169,7 @@ def get_context_genotype_storages(
     Notes
     -----
     This helper is analogous to
-    :func:`dae.annotation.annotation_genomic_context_cli.get_context_pipeline`
+    :func:`gain.annotation.annotation_genomic_context_cli.get_context_pipeline`
     and provides type-safe access to the genotype storage registry within the
     context system.
     """

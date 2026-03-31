@@ -24,7 +24,7 @@ from sqlglot.expressions import (
 )
 
 from dae.pheno.common import MeasureType
-from dae.utils.sql_utils import to_duckdb_transpile
+from gain.utils.sql_utils import to_duckdb_transpile
 
 
 class PhenoBrowser:

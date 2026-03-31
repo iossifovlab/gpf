@@ -5,7 +5,7 @@ from typing import Any, TextIO
 
 import numpy as np
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils.variant_utils import get_interval_locus_ploidy
 from dae.variants.core import Allele

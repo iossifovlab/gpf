@@ -5,10 +5,10 @@ from collections.abc import Callable
 from typing import Any
 
 import pytest
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
     setup_pedigree,

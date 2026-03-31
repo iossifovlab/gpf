@@ -13,30 +13,31 @@ from typing import Any
 
 import yaml
 
-from dae.annotation.annotate_utils import (
+from gain.annotation.annotate_utils import (
+    add_input_files_to_task_graph,
     build_cli_genomic_context,
     cache_pipeline_resources,
     get_grr_from_context,
     get_pipeline_from_context,
 )
-from dae.annotation.annotation_config import (
+from gain.annotation.annotation_config import (
     RawPipelineConfig,
 )
-from dae.annotation.annotation_factory import (
+from gain.annotation.annotation_factory import (
     build_annotation_pipeline,
     load_pipeline_from_yaml,
 )
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
 )
-from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.cli import VerbosityConfiguration
+from gain.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
 )
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.parquet.parquet_writer import (
@@ -63,11 +64,11 @@ from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from dae.task_graph.cache import TaskCache
-from dae.task_graph.cli_tools import TaskGraphCli, task_graph_run
-from dae.task_graph.graph import Task, TaskGraph
-from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
-from dae.utils.regions import Region, split_into_regions
+from gain.task_graph.cache import TaskCache
+from gain.task_graph.cli_tools import TaskGraphCli, task_graph_run
+from gain.task_graph.graph import Task, TaskGraph
+from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
+from gain.utils.regions import Region, split_into_regions
 
 logger = logging.getLogger("parquet_schema2_annotation")
 

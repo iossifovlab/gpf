@@ -4,7 +4,7 @@ import textwrap
 from typing import Any, cast
 
 import pytest
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )

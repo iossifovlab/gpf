@@ -3,15 +3,15 @@ import pathlib  # noqa: I001
 from collections.abc import Callable
 
 import pytest
-from dae.effect_annotation.effect import EffectGene
+from gain.effect_annotation.effect import EffectGene
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree, setup_vcf,
 )
 from dae.testing.import_helpers import vcf_study
 from dae.testing.foobar_import import foobar_gpf
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="module")

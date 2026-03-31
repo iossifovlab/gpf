@@ -2,7 +2,7 @@
 import pathlib
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
@@ -13,7 +13,7 @@ from dae.parquet_storage.storage import ParquetGenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 VCF_PED = """
 familyId personId dadId momId sex status role

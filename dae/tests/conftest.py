@@ -6,11 +6,11 @@ from typing import Any, cast
 
 import pytest
 import pytest_mock
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     get_genomic_context,
     register_context,
 )
-from dae.genomic_resources.genomic_context_base import (
+from gain.genomic_resources.genomic_context_base import (
     GenomicContext,
 )
 from dae.genotype_storage.genotype_storage_registry import (
@@ -334,10 +334,10 @@ def context_fixture(
         "DAE_DB_DIR": conf_dir,
     })
     mocker.patch(
-        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        "gain.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
         [])
     mocker.patch(
-        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        "gain.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
         [])
     context = get_genomic_context()
     assert context is not None
@@ -352,11 +352,11 @@ def gpf_instance_genomic_context_fixture(
 
     def builder(gpf_instance: GPFInstance) -> GenomicContext:
         mocker.patch(
-            "dae.genomic_resources.genomic_context."
+            "gain.genomic_resources.genomic_context."
             "_REGISTERED_CONTEXT_PROVIDERS",
             [])
         mocker.patch(
-            "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+            "gain.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
             [])
 
         context = GPFInstanceGenomicContext(gpf_instance)
@@ -373,7 +373,7 @@ def clean_genomic_context(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     mocker.patch(
-        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        "gain.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
         [])
 
 
@@ -382,5 +382,5 @@ def clean_genomic_context_providers(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     mocker.patch(
-        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        "gain.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
         [])

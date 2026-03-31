@@ -15,16 +15,16 @@ from typing import Any, cast
 import yaml
 from box import Box
 
-from dae.annotation.annotation_factory import (
+from gain.annotation.annotation_factory import (
     AnnotationPipeline,
     RawPipelineConfig,
     build_annotation_pipeline,
 )
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     GenomicContext,
 )
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
@@ -39,10 +39,10 @@ from dae.parquet.partition_descriptor import (
 )
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.task_graph.graph import TaskGraph
-from dae.utils import fs_utils
-from dae.utils.regions import Region
-from dae.utils.stats_collection import StatsCollection
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
+from gain.utils.regions import Region
+from gain.utils.stats_collection import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.parquet.loader import ParquetLoader

@@ -2,17 +2,17 @@ import argparse
 import logging
 import sys
 
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     context_providers_add_argparser_arguments,
     context_providers_init,
     get_genomic_context,
 )
 from dae.import_tools.import_tools import ImportProject
-from dae.task_graph.cli_tools import TaskGraphCli, task_graph_run
-from dae.task_graph.executor import TaskGraphExecutor
-from dae.task_graph.sequential_executor import SequentialExecutor
-from dae.utils import fs_utils
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.task_graph.cli_tools import TaskGraphCli, task_graph_run
+from gain.task_graph.executor import TaskGraphExecutor
+from gain.task_graph.sequential_executor import SequentialExecutor
+from gain.utils import fs_utils
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

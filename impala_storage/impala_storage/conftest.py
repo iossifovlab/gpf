@@ -15,14 +15,14 @@ from dae.configuration.gpf_config_parser import (
     GPFConfigParser,
 )
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.genomic_resources.gene_models.gene_models_factory import (
+from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
-from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.group_repository import GenomicResourceGroupRepo
+from gain.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.genotype_storage.genotype_storage_registry import (

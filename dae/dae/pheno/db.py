@@ -19,7 +19,7 @@ from sqlglot.expressions import (
 )
 
 from dae.pheno.common import MeasureType
-from dae.utils.sql_utils import glot_and, to_duckdb_transpile
+from gain.utils.sql_utils import glot_and, to_duckdb_transpile
 from dae.variants.attributes import Role, Sex, Status
 
 

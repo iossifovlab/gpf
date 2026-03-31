@@ -2,12 +2,12 @@
 
 import pytest
 import pytest_mock
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     build_s3_test_bucket,
     build_s3_test_filesystem,
     setup_vcf,
 )
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 

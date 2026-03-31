@@ -7,16 +7,16 @@ from contextlib import closing
 import pandas as pd
 import pysam
 import pytest
-from dae.genomic_resources.genomic_context import (
+from gain.genomic_resources.genomic_context import (
     GenomicContext,
     SimpleGenomicContext,
     register_context,
 )
-from dae.genomic_resources.liftover_chain import (
+from gain.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import (
     build_filesystem_test_repository,
     convert_to_tab_separated,
     setup_dae_transmitted,
@@ -35,7 +35,7 @@ from dae.tools.liftover_tools import (
     denovo_liftover_main,
     vcf_liftover_main,
 )
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from pytest_mock import MockerFixture
 
 

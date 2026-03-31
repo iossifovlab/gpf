@@ -2,15 +2,15 @@ import logging
 import pathlib
 import textwrap
 
-from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.repository import (
+from gain.genomic_resources.cli import cli_manage
+from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
-from dae.genomic_resources.repository_factory import (
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
     setup_vcf,

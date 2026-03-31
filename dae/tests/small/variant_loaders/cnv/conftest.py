@@ -3,7 +3,7 @@ import io
 import textwrap
 
 import pytest
-from dae.genomic_resources.testing import convert_to_tab_separated
+from gain.genomic_resources.testing import convert_to_tab_separated
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 

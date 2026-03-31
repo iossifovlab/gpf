@@ -2,7 +2,7 @@ from collections import Counter
 from collections.abc import Iterable
 from typing import Any, cast
 
-from dae.effect_annotation.effect import EffectTypesMixin
+from gain.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
 from dae.variants.family_variant import FamilyVariant

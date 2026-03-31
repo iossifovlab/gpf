@@ -1,8 +1,8 @@
 from collections.abc import Callable, Generator, Sequence
 from typing import Any, TextIO
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.utils.dae_utils import dae2vcf_variant
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import allele_type_from_cshl_variant
 
 

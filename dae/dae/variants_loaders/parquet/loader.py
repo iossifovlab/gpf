@@ -1,6 +1,6 @@
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.schema2.loader import ParquetLoader as Schema2Loader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 from dae.variants_loaders.raw.loader import (
     CLIArgument,
     FullVariantsIterator,

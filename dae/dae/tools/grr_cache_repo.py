@@ -6,16 +6,16 @@ import os
 import sys
 import time
 
-from dae.annotation.annotation_factory import load_pipeline_from_file
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.cached_repository import cache_resources
-from dae.genomic_resources.repository_factory import (
+from gain.annotation.annotation_factory import load_pipeline_from_file
+from gain.annotation.annotation_pipeline import AnnotationPipeline
+from gain.genomic_resources.cached_repository import cache_resources
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
     get_default_grr_definition,
     load_definition_file,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("grr_cache_repo")
 

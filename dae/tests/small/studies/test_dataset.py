@@ -2,7 +2,7 @@
 import time
 
 import pytest
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.studies.study import GenotypeData
 from dae.testing.acgt_import import acgt_gpf
 from dae.testing.import_helpers import setup_dataset, vcf_study

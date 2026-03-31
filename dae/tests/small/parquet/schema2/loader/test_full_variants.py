@@ -2,14 +2,14 @@
 import pathlib
 
 import pytest
-from dae.genomic_resources.testing import (
+from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
 from dae.gpf_instance import GPFInstance
 from dae.parquet.schema2.loader import ParquetLoader
 from dae.testing.import_helpers import vcf_study
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="module")

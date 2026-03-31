@@ -7,13 +7,13 @@ from typing import Any
 
 from jinja2 import Template
 
-from dae.gene_scores.gene_scores import (
+from gain.gene_scores.gene_scores import (
     GeneScore,
     GeneScoresDb,
     build_gene_score_from_resource,
 )
-from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.histogram import (
+from gain.genomic_resources import GenomicResource
+from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
     NullHistogramConfig,
@@ -21,11 +21,11 @@ from dae.genomic_resources.histogram import (
     NumberHistogramConfig,
     plot_histogram,
 )
-from dae.genomic_resources.resource_implementation import (
+from gain.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
-from dae.task_graph.graph import TaskDesc, TaskGraph
+from gain.task_graph.graph import TaskDesc, TaskGraph
 
 logger = logging.getLogger(__name__)
 

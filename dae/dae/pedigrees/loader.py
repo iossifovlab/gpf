@@ -20,7 +20,7 @@ from dae.pedigrees.family import (
 )
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
 from dae.pedigrees.layout import Layout
-from dae.utils.helpers import str2bool
+from gain.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants_loaders.raw.loader import CLIArgument, CLILoader
 

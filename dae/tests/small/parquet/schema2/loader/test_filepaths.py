@@ -2,7 +2,7 @@
 import os
 
 from dae.parquet.schema2.loader import ParquetLoader
-from dae.utils.regions import Region
+from gain.utils.regions import Region
 
 
 def test_get_summary_pq_filepaths_nonpartitioned(

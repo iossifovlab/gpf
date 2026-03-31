@@ -3,10 +3,10 @@ import gzip
 import pathlib
 
 import pytest
-from dae.genomic_resources.gene_models.gene_models_factory import (
+from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_file,
 )
-from dae.genomic_resources.testing import convert_to_tab_separated
+from gain.genomic_resources.testing import convert_to_tab_separated
 from dae.tools.to_gpf_gene_models_format import main
 
 REFFLAT_CONTENT = """

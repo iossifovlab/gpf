@@ -5,9 +5,9 @@ import functools
 import logging
 from typing import Any, cast
 
-from dae.effect_annotation.effect import expand_effect_types
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.effect_annotation.effect import expand_effect_types
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryRunner
 from dae.variants.family_variant import FamilyVariant

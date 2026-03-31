@@ -1,14 +1,14 @@
 import pathlib
 import textwrap
 
-from dae.genomic_resources.gene_models.gene_models_factory import (
+from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import setup_directories
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import setup_directories
 from dae.gpf_instance import GPFInstance
 
 

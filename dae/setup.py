@@ -27,53 +27,19 @@ setuptools.setup(
     package_data={
         "dae": ["py.typed"],
         "dae.dask": ["named_cluster.yaml"],
-        "dae.annotation": ["templates/annotate_doc_pipeline_template.jinja"],
-        "dae.genomic_resources": ["repo_info_scripts.html"],
     },
     scripts=[
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
-    default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider
-    cli_genomic_context=dae.genomic_resources.genomic_context_cli:CLIGenomicContextProvider
-    cli_annotation_context=dae.annotation.annotation_genomic_context_cli:CLIAnnotationContextProvider
     gpf_instance_context=dae.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider
 
     [dae.genomic_resources.implementations]
     gene_set_collection=dae.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
     gene_set=dae.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
     gene_score=dae.gene_scores.implementations.gene_scores_impl:build_gene_score_implementation_from_resource
-    position_score=dae.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
-    np_score=dae.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
-    allele_score=dae.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
-    liftover_chain=dae.genomic_resources.implementations.liftover_chain_impl:LiftoverChainImplementation
-    genome=dae.genomic_resources.implementations.reference_genome_impl:ReferenceGenomeImplementation
-    vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
-    gene_models=dae.genomic_resources.implementations.gene_models_impl:GeneModelsImpl
-    cnv_collection=dae.genomic_resources.implementations.genomic_scores_impl:CnvCollectionImplementation
     gene_weights_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
     samocha_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
-    annotation_pipeline=dae.genomic_resources.implementations.annotation_pipeline_impl:AnnotationPipelineImplementation
-
-    [dae.annotation.annotators]
-    allele_score=dae.annotation.score_annotator:build_allele_score_annotator
-    allele_score_annotator=dae.annotation.score_annotator:build_allele_score_annotator
-    np_score=dae.annotation.score_annotator:build_np_score_annotator
-    np_score_annotator=dae.annotation.score_annotator:build_np_score_annotator
-    position_score=dae.annotation.score_annotator:build_position_score_annotator
-    position_score_annotator=dae.annotation.score_annotator:build_position_score_annotator
-    effect_annotator=dae.annotation.effect_annotator:build_effect_annotator
-    gene_set_annotator=dae.annotation.gene_set_annotator:build_gene_set_annotator
-    liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
-    basic_liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
-    bcf_liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
-    normalize_allele_annotator=dae.annotation.normalize_allele_annotator:build_normalize_allele_annotator
-    gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
-    simple_effect_annotator=dae.annotation.simple_effect_annotator:build_simple_effect_annotator
-    cnv_collection=dae.annotation.cnv_collection_annotator:build_cnv_collection_annotator
-    cnv_collection_annotator=dae.annotation.cnv_collection_annotator:build_cnv_collection_annotator
-    chrom_mapping=dae.annotation.chrom_mapping_annotator:build_chrom_mapping_annotator
-    debug_annotator=dae.annotation.debug_annotator:build_annotator
 
     [dae.genotype_storage.factories]
     inmemory=dae.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
@@ -95,20 +61,9 @@ setuptools.setup(
     parquet=dae.parquet_storage.storage:ParquetImportStorage
 
     [console_scripts]
-    demo_graphs_cli=dae.task_graph.demo_graphs_cli:main
-
-    grr_manage=dae.genomic_resources.cli:cli_manage
-    grr_browse=dae.genomic_resources.cli:cli_browse
     grr_cache_repo=dae.tools.grr_cache_repo:cli_cache_repo
 
-    annotate_variant_effects=dae.effect_annotation.cli:cli_columns
-    annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
-
-    annotate_columns=dae.annotation.annotate_columns:cli
-    annotate_vcf=dae.annotation.annotate_vcf:cli
-    annotate_doc=dae.annotation.annotate_doc:cli
     annotate_schema2_parquet=dae.parquet.schema2.annotate_schema2_parquet:cli
-    reannotate_instance=dae.annotation.reannotate_instance:cli
     pheno_import=dae.pheno.pheno_import:main
     import_tools_pheno=dae.pheno.import_tools:main
     import_phenotypes=dae.pheno.import_tools:main
@@ -120,8 +75,6 @@ setuptools.setup(
 
     ped2ped=dae.tools.ped2ped:main
     draw_pedigree=dae.tools.draw_pedigree:main
-    draw_score_histograms=dae.genomic_resources.draw_score_histograms:main
-
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
     gpf_instance_adjustments=dae.gpf_instance.adjustments.gpf_instance_adjustments:cli

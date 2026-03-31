@@ -11,30 +11,30 @@ from typing import Any, cast
 import yaml
 from box import Box
 
-from dae.annotation.annotation_factory import (
+from gain.annotation.annotation_factory import (
     RawPipelineConfig,
     build_annotation_pipeline,
 )
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from gain.annotation.annotation_pipeline import AnnotationPipeline
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
-from dae.gene_scores.gene_scores import GeneScore
-from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
+from gain.gene_scores.gene_scores import GeneScore
+from gain.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
-from dae.gene_sets.gene_sets_db import (
+from gain.gene_sets.gene_sets_db import (
     GeneSetsDb,
     build_gene_set_collection_from_resource,
 )
-from dae.genomic_resources.gene_models import (
+from gain.genomic_resources.gene_models import (
     GeneModels,
     TranscriptModel,
 )
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_scores.scores import GenomicScoresRegistry
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_scores.scores import GenomicScoresRegistry
 from dae.pheno.pheno_data import (
     PhenotypeData,
     get_pheno_db_dir,
@@ -46,7 +46,7 @@ from dae.pheno.storage import (
 )
 from dae.studies.study import GenotypeData
 from dae.studies.variants_db import VariantsDb
-from dae.utils.fs_utils import find_directory_with_a_file
+from gain.utils.fs_utils import find_directory_with_a_file
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +160,7 @@ class GPFInstance:
             return self._grr
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources.repository_factory import (
+        from gain.genomic_resources.repository_factory import (
             build_genomic_resource_repository,
         )
         if self.dae_config.grr:
@@ -177,7 +177,7 @@ class GPFInstance:
             return self._reference_genome
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources.reference_genome import (
+        from gain.genomic_resources.reference_genome import (
             build_reference_genome_from_resource,
         )
 
@@ -196,7 +196,7 @@ class GPFInstance:
             return self._gene_models
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources.gene_models.gene_models_factory import (
+        from gain.genomic_resources.gene_models.gene_models_factory import (
             build_gene_models_from_resource,
         )
 
@@ -279,7 +279,7 @@ class GPFInstance:
     @cached_property
     def gene_scores_db(self) -> Any:
         """Load and return gene scores db."""
-        from dae.gene_scores.gene_scores import (
+        from gain.gene_scores.gene_scores import (
             GeneScoresDb,
             build_gene_score_from_resource,
         )

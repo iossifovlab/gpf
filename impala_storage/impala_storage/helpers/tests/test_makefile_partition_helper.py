@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pytest_mock
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from gain.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
 

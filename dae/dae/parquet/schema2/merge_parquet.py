@@ -9,7 +9,7 @@ from deprecation import deprecated
 from fsspec.core import url_to_fs
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.utils import fs_utils
+from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

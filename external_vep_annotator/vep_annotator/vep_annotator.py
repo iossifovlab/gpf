@@ -9,27 +9,27 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, TextIO, cast
 
-from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_factory import AnnotationConfigParser
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotatable import Annotatable, VCFAllele
+from gain.annotation.annotation_factory import AnnotationConfigParser
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     AnnotatorInfo,
 )
-from dae.annotation.annotator_base import AttributeDesc
-from dae.annotation.docker_annotator import DockerAnnotator
-from dae.annotation.utils import (
+from gain.annotation.annotator_base import AttributeDesc
+from gain.annotation.docker_annotator import DockerAnnotator
+from gain.annotation.utils import (
     find_annotator_gene_models,
     find_annotator_reference_genome,
 )
-from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-from dae.genomic_resources.gene_models.gene_models_factory import (
+from gain.genomic_resources.cached_repository import GenomicResourceCachedRepo
+from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
-from dae.genomic_resources.gene_models.serialization import (
+from gain.genomic_resources.gene_models.serialization import (
     gene_models_to_gtf,
 )
-from dae.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.repository import GenomicResource
 
 from vep_annotator.vep_attributes import effect_attributes, full_attributes
 

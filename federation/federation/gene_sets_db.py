@@ -4,7 +4,7 @@ import logging
 from functools import cached_property
 from typing import Any
 
-from dae.gene_sets.gene_sets_db import (
+from gain.gene_sets.gene_sets_db import (
     BaseGeneSetCollection,
     GeneSet,
     GeneSetsDb,

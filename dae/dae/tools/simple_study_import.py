@@ -13,7 +13,7 @@ from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
 from dae.pedigrees.loader import FamiliesLoader
 from dae.tools import generate_common_report, generate_denovo_gene_sets
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader

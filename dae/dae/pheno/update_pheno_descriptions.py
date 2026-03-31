@@ -12,8 +12,8 @@ from dae.pheno.pheno_import import (
     load_instrument_descriptions,
     load_measure_descriptions,
 )
-from dae.task_graph.cli_tools import TaskGraphCli
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 
