@@ -5,12 +5,12 @@ from typing import Any
 import pytest
 import yaml
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.genotype_storage.genotype_storage_registry import (
+from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
-from dae.studies.study import GenotypeData
-from dae.testing.foobar_import import foobar_gpf
-from dae.testing.import_helpers import vcf_study
+from gpf.studies.study import GenotypeData
+from gpf.testing.foobar_import import foobar_gpf
+from gpf.testing.import_helpers import vcf_study
 
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 

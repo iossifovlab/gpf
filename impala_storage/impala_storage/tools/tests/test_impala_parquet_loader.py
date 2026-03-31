@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Callable
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.tools.impala_parquet_loader import main
 

@@ -13,17 +13,17 @@ from typing import Any, ClassVar, cast
 import numpy as np
 import pyarrow as pa
 from gain.annotation.annotation_pipeline import AttributeInfo
-from dae.pedigrees.family import Family
-from dae.variants.attributes import (
+from gpf.pedigrees.family import Family
+from gpf.variants.attributes import (
     GeneticModel,
     Inheritance,
     Role,
     Sex,
     TransmissionType,
 )
-from dae.variants.core import Allele
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.variant import (
+from gpf.variants.core import Allele
+from gpf.variants.family_variant import FamilyAllele, FamilyVariant
+from gpf.variants.variant import (
     SummaryAllele,
     SummaryVariant,
     SummaryVariantFactory,

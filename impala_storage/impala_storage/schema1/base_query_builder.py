@@ -3,17 +3,17 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from typing import Any
 
-import dae.utils.regions
+import gpf.utils.regions
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
-from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.attribute_queries import (
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression_schema1,
 )
 from gain.utils.regions import Region
-from dae.variants.attributes import Inheritance, Role, Sex
-from dae.variants.core import Allele
+from gpf.variants.attributes import Inheritance, Role, Sex
+from gpf.variants.core import Allele
 from sqlglot import column
 
 logger = logging.getLogger(__name__)

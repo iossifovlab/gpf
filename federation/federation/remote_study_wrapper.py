@@ -3,8 +3,8 @@ import logging
 from collections.abc import Generator, Iterable
 from typing import Any, cast
 
-from dae.pedigrees.families_data import FamiliesData
-from dae.variants.variant import SummaryVariant
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.variants.variant import SummaryVariant
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     ResponseTransformerProtocol,

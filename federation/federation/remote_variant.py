@@ -4,10 +4,10 @@ import math
 from copy import copy
 from typing import Any
 
-from dae.pedigrees.family import Family
-from dae.utils.variant_utils import str2fgt, str2mat
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.variant import SummaryAllele, SummaryVariant
+from gpf.pedigrees.family import Family
+from gpf.utils.variant_utils import str2fgt, str2mat
+from gpf.variants.family_variant import FamilyAllele, FamilyVariant
+from gpf.variants.variant import SummaryAllele, SummaryVariant
 
 SUMMARY_QUERY_SOURCES = [
     {"source": "chrom"},

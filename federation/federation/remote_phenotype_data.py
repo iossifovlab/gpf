@@ -5,15 +5,15 @@ from collections.abc import Generator, Iterable
 from typing import Any, cast
 
 import pandas as pd
-from dae.common_reports.common_report import CommonReport
-from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets.person_sets import (
+from gpf.common_reports.common_report import CommonReport
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.person_sets.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
 )
-from dae.pheno.common import ImportManifest, MeasureType
-from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
-from dae.variants.attributes import Role
+from gpf.pheno.common import ImportManifest, MeasureType
+from gpf.pheno.pheno_data import Instrument, Measure, PhenotypeData
+from gpf.variants.attributes import Role
 
 from federation.utils import prefix_remote_identifier, prefix_remote_name
 from rest_client.rest_client import RESTClient

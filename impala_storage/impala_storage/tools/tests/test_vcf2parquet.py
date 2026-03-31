@@ -5,7 +5,7 @@ import os
 from typing import Callable
 
 import pyarrow.parquet as pq
-from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.tools.vcf2parquet import main
 

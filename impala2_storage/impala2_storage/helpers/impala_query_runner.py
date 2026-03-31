@@ -6,7 +6,7 @@ from typing import Any, Callable
 import impala
 
 # from gain.utils.debug_closing import closing
-from dae.query_variants.query_runners import QueryRunner
+from gpf.query_variants.query_runners import QueryRunner
 from impala.hiveserver2 import HiveServer2Connection
 from sqlalchemy import exc
 from sqlalchemy.pool import QueuePool

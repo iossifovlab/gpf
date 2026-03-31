@@ -4,10 +4,10 @@ import pathlib
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.studies.study import GenotypeData
-from dae.testing.alla_import import alla_gpf
-from dae.testing.import_helpers import vcf_study
+from gpf.genotype_storage.genotype_storage import GenotypeStorage
+from gpf.studies.study import GenotypeData
+from gpf.testing.alla_import import alla_gpf
+from gpf.testing.import_helpers import vcf_study
 from gain.utils.regions import Region
 
 

@@ -6,18 +6,18 @@ from collections.abc import Iterator
 from typing import cast
 
 import toml
-from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import (
+from gpf.configuration.study_config_builder import StudyConfigBuilder
+from gpf.import_tools.import_tools import (
     Bucket,
     ImportProject,
     ImportStorage,
     save_study_config,
 )
-from dae.parquet.parquet_writer import merge_variants_parquets
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.parquet.parquet_writer import merge_variants_parquets
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gain.task_graph.graph import TaskGraph
 from gain.utils import fs_utils
-from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
+from gpf.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,

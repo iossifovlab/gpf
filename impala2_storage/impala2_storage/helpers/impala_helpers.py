@@ -6,7 +6,7 @@ import time
 from contextlib import closing
 from typing import Any
 
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 from impala import dbapi
 from impala.hiveserver2 import HiveServer2Connection
 from sqlalchemy import exc, pool

@@ -4,9 +4,9 @@ from typing import Any
 
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
-from dae.pedigrees.families_data import FamiliesData
+from gpf.pedigrees.families_data import FamiliesData
 from gain.utils.regions import Region
-from dae.variants.attributes import Role, Sex, Status
+from gpf.variants.attributes import Role, Sex, Status
 
 from impala_storage.schema1.base_query_builder import BaseQueryBuilder
 from impala_storage.schema1.serializers import AlleleParquetSerializer

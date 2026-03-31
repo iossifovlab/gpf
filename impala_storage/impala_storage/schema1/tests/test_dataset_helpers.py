@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf.gpf_instance.gpf_instance import GPFInstance
 from pytest_mock.plugin import MockerFixture
 
 from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers

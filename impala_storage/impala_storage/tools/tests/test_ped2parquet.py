@@ -3,8 +3,8 @@ import os
 
 import pyarrow.parquet as pq
 import pytest
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.pedigrees.families_data import FamiliesData
+from gpf.parquet.partition_descriptor import PartitionDescriptor
+from gpf.pedigrees.families_data import FamiliesData
 
 from impala_storage.tools.ped2parquet import main
 

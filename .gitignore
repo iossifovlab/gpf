@@ -102,7 +102,6 @@ userdocs/wdae
 *.retry
 gpf-html.tar.gz
 gpf-user-html.tar.gz
-gpf
 
 coverage/
 *.log

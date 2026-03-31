@@ -1,4 +1,4 @@
-from dae.utils.variant_utils import reverse_complement
+from gpf.utils.variant_utils import reverse_complement
 from spliceai_annotator.utils import (
     one_hot_decode,
     one_hot_encode,

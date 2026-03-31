@@ -4,9 +4,9 @@ from typing import Any, Callable, Dict, List
 
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
-from dae.pedigrees.families_data import FamiliesData
+from gpf.pedigrees.families_data import FamiliesData
 from gain.utils.regions import Region
-from dae.variants.variant import SummaryVariant
+from gpf.variants.variant import SummaryVariant
 
 from impala_storage.schema1.base_query_builder import (
     BaseQueryBuilder,

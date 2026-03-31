@@ -2,8 +2,8 @@
 import pytest
 import pytest_mock
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 
 from impala_storage.helpers.partition_helper import MakefilePartitionHelper
 

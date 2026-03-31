@@ -2,7 +2,7 @@ from collections import defaultdict
 from math import ceil
 
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 
 
 class MakefilePartitionHelper:

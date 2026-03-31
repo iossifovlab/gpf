@@ -10,7 +10,7 @@ import sys
 from typing import Any, cast
 
 import yaml
-from dae.genotype_storage.genotype_storage_registry import (
+from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 

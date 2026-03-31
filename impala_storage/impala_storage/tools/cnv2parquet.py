@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants_loaders.cnv.loader import CNVLoader
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.variants_loaders.cnv.loader import CNVLoader
 
 from impala_storage.schema1.import_commons import Variants2ParquetTool
 

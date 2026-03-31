@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 import pytest
-from dae.pedigrees.family import Family, Person
+from gpf.pedigrees.family import Family, Person
 from federation.remote_variant import (
     RemoteAllele,
     RemoteFamilyAllele,

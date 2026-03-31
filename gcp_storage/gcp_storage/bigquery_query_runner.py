@@ -4,7 +4,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from dae.query_variants.query_runners import QueryRunner
+from gpf.query_variants.query_runners import QueryRunner
 from google.cloud.bigquery.client import Client
 
 logger = logging.getLogger(__name__)

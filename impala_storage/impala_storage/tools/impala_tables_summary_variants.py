@@ -9,8 +9,8 @@ from contextlib import closing
 from typing import Any
 
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeDataStudy
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.studies.study import GenotypeDataStudy
 from gain.utils.regions import Region
 from gain.utils.verbosity_configuration import VerbosityConfiguration
 

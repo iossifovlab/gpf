@@ -8,12 +8,12 @@ from typing import Any, ClassVar, cast
 import toml
 from box import Box
 from cerberus import Validator
-from dae.configuration.utils import validate_path
+from gpf.configuration.utils import validate_path
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.query_variants.base_query_variants import QueryVariantsBase
+from gpf.genotype_storage.genotype_storage import GenotypeStorage
+from gpf.parquet.partition_descriptor import PartitionDescriptor
+from gpf.query_variants.base_query_variants import QueryVariantsBase
 
 from impala_storage.helpers.hdfs_helpers import HdfsHelpers
 from impala_storage.helpers.impala_helpers import ImpalaHelpers
