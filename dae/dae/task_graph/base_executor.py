@@ -178,7 +178,28 @@ class TaskGraphExecutorBase(TaskGraphExecutor):
                 if record.type != CacheRecordType.COMPUTED:
                     uncomputed_tasks.add(task)
                 cached_tasks[task] = record
+
+            intermediates_needing_recompute = set()
             for task in uncomputed_tasks:
+                task_desc = graph.get_task_desc(task)
+                for input_file in task_desc.input_files:
+                    if os.path.exists(input_file):
+                        continue
+                    for ancestor_task in networkx.ancestors(di_graph, task):
+                        ancestor_desc = graph.get_task_desc(ancestor_task)
+                        if (
+                            input_file in ancestor_desc.output_files or
+                            input_file in
+                            ancestor_desc.intermediate_output_files
+                        ):
+                            cached_tasks[ancestor_task] = \
+                                cached_tasks[ancestor_task].invalidate()
+                            intermediates_needing_recompute.add(ancestor_task)
+
+            uncomputed_tasks.update(intermediates_needing_recompute)
+
+            for task in uncomputed_tasks:
+                task_desc = graph.get_task_desc(task)
                 descendants = networkx.descendants(di_graph, task)
                 for descendant_task in descendants:
                     cached_tasks[descendant_task] = \
