@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import pathlib
 import textwrap
 
@@ -9,14 +8,12 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_directories,
 )
-from gpf.gpf_instance.gpf_instance import GPFInstance
-from gpf.testing.t4c8_import import t4c8_gpf
 
 pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 @pytest.fixture
-def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
+def annotate_doc_root(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path
     setup_directories(
         root_path,
@@ -61,21 +58,20 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
         chr1   4          0.01
     """)
     setup_denovo(root_path / "one" / "data.txt", one_content)
-    return t4c8_gpf(root_path)
+    return root_path
 
 
 def test_annotate_doc(
     tmp_path: pathlib.Path,
-    t4c8_instance: GPFInstance,
+    annotate_doc_root: pathlib.Path,
 ) -> None:
-    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    root_path = annotate_doc_root
     pipeline_config = str(root_path / "pipeline_config.yaml")
     output_file = tmp_path / "output.html"
 
     cli([
         pipeline_config,
         "-o", str(output_file),
-        "-i", os.path.join(t4c8_instance.dae_dir, "gpf_instance.yaml"),
         "-g", str(root_path / "grr.yaml"),
     ])
 

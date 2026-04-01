@@ -25,8 +25,7 @@ from gain.genomic_resources.testing import (
     setup_genome,
     setup_gzip,
 )
-from gpf.testing.t4c8_import import t4c8_genes, t4c8_genome
-from gpf.utils.testing import setup_t4c8_grr
+from gain.testing.t4c8_import import setup_t4c8_grr, t4c8_genes, t4c8_genome
 
 
 @pytest.fixture(scope="module")

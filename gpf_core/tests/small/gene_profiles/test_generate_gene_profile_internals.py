@@ -26,8 +26,8 @@ from gain.genomic_resources.testing import (
 )
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gain.utils.regions import Region
+from gain.testing.t4c8_import import setup_t4c8_grr
 from gpf.utils.testing import (
-    setup_t4c8_grr,
     setup_t4c8_instance,
 )
 

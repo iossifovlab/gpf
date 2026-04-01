@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 from gain.effect_annotation.annotator import EffectAnnotator
-from gpf.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
 
 
 def test_t4c8_genome(tmp_path: pathlib.Path) -> None:

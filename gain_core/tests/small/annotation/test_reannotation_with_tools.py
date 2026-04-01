@@ -21,7 +21,7 @@ from gain.genomic_resources.testing import (
 import pytest_mock
 import gain.annotation.annotate_columns
 import gain.annotation.annotate_vcf
-from gpf.testing.foobar_import import foobar_genes, foobar_genome
+from gain.testing.foobar_import import foobar_genes, foobar_genome
 
 pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 

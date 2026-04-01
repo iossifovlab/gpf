@@ -20,7 +20,7 @@ from gain.genomic_resources.testing import (
     setup_gene_models,
     setup_genome,
 )
-from gpf.testing.t4c8_import import GENOME_CONTENT, GMM_CONTENT
+from gain.testing.t4c8_import import GENOME_CONTENT, GMM_CONTENT
 
 
 @pytest.fixture

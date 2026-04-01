@@ -29,7 +29,7 @@ from gain.genomic_resources.testing import (
     build_inmemory_test_resource,
     convert_to_tab_separated,
 )
-from gpf.testing.t4c8_import import t4c8_genes
+from gain.testing.t4c8_import import t4c8_genes
 
 
 @pytest.fixture

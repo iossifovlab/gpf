@@ -385,6 +385,7 @@ EOT
               --cov gpf_web \
               gpf_web || true'
       }
+    }
 
     # wait for the asynchronously ran tests to finish and copy their results
     {

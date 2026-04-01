@@ -10,7 +10,7 @@ from gain.genomic_resources.testing import (
     setup_directories,
     setup_vcf,
 )
-from gpf.testing.t4c8_import import (
+from gain.testing.t4c8_import import (
     t4c8_grr,
 )
 

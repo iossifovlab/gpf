@@ -30,11 +30,11 @@ from gain.genomic_resources.testing import (
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_data import PhenotypeData
 from gpf.studies.study import GenotypeData
-from gpf.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gain.testing.t4c8_import import setup_t4c8_grr
 from gpf.utils.testing import (
     _t4c8_study_1_ped,
     _t4c8_study_1_vcf,
-    setup_t4c8_grr,
     setup_t4c8_instance,
 )
 

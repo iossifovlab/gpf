@@ -2,100 +2,27 @@ import logging
 import pathlib
 import textwrap
 
-from gain.genomic_resources.cli import cli_manage
 from gain.genomic_resources.repository import (
-    GR_CONF_FILE_NAME,
     GenomicResourceRepo,
-)
-from gain.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
 )
 from gain.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
     setup_vcf,
 )
+from gain.testing.t4c8_import import setup_t4c8_grr
+
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_import import main as pheno_import
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import setup_dataset_config, vcf_study
 from gpf.testing.setup_helpers import setup_gpf_instance
-from gpf.testing.t4c8_import import t4c8_genes, t4c8_genome
 from gpf.tools.generate_denovo_gene_sets import (
     main as generate_denovo_gene_sets,
 )
 
 logger = logging.getLogger(__name__)
-
-
-###############################################################################
-
-
-def setup_t4c8_grr(
-    root_path: pathlib.Path,
-) -> GenomicResourceRepo:
-    """Setup a genomic resource repository for t4c8 test instance."""
-
-    repo_path = root_path
-    t4c8_genome(repo_path)
-    t4c8_genes(repo_path)
-
-    setup_directories(
-        repo_path / "gene_scores" / "t4c8_score",
-        {
-            GR_CONF_FILE_NAME:
-            """
-                type: gene_score
-                filename: t4c8_gene_score.csv
-                scores:
-                - id: t4c8_score
-                  desc: t4c8 gene score
-                  histogram:
-                    type: number
-                    number_of_bins: 3
-                    x_log_scale: false
-                    y_log_scale: false
-                """,
-            "t4c8_gene_score.csv": textwrap.dedent("""
-                gene,t4c8_score
-                t4,10.123456789
-                c8,20.0
-            """),
-        },
-    )
-
-    setup_directories(
-        repo_path / "genomic_scores" / "score_one",
-        {
-            GR_CONF_FILE_NAME: textwrap.dedent("""
-                type: position_score
-                table:
-                  filename: data.txt
-                scores:
-                - id: score_one
-                  type: float
-                  name: score
-            """),
-            "data.txt": textwrap.dedent("""
-                chrom\tpos_begin\tscore
-                chr1\t4\t0.01
-                chr1\t54\t0.02
-                chr1\t90\t0.03
-                chr1\t100\t0.04
-                chr1\t119\t0.05
-                chr1\t122\t0.06
-            """),
-        },
-    )
-
-    cli_manage([
-        "repo-repair", "-R", str(repo_path), "-j", "1"])
-
-    return build_genomic_resource_repository({
-        "id": "t4c8_local",
-        "type": "directory",
-        "directory": str(repo_path),
-    })
 
 
 def setup_t4c8_instance(

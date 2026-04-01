@@ -1,13 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
-from gain.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
-from gain.genomic_resources.testing import (
-    setup_empty_gene_models,
-    setup_genome,
-)
+from gain.testing.acgt_import import acgt_grr
+
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance import GPFInstance
 from gpf.testing.setup_helpers import setup_gpf_instance
@@ -16,25 +12,7 @@ from gpf.testing.setup_helpers import setup_gpf_instance
 def acgt_gpf(
         root_path: pathlib.Path,
         storage: GenotypeStorage | None = None) -> GPFInstance:
-    setup_genome(
-        root_path / "acgt_gpf" / "genome" / "allChr.fa",
-        f"""
-        >chr1
-        {25 * "ACGT"}
-        >chr2
-        {25 * "ACGT"}
-        >chr3
-        {25 * "ACGT"}
-        """,
-    )
-    setup_empty_gene_models(
-        root_path / "acgt_gpf" / "empty_gene_models" / "empty_genes.txt")
-
-    local_repo = build_genomic_resource_repository({
-        "id": "acgt_local",
-        "type": "directory",
-        "directory": str(root_path / "acgt_gpf"),
-    })
+    local_repo = acgt_grr(root_path)
 
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",

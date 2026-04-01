@@ -13,7 +13,7 @@ from gain.genomic_resources.repository import GenomicResourceProtocolRepo
 from gain.genomic_resources.testing import (
     build_filesystem_test_repository,
 )
-from gpf.testing.t4c8_import import (
+from gain.testing.t4c8_import import (
     t4c8_genes,
     t4c8_genome,
 )

@@ -24,6 +24,7 @@ from gain.annotation.annotation_config import AttributeInfo
 from gain.annotation.annotation_factory import (
     build_annotation_pipeline,
 )
+from gain.genomic_resources.repository import GenomicResourceRepo
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -31,15 +32,14 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_vcf,
 )
-from gpf.gpf_instance.gpf_instance import GPFInstance
-from gpf.testing.acgt_import import acgt_gpf
+from gain.testing.acgt_import import acgt_grr
 from gain.utils.regions import Region
 
 pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 @pytest.fixture
-def test_gpf_instance(tmp_path: pathlib.Path) -> GPFInstance:
+def acgt_annotate_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     score_dir = tmp_path / "acgt_gpf" / "sample_score"
     setup_denovo(
         score_dir / "data.txt",
@@ -59,7 +59,7 @@ def test_gpf_instance(tmp_path: pathlib.Path) -> GPFInstance:
               type: float
               name: score
         """))
-    return acgt_gpf(tmp_path)
+    return acgt_grr(tmp_path)
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ def sample_vcf(tmp_path: pathlib.Path) -> pathlib.Path:
 
 def test_annotate_vcf_simple(
     tmp_path: pathlib.Path,
-    test_gpf_instance: GPFInstance,
+    acgt_annotate_grr: GenomicResourceRepo,
     sample_vcf: pathlib.Path,
 ) -> None:
     out_path = tmp_path / "out.vcf"
@@ -93,7 +93,7 @@ def test_annotate_vcf_simple(
     _annotate_vcf(
         str(out_path),
         pipeline_config,
-        test_gpf_instance.grr.definition,  # type: ignore
+        acgt_annotate_grr.definition,
         None,
         {
             "input": str(sample_vcf),
@@ -115,7 +115,7 @@ def test_annotate_vcf_simple(
 
 def test_annotate_vcf_simple_batch(
     tmp_path: pathlib.Path,
-    test_gpf_instance: GPFInstance,
+    acgt_annotate_grr: GenomicResourceRepo,
     sample_vcf: pathlib.Path,
     mocker: pytest_mock.MockerFixture,
 ) -> None:
@@ -130,7 +130,7 @@ def test_annotate_vcf_simple_batch(
     _annotate_vcf(
         str(out_path),
         pipeline_config,
-        test_gpf_instance.grr.definition,  # type: ignore
+        acgt_annotate_grr.definition,
         None,
         {
             "input": str(sample_vcf),

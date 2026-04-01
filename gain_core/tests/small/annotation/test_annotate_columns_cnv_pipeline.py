@@ -13,7 +13,7 @@ from gain.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
 )
-from gpf.testing.foobar_import import foobar_genes, foobar_genome
+from gain.testing.foobar_import import foobar_genes, foobar_genome
 
 pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 

@@ -42,7 +42,7 @@ def test_rename_study_config(
     mocker.patch("os.rename", mock_rename)
 
     mock_open = mocker.mock_open()
-    mocker.patch("dae.tools.dataset_helpers.open", mock_open)
+    mocker.patch("gpf.tools.dataset_helpers.open", mock_open)
 
     spy = mocker.spy(os, "rename")
 

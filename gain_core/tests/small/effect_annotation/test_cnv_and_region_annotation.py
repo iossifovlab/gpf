@@ -6,8 +6,8 @@ from gain.effect_annotation.annotator import EffectAnnotator
 from gain.effect_annotation.effect import AnnotationEffect
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gpf.testing.t4c8_import import t4c8_genes as setup_t4c8_genes
-from gpf.testing.t4c8_import import t4c8_genome as setup_t4c8_genome
+from gain.testing.t4c8_import import t4c8_genes as setup_t4c8_genes
+from gain.testing.t4c8_import import t4c8_genome as setup_t4c8_genome
 
 
 @pytest.fixture(scope="session")

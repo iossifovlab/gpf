@@ -15,7 +15,7 @@ from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from gain.genomic_resources.testing import setup_directories
-from gpf.testing.foobar_import import foobar_genes, foobar_genome
+from gain.testing.foobar_import import foobar_genes, foobar_genome
 
 
 @pytest.fixture(scope="module")

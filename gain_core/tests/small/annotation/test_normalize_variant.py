@@ -22,7 +22,7 @@ from gain.genomic_resources.testing import (
     build_filesystem_test_repository,
     setup_genome,
 )
-from gpf.testing.t4c8_import import GENOME_CONTENT
+from gain.testing.t4c8_import import GENOME_CONTENT
 
 
 @pytest.fixture

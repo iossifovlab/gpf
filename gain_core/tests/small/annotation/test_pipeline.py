@@ -30,7 +30,7 @@ from gain.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
 )
-from gpf.testing.t4c8_import import t4c8_genome
+from gain.testing.t4c8_import import t4c8_genome
 
 from tests.small.annotation.conftest import DummyAnnotator
 

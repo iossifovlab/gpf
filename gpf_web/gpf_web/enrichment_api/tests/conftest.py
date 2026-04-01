@@ -31,6 +31,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
 from gpf.gpf_instance import GPFInstance
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.studies.study import GenotypeData
@@ -38,7 +39,6 @@ from gpf.testing.import_helpers import vcf_study
 from gpf.testing.setup_helpers import (
     setup_gpf_instance,
 )
-from gpf.testing.t4c8_import import t4c8_genes, t4c8_genome
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariantFactory
