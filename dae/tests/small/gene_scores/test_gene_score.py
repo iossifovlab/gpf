@@ -1,10 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import logging
 import textwrap
 
 import numpy as np
 import pytest
 from dae.gene_scores.gene_scores import (
+    GeneScore,
     GeneScoresDb,
     ScoreDesc,
     _build_gene_score_help,
@@ -254,7 +256,7 @@ def test_load_log_gene_scores_from_resource(
 def test_load_wrong_resource_type(
         scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("Oops")
-    with pytest.raises(ValueError, match="invalid resource type Oops"):
+    with pytest.raises(ValueError, match="invalid resource type: Oops"):
         build_gene_score_from_resource(res)
 
 
@@ -814,7 +816,7 @@ def test_get_score_histogram_unknown_score(
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def cat_gene_score():  # type: ignore[return]
+def cat_gene_score() -> GeneScore:
     cat_repo = build_inmemory_test_repository({
         "CatScore": {
             GR_CONF_FILE_NAME: """
@@ -850,11 +852,11 @@ def cat_gene_score():  # type: ignore[return]
     return build_gene_score_from_resource(res)
 
 
-def test_get_x_scale_categorical(cat_gene_score) -> None:  # type: ignore[no-untyped-def]
+def test_get_x_scale_categorical(cat_gene_score: GeneScore) -> None:
     assert cat_gene_score.get_x_scale("cat") is None
 
 
-def test_get_y_scale_categorical(cat_gene_score) -> None:  # type: ignore[no-untyped-def]
+def test_get_y_scale_categorical(cat_gene_score: GeneScore) -> None:
     assert cat_gene_score.get_y_scale("cat") is None
 
 
@@ -964,7 +966,6 @@ def test_deprecated_name_field(caplog: pytest.LogCaptureFixture) -> None:
         },
     })
     res = deprecated_repo.get_resource("DeprecatedName")
-    import logging
     with caplog.at_level(logging.WARNING):
         gene_score = build_gene_score_from_resource(res)
 
