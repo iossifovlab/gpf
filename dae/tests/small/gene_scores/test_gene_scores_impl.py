@@ -4,12 +4,14 @@ import pathlib
 import textwrap
 
 import pytest
+from dae.gene_scores.gene_scores import ScoreDef
 from dae.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
     build_gene_score_implementation_from_resource,
 )
 from dae.genomic_resources.histogram import (
     CategoricalHistogram,
+    NullHistogramConfig,
     NumberHistogram,
 )
 from dae.genomic_resources.repository import (
@@ -203,13 +205,12 @@ def test_create_statistics_build_tasks_skips_null_histogram(
 ) -> None:
     # NullHistogramConfig is rejected by GeneScore.__init__, so we must
     # inject it into score_definitions to exercise the skip branch.
-    from dae.gene_scores.gene_scores import ScoreDef
-    from dae.genomic_resources.histogram import NullHistogramConfig
 
     linear_impl.gene_score.score_definitions["null_score"] = ScoreDef(
+        resource_id=linear_impl.resource.resource_id,
         score_id="null_score",
         column_name="null_score",
-        desc="injected null",
+        description="injected null",
         value_type="float",
         hist_conf=NullHistogramConfig(reason="disabled"),
         small_values_desc=None,

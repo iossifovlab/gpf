@@ -114,7 +114,7 @@ class GeneScoreAnnotator(Annotator):
             attributes[score_id] = AttributeDesc(
                 source=score_id,
                 type=score_def.value_type,
-                description=score_def.desc,
+                description=score_def.description,
                 params={"gene_aggregator": self.DEFAULT_AGGREGATOR_TYPE},
             )
         return attributes

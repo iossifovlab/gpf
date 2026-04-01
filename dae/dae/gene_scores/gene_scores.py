@@ -14,6 +14,7 @@ from jinja2 import Template
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import (
     CategoricalHistogramConfig,
+    HistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
     build_histogram_config,
@@ -36,12 +37,14 @@ logger = logging.getLogger(__name__)
 class ScoreDef:
     """Class used to represent a gene score definition."""
 
+    resource_id: str
     score_id: str
     column_name: str
-    desc: str
     value_type: str
 
-    hist_conf: NumberHistogramConfig | CategoricalHistogramConfig | None
+    description: str
+
+    hist_conf: HistogramConfig | None
     small_values_desc: str | None
     large_values_desc: str | None
 
@@ -113,13 +116,16 @@ class GeneScore(
                 hist_conf.view_range = (min_value, max_value)
 
             self.score_definitions[score_conf["id"]] = ScoreDef(
-                score_id,
-                score_name,
-                score_conf.get("desc", ""),
-                score_conf.get("type", "float"),
-                hist_conf,
-                score_conf.get("small_values_desc"),
-                score_conf.get("large_values_desc"),
+                resource_id=self.resource.resource_id,
+                score_id=score_conf["id"],
+                column_name=score_name,
+                value_type=score_conf.get("type", "float"),
+
+                description=score_conf.get("desc", ""),
+
+                hist_conf=hist_conf,
+                small_values_desc=score_conf.get("small_values_desc"),
+                large_values_desc=score_conf.get("large_values_desc"),
             )
         self.df = self.df.rename(columns={
             score_def.column_name: score_def.score_id
@@ -135,6 +141,11 @@ class GeneScore(
                 score_id: record[score_id]
                 for score_id in self.score_definitions
             }
+
+    def open(self) -> GeneScore:
+        """Open the gene score resource."""
+
+        return self
 
     def get_min(self, score_id: str) -> float:
         """Return minimal score value."""
@@ -368,6 +379,8 @@ class ScoreDesc:
     resource_id: str
     score_id: str
     column_name: str
+    value_type: str
+
     hist: NumberHistogram
     description: str
     help: str
@@ -410,7 +423,7 @@ def _build_gene_score_help(
 
     data = {
         "name": score_def.score_id,
-        "description": score_def.desc,
+        "description": score_def.description,
         "resource_id": gene_score.resource.resource_id,
         "resource_summary": gene_score.resource.get_summary(),
         "resource_url": f"{gene_score.resource.get_public_url()}/index.html",
@@ -448,8 +461,9 @@ class GeneScoresDb:
                 resource_id=gene_score.resource.resource_id,
                 score_id=score_id,
                 column_name=score_def.column_name,
+                value_type=score_def.value_type,
                 hist=gene_score.get_score_histogram(score_id),
-                description=score_def.desc,
+                description=score_def.description,
                 help=help_doc,
                 small_values_desc=score_def.small_values_desc,
                 large_values_desc=score_def.large_values_desc,
