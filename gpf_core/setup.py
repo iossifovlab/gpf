@@ -26,7 +26,6 @@ setuptools.setup(
     ),
     package_data={
         "gpf": ["py.typed"],
-        "gpf.dask": ["named_cluster.yaml"],
     },
     scripts=[
     ],
@@ -35,10 +34,7 @@ setuptools.setup(
     gpf_instance_context=gpf.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider
 
     [dae.genomic_resources.implementations]
-    gene_set_collection=gpf.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
-    gene_set=gpf.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
-    gene_score=gpf.gene_scores.implementations.gene_scores_impl:build_gene_score_implementation_from_resource
-    gene_weights_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
+gene_weights_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
     samocha_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
 
     [dae.genotype_storage.factories]

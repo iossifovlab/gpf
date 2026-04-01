@@ -6,7 +6,7 @@ from typing import Any
 from jinja2 import Template
 from markdown2 import markdown
 
-from gain.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
+from gain.gene_sets.gene_set import build_gene_set_collection_from_resource
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,

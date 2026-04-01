@@ -14,7 +14,7 @@ from box import Box
 from gain.effect_annotation.effect import expand_effect_types
 from gpf.gene_profile.db import GeneProfileDBWriter
 from gpf.gene_profile.statistic import GPStatistic
-from gain.gene_sets.gene_sets_db import GeneSet
+from gain.gene_sets.gene_set import GeneSet
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.repository_factory import (

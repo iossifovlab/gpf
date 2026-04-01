@@ -3,7 +3,7 @@ import json
 import pathlib
 
 import pytest
-from gpf.gene_sets.implementations.gene_sets_impl import GeneSetCollectionImpl
+from gain.gene_sets.implementations.gene_sets_impl import GeneSetCollectionImpl
 from gain.genomic_resources.cli import cli_manage
 from gain.genomic_resources.repository import (
     GenomicResourceRepo,

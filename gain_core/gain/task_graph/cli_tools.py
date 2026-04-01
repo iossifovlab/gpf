@@ -110,7 +110,7 @@ class TaskGraphCli:
     ) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         # pylint: disable=import-outside-toplevel
-        from gpf.dask.named_cluster import (
+        from gain.dask.named_cluster import (
             setup_client,
             setup_client_from_config,
         )

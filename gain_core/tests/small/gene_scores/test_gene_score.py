@@ -13,7 +13,7 @@ from gain.gene_scores.gene_scores import (
     build_gene_score_from_resource,
     build_gene_score_from_resource_id,
 )
-from gpf.gene_scores.implementations.gene_scores_impl import (
+from gain.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
 )
 from gain.genomic_resources.histogram import (

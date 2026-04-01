@@ -3,7 +3,7 @@ import argparse
 import pathlib
 import textwrap
 
-import gpf.dask.named_cluster
+import gain.dask.named_cluster
 import dask.distributed
 import pytest
 from gain.genomic_resources.testing import setup_directories
@@ -37,7 +37,7 @@ def test_cli_cluster_with_config_file(
     args = parser.parse_args(argv)
 
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
     mocker.patch(
         "dask.distributed.LocalCluster",
@@ -51,6 +51,6 @@ def test_cli_cluster_with_config_file(
             memory="2GB",
             threads_per_worker=1,
         )
-    cluster_mock = gpf.dask.named_cluster\
+    cluster_mock = gain.dask.named_cluster\
         .Client.call_args.args[0]  # type: ignore
     cluster_mock.scale.assert_called_once_with(n=20)

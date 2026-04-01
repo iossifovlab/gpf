@@ -25,7 +25,7 @@ from gain.genomic_resources.testing import (
     setup_empty_gene_models,
     setup_genome,
 )
-from gain.genomic_scores.scores import (
+from gpf.genomic_scores.scores import (
     GenomicScoresRegistry,
     ScoreDesc,
     _build_score_help,

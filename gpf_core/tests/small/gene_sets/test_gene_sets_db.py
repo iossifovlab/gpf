@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from gain.gene_sets.gene_sets_db import (
+from gain.gene_sets.gene_set import (
     GeneSetCollection,
-    GeneSetsDb,
     build_gene_set_collection_from_resource_id,
 )
 from gain.genomic_resources.repository import (
     GenomicResourceRepo,
 )
+from gpf.gene_sets.gene_sets_db import GeneSetsDb
 
 
 def test_gene_set_collection_main(

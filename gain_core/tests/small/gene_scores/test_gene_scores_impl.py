@@ -4,7 +4,7 @@ import pathlib
 import textwrap
 
 import pytest
-from gpf.gene_scores.implementations.gene_scores_impl import (
+from gain.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
     build_gene_score_implementation_from_resource,
 )

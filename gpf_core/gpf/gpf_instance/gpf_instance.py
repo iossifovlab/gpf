@@ -23,18 +23,23 @@ from gpf.gene_profile.db import GeneProfileDB
 from gpf.gene_profile.statistic import GPStatistic
 from gain.gene_scores.gene_scores import GeneScore
 from gain.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
-from gpf.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
-from gain.gene_sets.gene_sets_db import (
-    GeneSetsDb,
-    build_gene_set_collection_from_resource,
-)
+from gain.gene_sets.gene_set import build_gene_set_collection_from_resource
 from gain.genomic_resources.gene_models import (
     GeneModels,
     TranscriptModel,
 )
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.repository import GenomicResourceRepo
-from gain.genomic_scores.scores import GenomicScoresRegistry
+from gain.utils.fs_utils import find_directory_with_a_file
+
+from gpf.configuration.gpf_config_parser import GPFConfigParser
+from gpf.configuration.schemas.dae_conf import dae_conf_schema
+from gpf.configuration.schemas.gene_profile import gene_profiles_config
+from gpf.gene_profile.db import GeneProfileDB
+from gpf.gene_profile.statistic import GPStatistic
+from gpf.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
+from gpf.gene_sets.gene_sets_db import GeneSetsDb
+from gpf.genomic_scores.scores import GenomicScoresRegistry
 from gpf.pheno.pheno_data import (
     PhenotypeData,
     get_pheno_db_dir,

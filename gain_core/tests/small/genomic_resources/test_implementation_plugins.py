@@ -1,4 +1,4 @@
-from gpf.gene_scores.implementations.gene_scores_impl import (
+from gain.gene_scores.implementations.gene_scores_impl import (
     build_gene_score_implementation_from_resource,
 )
 from gain.genomic_resources import (

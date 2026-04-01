@@ -194,7 +194,7 @@ GENE_SCORES_TEMPLATE = """
                 <td>{{ score.value_type }}</td>
 
                 <td>
-                    <div>{{ score_def.desc }}</div>
+                    <div>{{ score_def.description }}</div>
                     {% if score_def.small_values_desc %}
                         <div style="color: rgb(145,145,145)">
                             {{ "Small values desc: " + score_def.small_values_desc }}

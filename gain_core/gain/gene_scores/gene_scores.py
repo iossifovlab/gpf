@@ -29,9 +29,19 @@ from gain.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
 )
-from gain.genomic_scores.scores import SCORE_HISTOGRAM
-
 logger = logging.getLogger(__name__)
+
+SCORE_HISTOGRAM = """
+<div class="modal-histogram">
+
+<div class="histogram-image">
+
+![HISTOGRAM]({{ hist_url }})
+
+</div>
+
+</div>
+"""
 
 
 @dataclass

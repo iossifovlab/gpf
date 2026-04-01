@@ -28,6 +28,7 @@ setuptools.setup(
     package_data={
         "gain": ["py.typed"],
         "gain.annotation": ["templates/annotate_doc_pipeline_template.jinja"],
+        "gain.dask": ["named_cluster.yaml"],
         "gain.genomic_resources": ["repo_info_scripts.html"],
     },
     scripts=[
@@ -49,6 +50,9 @@ setuptools.setup(
     gene_models=gain.genomic_resources.implementations.gene_models_impl:GeneModelsImpl
     cnv_collection=gain.genomic_resources.implementations.genomic_scores_impl:CnvCollectionImplementation
     annotation_pipeline=gain.genomic_resources.implementations.annotation_pipeline_impl:AnnotationPipelineImplementation
+    gene_score=gain.gene_scores.implementations.gene_scores_impl:build_gene_score_implementation_from_resource
+    gene_set_collection=gain.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
+    gene_set=gain.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
 
     [dae.annotation.annotators]
     allele_score=gain.annotation.score_annotator:build_allele_score_annotator

@@ -10,7 +10,7 @@ from gpf.gene_sets.denovo_gene_set_helpers import (
     DenovoGeneSetHelpers,
 )
 from gpf.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
-from gain.gene_sets.gene_sets_db import GeneSetCollection, GeneSetsDb
+from gain.gene_sets.gene_set import GeneSetCollection
 from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -21,6 +21,7 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+from gpf.gene_sets.gene_sets_db import GeneSetsDb
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf

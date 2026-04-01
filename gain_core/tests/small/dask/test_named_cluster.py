@@ -2,10 +2,10 @@
 from typing import Any
 from unittest.mock import DEFAULT
 
-import gpf.dask.named_cluster
+import gain.dask.named_cluster
 import pytest
 import pytest_mock
-from gpf.dask.named_cluster import setup_client, setup_client_from_config
+from gain.dask.named_cluster import setup_client, setup_client_from_config
 from dask import config
 
 
@@ -44,7 +44,7 @@ def test_default(
         "dask.distributed.LocalCluster", autospec=True)
 
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     with config.set({"dae_named_cluster": named_cluster_config}):
@@ -65,7 +65,7 @@ def test_default_with_number_of_workers(
     mocked_local = mocker.patch(
         "dask.distributed.LocalCluster", autospec=True)
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     with config.set({"dae_named_cluster": named_cluster_config}):
@@ -93,7 +93,7 @@ def test_default_with_number_of_workers_config(
         "dask.distributed.LocalCluster", new=DEFAULT)
 
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     named_cluster_config["clusters"][0].update(config_update)
@@ -117,7 +117,7 @@ def test_config_access(
     mocked_local = mocker.patch(
         "dask.distributed.LocalCluster", autospec=True)
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
     with config.set({"dae_named_cluster": named_cluster_config}):
         client, _ = setup_client()
@@ -134,14 +134,14 @@ def test_setup_cluster_from_config_simple(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     mocked_factory = mocker.patch(
-        "gpf.dask.named_cluster.set_up_local_cluster", autospec=True)
+        "gain.dask.named_cluster.set_up_local_cluster", autospec=True)
     mocker.patch.dict(
-        gpf.dask.named_cluster._CLUSTER_TYPES, {
+        gain.dask.named_cluster._CLUSTER_TYPES, {
             "local": mocked_factory,
         },
     )
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     setup_client_from_config({
@@ -149,7 +149,7 @@ def test_setup_cluster_from_config_simple(
     }, number_of_workers=2)
 
     # pylint: disable=no-member
-    gpf.dask.named_cluster\
+    gain.dask.named_cluster\
         .set_up_local_cluster.assert_called_once_with({  # type: ignore
             "number_of_workers": 2,
         })
@@ -160,7 +160,7 @@ def test_setup_sge_cluster(mocker: pytest_mock.MockerFixture) -> None:
         "dask_jobqueue.SGECluster", autospec=True)
 
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     setup_client_from_config({
@@ -176,7 +176,7 @@ def test_setup_slurm_cluster(mocker: pytest_mock.MockerFixture) -> None:
         "dask_jobqueue.SLURMCluster", autospec=True)
 
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     setup_client_from_config({
@@ -189,7 +189,7 @@ def test_setup_slurm_cluster(mocker: pytest_mock.MockerFixture) -> None:
 
 def test_setup_manual_client(mocker: pytest_mock.MockerFixture) -> None:
     mocked_client = mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     setup_client_from_config({
@@ -212,7 +212,7 @@ def test_adjust_default_distributed_config(
     mocker.patch(
         "dask.distributed.LocalCluster", autospec=True)
     mocker.patch(
-        "gpf.dask.named_cluster.Client",
+        "gain.dask.named_cluster.Client",
         autospec=True)
 
     client, _ = setup_client(number_of_workers=4)

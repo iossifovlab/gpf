@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from copy import deepcopy
 from typing import Any, cast
 
-from gain.gene_sets.gene_sets_db import GeneSet
+from gain.gene_sets.gene_set import GeneSet
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
