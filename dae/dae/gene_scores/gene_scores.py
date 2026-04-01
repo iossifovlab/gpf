@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from io import StringIO
+from threading import Lock
 from typing import Any, cast
 from urllib.parse import quote
 
@@ -14,6 +15,7 @@ from jinja2 import Template
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import (
     CategoricalHistogramConfig,
+    HistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
     build_histogram_config,
@@ -36,12 +38,14 @@ logger = logging.getLogger(__name__)
 class ScoreDef:
     """Class used to represent a gene score definition."""
 
+    resource_id: str
     score_id: str
     column_name: str
-    desc: str
     value_type: str
 
-    hist_conf: NumberHistogramConfig | CategoricalHistogramConfig | None
+    description: str
+
+    hist_conf: HistogramConfig | None
     small_values_desc: str | None
     large_values_desc: str | None
 
@@ -113,13 +117,16 @@ class GeneScore(
                 hist_conf.view_range = (min_value, max_value)
 
             self.score_definitions[score_conf["id"]] = ScoreDef(
-                score_id,
-                score_name,
-                score_conf.get("desc", ""),
-                score_conf.get("type", "float"),
-                hist_conf,
-                score_conf.get("small_values_desc"),
-                score_conf.get("large_values_desc"),
+                resource_id=self.resource.resource_id,
+                score_id=score_conf["id"],
+                column_name=score_name,
+                value_type=score_conf.get("type", "float"),
+
+                description=score_conf.get("desc", ""),
+
+                hist_conf=hist_conf,
+                small_values_desc=score_conf.get("small_values_desc"),
+                large_values_desc=score_conf.get("large_values_desc"),
             )
         self.df = self.df.rename(columns={
             score_def.column_name: score_def.score_id
@@ -136,6 +143,11 @@ class GeneScore(
                 for score_id in self.score_definitions
             }
 
+    def open(self) -> GeneScore:
+        """Open the gene score resource."""
+
+        return self
+
     def get_min(self, score_id: str) -> float:
         """Return minimal score value."""
         return float(self.df[score_id].min())
@@ -148,7 +160,8 @@ class GeneScore(
         """Return a list of score values."""
         return cast(list[float], list(self.df[score_id].values))
 
-    def _get_hist_conf(self, score_id: str) -> NumberHistogramConfig | None:
+    def _get_number_hist_conf(
+            self, score_id: str) -> NumberHistogramConfig | None:
         if score_id not in self.score_definitions:
             logger.warning("Score %s does not exist!", score_id)
             raise ValueError(
@@ -166,7 +179,7 @@ class GeneScore(
 
     def get_x_scale(self, score_id: str) -> str | None:
         """Return the scale type of the X axis."""
-        hist_conf = self._get_hist_conf(score_id)
+        hist_conf = self._get_number_hist_conf(score_id)
         if hist_conf is None:
             return None
         if hist_conf.x_log_scale:
@@ -175,7 +188,7 @@ class GeneScore(
 
     def get_y_scale(self, score_id: str) -> str | None:
         """Return the scale type of the Y axis."""
-        hist_conf = self._get_hist_conf(score_id)
+        hist_conf = self._get_number_hist_conf(score_id)
         if hist_conf is None:
             return None
         if hist_conf.y_log_scale:
@@ -225,7 +238,8 @@ class GeneScore(
             df.set_index("gene")[score_id].to_dict())
 
     def get_gene_value(
-            self, score_id: str, gene_symbol: str) -> float | None:
+        self, score_id: str, gene_symbol: str,
+    ) -> float | None:
         """Return the value for a given gene symbol."""
         if gene_symbol not in self.gene_values:
             return None
@@ -326,10 +340,6 @@ class GeneScore(
     def get_score_range(
             self, score_id: str) -> tuple[float, float] | None:
         """Return the value range for a numeric score."""
-        if score_id not in self.get_all_scores():
-            raise ValueError(
-                f"unknown score {score_id}; "
-                f"available scores are {self.get_all_scores()}")
         hist = self.get_score_histogram(score_id)
         if isinstance(hist, NumberHistogram):
             return (hist.min_value, hist.max_value)
@@ -337,6 +347,10 @@ class GeneScore(
 
     def get_histogram_filename(self, score_id: str) -> str:
         """Return the histogram filename for a gene score."""
+        if score_id not in self.get_all_scores():
+            raise ValueError(
+                f"unknown score {score_id}; "
+                f"available scores are {self.get_all_scores()}")
         filename = f"statistics/histogram_{score_id}.yaml"
         if filename in self.resource.get_manifest():
             return filename
@@ -345,11 +359,6 @@ class GeneScore(
     @lru_cache(maxsize=64)
     def get_score_histogram(self, score_id: str) -> NumberHistogram:
         """Return defined histogram for a score."""
-        if score_id not in self.score_definitions:
-            raise ValueError(
-                f"unexpected gene score ID {score_id}; available scores are: "
-                f"{self.get_all_scores()}")
-
         hist_filename = self.get_histogram_filename(score_id)
         hist = load_histogram(self.resource, hist_filename)
         return cast(NumberHistogram, hist)
@@ -371,6 +380,8 @@ class ScoreDesc:
     resource_id: str
     score_id: str
     column_name: str
+    value_type: str
+
     hist: NumberHistogram
     description: str
     help: str
@@ -413,7 +424,7 @@ def _build_gene_score_help(
 
     data = {
         "name": score_def.score_id,
-        "description": score_def.desc,
+        "description": score_def.description,
         "resource_id": gene_score.resource.resource_id,
         "resource_summary": gene_score.resource.get_summary(),
         "resource_url": f"{gene_score.resource.get_public_url()}/index.html",
@@ -451,8 +462,9 @@ class GeneScoresDb:
                 resource_id=gene_score.resource.resource_id,
                 score_id=score_id,
                 column_name=score_def.column_name,
+                value_type=score_def.value_type,
                 hist=gene_score.get_score_histogram(score_id),
-                description=score_def.desc,
+                description=score_def.description,
                 help=help_doc,
                 small_values_desc=score_def.small_values_desc,
                 large_values_desc=score_def.large_values_desc,
@@ -499,9 +511,30 @@ class GeneScoresDb:
         return len(self.score_descs)
 
 
+_INMEMORY_CACHE: dict[tuple[str, str], GeneScore] = {}
+_INMEMORY_CACHE_LOCK = Lock()
+
+
 def build_gene_score_from_resource(resource: GenomicResource) -> GeneScore:
+    """Load gene score from a genomic resource."""
     if resource is None:
         raise ValueError(f"missing resource {resource}")
+
+    if resource.get_type() != "gene_score":
+        logger.error(
+            "trying to open a resource %s of type "
+            "%s as gene scores", resource.resource_id, resource.get_type())
+        raise ValueError(f"invalid resource type: {resource.resource_id}")
+
+    cache_id = (resource.get_full_id(), resource.get_repo_url())
+    with _INMEMORY_CACHE_LOCK:
+        if cache_id in _INMEMORY_CACHE:
+            return _INMEMORY_CACHE[cache_id]
+
+        gene_score = GeneScore(resource)
+        _INMEMORY_CACHE[cache_id] = gene_score
+        return gene_score
+
     return GeneScore(resource)
 
 

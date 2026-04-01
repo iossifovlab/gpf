@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import json
+import logging
 import textwrap
 
 import numpy as np
 import pytest
 from dae.gene_scores.gene_scores import (
+    GeneScore,
     GeneScoresDb,
     ScoreDesc,
     _build_gene_score_help,
@@ -13,12 +16,16 @@ from dae.gene_scores.gene_scores import (
 from dae.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
 )
-from dae.genomic_resources.histogram import NumberHistogram
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    NumberHistogram,
+)
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
 from dae.genomic_resources.testing import build_inmemory_test_repository
+from dae.task_graph.graph import TaskDesc
 
 
 @pytest.fixture
@@ -249,7 +256,7 @@ def test_load_log_gene_scores_from_resource(
 def test_load_wrong_resource_type(
         scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("Oops")
-    with pytest.raises(ValueError, match="invalid resource type Oops"):
+    with pytest.raises(ValueError, match="invalid resource type: Oops"):
         build_gene_score_from_resource(res)
 
 
@@ -632,3 +639,526 @@ def test_score_desc_properties(scores_repo: GenomicResourceRepo) -> None:
     assert len(score_desc.help) > 0
     assert score_desc.small_values_desc is None
     assert score_desc.large_values_desc is None
+
+
+# ---------------------------------------------------------------------------
+# get_genes with values= (categorical isin branch)
+# ---------------------------------------------------------------------------
+
+def test_get_genes_with_values(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    # Genes with score value 1: G1, G4.  Genes with score value 3: G3, G6.
+    genes = gene_score.get_genes("linear score", values=["1", "3"])
+    assert genes == {"G1", "G4", "G3", "G6"}
+
+
+def test_get_genes_with_values_no_match(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    genes = gene_score.get_genes("linear score", values=["99"])
+    assert genes == set()
+
+
+# ---------------------------------------------------------------------------
+# get_gene_value - score_id not in gene_values entry
+# ---------------------------------------------------------------------------
+
+def test_get_gene_value_unknown_score_id(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    # Manually remove the score from one gene's entry to exercise the
+    # "score_id not in self.gene_values[gene_symbol]" branch.
+    del gene_score.gene_values["G1"]["linear score"]
+    assert gene_score.get_gene_value("linear score", "G1") is None
+
+
+# ---------------------------------------------------------------------------
+# get_values
+# ---------------------------------------------------------------------------
+
+def test_get_values(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    values = gene_score.get_values("linear score")
+    assert isinstance(values, list)
+    assert len(values) == 6
+    assert sorted(values) == [1.0, 1.0, 2.0, 2.0, 3.0, 3.0]
+
+
+# ---------------------------------------------------------------------------
+# get_score_range
+# ---------------------------------------------------------------------------
+
+def test_get_score_range_numeric() -> None:
+    # Use a histogram JSON that includes min_value / max_value so that
+    # get_score_range returns a meaningful (non-nan) tuple.
+    range_repo = build_inmemory_test_repository({
+        "RangeScore": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: scores.csv
+                scores:
+                - id: score1
+                  desc: a score
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "scores.csv": textwrap.dedent("""
+                gene,score1
+                G1,1
+                G2,2
+                G3,3
+            """),
+            "statistics": {
+                "histogram_score1.json": json.dumps({
+                    "bars": [1, 1, 1],
+                    "bins": [1.0, 1.665, 2.333, 3.0],
+                    "min_value": 1.0,
+                    "max_value": 3.0,
+                    "config": {
+                        "type": "number",
+                        "number_of_bins": 3,
+                        "view_range": {"min": 1.0, "max": 3.0},
+                        "x_log_scale": False,
+                        "y_log_scale": False,
+                    },
+                }),
+            },
+        },
+    })
+    res = range_repo.get_resource("RangeScore")
+    gene_score = build_gene_score_from_resource(res)
+
+    result = gene_score.get_score_range("score1")
+    assert result is not None
+    assert isinstance(result, tuple)
+    assert len(result) == 2
+    assert result[0] == 1.0
+    assert result[1] == 3.0
+
+
+def test_get_score_range_unknown_score(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    with pytest.raises(ValueError, match="unknown score nonexistent"):
+        gene_score.get_score_range("nonexistent")
+
+
+def test_get_score_range_categorical() -> None:
+    cat_repo = build_inmemory_test_repository({
+        "CatScore": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: cat.csv
+                scores:
+                - id: cat
+                  desc: categorical score
+                  histogram:
+                    type: categorical
+                    value_order: [1, 2, 3]
+                """,
+            "cat.csv": textwrap.dedent("""
+                gene,cat
+                G1,1
+                G2,2
+                G3,3
+            """),
+            "statistics": {
+                "histogram_cat.json": json.dumps({
+                    "config": {
+                        "type": "categorical",
+                        "value_order": [1, 2, 3],
+                        "y_log_scale": False,
+                        "label_rotation": 0,
+                    },
+                    "values": {"1": 1, "2": 1, "3": 1},
+                }),
+            },
+        },
+    })
+    res = cat_repo.get_resource("CatScore")
+    gene_score = build_gene_score_from_resource(res)
+
+    assert gene_score.get_score_range("cat") is None
+
+
+# ---------------------------------------------------------------------------
+# get_score_histogram - unknown score_id
+# ---------------------------------------------------------------------------
+
+def test_get_score_histogram_unknown_score(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    with pytest.raises(ValueError, match="unknown score nonexistent"):
+        gene_score.get_score_histogram("nonexistent")
+
+
+# ---------------------------------------------------------------------------
+# get_x_scale / get_y_scale - categorical and unknown score_id
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def cat_gene_score() -> GeneScore:
+    cat_repo = build_inmemory_test_repository({
+        "CatScore": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: cat.csv
+                scores:
+                - id: cat
+                  desc: categorical score
+                  histogram:
+                    type: categorical
+                    value_order: [1, 2, 3]
+                """,
+            "cat.csv": textwrap.dedent("""
+                gene,cat
+                G1,1
+                G2,2
+                G3,3
+            """),
+            "statistics": {
+                "histogram_cat.json": json.dumps({
+                    "config": {
+                        "type": "categorical",
+                        "value_order": [1, 2, 3],
+                        "y_log_scale": False,
+                        "label_rotation": 0,
+                    },
+                    "values": {"1": 1, "2": 1, "3": 1},
+                }),
+            },
+        },
+    })
+    res = cat_repo.get_resource("CatScore")
+    return build_gene_score_from_resource(res)
+
+
+def test_get_x_scale_categorical(cat_gene_score: GeneScore) -> None:
+    assert cat_gene_score.get_x_scale("cat") is None
+
+
+def test_get_y_scale_categorical(cat_gene_score: GeneScore) -> None:
+    assert cat_gene_score.get_y_scale("cat") is None
+
+
+def test_get_x_scale_unknown_score(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    with pytest.raises(ValueError, match="unexpected score_id"):
+        gene_score.get_x_scale("nonexistent")
+
+
+def test_get_y_scale_unknown_score(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    with pytest.raises(ValueError, match="unexpected score_id"):
+        gene_score.get_y_scale("nonexistent")
+
+
+# ---------------------------------------------------------------------------
+# get_histogram_filename - YAML path
+# ---------------------------------------------------------------------------
+
+def test_get_histogram_filename_yaml() -> None:
+    yaml_repo = build_inmemory_test_repository({
+        "YamlHist": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: scores.csv
+                scores:
+                - id: score1
+                  desc: a score
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "scores.csv": textwrap.dedent("""
+                gene,score1
+                G1,1
+                G2,2
+                G3,3
+            """),
+            "statistics": {
+                "histogram_score1.yaml": textwrap.dedent("""
+                    bars: [1, 1, 1]
+                    bins: [1.0, 1.665, 2.333, 3.0]
+                    config:
+                      type: number
+                      number_of_bins: 3
+                      view_range:
+                        min: 1.0
+                        max: 3.0
+                      x_log_scale: false
+                      y_log_scale: false
+                """),
+            },
+        },
+    })
+    res = yaml_repo.get_resource("YamlHist")
+    gene_score = build_gene_score_from_resource(res)
+
+    filename = gene_score.get_histogram_filename("score1")
+    assert filename == "statistics/histogram_score1.yaml"
+
+
+# ---------------------------------------------------------------------------
+# Deprecated 'name' field in score config
+# ---------------------------------------------------------------------------
+
+def test_deprecated_name_field(caplog: pytest.LogCaptureFixture) -> None:
+    deprecated_repo = build_inmemory_test_repository({
+        "DeprecatedName": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: scores.csv
+                scores:
+                - id: my_score
+                  name: my_score_col
+                  desc: uses deprecated name field
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "scores.csv": textwrap.dedent("""
+                gene,my_score_col
+                G1,1
+                G2,2
+                G3,3
+            """),
+            "statistics": {
+                "histogram_my_score.json": json.dumps({
+                    "bars": [1, 1, 1],
+                    "bins": [1.0, 1.665, 2.333, 3.0],
+                    "config": {
+                        "type": "number",
+                        "number_of_bins": 3,
+                        "view_range": {"min": 1.0, "max": 3.0},
+                        "x_log_scale": False,
+                        "y_log_scale": False,
+                    },
+                }),
+            },
+        },
+    })
+    res = deprecated_repo.get_resource("DeprecatedName")
+    with caplog.at_level(logging.WARNING):
+        gene_score = build_gene_score_from_resource(res)
+
+    assert gene_score.get_scores() == ["my_score"]
+    assert gene_score.get_gene_value("my_score", "G1") == 1.0
+    assert any("deprecated" in record.message for record in caplog.records)
+
+
+# ---------------------------------------------------------------------------
+# Custom separator config
+# ---------------------------------------------------------------------------
+
+def test_custom_separator() -> None:
+    sep_repo = build_inmemory_test_repository({
+        "CustomSep": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: scores.csv
+                separator: ";"
+                scores:
+                - id: score1
+                  desc: semicolon-separated score
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "scores.csv": textwrap.dedent("""
+                gene;score1
+                G1;10
+                G2;20
+                G3;30
+            """),
+            "statistics": {
+                "histogram_score1.json": json.dumps({
+                    "bars": [1, 1, 1],
+                    "bins": [10.0, 16.65, 23.33, 30.0],
+                    "config": {
+                        "type": "number",
+                        "number_of_bins": 3,
+                        "view_range": {"min": 10.0, "max": 30.0},
+                        "x_log_scale": False,
+                        "y_log_scale": False,
+                    },
+                }),
+            },
+        },
+    })
+    res = sep_repo.get_resource("CustomSep")
+    gene_score = build_gene_score_from_resource(res)
+
+    assert gene_score.get_gene_value("score1", "G1") == 10.0
+    assert gene_score.get_gene_value("score1", "G2") == 20.0
+    assert gene_score.get_gene_value("score1", "G3") == 30.0
+
+
+# ---------------------------------------------------------------------------
+# small_values_desc / large_values_desc in ScoreDesc
+# ---------------------------------------------------------------------------
+
+def test_small_large_values_desc_in_score_desc() -> None:
+    desc_repo = build_inmemory_test_repository({
+        "DescScore": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: scores.csv
+                scores:
+                - id: score1
+                  desc: a score with value descriptions
+                  small_values_desc: "low is good"
+                  large_values_desc: "high is bad"
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "scores.csv": textwrap.dedent("""
+                gene,score1
+                G1,1
+                G2,2
+                G3,3
+            """),
+            "statistics": {
+                "histogram_score1.json": json.dumps({
+                    "bars": [1, 1, 1],
+                    "bins": [1.0, 1.665, 2.333, 3.0],
+                    "config": {
+                        "type": "number",
+                        "number_of_bins": 3,
+                        "view_range": {"min": 1.0, "max": 3.0},
+                        "x_log_scale": False,
+                        "y_log_scale": False,
+                    },
+                }),
+            },
+        },
+    })
+    res = desc_repo.get_resource("DescScore")
+    gene_score = build_gene_score_from_resource(res)
+    score_descs = GeneScoresDb.build_descs_from_score(gene_score)
+
+    assert len(score_descs) == 1
+    score_desc = score_descs[0]
+    assert score_desc.small_values_desc == "low is good"
+    assert score_desc.large_values_desc == "high is bad"
+
+
+# ---------------------------------------------------------------------------
+# GeneScoreImplementation - calc_histogram with categorical config
+# ---------------------------------------------------------------------------
+
+def test_calc_histogram_categorical() -> None:
+    cat_repo = build_inmemory_test_repository({
+        "CatImpl": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: cat.csv
+                scores:
+                - id: cat
+                  desc: categorical score
+                  histogram:
+                    type: categorical
+                    value_order: [1, 2, 3]
+                """,
+            "cat.csv": textwrap.dedent("""
+                gene,cat
+                G1,1
+                G2,2
+                G3,3
+                G4,1
+            """),
+            "statistics": {
+                "histogram_cat.json": json.dumps({
+                    "config": {
+                        "type": "categorical",
+                        "value_order": [1, 2, 3],
+                        "y_log_scale": False,
+                        "label_rotation": 0,
+                    },
+                    "values": {"1": 2, "2": 1, "3": 1},
+                }),
+            },
+        },
+    })
+    res = cat_repo.get_resource("CatImpl")
+    histogram = GeneScoreImplementation._calc_histogram(res, "cat")
+
+    assert isinstance(histogram, CategoricalHistogram)
+    assert histogram.raw_values[1] == 2
+    assert histogram.raw_values[2] == 1
+    assert histogram.raw_values[3] == 1
+
+
+# ---------------------------------------------------------------------------
+# GeneScoreImplementation - calc_statistics_hash and calc_info_hash
+# ---------------------------------------------------------------------------
+
+def test_calc_statistics_hash(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    impl = GeneScoreImplementation(res)
+
+    result = impl.calc_statistics_hash()
+
+    assert isinstance(result, bytes)
+    assert len(result) > 0
+    parsed = json.loads(result.decode())
+    assert "score_config" in parsed
+    assert "score_file" in parsed
+    # deterministic
+    assert impl.calc_statistics_hash() == result
+
+
+def test_calc_info_hash(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    impl = GeneScoreImplementation(res)
+
+    assert impl.calc_info_hash() == b"placeholder"
+
+
+# ---------------------------------------------------------------------------
+# GeneScoreImplementation - create_statistics_build_tasks
+# ---------------------------------------------------------------------------
+
+def test_create_statistics_build_tasks(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    impl = GeneScoreImplementation(res)
+
+    tasks = impl.create_statistics_build_tasks()
+
+    # LinearHist has 1 score → 2 tasks (calc + save)
+    assert len(tasks) == 2
+    assert all(isinstance(t, TaskDesc) for t in tasks)
