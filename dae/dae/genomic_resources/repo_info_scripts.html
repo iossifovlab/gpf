@@ -83,7 +83,9 @@
                 let rowData = window.rowData[rowId];
                 let cells = row.children("td");
                 cells[0].textContent = rowData.type;
+                cells[1].title = rowData.id;
                 $(cells[1]).find("a").attr("href", rowData.url).text(rowData.id);
+                $(cells[1]).children("div").children("span")[0].className = `material-symbols-outlined copy-icon ${rowData.id}`;
                 cells[2].textContent = rowData.version;
                 cells[3].textContent = rowData.sizeInBytes;
                 cells[4].textContent = rowData.summary;
