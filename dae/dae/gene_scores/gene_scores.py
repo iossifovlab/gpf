@@ -148,7 +148,8 @@ class GeneScore(
         """Return a list of score values."""
         return cast(list[float], list(self.df[score_id].values))
 
-    def _get_hist_conf(self, score_id: str) -> NumberHistogramConfig | None:
+    def _get_number_hist_conf(
+            self, score_id: str) -> NumberHistogramConfig | None:
         if score_id not in self.score_definitions:
             logger.warning("Score %s does not exist!", score_id)
             raise ValueError(
@@ -166,7 +167,7 @@ class GeneScore(
 
     def get_x_scale(self, score_id: str) -> str | None:
         """Return the scale type of the X axis."""
-        hist_conf = self._get_hist_conf(score_id)
+        hist_conf = self._get_number_hist_conf(score_id)
         if hist_conf is None:
             return None
         if hist_conf.x_log_scale:
@@ -175,7 +176,7 @@ class GeneScore(
 
     def get_y_scale(self, score_id: str) -> str | None:
         """Return the scale type of the Y axis."""
-        hist_conf = self._get_hist_conf(score_id)
+        hist_conf = self._get_number_hist_conf(score_id)
         if hist_conf is None:
             return None
         if hist_conf.y_log_scale:
@@ -225,7 +226,8 @@ class GeneScore(
             df.set_index("gene")[score_id].to_dict())
 
     def get_gene_value(
-            self, score_id: str, gene_symbol: str) -> float | None:
+        self, score_id: str, gene_symbol: str,
+    ) -> float | None:
         """Return the value for a given gene symbol."""
         if gene_symbol not in self.gene_values:
             return None
@@ -326,10 +328,6 @@ class GeneScore(
     def get_score_range(
             self, score_id: str) -> tuple[float, float] | None:
         """Return the value range for a numeric score."""
-        if score_id not in self.get_all_scores():
-            raise ValueError(
-                f"unknown score {score_id}; "
-                f"available scores are {self.get_all_scores()}")
         hist = self.get_score_histogram(score_id)
         if isinstance(hist, NumberHistogram):
             return (hist.min_value, hist.max_value)
@@ -337,6 +335,10 @@ class GeneScore(
 
     def get_histogram_filename(self, score_id: str) -> str:
         """Return the histogram filename for a gene score."""
+        if score_id not in self.get_all_scores():
+            raise ValueError(
+                f"unknown score {score_id}; "
+                f"available scores are {self.get_all_scores()}")
         filename = f"statistics/histogram_{score_id}.yaml"
         if filename in self.resource.get_manifest():
             return filename
@@ -345,11 +347,6 @@ class GeneScore(
     @lru_cache(maxsize=64)
     def get_score_histogram(self, score_id: str) -> NumberHistogram:
         """Return defined histogram for a score."""
-        if score_id not in self.score_definitions:
-            raise ValueError(
-                f"unexpected gene score ID {score_id}; available scores are: "
-                f"{self.get_all_scores()}")
-
         hist_filename = self.get_histogram_filename(score_id)
         hist = load_histogram(self.resource, hist_filename)
         return cast(NumberHistogram, hist)
