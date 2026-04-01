@@ -70,7 +70,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph.cli_tools import TaskGraphCli
-from dae.task_graph.graph import TaskGraph, sync_tasks
+from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -573,18 +573,12 @@ def _add_tasks_tabixed(
             ),
         )
 
-    annotation_sync = task_graph.create_task(
-        "sync_csv_write",
-        sync_tasks,
-        args=[],
-        deps=annotation_tasks,
-    )
-
     concat_task = task_graph.create_task(
         "concat",
         _concat,
         args=[file_paths, output_path, args["keep_parts"]],
-        deps=[annotation_sync],
+        deps=annotation_tasks,
+        input_files=file_paths,
         intermediate_output_files=[output_path],
     )
 
