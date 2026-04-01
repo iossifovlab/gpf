@@ -753,7 +753,7 @@ def test_get_score_range_unknown_score(
     res = scores_repo.get_resource("LinearHist")
     gene_score = build_gene_score_from_resource(res)
 
-    with pytest.raises(ValueError, match="unknown score"):
+    with pytest.raises(ValueError, match="unexpected gene score ID"):
         gene_score.get_score_range("nonexistent")
 
 
