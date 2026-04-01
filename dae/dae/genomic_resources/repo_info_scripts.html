@@ -179,12 +179,14 @@
         var debouncedSearch = debounce(doSearch, 400, false);
 
         $("#search-field").on("keydown", (e) => {
-            if (e.key === "Enter") {
-                doSearch();
-            }
-            else {
-                debouncedSearch();
-            }
+          if (e.key === "Enter") {
+            doSearch();
+          }
+          else {
+            debouncedSearch();
+          }
+          // reset all icons
+           document.querySelectorAll('.copy-icon').forEach(i => i.textContent = 'content_copy')
         });
         
         $(".copy-icon").on("click", (e) => {
@@ -195,7 +197,7 @@
               e.target.textContent = 'check'
               setTimeout(function(){
                 e.target.textContent = 'content_copy'
-              }, 5000);
+              }, 3000);
             }
           )
         });
