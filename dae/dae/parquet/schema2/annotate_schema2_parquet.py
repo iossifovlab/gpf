@@ -14,7 +14,6 @@ from typing import Any
 import yaml
 
 from dae.annotation.annotate_utils import (
-    add_input_files_to_task_graph,
     build_cli_genomic_context,
     cache_pipeline_resources,
     get_grr_from_context,
@@ -575,7 +574,11 @@ def cli(raw_args: list[str] | None = None) -> None:
 
     if len(task_graph.tasks) == 0:
         return
-    add_input_files_to_task_graph(args, task_graph)
+
+    if "pipeline" in args:
+        task_graph.input_files.append(args["pipeline"])
+    if args.get("reannotate"):
+        task_graph.input_files.append(args["reannotate"])
 
     if args.get("task_ids") is not None:
         task_graph.prune(tasks_to_keep=args["task_ids"])
