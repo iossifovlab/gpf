@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from io import StringIO
+from threading import Lock
 from typing import Any, cast
 from urllib.parse import quote
 
@@ -510,9 +511,30 @@ class GeneScoresDb:
         return len(self.score_descs)
 
 
+_INMEMORY_CACHE: dict[tuple[str, str], GeneScore] = {}
+_INMEMORY_CACHE_LOCK = Lock()
+
+
 def build_gene_score_from_resource(resource: GenomicResource) -> GeneScore:
+    """Load gene score from a genomic resource."""
     if resource is None:
         raise ValueError(f"missing resource {resource}")
+
+    if resource.get_type() != "gene_score":
+        logger.error(
+            "trying to open a resource %s of type "
+            "%s as gene scores", resource.resource_id, resource.get_type())
+        raise ValueError(f"invalid resource type: {resource.resource_id}")
+
+    cache_id = (resource.get_full_id(), resource.get_repo_url())
+    with _INMEMORY_CACHE_LOCK:
+        if cache_id in _INMEMORY_CACHE:
+            return _INMEMORY_CACHE[cache_id]
+
+        gene_score = GeneScore(resource)
+        _INMEMORY_CACHE[cache_id] = gene_score
+        return gene_score
+
     return GeneScore(resource)
 
 
