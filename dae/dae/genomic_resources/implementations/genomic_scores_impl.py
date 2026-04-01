@@ -645,14 +645,14 @@ GENOMIC_SCORES_TEMPLATE = """
                     </div>
                 {% endif %}
             </td>
-            <td>
+            <td style="text-align: center">
                 {% set hist = impl.score.get_score_histogram(score_id) %}
                 {%- if hist.type != 'null_histogram' %}
                 {% set hist_image_file = impl.score.get_histogram_image_filename(score_id) %}
                 <img src="{{ hist_image_file }}"
                     alt="{{ "HISTOGRAM FOR " + score_id }}"
                     title={{ score_id | replace(" ", "_") }}
-                    style="width: 200px; cursor: pointer;"
+                    style="max-width: 200px; cursor: pointer;"
                     data-modal-trigger="modal-{{ score_id | replace(" ", "_") }}">
                 {%- else -%}
                 <p>No histogram: {{ hist.reason }}</p>

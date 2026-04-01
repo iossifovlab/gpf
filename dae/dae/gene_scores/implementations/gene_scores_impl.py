@@ -206,11 +206,11 @@ GENE_SCORES_TEMPLATE = """
                 </td>
 
                 {% set hist = score.get_score_histogram(score_id) %}
-                <td>
+                <td style="text-align: center">
                 {% if hist %}
                     <div class="histogram">
                         <img src="{{score.get_histogram_image_filename(score_id)}}"
-                            style="width: 200px; cursor: pointer;"
+                            style="max-width: 200px; cursor: pointer;"
                             alt={{ score_id }}
                             title=" {{ score_id | replace(" ", "_") }}"
                             data-modal-trigger="modal-{{ score_id | replace(" ", "_") }}">
