@@ -267,7 +267,7 @@ RESOURCE_TEMPLATE = Template("""
       #resource-table {
         margin-bottom: 70px;
       }
-                    
+
       #resource-table th {
         text-align: end;
         width: 100px;
@@ -287,7 +287,7 @@ RESOURCE_TEMPLATE = Template("""
       a:hover {
         color: #4C93C9;
       }
-                             
+
       .nowrap {
         white-space: nowrap;
         overflow: hidden;
@@ -311,7 +311,7 @@ RESOURCE_TEMPLATE = Template("""
         margin: auto;
         display: block;
         width: 80%;
-        max-width: 700px;
+        max-width: 800px;
       }
 
       .close {

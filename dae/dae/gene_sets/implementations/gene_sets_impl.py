@@ -396,7 +396,7 @@ GENE_SETS_TEMPLATE = """
 </div>
 <div id="genes-per-gene-set" class="modal">
     <div class="modal-content"
-        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content; max-width: min(100%, 800px);">
         <span class="close">&times;</span>
         <img src="{{ gsc.get_genes_per_gene_set_hist_image_filename() }}"
             alt="genes per gene set histogram"
@@ -405,7 +405,7 @@ GENE_SETS_TEMPLATE = """
 </div>
 <div id="gene-sets-per-gene" class="modal">
     <div class="modal-content"
-        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content; max-width: min(100%, 800px);">
         <span class="close">&times;</span>
         <img src="{{ gsc.get_gene_sets_per_gene_hist_image_filename() }}"
             alt="genes per gene set histogram"
