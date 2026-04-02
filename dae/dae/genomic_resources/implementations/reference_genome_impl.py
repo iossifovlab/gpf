@@ -331,7 +331,7 @@ class ReferenceGenomeImplementation(
                 margin-bottom: 50px;
             }
             #chromosomes-table th {
-                border: 0;  
+                border: 0;
                 border-top: 1px solid #cfd8df;
                 border-bottom: 1px solid #cfd8df;
                 border-right: 1px solid #cfd8df;

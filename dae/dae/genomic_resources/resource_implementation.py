@@ -230,7 +230,7 @@ RESOURCE_TEMPLATE = Template("""
         margin: 50px auto 100px auto;
         padding: 0 40px;
       }
-      
+
       h2 {
         margin-top: 50px;
         margin-bottom: 10px;
@@ -259,11 +259,11 @@ RESOURCE_TEMPLATE = Template("""
         border: 1px solid #cfd8df;
         padding: 5px 10px;
       }
-  
+
       tr {
         height: 38px;
       }
-                             
+
       #resource-table {
         margin-bottom: 70px;
       }
@@ -276,7 +276,7 @@ RESOURCE_TEMPLATE = Template("""
       ul {
         list-style-type: '-  ';
         padding-left: 15px;
-        margin: 0;                    
+        margin: 0;
       }
 
       a {
@@ -475,7 +475,7 @@ STATISTICS_TEMPLATE = Template("""
         margin: 50px auto 100px auto;
         padding: 0 40px;
       }
-      
+
       h2 {
         margin-top: 50px;
         margin-bottom: 10px;
@@ -504,7 +504,7 @@ STATISTICS_TEMPLATE = Template("""
         border: 1px solid #cfd8df;
         padding: 5px 10px;
       }
-  
+
       tr {
         height: 38px;
       }
@@ -512,7 +512,7 @@ STATISTICS_TEMPLATE = Template("""
       ul {
         list-style-type: '-  ';
         padding-left: 15px;
-        margin: 0;                    
+        margin: 0;
       }
 
       a {
@@ -522,7 +522,8 @@ STATISTICS_TEMPLATE = Template("""
 
       a:hover {
         color: #4C93C9;
-      }           
+      }
+
       .nowrap {
         white-space: nowrap;
         overflow: hidden;
