@@ -391,6 +391,7 @@ class TaskGraph:
         return result
 
     def as_directed_graph(self) -> networkx.DiGraph:
+        """Return the task graph as a networkx directed graph."""
         with self._lock:
             di_graph = networkx.DiGraph()
             nodes: list[Task] = list(self._tasks.keys())
