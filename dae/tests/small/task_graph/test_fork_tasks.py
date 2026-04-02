@@ -67,6 +67,8 @@ def test_exec_without_fork_invokes_internal(
         {},
         [],
         [],
+        [],
+        [],
     )
     result = TaskGraphExecutorBase._exec(
         simple_task, params,
@@ -85,6 +87,8 @@ def test_exec_forked_simple(
         add_to_list,
         [1, []],
         {},
+        [],
+        [],
         [],
         [],
     )
@@ -113,6 +117,8 @@ def test_exec_forked_exception(
         raise_exception,
         [],
         {},
+        [],
+        [],
         [],
         [],
     )

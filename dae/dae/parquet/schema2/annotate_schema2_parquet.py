@@ -14,7 +14,6 @@ from typing import Any
 import yaml
 
 from dae.annotation.annotate_utils import (
-    add_input_files_to_task_graph,
     build_cli_genomic_context,
     cache_pipeline_resources,
     get_grr_from_context,
@@ -64,7 +63,8 @@ from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from dae.task_graph.cli_tools import TaskGraphCli
+from dae.task_graph.cache import TaskCache
+from dae.task_graph.cli_tools import TaskGraphCli, task_graph_run
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region, split_into_regions
@@ -220,12 +220,39 @@ def symlink_pedigree_and_family_variants(
     """
     Mirror pedigree and family variants data using symlinks.
     """
+    src_pedigree_dir = pathlib.Path(src_layout.pedigree).parent
+    dest_pedigree_dir = pathlib.Path(dest_layout.pedigree).parent
+    if (
+        os.path.exists(src_pedigree_dir)
+        and
+        os.path.islink(dest_pedigree_dir)
+    ):
+        os.unlink(dest_pedigree_dir)
+    elif os.path.exists(dest_pedigree_dir):
+        raise FileExistsError(
+            f"Cannot create symlink for pedigree variants, "
+            f"destination '{dest_pedigree_dir}' already exists "
+            "and is not a symlink!",
+        )
+
     os.symlink(
         pathlib.Path(src_layout.pedigree).parent,
         pathlib.Path(dest_layout.pedigree).parent,
         target_is_directory=True,
     )
     if src_layout.family is not None and dest_layout.family is not None:
+        if (
+            os.path.exists(src_layout.family)
+            and
+            os.path.islink(dest_layout.family)
+        ):
+            os.unlink(dest_layout.family)
+        elif os.path.exists(dest_layout.family):
+            raise FileExistsError(
+                f"Cannot create symlink for family variants, "
+                f"destination '{dest_layout.family}' already exists "
+                "and is not a symlink!",
+            )
         os.symlink(
             src_layout.family,
             dest_layout.family,
@@ -429,7 +456,7 @@ def _setup_io_layouts(
         raise ValueError("No output path was provided!")
 
     input_dir = os.path.abspath(input_path)
-    output_dir = input_dir if in_place\
+    output_dir = f"{input_dir}_temp" if in_place\
         else os.path.abspath(output_path)
 
     if not in_place:
@@ -441,8 +468,7 @@ def _setup_io_layouts(
         elif os.path.exists(output_dir) and force:
             _remove_data(output_dir)
 
-    input_layout = backup_schema2_study(input_dir) if in_place \
-        else create_schema2_dataset_layout(input_dir)
+    input_layout = create_schema2_dataset_layout(input_dir)
     output_layout = create_schema2_dataset_layout(output_dir)
 
     if input_layout.summary is None:
@@ -546,6 +572,36 @@ def cli(raw_args: list[str] | None = None) -> None:
         args,
     )
 
-    if len(task_graph.tasks) > 0:
-        add_input_files_to_task_graph(args, task_graph)
-        TaskGraphCli.process_graph(task_graph, **args)
+    if len(task_graph.tasks) == 0:
+        return
+
+    if "pipeline" in args:
+        task_graph.input_files.append(args["pipeline"])
+    if args.get("reannotate"):
+        task_graph.input_files.append(args["reannotate"])
+
+    if args.get("task_ids") is not None:
+        task_graph.prune(tasks_to_keep=args["task_ids"])
+
+    task_cache = TaskCache.create(
+        task_progress_mode=args.get("task_progress_mode", True),
+        cache_dir=args.get("task_status_dir"),
+    )
+    with TaskGraphCli.create_executor(task_cache, **args) as xtor:
+        completed_tasks = list(xtor.get_completed_tasks(task_graph))
+        task_graph.process_completed_tasks(completed_tasks)
+        if args["in_place"]:
+            if len(task_graph) == 0:
+                return
+
+            task_graph_run(
+                task_graph, xtor, keep_going=args.get("keep_going", False))
+
+            backup_schema2_study(args["input"])
+            assert output_layout.summary is not None
+            assert loader.layout.summary is not None
+            shutil.move(output_layout.summary, loader.layout.summary)
+            shutil.move(output_layout.meta, loader.layout.meta)
+        else:
+            task_graph_run(
+                task_graph, xtor, keep_going=args.get("keep_going", False))

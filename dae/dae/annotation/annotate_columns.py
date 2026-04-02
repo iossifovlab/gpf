@@ -70,7 +70,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph.cli_tools import TaskGraphCli
-from dae.task_graph.graph import TaskGraph, sync_tasks
+from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -556,43 +556,49 @@ def _add_tasks_tabixed(
 
     annotation_tasks = []
     for region, path in zip(regions, file_paths, strict=True):
-        annotation_tasks.append(task_graph.create_task(
-            f"part-{str(region).replace(':', '-')}",
-            _annotate_csv,
-            args=[
-                path,
-                pipeline_config,
-                grr_definition,
-                ref_genome_id,
-                region,
-                args,
-            ],
-            deps=[]))
-
-    annotation_sync = task_graph.create_task(
-        "sync_csv_write",
-        sync_tasks,
-        args=[],
-        deps=annotation_tasks,
-    )
+        annotation_tasks.append(
+            task_graph.create_task(
+                f"part-{str(region).replace(':', '-')}",
+                _annotate_csv,
+                args=[
+                    path,
+                    pipeline_config,
+                    grr_definition,
+                    ref_genome_id,
+                    region,
+                    args,
+                ],
+                deps=[],
+                intermediate_output_files=[path],
+            ),
+        )
 
     concat_task = task_graph.create_task(
         "concat",
         _concat,
         args=[file_paths, output_path, args["keep_parts"]],
-        deps=[annotation_sync])
+        deps=annotation_tasks,
+        input_files=file_paths,
+        intermediate_output_files=[output_path],
+    )
 
     compress_task = task_graph.create_task(
         "tabix_compress",
         _tabix_compress,
         args=[output_path],
-        deps=[concat_task])
+        deps=[concat_task],
+        input_files=[output_path],
+        output_files=[f"{output_path}.gz"],
+    )
 
     task_graph.create_task(
         "tabix_index",
         _tabix_index,
         args=[f"{output_path}.gz", args["columns_args"]],
-        deps=[compress_task])
+        deps=[compress_task],
+        input_files=[f"{output_path}.gz"],
+        output_files=[f"{output_path}.gz.tbi"],
+    )
 
 
 def _add_tasks_plaintext(
@@ -603,24 +609,43 @@ def _add_tasks_plaintext(
     grr_definition: dict[str, Any],
     ref_genome_id: str | None,
 ) -> None:
-    annotate_task = task_graph.create_task(
-        "annotate_all",
-        _annotate_csv,
-        args=[
-            output_path,
-            pipeline_config,
-            grr_definition,
-            ref_genome_id,
-            None,
-            args,
-        ],
-        deps=[])
     if is_compressed_filename(args["input"]):
+        annotate_task = task_graph.create_task(
+            "annotate_all",
+            _annotate_csv,
+            args=[
+                output_path,
+                pipeline_config,
+                grr_definition,
+                ref_genome_id,
+                None,
+                args,
+            ],
+            deps=[],
+            intermediate_output_files=[output_path],
+        )
         task_graph.create_task(
             "tabix_compress",
             _tabix_compress,
             args=[output_path],
-            deps=[annotate_task])
+            deps=[annotate_task],
+            output_files=[f"{output_path}.gz"],
+        )
+    else:
+        task_graph.create_task(
+            "annotate_all",
+            _annotate_csv,
+            args=[
+                output_path,
+                pipeline_config,
+                grr_definition,
+                ref_genome_id,
+                None,
+                args,
+            ],
+            deps=[],
+            output_files=[output_path],
+        )
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:

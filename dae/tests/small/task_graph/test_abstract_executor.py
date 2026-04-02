@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import os
 import pathlib
-from collections.abc import Generator
 from typing import Any, cast
 
 import networkx
@@ -22,7 +21,7 @@ from dae.task_graph.cli_tools import (
 from dae.task_graph.executor import (
     TaskGraphExecutor,
 )
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.graph import Task, TaskDesc, TaskGraph
 
 
 def add_to_list(what: int, where: list[int]) -> list[int]:
@@ -57,23 +56,20 @@ class DummyCache(TaskCache):
     def __init__(self, mapping: dict[Task, CacheRecord]):
         self.mapping = mapping
 
-    def load(
-        self, graph: TaskGraph,
-    ) -> Generator[tuple[Task, CacheRecord], None, None]:
-        for task in graph.tasks:
-            yield task, self.mapping.get(
-                task, CacheRecord(CacheRecordType.NEEDS_COMPUTE),
-            )
+    def get_record(
+        self, task_desc: TaskDesc,
+    ) -> CacheRecord:
+        return self.mapping[task_desc.task]
 
     def cache(
-        self, task_node: Task, *,
+        self, task: Task, *,
         is_error: bool, result: Any,
     ) -> None:
         record_type = (
             CacheRecordType.ERROR if is_error
             else CacheRecordType.COMPUTED
         )
-        self.mapping[task_node] = CacheRecord(record_type, result)
+        self.mapping[task] = CacheRecord(record_type, result)
 
 
 def test_calling_execute_twice(executor: TaskGraphExecutor) -> None:
@@ -117,7 +113,9 @@ def test_executing_with_cache(
     os.remove(base_executor._task_cache._get_flag_filename(task_to_delete))
 
     task_results = list(executor.execute(graph))
-    assert len(task_results) == 9
+    assert len(task_results) == 2
+    task_ids = [task.task_id for task, _ in task_results]
+    assert set(task_ids) == {"7", "final"}
     for task, result in task_results:
         if task.task_id == "final":
             assert result == [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7]
@@ -257,10 +255,8 @@ def test_task_graph_all_done_detects_cycle() -> None:
     graph.create_task("A", lambda: None, args=[], deps=[Task("B")])
     graph.create_task("B", lambda: None, args=[], deps=[Task("A")])
 
-    cache = DummyCache({})
-
     with pytest.raises(ValueError, match="Cyclic dependency"):
-        task_graph_all_done(graph, cache)
+        graph.as_directed_graph()
 
 
 @pytest.mark.parametrize(

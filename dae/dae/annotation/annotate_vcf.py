@@ -59,7 +59,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.task_graph.cli_tools import TaskGraphCli
-from dae.task_graph.graph import TaskGraph, sync_tasks
+from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from dae.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from dae.utils.regions import Region
@@ -460,24 +460,41 @@ def _add_tasks_plaintext(
     pipeline_config: RawPipelineConfig,
     grr_definition: dict[str, Any],
 ) -> None:
-    annotate_task = task_graph.create_task(
-        "all_variants_annotate",
-        _annotate_vcf,
-        args=[
-            output_path,
-            pipeline_config,
-            grr_definition,
-            None,
-            args,
-        ],
-        deps=[],
-    )
     if is_compressed_filename(args["input"]):
+        annotate_task = task_graph.create_task(
+            "all_variants_annotate",
+            _annotate_vcf,
+            args=[
+                output_path,
+                pipeline_config,
+                grr_definition,
+                None,
+                args,
+            ],
+            deps=[],
+            intermediate_output_files=[output_path],
+        )
         task_graph.create_task(
             "tabix_compress",
             _tabix_compress,
             args=[output_path],
-            deps=[annotate_task])
+            input_files=[output_path],
+            deps=[annotate_task],
+        )
+    else:
+        task_graph.create_task(
+            "all_variants_annotate",
+            _annotate_vcf,
+            args=[
+                output_path,
+                pipeline_config,
+                grr_definition,
+                None,
+                args,
+            ],
+            deps=[],
+            output_files=[output_path],
+        )
 
 
 def _add_tasks_tabixed(
@@ -505,29 +522,31 @@ def _add_tasks_tabixed(
                 args,
             ],
             deps=[],
+            output_files=[file_path],
         ))
-
-    annotation_sync = task_graph.create_task(
-        "sync_vcf_annotate", sync_tasks,
-        args=[], deps=annotation_tasks,
-    )
 
     concat_task = task_graph.create_task(
         "concat",
         _concat,
         args=[file_paths, output_path, args["keep_parts"]],
-        deps=[annotation_sync],
+        input_files=file_paths,
+        intermediate_output_files=[output_path],
+        deps=annotation_tasks,
     )
     compress_task = task_graph.create_task(
         "tabix_compress",
         _tabix_compress,
         args=[output_path],
+        input_files=[output_path],
+        output_files=[f"{output_path}.gz"],
         deps=[concat_task])
 
     task_graph.create_task(
         "tabix_index",
         _tabix_index,
         args=[f"{output_path}.gz"],
+        input_files=[f"{output_path}.gz"],
+        output_files=[f"{output_path}.gz.tbi"],
         deps=[compress_task])
 
 

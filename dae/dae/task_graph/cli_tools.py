@@ -177,18 +177,12 @@ class TaskGraphCli:
         if kwargs.get("task_ids") is not None:
             task_graph.prune(tasks_to_keep=kwargs["task_ids"])
 
-        force = kwargs.get("force", False)
         task_cache = TaskCache.create(
             task_progress_mode=task_progress_mode,
-            force=force,
             cache_dir=kwargs.get("task_status_dir"),
         )
 
         if kwargs.get("command") is None or kwargs.get("command") == "run":
-            if task_graph_all_done(task_graph, task_cache):
-                logger.warning(
-                    "All tasks are already COMPUTED; nothing to compute")
-                return True
             with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
                 return task_graph_run(
                     task_graph, xtor,
@@ -246,16 +240,11 @@ def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
     When all tasks are already computed, the function returns True.
     If there are tasks, that need to run, the function returns False.
     """
-    # pylint: disable=protected-access
-    already_computed_tasks = {}
-    for task_node, record in task_cache.load(task_graph):
-        if record.type == CacheRecordType.COMPUTED:
-            already_computed_tasks[task_node] = record.result
-
-    for task_node in task_graph.topological_order():
-        if task_node not in already_computed_tasks:
-            return False
-
+    with task_graph as tasks:
+        for task in tasks:
+            record = task_cache.get_record(task_graph.get_task_desc(task))
+            if record.type != CacheRecordType.COMPUTED:
+                return False
     return True
 
 
@@ -267,9 +256,8 @@ def task_graph_status(
     id_col_len = min(120, max(50, id_col_len))
     columns = ["TaskID", "Status"]
     print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-    task2record = dict(task_cache.load(task_graph))
     for task in task_graph.tasks:
-        record = task2record[task]
+        record = task_cache.get_record(task_graph.get_task_desc(task))
         status = record.type.name
         msg = f"{task.task_id:{id_col_len}s} {status}"
         is_error = record.type == CacheRecordType.ERROR
