@@ -355,10 +355,6 @@ class ReferenceGenomeImplementation(
 
             {% block content %}
 
-            {% if data["chrom_prefix"] %}
-            <p>chrom prefix: {{ data["chrom_prefix"] }}</p>
-            {% endif %}
-
             {% if data["PARS"] %}
             <h3>Pseudoautosomal regions:</h6>
             {% if data["PARS"]["X"] %}
@@ -380,8 +376,7 @@ class ReferenceGenomeImplementation(
             {% endif %}
             {% endif %}
 
-            <h2>Genome statistics:</h2>
-            <h3>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h3>
+            <h2>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h2>
             <div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 14px;">
                 <table id="chromosomes-table">
                     <thead>
@@ -416,8 +411,8 @@ class ReferenceGenomeImplementation(
                 </table>
             </div>
             {% if data["global_statistic"] %}
-                <h4>Bi-Nucleotide distribution:</h4>
-                <table border="1">
+                <h2>Bi-Nucleotide distribution:</h2>
+                <table border="1" style="width: fit-content;">
                     <tr>
                         <th>{{ nucleotide }}</th>
                         {% for nucleotide in ["A", "T", "C", "G", "N"] %}

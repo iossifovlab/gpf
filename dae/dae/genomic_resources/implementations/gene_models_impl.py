@@ -129,14 +129,14 @@ class GeneModelsImpl(
 {% endblock %}
 
 {% block content %}
-<h1>Configuration</h1>
+<h2>Configuration</h2>
     <p><b>Gene models file:</b> <a href="{{ data.config.filename }}">
     {{ data.config.filename }}
     </a></p>
 
     <p><b>Format:</b> {{ data.config.format }}</p>
-<h1>Statistics</h1>
-    <h2>Chromosome statistics</h2>
+<h2>Statistics</h2>
+    <h3>Chromosome statistics</h3>
     <div style="max-height: 50%; overflow-y: auto; width: fit-content">
         <table id="chromosomes-table">
             <thead>

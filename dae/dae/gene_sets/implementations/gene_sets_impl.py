@@ -335,8 +335,6 @@ GENE_SETS_TEMPLATE = """
 #gene-sets-table {
     border-collapse: separate;
     border-spacing: 0;
-    width: 1200px;
-    table-layout: fixed;
 }
 #gene-sets-table th {
     word-break: break-word;
@@ -371,8 +369,7 @@ GENE_SETS_TEMPLATE = """
 {% block content %}
 {% set gsc = data.impl.gene_set_collection %}
 
-<h1>Gene set ID: {{ data["id"] }}</h1>
-<h2>Statistics:</h2>
+<h2>Gene sets</h2>
 <p><b>Number of gene sets:</b> {{ data["number_of_gene_sets"] }}</p>
 <p><b>Number of unique genes:</b> {{ data["number_of_unique_genes"] }}</p>
 <div style="display: flex; padding-top: 8px;">
@@ -415,7 +412,7 @@ GENE_SETS_TEMPLATE = """
             title="gene-sets-per-gene">
     </div>
 </div>
-<div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 16px;">
+<div style="max-height: 50%; overflow-y: auto; margin-bottom: 16px;">
     <table id="gene-sets-table">
         <thead>
             <tr>
@@ -439,9 +436,5 @@ GENE_SETS_TEMPLATE = """
 <p style="margin-top: 32px"><b>Gene sets file:</b> <a href="{{ data["filename"] }}">{{ data["filename"] }}</a></p>
 {% endif %}
 <p><b>Format:</b> {{ data["format"] }}</p>
-{% if data["web_label"] %}<p><b>Web label:</b> {{ data["web_label"] }}</p>{% endif %}
-{% if data["web_format_str"] %}
-<p><b>Web label:</b> {{ data["web_format_str"] }}</p>
-{% endif %}
 {% endblock %}
 """  # noqa: E501

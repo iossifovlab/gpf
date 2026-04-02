@@ -231,7 +231,7 @@ RESOURCE_TEMPLATE = Template("""
         padding: 0 40px;
       }
       
-      h1 {
+      h2 {
         margin-top: 50px;
         margin-bottom: 10px;
       }
@@ -262,6 +262,10 @@ RESOURCE_TEMPLATE = Template("""
   
       tr {
         height: 38px;
+      }
+                             
+      #resource-table {
+        margin-bottom: 70px;
       }
                     
       #resource-table th {
@@ -362,7 +366,7 @@ RESOURCE_TEMPLATE = Template("""
     </script>
   </head>
     <body>
-    <h1>Resource</h1>
+    <h2>Resource</h2>
     <div>
         <table border="1" id="resource-table">
             <tr>
@@ -431,7 +435,7 @@ RESOURCE_TEMPLATE = Template("""
     N/A
     {% endblock %}
 
-    <h1>Files</h1>
+    <h2 style="margin-top: 70px;">Files</h2>
     <table>
     <thead>
         <tr>
@@ -472,7 +476,7 @@ STATISTICS_TEMPLATE = Template("""
         padding: 0 40px;
       }
       
-      h1 {
+      h2 {
         margin-top: 50px;
         margin-bottom: 10px;
       }
@@ -503,11 +507,6 @@ STATISTICS_TEMPLATE = Template("""
   
       tr {
         height: 38px;
-      }
-                    
-      #resource-table th {
-        text-align: end;
-        width: 100px;
       }
 
       ul {
