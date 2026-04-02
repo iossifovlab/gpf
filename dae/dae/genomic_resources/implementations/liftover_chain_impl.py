@@ -38,12 +38,12 @@ class LiftoverChainImplementation(
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
-            <hr>
-            <h3>Liftover chain file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
-            <p>Format: {{ data["format"] }}</p>
+            <p>
+              <b>Liftover chain file: </b>
+              <a href="{{ data["filename"] }}">{{ data["filename"] }}</a>
+            </p>
+
+            <p><b>Format: </b>{{ data["format"] }}</p>
             {% if data["variant_chrom"] %}
             <p>{{ data["variant_chrom"] }}</p>
             {% endif %}

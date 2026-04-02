@@ -410,6 +410,15 @@ RESOURCE_TEMPLATE = Template("""
                                 height: auto;
                                 display: block;
                               }
+
+                              a {
+                                text-decoration: none;
+                                color: #24699E;
+                              }
+
+                              a:hover {
+                                color: #4C93C9;
+                              }
                             </style>
                             {%- set description = resource.get_description() -%}
                             {{

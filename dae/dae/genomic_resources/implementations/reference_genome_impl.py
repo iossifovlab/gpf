@@ -376,7 +376,7 @@ class ReferenceGenomeImplementation(
             {% endif %}
             {% endif %}
 
-            <h2>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h2>
+            <h3>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h3>
             <div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 14px;">
                 <table id="chromosomes-table">
                     <thead>
@@ -411,7 +411,7 @@ class ReferenceGenomeImplementation(
                 </table>
             </div>
             {% if data["global_statistic"] %}
-                <h2>Bi-Nucleotide distribution:</h2>
+                <h3>Bi-Nucleotide distribution:</h3>
                 <table border="1" style="width: fit-content;">
                     <tr>
                         <th>{{ nucleotide }}</th>
