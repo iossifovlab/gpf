@@ -106,17 +106,19 @@ class GeneModelsImpl(
     border-spacing: 0;
 }
 #chromosomes-table th {
-    border-top: 1px solid;
-    border-bottom: 1px solid;
-    border-right: 1px solid;
+    border: 0;
+    border-top: 1px solid #cfd8df;
+    border-bottom: 1px solid #cfd8df;
+    border-right: 1px solid #cfd8df;
 }
 #chromosomes-table td {
-    border-bottom: 1px solid;
-    border-right: 1px solid;
+    border: 0;
+    border-bottom: 1px solid #cfd8df;
+    border-right: 1px solid #cfd8df;
 }
 #chromosomes-table th:first-child,
 #chromosomes-table td:first-child {
-    border-left: 1px solid;
+    border-left: 1px solid #cfd8df;
 }
 #chromosomes-table thead tr:nth-of-type(2) th {
     border-top: none;
@@ -127,15 +129,14 @@ class GeneModelsImpl(
 {% endblock %}
 
 {% block content %}
-<h1>Configuration</h1>
-    Gene models file:
-    <p><a href="{{ data.config.filename }}">
+<h2>Configuration</h2>
+    <p><b>Gene models file:</b> <a href="{{ data.config.filename }}">
     {{ data.config.filename }}
     </a></p>
 
-    <p>Format: {{ data.config.format }}</p>
-<h1>Statistics</h1>
-    <h2>Chromosome statistics</h2>
+    <p><b>Format:</b> {{ data.config.format }}</p>
+<h2>Statistics</h2>
+    <h3>Chromosome statistics</h3>
     <div style="max-height: 50%; overflow-y: auto; width: fit-content">
         <table id="chromosomes-table">
             <thead>

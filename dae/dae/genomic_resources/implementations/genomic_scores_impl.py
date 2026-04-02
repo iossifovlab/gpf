@@ -606,7 +606,7 @@ GENOMIC_SCORES_TEMPLATE = """
 {% set impl = data.genomic_scores %}
 {% set scores = impl.score %}
 
-<h1>Scores</h1>
+<h2>Scores</h2>
 <table border="1">
     <tr>
         <th>ID</th>
@@ -645,14 +645,14 @@ GENOMIC_SCORES_TEMPLATE = """
                     </div>
                 {% endif %}
             </td>
-            <td>
+            <td style="text-align: center">
                 {% set hist = impl.score.get_score_histogram(score_id) %}
                 {%- if hist.type != 'null_histogram' %}
                 {% set hist_image_file = impl.score.get_histogram_image_filename(score_id) %}
                 <img src="{{ hist_image_file }}"
                     alt="{{ "HISTOGRAM FOR " + score_id }}"
                     title={{ score_id | replace(" ", "_") }}
-                    style="width: 200px; cursor: pointer;"
+                    style="max-width: 200px; cursor: pointer;"
                     data-modal-trigger="modal-{{ score_id | replace(" ", "_") }}">
                 {%- else -%}
                 <p>No histogram: {{ hist.reason }}</p>
@@ -673,7 +673,8 @@ GENOMIC_SCORES_TEMPLATE = """
                 <span title={{score_id | replace(" ", "_")}} class="close">&times;</span>
                 <img src="{{ impl.score.get_histogram_image_filename(score_id) }}"
                     alt="{{ "HISTOGRAM FOR " + score_id }}"
-                    title={{ score_id | replace(" ", "_")}}>
+                    title={{ score_id | replace(" ", "_")}}
+                    style="max-width: min(100%, 800px);">
             </div>
         </div>
     {%- endfor %}

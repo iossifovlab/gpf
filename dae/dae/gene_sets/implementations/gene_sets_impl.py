@@ -335,25 +335,25 @@ GENE_SETS_TEMPLATE = """
 #gene-sets-table {
     border-collapse: separate;
     border-spacing: 0;
-    width: 1200px;
-    table-layout: fixed;
 }
 #gene-sets-table th {
     word-break: break-word;
     max-width: 200px;
-    border-top: 1px solid;
-    border-bottom: 1px solid;
-    border-right: 1px solid;
+    border: 0;
+    border-top: 1px solid #cfd8df;
+    border-bottom: 1px solid #cfd8df;
+    border-right: 1px solid #cfd8df;
 }
 #gene-sets-table td {
     word-break: break-word;
     max-width: 200px;
-    border-bottom: 1px solid;
-    border-right: 1px solid;
+    border: 0;
+    border-bottom: 1px solid #cfd8df;
+    border-right: 1px solid #cfd8df;
 }
 #gene-sets-table th:first-child,
 #gene-sets-table td:first-child {
-    border-left: 1px solid;
+    border-left: 1px solid #cfd8df;
 }
 #gene-sets-table thead tr:nth-of-type(2) th {
     border-top: none;
@@ -368,11 +368,10 @@ GENE_SETS_TEMPLATE = """
 
 {% block content %}
 {% set gsc = data.impl.gene_set_collection %}
-<hr>
-<h2>Gene set ID: {{ data["id"] }}</h2>
-<h3>Statistics:</h3>
-<p>Number of gene sets: {{ data["number_of_gene_sets"] }}</p>
-<p>Number of unique genes: {{ data["number_of_unique_genes"] }}</p>
+
+<h2>Gene sets</h2>
+<p><b>Number of gene sets:</b> {{ data["number_of_gene_sets"] }}</p>
+<p><b>Number of unique genes:</b> {{ data["number_of_unique_genes"] }}</p>
 <div style="display: flex; padding-top: 8px;">
     <div style="display: flex; flex-direction: column; align-items: center;">
         <span>Count of genes per gene set</span>
@@ -397,7 +396,7 @@ GENE_SETS_TEMPLATE = """
 </div>
 <div id="genes-per-gene-set" class="modal">
     <div class="modal-content"
-        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content; max-width: min(100%, 800px);">
         <span class="close">&times;</span>
         <img src="{{ gsc.get_genes_per_gene_set_hist_image_filename() }}"
             alt="genes per gene set histogram"
@@ -406,14 +405,14 @@ GENE_SETS_TEMPLATE = """
 </div>
 <div id="gene-sets-per-gene" class="modal">
     <div class="modal-content"
-        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content; max-width: min(100%, 800px);">
         <span class="close">&times;</span>
         <img src="{{ gsc.get_gene_sets_per_gene_hist_image_filename() }}"
             alt="genes per gene set histogram"
             title="gene-sets-per-gene">
     </div>
 </div>
-<div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 16px;">
+<div style="max-height: 50%; overflow-y: auto; margin-bottom: 16px;">
     <table id="gene-sets-table">
         <thead>
             <tr>
@@ -432,16 +431,10 @@ GENE_SETS_TEMPLATE = """
     </table>
 </div>
 {% if data["format"] == "directory" %}
-<h3>Gene sets directory:</h3>
-<a href="{{ data["directory"] }}">{{ data["directory"] }}</a>
+<p><b>Gene sets directory:</b> <a href="{{ data["directory"] }}">{{ data["directory"] }}</a></p>
 {% else %}
-<h3 style="margin-top: 32px">Gene sets file:</h3>
-<a href="{{ data["filename"] }}">{{ data["filename"] }}</a>
+<p style="margin-top: 32px"><b>Gene sets file:</b> <a href="{{ data["filename"] }}">{{ data["filename"] }}</a></p>
 {% endif %}
-<p>Format: {{ data["format"] }}</p>
-{% if data["web_label"] %}<p>Web label: {{ data["web_label"] }}</p>{% endif %}
-{% if data["web_format_str"] %}
-<p>Web label: {{ data["web_format_str"] }}</p>
-{% endif %}
+<p><b>Format:</b> {{ data["format"] }}</p>
 {% endblock %}
 """  # noqa: E501

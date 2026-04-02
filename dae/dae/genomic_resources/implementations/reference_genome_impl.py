@@ -328,19 +328,22 @@ class ReferenceGenomeImplementation(
             #chromosomes-table {
                 border-collapse: separate;
                 border-spacing: 0;
+                margin-bottom: 50px;
             }
             #chromosomes-table th {
-                border-top: 1px solid;
-                border-bottom: 1px solid;
-                border-right: 1px solid;
+                border: 0;
+                border-top: 1px solid #cfd8df;
+                border-bottom: 1px solid #cfd8df;
+                border-right: 1px solid #cfd8df;
             }
             #chromosomes-table td {
-                border-bottom: 1px solid;
-                border-right: 1px solid;
+                border: 0;
+                border-bottom: 1px solid #cfd8df;
+                border-right: 1px solid #cfd8df;
             }
             #chromosomes-table th:first-child,
             #chromosomes-table td:first-child {
-                border-left: 1px solid;
+                border-left: 1px solid #cfd8df;
             }
             #chromosomes-table thead tr:nth-of-type(2) th {
                 border-top: none;
@@ -351,10 +354,6 @@ class ReferenceGenomeImplementation(
             {% endblock %}
 
             {% block content %}
-
-            {% if data["chrom_prefix"] %}
-            <p>chrom prefix: {{ data["chrom_prefix"] }}</p>
-            {% endif %}
 
             {% if data["PARS"] %}
             <h3>Pseudoautosomal regions:</h6>
@@ -377,7 +376,6 @@ class ReferenceGenomeImplementation(
             {% endif %}
             {% endif %}
 
-            <h3>Genome statistics:</h3>
             <h3>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h3>
             <div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 14px;">
                 <table id="chromosomes-table">
@@ -413,8 +411,8 @@ class ReferenceGenomeImplementation(
                 </table>
             </div>
             {% if data["global_statistic"] %}
-                <h4>Bi-Nucleotide distribution:</h4>
-                <table border="1">
+                <h3>Bi-Nucleotide distribution:</h3>
+                <table border="1" style="width: fit-content;">
                     <tr>
                         <th>{{ nucleotide }}</th>
                         {% for nucleotide in ["A", "T", "C", "G", "N"] %}
