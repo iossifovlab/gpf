@@ -27,6 +27,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.tools.liftover_tools import (
     VCFLiftoverTool,
     _region_output_filename,
@@ -35,7 +36,6 @@ from gpf.tools.liftover_tools import (
     denovo_liftover_main,
     vcf_liftover_main,
 )
-from gain.utils.regions import Region
 from pytest_mock import MockerFixture
 
 

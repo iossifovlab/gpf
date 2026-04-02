@@ -5,6 +5,10 @@ from collections.abc import Iterable
 from typing import Any, cast
 
 import pandas as pd
+from gain.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.resource_implementation import (
+    get_base_resource_schema,
+)
 from scipy import stats
 
 from gpf.enrichment_tool.base_enrichment_background import (
@@ -14,10 +18,6 @@ from gpf.enrichment_tool.event_counters import (
     EnrichmentResult,
     EnrichmentSingleResult,
     EventCountersResult,
-)
-from gain.genomic_resources.repository import GenomicResource
-from gain.genomic_resources.resource_implementation import (
-    get_base_resource_schema,
 )
 from gpf.person_sets import ChildrenStats
 

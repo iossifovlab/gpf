@@ -3,6 +3,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from gain.genomic_resources.repository import GenomicResource
+from gain.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+)
+from gain.task_graph.graph import TaskDesc
+
 from gpf.enrichment_tool.base_enrichment_background import (
     BaseEnrichmentBackground,
 )
@@ -10,12 +17,6 @@ from gpf.enrichment_tool.gene_weights_background import (
     GeneWeightsEnrichmentBackground,
 )
 from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
-from gain.genomic_resources.repository import GenomicResource
-from gain.genomic_resources.resource_implementation import (
-    GenomicResourceImplementation,
-    InfoImplementationMixin,
-)
-from gain.task_graph.graph import TaskDesc
 
 logger = logging.getLogger(__name__)
 

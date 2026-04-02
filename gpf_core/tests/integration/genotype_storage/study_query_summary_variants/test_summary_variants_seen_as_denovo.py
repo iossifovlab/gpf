@@ -7,11 +7,11 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.alla_import import alla_gpf
 from gpf.testing.import_helpers import vcf_study
-from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -62,7 +62,7 @@ def imported_study(
 ])
 def test_summary_variants_seen_as_denovo_single_allele(
     region: Region,
-    seen_as_denovo: bool,  # noqa: FBT001
+    seen_as_denovo: bool,
     imported_study: GenotypeData,
 ) -> None:
 

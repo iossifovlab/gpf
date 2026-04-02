@@ -6,6 +6,9 @@ import pathlib
 from typing import Any
 
 import duckdb
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils import fs_utils
 
 from gpf.duckdb_storage.duckdb2_variants import (
     Db2Layout,
@@ -27,10 +30,7 @@ from gpf.duckdb_storage.duckdb_storage_helpers import (
     create_study_parquet_tables_layout,
     get_study_config_tables,
 )
-from gain.genomic_resources.gene_models import GeneModels
-from gain.genomic_resources.reference_genome import ReferenceGenome
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
-from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

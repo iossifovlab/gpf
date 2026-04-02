@@ -18,7 +18,7 @@ from sqlglot import column, parse_one
         ),
     ],
 )
-def test_bitwise_query(query, expected):
+def test_bitwise_query(query: str, expected: str) -> None:
     query_glot = transform_attribute_query_to_sql_expression_schema1(
         Inheritance, query, column("col"),
     )

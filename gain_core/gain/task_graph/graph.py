@@ -25,7 +25,7 @@ class Task:
 class TaskDesc:
     """Represent an immutable full task description with all its properties."""
     task: Task
-    func: Callable
+    func: Callable[..., Any]
     args: list[Any]
     kwargs: dict[str, Any]
     deps: list[Task]
@@ -61,7 +61,7 @@ class _Task:
 
     def __init__(
         self, task_id: str | Task,
-        func: Callable,
+        func: Callable[..., Any],
         args: list[Any],
         kwargs: dict[str, Any],
         deps: list[Task],
@@ -225,7 +225,7 @@ class TaskGraph:
 
     def create_task(
         self, task_id: str, func: Callable[..., Any], *,
-        args: Sequence,
+        args: Sequence[Any],
         kwargs: dict[str, Any] | None = None,
         deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,
@@ -255,7 +255,7 @@ class TaskGraph:
     def make_task(
         task_id: str,
         func: Callable[..., Any], *,
-        args: Sequence,
+        args: Sequence[Any],
         kwargs: dict[str, Any] | None = None,
         deps: Sequence[Task] | None = None,
         input_files: Sequence[str] | None = None,

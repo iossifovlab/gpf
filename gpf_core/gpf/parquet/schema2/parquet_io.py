@@ -9,11 +9,12 @@ from typing import Any, cast
 import pyarrow as pa
 import pyarrow.parquet as pq
 from deprecation import deprecated
-
 from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from gain.effect_annotation.effect import AlleleEffects
+from gain.utils import fs_utils
+
 from gpf.parquet.helpers import url_to_pyarrow_fs
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.parquet.schema2.serializers import (
@@ -22,7 +23,6 @@ from gpf.parquet.schema2.serializers import (
     SummaryAlleleParquetSerializer,
     VariantsDataSerializer,
 )
-from gain.utils import fs_utils
 from gpf.utils.variant_utils import (
     is_all_reference_genotype,
     is_unknown_genotype,

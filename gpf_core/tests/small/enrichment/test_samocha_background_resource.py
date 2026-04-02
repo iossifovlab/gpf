@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from gain.genomic_resources import GenomicResource
 from gain.genomic_resources.repository import GR_CONF_FILE_NAME
 from gain.genomic_resources.testing import (
     build_inmemory_test_resource,
     convert_to_tab_separated,
 )
+from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 
 
 def test_background_resource_simple() -> None:

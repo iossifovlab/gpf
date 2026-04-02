@@ -4,16 +4,19 @@ from collections.abc import Generator, Iterable
 from typing import Any, ClassVar, cast
 
 from cerberus import Validator
-
-from gpf.configuration.utils import validate_path
-from gpf.duckdb_storage.duckdb_import_storage import (
-    DuckDbLegacyImportStorage,
-)
 from gain.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
 )
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
+from gain.utils.regions import Region
+
+from gpf.configuration.utils import validate_path
+from gpf.duckdb_storage.duckdb_import_storage import (
+    DuckDbLegacyImportStorage,
+)
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.import_tools.import_tools import ImportProject
 from gpf.inmemory_storage.raw_variants import (
@@ -34,9 +37,6 @@ from gpf.schema2_storage.schema2_layout import (
     create_schema2_dataset_layout,
     load_schema2_dataset_layout,
 )
-from gain.task_graph.graph import TaskGraph
-from gain.utils import fs_utils
-from gain.utils.regions import Region
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant
 

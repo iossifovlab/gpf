@@ -9,6 +9,7 @@ from copy import copy
 from typing import Any, Protocol, cast
 
 from box import Box
+from gain.utils.dae_utils import join_line
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.configuration.schemas.wdae_study_config import (
     wdae_study_config_schema,
@@ -26,7 +27,6 @@ from gpf.person_sets.person_sets import PSCQuery
 from gpf.pheno.common import MeasureType
 from gpf.pheno.pheno_data import Measure, PhenotypeData
 from gpf.studies.study import GenotypeData
-from gain.utils.dae_utils import join_line
 from gpf.variants.attributes import Role
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant

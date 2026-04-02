@@ -7,11 +7,11 @@ import textwrap
 
 import pytest
 from gain.genomic_resources.testing import setup_directories
+from gain.utils.regions import Region
 from gpf.parquet.partition_descriptor import (
     Partition,
     PartitionDescriptor,
 )
-from gain.utils.regions import Region
 
 
 def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:

@@ -24,7 +24,7 @@ from urllib.parse import urlparse
 import apsw
 import fsspec
 import jinja2
-import pyBigWig  # type: ignore
+import pyBigWig
 import pysam
 import yaml
 from filelock import FileLock

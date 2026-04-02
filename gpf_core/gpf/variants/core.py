@@ -5,7 +5,7 @@ from enum import Enum
 from typing import ClassVar
 
 from gain.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
-from gpf.utils.variant_utils import trim_parsimonious
+from gain.utils.variant_utils import trim_parsimonious
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@ from collections.abc import Iterator, MutableMapping
 from typing import Any
 
 
-class StatsCollection(MutableMapping):
+class StatsCollection(MutableMapping[tuple[str, ...], Any]):
     """Helper class for collection of variuos statistics.
 
     This class would be used in the project in places where collection of

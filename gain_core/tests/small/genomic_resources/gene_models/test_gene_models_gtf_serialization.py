@@ -389,7 +389,7 @@ def test_phase_field_serialization_negative_strand(
 )
 def test_gene_models_to_gtf_sort_parameter(
     gencode_46_calml6_example: GeneModels,
-    sort: bool,  # noqa: FBT001
+    sort: bool,
     expected: list[str],
 ) -> None:
     example_models = gencode_46_calml6_example

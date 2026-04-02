@@ -6,6 +6,8 @@ from collections.abc import Iterator
 from typing import cast
 
 import toml
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
 from gpf.configuration.study_config_builder import StudyConfigBuilder
 from gpf.import_tools.import_tools import (
     Bucket,
@@ -15,8 +17,6 @@ from gpf.import_tools.import_tools import (
 )
 from gpf.parquet.parquet_writer import merge_variants_parquets
 from gpf.parquet.partition_descriptor import PartitionDescriptor
-from gain.task_graph.graph import TaskGraph
-from gain.utils import fs_utils
 from gpf.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 from impala_storage.schema1.annotation_decorator import (

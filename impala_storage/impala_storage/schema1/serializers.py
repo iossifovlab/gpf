@@ -855,11 +855,14 @@ class AlleleParquetSerializer:
                 itertools.product(vector, effect_types),
             )
             for idx, egs in enumerate(effect_gene_syms):
-                vector[idx] += tuple([egs])
-            vector = [list(itertools.chain.from_iterable(map(
-                lambda x: x if isinstance(x, list) else [x],
-                subvector,
-            ))) for subvector in vector]
+                vector[idx] += (egs,)
+            vector = [
+                list(itertools.chain.from_iterable(
+                    x if isinstance(x, list) else [x]
+                    for x in subvector
+                ))
+                for subvector in vector
+            ]
             vectors[allele.allele_index].append(list(vector))
         return {
             k: list(itertools.chain.from_iterable(v))
@@ -946,11 +949,13 @@ class AlleleParquetSerializer:
                 prop_value = [None]
             new_vectors = list(  # type: ignore
                 itertools.product(new_vectors, prop_value))
-            new_vectors = [list(itertools.chain.from_iterable(  # type: ignore
-                map(
-                    lambda x: x if isinstance(x, list) else [x],
-                    subvector,
-                ))) for subvector in new_vectors]
+            new_vectors = [  # type: ignore
+                list(itertools.chain.from_iterable(
+                    x if isinstance(x, list) else [x]
+                    for x in subvector
+                ))
+                for subvector in new_vectors
+            ]
 
         header = self.allele_batch_header
         allele_data = {name: [] for name in self.schema.names}  # type: ignore

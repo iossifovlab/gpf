@@ -88,7 +88,7 @@ def test_f1_matched_allele_indexes(
     position: int,
     inheritance: str,
     effects: list[str] | None,
-    return_reference: bool,  # noqa: FBT001
+    return_reference: bool,
     matched_alleles: list[int],
 ) -> None:
     region = Region("bar", position, position)

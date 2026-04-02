@@ -3,10 +3,10 @@ from typing import cast
 
 import pytest
 from box import Box
-from gpf.studies.study import GenotypeData, GenotypeDataGroup
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import override_settings
+from gpf.studies.study import GenotypeData, GenotypeDataGroup
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy
 

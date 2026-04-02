@@ -8,6 +8,7 @@ from typing import Any, cast
 from gain.effect_annotation.effect import expand_effect_types
 from gain.genomic_resources.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+
 from gpf.query_variants.base_query_variants import QueryVariantsBase
 from gpf.query_variants.query_runners import QueryRunner
 from gpf.variants.family_variant import FamilyVariant

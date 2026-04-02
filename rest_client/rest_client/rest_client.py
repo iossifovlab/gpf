@@ -411,6 +411,22 @@ class GPFPasswordSession(GPFClientSession):
             **kwargs,
         )
 
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Head request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return self.session.head(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
     def post(
         self, url: str,
         headers: dict[str, str] | None = None,

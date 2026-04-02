@@ -26,7 +26,7 @@ from gpf.pedigrees.testing import build_families_data
 ])
 def test_family_tags_builder_simple(
     tag_label: str,
-    value: bool,  # noqa: FBT001
+    value: bool,
 ) -> None:
 
     families = build_families_data(

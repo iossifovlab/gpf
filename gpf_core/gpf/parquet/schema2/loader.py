@@ -6,6 +6,7 @@ from typing import ClassVar
 
 import numpy as np
 import yaml
+from gain.utils.regions import Region
 from pyarrow import compute as pc
 from pyarrow import dataset as ds
 from pyarrow import parquet as pq
@@ -18,7 +19,6 @@ from gpf.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     load_schema2_dataset_layout,
 )
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance, Role, Sex, Status
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant, SummaryVariantFactory

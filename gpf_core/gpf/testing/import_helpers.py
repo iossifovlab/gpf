@@ -8,14 +8,14 @@ from typing import Any
 import jinja2
 import yaml
 from box import Box
+from gain.genomic_resources.testing import setup_directories
+from gain.utils.dict_utils import recursive_dict_update
 
 from gpf.configuration.study_config_builder import StudyConfigBuilder
-from gain.genomic_resources.testing import setup_directories
 from gpf.gpf_instance import GPFInstance
 from gpf.import_tools.cli import run_with_project
 from gpf.import_tools.import_tools import ImportProject
 from gpf.studies.study import GenotypeData, GenotypeDataGroup
-from gain.utils.dict_utils import recursive_dict_update
 
 
 @dataclass

@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from gain.genomic_resources.gene_models import GeneModels
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.sql.schema2.base_query_builder import (
     BaseQueryBuilder,

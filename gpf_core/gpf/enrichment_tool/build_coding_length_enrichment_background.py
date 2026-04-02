@@ -4,7 +4,6 @@ import sys
 from collections import defaultdict
 
 import pandas as pd
-
 from gain.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,

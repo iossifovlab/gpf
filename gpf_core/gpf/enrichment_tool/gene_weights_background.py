@@ -6,6 +6,10 @@ from functools import cached_property
 from typing import Any, cast
 
 import pandas as pd
+from gain.gene_scores.gene_scores import (
+    build_gene_score_from_resource,
+)
+from gain.genomic_resources.repository import GenomicResource
 from scipy import stats
 
 from gpf.enrichment_tool.base_enrichment_background import (
@@ -17,10 +21,6 @@ from gpf.enrichment_tool.event_counters import (
     EnrichmentSingleResult,
     EventCountersResult,
 )
-from gain.gene_scores.gene_scores import (
-    build_gene_score_from_resource,
-)
-from gain.genomic_resources.repository import GenomicResource
 
 logger = logging.getLogger(__name__)
 

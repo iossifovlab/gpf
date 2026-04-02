@@ -12,14 +12,14 @@ import fsspec
 import numpy as np
 import pandas as pd
 import pysam
-
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gpf.pedigrees.families_data import FamiliesData
-from gpf.pedigrees.family import Family
 from gain.utils import fs_utils
 from gain.utils.dae_utils import dae2vcf_variant
 from gain.utils.helpers import str2bool
 from gain.utils.regions import Region
+
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.pedigrees.family import Family
 from gpf.utils.variant_utils import (
     GenotypeType,
     get_locus_ploidy,

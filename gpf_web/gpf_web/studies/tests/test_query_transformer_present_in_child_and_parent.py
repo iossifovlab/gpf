@@ -71,7 +71,7 @@ def test_transform_present_in_child_and_present_in_parent(
     present_in_parent: set[str],
     inheritance: list[Inheritance],
     roles: list[Role],
-    accepted: bool,  # noqa: FBT001
+    accepted: bool,
 ) -> None:
 
     kwargs = {

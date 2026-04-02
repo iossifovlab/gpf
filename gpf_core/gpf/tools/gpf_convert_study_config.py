@@ -2,10 +2,10 @@ import argparse
 import logging
 
 import yaml
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.gpf_instance.gpf_instance import GPFInstance
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_convert_study_config")
 

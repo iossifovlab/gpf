@@ -1,6 +1,7 @@
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gpf.parquet.schema2.loader import ParquetLoader as Schema2Loader
 from gain.utils.regions import Region
+
+from gpf.parquet.schema2.loader import ParquetLoader as Schema2Loader
 from gpf.variants_loaders.raw.loader import (
     CLIArgument,
     FullVariantsIterator,

@@ -3,8 +3,8 @@ import argparse
 import pathlib
 import textwrap
 
-import gain.dask.named_cluster
 import dask.distributed
+import gain.dask.named_cluster
 import pytest
 from gain.genomic_resources.testing import setup_directories
 from gain.task_graph import TaskGraphCli

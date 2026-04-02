@@ -5,8 +5,8 @@ from unittest.mock import DEFAULT
 import gain.dask.named_cluster
 import pytest
 import pytest_mock
-from gain.dask.named_cluster import setup_client, setup_client_from_config
 from dask import config
+from gain.dask.named_cluster import setup_client, setup_client_from_config
 
 
 @pytest.fixture

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from box import Box
+from gain.utils.regions import Region
 
 from gpf.common_reports.common_report import CommonReport
 from gpf.common_reports.denovo_report import DenovoReport
@@ -31,7 +32,6 @@ from gpf.query_variants.base_query_variants import QueryVariantsBase
 from gpf.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
 )
-from gain.utils.regions import Region
 from gpf.variants.attributes import Role
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant

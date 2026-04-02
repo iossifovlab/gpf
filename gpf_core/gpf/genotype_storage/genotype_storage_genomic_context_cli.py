@@ -27,12 +27,12 @@ import pathlib
 from typing import Any
 
 import yaml
-
 from gain.genomic_resources.genomic_context_base import (
     GenomicContext,
     GenomicContextProvider,
     SimpleGenomicContext,
 )
+
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )

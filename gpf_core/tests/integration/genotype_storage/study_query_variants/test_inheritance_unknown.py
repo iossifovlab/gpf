@@ -8,11 +8,11 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.alla_import import alla_gpf
 from gpf.testing.import_helpers import vcf_study
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyAllele
 

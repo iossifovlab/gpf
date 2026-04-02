@@ -8,11 +8,11 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.testing.import_helpers import vcf_study
-from gain.utils.regions import Region
 from gpf.variants.family_variant import FamilyAllele
 
 
@@ -206,8 +206,8 @@ def test_f1_canonical_denovo_return_reference_or_unknown(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    return_reference: bool,  # noqa: FBT001
-    return_unknown: bool,  # noqa: FBT001
+    return_reference: bool,
+    return_unknown: bool,
     count: int,
 ) -> None:
     region = Region("bar", position, position)
@@ -240,8 +240,8 @@ def test_f1_partially_unknown_denovo_return_reference_or_unknown(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    return_reference: bool,  # noqa: FBT001
-    return_unknown: bool,  # noqa: FBT001
+    return_reference: bool,
+    return_unknown: bool,
     count: int,
 ) -> None:
     region = Region("bar", position, position)

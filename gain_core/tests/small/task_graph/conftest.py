@@ -2,13 +2,13 @@
 from collections.abc import Generator
 
 import pytest
+from dask.distributed import Client
 from gain.task_graph.dask_executor import DaskExecutor
 from gain.task_graph.executor import (
     TaskGraphExecutor,
 )
 from gain.task_graph.process_pool_executor import ProcessPoolTaskExecutor
 from gain.task_graph.sequential_executor import SequentialExecutor
-from dask.distributed import Client
 
 
 @pytest.fixture

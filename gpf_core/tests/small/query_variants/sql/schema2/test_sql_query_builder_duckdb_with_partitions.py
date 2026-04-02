@@ -2,6 +2,7 @@
 from typing import Any, cast
 
 import pytest
+from gain.utils.regions import Region
 from gpf.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
@@ -12,7 +13,6 @@ from gpf.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
 )
 from gpf.studies.study import GenotypeDataStudy
-from gain.utils.regions import Region
 
 
 @pytest.fixture

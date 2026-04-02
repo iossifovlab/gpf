@@ -12,13 +12,13 @@ from urllib.parse import urlparse
 import numpy as np
 import pysam
 from fsspec.core import url_to_fs
-
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gpf.pedigrees.families_data import FamiliesData
-from gpf.pedigrees.family import Family
 from gain.utils import fs_utils
 from gain.utils.helpers import str2bool
 from gain.utils.regions import Region
+
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.pedigrees.family import Family
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyAllele, FamilyVariant
 from gpf.variants.variant import SummaryVariant, SummaryVariantFactory

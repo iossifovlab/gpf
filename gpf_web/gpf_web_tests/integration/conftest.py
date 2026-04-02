@@ -2,10 +2,10 @@
 
 import contextlib
 import os
-import pathlib
 import sys
 from collections.abc import Callable, Generator
-from typing import Any, ContextManager
+from contextlib import AbstractContextManager
+from typing import Any
 
 import pytest
 import pytest_mock
@@ -15,11 +15,11 @@ from gpf_web_tests.integration.testing import LiveServer
 
 
 def _module_cleaner(root_module: str) -> None:
-    modules_to_remove = []
-    for module_name in sys.modules:
-        if module_name == root_module or \
-                module_name.startswith(f"{root_module}."):
-            modules_to_remove.append(module_name)
+    modules_to_remove = [
+        module_name for module_name in sys.modules
+        if module_name == root_module
+        or module_name.startswith(f"{root_module}.")
+    ]
 
     modules_to_remove = sorted(
         modules_to_remove, key=lambda mn: -mn.count("."))
@@ -37,8 +37,7 @@ def _module_cleaner(root_module: str) -> None:
 @pytest.fixture
 def wdae_django_setup(
     mocker: pytest_mock.MockerFixture,
-    tmp_path: pathlib.Path,
-) -> Callable[[WGPFInstance, str], ContextManager[Any]]:
+) -> Callable[[WGPFInstance, str], AbstractContextManager[Any]]:
 
     @contextlib.contextmanager
     def builder(
@@ -101,9 +100,9 @@ def wdae_django_setup(
 
 @pytest.fixture
 def wdae_django_server(
-    mocker: pytest_mock.MockerFixture,
-    wdae_django_setup: Callable[[WGPFInstance, str], ContextManager[Any]],
-) -> Callable[[WGPFInstance, str], ContextManager[LiveServer]]:
+    wdae_django_setup: Callable[
+        [WGPFInstance, str], AbstractContextManager[Any]],
+) -> Callable[[WGPFInstance, str], AbstractContextManager[LiveServer]]:
 
     @contextlib.contextmanager
     def builder(

@@ -5,6 +5,8 @@ from contextlib import closing
 from typing import Any, cast
 
 import yaml
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
 
 from gpf.configuration.study_config_builder import StudyConfigBuilder
 from gpf.duckdb_storage.duckdb_genotype_storage import (
@@ -30,8 +32,6 @@ from gpf.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     load_schema2_dataset_layout,
 )
-from gain.task_graph.graph import TaskGraph
-from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

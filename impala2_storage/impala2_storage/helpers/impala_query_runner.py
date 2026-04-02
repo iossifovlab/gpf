@@ -1,11 +1,10 @@
 import logging
 import time
+from collections.abc import Callable
 from contextlib import closing
-from typing import Any, Callable
+from typing import Any
 
 import impala
-
-# from gain.utils.debug_closing import closing
 from gpf.query_variants.query_runners import QueryRunner
 from impala.hiveserver2 import HiveServer2Connection
 from sqlalchemy import exc
@@ -57,8 +56,8 @@ class ImpalaQueryRunner(QueryRunner):
                         self.study_id, elapsed)
                     return None
             except BaseException:  # pylint: disable=broad-except
-                logger.error(
-                    "(%s) unexpected exception", self.study_id, exc_info=True)
+                logger.exception(
+                    "(%s) unexpected exception", self.study_id)
                 return None
 
     def run(self) -> None:
@@ -121,9 +120,9 @@ class ImpalaQueryRunner(QueryRunner):
                             break
 
                 except Exception as ex:  # pylint: disable=broad-except
-                    logger.error(
-                        "exception in runner (%s) run: %s",
-                        self.study_id, type(ex), exc_info=True)
+                    logger.exception(
+                        "exception in runner (%s) run",
+                        self.study_id)
                     self.put_value_in_result_queue(ex)
         logger.debug(
             "(%s) runner connection closed", self.study_id)

@@ -3,13 +3,14 @@ from collections.abc import Iterable
 from typing import Any
 
 from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.utils.regions import Region
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.sql.schema2.base_query_builder import (
     BaseQueryBuilder,
     Dialect,
     TableSchema,
 )
-from gain.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]

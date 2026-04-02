@@ -4,9 +4,9 @@ import sys
 from collections import Counter
 
 import pandas as pd
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.gpf_instance import GPFInstance
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("build_ur_synonymous_enrichment_background")
 

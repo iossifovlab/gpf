@@ -8,9 +8,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 import pytest_mock
+from gain.utils import fs_utils
 from gpf.parquet.schema2 import merge_parquet
 from gpf.parquet.schema2.merge_parquet import merge_parquet_directory
-from gain.utils import fs_utils
 
 
 @pytest.fixture

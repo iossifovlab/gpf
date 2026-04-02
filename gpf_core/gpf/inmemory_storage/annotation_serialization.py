@@ -8,9 +8,9 @@ import time
 
 import numpy as np
 import pandas as pd
-
 from gain.annotation.annotation_pipeline import AnnotationPipeline
 from gain.effect_annotation.effect import AlleleEffects
+
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant
 from gpf.variants_loaders.raw.loader import (

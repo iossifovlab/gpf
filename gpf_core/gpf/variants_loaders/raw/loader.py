@@ -13,12 +13,12 @@ from typing import (
 )
 
 import numpy as np
-
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils.regions import Region
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Family
-from gain.utils.regions import Region
 from gpf.utils.variant_utils import best2gt, get_locus_ploidy
 from gpf.variants.attributes import GeneticModel, Sex, TransmissionType
 from gpf.variants.family_variant import (

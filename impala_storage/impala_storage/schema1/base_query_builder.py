@@ -3,15 +3,14 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from typing import Any
 
-import gpf.utils.regions
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.utils.regions import Region, collapse
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression_schema1,
 )
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance, Role, Sex
 from gpf.variants.core import Allele
 from sqlglot import column
@@ -89,7 +88,7 @@ class BaseQueryBuilder(ABC):
 
     def build_where(
         self, *,
-        regions: list[dae.utils.regions.Region] | None = None,
+        regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         family_ids: set[str] | list[str] | None = None,
@@ -127,7 +126,7 @@ class BaseQueryBuilder(ABC):
 
     def _base_build_where(
         self, *,
-        regions: list[dae.utils.regions.Region] | None = None,
+        regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
@@ -311,7 +310,7 @@ class BaseQueryBuilder(ABC):
 
     @classmethod
     def _build_regions_where(
-        cls, regions: list[dae.utils.regions.Region | Any],
+        cls, regions: list[Region | Any],
     ) -> str:
         assert isinstance(regions, list), regions
         where = []
@@ -391,8 +390,8 @@ class BaseQueryBuilder(ABC):
 
     def _build_gene_regions_heuristic(
         self, genes: list[str | Any],
-        regions: list[dae.utils.regions.Region] | None,
-    ) -> list[dae.utils.regions.Region] | None:
+        regions: list[Region] | None,
+    ) -> list[Region] | None:
         assert genes is not None
         assert self.gene_models is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
@@ -412,7 +411,7 @@ class BaseQueryBuilder(ABC):
                     ) for gm in gene_model
                 ])
 
-            gene_regions = dae.utils.regions.collapse(gene_regions)
+            gene_regions = collapse(gene_regions)
             logger.info("gene regions for %s: %s", genes, gene_regions)
             logger.info("input regions: %s", regions)
             if not regions:
@@ -424,7 +423,7 @@ class BaseQueryBuilder(ABC):
                         intersection = gene_region.intersection(region)
                         if intersection:
                             result.append(intersection)
-                result = dae.utils.regions.collapse(result)
+                result = collapse(result)
                 logger.info("original regions: %s; result: %s",
                             regions, result)
                 regions = result
@@ -547,7 +546,7 @@ class BaseQueryBuilder(ABC):
         return ""
 
     def _build_region_bin_heuristic(
-        self, regions: list[dae.utils.regions.Region] | None,
+        self, regions: list[Region] | None,
     ) -> str:
         if not regions or self.table_properties["region_length"] == 0:
             return ""

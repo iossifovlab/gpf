@@ -3,16 +3,16 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Annotated, Any, Literal
 
+from gain.effect_annotation.annotation_effects import (
+    get_effect_types,
+    get_effect_types_set,
+)
 from pydantic import (
     BaseModel,
     ConfigDict,
 )
 from pydantic.functional_validators import AfterValidator
 
-from gain.effect_annotation.annotation_effects import (
-    get_effect_types,
-    get_effect_types_set,
-)
 from gpf.variants.attributes import Sex
 
 

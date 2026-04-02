@@ -1,7 +1,11 @@
 from copy import deepcopy
+from typing import Any
 
 
-def recursive_dict_update(input_dict: dict, updater_dict: dict) -> dict:
+def recursive_dict_update(
+    input_dict: dict[str, Any],
+    updater_dict: dict[str, Any],
+) -> dict[str, Any]:
     """Recursively update a dictionary with another dictionary."""
     # This method cannot handle nested dictionaries
     # that hold a reference to the dictionary that
@@ -22,7 +26,7 @@ def recursive_dict_update(input_dict: dict, updater_dict: dict) -> dict:
 
 
 def recursive_dict_update_inplace(
-    input_dict: dict, updater_dict: dict,
+    input_dict: dict[str, Any], updater_dict: dict[str, Any],
 ) -> None:
     """Recursively update a dictionary with another dictionary."""
     # This method cannot handle nested dictionaries

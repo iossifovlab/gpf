@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from typing import Any, cast
 
 from gain.utils.helpers import isnan
+
 from gpf.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)

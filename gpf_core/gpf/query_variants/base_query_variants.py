@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 import numpy as np
+from gain.utils.regions import Region
 
 from gpf.parquet.schema2.serializers import VariantsDataSerializer
 from gpf.pedigrees.families_data import FamiliesData
@@ -13,7 +14,6 @@ from gpf.query_variants.sql.schema2.sql_query_builder import (
     TagsQuery,
     ZygosityQuery,
 )
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant, SummaryVariantFactory

@@ -9,6 +9,11 @@ from typing import cast
 
 import pytest
 import pytest_mock
+from datasets_api.models import Dataset
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser, Group
+from django.test import Client
+from django.utils import timezone
 from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -19,11 +24,6 @@ from gain.genomic_resources.testing import (
 )
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
-from datasets_api.models import Dataset
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser, Group
-from django.test import Client
-from django.utils import timezone
 from gpf_instance.gpf_instance import (
     WGPFInstance,
     get_wgpf_instance,

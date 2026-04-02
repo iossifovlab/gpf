@@ -80,7 +80,7 @@ class HdfsHelpers:
 
         return dirname
 
-    def delete(self, path: str, recursive: bool = False) -> None:
+    def delete(self, path: str, *, recursive: bool = False) -> None:
         self.hdfs.delete(path, recursive=recursive)
 
     def filesystem(self) -> ArrowFSWrapper:
@@ -92,6 +92,7 @@ class HdfsHelpers:
     def put(
         self, local_filename: str,
         hdfs_filename: str,
+        *,
         recursive: bool = False,
     ) -> None:
         """Copy a file or directory from the local filesystem to HDFS.
@@ -134,9 +135,6 @@ class HdfsHelpers:
         with open(local_filename, "wb") as outfile:
             self.hdfs.download(hdfs_filename, outfile)
 
-    # def list_dir(self, hdfs_dirname: str) -> list[str]:
-    #     return cast(list[str], self.hdfs.ls(hdfs_dirname))
-
     def isdir(self, hdfs_dirname: str) -> bool:
         if not self.exists(hdfs_dirname):
             return False
@@ -148,26 +146,3 @@ class HdfsHelpers:
             return False
         info = self.hdfs.info(hdfs_filename)
         return bool(info["type"] == "file")
-
-    # def list_parquet_files(
-    #     self, hdfs_dirname: str,
-    #     regexp: str = r".*\.parquet"
-    # ) -> list[str]:
-    #     """List all parquet files in hdfs_dirname."""
-    #     regexp = re.compile(regexp)
-
-    #     def list_parquet_files_recursive(dirname, collection):
-    #         assert self.isdir(dirname)
-    #         allfiles = self.list_dir(dirname)
-    #         for hfile in allfiles:
-    #             if self.isdir(hfile):
-    #                 list_parquet_files_recursive(hfile, collection)
-    #             elif self.isfile(hfile) and regexp.match(hfile) and \
-    #                     hfile not in collection:
-    #                 collection.append(hfile)
-
-    #     assert self.isdir(hdfs_dirname), hdfs_dirname
-
-    #     result: list[str] = []
-    #     list_parquet_files_recursive(hdfs_dirname, result)
-    #     return result

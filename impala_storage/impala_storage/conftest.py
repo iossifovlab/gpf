@@ -9,12 +9,6 @@ from typing import Any
 
 import pytest
 from box import Box
-from gpf.configuration.gpf_config_parser import (
-    DefaultBox,
-    FrozenBox,
-    GPFConfigParser,
-)
-from gpf.configuration.schemas.dae_conf import dae_conf_schema
 from gain.genomic_resources.gene_models.gene_models_factory import (
     build_gene_models_from_resource,
 )
@@ -25,6 +19,12 @@ from gain.genomic_resources.reference_genome import (
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from gpf.configuration.gpf_config_parser import (
+    DefaultBox,
+    FrozenBox,
+    GPFConfigParser,
+)
+from gpf.configuration.schemas.dae_conf import dae_conf_schema
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     GenotypeStorageRegistry,

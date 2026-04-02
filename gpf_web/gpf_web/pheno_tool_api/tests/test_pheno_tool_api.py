@@ -4,10 +4,10 @@ import json
 
 import pytest
 import pytest_mock
+from django.test.client import Client
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
-from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from studies.study_wrapper import WDAEStudy

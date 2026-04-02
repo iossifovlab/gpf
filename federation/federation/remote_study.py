@@ -1,8 +1,12 @@
 from collections.abc import Generator, Iterable
 from typing import Any, cast
 
+from gain.utils.regions import Region
 from gpf.common_reports.common_report import CommonReport
 from gpf.configuration.gpf_config_parser import FrozenBox
+from gpf.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.person_sets import (
     PersonSetCollection,
@@ -10,7 +14,6 @@ from gpf.person_sets import (
 )
 from gpf.person_sets.person_sets import parse_person_set_collection_config
 from gpf.studies.study import GenotypeDataStudy
-from gain.utils.regions import Region
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant
 
@@ -55,9 +58,9 @@ class RemoteGenotypeData(GenotypeDataStudy):
         self.config = FrozenBox(config)
 
         self._common_report: CommonReport | None = None
-        self._remote_common_report = None
+        self._remote_common_report: dict[str, Any] | None = None
 
-        super().__init__(None, self.config)
+        super().__init__(cast(GenotypeStorageRegistry, None), self.config)
 
         self._parents = set(config["parents"])
 
@@ -91,7 +94,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
         raise NotImplementedError
 
     # pylint: disable=arguments-renamed
-    def _build_person_set_collections(  # type: ignore[override]
+    def _build_person_set_collections(
         self, pscs_config: dict[str, Any] | None,
     ) -> dict[str, PersonSetCollection]:
         if pscs_config is None:
@@ -170,7 +173,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
     ) -> PersonSetCollection | None:
         if person_set_collection_id is None:
             return None
-        return self._person_set_collections[person_set_collection_id]
+        return self.person_set_collections[person_set_collection_id]
 
     def get_common_report(self) -> CommonReport | None:
         return self.common_report

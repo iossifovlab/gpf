@@ -5,6 +5,8 @@ from dataclasses import asdict
 from pathlib import Path
 
 from gain.effect_annotation.effect import expand_effect_types
+from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf.enrichment_tool.enrichment_utils import (
     EnrichmentEventCounts,
     get_enrichment_cache_path,
@@ -17,7 +19,6 @@ from gpf.enrichment_tool.event_counters import (
 from gpf.enrichment_tool.genotype_helper import GenotypeHelper
 from gpf.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("enrichment_cache_builder")
 

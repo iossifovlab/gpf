@@ -2,6 +2,7 @@
 import pathlib
 
 import pytest
+from gain.genomic_resources.testing import setup_denovo, setup_pedigree
 from gpf.enrichment_tool.enrichment_cache_builder import (
     build_enrichment_event_counts_cache,
     cli,
@@ -9,7 +10,6 @@ from gpf.enrichment_tool.enrichment_cache_builder import (
 from gpf.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
-from gain.genomic_resources.testing import setup_denovo, setup_pedigree
 from gpf.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import denovo_study

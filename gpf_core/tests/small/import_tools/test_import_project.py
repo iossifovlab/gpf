@@ -122,7 +122,7 @@ def test_tags_on_by_default(resources_dir: pathlib.Path) -> None:
 ])
 def test_has_genotype_storage(
     import_config: dict[str, dict[str, Any]],
-    expected: bool,  # noqa: FBT001
+    expected: bool,
 ) -> None:
     project = ImportProject.build_from_config(import_config)
     assert project.has_genotype_storage() == expected

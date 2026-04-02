@@ -7,10 +7,10 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import vcf_study
-from gain.utils.regions import Region
 from gpf.utils.variant_utils import mat2str
 
 

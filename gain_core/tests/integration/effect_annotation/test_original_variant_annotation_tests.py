@@ -709,7 +709,7 @@ def test_chr1_71418630_sub_var(
 
     assert len(effects) == 8
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "PTGER3"
     assert effects_sorted[0].transcript_id == "NM_001126044_1"
@@ -801,7 +801,7 @@ def test_chr20_56284593_ins_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "PMEPA1"
     assert effects_sorted[0].transcript_id == "NM_020182_1"
@@ -855,7 +855,7 @@ def test_chr20_57478739_sub_var(
 
     assert len(effects) == 8
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "GNAS"
     assert effects_sorted[0].transcript_id == "NM_000516_1"
@@ -936,7 +936,7 @@ def test_chr14_78227471_del_var(
 
     assert len(effects) == 3
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "C14orf178"
     assert effects_sorted[0].transcript_id == "NM_001173978_1"
@@ -983,7 +983,7 @@ def test_chr3_128813981_sub_var(
 
     assert len(effects) == 8
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "RAB43"
     assert effects_sorted[0].transcript_id == "NM_001204883_1"
@@ -1062,7 +1062,7 @@ def test_chr14_21895990_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "CHD8"
     assert effects_sorted[0].transcript_id == "NM_001170629_1"
@@ -1105,7 +1105,7 @@ def test_chr1_12175787_sub_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "TNFRSF8"
     assert effects_sorted[0].transcript_id == "NM_001243_1"
@@ -1148,7 +1148,7 @@ def test_chr13_23904276_sub_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "SACS"
     assert effects_sorted[0].transcript_id == "NM_001278055_1"
@@ -1179,7 +1179,7 @@ def test_chr20_61476990_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "TCFL5"
     assert effects_sorted[0].transcript_id == "NM_006602_1"
@@ -1238,7 +1238,7 @@ def test_chr5_56527122_sub_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "GPBP1"
     assert effects_sorted[0].transcript_id == "NM_001127235_1"
@@ -1284,7 +1284,7 @@ def test_chr4_2514166_del_var(
 
     assert len(effects) == 3
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "RNF4"
     assert effects_sorted[0].transcript_id == "NM_001185009_1"
@@ -1371,7 +1371,7 @@ def test_chr15_80137554_ins_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "MTHFS"
     assert effects_sorted[0].transcript_id == "NM_001199758_1"
@@ -1418,7 +1418,7 @@ def test_chr1_207793410_sub_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "CR1"
     assert effects_sorted[0].transcript_id == "NM_000573_1"
@@ -1510,7 +1510,7 @@ def test_chr2_169417831_sub_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "CERS6"
     assert effects_sorted[0].transcript_id == "NM_001256126_1"
@@ -1583,7 +1583,7 @@ def test_chr4_140640596_sub_var(
 
     assert len(effects) == 3
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "MGST2"
     assert effects_sorted[0].transcript_id == "NM_001204366_1"
@@ -1622,7 +1622,7 @@ def test_chr7_40134547_ins_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "CDK13"
     assert effects_sorted[0].transcript_id == "NM_003718_1"
@@ -1653,7 +1653,7 @@ def test_chr9_98279102_sub_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "PTCH1"
     assert effects_sorted[0].transcript_id == "NM_001083602_1"
@@ -1685,7 +1685,7 @@ def test_chr2_166535661_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "CSRNP3"
     assert effects_sorted[0].transcript_id == "NM_001172173_1"
@@ -1759,7 +1759,7 @@ def test_chr20_34243229_sub_var(
 
     assert len(effects) == 10
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "RBM12"
     assert effects_sorted[0].transcript_id == "NM_001198838_1"
@@ -1852,7 +1852,7 @@ def test_chr7_6505720_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "KDELR2"
     assert effects_sorted[0].transcript_id == "NM_001100603_1"
@@ -1889,7 +1889,7 @@ def test_chr7_31609423_sub_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "CCDC129"
     assert effects_sorted[0].transcript_id == "NM_001257967_1"
@@ -1957,7 +1957,7 @@ def test_chr1_120311364_sub_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "HMGCS2"
     assert effects_sorted[0].transcript_id == "NM_001166107_1"
@@ -2050,7 +2050,7 @@ def test_chr9_130422308_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "STXBP1"
     assert effects_sorted[0].transcript_id == "NM_001032221_1"
@@ -2093,7 +2093,7 @@ def test_chr1_245019922_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "HNRNPU"
     assert effects_sorted[0].transcript_id == "NM_004501_1"
@@ -2158,7 +2158,7 @@ def test_chr20_57466823_sub_var(
 
     assert len(effects) == 8
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "GNAS"
     assert effects_sorted[0].transcript_id == "NM_000516_1"
@@ -2243,7 +2243,7 @@ def test_chr1_156354348_del_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "RHBG"
     assert effects_sorted[0].transcript_id == "NM_001256395_1"
@@ -2350,7 +2350,7 @@ def test_chr10_46248650_del_var(
 
     assert len(effects) == 3
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "FAM21C"
     assert effects_sorted[0].transcript_id == "NM_001169106_1"
@@ -2416,7 +2416,7 @@ def test_chr3_131100722_sub_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "NUDT16"
     assert effects_sorted[0].transcript_id == "NM_001171905_1"
@@ -2526,7 +2526,7 @@ def test_chr1_120934555_sub_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "FCGR1B"
     assert effects_sorted[0].transcript_id == "NM_001004340_1"
@@ -2617,7 +2617,7 @@ def test_chr1_203652334_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "ATP2B4"
     assert effects_sorted[0].transcript_id == "NM_001001396_1"
@@ -2648,7 +2648,7 @@ def test_chr2_133426005_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "LYPD1"
     assert effects_sorted[0].transcript_id == "NM_001077427_1"
@@ -2738,7 +2738,7 @@ def test_chr2_58390000_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "FANCL"
     assert effects_sorted[0].transcript_id == "NM_001114636_1"
@@ -2842,7 +2842,7 @@ def test_chr1_33330213_del_var(
 
     assert len(effects) == 3
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "FNDC5"
     assert effects_sorted[0].transcript_id == "NM_001171940_1"
@@ -2956,7 +2956,7 @@ def test_chr11_3846347_del_var(
 
     assert len(effects) == 16
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "PGAP2"
     assert effects_sorted[0].transcript_id == "NM_001145438_1"
@@ -3099,7 +3099,7 @@ def test_chr1_145567756_ins_var(
 
     assert len(effects) == 4
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "NBPF10"
     assert effects_sorted[0].transcript_id == "NM_001039703_1"
@@ -3157,7 +3157,7 @@ def test_chr3_135969219_ins_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "PCCB"
     assert effects_sorted[0].transcript_id == "NM_000532_1"
@@ -3230,7 +3230,7 @@ def test_chr1_33476432_ins_var(
     assert len(effects) == 3
 
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "AK2"
     assert effects_sorted[0].transcript_id == "NM_001199199_1"
@@ -3269,7 +3269,7 @@ def test_chr1_245017754_del_var(
 
     assert len(effects) == 2
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "HNRNPU"
     assert effects_sorted[0].transcript_id == "NM_004501_1"
@@ -3298,7 +3298,7 @@ def test_chr4_26862842_del_var(
 
     assert len(effects) == 3
     effects_sorted = sorted(
-        effects, key=lambda k: k.transcript_id)  # type: ignore
+        effects, key=lambda k: k.transcript_id or "")
 
     assert effects_sorted[0].gene == "STIM2"
     assert effects_sorted[0].transcript_id == "NM_001169117_1"

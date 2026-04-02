@@ -3,11 +3,11 @@ import argparse
 import os
 import sys
 
+from gain.utils.dict_utils import recursive_dict_update
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.configuration.study_config_builder import StudyConfigBuilder
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.import_tools.import_tools import save_study_config
-from gain.utils.dict_utils import recursive_dict_update
 
 
 def parse_cli_arguments(

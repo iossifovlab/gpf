@@ -23,8 +23,6 @@ import pyarrow.parquet as pq
 import sqlglot
 import sqlglot.expressions as exp
 import yaml
-from pydantic import BaseModel
-
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
@@ -32,6 +30,15 @@ from gain.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,
 )
+from gain.task_graph.cli_tools import (
+    TaskCache,
+    TaskGraphCli,
+    task_graph_run_with_results,
+)
+from gain.task_graph.graph import TaskGraph
+from gain.utils.sql_utils import to_duckdb_transpile
+from pydantic import BaseModel
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pedigrees.family import ALL_FAMILY_TAG_LABELS
 from gpf.pedigrees.loader import (
@@ -61,13 +68,6 @@ from gpf.pheno.prepare.measure_classifier import (
     determine_histogram_type,
     inference_reference_impl,
 )
-from gain.task_graph.cli_tools import (
-    TaskCache,
-    TaskGraphCli,
-    task_graph_run_with_results,
-)
-from gain.task_graph.graph import TaskGraph
-from gain.utils.sql_utils import to_duckdb_transpile
 from gpf.variants.attributes import Status
 
 logger = logging.getLogger(__name__)

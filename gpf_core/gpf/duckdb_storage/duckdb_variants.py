@@ -5,11 +5,11 @@ from typing import Any, cast
 import duckdb
 import pandas as pd
 import yaml
+from gain.genomic_resources.gene_models import GeneModels
 
 from gpf.duckdb_storage.duckdb_connection_factory import (
     DuckDbConnectionFactory,
 )
-from gain.genomic_resources.gene_models import GeneModels
 from gpf.query_variants.query_runners import QueryRunner
 from gpf.query_variants.sql.schema2.base_query_builder import Dialect
 from gpf.query_variants.sql.schema2.base_variants import SqlSchema2Variants

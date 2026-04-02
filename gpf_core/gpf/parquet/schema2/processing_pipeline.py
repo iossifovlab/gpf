@@ -16,9 +16,10 @@ from gain.annotation.processing_pipeline import (
     AnnotationsWithSource,
 )
 from gain.effect_annotation.effect import AlleleEffects
-from gpf.parquet.schema2.loader import ParquetLoader
 from gain.utils.processing_pipeline import Filter, Source
 from gain.utils.regions import Region
+
+from gpf.parquet.schema2.loader import ParquetLoader
 from gpf.variants.variant import SummaryAllele, SummaryVariant
 from gpf.variants_loaders.raw.loader import (
     FullVariant,

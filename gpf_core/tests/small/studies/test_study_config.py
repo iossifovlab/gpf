@@ -99,7 +99,7 @@ def test_study_config_genotype_storage(study_config: Box) -> None:
 )
 def test_study_config_attr_access(
     study_config: Box, option_name: str,
-    expected_value: str | bool | None,  # noqa: FBT001
+    expected_value: str | bool | None,
 ) -> None:
     assert getattr(study_config, option_name) == expected_value
 
@@ -115,7 +115,7 @@ def test_study_config_attr_access(
 )
 def test_study_config_genotype_browser(
     study_config: Box, option_name: str,
-    expected_value: bool,  # noqa: FBT001
+    expected_value: bool,
 ) -> None:
     genotype_browser_config = study_config.genotype_browser
     assert getattr(genotype_browser_config, option_name) == expected_value

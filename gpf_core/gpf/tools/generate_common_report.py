@@ -3,10 +3,11 @@ import logging
 import sys
 import time
 
+from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 from gpf.studies.study import GenotypeData
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_common_reports")
 

@@ -1,10 +1,10 @@
-from gpf.pedigrees.family_tag_builder import FamilyTag, check_tag
 from datasets_api.permissions import (
     get_instance_timestamp_etag,
     get_permissions_etag,
 )
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
+from gpf.pedigrees.family_tag_builder import FamilyTag, check_tag
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request

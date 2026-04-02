@@ -10,10 +10,11 @@ from gain.genomic_resources.genomic_context import (
     context_providers_init,
     get_genomic_context,
 )
+from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader, PedigreeIO
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 from gpf.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger("ped2ped")

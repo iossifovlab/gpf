@@ -7,11 +7,11 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.alla_import import alla_gpf
 from gpf.testing.import_helpers import cnv_study
-from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="session")

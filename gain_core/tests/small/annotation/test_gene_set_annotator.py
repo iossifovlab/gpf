@@ -141,7 +141,7 @@ def test_gene_set_annotator_in_pipeline(
     pos: int,
     ref: str,
     alt: str,
-    expected: bool,  # noqa: FBT001
+    expected: bool,
 ) -> None:
     pipeline = load_pipeline_from_yaml(textwrap.dedent(
         """
@@ -202,7 +202,7 @@ def test_gene_set_annotator_in_pipeline_with_configuration(
     pos: int,
     ref: str,
     alt: str,
-    expected: bool,  # noqa: FBT001
+    expected: bool,
 ) -> None:
     pipeline = load_pipeline_from_yaml(textwrap.dedent(
         f"""

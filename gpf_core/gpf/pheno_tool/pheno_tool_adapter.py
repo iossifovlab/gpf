@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from typing import Any, cast
 
 from gain.effect_annotation.effect import EffectTypesMixin
+
 from gpf.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from gpf.variants.attributes import Sex
 from gpf.variants.family_variant import FamilyVariant

@@ -7,9 +7,9 @@ from typing import Literal
 import duckdb
 from deprecation import deprecated
 from fsspec.core import url_to_fs
+from gain.utils import fs_utils
 
 from gpf.parquet.partition_descriptor import PartitionDescriptor
-from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

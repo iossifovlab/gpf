@@ -3,6 +3,9 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
+from datasets_api.permissions import get_instance_timestamp_etag
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
@@ -11,9 +14,6 @@ from gain.genomic_resources.histogram import (
 )
 from gpf.pheno.common import MeasureType
 from gpf.variants.attributes import Role
-from datasets_api.permissions import get_instance_timestamp_etag
-from django.utils.decorators import method_decorator
-from django.views.decorators.http import etag
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request

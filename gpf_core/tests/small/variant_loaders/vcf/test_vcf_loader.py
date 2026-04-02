@@ -170,9 +170,9 @@ def f1_test(
 )
 def test_vcf_loader_params(
     f1_test: tuple[str, str],
-    vcf_include_reference_genotypes: bool,  # noqa: FBT001
-    vcf_include_unknown_family_genotypes: bool,  # noqa: FBT001
-    vcf_include_unknown_person_genotypes: bool,  # noqa: FBT001
+    vcf_include_reference_genotypes: bool,
+    vcf_include_unknown_family_genotypes: bool,
+    vcf_include_unknown_person_genotypes: bool,
     count: int,
     acgt_genome: ReferenceGenome,
 ) -> None:

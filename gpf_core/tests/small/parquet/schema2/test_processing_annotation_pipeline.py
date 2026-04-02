@@ -7,13 +7,13 @@ import pytest
 from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
+from gain.utils.processing_pipeline import Filter, PipelineProcessor
 from gpf.parquet.schema2.processing_pipeline import (
     AnnotationPipelineVariantsBatchFilter,
     AnnotationPipelineVariantsFilter,
     VariantsLoaderBatchSource,
     VariantsLoaderSource,
 )
-from gain.utils.processing_pipeline import Filter, PipelineProcessor
 from gpf.variants_loaders.raw.loader import (
     FullVariant,
     VariantsGenotypesLoader,

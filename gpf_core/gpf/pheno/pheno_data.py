@@ -16,10 +16,6 @@ from typing import Any, cast
 import duckdb
 import pandas as pd
 from box import Box
-
-from gpf.common_reports.common_report import CommonReport
-from gpf.common_reports.family_report import FamiliesReport
-from gpf.common_reports.people_counter import PeopleReport
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
@@ -29,6 +25,11 @@ from gain.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,
 )
+from gain.utils.helpers import isnan
+
+from gpf.common_reports.common_report import CommonReport
+from gpf.common_reports.family_report import FamiliesReport
+from gpf.common_reports.people_counter import PeopleReport
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Person
 from gpf.pedigrees.loader import FamiliesLoader
@@ -41,7 +42,6 @@ from gpf.pheno.browser import PhenoBrowser
 from gpf.pheno.common import IMPORT_METADATA_TABLE, ImportManifest, MeasureType
 from gpf.pheno.db import PhenoDb
 from gpf.studies.study import CommonStudyMixin
-from gain.utils.helpers import isnan
 from gpf.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)

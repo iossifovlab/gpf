@@ -6,7 +6,7 @@ import logging
 from threading import Lock, RLock
 from typing import Any, cast
 
-from pyliftover import LiftOver  # type: ignore
+from pyliftover import LiftOver
 
 from gain.genomic_resources import GenomicResource
 from gain.genomic_resources.repository import GenomicResourceRepo

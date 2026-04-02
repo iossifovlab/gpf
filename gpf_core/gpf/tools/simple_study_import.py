@@ -7,13 +7,13 @@ import sys
 import time
 
 from box import Box
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.import_tools.cli import run_with_project
 from gpf.import_tools.import_tools import ImportProject
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.tools import generate_common_report, generate_denovo_gene_sets
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 from gpf.variants_loaders.cnv.loader import CNVLoader
 from gpf.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from gpf.variants_loaders.vcf.loader import VcfLoader

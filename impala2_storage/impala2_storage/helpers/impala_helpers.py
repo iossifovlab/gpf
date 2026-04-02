@@ -66,8 +66,7 @@ class ImpalaHelpers:
         started = time.time()
         while True:
             try:
-                connection = self._connection_pool.connect()
-                return connection
+                return self._connection_pool.connect()
             except exc.TimeoutError as error:
                 elapsed = time.time() - started
                 logger.debug(
@@ -154,56 +153,22 @@ class ImpalaHelpers:
             "string": "STRING",
             "binary": "STRING",
         }
-        impala_partitions = ", ".join([
+        return ", ".join([
             f"{bname} {type_convertion[btype]}"
             for (bname, btype) in partitions
         ])
-        return impala_partitions
-
-    # @staticmethod
-    # def _create_dataset_table(
-    #     cursor: Any, db: str, table: str, sample_file: str,
-    #     partition_description: PartitionDescriptor
-    # ) -> None:
-    #     cursor.execute(
-    #         f"DROP TABLE IF EXISTS {db}.{table}")
-
-    #     hdfs_dir = partition_description.variants_filename_basedir(
-    #           sample_file)
-    #     if not partition_description.has_partitions():
-    #         statement = f"""
-    #             CREATE EXTERNAL TABLE {db}.{table}
-    #             LIKE PARQUET '{sample_file}'
-    #             STORED AS PARQUET LOCATION '{hdfs_dir}'
-    #         """
-    #     else:
-    #         impala_partitions = \
-    #             ImpalaHelpers._build_impala_partitions(partition_description)
-    #         statement = f"""
-    #             CREATE EXTERNAL TABLE {db}.{table}
-    #             LIKE PARQUET '{sample_file}'
-    #             PARTITIONED BY ({impala_partitions})
-    #             STORED AS PARQUET LOCATION '{hdfs_dir}'
-    #         """
-    #     cursor.execute(statement)
-
-    #     if partition_description.has_partitions():
-    #         cursor.execute(
-    #             f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
-    #     cursor.execute(
-    #         f"REFRESH {db}.{table}")
 
     def import_pedigree_into_db(
         self, db: str, pedigree_table: str, pedigree_hdfs_file: str,
     ) -> None:
         """Import pedigree files into impala table."""
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                cursor.execute(
-                    f"CREATE DATABASE IF NOT EXISTS {db}")
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            cursor.execute(
+                f"CREATE DATABASE IF NOT EXISTS {db}")
 
-                self._import_single_file(
-                    cursor, db, pedigree_table, pedigree_hdfs_file)
+            self._import_single_file(
+                cursor, db, pedigree_table, pedigree_hdfs_file)
 
     @staticmethod
     def _build_variants_schema(variants_schema: dict[str, Any]) -> str:
@@ -222,8 +187,7 @@ class ImpalaHelpers:
             assert impala_type is not None, (field_name, field_type)
             result.append(f"`{field_name}` {impala_type}")
         statement = ", ".join(result)
-        statement = f"( {statement} )"
-        return statement
+        return f"( {statement} )"
 
     def _build_import_variants_statement(
         self, db: str, variants_table: str, variants_hdfs_dir: str,
@@ -266,60 +230,60 @@ class ImpalaHelpers:
         """Import variant parquet files in variants_hdfs_dir in impala."""
         assert variants_schema is not None or variants_sample is not None
 
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            cursor.execute(
+                f"CREATE DATABASE IF NOT EXISTS {db}")
+
+            cursor.execute(
+                f"DROP TABLE IF EXISTS {db}.{variants_table}")
+
+            statement = self._build_import_variants_statement(
+                db, variants_table, variants_hdfs_dir,
+                partition_description,
+                variants_sample=variants_sample,
+                variants_schema=variants_schema)
+            logger.info("going to execute: %s", statement)
+            cursor.execute(statement)
+
+            if partition_description.has_partitions():
                 cursor.execute(
-                    f"CREATE DATABASE IF NOT EXISTS {db}")
+                    f"ALTER TABLE {db}.{variants_table} "
+                    f"RECOVER PARTITIONS")
+            cursor.execute(
+                f"REFRESH {db}.{variants_table}")
 
-                cursor.execute(
-                    f"DROP TABLE IF EXISTS {db}.{variants_table}")
-
-                statement = self._build_import_variants_statement(
-                    db, variants_table, variants_hdfs_dir,
-                    partition_description,
-                    variants_sample=variants_sample,
-                    variants_schema=variants_schema)
-                logger.info("going to execute: %s", statement)
-                cursor.execute(statement)
-
-                if partition_description.has_partitions():
-                    cursor.execute(
-                        f"ALTER TABLE {db}.{variants_table} "
-                        f"RECOVER PARTITIONS")
-                cursor.execute(
-                    f"REFRESH {db}.{variants_table}")
-
-                if partition_description.has_partitions():
-                    self._add_partition_properties(
-                        cursor, db, variants_table, partition_description)
+            if partition_description.has_partitions():
+                self._add_partition_properties(
+                    cursor, db, variants_table, partition_description)
 
     def compute_table_stats(
         self, db: str, table: str, region_bin: str | None = None,
     ) -> None:
         """Compute impala table stats."""
-        with closing(self.connection()) as connection:
-            with closing(connection.cursor()) as cursor:
-                if region_bin is not None:
-                    query = f"COMPUTE INCREMENTAL STATS {db}.{table} " \
-                        f"PARTITION (region_bin='{region_bin}')"
-                else:
-                    query = f"COMPUTE STATS {db}.{table}"
-                logger.info("compute stats for impala table: %s", query)
-                cursor.execute(query)
+        with closing(self.connection()) as connection, \
+                closing(connection.cursor()) as cursor:
+            if region_bin is not None:
+                query = (
+                    f"COMPUTE INCREMENTAL STATS {db}.{table} "
+                     f"PARTITION (region_bin='{region_bin}')"
+                )
+            else:
+                query = f"COMPUTE STATS {db}.{table}"
+            logger.info("compute stats for impala table: %s", query)
+            cursor.execute(query)
 
     def collect_region_bins(
         self, db: str, table: str,
     ) -> list[str]:
         """Collect region bins from table."""
-        region_bins = []
-        with closing(self.connection()) as connection:
-            with closing(connection.cursor()) as cursor:
-                query = f"SELECT DISTINCT(region_bin) FROM " \
-                    f"{db}.{table}"
-                logger.info("running %s", query)
-                cursor.execute(query)
-                for row in cursor:  # type: ignore
-                    region_bins.append(row[0])
+        region_bins: list[str] = []
+        with closing(self.connection()) as connection, \
+                closing(connection.cursor()) as cursor:
+            query = f"SELECT DISTINCT(region_bin) FROM {db}.{table}"
+            logger.info("running %s", query)
+            cursor.execute(query)
+            region_bins.extend(row[0] for row in cursor)
         region_bins.sort()
         logger.info("collected region bins: %s", region_bins)
         return region_bins
@@ -328,16 +292,16 @@ class ImpalaHelpers:
         self, db: str, table: str,
     ) -> str | None:
         """Get the create statement for table."""
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                statement = f"SHOW CREATE TABLE {db}.{table}"
-                cursor.execute(statement)
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            statement = f"SHOW CREATE TABLE {db}.{table}"
+            cursor.execute(statement)
 
-                create_statement = None
-                for row in cursor:  # type: ignore
-                    create_statement = row[0]
-                    break
-                return create_statement
+            create_statement = None
+            for row in cursor:
+                create_statement = row[0]
+                break
+            return create_statement
 
     def recreate_table(
         self, db: str, table: str, new_table: str, new_hdfs_dir: str,
@@ -406,46 +370,46 @@ class ImpalaHelpers:
         statement = " ".join(parts)
         logger.info("going to execute %s", statement)
 
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                cursor.execute(statement)
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            cursor.execute(statement)
 
     def check_database(self, dbname: str) -> bool:
         """Check if dbname exists."""
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = "SHOW DATABASES"
-                cursor.execute(query)
-                for row in cursor:  # type: ignore
-                    if row[0] == dbname:
-                        return True
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = "SHOW DATABASES"
+            cursor.execute(query)
+            for row in cursor:
+                if row[0] == dbname:
+                    return True
         return False
 
     def check_table(self, dbname: str, tablename: str) -> bool:
         """Check if dbname.tablename exists."""
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"SHOW TABLES IN {dbname}"
-                cursor.execute(query)
-                for row in cursor:  # type: ignore
-                    if row[0] == tablename.lower():
-                        return True
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"SHOW TABLES IN {dbname}"
+            cursor.execute(query)
+            for row in cursor:
+                if row[0] == tablename.lower():
+                    return True
         return False
 
     def drop_table(self, dbname: str, tablename: str) -> None:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
-                cursor.execute(query)
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
+            cursor.execute(query)
 
     def create_database(self, dbname: str) -> None:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"CREATE DATABASE IF NOT EXISTS {dbname}"
-                cursor.execute(query)
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"CREATE DATABASE IF NOT EXISTS {dbname}"
+            cursor.execute(query)
 
     def drop_database(self, dbname: str) -> None:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                cursor.execute(
-                    f"DROP DATABASE IF EXISTS {dbname} CASCADE")
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            cursor.execute(
+                f"DROP DATABASE IF EXISTS {dbname} CASCADE")

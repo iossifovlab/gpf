@@ -69,7 +69,7 @@ def test_query_by_family_ids(
         imported_study: GenotypeData,
         selected_family_tags: list[str],
         deselected_family_tags: list[str],
-        tags_or_mode: bool,  # noqa: FBT001
+        tags_or_mode: bool,
         count: int,
 ) -> None:
     vs = list(imported_study.query_variants(

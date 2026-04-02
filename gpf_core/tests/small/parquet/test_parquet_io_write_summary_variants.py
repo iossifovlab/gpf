@@ -3,12 +3,13 @@ import pathlib
 from typing import Any
 
 import pytest
-from gpf.duckdb_storage.duckdb_genotype_storage import (
-    DuckDbStorage,
-)
 from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
+)
+from gain.utils.regions import Region
+from gpf.duckdb_storage.duckdb_genotype_storage import (
+    DuckDbStorage,
 )
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
@@ -17,7 +18,6 @@ from gpf.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import vcf_study
 from gpf.testing.t4c8_import import t4c8_gpf
-from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="module")

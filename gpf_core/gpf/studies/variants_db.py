@@ -6,12 +6,12 @@ from typing import Any
 import toml
 from box import Box
 from deprecation import deprecated
-
 from gain.annotation.annotation_config import AttributeInfo
-from gpf.configuration.gpf_config_parser import GPFConfigParser
-from gpf.configuration.schemas.study_config import study_config_schema
 from gain.genomic_resources.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+
+from gpf.configuration.gpf_config_parser import GPFConfigParser
+from gpf.configuration.schemas.study_config import study_config_schema
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )

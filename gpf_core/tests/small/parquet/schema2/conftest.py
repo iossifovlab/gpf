@@ -316,6 +316,7 @@ class DummyAnnotator(Annotator):
     def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
         return {
             "index": AttributeDesc(
+                source="index",
                 name="index",
                 type="int",
                 description="dummy",

@@ -5,10 +5,10 @@ import pathlib
 import sys
 
 import yaml
+from gain.task_graph.cli_tools import TaskGraphCli
 
 from gpf.pheno.common import PhenoImportConfig
 from gpf.pheno.pheno_import import get_gpf_instance, import_pheno_data
-from gain.task_graph.cli_tools import TaskGraphCli
 
 logger = logging.getLogger(__name__)
 

@@ -2,8 +2,8 @@
 from typing import Any, cast
 
 import pytest
-from gpf.studies.study import GenotypeDataStudy
 from gain.utils.regions import Region
+from gpf.studies.study import GenotypeDataStudy
 
 from gcp_storage.bigquery_variants import BigQueryVariants
 

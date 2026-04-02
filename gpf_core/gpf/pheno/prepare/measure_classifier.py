@@ -4,14 +4,14 @@ from collections.abc import Sequence
 from typing import Any, cast
 
 import numpy as np
-from pydantic import BaseModel
-
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     Histogram,
     NullHistogram,
     NumberHistogram,
 )
+from pydantic import BaseModel
+
 from gpf.pheno.common import InferenceConfig
 from gpf.pheno.utils.commons import remove_annoying_characters
 

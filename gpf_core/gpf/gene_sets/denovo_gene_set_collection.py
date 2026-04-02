@@ -9,8 +9,6 @@ from itertools import product
 from typing import Any
 
 from gain.gene_sets.gene_set import GeneSet
-
-
 from gpf.gene_sets.denovo_gene_sets_config import (
     DenovoGeneSetsConfig,
     DGSCQuery,
@@ -18,7 +16,6 @@ from gpf.gene_sets.denovo_gene_sets_config import (
     parse_denovo_gene_sets_study_config,
     parse_dgsc_query,
 )
-from gain.gene_sets.gene_sets_db import GeneSet
 from gpf.pedigrees.family import Person
 from gpf.person_sets import (
     PersonSetCollection,

@@ -9,6 +9,7 @@ from gain.genomic_resources.reference_genome import (
 )
 from gain.genomic_resources.repository import GenomicResourceRepo
 from gain.genomic_resources.testing import setup_directories
+
 from gpf.gpf_instance import GPFInstance
 
 

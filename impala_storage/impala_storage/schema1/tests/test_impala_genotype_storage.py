@@ -1,11 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import re
+from collections.abc import Callable
 from contextlib import closing
-from typing import Callable
 
 import pytest
-import pytest_mock
 from box import Box
 
 from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
@@ -17,7 +16,7 @@ def impala_genotype_storage() -> ImpalaGenotypeStorage:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -95,80 +94,45 @@ def test_impala_partition_import(
             "coding_bin_0_family_bin_69.parquet",
         ),
     )
-    # assert hdfs.exists(
-    #     os.path.join(
-    #         root,
-    #         "test_study/variants/region_bin=2_9/family_bin=6/coding_bin=0/"
-    #         "frequency_bin=3",
-    #     )
-    # )
-    # assert hdfs.exists(
-    #     os.path.join(
-    #         root,
-    #         "test_study/variants/region_bin=2_9/family_bin=6/coding_bin=0/"
-    #         "frequency_bin=3/"
-    #         "variants_region_bin_2_9_family_bin_6_"
-    #         "coding_bin_0_frequency_bin_3.parquet",
-    #     )
-    # )
-    # assert hdfs.exists(
-    #     os.path.join(
-    #         root,
-    #         "test_study/variants/region_bin=2_9/family_bin=69"
-    #         "/coding_bin=0/frequency_bin=3",
-    #     )
-    # )
-    # assert hdfs.exists(
-    #     os.path.join(
-    #         root,
-    #         "test_study/variants/region_bin=2_9/family_bin=69/coding_bin=0/"
-    #         "frequency_bin=3/"
-    #         "variants_region_bin_2_9_family_bin_69_"
-    #         "coding_bin_0_frequency_bin_3.parquet",
-    #     )
-    # )
-
     impala_helpers = impala_genotype_storage.impala_helpers
     db = impala_genotype_storage.storage_config.impala.db  # type: ignore
 
-    with closing(impala_helpers.connection()) as conn:
-        with conn.cursor() as cursor:  # type: ignore
-            cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
-            rows = list(cursor)
-            assert any(
-                row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
-                and all([
-                    "frame-shift" in row[2],
-                    "missense" in row[2],
-                    "synonymou" in row[2],
-                    "nonsense" in row[2]])
-                for row in rows
-            )
-            assert any(
-                row[1] == "gpf_partitioning_family_bin_family_bin_size"
-                and int(row[2]) == 100
-                for row in rows
-            )
-            assert any(
-                row[1] == "gpf_partitioning_frequency_bin_rare_boundary"
-                and float(row[2]) == 30
-                for row in rows
-            )
-            assert any(
-                row[1] == "gpf_partitioning_region_bin_chromosomes"
-                and "1, 2" in row[2]
-                for row in rows
-            )
-            assert any(
-                row[1] == "gpf_partitioning_region_bin_region_length"
-                and int(row[2]) == 100000
-                for row in rows
-            )
+    with closing(impala_helpers.connection()) as conn, \
+            conn.cursor() as cursor:
+        cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
+        rows = list(cursor)
+        assert any(
+            row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
+            and all([
+                "frame-shift" in row[2],
+                "missense" in row[2],
+                "synonymou" in row[2],
+                "nonsense" in row[2]])
+            for row in rows
+        )
+        assert any(
+            row[1] == "gpf_partitioning_family_bin_family_bin_size"
+            and int(row[2]) == 100
+            for row in rows
+        )
+        assert any(
+            row[1] == "gpf_partitioning_frequency_bin_rare_boundary"
+            and float(row[2]) == 30
+            for row in rows
+        )
+        assert any(
+            row[1] == "gpf_partitioning_region_bin_chromosomes"
+            and "1, 2" in row[2]
+            for row in rows
+        )
+        assert any(
+            row[1] == "gpf_partitioning_region_bin_region_length"
+            and int(row[2]) == 100000
+            for row in rows
+        )
 
 
-def test_impala_genotype_storate_has_rsync_helpers(
-    mocker: pytest_mock.MockerFixture,
-) -> None:
+def test_impala_genotype_storate_has_rsync_helpers() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -179,7 +143,7 @@ def test_impala_genotype_storate_has_rsync_helpers(
             "pool_size": 3,
         },
         "hdfs": {
-            "base_dir": "/tmp/genotype_impala",
+            "base_dir": "/tmp/genotype_impala",  # noqa: S108
             "host": "locahost",
             "port": 8020,
         },
@@ -193,9 +157,7 @@ def test_impala_genotype_storate_has_rsync_helpers(
     assert storage.rsync_helpers is not None
 
 
-def test_impala_genotype_storate_no_rsync_helpers(
-    mocker: pytest_mock.MockerFixture,
-) -> None:
+def test_impala_genotype_storate_no_rsync_helpers() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -206,7 +168,7 @@ def test_impala_genotype_storate_no_rsync_helpers(
             "pool_size": 3,
         },
         "hdfs": {
-            "base_dir": "/tmp/genotype_impala",
+            "base_dir": "/tmp/genotype_impala",  # noqa: S108
             "host": "locahost",
             "port": 8020,
         },
@@ -222,7 +184,7 @@ def test_create_impala_genotype_storage() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -244,7 +206,7 @@ def test_create_impala_genotype_storage_missing_id() -> None:
     config = {
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -268,7 +230,7 @@ def test_create_impala_genotype_storage_missing_type() -> None:
     config = {
         "id": "aaaa",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -293,7 +255,7 @@ def test_create_impala_genotype_storage_wrong_type() -> None:
         "id": "aaaa",
         "storage_type": "impala2",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -319,11 +281,11 @@ def test_create_impala_genotype_storage_missing_hdfs() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
-        # "hdfs": {
-        #     "base_dir": "/tmp/test_data",
-        #     "host": "localhost",
-        #     "port": 8020,
-        #     "replication": 1,
+        # "hdfs": {  # noqa: ERA001
+        #     "base_dir": "/tmp/test_data",  # noqa: ERA001
+        #     "host": "localhost",  # noqa: ERA001
+        #     "port": 8020,  # noqa: ERA001
+        #     "replication": 1,  # noqa: ERA001
         # },
         "impala": {
             "db": "impala_storage_test_db",
@@ -347,7 +309,7 @@ def test_create_impala_genotype_storage_missing_hdfs_base_dir() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            # "base_dir": "/tmp/test_data",
+            # "base_dir": "/tmp/test_data",  # noqa: ERA001
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -402,8 +364,8 @@ def test_create_impala_genotype_storage_missing_hdfs_host() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
-            # "host": "localhost",
+            "base_dir": "/tmp/test_data",  # noqa: S108
+            # "host": "localhost",  # noqa: ERA001
             "port": 8020,
             "replication": 1,
         },
@@ -429,9 +391,9 @@ def test_create_impala_genotype_storage_missing_hdfs_port() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
-            # "port": 8020,
+            # "port": 8020,  # noqa: ERA001
             "replication": 1,
         },
         "impala": {
@@ -452,10 +414,10 @@ def test_create_impala_genotype_storage_missing_hdfs_replication() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
-            # "replication": 1,
+            # "replication": 1,  # noqa: ERA001
         },
         "impala": {
             "db": "impala_storage_test_db",
@@ -475,18 +437,18 @@ def test_create_impala_genotype_storage_missing_impala() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
         },
-        # "impala": {
-        #     "db": "impala_storage_test_db",
+        # "impala": {  # noqa: ERA001
+        #     "db": "impala_storage_test_db",  # noqa: ERA001
         #     "hosts": [
         #         "localhost",
         #     ],
-        #     "pool_size": 3,
-        #     "port": 21050,
+        #     "pool_size": 3,  # noqa: ERA001
+        #     "port": 21050,  # noqa: ERA001
         # },
     }
     with pytest.raises(
@@ -502,13 +464,13 @@ def test_create_impala_genotype_storage_missing_impala_db() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
         },
         "impala": {
-            # "db": "impala_storage_test_db",
+            # "db": "impala_storage_test_db",  # noqa: ERA001
             "hosts": [
                 "localhost",
             ],
@@ -529,7 +491,7 @@ def test_create_impala_genotype_storage_missing_impala_hosts() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -556,7 +518,7 @@ def test_create_impala_genotype_storage_missing_impala_port() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -567,7 +529,7 @@ def test_create_impala_genotype_storage_missing_impala_port() -> None:
                 "localhost",
             ],
             "pool_size": 3,
-            # "port": 21050,
+            # "port": 21050,  # noqa: ERA001
         },
     }
     res = ImpalaGenotypeStorage(config)
@@ -579,7 +541,7 @@ def test_create_impala_genotype_storage_missing_impala_pool_size() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -590,7 +552,7 @@ def test_create_impala_genotype_storage_missing_impala_pool_size() -> None:
                 "localhost",
             ],
             "port": 21050,
-            # "pool_size": 3,
+            # "pool_size": 3,  # noqa: ERA001
         },
     }
     res = ImpalaGenotypeStorage(config)

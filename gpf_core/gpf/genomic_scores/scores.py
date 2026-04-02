@@ -4,8 +4,6 @@ import logging
 from dataclasses import dataclass
 from typing import Any, cast
 
-from jinja2 import Template
-
 from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     AttributeInfo,
@@ -21,6 +19,7 @@ from gain.genomic_resources.histogram import (
     NullHistogram,
     NumberHistogram,
 )
+from jinja2 import Template
 
 logger = logging.getLogger(__name__)
 

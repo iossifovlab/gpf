@@ -6,14 +6,14 @@ import os
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.utils import fs_utils
+
 from gpf.parquet import helpers as parquet_helpers
 from gpf.parquet.helpers import url_to_pyarrow_fs
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.parquet.schema2.serializers import build_summary_schema
 from gpf.pedigrees.families_data import FamiliesData
-from gain.utils import fs_utils
 from gpf.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)

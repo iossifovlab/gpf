@@ -18,14 +18,14 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import toml
+from gain.utils import fs_utils
+from gain.utils.regions import Region
 from gpf.import_tools.import_tools import Bucket, ImportProject
 from gpf.parquet.helpers import url_to_pyarrow_fs
 from gpf.parquet.parquet_writer import fill_family_bins, save_ped_df_to_parquet
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Family
-from gain.utils import fs_utils
-from gain.utils.regions import Region
 from gpf.utils.variant_utils import GenotypeType
 from gpf.variants.family_variant import (
     FamilyAllele,

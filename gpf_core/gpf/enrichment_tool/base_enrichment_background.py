@@ -5,14 +5,15 @@ import logging
 from collections.abc import Iterable
 from typing import Any, cast
 
-from gpf.enrichment_tool.event_counters import (
-    EnrichmentResult,
-    EventCountersResult,
-)
 from gain.genomic_resources.repository import GenomicResource
 from gain.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
+)
+
+from gpf.enrichment_tool.event_counters import (
+    EnrichmentResult,
+    EventCountersResult,
 )
 
 logger = logging.getLogger(__name__)

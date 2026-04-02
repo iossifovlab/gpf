@@ -122,8 +122,8 @@ def test_denovo_gene_sets(
 
     assert response
     assert response.status_code == 200
-    assert len(response.data) == 8
-    dataset_ids = [dgs["datasetId"] for dgs in response.data]
+    assert len(response.data) == 8  # type: ignore[attr-defined]
+    dataset_ids = [dgs["datasetId"] for dgs in response.data]  # type: ignore[attr-defined]
     assert set(dataset_ids) == {
         "t4c8_dataset",
         "t4c8_study_1",
@@ -520,9 +520,9 @@ def test_query_variants_wdae_remote(
         content_type="application/json",
     )
 
-    assert response.status_code == status.HTTP_200_OK  # type: ignore
+    assert response.status_code == status.HTTP_200_OK
     res = json.loads(
-        "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore
+        "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore[attr-defined]
 
     assert len(res) == 12
 
@@ -734,7 +734,7 @@ def test_genotype_browser_query_default_person_set_collection(
     assert response.status_code == status.HTTP_200_OK
 
     res = "".join(
-        p.decode("utf8") for p in response.streaming_content  # pyright: ignore
+        p.decode("utf8") for p in response.streaming_content  # type: ignore[attr-defined]
         if p).split("\n")
     res = [r for r in res if r]
 
@@ -767,7 +767,7 @@ def test_genotype_browser_query_explicit_person_set_collection(
     assert response.status_code == status.HTTP_200_OK
 
     res = "".join(
-        p.decode("utf8") for p in response.streaming_content  # pyright: ignore
+        p.decode("utf8") for p in response.streaming_content  # type: ignore[attr-defined]
         if p).split("\n")
     res = [r for r in res if r]
 

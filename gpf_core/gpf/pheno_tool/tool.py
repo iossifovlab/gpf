@@ -5,9 +5,9 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
+from gain.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 from scipy.stats import ttest_ind
 
-from gain.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 from gpf.pheno.common import MeasureType
 from gpf.pheno.pheno_data import PhenotypeData
 from gpf.pheno.utils.lin_regress import LinearRegression

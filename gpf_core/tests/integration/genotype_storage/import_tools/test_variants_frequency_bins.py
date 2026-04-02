@@ -106,7 +106,7 @@ def vcf_fixture(
 def test_family_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     label: str, frequency_bin: int,
-    exists: bool,  # noqa: FBT001
+    exists: bool,
 ) -> None:
 
     root_path, _ = vcf_fixture
@@ -133,7 +133,7 @@ def test_summary_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     label: str,
     frequency_bin: int,
-    exists: bool,  # noqa: FBT001
+    exists: bool,
 ) -> None:
 
     root_path, _ = vcf_fixture
@@ -238,7 +238,7 @@ def test_denovo_frequency_bin_for_denovo_import(
     denovo_project_to_parquet: ImportProject,
     label: str,
     frequency_bin: int,
-    exists: bool,  # noqa: FBT001
+    exists: bool,
 ) -> None:
 
     run_with_project(denovo_project_to_parquet)

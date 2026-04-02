@@ -53,4 +53,4 @@ class RemotePhenoToolAdapter(PhenoToolAdapterBase):
         handle_gene_sets(self.rest_client, query_data)
         handle_genomic_scores(self.rest_client, query_data)
 
-        yield from self.rest_client.post_pheno_tool_download(query_data)  # type: ignore
+        yield from self.rest_client.post_pheno_tool_download(query_data)

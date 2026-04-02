@@ -6,6 +6,14 @@ import sys
 from typing import Any, cast
 
 from gain.annotation.annotation_factory import load_pipeline_from_yaml
+from gain.genomic_resources.genomic_context import (
+    context_providers_add_argparser_arguments,
+    context_providers_init,
+    get_genomic_context,
+)
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from gpf.duckdb_storage.duckdb_genotype_storage import (
     DuckDbParquetStorage,
@@ -13,17 +21,10 @@ from gpf.duckdb_storage.duckdb_genotype_storage import (
 from gpf.duckdb_storage.duckdb_storage_helpers import (
     PARQUET_SCAN,
 )
-from gain.genomic_resources.genomic_context import (
-    context_providers_add_argparser_arguments,
-    context_providers_init,
-    get_genomic_context,
-)
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.parquet_storage.storage import ParquetLoaderVariants
 from gpf.schema2_storage.schema2_import_storage import Schema2ImportStorage
 from gpf.studies.study import GenotypeData, GenotypeDataStudy
-from gain.task_graph.cli_tools import TaskGraphCli
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

@@ -6,6 +6,10 @@ import pathlib
 from typing import Literal
 
 import yaml
+from gain.task_graph.graph import Task, TaskGraph, sync_tasks
+from gain.utils import fs_utils
+from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
+from gain.utils.regions import Region
 from pyarrow import parquet as pq
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
@@ -53,10 +57,6 @@ from gpf.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from gain.task_graph.graph import Task, TaskGraph, sync_tasks
-from gain.utils import fs_utils
-from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
-from gain.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 

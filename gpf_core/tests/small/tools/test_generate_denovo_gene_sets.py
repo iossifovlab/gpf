@@ -4,8 +4,8 @@ import pathlib
 import textwrap
 
 import pytest
-from gpf.common_reports.common_report import CommonReport
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+from gpf.common_reports.common_report import CommonReport
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData, GenotypeDataGroup
 from gpf.testing.import_helpers import setup_dataset, vcf_study

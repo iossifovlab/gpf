@@ -11,7 +11,7 @@ def test_impala_config_validation() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -33,7 +33,7 @@ def test_impala_config_validation_missing_id() -> None:
     config = {
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -57,7 +57,7 @@ def test_impala_config_validation_missing_type() -> None:
     config = {
         "id": "aaaa",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -82,7 +82,7 @@ def test_impala_config_validation_wrong_type() -> None:
         "id": "aaaa",
         "storage_type": "impala2",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -108,11 +108,11 @@ def test_impala_config_validation_missing_hdfs() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
-        # "hdfs": {
-        #     "base_dir": "/tmp/test_data",
-        #     "host": "localhost",
-        #     "port": 8020,
-        #     "replication": 1,
+        # "hdfs": {  # noqa: ERA001
+        #     "base_dir": "/tmp/test_data",  # noqa: ERA001
+        #     "host": "localhost",  # noqa: ERA001
+        #     "port": 8020,  # noqa: ERA001
+        #     "replication": 1,  # noqa: ERA001
         # },
         "impala": {
             "db": "impala_storage_test_db",
@@ -136,7 +136,7 @@ def test_impala_config_validation_missing_hdfs_base_dir() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            # "base_dir": "/tmp/test_data",
+            # "base_dir": "/tmp/test_data",  # noqa: ERA001
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -191,8 +191,8 @@ def test_impala_config_validation_missing_hdfs_host() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
-            # "host": "localhost",
+            "base_dir": "/tmp/test_data",  # noqa: S108
+            # "host": "localhost",  # noqa: ERA001
             "port": 8020,
             "replication": 1,
         },
@@ -218,9 +218,9 @@ def test_impala_config_validation_missing_hdfs_port() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
-            # "port": 8020,
+            # "port": 8020,  # noqa: ERA001
             "replication": 1,
         },
         "impala": {
@@ -241,10 +241,10 @@ def test_impala_config_validation_missing_hdfs_replication() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
-            # "replication": 1,
+            # "replication": 1,  # noqa: ERA001
         },
         "impala": {
             "db": "impala_storage_test_db",
@@ -264,7 +264,7 @@ def test_impala_config_validation_missing_impala() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -283,13 +283,13 @@ def test_impala_config_validation_missing_impala_db() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
         },
         "impala": {
-            # "db": "impala_storage_test_db",
+            # "db": "impala_storage_test_db",  # noqa: ERA001
             "hosts": [
                 "localhost",
             ],
@@ -310,7 +310,7 @@ def test_impala_config_validation_missing_impala_hosts() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -337,7 +337,7 @@ def test_impala_config_validation_missing_impala_port() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -348,7 +348,7 @@ def test_impala_config_validation_missing_impala_port() -> None:
                 "localhost",
             ],
             "pool_size": 3,
-            # "port": 21050,
+            # "port": 21050,  # noqa: ERA001
         },
     }
     res = ImpalaGenotypeStorage.validate_and_normalize_config(config)
@@ -360,7 +360,7 @@ def test_impala_config_validation_missing_impala_pool_size() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -371,7 +371,7 @@ def test_impala_config_validation_missing_impala_pool_size() -> None:
                 "localhost",
             ],
             "port": 21050,
-            # "pool_size": 3,
+            # "pool_size": 3,  # noqa: ERA001
         },
     }
     res = ImpalaGenotypeStorage.validate_and_normalize_config(config)

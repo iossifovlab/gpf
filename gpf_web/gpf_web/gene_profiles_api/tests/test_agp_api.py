@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from box import Box
-from gpf.gene_profile.statistic import GPStatistic
-from gain.genomic_resources.gene_models import Exon, TranscriptModel
 from django.test.client import Client
+from gain.genomic_resources.gene_models import Exon, TranscriptModel
+from gpf.gene_profile.statistic import GPStatistic
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture
 

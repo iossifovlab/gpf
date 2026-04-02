@@ -14,8 +14,9 @@ from gain.genomic_resources.repository_factory import (
     get_default_grr_definition,
     load_definition_file,
 )
-from gpf.gpf_instance.gpf_instance import GPFInstance
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
+from gpf.gpf_instance.gpf_instance import GPFInstance
 
 logger = logging.getLogger("grr_cache_repo")
 

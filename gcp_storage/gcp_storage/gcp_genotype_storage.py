@@ -6,11 +6,11 @@ import pyarrow.parquet as pq
 from cerberus import Validator
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils import fs_utils
+from google.cloud import bigquery
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from gain.utils import fs_utils
-from google.cloud import bigquery
 
 from gcp_storage.bigquery_variants import BigQueryVariants
 

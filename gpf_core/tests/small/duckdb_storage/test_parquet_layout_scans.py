@@ -4,12 +4,12 @@ from typing import cast
 
 import pytest
 import pytest_mock
-from gpf.duckdb_storage.duckdb_legacy_genotype_storage import (
-    DuckDbLegacyStorage,
-)
 from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
+)
+from gpf.duckdb_storage.duckdb_legacy_genotype_storage import (
+    DuckDbLegacyStorage,
 )
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,

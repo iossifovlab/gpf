@@ -4,15 +4,16 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from gpf.duckdb_storage.duckdb_legacy_genotype_storage import (
-    DuckDbLegacyStorage,
-)
 from gain.genomic_resources.testing import (
     build_s3_test_bucket,
     build_s3_test_filesystem,
     s3_test_server_endpoint,
     setup_pedigree,
     setup_vcf,
+)
+from gain.utils import fs_utils
+from gpf.duckdb_storage.duckdb_legacy_genotype_storage import (
+    DuckDbLegacyStorage,
 )
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.genotype_storage.genotype_storage_registry import (
@@ -23,7 +24,6 @@ from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.testing.import_helpers import vcf_study
-from gain.utils import fs_utils
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:

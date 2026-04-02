@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
-from gain.testing.t4c8_import import t4c8_grr
 from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.testing.t4c8_import import t4c8_grr
 
 
 from gpf.genotype_storage.genotype_storage import GenotypeStorage

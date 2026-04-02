@@ -9,7 +9,6 @@ from contextlib import closing
 from typing import cast
 
 import pysam
-
 from gain.annotation.annotatable import (
     CNVAllele,
     VCFAllele,
@@ -36,10 +35,11 @@ from gain.genomic_resources.reference_genome import (
 from gain.genomic_resources.repository_factory import (
     GenomicResourceRepo,
 )
-from gpf.pedigrees.loader import FamiliesLoader
 from gain.utils.regions import Region
-from gpf.utils.variant_utils import mat2str
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
+from gpf.pedigrees.loader import FamiliesLoader
+from gpf.utils.variant_utils import mat2str
 from gpf.variants.family_variant import FamilyAllele
 from gpf.variants.variant import VariantDetails
 from gpf.variants_loaders.cnv.loader import CNVLoader

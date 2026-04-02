@@ -6,8 +6,8 @@ from collections.abc import Iterable, Sequence
 from types import TracebackType
 
 import pysam
-
 from gain.genomic_resources.reference_genome import ReferenceGenome
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant

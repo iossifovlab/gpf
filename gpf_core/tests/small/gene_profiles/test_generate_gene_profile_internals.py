@@ -7,6 +7,12 @@ import pytest
 import pytest_mock
 import yaml
 from box import Box
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import (
+    setup_directories,
+)
+from gain.testing.t4c8_import import setup_t4c8_grr
+from gain.utils.regions import Region
 from gpf.gene_profile.generate_gene_profile import (
     GeneProfileDBWriter,
     _calculate_variant_counts,
@@ -20,13 +26,7 @@ from gpf.gene_profile.generate_gene_profile import (
 from gpf.gene_profile.generate_gene_profile import (
     main as gp_main,
 )
-from gain.genomic_resources.repository import GenomicResourceRepo
-from gain.genomic_resources.testing import (
-    setup_directories,
-)
 from gpf.gpf_instance.gpf_instance import GPFInstance
-from gain.utils.regions import Region
-from gain.testing.t4c8_import import setup_t4c8_grr
 from gpf.utils.testing import (
     setup_t4c8_instance,
 )

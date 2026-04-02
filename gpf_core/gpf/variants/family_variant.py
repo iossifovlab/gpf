@@ -4,8 +4,8 @@ from typing import Any, cast
 
 import numpy as np
 from deprecation import deprecated
-
 from gain.effect_annotation.effect import AlleleEffects
+
 from gpf.pedigrees.family import Family
 from gpf.utils.variant_utils import (
     BitmaskEnumTranslator,

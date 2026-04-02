@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from gain.utils.regions import Region
 from django.test import Client
+from gain.utils.regions import Region
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 

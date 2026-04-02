@@ -12,10 +12,12 @@ from typing import cast
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 from gain.annotation.annotation_pipeline import (
     AttributeInfo,
 )
+from gain.utils import fs_utils
+from gain.utils.processing_pipeline import Filter
+
 from gpf.parquet.helpers import url_to_pyarrow_fs
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.parquet.schema2.serializers import (
@@ -24,8 +26,6 @@ from gpf.parquet.schema2.serializers import (
     SummaryAlleleParquetSerializer,
     VariantsDataSerializer,
 )
-from gain.utils import fs_utils
-from gain.utils.processing_pipeline import Filter
 from gpf.utils.variant_utils import (
     is_all_reference_genotype,
     is_unknown_genotype,

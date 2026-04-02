@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 from collections.abc import Callable
-from typing import ContextManager
+from contextlib import AbstractContextManager
 
 import pytest
 from gpf_instance.gpf_instance import WGPFInstance
-from gpf_web.wgpf import cli  # type: ignore
+from gpf_web.wgpf import cli
 
 from gpf_web_tests.integration.testing import LiveServer
 
@@ -12,7 +12,7 @@ from gpf_web_tests.integration.testing import LiveServer
 def test_wgpf_init_simple(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
 ) -> None:
     # Given
     with wdae_django_setup(
@@ -34,7 +34,7 @@ def test_wgpf_init_simple(
 def test_wgpf_reinit(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
     capsys: pytest.CaptureFixture,
 ) -> None:
     # Given
@@ -57,7 +57,7 @@ def test_wgpf_reinit(
 def test_wgpf_force_reinit(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]],
+        [WGPFInstance, str], AbstractContextManager[LiveServer]],
 ) -> None:
     # Given
     with wdae_django_setup(

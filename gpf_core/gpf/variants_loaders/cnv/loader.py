@@ -81,10 +81,10 @@ from typing import Any, TextIO
 
 import numpy as np
 import pandas as pd
-
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gpf.pedigrees.families_data import FamiliesData
 from gain.utils.regions import Region
+
+from gpf.pedigrees.families_data import FamiliesData
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant, SummaryVariantFactory

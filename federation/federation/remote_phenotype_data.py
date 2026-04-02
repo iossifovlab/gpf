@@ -187,7 +187,8 @@ class RemotePhenotypeData(PhenotypeData):
         return pd.read_json(measure_values, orient="split")
 
     def get_person_roles(self) -> list[str]:
-        return self.rest_client.get_pheno_roles(self._remote_pheno_id)
+        return cast(list[str], self.rest_client.get_pheno_roles(
+            self._remote_pheno_id))
 
     @property
     def instruments(self) -> dict[str, Instrument]:
@@ -253,7 +254,7 @@ class RemotePhenotypeData(PhenotypeData):
         )
         return cast(dict[str, Any], output)
 
-    def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
+    def get_image(self, image_path: str) -> tuple[bytes, str]:
         """Return binary image data with mimetype."""
         image, mimetype = self.rest_client.get_pheno_image(image_path)
         if image is None or mimetype is None:

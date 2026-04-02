@@ -3,6 +3,8 @@ import os
 import shutil
 from typing import Any
 
+from gain.task_graph.graph import TaskGraph
+
 from gpf.configuration.study_config_builder import StudyConfigBuilder
 from gpf.import_tools.import_tools import (
     ImportProject,
@@ -13,7 +15,6 @@ from gpf.inmemory_storage.annotation_serialization import (
     build_annotation_filename,
     variants_loader_annotate_and_save,
 )
-from gain.task_graph.graph import TaskGraph
 
 logger = logging.getLogger(__name__)
 

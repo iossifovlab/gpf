@@ -7,8 +7,8 @@ from copy import deepcopy
 from typing import Any, cast
 
 import numpy as np
-
 from gain.effect_annotation.effect import EffectTypesMixin
+
 from gpf.person_sets import PersonSet, PersonSetCollection
 from gpf.variants.family_variant import FamilyAllele, FamilyVariant
 

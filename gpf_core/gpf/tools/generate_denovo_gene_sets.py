@@ -2,8 +2,9 @@ import argparse
 import logging
 import sys
 
-from gpf.gpf_instance.gpf_instance import GPFInstance
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
+from gpf.gpf_instance.gpf_instance import GPFInstance
 
 logger = logging.getLogger("generate_denovo_gene_sets")
 

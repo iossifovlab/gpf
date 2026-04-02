@@ -221,7 +221,7 @@ def test_get_chrom_length(
 def test_region_contains(
     reg1: Region,
     reg2: Region,
-    expected: bool,  # noqa: FBT001
+    expected: bool,
 ) -> None:
     assert reg1.contains(reg2) == expected
 

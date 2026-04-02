@@ -8,10 +8,11 @@ from gain.utils import fs_utils
 from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 
-class FsspecHandler(logging.StreamHandler):
+class FsspecHandler(logging.StreamHandler[Any]):
     """Class to create fsspec based logging handler."""
 
     def __init__(self, logfile: str):
+        self.stream: Any = None
         fs, logpath = fs_utils.url_to_fs(logfile)
         stream = fs.open(logpath, "w")
         super().__init__(stream=stream)

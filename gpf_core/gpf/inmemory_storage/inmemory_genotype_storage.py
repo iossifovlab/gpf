@@ -5,10 +5,10 @@ from typing import Any, ClassVar, cast
 
 from box import Box
 from cerberus import Validator
-
-from gpf.configuration.utils import validate_path
 from gain.genomic_resources.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+
+from gpf.configuration.utils import validate_path
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.inmemory_storage.annotation_serialization import (
     build_annotation_filename,

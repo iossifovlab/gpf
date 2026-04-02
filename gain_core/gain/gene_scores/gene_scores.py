@@ -29,6 +29,7 @@ from gain.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
 )
+
 logger = logging.getLogger(__name__)
 
 SCORE_HISTOGRAM = """

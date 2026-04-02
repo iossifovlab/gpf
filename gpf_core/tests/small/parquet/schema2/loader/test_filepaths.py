@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 
-from gpf.parquet.schema2.loader import ParquetLoader
 from gain.utils.regions import Region
+from gpf.parquet.schema2.loader import ParquetLoader
 
 
 def test_get_summary_pq_filepaths_nonpartitioned(

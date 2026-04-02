@@ -7,12 +7,13 @@ from gain.genomic_resources.genomic_context import (
     context_providers_init,
     get_genomic_context,
 )
-from gpf.import_tools.import_tools import ImportProject
 from gain.task_graph.cli_tools import TaskGraphCli, task_graph_run
 from gain.task_graph.executor import TaskGraphExecutor
 from gain.task_graph.sequential_executor import SequentialExecutor
 from gain.utils import fs_utils
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
+from gpf.import_tools.import_tools import ImportProject
 
 logger = logging.getLogger(__name__)
 

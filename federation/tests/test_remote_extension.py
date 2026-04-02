@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import cast
 
 import pytest
 import pytest_mock
@@ -173,12 +172,9 @@ def test_extension_load_clients(
     assert isinstance(clients["id1"].session, GPFAnonymousSession)
     assert clients["id2"].base_url == "url2"
     assert isinstance(clients["id2"].session, GPFOAuthSession)
-    assert cast(
-        GPFOAuthSession, clients["id2"].session,
-    ).client_id == "client_id2"
-    assert cast(
-        GPFOAuthSession, clients["id2"].session,
-    ).client_secret == "client_secret2"  # noqa: S105
+    oauth_session = clients["id2"].session
+    assert oauth_session.client_id == "client_id2"
+    assert oauth_session.client_secret == "client_secret2"  # noqa: S105
 
 
 def test_extension_get_tool(
@@ -186,10 +182,12 @@ def test_extension_get_tool(
     test_remote_extension: GPFRemoteExtension,
 ) -> None:
     study = t4c8_instance.get_wdae_wrapper("t4c8_study_4")
+    assert study is not None
     tool = test_remote_extension.get_tool(study, "pheno_tool")
     assert tool is None
 
     study = t4c8_instance.get_wdae_wrapper("TEST_REMOTE_t4c8_study_1")
+    assert study is not None
     tool = test_remote_extension.get_tool(study, "pheno_tool")
     assert tool is not None
 
@@ -199,6 +197,7 @@ def test_extension_get_tool_unsupported_tool(
     test_remote_extension: GPFRemoteExtension,
 ) -> None:
     study = t4c8_instance.get_wdae_wrapper("TEST_REMOTE_t4c8_study_1")
+    assert study is not None
 
     tool = test_remote_extension.get_tool(study, "pheno_tool")
     assert tool is not None

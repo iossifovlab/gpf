@@ -8,6 +8,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from box import Box
+from gain.task_graph.cache import (
+    TaskCache,
+)
+from gain.task_graph.cli_tools import (
+    TaskGraphCli,
+    task_graph_run_with_results,
+)
+from gain.task_graph.graph import TaskGraph
 
 from gpf.pheno.browser import PhenoBrowser
 from gpf.pheno.common import (
@@ -29,14 +37,6 @@ from gpf.pheno.pheno_data import (
 )
 from gpf.pheno.registry import PhenoRegistry
 from gpf.pheno.storage import PhenotypeStorageRegistry
-from gain.task_graph.cache import (
-    TaskCache,
-)
-from gain.task_graph.cli_tools import (
-    TaskGraphCli,
-    task_graph_run_with_results,
-)
-from gain.task_graph.graph import TaskGraph
 from gpf.variants.attributes import Role
 
 mpl.use("PS")

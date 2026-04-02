@@ -4,7 +4,6 @@ from collections.abc import Generator, Iterable
 from typing import Any, cast
 
 from gpf.pedigrees.families_data import FamiliesData
-from gpf.variants.variant import SummaryVariant
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     ResponseTransformerProtocol,
@@ -132,9 +131,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         # Overwrite with prefixed versions
         details["id"] = self.study_id
         details["name"] = self.name
-        return details
+        return cast(dict[str, Any], details)
 
-    def _init_pheno(self, *_, **__) -> None:
+    def _init_pheno(self, *_: Any, **__: Any) -> None:
         # This method is not necessary for remote studies, as the phenotype
         # data is already initialized in the constructor.
         pass
@@ -166,11 +165,13 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         data = {
             "queryData": json.dumps(kwargs),
         }
-        return self.rest_client.post_gene_view_summary_variants_download(data)
+        return cast(Iterable[Any],
+                    self.rest_client.post_gene_view_summary_variants_download(
+                        data))
 
     def _query_gene_view_summary_variants(
         self, query_transformer: QueryTransformerProtocol, **kwargs: Any,
-    ) -> Generator[SummaryVariant, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         kwargs["datasetId"] = self.remote_study_id
 
         study_filters = None
@@ -188,7 +189,10 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
         kwargs = self._extract_pre_kwargs(query_transformer, kwargs)
         kwargs.pop("maxVariantsCount", None)
-        return self.rest_client.post_gene_view_summary_variants(kwargs)
+        return cast(
+            Generator[dict[str, Any], None, None],
+            self.rest_client.post_gene_view_summary_variants(kwargs),
+        )
 
     def _extract_pre_kwargs(
             self, query_transformer: QueryTransformerProtocol,

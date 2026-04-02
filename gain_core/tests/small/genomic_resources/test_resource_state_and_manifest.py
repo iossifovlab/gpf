@@ -45,7 +45,7 @@ def proto_fixture() -> ReadWriteRepositoryProtocol:
 ])
 def test_build_build_manifest_use_dvc(
     proto_fixture: ReadWriteRepositoryProtocol,
-    use_dvc: bool,  # noqa:FBT001
+    use_dvc: bool,
     filename: str,
     expected: tuple[str, int],
 ) -> None:
@@ -71,7 +71,7 @@ def test_build_build_manifest_use_dvc(
 ])
 def test_build_update_manifest_use_dvc(
     proto_fixture: ReadWriteRepositoryProtocol,
-    use_dvc: bool,  # noqa:FBT001
+    use_dvc: bool,
     filename: str,
     expected: tuple[str, int],
 ) -> None:

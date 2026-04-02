@@ -8,9 +8,9 @@ from typing import Any, ClassVar, cast
 import toml
 from box import Box
 from cerberus import Validator
-from gpf.configuration.utils import validate_path
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gpf.configuration.utils import validate_path
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.query_variants.base_query_variants import QueryVariantsBase
@@ -320,7 +320,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self.hdfs_helpers.put_in_directory(
                 schema_filename, study_path)
 
-        for lvf, hvf in zip(local_variants_files, hdfs_variants_files):
+        for lvf, hvf in zip(
+            local_variants_files, hdfs_variants_files, strict=False,
+        ):
             hdfs_dir = os.path.dirname(hvf)
             self.hdfs_helpers.makedirs(hdfs_dir)
             self.hdfs_helpers.put_in_directory(lvf, hdfs_dir)

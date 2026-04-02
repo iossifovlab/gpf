@@ -15,7 +15,6 @@ from typing import Any, cast
 import jinja2
 import toml
 import yaml
-
 from gain.effect_annotation.effect import expand_effect_types
 from gain.utils import fs_utils
 from gain.utils.regions import (
@@ -24,6 +23,7 @@ from gain.utils.regions import (
     calc_bin_end,
     calc_bin_index,
 )
+
 from gpf.variants.attributes import TransmissionType
 from gpf.variants.family_variant import FamilyAllele
 from gpf.variants.variant import SummaryAllele

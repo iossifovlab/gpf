@@ -12,7 +12,6 @@ import toml
 import yaml
 from box import Box
 from cerberus import Validator
-
 from gain.utils.dict_utils import recursive_dict_update
 
 logger = logging.getLogger(__name__)

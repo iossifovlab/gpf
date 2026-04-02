@@ -14,11 +14,11 @@ from xml.etree.ElementTree import Element, tostring  # noqa: S405
 import numpy as np
 import pandas as pd
 import yaml
+from gain.utils.regions import Region
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
-from gain.utils.regions import Region
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 from gpf.variants.family_variant import FamilyAllele, FamilyVariant
 
 logger = logging.getLogger("gpf_validation_runner")

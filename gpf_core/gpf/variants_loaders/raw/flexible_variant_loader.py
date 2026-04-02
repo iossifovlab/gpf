@@ -3,6 +3,7 @@ from typing import Any, TextIO
 
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.utils.dae_utils import dae2vcf_variant
+
 from gpf.variants.variant import allele_type_from_cshl_variant
 
 

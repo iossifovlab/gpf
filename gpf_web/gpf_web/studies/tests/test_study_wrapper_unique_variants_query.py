@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from gpf.duckdb_storage.duckdb_genotype_storage import duckdb_storage_factory
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+from gpf.duckdb_storage.duckdb_genotype_storage import duckdb_storage_factory
 from gpf.testing.alla_import import alla_gpf
 from gpf.testing.import_helpers import setup_dataset, vcf_study
 from gpf_instance.gpf_instance import WGPFInstance
@@ -133,7 +133,7 @@ def query_transformer(
 def test_unique_family_variants(
     dataset: WDAEStudyGroup,
     query_transformer: QueryTransformer,
-    unique_family_variants: bool,  # noqa: FBT001
+    unique_family_variants: bool,
     count: int,
 ) -> None:
     query: dict[str, Any] = {"uniqueFamilyVariants": unique_family_variants}

@@ -12,9 +12,9 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.testing.t4c8_import import t4c8_grr
 from gpf.gpf_instance import GPFInstance
 from gpf.testing.import_helpers import vcf_study
-from gain.testing.t4c8_import import t4c8_grr
 from gpf.testing.t4c8_import import t4c8_gpf
 
 

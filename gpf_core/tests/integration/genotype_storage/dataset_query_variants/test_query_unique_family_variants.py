@@ -98,7 +98,7 @@ chr1   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
 )
 def test_unique_family_variants(
     dataset: GenotypeDataGroup,
-    unique_family_variants: bool,  # noqa: FBT001
+    unique_family_variants: bool,
     count: int,
 ) -> None:
     vs = list(dataset.query_variants(

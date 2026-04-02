@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 import duckdb
 import jinja2
+from gain.utils import fs_utils
 from pydantic import (
     ByteSize,
 )
@@ -22,7 +23,6 @@ from gpf.duckdb_storage.duckdb_storage_config import (
 )
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 PARQUET_SCAN = re.compile(r"parquet_scan\('(?P<parquet_path>.+)'\)")

@@ -20,10 +20,10 @@ from gain.effect_annotation.effect import (
     gene_effect_get_worst_effect,
 )
 from gain.gene_scores.gene_scores import GeneScoresDb
+from gain.utils.dae_utils import join_line, split_iterable
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pedigrees.family import Person
 from gpf.person_sets import PersonSetCollection
-from gain.utils.dae_utils import join_line, split_iterable
 from gpf.utils.variant_utils import fgt2str, mat2str
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyAllele, FamilyVariant

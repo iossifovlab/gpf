@@ -12,7 +12,7 @@ import textwrap
 from collections.abc import Generator
 from typing import Any, cast
 
-import pyBigWig  # type: ignore
+import pyBigWig
 import pysam
 from s3fs.core import S3FileSystem
 

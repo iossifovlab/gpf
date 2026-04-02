@@ -6,6 +6,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
@@ -13,7 +14,6 @@ from gpf.parquet_storage.storage import ParquetGenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import vcf_study
 from gpf.testing.t4c8_import import t4c8_gpf
-from gain.utils.regions import Region
 
 VCF_PED = """
 familyId personId dadId momId sex status role

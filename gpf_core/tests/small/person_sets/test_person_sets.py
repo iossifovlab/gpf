@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 import pytest
 import toml
+from gain.genomic_resources.testing import setup_pedigree
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.configuration.schemas.person_sets import person_set_collections_schema
-from gain.genomic_resources.testing import setup_pedigree
 from gpf.gpf_instance import GPFInstance
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader

@@ -18,7 +18,7 @@ from gpf.variants.attributes import Inheritance
         ("not denovo and not possible_denovo", False, False),
     ],
 )
-def test_simple_inheritance_parser(query, exp1, exp2):
+def test_simple_inheritance_parser(query: str, exp1: bool, exp2: bool) -> None:
     matcher = transform_attribute_query_to_function(Inheritance, query)
 
     assert matcher(Inheritance.denovo.value) == exp1

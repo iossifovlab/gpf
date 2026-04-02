@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from box import Box
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_data import (
@@ -16,8 +18,6 @@ from gpf.pheno.pheno_data import (
 from gpf.pheno.prepare_data import PreparePhenoBrowserBase
 from gpf.pheno.registry import PhenoRegistry
 from gpf.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
-from gain.task_graph.cli_tools import TaskGraphCli
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

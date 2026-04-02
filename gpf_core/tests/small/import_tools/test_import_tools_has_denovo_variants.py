@@ -38,7 +38,7 @@ def test_import_project_denovo_loader(
 ])
 def test_import_project_vcf_loader_denovo_mode(
         denovo_mode: str,
-        has_denovo: bool,  # noqa: FBT001
+        has_denovo: bool,
         gpf_fixture: GPFInstance) -> None:
 
     import_config: dict[str, Any] = {

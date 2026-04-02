@@ -3,8 +3,9 @@ import logging
 from typing import Any
 
 import pandas as pd
-
 from gain.genomic_resources.gene_models import GeneModels
+from gain.utils.regions import Region
+
 from gpf.inmemory_storage.raw_variants import RawFamilyVariants
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.loader import FamiliesLoader
@@ -14,7 +15,6 @@ from gpf.query_variants.sql.schema2.base_query_builder import Dialect
 from gpf.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from gpf.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from gpf.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
-from gain.utils.regions import Region
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant
 

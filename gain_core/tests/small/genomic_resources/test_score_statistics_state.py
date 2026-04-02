@@ -8,6 +8,7 @@ from collections.abc import Generator
 import pysam
 import pytest
 import pytest_mock
+from dask.distributed import Client
 from gain.genomic_resources.repository import GR_CONF_FILE_NAME
 from gain.genomic_resources.testing import (
     FsspecReadWriteProtocol,
@@ -15,7 +16,6 @@ from gain.genomic_resources.testing import (
     setup_directories,
     setup_tabix,
 )
-from dask.distributed import Client
 
 
 @pytest.fixture(scope="module")

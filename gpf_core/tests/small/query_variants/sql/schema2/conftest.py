@@ -3,14 +3,14 @@ import pathlib
 from typing import cast
 
 import pytest
-from gpf.duckdb_storage.duckdb_genotype_storage import (
-    DuckDbStorage,
-)
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
+)
+from gpf.duckdb_storage.duckdb_genotype_storage import (
+    DuckDbStorage,
 )
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,

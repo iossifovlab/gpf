@@ -9,8 +9,9 @@ from gain.genomic_resources.repository_factory import (
     GenomicResourceRepo,
     build_genomic_resource_repository,
 )
-from gpf.pedigrees.loader import FamiliesLoader
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
+from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants_loaders.dae.loader import DaeTransmittedLoader
 from gpf.variants_loaders.vcf.serializer import VcfSerializer
 

@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 
 import yaml
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.pheno.browser import PhenoBrowser
 from gpf.pheno.common import PhenoImportConfig
@@ -12,8 +14,6 @@ from gpf.pheno.pheno_import import (
     load_instrument_descriptions,
     load_measure_descriptions,
 )
-from gain.task_graph.cli_tools import TaskGraphCli
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

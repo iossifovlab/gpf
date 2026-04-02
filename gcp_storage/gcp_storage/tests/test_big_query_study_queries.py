@@ -2,8 +2,8 @@
 from typing import Any
 
 import pytest
-from gpf.studies.study import GenotypeDataStudy
 from gain.utils.regions import Region
+from gpf.studies.study import GenotypeDataStudy
 
 
 @pytest.mark.parametrize("index,query,ecount", [

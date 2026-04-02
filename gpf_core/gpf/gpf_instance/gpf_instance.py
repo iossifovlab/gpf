@@ -10,17 +10,11 @@ from typing import Any, cast
 
 import yaml
 from box import Box
-
 from gain.annotation.annotation_factory import (
     RawPipelineConfig,
     build_annotation_pipeline,
 )
 from gain.annotation.annotation_pipeline import AnnotationPipeline
-from gpf.configuration.gpf_config_parser import GPFConfigParser
-from gpf.configuration.schemas.dae_conf import dae_conf_schema
-from gpf.configuration.schemas.gene_profile import gene_profiles_config
-from gpf.gene_profile.db import GeneProfileDB
-from gpf.gene_profile.statistic import GPStatistic
 from gain.gene_scores.gene_scores import GeneScore
 from gain.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
 from gain.gene_sets.gene_set import build_gene_set_collection_from_resource
@@ -51,7 +45,6 @@ from gpf.pheno.storage import (
 )
 from gpf.studies.study import GenotypeData
 from gpf.studies.variants_db import VariantsDb
-from gain.utils.fs_utils import find_directory_with_a_file
 
 logger = logging.getLogger(__name__)
 

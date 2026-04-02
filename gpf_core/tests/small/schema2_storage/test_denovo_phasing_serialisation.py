@@ -4,10 +4,10 @@ from typing import Any, cast
 
 import pytest
 from gain.genomic_resources.testing import setup_denovo, setup_pedigree
+from gain.utils.regions import Region
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.testing.import_helpers import denovo_study
-from gain.utils.regions import Region
 
 
 @pytest.fixture

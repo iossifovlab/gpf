@@ -8,11 +8,11 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.import_tools.cli import run_with_project
 from gpf.import_tools.import_tools import ImportProject
 from gpf.testing.import_helpers import vcf_study
-from gain.utils.regions import Region
 from gpf.variants_loaders.parquet.loader import ParquetLoader
 
 

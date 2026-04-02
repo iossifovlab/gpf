@@ -24,7 +24,7 @@ translator = BitmaskEnumTranslator(
     ],
 )
 def test_compound_zygosity(
-    query: str, role: Role, zygosity: Zygosity, expected: bool,  # noqa: FBT001
+    query: str, role: Role, zygosity: Zygosity, expected: bool,
 ) -> None:
     matcher = transform_attribute_query_to_function(
         Role, query, complementary_type=Zygosity,

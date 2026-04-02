@@ -70,7 +70,7 @@ from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from gain.task_graph.cli_tools import TaskGraphCli
-from gain.task_graph.graph import TaskGraph, sync_tasks
+from gain.task_graph.graph import TaskGraph
 from gain.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from gain.utils.regions import Region

@@ -6,7 +6,7 @@ from collections.abc import Generator
 from threading import Lock
 from typing import Any, cast
 
-from intervaltree import (  # type: ignore
+from intervaltree import (
     Interval,
     IntervalTree,
 )
@@ -54,8 +54,8 @@ class GeneModels(
             transcript model mapping.
 
     Example:
-        >>> from gain.genomic_resources.gene_models.gene_models_factory import \\
-        ...     build_gene_models_from_file
+        >>> from gain.genomic_resources.gene_models \
+        ...     .gene_models_factory import build_gene_models_from_file
         >>> gene_models = build_gene_models_from_file("genes.gtf")
         >>> gene_models.load()
         >>> # Query by gene name

@@ -8,9 +8,9 @@ from collections.abc import Callable
 from typing import Any, cast
 
 import pysam
-
 from gain.effect_annotation.effect import AlleleEffects, EffectGene
-from gpf.utils.variant_utils import trim_str_left_right, trim_str_right_left
+from gain.utils.variant_utils import trim_str_left_right, trim_str_right_left
+
 from gpf.variants import core
 from gpf.variants.attributes import TransmissionType
 

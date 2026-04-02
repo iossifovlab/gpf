@@ -2,9 +2,10 @@ import argparse
 import logging
 import sys
 
+from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf import __version__  # type: ignore
 from gpf.gpf_instance import GPFInstance
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gp_exporter")
 

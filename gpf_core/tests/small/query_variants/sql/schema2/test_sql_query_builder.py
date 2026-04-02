@@ -2,6 +2,7 @@
 import pytest
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils.regions import Region
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.sql.schema2.sql_query_builder import (
@@ -10,7 +11,6 @@ from gpf.query_variants.sql.schema2.sql_query_builder import (
     RealAttrFilterType,
     SqlQueryBuilder,
 )
-from gain.utils.regions import Region
 from sqlglot import diff, exp, parse_one
 from sqlglot.diff import Keep
 from sqlglot.executor import execute
@@ -429,7 +429,7 @@ def test_build_ultra_rare_where(
 def test_real_attr_filter(
     attr: str,
     value_range: tuple[float | None, float | None],
-    is_frequency: bool,  # noqa: FBT001
+    is_frequency: bool,
     expected: str,
     sql_builder: SqlQueryBuilder,
 ) -> None:
@@ -531,7 +531,7 @@ def test_sqlglot_nested_schema_experiments_array() -> None:
     ])
 def test_check_inheritance_denovo_only(
     inheritance: list[str],
-    expected: bool,  # noqa: FBT001
+    expected: bool,
     sql_builder: SqlQueryBuilder,
 ) -> None:
     result = sql_builder.check_inheritance_denovo_only(inheritance)

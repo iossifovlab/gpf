@@ -23,7 +23,8 @@ from gpf.variants.core import Allele
         ("cnv+ or cnv-", Allele.Type.substitution, False),
     ],
 )
-def test_simple_variant_types_parser(query, variant, expected):
+def test_simple_variant_types_parser(
+        query: str, variant: Allele.Type, expected: bool) -> None:
     matcher = transform_attribute_query_to_function(
         Allele.Type, query, aliases=Allele.TYPE_DISPLAY_NAME,
     )
@@ -80,7 +81,8 @@ def test_simple_variant_types_parser(query, variant, expected):
         ),
     ],
 )
-def test_attributes_query_function_transform(query, variant, expected):
+def test_attributes_query_function_transform(
+        query: str, variant: Allele.Type, expected: bool) -> None:
     func = transform_attribute_query_to_function(Allele.Type, query)
 
     assert func(variant.value) == expected

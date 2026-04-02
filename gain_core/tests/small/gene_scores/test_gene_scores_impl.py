@@ -4,11 +4,11 @@ import pathlib
 import textwrap
 
 import pytest
+from gain.gene_scores.gene_scores import ScoreDef
 from gain.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
     build_gene_score_implementation_from_resource,
 )
-from gain.gene_scores.gene_scores import ScoreDef
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     NullHistogramConfig,

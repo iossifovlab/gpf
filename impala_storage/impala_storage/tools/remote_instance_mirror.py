@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Tool to mirror remote GPF instances."""
 import argparse
 import copy
@@ -138,9 +137,10 @@ def update_mirror_config(
 
     filename = os.path.join(work_dir, "remote_impala_port_mapping.txt")
     logger.debug("remote netloc: %s", rsync_helpers.parsed_remote)
-    port_mapping_command = \
-        f"ssh -L 21050:{remote_impala_host}:21050 " \
-        f"{rsync_helpers.parsed_remote.netloc}"
+    port_mapping_command = (
+        f"ssh -L 21050:{remote_impala_host}:21050 "
+         f"{rsync_helpers.parsed_remote.netloc}"
+    )
     with open(filename, "wt", encoding="utf8") as outfile:
         outfile.write(port_mapping_command)
         outfile.write("\n")
@@ -152,21 +152,21 @@ def get_active_conda_environment() -> str | None:
     """Detect activate conda environment."""
     try:
         result = subprocess.run(
-            ["conda", "env", "list"],
+            ["conda", "env", "list"],  # noqa: S607
             text=True, capture_output=True, check=True)
         assert result.returncode == 0, result
 
         stdout = result.stdout
 
         regexp = re.compile(
-            "^(?P<env>.+?)\\s+(?P<active>\\*)\\s+(?P<path>\\/.+$)")
+            r"^(?P<env>.+?)\s+(?P<active>\*)\s+(?P<path>\/.+$)")
 
         lines = [ln.strip() for ln in stdout.split("\n")]
         for line in lines:
             match = regexp.match(line)
             if match:
                 return match.groupdict()["env"]
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except  # noqa: BLE001
         logger.warning("unable to detect conda environment", exc_info=True)
     return None
 

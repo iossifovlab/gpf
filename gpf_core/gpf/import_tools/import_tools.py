@@ -14,17 +14,21 @@ from typing import Any, cast
 
 import yaml
 from box import Box
-
 from gain.annotation.annotation_factory import (
     AnnotationPipeline,
     RawPipelineConfig,
     build_annotation_pipeline,
 )
-from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gain.genomic_resources.genomic_context import (
     GenomicContext,
 )
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.task_graph.graph import TaskGraph
+from gain.utils import fs_utils
+from gain.utils.regions import Region
+from gain.utils.stats_collection import StatsCollection
+
+from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
@@ -39,10 +43,6 @@ from gpf.parquet.partition_descriptor import (
 )
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
-from gain.task_graph.graph import TaskGraph
-from gain.utils import fs_utils
-from gain.utils.regions import Region
-from gain.utils.stats_collection import StatsCollection
 from gpf.variants_loaders.cnv.loader import CNVLoader
 from gpf.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from gpf.variants_loaders.parquet.loader import ParquetLoader

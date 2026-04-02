@@ -7,11 +7,11 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.alla_import import alla_gpf
 from gpf.testing.import_helpers import setup_dataset, vcf_study
-from gain.utils.regions import Region
 from gpf.variants.attributes import Status
 
 
@@ -96,7 +96,7 @@ def imported_dataset(
 ])
 def test_summary_variants_seen_in_status_single_allele(
     region: Region,
-    seen_in_status: bool,  # noqa: FBT001
+    seen_in_status: bool,
     imported_dataset: GenotypeData,
 ) -> None:
 

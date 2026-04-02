@@ -3,7 +3,6 @@ import pytest
 import pytest_mock
 from gain.genomic_resources.genomic_context import (
     get_genomic_context,
-    register_context,
 )
 from gain.genomic_resources.genomic_context_base import GenomicContext
 
@@ -90,7 +89,6 @@ def clean_genomic_context_providers(
 
 @pytest.fixture
 def context_fixture(
-    tmp_path: pytest.TempPathFactory,
     mocker: pytest_mock.MockerFixture,
 ) -> GenomicContext:
     mocker.patch(

@@ -10,6 +10,7 @@ from typing import Any
 
 import toml
 import yaml
+from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.gpf_instance.adjustments.adjust_command import (
     AdjustmentsCommand,
@@ -20,7 +21,6 @@ from gpf.gpf_instance.adjustments.adjust_duckdb_storage import (
 from gpf.gpf_instance.adjustments.adjust_impala_storage import (
     AdjustImpalaStorageCommand,
 )
-from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_instance_adjustments")
 

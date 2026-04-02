@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from box import Box
-from gpf.studies.study import GenotypeDataStudy
 from datasets_api.models import Dataset
+from gpf.studies.study import GenotypeDataStudy
 from pytest_mock import MockerFixture
 from studies.study_wrapper import WDAEStudy
 

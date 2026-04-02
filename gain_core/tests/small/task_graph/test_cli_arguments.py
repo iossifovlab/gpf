@@ -88,7 +88,7 @@ def test_cli_args_task_ids(
 ])
 def test_cli_args_keep_going(
     argv: list[str],
-    keep_going: bool,  # noqa: FBT001
+    keep_going: bool,
 ) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
@@ -103,9 +103,9 @@ def test_cli_args_keep_going(
     (False, [], None),
 ])
 def test_cli_args_force(
-    task_progress_mode: bool,  # noqa: FBT001
+    task_progress_mode: bool,
     argv: list[str],
-    force: bool | None,  # noqa: FBT001
+    force: bool | None,
 ) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, task_progress_mode=task_progress_mode)
@@ -139,7 +139,7 @@ def test_cli_args_task_status_dir(
     (["--fork"], True),
 ])
 def test_cli_args_fork_tasks(
-    argv: list[str], fork_tasks: bool,  # noqa: FBT001
+    argv: list[str], fork_tasks: bool,
 ) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)

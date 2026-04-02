@@ -6,6 +6,12 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
+from gain.genomic_resources.gene_models.gene_models import (
+    GeneModels,
+    create_regions_from_genes,
+)
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils.regions import Region
 from pydantic import BaseModel
 from sqlglot import Expression, column, condition, exp, or_, parse_one
 from sqlglot.expressions import (
@@ -17,18 +23,12 @@ from sqlglot.expressions import (
 )
 from sqlglot.schema import Schema, ensure_schema
 
-from gain.genomic_resources.gene_models.gene_models import (
-    GeneModels,
-    create_regions_from_genes,
-)
-from gain.genomic_resources.reference_genome import ReferenceGenome
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression,
 )
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from gpf.variants.core import Allele
 

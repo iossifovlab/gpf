@@ -62,7 +62,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             logger.warning(
                 "No such gene set '%s' available in remote client '%s'!",
                 gene_set_id,
-                self.rest_client.remote_id,
+                self.rest_client.client_id,
             )
             return None
 

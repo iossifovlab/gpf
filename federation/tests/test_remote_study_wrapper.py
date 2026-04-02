@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any
+
 from federation.remote_study_wrapper import (
     RemoteWDAEStudy,
     handle_denovo_gene_sets,
@@ -20,7 +22,7 @@ def test_query_variants_wdae_remote_study_filters(
     assert remote_study is not None
     assert isinstance(remote_study, RemoteWDAEStudy)
 
-    query = {}
+    query: dict[str, Any] = {}
     result = list(remote_study.query_variants_preview_wdae(
         query, t4c8_query_transformer, t4c8_response_transformer))
     assert len(result) == 12

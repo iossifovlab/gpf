@@ -12,9 +12,9 @@ from threading import Lock
 from typing import Any, cast
 
 from box import Box
-from gpf.gpf_instance.gpf_instance import GPFInstance
 from gain.utils.fs_utils import find_directory_with_a_file
 from gain.utils.helpers import to_response_json
+from gpf.gpf_instance.gpf_instance import GPFInstance
 from pheno_tool_api.adapter import PhenoToolAdapter, PhenoToolAdapterBase
 from studies.query_transformer import make_query_transformer
 from studies.response_transformer import make_response_transformer

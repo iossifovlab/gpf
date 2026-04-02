@@ -11,6 +11,7 @@ from functools import partial
 from typing import Any, TextIO, cast
 
 import pandas as pd
+from gain.utils.helpers import str2bool
 
 from gpf.pedigrees.families_data import FamiliesData, tag_families_data
 from gpf.pedigrees.family import (
@@ -20,7 +21,6 @@ from gpf.pedigrees.family import (
 )
 from gpf.pedigrees.family_role_builder import FamilyRoleBuilder
 from gpf.pedigrees.layout import Layout
-from gain.utils.helpers import str2bool
 from gpf.variants.attributes import Role, Sex, Status
 from gpf.variants_loaders.raw.loader import CLIArgument, CLILoader
 

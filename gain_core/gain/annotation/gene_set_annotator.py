@@ -13,7 +13,10 @@ from gain.annotation.annotator_base import (
     AnnotatorBase,
     AttributeDesc,
 )
-from gain.gene_sets.gene_set import GeneSet, build_gene_set_collection_from_resource
+from gain.gene_sets.gene_set import (
+    GeneSet,
+    build_gene_set_collection_from_resource,
+)
 from gain.genomic_resources import GenomicResource
 
 logger = logging.getLogger(__name__)

@@ -4,18 +4,8 @@ from enum import Enum
 
 import numpy as np
 import numpy.typing as npt
-
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gain.utils.variant_utils import (  # noqa: F401
-    DNA_COMPLEMENT_NUCLEOTIDES,
-    complement,
-    reverse_complement,
-    trim_parsimonious,
-    trim_str_left,
-    trim_str_left_right,
-    trim_str_right,
-    trim_str_right_left,
-)
+
 from gpf.variants.attributes import Sex
 
 logger = logging.getLogger(__name__)

@@ -58,7 +58,7 @@ class ImpalaVariants(SqlSchema2Variants):
         conn = self._impala_helpers.connection()
         logger.debug(
             "getting connection to host %s from impala helpers %s",
-            conn.host, id(self._impala_helpers),  # type: ignore
+            conn.host, id(self._impala_helpers),
         )
         return conn
 

@@ -64,18 +64,19 @@ class TaskCache:
     @staticmethod
     def create(
         *,
+        force: bool = False,
         task_progress_mode: bool = True,
         cache_dir: str | None = None,
     ) -> TaskCache:
         """Create the appropriate task cache."""
-        if not task_progress_mode:
+        if force or not task_progress_mode:
             return NoTaskCache()
         if cache_dir is None:
             cache_dir = os.getcwd()
         return FileTaskCache(cache_dir=cache_dir)
 
 
-class NoTaskCache(dict, TaskCache):
+class NoTaskCache(dict[Any, Any], TaskCache):
     """Don't check any conditions and just run any task."""
 
     def get_record(

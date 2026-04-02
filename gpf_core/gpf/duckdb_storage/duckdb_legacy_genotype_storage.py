@@ -13,6 +13,9 @@ from urllib.parse import urlparse
 import duckdb
 import jinja2
 from cerberus import Validator
+from gain.genomic_resources.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils import fs_utils
 from s3fs.core import S3FileSystem
 
 from gpf.duckdb_storage.duckdb2_variants import (
@@ -20,12 +23,9 @@ from gpf.duckdb_storage.duckdb2_variants import (
     DuckDbConnectionFactory,
 )
 from gpf.duckdb_storage.duckdb_variants import DuckDbVariants
-from gain.genomic_resources.gene_models import GeneModels
-from gain.genomic_resources.reference_genome import ReferenceGenome
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from gain.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,6 @@ from datetime import datetime
 from typing import Any
 
 import yaml
-
 from gain.annotation.annotate_utils import (
     add_input_files_to_task_graph,
     build_cli_genomic_context,
@@ -40,6 +39,11 @@ from gain.genomic_resources.repository import GenomicResourceRepo
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from gain.task_graph.cli_tools import TaskGraphCli
+from gain.task_graph.graph import Task, TaskGraph
+from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
+from gain.utils.regions import Region, split_into_regions
+
 from gpf.parquet.parquet_writer import (
     append_meta_to_parquet,
     serialize_summary_schema,
@@ -64,10 +68,6 @@ from gpf.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
-from gain.task_graph.cli_tools import TaskGraphCli
-from gain.task_graph.graph import Task, TaskGraph
-from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
-from gain.utils.regions import Region, split_into_regions
 
 logger = logging.getLogger("parquet_schema2_annotation")
 

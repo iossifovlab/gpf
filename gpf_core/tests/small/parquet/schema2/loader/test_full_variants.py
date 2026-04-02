@@ -6,10 +6,10 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gain.utils.regions import Region
 from gpf.gpf_instance import GPFInstance
 from gpf.parquet.schema2.loader import ParquetLoader
 from gpf.testing.import_helpers import vcf_study
-from gain.utils.regions import Region
 
 
 @pytest.fixture(scope="module")

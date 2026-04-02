@@ -237,7 +237,7 @@ def test_effect_annotator_gene_lists(
 def test_effect_annotator_attributes(
     grr: GenomicResourceRepo,
     attribute: str,
-    expected: bool,  # noqa: FBT001
+    expected: bool,
 ) -> None:
     genome = "t4c8_genome"
     gene_models = "t4c8_genes"

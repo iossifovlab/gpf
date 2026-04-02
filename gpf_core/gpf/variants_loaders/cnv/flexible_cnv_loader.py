@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Any, TextIO
 
 import numpy as np
-
 from gain.genomic_resources.reference_genome import ReferenceGenome
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.utils.variant_utils import get_interval_locus_ploidy
 from gpf.variants.core import Allele

@@ -4,8 +4,8 @@ from collections.abc import Callable
 
 import pytest
 from gain.genomic_resources.reference_genome import ReferenceGenome
-from gpf.pedigrees.families_data import FamiliesData
 from gain.utils.regions import Region
+from gpf.pedigrees.families_data import FamiliesData
 from gpf.variants_loaders.dae.loader import DenovoLoader
 
 

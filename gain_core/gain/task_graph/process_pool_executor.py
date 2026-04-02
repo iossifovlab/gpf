@@ -33,7 +33,7 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         max_workers = kwargs.get("max_workers")
         self._executor = ProcessPoolExecutor(max_workers=max_workers)
 
-    def _submit_task(self, task: TaskDesc) -> Future:
+    def _submit_task(self, task: TaskDesc) -> Future[Any]:
         assert len(task.deps) == 0
         assert not any(isinstance(arg, Task) for arg in task.args), \
             "Task has dependencies to wait for."
@@ -77,9 +77,9 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
 
     def _schedule_tasks(
         self, graph: TaskGraph,
-    ) -> dict[Future, Task]:
+    ) -> dict[Future[Any], Task]:
         ready_tasks = graph.extract_tasks(graph.ready_tasks())
-        submitted_tasks: dict[Future, Task] = {}
+        submitted_tasks: dict[Future[Any], Task] = {}
         if ready_tasks:
             logger.debug("scheduling %d tasks", len(ready_tasks))
             for task in ready_tasks:
@@ -89,15 +89,15 @@ class ProcessPoolTaskExecutor(TaskGraphExecutorBase):
         return submitted_tasks
 
     def _execute(self, graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
-        not_completed: set[Future] = set()
-        completed: deque[Future] = deque()
+        not_completed: set[Future[Any]] = set()
+        completed: deque[Future[Any]] = deque()
         initial_task_count = len(graph)
         finished_tasks = 0
         process = psutil.Process(os.getpid())
         current_memory_mb = process.memory_info().rss / (1024 * 1024)
         logger.info(
             "executor memory usage: %.2f MB", current_memory_mb)
-        submitted_tasks: dict[Future, Task] = {}
+        submitted_tasks: dict[Future[Any], Task] = {}
 
         while not_completed or not graph.empty():
             submitted_tasks.update(self._schedule_tasks(graph))

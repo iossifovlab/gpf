@@ -5,6 +5,8 @@ from collections.abc import Callable, Iterator, Sequence
 from functools import reduce
 from typing import Any, cast
 
+from gain.utils.regions import Region
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.attribute_queries import (
     Matcher,
@@ -15,7 +17,6 @@ from gpf.query_variants.base_query_variants import (
 )
 from gpf.query_variants.query_runners import QueryRunner
 from gpf.query_variants.sql.schema2.sql_query_builder import TagsQuery
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from gpf.variants.core import Allele
 from gpf.variants.family_variant import FamilyAllele, FamilyVariant

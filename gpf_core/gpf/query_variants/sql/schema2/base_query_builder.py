@@ -3,13 +3,14 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import Any
 
-from sqlglot import column
-
 from gain.genomic_resources.gene_models.gene_models import (
     GeneModels,
     create_regions_from_genes,
 )
 from gain.genomic_resources.reference_genome import ReferenceGenome
+from gain.utils.regions import Region
+from sqlglot import column
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.attribute_queries import (
@@ -17,7 +18,6 @@ from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_sql_expression,
     transform_attribute_query_to_sql_expression_schema1,
 )
-from gain.utils.regions import Region
 from gpf.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from gpf.variants.core import Allele
 

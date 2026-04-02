@@ -3,12 +3,12 @@ from typing import Any
 
 import numpy as np
 import pytest
-from gpf.pedigrees.family import Family, Person
 from federation.remote_variant import (
     RemoteAllele,
     RemoteFamilyAllele,
     RemoteFamilyVariant,
 )
+from gpf.pedigrees.family import Family, Person
 
 
 @pytest.fixture
@@ -142,7 +142,7 @@ def test_remote_variant_alleles(
 
 
 def test_remote_allele_find_attribute_source_not_in_columns(
-        sample_attributes_columns):
+        sample_attributes_columns: Any) -> None:
     attributes, columns = sample_attributes_columns
     ra = RemoteAllele(attributes, 0, columns)
     result = ra._find_attribute("not_a_column")
@@ -150,8 +150,8 @@ def test_remote_allele_find_attribute_source_not_in_columns(
 
 
 def test_remote_family_allele_find_attribute_source_not_in_columns(
-    sample_attributes_columns, sample_family,
-):
+    sample_attributes_columns: Any, sample_family: Any,
+) -> None:
     attributes, columns = sample_attributes_columns
     rfa = RemoteFamilyAllele(attributes, 0, sample_family, columns)
     result = rfa._find_attribute("not_a_column")

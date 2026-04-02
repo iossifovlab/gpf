@@ -2,11 +2,11 @@
 import pathlib
 
 import pytest
-from gpf.enrichment_tool.build_ur_synonymous_enrichment_background import cli
 from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+from gpf.enrichment_tool.build_ur_synonymous_enrichment_background import cli
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import vcf_study
