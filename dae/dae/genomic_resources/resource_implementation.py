@@ -366,6 +366,9 @@ RESOURCE_TEMPLATE = Template("""
     </script>
   </head>
     <body>
+    <a href="/index.html" style="position: absolute; top: 20px; left: 40px; font-size: 16px; color: #24699E;">
+      Back to main page
+    </a>
     <h2>Resource</h2>
     <div>
         <table border="1" id="resource-table">
