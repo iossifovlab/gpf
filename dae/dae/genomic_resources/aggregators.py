@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import math
 import re
+from collections import Counter
 from collections.abc import Callable
 from typing import Any, cast
 
@@ -317,6 +318,32 @@ class DictAggregator(Aggregator):
         return self.values
 
 
+class CounterAggregator(Aggregator):
+    """Aggregator that counts values."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.counter: Counter = Counter()
+
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            self.counter.update([value])
+        else:
+            self.counter.update(value)
+
+    def _clear_internal(self) -> None:
+        self.counter.clear()
+
+    def get_final(self) -> Any:
+        return dict(self.counter)
+
+
 AGGREGATOR_CLASS_DICT: dict[str, type[Aggregator]] = {
     "max": MaxAggregator,
     "min": MinAggregator,
@@ -328,6 +355,7 @@ AGGREGATOR_CLASS_DICT: dict[str, type[Aggregator]] = {
     "join": JoinAggregator,
     "list": ListAggregator,
     "dict": DictAggregator,
+    "value_count": CounterAggregator,
 }
 
 AGGREGATOR_SCHEMA = {
@@ -342,6 +370,7 @@ AGGREGATOR_SCHEMA = {
         {"regex": "^join\\(.+\\)$"},
         {"regex": "^list$"},
         {"regex": "^dict$"},
+        {"regex": "^value_count$"},
     ],
 }
 

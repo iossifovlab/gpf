@@ -7,6 +7,7 @@ import logging
 import os
 from collections.abc import Sequence
 from functools import cached_property
+from threading import Lock
 from typing import Annotated, Any, Literal, cast
 
 from pydantic import BaseModel, Field
@@ -402,51 +403,62 @@ def build_gene_set_collection_from_file(
         web_format_str: str | None = None,
 ) -> GeneSetCollection:
     """Return a Gene Set Collection by adapting a file to a local resource."""
-    dirname = os.path.dirname(filename)
-    basename = os.path.basename(filename)
-    if collection_format is None:
-        is_dir = os.path.isdir(filename)
-        if is_dir:
-            collection_format = "directory"
-        else:
-            extension = os.path.splitext(filename)[1]
-            if extension == ".txt":
-                collection_format = "map"
-            elif extension == ".gmt":
-                collection_format = "gmt"
-            elif extension == ".sql":
-                collection_format = "sqlite"
+    cache_id = (filename, "file:///.")
+    with _INMEMORY_CACHE_LOCK:
+        if cache_id not in _INMEMORY_CACHE:
+            dirname = os.path.dirname(filename)
+            basename = os.path.basename(filename)
+            if collection_format is None:
+                is_dir = os.path.isdir(filename)
+                if is_dir:
+                    collection_format = "directory"
+                else:
+                    extension = os.path.splitext(filename)[1]
+                    if extension == ".txt":
+                        collection_format = "map"
+                    elif extension == ".gmt":
+                        collection_format = "gmt"
+                    elif extension == ".sql":
+                        collection_format = "sqlite"
+                    else:
+                        raise ValueError(
+                            "Cannot find collection format automatically")
+
+            if collection_id is None:
+                collection_id = basename
+
+            config = {
+                "type": "gene_set",
+                "id": collection_id,
+                "format": collection_format,
+                "web_label": web_label,
+                "web_format_str": web_format_str,
+            }
+            if collection_format == "directory":
+                config["directory"] = basename
+            elif collection_format == "sqlite":
+                config["dbfile"] = basename
             else:
-                raise ValueError("Cannot find collection format automatically")
+                config["filename"] = basename
+            resource = build_local_resource(dirname, config)
+            _INMEMORY_CACHE[cache_id] = \
+                build_gene_set_collection_from_resource(resource)
+        return _INMEMORY_CACHE[cache_id]
 
-    if collection_id is None:
-        collection_id = basename
 
-    config = {
-        "type": "gene_set",
-        "id": collection_id,
-        "format": collection_format,
-        "web_label": web_label,
-        "web_format_str": web_format_str,
-    }
-    if collection_format == "directory":
-        config["directory"] = basename
-    elif collection_format == "sqlite":
-        config["dbfile"] = basename
-    else:
-        config["filename"] = basename
-    resource = build_local_resource(dirname, config)
-    return build_gene_set_collection_from_resource(resource)
+_INMEMORY_CACHE: dict[tuple[str, str], GeneSetCollection] = {}
+_INMEMORY_CACHE_LOCK = Lock()
 
 
 def build_gene_set_collection_from_resource(
     resource: GenomicResource,
 ) -> GeneSetCollection:
     """Return a Gene Set Collection built from a resource."""
-    if resource is None:
-        raise ValueError(f"missing resource {resource}")
-
-    return GeneSetCollection(resource)
+    cache_id = (resource.get_full_id(), resource.get_repo_url())
+    with _INMEMORY_CACHE_LOCK:
+        if cache_id not in _INMEMORY_CACHE:
+            _INMEMORY_CACHE[cache_id] = GeneSetCollection(resource)
+        return _INMEMORY_CACHE[cache_id]
 
 
 def build_gene_set_collection_from_resource_id(
