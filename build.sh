@@ -346,6 +346,7 @@ EOT
             cd /wd/gpf_core;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              --s3 --http \
               -n 10 \
               --durations 20 \
               --cov-config /wd/coveragerc \
