@@ -74,6 +74,49 @@ def scores_repo() -> GenomicResourceRepo:
                 """),
             },
         },
+        "LinearHistInt": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: linear.csv
+                scores:
+                - id: int score
+                  type: int
+                  column_name: linear_score
+                  desc: linear gene score
+                  histogram:
+                    type: number
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "linear.csv": textwrap.dedent("""
+                gene,linear_score
+                G1,1
+                G2,2
+                G3,3
+                G4,1
+                G5,2
+                G6,3
+            """),
+            "statistics": {
+                "histogram_linear score.json": textwrap.dedent("""{
+                    "bars":[2,2,2],
+                    "bins":[1.0,1.665,2.333,3.0],
+                    "config":{
+                      "type": "number",
+                      "number_of_bins": 3,
+                      "score": "linear score",
+                      "view_range": {
+                        "max": 3.0,
+                        "min": 1.0
+                      },
+                      "x_log_scale": false,
+                      "y_log_scale": false
+                    }
+                }
+                """),
+            },
+        },
         "LogHist": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
@@ -1234,3 +1277,14 @@ def test_create_statistics_build_tasks(
     # LinearHist has 1 score → 2 tasks (calc + save)
     assert len(tasks) == 1
     assert all(isinstance(t, TaskDesc) for t in tasks)
+
+
+def test_int_scores(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHistInt")
+    gene_score = build_gene_score_from_resource(res)
+
+    assert gene_score.get_gene_value("int score", "G1") == 1
+    assert gene_score.get_gene_value("int score", "G2") == 2
+    assert gene_score.get_gene_value("int score", "G3") == 3
+
+    assert gene_score.score_definitions["int score"].value_type == "int"
