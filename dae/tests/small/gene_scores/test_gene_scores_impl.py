@@ -178,7 +178,7 @@ def test_create_statistics_build_tasks_count(
 ) -> None:
     # 1 score -> 2 tasks: calc + save
     tasks = linear_impl.create_statistics_build_tasks()
-    assert len(tasks) == 2
+    assert len(tasks) == 1
     assert all(isinstance(t, TaskDesc) for t in tasks)
 
 
@@ -187,17 +187,7 @@ def test_create_statistics_build_tasks_ids_contain_score(
 ) -> None:
     tasks = linear_impl.create_statistics_build_tasks()
     task_ids = [t.task.task_id for t in tasks]
-    assert any("score1" in tid for tid in task_ids)
     assert any("LinearScore" in tid for tid in task_ids)
-
-
-def test_create_statistics_build_tasks_save_depends_on_calc(
-    linear_impl: GeneScoreImplementation,
-) -> None:
-    tasks = linear_impl.create_statistics_build_tasks()
-    calc_task = tasks[0]
-    save_task = tasks[1]
-    assert calc_task.task in save_task.deps
 
 
 def test_create_statistics_build_tasks_skips_null_histogram(
@@ -217,11 +207,11 @@ def test_create_statistics_build_tasks_skips_null_histogram(
         large_values_desc=None,
     )
 
-    tasks = linear_impl.create_statistics_build_tasks()
+    histograms = GeneScoreImplementation._build_histograms(
+        linear_impl.resource)
     # score1 -> 2 tasks; null_score -> 0 tasks (skipped)
-    assert len(tasks) == 2
-    task_ids = [t.task.task_id for t in tasks]
-    assert not any("null_score" in tid for tid in task_ids)
+    assert len(histograms) == 1
+    assert not any("null_score" in score_id for score_id in histograms)
 
 
 def test_create_statistics_build_tasks_multiple_scores() -> None:
@@ -281,15 +271,14 @@ def test_create_statistics_build_tasks_multiple_scores() -> None:
     res = repo.get_resource("MultiScore")
     impl = GeneScoreImplementation(res)
     tasks = impl.create_statistics_build_tasks()
-    # 2 scores x 2 tasks (calc + save) = 4 tasks
-    assert len(tasks) == 4
+    assert len(tasks) == 1
 
 
 # _calc_histogram tests (number and categorical)
 
 def test_calc_histogram_number(inmemory_repo: GenomicResourceRepo) -> None:
     res = inmemory_repo.get_resource("LinearScore")
-    histogram = GeneScoreImplementation._calc_histogram(res, "score1")
+    histogram = GeneScoreImplementation._build_histograms(res)["score1"]
     assert isinstance(histogram, NumberHistogram)
     assert histogram.min_value == 1.0
     assert histogram.max_value == 3.0
@@ -329,7 +318,7 @@ def test_calc_histogram_categorical() -> None:
         },
     })
     res = repo.get_resource("CatScore")
-    histogram = GeneScoreImplementation._calc_histogram(res, "cat")
+    histogram = GeneScoreImplementation._build_histograms(res)["cat"]
     assert isinstance(histogram, CategoricalHistogram)
     assert histogram.raw_values[1] == 2
     assert histogram.raw_values[2] == 1
@@ -345,9 +334,7 @@ def test_save_histogram_writes_json_file(
     tmp_path: pathlib.Path,
 ) -> None:
     res = fs_repo.get_resource("LinearScore")
-    histogram = GeneScoreImplementation._calc_histogram(res, "score1")
-
-    GeneScoreImplementation._save_histogram(histogram, res, "score1")
+    GeneScoreImplementation._build_histograms(res)
 
     hist_path = (
         tmp_path / "LinearScore" / "statistics" / "histogram_score1.json"
@@ -363,9 +350,7 @@ def test_save_histogram_writes_png_image(
     tmp_path: pathlib.Path,
 ) -> None:
     res = fs_repo.get_resource("LinearScore")
-    histogram = GeneScoreImplementation._calc_histogram(res, "score1")
-
-    GeneScoreImplementation._save_histogram(histogram, res, "score1")
+    GeneScoreImplementation._build_histograms(res)
 
     png_path = tmp_path / "LinearScore" / "statistics" / "histogram_score1.png"
     assert png_path.exists()

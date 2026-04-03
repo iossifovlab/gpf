@@ -60,86 +60,88 @@ class GeneScoreImplementation(
         self,
         **kwargs: Any,  # noqa: ARG002
     ) -> list[TaskDesc]:
-        tasks = []
-        for score_id, score_def in self.gene_score.score_definitions.items():
-            hist_conf = score_def.hist_conf
-            if hist_conf is None or isinstance(hist_conf, NullHistogramConfig):
+        create_task = TaskGraph.make_task(
+            f"{self.resource.resource_id}_build_histograms",
+            self._build_histograms,
+            args=[self.resource],
+            deps=[],
+        )
+        return [create_task]
+
+    @staticmethod
+    def _build_histograms(
+        resource: GenomicResource,
+    ) -> dict[str, NumberHistogram | CategoricalHistogram]:
+        histograms = {}
+        gene_score = build_gene_score_from_resource(resource)
+        for score_id in gene_score.score_definitions:
+            try:
+                histogram = GeneScoreImplementation._calc_histogram(
+                    gene_score, score_id)
+            except ValueError as e:
                 logger.warning(
-                    "Gene score %s in %s has no histogram config!",
-                    score_id, self.resource.resource_id,
+                    "Error calculating histogram for score %s in %s: %s",
+                    score_id, resource.resource_id, e,
                 )
                 continue
-            create_task = TaskGraph.make_task(
-                f"{self.resource.resource_id}_{score_id}_calc_histogram",
-                self._calc_histogram,
-                args=[self.resource, score_id],
-                deps=[],
+
+            if histogram is None:
+                logger.warning(
+                    "Gene score %s in %s has no histogram config!",
+                    score_id, resource.resource_id,
+                )
+                continue
+
+            with resource.proto.open_raw_file(
+                resource,
+                gene_score.get_histogram_filename(score_id),
+                mode="wt",
+            ) as outfile:
+                outfile.write(histogram.serialize())
+            scores_db = GeneScoresDb([gene_score])
+            score_desc = scores_db.get_score_desc(score_id)
+            small_values_desc = None
+            large_values_desc = None
+            if score_desc is not None:
+                small_values_desc = score_desc.small_values_desc
+                large_values_desc = score_desc.large_values_desc
+            plot_histogram(
+                resource,
+                gene_score.get_histogram_image_filename(score_id),
+                histogram,
+                score_id,
+                small_values_desc,
+                large_values_desc,
             )
-            tasks.append(create_task)
-            save_task = TaskGraph.make_task(
-                f"{self.resource.resource_id}_{score_id}_save_histogram",
-                self._save_histogram,
-                args=[create_task.task, self.resource, score_id],
-                deps=[create_task.task],
-            )
-            tasks.append(save_task)
-        return tasks
+            histograms[score_id] = histogram
+        return histograms
 
     @staticmethod
     def _calc_histogram(
-        resource: GenomicResource, score_id: str,
-    ) -> NumberHistogram | CategoricalHistogram:
-        score = build_gene_score_from_resource(resource)
-        hist_conf = score.score_definitions[score_id].hist_conf
-
+        gene_score: GeneScore, score_id: str,
+    ) -> NumberHistogram | CategoricalHistogram | None:
+        if score_id not in gene_score.score_definitions:
+            raise ValueError(
+                f"Score ID {score_id} not found in gene score definitions")
+        score_def = gene_score.score_definitions.get(score_id)
+        assert score_def is not None
+        hist_conf = score_def.hist_conf
+        if hist_conf is None or isinstance(hist_conf, NullHistogramConfig):
+            return None
         histogram: NumberHistogram | CategoricalHistogram
 
         if isinstance(hist_conf, NumberHistogramConfig):
             histogram = NumberHistogram(hist_conf)
-            for value in score.get_values(score_id):
+            for value in gene_score.get_values(score_id):
                 histogram.add_value(value)
         elif isinstance(hist_conf, CategoricalHistogramConfig):
             histogram = CategoricalHistogram(hist_conf)
-            for value in score.get_values(score_id):
+            for value in gene_score.get_values(score_id):
                 if math.isnan(value):
                     continue
                 histogram.add_value(int(value))
         else:
             raise TypeError(f"Unknown histogram config: {hist_conf}")
-
-        return histogram
-
-    @staticmethod
-    def _save_histogram(
-        histogram: NumberHistogram | CategoricalHistogram,
-        resource: GenomicResource,
-        score_id: str,
-    ) -> NumberHistogram | CategoricalHistogram:
-        proto = resource.proto
-        gene_score = build_gene_score_from_resource(resource)
-
-        with proto.open_raw_file(
-            resource,
-            gene_score.get_histogram_filename(score_id),
-            mode="wt",
-        ) as outfile:
-            outfile.write(histogram.serialize())
-
-        scores_db = GeneScoresDb([gene_score])
-        score_desc = scores_db.get_score_desc(score_id)
-        small_values_desc = None
-        large_values_desc = None
-        if score_desc is not None:
-            small_values_desc = score_desc.small_values_desc
-            large_values_desc = score_desc.large_values_desc
-        plot_histogram(
-            resource,
-            gene_score.get_histogram_image_filename(score_id),
-            histogram,
-            score_id,
-            small_values_desc,
-            large_values_desc,
-        )
         return histogram
 
     def calc_info_hash(self) -> bytes:

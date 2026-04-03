@@ -123,6 +123,55 @@ def scores_repo() -> GenomicResourceRepo:
                 """),
             },
         },
+        "LogHistENotation": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: log.csv
+                scores:
+                - id: log
+                  type: float
+                  column_name: log_score
+                  desc: log gene score
+                  histogram:
+                    type: number
+                    number_of_bins: 5
+                    view_range:
+                      min: 0.0
+                      max: 1.0
+                    x_min_log: 1.0e-3
+                    x_log_scale: true
+                    y_log_scale: false
+                """,
+            "log.csv": textwrap.dedent("""
+                gene,log_score
+                G1,0
+                G2,0.0001
+                G3,0.001
+                G4,0.01
+                G5,0.1
+                G6,1.0
+            """),
+            "statistics": {
+                "histogram_log.json": textwrap.dedent("""{
+                    "bars":[2,1,1,1,1],
+                    "bins": [
+                        0.0,0.001,0.005623413251903491,0.03162277660168379,
+                        0.1778279410038923,1.0],
+                    "config": {
+                        "type": "number",
+                        "number_of_bins": 5,
+                        "view_range": {
+                            "min": 0.0,
+                            "max": 1.0
+                        },
+                        "x_min_log": 1.0e-3,
+                        "x_log_scale": true,
+                        "y_log_scale": false
+                    }
+                }
+                """),
+            },
+        },
         "NaNTest": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
@@ -253,6 +302,28 @@ def test_load_log_gene_scores_from_resource(
     assert np.all(hist.bars == np.array([2, 1, 1, 1, 1]))
 
 
+def test_load_log_gene_scores_from_resource_with_e_notation(
+        scores_repo: GenomicResourceRepo) -> None:
+
+    res = scores_repo.get_resource("LogHistENotation")
+    assert res.get_type() == "gene_score"
+
+    result = build_gene_score_from_resource(res)
+    scores = result.get_scores()
+    assert len(scores) == 1
+    score_id = scores[0]
+
+    assert result.get_x_scale(score_id) == "log"
+    assert result.get_y_scale(score_id) == "linear"
+
+    hist = result.get_score_histogram(score_id)
+    assert hist is not None
+    assert isinstance(hist, NumberHistogram)
+
+    assert len(hist.bins) == 6
+    assert np.all(hist.bars == np.array([2, 1, 1, 1, 1]))
+
+
 def test_load_wrong_resource_type(
         scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("Oops")
@@ -316,7 +387,7 @@ def test_calculate_histogram(scores_repo: GenomicResourceRepo) -> None:
     result = build_gene_score_from_resource(res)
     assert result is not None
 
-    histogram = GeneScoreImplementation._calc_histogram(res, "linear score")
+    histogram = GeneScoreImplementation._calc_histogram(result, "linear score")
     assert histogram is not None
 
 
@@ -1113,7 +1184,8 @@ def test_calc_histogram_categorical() -> None:
         },
     })
     res = cat_repo.get_resource("CatImpl")
-    histogram = GeneScoreImplementation._calc_histogram(res, "cat")
+    gene_score = build_gene_score_from_resource(res)
+    histogram = GeneScoreImplementation._calc_histogram(gene_score, "cat")
 
     assert isinstance(histogram, CategoricalHistogram)
     assert histogram.raw_values[1] == 2
@@ -1160,5 +1232,5 @@ def test_create_statistics_build_tasks(
     tasks = impl.create_statistics_build_tasks()
 
     # LinearHist has 1 score → 2 tasks (calc + save)
-    assert len(tasks) == 2
+    assert len(tasks) == 1
     assert all(isinstance(t, TaskDesc) for t in tasks)
