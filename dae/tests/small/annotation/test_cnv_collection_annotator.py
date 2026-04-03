@@ -138,6 +138,26 @@ def test_cnv_filter(
     (Region("1", 15, 60), 1),
     (Region("1", 30, 40), 0),
 ])
+def test_cnv_filter_in(
+        annotatable: Annotatable, cnv_count: int,
+        grr: GenomicResourceRepo) -> None:
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
+            - cnv_collection:
+                resource_id: cnvs
+                cnv_filter: '"SSC" in collection'
+            """),
+        grr)
+
+    atts = pipeline.annotate(annotatable)
+    assert atts["count"] == cnv_count
+
+
+@pytest.mark.parametrize("annotatable, cnv_count", [
+    (Position("1", 15), 1),
+    (Region("1", 15, 60), 1),
+    (Region("1", 30, 40), 0),
+])
 def test_cnv_filter_on_newline(
         annotatable: Annotatable, cnv_count: int,
         grr: GenomicResourceRepo) -> None:
