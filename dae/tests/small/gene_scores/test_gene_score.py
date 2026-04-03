@@ -81,8 +81,8 @@ def scores_repo() -> GenomicResourceRepo:
                 scores:
                 - id: int score
                   type: int
-                  column_name: linear_score
-                  desc: linear gene score
+                  column_name: int_score
+                  desc: test int score
                   histogram:
                     type: number
                     number_of_bins: 3
@@ -90,7 +90,7 @@ def scores_repo() -> GenomicResourceRepo:
                     y_log_scale: false
                 """,
             "linear.csv": textwrap.dedent("""
-                gene,linear_score
+                gene,int_score
                 G1,1
                 G2,2
                 G3,3
