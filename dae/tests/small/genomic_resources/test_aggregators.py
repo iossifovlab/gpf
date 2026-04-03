@@ -4,6 +4,7 @@ import numpy
 from dae.genomic_resources.aggregators import (
     ConcatAggregator,
     CountAggregator,
+    CounterAggregator,
     DictAggregator,
     JoinAggregator,
     ListAggregator,
@@ -187,4 +188,17 @@ def test_dict_aggregator() -> None:
         "second": 2,
         "third": 3,
         "fourth": 4,
+    }
+
+
+def test_counter_aggregator() -> None:
+    values = ["a", "b", "a", "c", "b", "a"]
+    agg = CounterAggregator()
+    for val in values:
+        agg.add(val)
+
+    assert agg.get_final() == {
+        "a": 3,
+        "b": 2,
+        "c": 1,
     }
