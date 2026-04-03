@@ -535,8 +535,6 @@ def build_gene_score_from_resource(resource: GenomicResource) -> GeneScore:
         _INMEMORY_CACHE[cache_id] = gene_score
         return gene_score
 
-    return GeneScore(resource)
-
 
 def build_gene_score_from_resource_id(
     resource_id: str, grr: GenomicResourceRepo | None = None,
