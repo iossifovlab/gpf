@@ -575,3 +575,33 @@ def test_annotator_info_to_dict() -> None:
 
 def test_empty_pipeline_passes() -> None:
     assert AnnotationConfigParser.parse_str("# test") is not None
+
+
+def test_invalid_internal_attribute_value() -> None:
+    with pytest.raises(
+        TypeError,
+        match="The 'internal' field in attribute att1 is not a boolean!",
+    ):
+        AnnotationConfigParser.parse_str("""
+            - annotator:
+                attributes:
+                - name: att1
+                  internal: tru
+        """)
+
+
+def test_boolean_internal() -> None:
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
+        - annotator:
+            attributes:
+            - name: att1
+              internal: true
+            - name: att2
+              internal: false
+    """)
+    assert pipeline_config is not None
+    assert len(pipeline_config) == 1
+    assert pipeline_config[0].attributes[0].name == "att1"
+    assert pipeline_config[0].attributes[0].internal is True
+    assert pipeline_config[0].attributes[1].name == "att2"
+    assert pipeline_config[0].attributes[1].internal is False
