@@ -105,7 +105,7 @@ class GeneSet:
 
     def __init__(self, name: str, desc: str, syms: list[str]) -> None:
         self.name = name
-        self.desc = desc
+        self.desc = desc + f" ({len(syms)})"
         self.count = len(syms)
         self.syms = syms
 

@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pysam
@@ -9,6 +10,8 @@ from .table_bigwig import BigWigTable
 from .table_inmemory import InmemoryGenomicPositionTable
 from .table_tabix import TabixGenomicPositionTable
 from .table_vcf import VCFGenomicPositionTable
+
+logger = logging.getLogger(__name__)
 
 
 def build_genomic_position_table(
@@ -40,6 +43,12 @@ def build_genomic_position_table(
     if table_fmt == "vcf_info":
         return VCFGenomicPositionTable(resource, table_definition)
     if table_fmt.lower() in ("bw", "bigwig"):
+        if table_definition.get("header_mode") is not None:
+            logger.warning(
+                "header_mode is not supported for bigwig tables,"
+                "ignoring it in %s",
+                resource.get_full_id(),
+            )
         return BigWigTable(resource, table_definition)
 
     raise ValueError(f"unknown table format {table_fmt}")

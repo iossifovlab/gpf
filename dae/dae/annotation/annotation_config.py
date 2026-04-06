@@ -584,9 +584,11 @@ class AnnotationConfigParser:
         attr_type = attribute_config.get("type", "str")
 
         internal = attribute_config.get("internal")
-        if internal is not None:
-            internal = bool(internal)
-
+        if internal is not None and not isinstance(internal, bool):
+            raise TypeError(
+                "The 'internal' field in "
+                f"attribute {source} is not a boolean!",
+            )
         assert source is not None
         if not isinstance(name, str):
             message = ("The name for in an attribute "

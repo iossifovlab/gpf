@@ -80,9 +80,9 @@ def test_compute_and_save_statistics(
     result = json.loads((
         statistics_path / "gene_sets_list_statistics.json").read_text())
     assert result == [
-        {"name": "test:02", "count": 2, "desc": "test_second"},
-        {"name": "test:01", "count": 1, "desc": "test_first"},
-        {"name": "test:03", "count": 1, "desc": "test_third"},
+        {"name": "test:02", "count": 2, "desc": "test_second (2)"},
+        {"name": "test:01", "count": 1, "desc": "test_first (1)"},
+        {"name": "test:03", "count": 1, "desc": "test_third (1)"},
     ]
 
 
