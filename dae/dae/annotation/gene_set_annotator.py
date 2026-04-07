@@ -91,7 +91,7 @@ class GeneSetAnnotator(AnnotatorBase):
             self.gene_set_collection.load()
             gene_sets_list = [
                 {"name": gs.name, "count": gs.count,
-                 "desc": gs.desc or gs.name}
+                 "desc": f"{gs.desc or gs.name} ({gs.count})"}
                 for gs in sorted(
                     self.gene_set_collection.get_all_gene_sets(),
                     key=lambda gs: (-gs.count, gs.name),
