@@ -28,6 +28,7 @@ import pyBigWig  # type: ignore
 import pysam
 import yaml
 from filelock import FileLock
+from markdown2 import markdown
 
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -778,10 +779,37 @@ class FsspecReadWriteProtocol(
                 "res_summary": res.get_summary(),
             }
 
+        about_md_path = os.path.join(self.url, "about.md")
+        has_about = self.filesystem.exists(about_md_path)
+
+        about_html_content = ""
+        about_title = ""
+        if has_about:
+            with self.filesystem.open(
+                    about_md_path, "rt", encoding="utf8") as infile:
+                about_md_raw = infile.read()
+            try:
+                about_html_content = markdown(about_md_raw)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Error occurred while converting about.md to HTML for %s",
+                    self.get_full_id(),
+                )
+                raise ValueError from e
+
+            with self.filesystem.open(
+                os.path.join(self.url, "about.html"), "wt", encoding="utf8",
+            ) as outfile:
+                outfile.write(about_html_content)
+
         content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
         with self.filesystem.open(
                 content_filepath, "wt", encoding="utf8") as outfile:
-            outfile.write(repository_template.render(data=result))
+            outfile.write(repository_template.render(
+                data=result,
+                has_about=has_about,
+                about_title=about_title,
+                about_contents=about_html_content))
 
         return result
 
