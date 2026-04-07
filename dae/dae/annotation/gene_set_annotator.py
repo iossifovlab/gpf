@@ -111,7 +111,7 @@ class GeneSetAnnotator(AnnotatorBase):
             gs["name"]: AttributeDesc(
                 source=gs["name"],
                 type="bool",
-                description=f"{gs['desc']} ({gs['count']})",
+                description=f"({gs['count']}) {gs['desc']}",
                 default=False,
             )
             for gs in gene_sets_list
