@@ -84,6 +84,14 @@ def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
         resource, "gene_list",
     )
 
+    attr_descs = annotator.get_all_attribute_descriptions()
+    assert attr_descs["set_0"].description == \
+        "random test gene set description (2)"
+    assert attr_descs["set_1"].description == \
+        "random test gene set description (1)"
+    assert attr_descs["set_2"].description == \
+        "random test gene set description (1)"
+
     annotatable = VCFAllele("1", 1, "A", "G")
     annotator.open()
 
