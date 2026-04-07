@@ -24,11 +24,11 @@ from urllib.parse import urlparse
 import apsw
 import fsspec
 import jinja2
-from markdown2 import markdown
 import pyBigWig  # type: ignore
 import pysam
 import yaml
 from filelock import FileLock
+from markdown2 import markdown
 
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -788,18 +788,19 @@ class FsspecReadWriteProtocol(
             with self.filesystem.open(
                     about_md_path, "rt", encoding="utf8") as infile:
                 about_md_raw = infile.read()
-            lines = about_md_raw.splitlines()
-            for i, line in enumerate(lines):
-                if line.startswith("# "):
-                    about_title = line[2:].strip()
-                    lines = lines[:i] + lines[i + 1:]
-                    break
             try:
-                about_html_content = markdown("\n".join(lines))  # type: ignore
+                about_html_content = markdown(about_md_raw)
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.error(
-                    "Error occurred while converting about.md to HTML: %s", e)
+                logger.exception(
+                    "Error occurred while converting about.md to HTML for %s",
+                    self.get_full_id(),
+                )
                 raise ValueError from e
+
+            with self.filesystem.open(
+                os.path.join(self.url, "about.html"), "wt", encoding="utf8",
+            ) as outfile:
+                outfile.write(about_html_content)
 
         content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
         with self.filesystem.open(

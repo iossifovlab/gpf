@@ -1081,8 +1081,7 @@ def get_scripts_for_template() -> str:
     return scripts_file.read_text()
 
 
-TEMPLATE_STRING = """
-<html>
+PAGE_HEAD = """
     <head>
      <link
       rel="stylesheet"
@@ -1120,7 +1119,7 @@ TEMPLATE_STRING = """
       }
 
       #search-container {
-        margin-top: 60px;
+        margin-top: 10px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -1287,9 +1286,8 @@ TEMPLATE_STRING = """
       }
 
       #nav-about {
-        position: absolute;
-        right: 0;
-        top: 20%;
+        display: block;
+        text-align: right;
         font-weight: bold;
         color: #7996ac;
         text-decoration: none;
@@ -1302,14 +1300,11 @@ TEMPLATE_STRING = """
     </style>
  </head>"""  # noqa: E501
 
-TEMPLATE_STRING += get_scripts_for_template()
-
-TEMPLATE_STRING += """
+INDEX_BODY = """
  <body>
      {% if has_about %}
      <div id="page-header">
-       <h1><a href="#" onclick="showSection('resources'); return false;">{{about_title}}</a></h1>
-       <a id="nav-about" href="#" onclick="showSection('about'); return false;">About</a>
+       <a id="nav-about" href="about.html">About</a>
      </div>
      {% endif %}
      <div id="section-resources">
@@ -1384,7 +1379,23 @@ TEMPLATE_STRING += """
      </div>
      {% endif %}
  </body>
-</html>
 """  # noqa: E501
 
-repository_template = Template(TEMPLATE_STRING)
+
+ABOUT_BODY = """
+    <body>
+        <div id="section-about">
+        {{about_contents}}
+        </div>
+    </body>
+"""
+
+repository_template = Template(
+    "<html>\n" +
+    PAGE_HEAD + get_scripts_for_template() + INDEX_BODY +
+    "</html>",
+)
+
+about_template = Template(
+    "<html>\n" + PAGE_HEAD + ABOUT_BODY + "</html>",
+)
