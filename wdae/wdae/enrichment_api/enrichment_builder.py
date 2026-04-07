@@ -218,12 +218,10 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
                     )
                 else:
                     desc = f"Gene Scores: {gene_scores_id}"
-
-                desc = f"{desc} ({len(gene_syms)})"
         else:
-            desc = f"Gene Symbols: {','.join(gene_syms)} ({len(gene_syms)})"
+            desc = f"Gene Symbols: {','.join(gene_syms)}"
 
-        return desc
+        return f"{desc} ({len(gene_syms)})"
 
     def _get_gene_syms(self, gene_score: dict[str, Any] | None) -> list[str]:
         if gene_score is None:
