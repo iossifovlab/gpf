@@ -1088,142 +1088,142 @@ TEMPLATE_STRING = """
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-        * {
-          font-family: sans-serif
-        }
+      * {
+        font-family: sans-serif
+      }
 
-        th {
-          background: #ecf1f6;
-        }
+      th {
+        background: #ecf1f6;
+      }
 
-        td, th {
-          border: 1px solid #cfd8df;
-          padding: 5px;
-          max-width: 100px;
-        }
+      td, th {
+        border: 1px solid #cfd8df;
+        padding: 5px;
+        max-width: 100px;
+      }
 
-        tr {
-          height: 38px;
-        }
+      tr {
+        height: 38px;
+      }
 
-        table, td, th {
-          border-collapse: collapse;
-        }
+      table, td, th {
+        border-collapse: collapse;
+      }
 
-        a {
-          text-decoration: none;
-          color: #24699E;
-        }
+      a {
+        text-decoration: none;
+        color: #24699E;
+      }
 
-        a:hover {
-          color: #4C93C9;
-        }
+      a:hover {
+        color: #4C93C9;
+      }
 
-        #search-container {
-          margin-top: 80px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 15px;
-          position: sticky;
-          top: 0;
-          background-color: white;
-          height: 70px;
-        }
+      #search-container {
+        margin-top: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        position: sticky;
+        top: 0;
+        background-color: white;
+        height: 70px;
+      }
 
-        #type-label {
-          color: #5b778c;
-        }
+      #type-label {
+        color: #5b778c;
+      }
 
-        #type-filter {
-          border: 1px solid #85a2b9;
-          height: 40px;
-          border-radius: 5px;
-          font-size: 18px;
-          padding-left: 10px;
-          background: white;
-        }
+      #type-filter {
+        border: 1px solid #85a2b9;
+        height: 40px;
+        border-radius: 5px;
+        font-size: 18px;
+        padding-left: 10px;
+        background: white;
+      }
 
-        #type-filter:hover {
-          cursor: pointer;
-        }
+      #type-filter:hover {
+        cursor: pointer;
+      }
 
-        #search-field {
-          width: 40%;
-          border: 1px solid #85a2b9;
-          height: 40px;
-          border-radius: 5px;
-          font-size: 18px;
-          padding: 0 10px;
-        }
+      #search-field {
+        width: 40%;
+        border: 1px solid #85a2b9;
+        height: 40px;
+        border-radius: 5px;
+        font-size: 18px;
+        padding: 0 10px;
+      }
 
-        input::placeholder {
-          color: #ababab;
-        }
+      input::placeholder {
+        color: #ababab;
+      }
 
-        #type-filter:focus-visible,
-        #search-field:focus-visible,
-        #type-filter:focus,
-        #search-field:focus {
-          outline-color: #85a2b9;
-        }
+      #type-filter:focus-visible,
+      #search-field:focus-visible,
+      #type-filter:focus,
+      #search-field:focus {
+        outline-color: #85a2b9;
+      }
 
-        .nowrap {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
+      .nowrap {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-        .search-info {
-          text-align: center;
-          font-size: 0.9em;
-          color: #ababab;
-          font-style: italic;
-          word-break: break-word;
-          margin: 0 10%;
-        }
+      .search-info {
+        text-align: center;
+        font-size: 0.9em;
+        color: #ababab;
+        font-style: italic;
+        word-break: break-word;
+        margin: 0 10%;
+      }
 
-        .loading,
-        .searching {
-          text-align: center;
-          font-size: larger;
-        }
+      .loading,
+      .searching {
+        text-align: center;
+        font-size: larger;
+      }
 
-        .pageButton {
-          border: none;
-          background: none;
-          color: blue;
-          cursor: pointer;
-          padding: 3px;
-          margin: 0px 3px;
-        }
+      .pageButton {
+        border: none;
+        background: none;
+        color: blue;
+        cursor: pointer;
+        padding: 3px;
+        margin: 0px 3px;
+      }
 
-        .pageButton.active {
-          color: black;
-          cursor: default;
-        }
+      .pageButton.active {
+        color: black;
+        cursor: default;
+      }
 
-        .pageButton.hide {
-          display: none;
-        }
+      .pageButton.hide {
+        display: none;
+      }
 
-        #status,
-        #status-error {
-          margin-left: 10%;
-          margin-top: 15px;
-          color: #5b778c;
-        }
+      #status,
+      #status-error {
+        margin-left: 10%;
+        margin-top: 15px;
+        color: #5b778c;
+      }
 
-        #status-error {
-          color: #d74b59;
-          text-align: center;
-        }
+      #status-error {
+        color: #d74b59;
+        text-align: center;
+      }
 
-        #resource-table {
-          margin: 10px 10%;
-          width: 80%;
-          border: 1px solid black;
-        }
+      #resource-table {
+        margin: 10px 10%;
+        width: 80%;
+        border: 1px solid black;
+      }
 
       .version-cell {
         width: 5%;
@@ -1254,6 +1254,51 @@ TEMPLATE_STRING = """
         cursor: pointer;
         color: #85A2B9;
       }
+
+      #section-about {
+        margin: 60px 10%;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      #section-about h1 {
+        font-size: 1.5em;
+      }
+
+      #page-header {
+        position: relative;
+        text-align: center;
+        margin: 20px 10% 0;
+      }
+
+      #page-header h1 {
+        margin: 0;
+        display: inline-block;
+      }
+
+      #page-header h1 a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      #page-header h1 a:hover {
+        color: inherit;
+        cursor: pointer;
+      }
+
+      #nav-about {
+        position: absolute;
+        right: 0;
+        top: 20%;
+        font-weight: bold;
+        color: #7996ac;
+        text-decoration: none;
+        font-size: 20px;
+      }
+
+      #nav-about:hover {
+        color: #8dabc1;
+      }
     </style>
  </head>"""  # noqa: E501
 
@@ -1261,7 +1306,13 @@ TEMPLATE_STRING += get_scripts_for_template()
 
 TEMPLATE_STRING += """
  <body>
-     <div>
+     {% if has_about %}
+     <div id="page-header">
+       <h1><a href="#" onclick="showSection('resources'); return false;">{{about_title}}</a></h1>
+       <a id="nav-about" href="#" onclick="showSection('about'); return false;">About</a>
+     </div>
+     {% endif %}
+     <div id="section-resources">
         <p class="loading">Loading search</p>
         <div id="search-container" style="display: none;">
           <span id="type-label">Resource type</span>
@@ -1326,6 +1377,12 @@ TEMPLATE_STRING += """
         <p class="searching" style="display: none;">Searching</p>
      </div>
      <div class="pagination"></div>
+     </div>
+     {% if has_about %}
+     <div id="section-about" style="display: none;" class="content">
+       {{about_contents}}
+     </div>
+     {% endif %}
  </body>
 </html>
 """  # noqa: E501

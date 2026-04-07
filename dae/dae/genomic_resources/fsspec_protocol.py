@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 import apsw
 import fsspec
 import jinja2
+from markdown2 import markdown
 import pyBigWig  # type: ignore
 import pysam
 import yaml
@@ -778,10 +779,36 @@ class FsspecReadWriteProtocol(
                 "res_summary": res.get_summary(),
             }
 
+        about_md_path = os.path.join(self.url, "about.md")
+        has_about = self.filesystem.exists(about_md_path)
+
+        about_html_content = ""
+        about_title = ""
+        if has_about:
+            with self.filesystem.open(
+                    about_md_path, "rt", encoding="utf8") as infile:
+                about_md_raw = infile.read()
+            lines = about_md_raw.splitlines()
+            for i, line in enumerate(lines):
+                if line.startswith("# "):
+                    about_title = line[2:].strip()
+                    lines = lines[:i] + lines[i + 1:]
+                    break
+            try:
+                about_html_content = markdown("\n".join(lines))  # type: ignore
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.error(
+                    "Error occurred while converting about.md to HTML: %s", e)
+                raise ValueError from e
+
         content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
         with self.filesystem.open(
                 content_filepath, "wt", encoding="utf8") as outfile:
-            outfile.write(repository_template.render(data=result))
+            outfile.write(repository_template.render(
+                data=result,
+                has_about=has_about,
+                about_title=about_title,
+                about_contents=about_html_content))
 
         return result
 
