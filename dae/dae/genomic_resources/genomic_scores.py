@@ -1531,37 +1531,40 @@ class CnvCollection(GenomicScore):
         return cnvs
 
 
-_INMEMORY_SCORE_CACHE: dict[str, GenomicScore] = {}
-_INMEMORY_SCORE_CACHE_LOCK = Lock()
+_INMEMORY_CNV_CACHE: dict[str, GenomicScore] = {}
+_INMEMORY_CNV_CACHE_LOCK = Lock()
 
 
 def build_score_from_resource(
     resource: GenomicResource,
 ) -> GenomicScore:
     """Build a genomic score resource and return the coresponding score."""
-    cache_id = f"{resource.get_id()}_{resource.get_repo_url()}"
-    with _INMEMORY_SCORE_CACHE_LOCK:
-        if cache_id not in _INMEMORY_SCORE_CACHE:
-            score: GenomicScore | None = None
-            if resource.get_type() == "position_score":
-                score = PositionScore(resource)
-            if resource.get_type() == "np_score":
-                logger.warning(
-                    "The resource type `np_score` is deprecated. "
-                    "Please use `allele_score` instead for resource %s.",
-                    resource.get_id())
-                score = AlleleScore(resource)
-            if resource.get_type() == "allele_score":
-                score = AlleleScore(resource)
+    if resource.get_type() == "position_score":
+        return PositionScore(resource)
+    if resource.get_type() == "np_score":
+        logger.warning(
+            "The resource type `np_score` is deprecated. "
+            "Please use `allele_score` instead for resource %s.",
+            resource.get_id())
+        return AlleleScore(resource)
+    if resource.get_type() == "allele_score":
+        return AlleleScore(resource)
 
-            if resource.get_type() == "cnv_collection":
+    if resource.get_type() == "cnv_collection":
+        cache_id = f"{resource.get_id()}_{resource.get_repo_url()}"
+
+        with _INMEMORY_CNV_CACHE_LOCK:
+            if cache_id not in _INMEMORY_CNV_CACHE:
                 score = CnvCollection(resource)
+                if score is None:
+                    raise ValueError(
+                        f"Resource {resource.get_id()} is not of score type")
+                _INMEMORY_CNV_CACHE[cache_id] = score
+            return _INMEMORY_CNV_CACHE[cache_id]
 
-            if score is None:
-                raise ValueError(
-                    f"Resource {resource.get_id()} is not of score type")
-            _INMEMORY_SCORE_CACHE[cache_id] = score
-        return _INMEMORY_SCORE_CACHE[cache_id]
+    raise ValueError(
+        f"Resource {resource.get_id()} is not of score type; "
+        f"unexpected resource type {resource.get_type()}")
 
 
 def build_score_from_resource_id(
