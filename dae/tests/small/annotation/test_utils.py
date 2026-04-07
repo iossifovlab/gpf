@@ -92,3 +92,15 @@ def test_stringify_np_floating() -> None:
     assert stringify(np.float64(0.123456), vcf=True) == "0.123"
     assert stringify(np.float64(123456.123456), vcf=False) == "1.23e+05"
     assert stringify(np.float64(123456.123456), vcf=True) == "1.23e+05"
+
+
+def test_stringify_gene_rank_score_values() -> None:
+    assert stringify(12345.5, vcf=False) == "12345.5"
+    assert stringify(1234.5, vcf=False) == "1234.5"
+    assert stringify(123.5, vcf=False) == "123.5"
+    assert stringify(12345, vcf=False) == "12345"
+    assert stringify(1234, vcf=False) == "1234"
+    assert stringify(123, vcf=False) == "123"
+    assert stringify(12345., vcf=False) == "12345"
+    assert stringify(1234., vcf=False) == "1234"
+    assert stringify(123., vcf=False) == "123"
