@@ -5,7 +5,6 @@ from typing import cast
 
 import pytest
 from gain.annotation.score_annotator import GenomicScoreAnnotatorBase
-from gain.genomic_resources.genomic_scores import build_score_from_resource
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     NullHistogram,
@@ -181,7 +180,6 @@ def test_genomic_scores_db_with_annotation(
 
 def test_build_attribute_help(
     annotation_gpf: GPFInstance,
-    scores_repo: GenomicResourceProtocolRepo,
 ) -> None:
     annotation_pipeline = annotation_gpf.get_annotation_pipeline()
     assert annotation_pipeline is not None
