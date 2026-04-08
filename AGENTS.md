@@ -164,25 +164,33 @@ REST Request → GPF Web Django App
 
 Multiple settings files in `gpf_web/gpf_web/gpf_web/`: `settings.py`, `test_settings.py`, `default_settings.py`, `gunicorn_settings.py`, `mypy_settings.py`.
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
+<!-- BEGIN BEADS INTEGRATION v:2 profile:minimal -->
 ## Beads Issue Tracker
 
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+This project uses **br (beads_rust)** for issue tracking.
+
+**Note:** `br` is non-invasive and never executes git
+commands. After `br sync --flush-only`, you must manually
+run `git add .beads/ && git commit`.
 
 ### Quick Reference
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
+br ready              # Find available work
+br show <id>          # View issue details
+br update <id> --claim  # Claim work
+br close <id>         # Complete work
+br sync --flush-only  # Export JSONL
+git add .beads/
+git commit -m "sync beads"
 ```
 
 ### Rules
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `br` for ALL task tracking — do NOT use
+  TodoWrite, TaskCreate, or markdown TODO lists
+- Use `br remember` for persistent knowledge — do NOT
+  use MEMORY.md files
 
 <!-- END BEADS INTEGRATION -->
 
