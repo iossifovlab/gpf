@@ -793,7 +793,7 @@ class FsspecReadWriteProtocol(
             except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.exception(
                     "Error occurred while converting about.md to HTML for %s",
-                    self.get_full_id(),
+                    self.get_url(),
                 )
                 raise ValueError from e
 
