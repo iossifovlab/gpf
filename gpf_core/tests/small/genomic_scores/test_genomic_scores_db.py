@@ -28,7 +28,6 @@ from gain.genomic_resources.testing import (
 from gpf.genomic_scores.scores import (
     GenomicScoresRegistry,
     ScoreDesc,
-    _build_score_help,
 )
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.testing.setup_helpers import setup_gpf_instance
@@ -180,7 +179,7 @@ def test_genomic_scores_db_with_annotation(
     assert not score.hist.config.y_log_scale
 
 
-def test_build_score_help(
+def test_build_attribute_help(
     annotation_gpf: GPFInstance,
     scores_repo: GenomicResourceProtocolRepo,
 ) -> None:
@@ -208,9 +207,9 @@ def test_build_score_help(
     genomic_score = build_score_from_resource(resource)
 
     # Build the help text
-    help_text = _build_score_help(
-        cast(GenomicScoreAnnotatorBase, score_annotator),
-        attr_info, genomic_score)
+    help_text = cast(
+        GenomicScoreAnnotatorBase, score_annotator
+    ).build_attribute_help(attr_info)
 
     # Verify the help text contains expected elements
     assert help_text is not None
