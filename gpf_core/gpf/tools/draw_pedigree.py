@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Tool to draw pedigrees defined in a file."""
 import argparse
 import logging
@@ -105,8 +104,7 @@ def draw_families_report(
             title = f"Number of families: {count}"
         else:
             title = ", ".join(family_counter.families)
-        figure = draw_pedigree(layout, title=title, tags=family.tag_labels)
-        yield figure
+        yield draw_pedigree(layout, title=title, tags=family.tag_labels)
 
 
 def draw_families(families: FamiliesData) -> Generator[Figure, None, None]:
@@ -114,8 +112,7 @@ def draw_families(families: FamiliesData) -> Generator[Figure, None, None]:
     for family_id, family in families.items():
         layout = build_family_layout(family)
 
-        figure = draw_pedigree(layout, title=family_id, tags=family.tag_labels)
-        yield figure
+        yield draw_pedigree(layout, title=family_id, tags=family.tag_labels)
 
 
 def main(argv: list[str] | None = None) -> None:
