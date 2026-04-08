@@ -22,3 +22,4 @@ wdae-api.log
 logs
 wdae.sql
 gpf_e2e_instance/studies/**
+/.task-log
