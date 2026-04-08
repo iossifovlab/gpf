@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-for d in /wd/dae /wd/spliceai_annotator; do
+for d in /wd/gain_core /wd/spliceai_annotator; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install .
 done
