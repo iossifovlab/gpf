@@ -3,7 +3,7 @@ import csv
 import sys
 from pathlib import Path
 
-from dae.annotation.annotatable import Annotatable
+from gain.annotation.annotatable import Annotatable
 
 
 def annotate_length_cli(raw_args: list[str] | None = None):

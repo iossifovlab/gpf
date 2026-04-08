@@ -3,7 +3,7 @@ import json
 from typing import Any
 
 import pytest
-from dae.pheno.common import MeasureType
+from gpf.pheno.common import MeasureType
 from requests import Response
 
 from rest_client.rest_client import RESTClient

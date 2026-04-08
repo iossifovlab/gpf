@@ -1,7 +1,7 @@
-from dae.annotation.annotation_config import (
+from gain.annotation.annotation_config import (
     AnnotatorInfo,
 )
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )

@@ -3,8 +3,8 @@ import pathlib
 import textwrap
 
 import pytest
-from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.genomic_resources.repository_factory import (
+from gain.annotation.annotation_factory import load_pipeline_from_yaml
+from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 

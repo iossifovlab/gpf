@@ -9,10 +9,10 @@ from copy import copy
 from dataclasses import dataclass
 from typing import Any, cast
 
-from dae.genomic_resources.gene_models.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.genomic_resources.reference_genome import ReferenceGenome
+from gpf.genotype_storage.genotype_storage import GenotypeStorage
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 
 from impala2_storage.helpers.hdfs_helpers import HdfsHelpers
 from impala2_storage.helpers.impala_helpers import ImpalaHelpers

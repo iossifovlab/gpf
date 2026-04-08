@@ -5,15 +5,15 @@ from typing import Any, ClassVar, cast
 
 import pandas as pd
 import pyarrow as pa
-from dae.annotation.annotation_config import AttributeInfo
-from dae.genomic_resources.gene_models.gene_models import GeneModels
-from dae.inmemory_storage.raw_variants import RawFamilyVariants
-from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.loader import FamiliesLoader
-from dae.query_variants.base_query_variants import QueryVariants
-from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
-from dae.utils.regions import Region
-from dae.variants.attributes import Role, Sex, Status
+from gain.annotation.annotation_config import AttributeInfo
+from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.utils.regions import Region
+from gpf.inmemory_storage.raw_variants import RawFamilyVariants
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.pedigrees.loader import FamiliesLoader
+from gpf.query_variants.base_query_variants import QueryVariants
+from gpf.query_variants.sql.schema2.sql_query_builder import TagsQuery
+from gpf.variants.attributes import Role, Sex, Status
 from impala.util import as_pandas
 from sqlalchemy import pool
 
@@ -382,7 +382,7 @@ class ImpalaVariants(QueryVariants):
                 closing(conn.cursor()) as cursor:
             cursor.execute(
                 f"DESCRIBE EXTENDED {self.db}.{self.variants_table}")
-            rows = list(cursor)  # type: ignore
+            rows = list(cursor)
             properties_start, properties_end = -1, -1
             for row_index, row in enumerate(rows):
                 if row[0].strip() == "Table Parameters:":

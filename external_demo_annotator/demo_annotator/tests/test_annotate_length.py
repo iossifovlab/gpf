@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from dae.genomic_resources.testing import setup_directories
+from gain.genomic_resources.testing import setup_directories
 
 from demo_annotator.annotate_length import annotate_length_cli
 

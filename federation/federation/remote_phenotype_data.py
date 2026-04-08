@@ -5,15 +5,15 @@ from collections.abc import Generator, Iterable
 from typing import Any, cast
 
 import pandas as pd
-from dae.common_reports.common_report import CommonReport
-from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets.person_sets import (
+from gpf.common_reports.common_report import CommonReport
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.person_sets.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
 )
-from dae.pheno.common import ImportManifest, MeasureType
-from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
-from dae.variants.attributes import Role
+from gpf.pheno.common import ImportManifest, MeasureType
+from gpf.pheno.pheno_data import Instrument, Measure, PhenotypeData
+from gpf.variants.attributes import Role
 
 from federation.utils import prefix_remote_identifier, prefix_remote_name
 from rest_client.rest_client import RESTClient
@@ -187,7 +187,8 @@ class RemotePhenotypeData(PhenotypeData):
         return pd.read_json(measure_values, orient="split")
 
     def get_person_roles(self) -> list[str]:
-        return self.rest_client.get_pheno_roles(self._remote_pheno_id)
+        return cast(list[str], self.rest_client.get_pheno_roles(
+            self._remote_pheno_id))
 
     @property
     def instruments(self) -> dict[str, Instrument]:
@@ -253,7 +254,7 @@ class RemotePhenotypeData(PhenotypeData):
         )
         return cast(dict[str, Any], output)
 
-    def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
+    def get_image(self, image_path: str) -> tuple[bytes, str]:
         """Return binary image data with mimetype."""
         image, mimetype = self.rest_client.get_pheno_image(image_path)
         if image is None or mimetype is None:

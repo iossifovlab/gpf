@@ -1,9 +1,9 @@
 import logging
 import os
 
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.tools.dataset_helpers import DatasetHelpers
+from gpf.genotype_storage.genotype_storage import GenotypeStorage
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.tools.dataset_helpers import DatasetHelpers
 
 from impala_storage.schema1.impala_genotype_storage import (
     ImpalaGenotypeStorage,

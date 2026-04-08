@@ -5,7 +5,7 @@ from contextlib import closing
 from typing import Any
 
 import impala
-from dae.query_variants.query_runners import QueryRunner
+from gpf.query_variants.query_runners import QueryRunner
 from impala.hiveserver2 import HiveServer2Connection
 from sqlalchemy import exc
 from sqlalchemy.pool import QueuePool

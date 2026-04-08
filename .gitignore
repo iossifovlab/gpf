@@ -102,7 +102,6 @@ userdocs/wdae
 *.retry
 gpf-html.tar.gz
 gpf-user-html.tar.gz
-gpf
 
 coverage/
 *.log
@@ -121,3 +120,10 @@ dae-mypy.txt
 .task-progress
 /work
 CLAUDE*.md
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+.beads-credential-key
+
+# bv (beads viewer) local config and caches
+.bv/

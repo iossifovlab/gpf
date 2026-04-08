@@ -6,7 +6,7 @@ from typing import Any, Protocol, cast
 
 import ijson
 import requests
-from dae.pheno.common import MeasureType
+from gpf.pheno.common import MeasureType
 from requests.auth import HTTPBasicAuth
 
 logger = logging.getLogger(__name__)
@@ -405,6 +405,22 @@ class GPFPasswordSession(GPFClientSession):
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
         return self.session.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def head(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Head request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return self.session.head(
             url,
             headers=headers,
             timeout=timeout,

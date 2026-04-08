@@ -4,8 +4,8 @@ import logging
 import os
 import sys
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 
 logger = logging.getLogger("hdfs_parquet_loader")
 

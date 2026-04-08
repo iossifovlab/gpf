@@ -6,7 +6,7 @@ from queue import Queue
 from typing import Any
 
 import pytest
-from dae.query_variants.query_runners import QueryResult
+from gpf.query_variants.query_runners import QueryResult
 
 from impala2_storage.helpers.impala_helpers import ImpalaHelpers
 from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner

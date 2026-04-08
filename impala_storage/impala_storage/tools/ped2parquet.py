@@ -4,9 +4,9 @@ import argparse
 import os
 import sys
 
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from gain.utils.verbosity_configuration import VerbosityConfiguration
+from gpf.parquet.partition_descriptor import PartitionDescriptor
+from gpf.pedigrees.loader import FamiliesLoader
 
 from impala_storage.schema1.parquet_io import (
     ParquetWriter,

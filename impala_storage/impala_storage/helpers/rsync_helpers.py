@@ -1,7 +1,6 @@
 import logging
 import os
 import subprocess
-from typing import List
 from urllib.parse import urlparse, urlunparse
 
 logger = logging.getLogger(__name__)
@@ -49,8 +48,8 @@ class RsyncHelpers:
 
     @staticmethod
     def _exclude_options(
-        exclude: str | List[str] | None = None,
-    ) -> List[str]:
+        exclude: str | list[str] | None = None,
+    ) -> list[str]:
         if exclude is None:
             return []
         result = []
@@ -63,10 +62,11 @@ class RsyncHelpers:
 
     def _copy_to_remote_cmd(
         self, local_path: str, remote_subdir: str | None = None,
-        exclude: List[str] | None = None,
+        exclude: list[str] | None = None,
+        *,
         ignore_existing: bool = False,
         clear_remote: bool = True,
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         # pylint: disable=too-many-branches
         exclude = exclude if exclude is not None else []
         logger.debug("rsync remote: %s", self.rsync_remote)
@@ -89,8 +89,7 @@ class RsyncHelpers:
         rsync_remote = self.rsync_remote
 
         if remote_subdir is not None:
-            if remote_subdir.startswith("/"):
-                remote_subdir = remote_subdir[1:]
+            remote_subdir = remote_subdir.removeprefix("/")
             rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
 
@@ -102,7 +101,7 @@ class RsyncHelpers:
                             f"rm -rf {rsync_path}",
                         ])
                 else:
-                    cmds.append(["rm", "-rf", "{rsync_path}"])
+                    cmds.append(["rm", "-rf", f"{rsync_path}"])
 
             if self.hosturl():
                 cmds.append(
@@ -141,8 +140,7 @@ class RsyncHelpers:
 
         rsync_remote = self.rsync_remote
         if remote_subdir is not None:
-            if remote_subdir.startswith("/"):
-                remote_subdir = remote_subdir[1:]
+            remote_subdir = remote_subdir.removeprefix("/")
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
 
         rsync_cmd = ["/usr/bin/rsync", "-avPHt"]
@@ -187,30 +185,32 @@ class RsyncHelpers:
         rsync_path = ""
         assert remote_subdir is not None
 
-        if remote_subdir.startswith("/"):
-            remote_subdir = remote_subdir[1:]
+        remote_subdir = remote_subdir.removeprefix("/")
         rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
 
         if self.hosturl():
-            cmds.append(
+            cmds.extend([
                 [
                     "ssh", f"{self.parsed_remote.netloc}",
                     f"rm -rf {rsync_path}",
-                ])
-            cmds.append(
+                ],
                 [
                     "ssh", f"{self.parsed_remote.netloc}",
                     f"mkdir -p {rsync_path}",
-                ])
+                ],
+            ])
         else:
-            cmds.append(["rm", "-rf", f"{rsync_path}"])
-            cmds.append(["mkdir", "-p", f"{rsync_path}"])
+            cmds.extend([
+                ["rm", "-rf", f"{rsync_path}"],
+                ["mkdir", "-p", f"{rsync_path}"],
+            ])
         self._cmd_execute(cmds)
 
     def copy_to_remote(
         self, local_path: str,
         remote_subdir: str | None = None,
         exclude: list[str] | None = None,
+        *,
         clear_remote: bool = True,
     ) -> None:
         """Copy from a local dir to a remote one."""

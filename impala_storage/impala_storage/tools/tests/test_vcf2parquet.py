@@ -2,18 +2,19 @@
 
 import glob
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pyarrow.parquet as pq
-from dae.gpf_instance.gpf_instance import GPFInstance
+import pytest
+from gpf.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.tools.vcf2parquet import main
 
 
+@pytest.mark.usefixtures("annotation_scores_dirname")
 def test_vcf2parquet_vcf(
     fixture_dirname: Callable,
     annotation_pipeline_no_effects_config: str,
-    annotation_scores_dirname: str,
     temp_filename: str,
     gpf_instance_2013: GPFInstance,
 ) -> None:
@@ -50,10 +51,10 @@ def test_vcf2parquet_vcf(
     assert "variant_data" in schema.names
 
 
+@pytest.mark.usefixtures("annotation_scores_dirname")
 def test_vcf2parquet_vcf_partition(
     fixture_dirname: Callable,
     annotation_pipeline_no_effects_config: str,
-    annotation_scores_dirname: str,
     temp_dirname: str,
     gpf_instance_2013: GPFInstance,
 ) -> None:

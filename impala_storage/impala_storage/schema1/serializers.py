@@ -12,18 +12,18 @@ from typing import Any, ClassVar, cast
 
 import numpy as np
 import pyarrow as pa
-from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.pedigrees.family import Family
-from dae.variants.attributes import (
+from gain.annotation.annotation_pipeline import AttributeInfo
+from gpf.pedigrees.family import Family
+from gpf.variants.attributes import (
     GeneticModel,
     Inheritance,
     Role,
     Sex,
     TransmissionType,
 )
-from dae.variants.core import Allele
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.variant import (
+from gpf.variants.core import Allele
+from gpf.variants.family_variant import FamilyAllele, FamilyVariant
+from gpf.variants.variant import (
     SummaryAllele,
     SummaryVariant,
     SummaryVariantFactory,
@@ -655,7 +655,7 @@ class AlleleParquetSerializer:
             for prop, serializer in property_serializers.items():
                 # pylint: disable=cell-var-from-loop
                 attr_getter = self.ALLELE_PROP_GETTERS.get(
-                    prop, lambda a: default_getter(a, prop))
+                    prop, lambda a, p=prop: default_getter(a, p))
                 value = attr_getter(allele)
                 self.write_property(stream, value, serializer)
 
@@ -855,11 +855,14 @@ class AlleleParquetSerializer:
                 itertools.product(vector, effect_types),
             )
             for idx, egs in enumerate(effect_gene_syms):
-                vector[idx] += tuple([egs])
-            vector = [list(itertools.chain.from_iterable(map(
-                lambda x: x if isinstance(x, list) else [x],
-                subvector,
-            ))) for subvector in vector]
+                vector[idx] += (egs,)
+            vector = [
+                list(itertools.chain.from_iterable(
+                    x if isinstance(x, list) else [x]
+                    for x in subvector
+                ))
+                for subvector in vector
+            ]
             vectors[allele.allele_index].append(list(vector))
         return {
             k: list(itertools.chain.from_iterable(v))
@@ -946,11 +949,13 @@ class AlleleParquetSerializer:
                 prop_value = [None]
             new_vectors = list(  # type: ignore
                 itertools.product(new_vectors, prop_value))
-            new_vectors = [list(itertools.chain.from_iterable(  # type: ignore
-                map(
-                    lambda x: x if isinstance(x, list) else [x],
-                    subvector,
-                ))) for subvector in new_vectors]
+            new_vectors = [  # type: ignore
+                list(itertools.chain.from_iterable(
+                    x if isinstance(x, list) else [x]
+                    for x in subvector
+                ))
+                for subvector in new_vectors
+            ]
 
         header = self.allele_batch_header
         allele_data = {name: [] for name in self.schema.names}  # type: ignore

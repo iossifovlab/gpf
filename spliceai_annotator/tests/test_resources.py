@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.genomic_resources.reference_genome import (
+from gain.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.repository import GenomicResourceRepo
 
 
 def test_genomic_resources_repo(

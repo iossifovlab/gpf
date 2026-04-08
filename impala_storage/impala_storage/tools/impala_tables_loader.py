@@ -3,10 +3,11 @@ import argparse
 import logging
 import os
 import sys
+from pathlib import Path
 
 import toml
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 
 logger = logging.getLogger(__name__)
 
@@ -126,8 +127,6 @@ def main(
     elif args.variants_sample or args.variants_schema:
         hdfs_variants_dir = \
             genotype_storage.default_variants_hdfs_dirname(study_id)
-        # if not genotype_storage.hdfs_helpers.exists(hdfs_variants_dir):
-        #     hdfs_variants_dir = None
     else:
         hdfs_variants_dir = None
 
@@ -157,10 +156,8 @@ def main(
     if args.variants_schema is not None:
         assert os.path.exists(args.variants_schema), args.variants_schema
         assert os.path.isfile(args.variants_schema), args.variants_schema
-        with open(args.variants_schema) as infile:
-            content = infile.read()
-            schema = toml.loads(content)
-            variants_schema = schema["variants_schema"]
+        schema = toml.loads(Path(args.variants_schema).read_text())
+        variants_schema = schema["variants_schema"]
 
     genotype_storage.impala_import_dataset(
         args.study_id,

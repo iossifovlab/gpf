@@ -1,6 +1,6 @@
 import re
 
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from gpf.parquet.partition_descriptor import PartitionDescriptor
 
 
 def generate_file_access_glob(

@@ -3,12 +3,12 @@ import pathlib
 
 import numpy as np
 import pytest
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.studies.study import GenotypeData
-from dae.testing.acgt_import import acgt_gpf
-from dae.testing.import_helpers import vcf_study
-from dae.variants.attributes import GeneticModel
+from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+from gpf.genotype_storage.genotype_storage import GenotypeStorage
+from gpf.studies.study import GenotypeData
+from gpf.testing.acgt_import import acgt_gpf
+from gpf.testing.import_helpers import vcf_study
+from gpf.variants.attributes import GeneticModel
 
 
 @pytest.fixture(scope="module")

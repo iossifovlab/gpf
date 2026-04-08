@@ -3,17 +3,17 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from dae.annotation.annotation_config import AttributeInfo
-from dae.configuration.gpf_config_parser import FrozenBox
-from dae.genotype_storage.genotype_storage_registry import (
+from gain.annotation.annotation_config import AttributeInfo
+from gpf.configuration.gpf_config_parser import FrozenBox
+from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.import_tools.cli import run_with_project
-from dae.import_tools.import_tools import ImportProject
-from dae.pedigrees.loader import FamiliesLoader
-from dae.variants.family_variant import FamilyAllele
-from dae.variants_loaders.dae.loader import DenovoLoader
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.import_tools.cli import run_with_project
+from gpf.import_tools.import_tools import ImportProject
+from gpf.pedigrees.loader import FamiliesLoader
+from gpf.variants.family_variant import FamilyAllele
+from gpf.variants_loaders.dae.loader import DenovoLoader
 
 from impala_storage.schema1.impala_genotype_storage import (
     ImpalaGenotypeStorage,

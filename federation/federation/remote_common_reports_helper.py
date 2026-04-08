@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, cast
 
 from common_reports_api.common_reports_helper import BaseCommonReportsHelper
 from gpf_instance.extension import GPFTool
@@ -29,10 +29,16 @@ class RemoteCommonReportsHelper(BaseCommonReportsHelper):
         )
 
     def get_common_report(self) -> dict[str, Any] | None:
-        return self.rest_client.get_common_report(self.dataset_id)
+        return cast(
+            dict[str, Any] | None,
+            self.rest_client.get_common_report(self.dataset_id),
+        )
 
     def get_full_common_report(self) -> dict[str, Any] | None:
-        return self.rest_client.get_common_report(self.dataset_id, full=True)
+        return cast(
+            dict[str, Any] | None,
+            self.rest_client.get_common_report(self.dataset_id, full=True),
+        )
 
     def get_family_counter_list(
         self,

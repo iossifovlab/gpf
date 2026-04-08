@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Any, cast
 
-from dae.genomic_scores.scores import ScoreDesc
+from gpf.genomic_scores.scores import ScoreDesc
 from gpf_instance.extension import GPFExtensionBase
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
@@ -18,6 +18,7 @@ from federation.remote_study_wrapper import (
 from federation.utils import prefix_remote_identifier, prefix_remote_name
 from rest_client.rest_client import (
     GPFAnonymousSession,
+    GPFClientSession,
     GPFOAuthSession,
     RESTClient,
     RESTError,
@@ -136,7 +137,7 @@ class GPFRemoteExtension(GPFExtensionBase):
 
                 if remote["client_id"] is None \
                         and remote["client_secret"] is None:
-                    session = GPFAnonymousSession(url)
+                    session: GPFClientSession = GPFAnonymousSession(url)
                 else:
                     session = GPFOAuthSession(
                         url, remote["client_id"], remote["client_secret"],

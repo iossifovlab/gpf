@@ -20,7 +20,9 @@ from rest_client.rest_client import RESTClient
 class RemotePhenoToolAdapter(PhenoToolAdapterBase):
     """Adapter for remote PhenoTool class."""
 
-    def __init__(self, rest_client: RESTClient, dataset_id: str) -> None:
+    def __init__(  # pylint: disable=super-init-not-called
+        self, rest_client: RESTClient, dataset_id: str,
+    ) -> None:
         self.rest_client = rest_client
         self.dataset_id = dataset_id
 
@@ -53,4 +55,4 @@ class RemotePhenoToolAdapter(PhenoToolAdapterBase):
         handle_gene_sets(self.rest_client, query_data)
         handle_genomic_scores(self.rest_client, query_data)
 
-        yield from self.rest_client.post_pheno_tool_download(query_data)  # type: ignore
+        yield from self.rest_client.post_pheno_tool_download(query_data)

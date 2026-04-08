@@ -1,7 +1,7 @@
 import logging
 import os
 from collections.abc import Generator
-from typing import Any
+from typing import Any, cast
 
 from gpf_instance.extension import GPFTool
 from pheno_browser_api.pheno_browser_helper import BasePhenoBrowserHelper
@@ -35,7 +35,9 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         )
 
     def get_instruments(self) -> list[str]:
-        return self.rest_client.get_instruments(self.dataset_id)
+        return cast(
+            list[str], self.rest_client.get_instruments(self.dataset_id),
+        )
 
     def get_measures_info(self) -> dict[str, Any]:
         measures_info = self.rest_client.get_browser_measures_info(
@@ -56,22 +58,25 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
             f"{url}/"
             f"{self.rest_client.client_id}_"
         )
-        return measures_info
+        return cast(dict[str, Any], measures_info)
 
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
-        return self.rest_client.get_measure_description(
+        return cast(dict[str, Any], self.rest_client.get_measure_description(
             self.dataset_id,
             measure_id,
-        )
+        ))
 
     def search_measures(
         self,
         data: dict[str, Any],
     ) -> list[dict[str, Any]]:
-        return self.rest_client.get_pheno_browser_measures(
-            self.dataset_id,
-            data.get("instrument", ""),
-            data.get("search", ""),
+        return cast(
+            list[dict[str, Any]],
+            self.rest_client.get_pheno_browser_measures(
+                self.dataset_id,
+                data.get("instrument", ""),
+                data.get("search", ""),
+            ),
         )
 
     def get_measure_ids(
@@ -104,11 +109,11 @@ class RemotePhenoBrowserHelper(BasePhenoBrowserHelper):
         return "ok"
 
     def get_count(self, data: dict[str, Any]) -> int:
-        return self.rest_client.get_pheno_browser_measure_count(
+        return cast(int, self.rest_client.get_pheno_browser_measure_count(
             self.dataset_id,
             data["instrument"],
             data.get("search_term", ""),
-        ).json().get("count", 0)
+        ).json().get("count", 0))
 
     def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
         return self.rest_client.get_pheno_image(

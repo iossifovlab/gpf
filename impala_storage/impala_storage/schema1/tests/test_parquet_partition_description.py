@@ -4,12 +4,12 @@ from typing import cast
 
 import numpy as np
 import pytest
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.pedigrees.family import Family
-from dae.pedigrees.loader import FamiliesLoader
-from dae.variants.attributes import TransmissionType
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.variant import SummaryAllele, SummaryVariant
+from gpf.parquet.partition_descriptor import PartitionDescriptor
+from gpf.pedigrees.family import Family
+from gpf.pedigrees.loader import FamiliesLoader
+from gpf.variants.attributes import TransmissionType
+from gpf.variants.family_variant import FamilyAllele, FamilyVariant
+from gpf.variants.variant import SummaryAllele, SummaryVariant
 
 
 @pytest.fixture(scope="module")

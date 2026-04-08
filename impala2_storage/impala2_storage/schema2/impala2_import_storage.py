@@ -2,15 +2,15 @@ import logging
 from typing import cast
 
 import yaml
-from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import ImportProject, save_study_config
-from dae.schema2_storage.schema2_import_storage import (
+from gain.task_graph.graph import TaskGraph
+from gpf.configuration.study_config_builder import StudyConfigBuilder
+from gpf.import_tools.import_tools import ImportProject, save_study_config
+from gpf.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
 )
-from dae.schema2_storage.schema2_layout import (
+from gpf.schema2_storage.schema2_layout import (
     load_schema2_dataset_layout,
 )
-from dae.task_graph.graph import TaskGraph
 
 from impala2_storage.schema2.impala2_genotype_storage import (
     HdfsStudyLayout,

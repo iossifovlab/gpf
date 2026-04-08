@@ -4,13 +4,13 @@ from typing import Any, cast
 
 import pandas as pd
 import yaml
-from dae.genomic_resources.gene_models.gene_models import GeneModels
-from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
-from dae.variants.attributes import Role, Sex, Status
-from dae.variants.family_variant import FamilyVariant
-from dae.variants.variant import SummaryVariant
+from gain.genomic_resources.gene_models.gene_models import GeneModels
 from google.cloud import bigquery
+from gpf.query_variants.sql.schema2.base_query_builder import Dialect
+from gpf.query_variants.sql.schema2.base_variants import SqlSchema2Variants
+from gpf.variants.attributes import Role, Sex, Status
+from gpf.variants.family_variant import FamilyVariant
+from gpf.variants.variant import SummaryVariant
 
 from gcp_storage.bigquery_query_runner import BigQueryQueryRunner
 
@@ -138,10 +138,13 @@ class BigQueryVariants(SqlSchema2Variants):
         }
 
         ped_df = ped_df.rename(columns=columns)
-        ped_df.role = ped_df.role.apply(Role.from_value)  # type: ignore
-        ped_df.sex = ped_df.sex.apply(Sex.from_value)  # type: ignore
-        ped_df.status = ped_df.status.apply(Status.from_value)  # type: ignore
-        return ped_df.sort_values(by=["family_id", "member_index"])
+        ped_df.role = ped_df.role.apply(Role.from_value)
+        ped_df.sex = ped_df.sex.apply(Sex.from_value)
+        ped_df.status = ped_df.status.apply(Status.from_value)
+        return cast(
+            pd.DataFrame,
+            ped_df.sort_values(by=["family_id", "member_index"]),
+        )
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access

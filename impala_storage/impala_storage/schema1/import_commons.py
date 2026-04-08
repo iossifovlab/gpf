@@ -10,21 +10,21 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 import fsspec
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.import_tools.import_tools import construct_import_annotation_pipeline
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.dict_utils import recursive_dict_update
-from dae.utils.regions import Region
-from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import (
+from gain.utils.dict_utils import recursive_dict_update
+from gain.utils.regions import Region
+from gpf.configuration.gpf_config_parser import GPFConfigParser
+from gpf.configuration.study_config_builder import StudyConfigBuilder
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.import_tools.import_tools import construct_import_annotation_pipeline
+from gpf.parquet.partition_descriptor import PartitionDescriptor
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.pedigrees.loader import FamiliesLoader
+from gpf.variants_loaders.cnv.loader import CNVLoader
+from gpf.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from gpf.variants_loaders.raw.loader import (
     VariantsLoader,
 )
-from dae.variants_loaders.vcf.loader import VcfLoader
+from gpf.variants_loaders.vcf.loader import VcfLoader
 from jinja2 import Template
 
 from impala_storage.helpers.partition_helper import MakefilePartitionHelper
@@ -673,18 +673,18 @@ class BatchImporter:
                 variants_params_dict)
             variants_context["verbose"] = verbose
 
-            context["variants"][prefix] = variants_context  # type: ignore
+            context["variants"][prefix] = variants_context
 
         context["mirror_of"] = {}
         if self.gpf_instance.dae_config.mirror_of:
             rsync_helper = RsyncHelpers(
                 self.gpf_instance.dae_config.mirror_of)
             context["mirror_of"][
-                "location"] = rsync_helper.rsync_remote  # type: ignore
+                "location"] = rsync_helper.rsync_remote
             context["mirror_of"][
-                "path"] = rsync_helper.parsed_remote.path  # type: ignore
+                "path"] = rsync_helper.parsed_remote.path
             context["mirror_of"][
-                "netloc"] = rsync_helper.parsed_remote.netloc  # type: ignore
+                "netloc"] = rsync_helper.parsed_remote.netloc
 
         return context
 

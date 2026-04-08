@@ -5,10 +5,10 @@ import textwrap
 from typing import cast
 
 import pytest
-from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import build_filesystem_test_repository
+from gain.annotation.annotation_factory import load_pipeline_from_yaml
+from gain.annotation.annotation_pipeline import AnnotationPipeline
+from gain.genomic_resources.repository import GenomicResourceRepo
+from gain.genomic_resources.testing import build_filesystem_test_repository
 
 from spliceai_annotator.spliceai_annotator import (
     SpliceAIAnnotator,

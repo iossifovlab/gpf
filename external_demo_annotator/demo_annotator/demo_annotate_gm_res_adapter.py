@@ -7,17 +7,17 @@ from collections.abc import Sequence
 from typing import Any, TextIO
 
 import fsspec
-from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_pipeline import (
+from gain.annotation.annotatable import Annotatable
+from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
     AnnotatorInfo,
 )
-from dae.annotation.annotator_base import (
+from gain.annotation.annotator_base import (
     AnnotatorBase,
     AttributeDesc,
 )
-from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
+from gain.genomic_resources.cached_repository import GenomicResourceCachedRepo
 
 
 class DemoAnnotateGeneModelsAdapter(AnnotatorBase):

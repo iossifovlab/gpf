@@ -73,7 +73,9 @@ def t4c8_instance(
 @pytest.fixture(scope="session")
 def test_remote_extension(
     t4c8_instance: WGPFInstance) -> GPFRemoteExtension:
-    return t4c8_instance.extensions.get("remote_extension")
+    result = t4c8_instance.extensions.get("remote_extension")
+    assert isinstance(result, GPFRemoteExtension)
+    return result
 
 
 @pytest.fixture
@@ -146,9 +148,9 @@ def admin(
     new_user.save()
 
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
-    new_user.groups.add(admin_group)
+    new_user.groups.add(admin_group)  # type: ignore[attr-defined]
 
-    return cast(WdaeUser, new_user)  # type: ignore
+    return cast(WdaeUser, new_user)
 
 
 @pytest.fixture
@@ -193,7 +195,7 @@ def user(
     new_user.set_password("secret")
     new_user.save()
 
-    return cast(WdaeUser, new_user)  # type: ignore
+    return cast(WdaeUser, new_user)
 
 
 @pytest.fixture

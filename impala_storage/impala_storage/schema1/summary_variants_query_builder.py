@@ -1,12 +1,12 @@
 import logging
-from collections.abc import Iterable
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable, Iterable
+from typing import Any
 
-from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.genomic_resources.gene_models.gene_models import GeneModels
-from dae.pedigrees.families_data import FamiliesData
-from dae.utils.regions import Region
-from dae.variants.variant import SummaryVariant
+from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.genomic_resources.gene_models.gene_models import GeneModels
+from gain.utils.regions import Region
+from gpf.pedigrees.families_data import FamiliesData
+from gpf.variants.variant import SummaryVariant
 
 from impala_storage.schema1.base_query_builder import (
     BaseQueryBuilder,
@@ -22,7 +22,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
 
     def __init__(
         self, db: str, variants_table: str, pedigree_table: str,
-        variants_schema: List[AttributeInfo],
+        variants_schema: list[AttributeInfo],
         table_properties: dict[str, Any],
         pedigree_schema: dict[str, str],
         families: FamiliesData,
@@ -35,14 +35,14 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             variants_schema, table_properties, pedigree_schema,
             families, gene_models=gene_models)
 
-    def _where_accessors(self) -> Dict[str, str]:
+    def _where_accessors(self) -> dict[str, str]:
         accessors = super()._where_accessors()
 
         for key, value in accessors.items():
             accessors[key] = f"variants.{value}"
         return accessors
 
-    def _query_columns(self) -> List[str]:
+    def _query_columns(self) -> list[str]:
         if self.summary_variants_table:
             self.select_accessors = {
                 "bucket_index": "variants.bucket_index",
@@ -52,9 +52,6 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 "seen_in_status": "variants.seen_in_status",
                 "seen_as_denovo": "variants.seen_as_denovo",
             }
-            # if self.has_extra_attributes:
-            #     self.select_accessors["extra_attributes"] = \
-            #         "MIN(variants.extra_attributes)"
         else:
             self.select_accessors = {
                 "bucket_index": "variants.bucket_index",
@@ -69,9 +66,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 self.select_accessors["extra_attributes"] = \
                     "MIN(variants.extra_attributes)"
 
-        columns = list(self.select_accessors.values())
-
-        return columns
+        return list(self.select_accessors.values())
 
     def build_from(self) -> None:
         table = self.summary_variants_table \
@@ -96,23 +91,23 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
 
     def build_where(
         self,
-        regions: List[Region] | None = None,
-        genes: List[str] | None = None,
-        effect_types: List[str] | None = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
-        inheritance: List[str] | str | None = None,
+        inheritance: list[str] | str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        *,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         **_kwargs: Any,
     ) -> None:
-        # FIXME too many arguments
         # pylint: disable=too-many-arguments
         if self.summary_variants_table:
             inheritance = None
@@ -163,7 +158,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             extra_attributes = None
             if "extra_attributes" in self.select_accessors:
                 extra_attributes = cols.get(
-                    self.select_accessors["extra_attributes"], None)
+                    self.select_accessors["extra_attributes"])
 
             if isinstance(variant_data, str):
                 logger.debug(
@@ -172,11 +167,6 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 )
                 variant_data = bytes(variant_data, "utf8")
             if isinstance(extra_attributes, str):
-                # TODO do we really need that if. Looks like a python2 leftover
-                # logger.debug(
-                #     f"extra_attributes is string!!!! "
-                #     f"{bucket_index}, {summary_index}"
-                # )
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             v = serializer.deserialize_summary_variant(

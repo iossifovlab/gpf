@@ -9,33 +9,33 @@ from typing import Any
 
 import pytest
 from box import Box
-from dae.configuration.gpf_config_parser import (
+from gain.genomic_resources.gene_models.gene_models_factory import (
+    build_gene_models_from_resource,
+)
+from gain.genomic_resources.group_repository import GenomicResourceGroupRepo
+from gain.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
+from gain.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from gpf.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,
     GPFConfigParser,
 )
-from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.genomic_resources.gene_models.gene_models_factory import (
-    build_gene_models_from_resource,
-)
-from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.genomic_resources.reference_genome import (
-    build_reference_genome_from_resource,
-)
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
-from dae.genotype_storage.genotype_storage_registry import (
+from gpf.configuration.schemas.dae_conf import dae_conf_schema
+from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     GenotypeStorageRegistry,
 )
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.import_tools.import_tools import (
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.import_tools.import_tools import (
     construct_import_annotation_pipeline,
 )
-from dae.pedigrees.loader import FamiliesLoader
-from dae.variants_loaders.dae.loader import DenovoLoader
-from dae.variants_loaders.vcf.loader import VcfLoader
+from gpf.pedigrees.loader import FamiliesLoader
+from gpf.variants_loaders.dae.loader import DenovoLoader
+from gpf.variants_loaders.vcf.loader import VcfLoader
 
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,

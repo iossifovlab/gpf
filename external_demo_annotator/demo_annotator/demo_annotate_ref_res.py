@@ -3,8 +3,8 @@ import csv
 import sys
 from pathlib import Path
 
-from dae.annotation.annotatable import Annotatable
-from dae.genomic_resources.reference_genome import (
+from gain.annotation.annotatable import Annotatable
+from gain.genomic_resources.reference_genome import (
     build_reference_genome_from_file,
 )
 

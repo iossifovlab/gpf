@@ -34,7 +34,7 @@ pipeline {
           discoverGitReferenceBuild(latestBuildIfNotFound: true, maxCommits: 400, skipUnknownCommits: true)
 
           def resultBeforeTests = currentBuild.currentResult
-          junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml, test-results/dae-tests-junit.xml, test-results/wdae-tests-junit.xml'
+          junit 'test-results/gain-junit.xml, test-results/gpf-junit.xml, test-results/gpf-web-junit.xml, test-results/demo-annotator-junit.xml, test-results/vep-annotator-junit.xml'
           sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
 
           recordCoverage sourceCodeEncoding: 'UTF-8', enabledForFailure: true, sourceCodeRetention: 'LAST_BUILD', tools: [
@@ -45,11 +45,13 @@ pipeline {
             enabledForFailure: true, aggregatingResults: false,
             tools: [
                 flake8(pattern: 'test-results/ruff_report', reportEncoding: 'UTF-8', id: 'ruff', name: 'Ruff'),
-                myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
-                myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
+                myPy(pattern: 'test-results/mypy_gain_report', reportEncoding: 'UTF-8', id: 'mypy-gain', name: 'MyPy - gain'),
+                myPy(pattern: 'test-results/mypy_gpf_report', reportEncoding: 'UTF-8', id: 'mypy-gpf', name: 'MyPy - gpf'),
+                myPy(pattern: 'test-results/mypy_gpf_web_report', reportEncoding: 'UTF-8', id: 'mypy-gpf-web', name: 'MyPy - gpf_web'),
 
-                pyLint(pattern: 'test-results/mypy_dae_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-dae-pylint', name: 'MyPy - dae (converted to PyLint)'),
-                pyLint(pattern: 'test-results/mypy_wdae_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-wdae-pylint', name: 'MyPy - wdae (converted to PyLint)'),
+                pyLint(pattern: 'test-results/mypy_gain_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-gain-pylint', name: 'MyPy - gain (converted to PyLint)'),
+                pyLint(pattern: 'test-results/mypy_gpf_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-gpf-pylint', name: 'MyPy - gpf (converted to PyLint)'),
+                pyLint(pattern: 'test-results/mypy_gpf_web_pylint_report', reportEncoding: 'UTF-8', id: 'mypy-gpf-web-pylint', name: 'MyPy - gpf_web (converted to PyLint)'),
 
                 pyLint(pattern: 'test-results/pylint_report', id: 'pylint-id', reportEncoding: 'UTF-8')
             ],

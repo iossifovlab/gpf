@@ -4,7 +4,7 @@ import os
 from collections.abc import Callable
 
 import pytest
-from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.schema1.import_commons import (
     BatchImporter,

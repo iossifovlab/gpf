@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.pheno.common import MeasureType
+from gpf.pheno.common import MeasureType
 from requests import Response
 
 from rest_client.rest_client import RESTClient
