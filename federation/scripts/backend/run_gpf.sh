@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 
-for d in /wd/dae /wd/wdae; do
+for d in /wd/gain_core /wd/gpf_core /wd/gpf_web; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install .
 done
