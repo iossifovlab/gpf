@@ -8,6 +8,7 @@ import logging
 import textwrap
 from collections.abc import Callable
 from typing import Any, cast
+
 from jinja2 import Template
 
 from gain.annotation.annotatable import Annotatable, VCFAllele

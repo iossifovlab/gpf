@@ -4,11 +4,9 @@ import logging
 from dataclasses import dataclass
 from typing import Any, cast
 
-from gain.annotation.annotation_config import AttributeInfo
 from gain.annotation.annotation_pipeline import AnnotationPipeline
 from gain.annotation.score_annotator import GenomicScoreAnnotatorBase
 from gain.genomic_resources.genomic_scores import (
-    GenomicScore,
     build_score_from_resource,
 )
 from gain.genomic_resources.histogram import (
@@ -17,7 +15,6 @@ from gain.genomic_resources.histogram import (
     NullHistogram,
     NumberHistogram,
 )
-from jinja2 import Template
 
 logger = logging.getLogger(__name__)
 

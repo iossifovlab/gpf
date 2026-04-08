@@ -202,13 +202,9 @@ def test_build_attribute_help(
     attr_info = annotator_info.attributes[0]
     assert attr_info.name == "phastcons100"
 
-    # Build the genomic score
-    resource = scores_repo.get_resource("phastCons")
-    genomic_score = build_score_from_resource(resource)
-
     # Build the help text
     help_text = cast(
-        GenomicScoreAnnotatorBase, score_annotator
+        GenomicScoreAnnotatorBase, score_annotator,
     ).build_attribute_help(attr_info)
 
     # Verify the help text contains expected elements
