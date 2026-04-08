@@ -12,7 +12,6 @@ from gain.genomic_resources.testing import (
 )
 from gain.testing.t4c8_import import setup_t4c8_grr
 
-
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_import import main as pheno_import
 from gpf.studies.study import GenotypeData

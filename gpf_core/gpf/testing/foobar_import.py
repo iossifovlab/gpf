@@ -6,7 +6,6 @@ from gain.genomic_resources.repository_factory import (
 )
 from gain.testing.foobar_import import foobar_genes, foobar_genome
 
-
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.testing.setup_helpers import setup_gpf_instance

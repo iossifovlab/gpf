@@ -2,7 +2,6 @@
 import pathlib
 import textwrap
 
-from gpf.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
 from gain.genomic_resources.cli import cli_manage
 from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -17,6 +16,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gpf.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.build_pheno_browser import main as build_browser
 from gpf.pheno.pheno_import import main as pheno_import

@@ -9,6 +9,7 @@ from itertools import product
 from typing import Any
 
 from gain.gene_sets.gene_set import GeneSet
+
 from gpf.gene_sets.denovo_gene_sets_config import (
     DenovoGeneSetsConfig,
     DGSCQuery,

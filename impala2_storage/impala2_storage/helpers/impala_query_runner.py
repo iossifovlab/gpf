@@ -43,7 +43,6 @@ class ImpalaQueryRunner(QueryRunner):
                     "(%s) connection created; pool status %s",
                     self.study_id,
                     self.connection_pool.status())
-                return connection
             except exc.TimeoutError:
                 elapsed = time.time() - started
                 logger.debug(
@@ -59,6 +58,8 @@ class ImpalaQueryRunner(QueryRunner):
                 logger.exception(
                     "(%s) unexpected exception", self.study_id)
                 return None
+            else:
+                return connection
 
     def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""

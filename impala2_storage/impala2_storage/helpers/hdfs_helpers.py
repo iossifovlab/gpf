@@ -73,7 +73,7 @@ class HdfsHelpers:
         return self.exists(current_path)
 
     def tempdir(self, prefix: str = "", suffix: str = "") -> str:
-        dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
+        dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)  # noqa: S306
         logger.debug("creating temporary directory %s", dirname)
         self.mkdir(dirname)
         assert self.exists(dirname)

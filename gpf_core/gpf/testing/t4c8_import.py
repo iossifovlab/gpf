@@ -4,7 +4,6 @@ import pathlib
 from gain.genomic_resources.repository import GenomicResourceRepo
 from gain.testing.t4c8_import import t4c8_grr
 
-
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance import GPFInstance
 from gpf.testing.setup_helpers import setup_gpf_instance

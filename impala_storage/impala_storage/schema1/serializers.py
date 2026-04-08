@@ -655,7 +655,7 @@ class AlleleParquetSerializer:
             for prop, serializer in property_serializers.items():
                 # pylint: disable=cell-var-from-loop
                 attr_getter = self.ALLELE_PROP_GETTERS.get(
-                    prop, lambda a: default_getter(a, prop))
+                    prop, lambda a, p=prop: default_getter(a, p))
                 value = attr_getter(allele)
                 self.write_property(stream, value, serializer)
 

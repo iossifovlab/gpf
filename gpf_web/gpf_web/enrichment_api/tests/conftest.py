@@ -8,16 +8,6 @@ from collections.abc import Callable, Generator
 import numpy as np
 import pytest
 import pytest_mock
-from gpf.enrichment_tool.build_coding_length_enrichment_background import (
-    cli as build_coding_len_background_cli,
-)
-from gpf.enrichment_tool.enrichment_utils import (
-    get_enrichment_config,
-)
-from gpf.enrichment_tool.gene_weights_background import (
-    GeneScoreEnrichmentBackground,
-)
-from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from gain.genomic_resources.group_repository import GenomicResourceGroupRepo
 from gain.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -32,6 +22,16 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gpf.enrichment_tool.build_coding_length_enrichment_background import (
+    cli as build_coding_len_background_cli,
+)
+from gpf.enrichment_tool.enrichment_utils import (
+    get_enrichment_config,
+)
+from gpf.enrichment_tool.gene_weights_background import (
+    GeneScoreEnrichmentBackground,
+)
+from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from gpf.gpf_instance import GPFInstance
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.studies.study import GenotypeData

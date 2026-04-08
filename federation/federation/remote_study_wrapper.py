@@ -218,7 +218,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         return kwargs
 
 
-class RemoteWDAEStudyGroup(RemoteWDAEStudy):
+class RemoteWDAEStudyGroup(RemoteWDAEStudy):  # pylint: disable=abstract-method
     """Genotype data study wrapper class for WDAE."""
 
     def __init__(

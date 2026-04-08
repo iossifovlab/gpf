@@ -3,7 +3,6 @@ import pathlib
 
 from gain.testing.acgt_import import acgt_grr
 
-
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance import GPFInstance
 from gpf.testing.setup_helpers import setup_gpf_instance

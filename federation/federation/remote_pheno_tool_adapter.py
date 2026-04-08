@@ -20,7 +20,9 @@ from rest_client.rest_client import RESTClient
 class RemotePhenoToolAdapter(PhenoToolAdapterBase):
     """Adapter for remote PhenoTool class."""
 
-    def __init__(self, rest_client: RESTClient, dataset_id: str) -> None:
+    def __init__(  # pylint: disable=super-init-not-called
+        self, rest_client: RESTClient, dataset_id: str,
+    ) -> None:
         self.rest_client = rest_client
         self.dataset_id = dataset_id
 
