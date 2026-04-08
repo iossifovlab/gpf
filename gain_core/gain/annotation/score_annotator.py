@@ -9,6 +9,8 @@ import textwrap
 from collections.abc import Callable
 from typing import Any, cast
 
+from jinja2 import Template
+
 from gain.annotation.annotatable import Annotatable, VCFAllele
 from gain.annotation.annotation_config import (
     AnnotationConfigParser,
@@ -53,6 +55,72 @@ def get_genomic_resource(
 
 class GenomicScoreAnnotatorBase(Annotator):
     """Genomic score base annotator."""
+
+    SCORE_HISTOGRAM = textwrap.dedent("""
+    <div class="modal-histogram">
+
+    <div class="histogram-image">
+
+    ![HISTOGRAM]({{ hist_url }})
+
+    </div>
+
+    </div>
+    """)
+
+    GENOMIC_SCORE_HELP = textwrap.dedent("""
+
+    <div class="score-description">
+
+    ## {{ data.name }}
+
+    {{ data.description}}
+
+    {{ data.resource_summary }}
+
+    {{ data.histogram }}
+
+    Genomic resource:
+    <a href={{data.resource_url}} target="_blank">{{ data.resource_id }}</a>
+
+    <details>
+
+    <summary class="details">
+
+    #### Details
+
+    </summary>
+
+    <div class="details-body">
+
+    ##### Attribute properties:
+
+    * **source**: {{ data.source }}
+    {% for aggregator in data.aggregators %}
+
+    * {{ aggregator }}
+
+    {% endfor %}
+
+
+    ##### Resource properties:
+
+    * **resource_type**: `{{ data.resource_type }}`
+
+
+    ##### Annotator documentation:
+
+    * **annotator_type**: `{{ data.annotator_type }}`
+
+    {{ data.annotator_doc }}
+
+    </div>
+
+    </details>
+
+    </div>
+
+    """)
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo,
                  score: GenomicScore):
@@ -191,6 +259,36 @@ class GenomicScoreAnnotatorBase(Annotator):
         self, attr_info: AttributeInfo,
     ) -> list[str]:
         """Construct score aggregator documentation."""
+
+    def build_attribute_help(self, attr_info: AttributeInfo) -> str:
+        """Build attribute help."""
+        hist_url = self.score.get_histogram_image_url(attr_info.source)
+        score_def = self.score.get_score_definition(attr_info.source)
+        assert score_def is not None
+
+        histogram = Template(self.SCORE_HISTOGRAM).render(
+            hist_url=hist_url,
+            score_def=score_def,
+        )
+
+        data = {
+            "name": attr_info.name,
+            "description": attr_info.description,
+            "resource_id": self.score.resource_id,
+            "resource_summary": self.score.resource.get_summary(),
+            "resource_url":
+            f"{self.score.resource.get_public_url()}/index.html",
+            "resource_type": self.score.resource.get_type(),
+            "histogram": histogram,
+            "source": attr_info.source,
+            "aggregators": self.build_score_aggregator_documentation(
+                attr_info,
+            ),
+            "annotator_type": self.get_info().type,
+            "annotator_doc": self.get_info().documentation,
+        }
+        template = Template(self.GENOMIC_SCORE_HELP)
+        return template.render(data=data)
 
 
 def build_position_score_annotator(pipeline: AnnotationPipeline,
