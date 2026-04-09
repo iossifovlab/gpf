@@ -29,10 +29,10 @@ setuptools.setup(
         "impala_storage/tools/run_gpf_impala.sh",
     ],
     entry_points="""
-    [dae.genotype_storage.factories]
+    [gpf.genotype_storage.factories]
     impala=impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
 
-    [dae.import_tools.storages]
+    [gpf.import_tools.storages]
     impala=impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
 
     [console_scripts]

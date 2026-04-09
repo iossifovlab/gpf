@@ -16,7 +16,7 @@ See Also
 --------
 gain.genomic_resources.genomic_context
     High-level orchestration and provider registration functions.
-dae.genotype_storage.genotype_storage_registry.GenotypeStorageRegistry
+gpf.genotype_storage.genotype_storage_registry.GenotypeStorageRegistry
     The registry implementation for managing multiple genotype storages.
 """
 from __future__ import annotations

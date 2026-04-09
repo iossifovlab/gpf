@@ -28,7 +28,7 @@ setuptools.setup(
     scripts=[
     ],
     entry_points="""
-    [dae.annotation.annotators]
+    [gain.annotation.annotators]
     spliceai_annotator=spliceai_annotator:build_spliceai_annotator
 
     """,

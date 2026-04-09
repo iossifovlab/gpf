@@ -4,7 +4,7 @@ various sources and make them available through a single interface.
 
 The module follows a registry-based approach.  Providers register themselves
 and are later consulted (in priority order) to build individual
-:class:`~dae.genomic_resources.genomic_context_base.GenomicContext`
+:class:`~gain.genomic_resources.genomic_context_base.GenomicContext`
 instances.  Every created context is combined into a
 :class:`PriorityGenomicContext`, offering a single access point for
 resources such as genomic resource repositories, reference genomes,
@@ -278,13 +278,13 @@ def _load_genomic_context_provider_plugins() -> None:
     Notes
     -----
     Third-party packages can contribute providers by declaring the
-    ``dae.genomic_resources.plugins`` entry-point group in their project
+    ``gain.genomic_resources.plugins`` entry-point group in their project
     metadata (for example, ``pyproject.toml``).
     """
     # pylint: disable=import-outside-toplevel
     from importlib.metadata import entry_points
 
-    discovered_plugins = entry_points(group="dae.genomic_resources.plugins")
+    discovered_plugins = entry_points(group="gain.genomic_resources.plugins")
     for plugin in discovered_plugins:
         factory = plugin.load()
         provider = factory()

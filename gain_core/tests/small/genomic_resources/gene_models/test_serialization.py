@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-"""Tests for dae.genomic_resources.gene_models.serialization module."""
+"""Tests for gain.genomic_resources.gene_models.serialization module."""
 import gzip
 import pathlib
 from io import StringIO

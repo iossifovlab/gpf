@@ -71,7 +71,7 @@ def _find_implementations() -> None:
         return
 
     discovered_implementations = entry_points(
-        group="dae.genomic_resources.implementations",
+        group="gain.genomic_resources.implementations",
     )
 
     for entry_point in discovered_implementations:

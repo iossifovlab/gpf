@@ -20,7 +20,7 @@ setuptools.setup(
     },
     scripts=[],
     entry_points="""
-    [wdae.gpf_instance.extensions]
+    [gpf_web.gpf_instance.extensions]
     remote_extension=federation.remote_extension:GPFRemoteExtension
     [federation.tools]
     pheno_tool=federation.remote_pheno_tool_adapter:RemotePhenoToolAdapter

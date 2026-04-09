@@ -112,7 +112,9 @@ class WGPFInstance(GPFInstance):
         self.load_extensions()
 
     def load_extensions(self) -> None:
-        discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
+        discovered_entries = entry_points(
+            group="gpf_web.gpf_instance.extensions",
+        )
         for entry in discovered_entries:
             extension_class = entry.load()
             self.extensions[entry.name] = extension_class(self)

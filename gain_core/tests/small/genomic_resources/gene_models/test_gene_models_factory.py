@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-"""Tests for dae.genomic_resources.gene_models.gene_models_factory module."""
+"""Tests for gain.genomic_resources.gene_models.gene_models_factory module."""
 import pathlib
 from typing import Any
 from unittest.mock import Mock, patch

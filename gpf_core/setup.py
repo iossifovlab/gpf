@@ -30,14 +30,14 @@ setuptools.setup(
     scripts=[
     ],
     entry_points="""
-    [dae.genomic_resources.plugins]
+    [gain.genomic_resources.plugins]
     gpf_instance_context=gpf.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider
 
-    [dae.genomic_resources.implementations]
+    [gain.genomic_resources.implementations]
 gene_weights_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
     samocha_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
 
-    [dae.genotype_storage.factories]
+    [gpf.genotype_storage.factories]
     inmemory=gpf.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
     duckdb_legacy=gpf.duckdb_storage.duckdb_legacy_genotype_storage:DuckDbLegacyStorage
     duckdb=gpf.duckdb_storage.duckdb_genotype_storage:duckdb_storage_factory
@@ -46,7 +46,7 @@ gene_weights_enrichment_background=gpf.enrichment_tool.resource_implementations.
     duckdb_s3=gpf.duckdb_storage.duckdb_genotype_storage:duckdb_s3_storage_factory
     parquet=gpf.parquet_storage.storage:ParquetGenotypeStorage
 
-    [dae.import_tools.storages]
+    [gpf.import_tools.storages]
     schema2=gpf.schema2_storage.schema2_import_storage:Schema2ImportStorage
     inmemory=gpf.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
     duckdb_legacy=gpf.duckdb_storage.duckdb_import_storage:DuckDbLegacyImportStorage

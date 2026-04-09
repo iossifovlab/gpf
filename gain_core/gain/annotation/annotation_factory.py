@@ -39,7 +39,7 @@ def _load_annotator_factory_plugins() -> None:
         return
     # pylint: disable=import-outside-toplevel
     from importlib.metadata import entry_points
-    discovered_entries = entry_points(group="dae.annotation.annotators")
+    discovered_entries = entry_points(group="gain.annotation.annotators")
     for entry in discovered_entries:
         annotator_type = entry.name
         factory = entry.load()
@@ -80,11 +80,11 @@ def register_annotator_factory(
 ) -> None:
     """Register additional annotator factory.
 
-    By default all genotype storage factories should be registered at
-    `[dae.genotype_storage.factories]` extenstion point. All registered
+    By default all annotator factories should be registered at
+    the `[gain.annotation.annotators]` entry point. All registered
     factories are loaded automatically. This function should be used if you
-    want to bypass extension point mechanism and register addition genotype
-    storage factory programatically.
+    want to bypass the entry point mechanism and register an additional
+    annotator factory programmatically.
     """
     _load_annotator_factory_plugins()
     if annotator_type in _ANNOTATOR_FACTORY_REGISTRY:

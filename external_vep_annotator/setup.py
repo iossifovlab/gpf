@@ -19,7 +19,7 @@ setuptools.setup(
         "vep_annotator": ["py.typed"],
     },
     entry_points="""
-    [dae.annotation.annotators]
+    [gain.annotation.annotators]
     vep_full_annotator=vep_annotator.vep_annotator:build_vep_cache_annotator
     vep_effect_annotator=vep_annotator.vep_annotator:build_vep_effect_annotator
 

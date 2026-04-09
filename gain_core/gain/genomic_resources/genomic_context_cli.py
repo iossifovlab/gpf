@@ -2,7 +2,7 @@
 
 This module exposes :class:`CLIGenomicContextProvider`, a concrete
 implementation of
-:class:`~dae.genomic_resources.genomic_context_base.GenomicContextProvider`
+:class:`~gain.genomic_resources.genomic_context_base.GenomicContextProvider`
 that resolves genomic resources based on command-line arguments.  Tools can
 register the provider to let their users supply a genomic resources
 repository, reference genome, and gene models at runtime.

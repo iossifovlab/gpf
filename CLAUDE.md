@@ -142,33 +142,31 @@ gain_core  ←  gpf_core  ←  gpf_web
 
 ### Plugin System
 
-GPF uses Python entry points for extensibility. Entry point
-group names use the `dae.*` prefix for backward
-compatibility.
+GPF uses Python entry points for extensibility.
 
 **Defined in `gain_core/setup.py`:**
 
-1. **`dae.genomic_resources.plugins`** — genomic context
+1. **`gain.genomic_resources.plugins`** — genomic context
    providers (DefaultRepository, CLI, CLIAnnotation)
-2. **`dae.genomic_resources.implementations`** —
+2. **`gain.genomic_resources.implementations`** —
    position/allele/NP scores, liftover chain, genome,
    gene models, CNV collection, annotation pipeline,
    gene score, gene set collection
-3. **`dae.annotation.annotators`** — all built-in
+3. **`gain.annotation.annotators`** — all built-in
    annotator types (score, effect, gene set, liftover,
    normalize allele, CNV collection, chrom mapping,
    gene score, simple effect, debug)
 
 **Defined in `gpf_core/setup.py`:**
 
-4. **`dae.genomic_resources.plugins`** —
+4. **`gain.genomic_resources.plugins`** —
    GPFInstanceContextProvider
-5. **`dae.genomic_resources.implementations`** —
+5. **`gain.genomic_resources.implementations`** —
    enrichment backgrounds (gene weights, Samocha)
-6. **`dae.genotype_storage.factories`** — inmemory,
+6. **`gpf.genotype_storage.factories`** — inmemory,
    duckdb (legacy, standard, parquet, S3, S3 parquet),
    parquet
-7. **`dae.import_tools.storages`** — import storage
+7. **`gpf.import_tools.storages`** — import storage
    backends matching each genotype storage type
    (schema2, inmemory, duckdb variants, parquet)
 

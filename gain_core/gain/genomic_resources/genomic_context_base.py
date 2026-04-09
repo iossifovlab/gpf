@@ -27,7 +27,7 @@ GC_ANNOTATION_PIPELINE_KEY : str
 
 See Also
 --------
-dae.genomic_resources.genomic_context
+gain.genomic_resources.genomic_context
     High-level orchestration and provider registration functions.
 """
 from __future__ import annotations
@@ -199,7 +199,7 @@ class GenomicContextProvider(ABC):
     invoked during context initialization.
 
     Providers typically register themselves at module import time by calling
-    :func:`dae.genomic_resources.genomic_context.register_context_provider`.
+    :func:`gain.genomic_resources.genomic_context.register_context_provider`.
     The registration system later sorts providers by priority (descending) and
     type name, then invokes their :meth:`init` method to produce contexts.
 

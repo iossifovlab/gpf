@@ -34,14 +34,12 @@ setuptools.setup(
     scripts=[
     ],
     entry_points="""
-    # Entry point group names intentionally keep the dae.* prefix for
-    # backward compatibility with existing plugin discovery code.
-    [dae.genomic_resources.plugins]
+    [gain.genomic_resources.plugins]
     default_grr=gain.genomic_resources.genomic_context:DefaultRepositoryContextProvider
     cli_genomic_context=gain.genomic_resources.genomic_context_cli:CLIGenomicContextProvider
     cli_annotation_context=gain.annotation.annotation_genomic_context_cli:CLIAnnotationContextProvider
 
-    [dae.genomic_resources.implementations]
+    [gain.genomic_resources.implementations]
     position_score=gain.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
     np_score=gain.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
     allele_score=gain.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
@@ -54,7 +52,7 @@ setuptools.setup(
     gene_set_collection=gain.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
     gene_set=gain.gene_sets.implementations.gene_sets_impl:build_gene_set_collection_implementation_from_resource
 
-    [dae.annotation.annotators]
+    [gain.annotation.annotators]
     allele_score=gain.annotation.score_annotator:build_allele_score_annotator
     allele_score_annotator=gain.annotation.score_annotator:build_allele_score_annotator
     np_score=gain.annotation.score_annotator:build_np_score_annotator

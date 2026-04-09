@@ -21,10 +21,10 @@ setuptools.setup(
     scripts=[
     ],
     entry_points="""
-    [dae.genotype_storage.factories]
+    [gpf.genotype_storage.factories]
     gcp=gcp_storage.gcp_genotype_storage:GcpGenotypeStorage
 
-    [dae.import_tools.storages]
+    [gpf.import_tools.storages]
     gcp=gcp_storage.gcp_import_storage:GcpImportStorage
 
     [console_scripts]

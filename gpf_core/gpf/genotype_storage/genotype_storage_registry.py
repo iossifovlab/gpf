@@ -47,10 +47,10 @@ def register_genotype_storage_factory(
     """Register additional genotype storage factory.
 
     By default all genotype storage factories should be registered at
-    `[dae.genotype_storage.factories]` extenstion point. All registered
+    the `[gpf.genotype_storage.factories]` entry point. All registered
     factories are loaded automatically. This function should be used if you
-    want to bypass extension point mechanism and register addition genotype
-    storage factory programatically.
+    want to bypass the entry point mechanism and register an additional
+    genotype storage factory programmatically.
     """
     _load_genotype_storage_factory_plugins()
     if storage_type in _REGISTERED_GENOTYPE_STORAGE_FACTORIES:
@@ -66,7 +66,7 @@ def _load_genotype_storage_factory_plugins() -> None:
         return
     # pylint: disable=import-outside-toplevel
     from importlib.metadata import entry_points
-    discovered_entries = entry_points(group="dae.genotype_storage.factories")
+    discovered_entries = entry_points(group="gpf.genotype_storage.factories")
 
     for entry in discovered_entries:
         storage_type = entry.name
