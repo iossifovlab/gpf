@@ -477,7 +477,6 @@ EOT
           --exclude gpf_core/build \
           --exclude gpf_web/build \
           --exclude tests \
-          --exclude wdae_tests \
           --exclude gpf_web_tests \
           --exclude dask-worker-space \
           --exclude demo-scripts \
