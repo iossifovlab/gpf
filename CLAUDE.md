@@ -1,14 +1,19 @@
-# AGENTS.md
+# GPF Monorepo — Agent Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working
+with code in this repository.
 
 ## Project Overview
 
-GPF (Genotypes and Phenotypes in Families) is a system for managing large databases of genetic variants and phenotypic measurements from family collections (e.g., the Simons Simplex Collection with ~2,600 autism families).
+GPF (Genotypes and Phenotypes in Families) is a system for
+managing large databases of genetic variants and phenotypic
+measurements from family collections (e.g., the Simons
+Simplex Collection with ~2,600 autism families).
 
 ## Environment Setup
 
-**This project requires conda/mamba.** All tools must be installed via conda, not system pip.
+**This project requires conda/mamba.** All tools must be
+installed via conda, not system pip.
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
@@ -42,9 +47,16 @@ cd gpf_core && pytest -v -n 10 tests/
 cd gpf_web && pytest -v -n 5 gpf_web/
 ```
 
-Test markers in `gpf_core/pytest.ini`: genotype storage (`gs_impala`, `gs_impala2`, `gs_inmemory`, `gs_gcp`, `gs_duckdb`, `gs_duckdb_parquet`, `gs_schema2`, `gs_parquet` and `no_gs_*` exclusion variants) and GRR (`grr_rw`, `grr_ro`, `grr_full`, `grr_http`, `grr_tabix`). Tests run with `PYTHONHASHSEED=0`.
+Test markers in `gpf_core/pytest.ini`: genotype storage
+(`gs_impala`, `gs_impala2`, `gs_inmemory`, `gs_gcp`,
+`gs_duckdb`, `gs_duckdb_parquet`, `gs_schema2`,
+`gs_parquet` and `no_gs_*` exclusion variants) and GRR
+(`grr_rw`, `grr_ro`, `grr_full`, `grr_http`, `grr_tabix`).
 
-Test markers in `gain_core/pytest.ini`: `grr_rw`, `grr_ro`, `grr_full`, `grr_http`, `grr_tabix`.
+Test markers in `gain_core/pytest.ini`: `grr_rw`, `grr_ro`,
+`grr_full`, `grr_http`, `grr_tabix`.
+
+All tests run with `PYTHONHASHSEED=0`.
 
 ### Linting and Type Checking
 
@@ -53,18 +65,24 @@ Test markers in `gain_core/pytest.ini`: `grr_rw`, `grr_ro`, `grr_full`, `grr_htt
 ruff check --fix .
 
 # Type checking (slow, 2-5 minutes)
-mypy gain --exclude gain_core/docs/ --exclude gain_core/gain/docs/
+mypy gain --exclude gain_core/docs/ \
+    --exclude gain_core/gain/docs/
 mypy gpf --exclude gpf_core/docs/
-mypy gpf_web --exclude gpf_web/docs/ --exclude gpf_web/conftest.py
+mypy gpf_web --exclude gpf_web/docs/ \
+    --exclude gpf_web/conftest.py
 ```
 
-Config: `ruff.toml` (line-length: 80, target: py310), `mypy.ini` (strict, Django plugin).
+Config: `ruff.toml` (line-length: 80, target: py310),
+`mypy.ini` (strict, Django plugin via django-stubs).
 
 ### Pre-commit Hook
 
 ```bash
 cp pre-commit .git/hooks/
 ```
+
+The pre-commit hook runs `ruff check` (ignoring FIX
+warnings) on staged `.py` files.
 
 ### Test Infrastructure (Docker)
 
@@ -75,94 +93,347 @@ docker compose up -d
 ```
 
 Services defined in `docker-compose.yaml`:
-- **MinIO** (ports 9000/9001) — S3-compatible object storage for GCP/S3 storage tests; credentials `minioadmin/minioadmin`, bucket `test-bucket`
-- **Apache httpd** (port 28080) — HTTP fixture server for `grr_http` tests; serves `gain_core/tests/.test_grr/`
+- **MinIO** (ports 9000/9001) — S3-compatible object
+  storage for GCP/S3 storage tests; credentials
+  `minioadmin/minioadmin`, bucket `test-bucket`
+- **Apache httpd** (port 28080) — HTTP fixture server for
+  `grr_http` tests; serves
+  `gain_core/tests/.test_grr/`
 
 ### Do NOT run locally
 
-`build.sh` requires Docker and a private `build-scripts` submodule — it's only for CI (Jenkins).
+`build.sh` requires Docker and a private `build-scripts`
+submodule — it's only for CI (Jenkins).
 
 ## Architecture
 
+### Dependency Direction
+
+Strict layering enforced by pytestarch architecture tests
+(`gain_core/tests/test_architecture.py`):
+
+```
+gain_core  ←  gpf_core  ←  gpf_web
+```
+
+`gain_core` must **never** import from `gpf_core` or
+`gpf_web`. `gpf_core` must **never** import from `gpf_web`.
+
 ### Package Structure
 
-- **`gain_core/`** — GAIn (Genomic Annotation Infrastructure): annotation engine, genomic resources, effect annotation, task graph, gene scores/sets
-- **`gpf_core/`** — GPF core library: genotype storage, studies, pedigrees, pheno, import tools, query API (Python package `gpf`, depends on `gain`)
-- **`gpf_web/`** — Web Django Application: REST API on top of GPF (Django 5.2)
-- **`impala_storage/`**, **`impala2_storage/`**, **`gcp_storage/`** — optional storage backends
+- **`gain_core/`** — GAIn (Genomic Annotation
+  Infrastructure): annotation engine, genomic resources,
+  effect annotation, task graph, gene scores/sets.
+  Python package: `gain`.
+- **`gpf_core/`** — GPF core library: genotype storage,
+  studies, pedigrees, pheno, import tools, query API.
+  Python package: `gpf`. Depends on `gain`.
+- **`gpf_web/`** — Web application: Django REST API on
+  top of GPF. Python package: `gpf_web`. Depends on
+  `gpf` and `gain`.
+- **`impala_storage/`**, **`impala2_storage/`**,
+  **`gcp_storage/`** — optional storage backends
 - **`federation/`** — federated query support
 - **`rest_client/`** — REST API client library
-- **`*_annotator/`** — external annotation plugins (VEP, SpliceAI, demo)
+- **`spliceai_annotator/`**,
+  **`external_vep_annotator/`**,
+  **`external_demo_annotator/`** — external annotation
+  plugins (Docker-based)
 
 ### Plugin System
 
-GPF uses Python entry points for extensibility. Entry point group names use the `dae.*` prefix for backward compatibility even when defined in `gain`.
+GPF uses Python entry points for extensibility. Entry point
+group names use the `dae.*` prefix for backward
+compatibility.
 
 **Defined in `gain_core/setup.py`:**
-1. **Genomic Resource Implementations** (`dae.genomic_resources.implementations`): position/allele scores, liftover chain, genome, gene models, CNV collections, annotation pipelines
-2. **Annotators** (`dae.annotation.annotators`): score annotators, effect annotator, gene set annotator, liftover, normalize allele, CNV collection, chrom mapping
+
+1. **`dae.genomic_resources.plugins`** — genomic context
+   providers (DefaultRepository, CLI, CLIAnnotation)
+2. **`dae.genomic_resources.implementations`** —
+   position/allele/NP scores, liftover chain, genome,
+   gene models, CNV collection, annotation pipeline,
+   gene score, gene set collection
+3. **`dae.annotation.annotators`** — all built-in
+   annotator types (score, effect, gene set, liftover,
+   normalize allele, CNV collection, chrom mapping,
+   gene score, simple effect, debug)
 
 **Defined in `gpf_core/setup.py`:**
-3. **Genomic Resource Implementations** (`dae.genomic_resources.implementations`): gene sets, gene scores
-4. **Genotype Storage Factories** (`dae.genotype_storage.factories`): inmemory, duckdb (multiple variants including S3 and Parquet), parquet
+
+4. **`dae.genomic_resources.plugins`** —
+   GPFInstanceContextProvider
+5. **`dae.genomic_resources.implementations`** —
+   enrichment backgrounds (gene weights, Samocha)
+6. **`dae.genotype_storage.factories`** — inmemory,
+   duckdb (legacy, standard, parquet, S3, S3 parquet),
+   parquet
+7. **`dae.import_tools.storages`** — import storage
+   backends matching each genotype storage type
+   (schema2, inmemory, duckdb variants, parquet)
+
+**Defined in `gpf_web/setup.py`:**
+
+8. **`console_scripts`** — `wgpf` (web server launcher),
+   `wdaemanage` (Django management wrapper)
 
 ### GAIN Submodules (`gain_core/gain/`)
 
-- **`annotation/`** — annotation pipeline engine
-- **`genomic_resources/`** — Genomic Resource Repository (GRR), resource implementations and plugins; supports HTTP/S3 access
-- **`effect_annotation/`** — variant effect annotation
+- **`annotation/`** — annotation pipeline engine,
+  annotator base classes, all built-in annotators,
+  processing pipeline, annotation config parsing
+- **`genomic_resources/`** — Genomic Resource Repository
+  (GRR): repository hierarchy (cached, group, factory),
+  resource implementations, fsspec protocol, genomic
+  context system. Sub-packages:
+  - `gene_models/` — gene model parsing and
+    serialization
+  - `genomic_position_table/` — tabular data backends
+    (tabix, BigWig, VCF, in-memory)
+  - `implementations/` — resource type implementations
+    (scores, genome, gene models, liftover, CNV,
+    annotation pipeline)
+  - `statistics/` — resource statistics (min/max)
+- **`effect_annotation/`** — variant effect prediction
+  (effect types, effect gene/transcript annotation)
 - **`task_graph/`** — DAG-based task orchestration
-- **`gene_scores/`**, **`gene_sets/`**, **`genomic_scores/`** — score and set resource types
-- **`utils/`** — shared utilities
+- **`gene_scores/`** — gene-level score resources and
+  implementations
+- **`gene_sets/`** — gene set collection resources and
+  implementations
+- **`dask/`** — dask named cluster configuration
+- **`testing/`** — test fixture helpers for study import
+  (acgt, alla, foobar, t4c8 datasets)
+- **`utils/`** — shared utilities (fs_utils, helpers)
 
 ### GPF Core Submodules (`gpf_core/gpf/`)
 
-- **`genotype_storage/`** — factory pattern for pluggable storage backends
-- **`variants/`** — variant data structures and operations
+- **`gpf_instance/`** — `GPFInstance` class: central
+  coordinator that wires together all GPF components
+  (config, GRR, gene models, genome, annotation, pheno,
+  studies, storages)
+- **`gpf_instance_plugin/`** — genomic context provider
+  plugin for GPFInstance
+- **`configuration/`** — config parser + validation
+  schemas (GPF instance YAML config)
+- **`genotype_storage/`** — factory + registry for
+  pluggable storage backends
+- **`duckdb_storage/`** — DuckDB genotype storage
+  (variants: legacy, standard, parquet, S3, S3 parquet)
+- **`parquet_storage/`** — Parquet-based genotype storage
+- **`inmemory_storage/`** — in-memory genotype storage
+- **`schema2_storage/`** — schema2 import storage
+- **`parquet/`** — low-level Parquet schema utilities
+- **`variants/`** — variant data structures (family
+  variant, summary variant)
+- **`variants_loaders/`** — loaders for VCF, DAE, denovo,
+  CNV file formats
 - **`studies/`** — study and dataset management
 - **`pedigrees/`** — family/pedigree handling
-- **`pheno/`** — phenotypic data import and browser
-- **`enrichment_tool/`** — gene enrichment analysis
-- **`import_tools/`** — data import pipelines
-- **`duckdb_storage/`**, **`parquet_storage/`** — built-in storage implementations
-- **`query_variants/`** — query API for variant retrieval
+- **`person_sets/`** — person set definitions + builders
+- **`person_filters/`** — person-level query filters
+- **`query_variants/`** — query API + query runners
+- **`import_tools/`** — data import pipelines + CLI
+- **`pheno/`** — phenotypic data import, storage, and
+  browser
+- **`pheno_tool/`** — phenotypic analysis tool
+- **`enrichment_tool/`** — gene enrichment analysis +
+  resource implementations
+- **`gene_profile/`** — gene profile DB, generation,
+  export, DuckDB conversion
+- **`gene_sets/`** — denovo gene sets DB + gene sets DB
+- **`genomic_scores/`** — genomic scores registry
+- **`common_reports/`** — common report generation
+- **`testing/`** — test fixture helpers (import utilities)
+- **`tools/`** — CLI tools (ped2ped, draw_pedigree,
+  liftover, format converters, validation runner)
+- **`utils/`** — shared utilities
 
-### GPF Web Django Apps (`gpf_web/gpf_web/`)
+### GPF Web Structure (`gpf_web/gpf_web/`)
 
-Key apps: `datasets_api`, `genotype_browser`, `enrichment_api`, `family_api`, `gene_profiles_api`, `person_sets_api`, `pheno_browser_api`, `users_api`, `groups_api`, `gpf_instance`, `studies`.
+The web layer is a Django project. The Django project
+package is `gpf_web/gpf_web/gpf_web/` (settings, urls,
+wsgi). Django apps sit at `gpf_web/gpf_web/<app_name>/`.
 
-Key patterns:
-- `QueryBaseView` — base class for variant query endpoints
+**Django apps (INSTALLED_APPS order):**
+
+- **`gpfjs`** — SPA static files + index view
+- **`utils`** — OAuth2 authentication, pagination helpers
+- **`gene_scores`** — gene scores REST API
+- **`gene_sets`** — gene sets REST API
+- **`datasets_api`** — dataset listing + permissions
+- **`genotype_browser`** — variant query/browse endpoints
+- **`enrichment_api`** — enrichment analysis endpoints
+- **`measures_api`** — phenotypic measures endpoints
+- **`pheno_browser_api`** — phenotype browser endpoints
+- **`pheno_tool_api`** — phenotype analysis tool
+  endpoints
+- **`common_reports_api`** — common report endpoints
+- **`users_api`** — user management + auth (defines
+  custom `WdaeUser` model via `AUTH_USER_MODEL`)
+- **`groups_api`** — group/permission management
+- **`query_state_save`** — saved query states
+- **`user_queries`** — user query history
+- **`gpf_instance`** — `WGPFInstance` singleton (wraps
+  `GPFInstance`), extension system, instance endpoints
+
+**Apps used via URL routing but not in INSTALLED_APPS:**
+
+- **`gene_profiles_api`** — gene profile data endpoints
+- **`gene_view`** — gene-level view endpoints
+- **`genomes_api`** — genome/reference data endpoints
+- **`genomic_scores_api`** — genomic scores endpoints
+- **`family_api`** — family data endpoints
+- **`person_sets_api`** — person set endpoints
+- **`sentry`** — Sentry integration endpoints
+
+**Shared modules (not Django apps):**
+
+- **`query_base/`** — `QueryBaseView` base class for all
+  variant query endpoints (provides OAuth2 auth +
+  dataset permission checks)
+- **`studies/`** — `QueryTransformer`,
+  `ResponseTransformer`, `WDAEStudy`/`WDAEStudyGroup`
+  wrappers
+
+**Key patterns:**
+- `QueryBaseView` — base class for variant query
+  endpoints (in `query_base/`)
 - `StreamingHttpResponse` — used for large result sets
-- `WGPFInstance` — web-layer wrapper around GPFInstance
+- `WGPFInstance` — web-layer singleton wrapping
+  `GPFInstance`
 - OAuth2 toolkit for multi-tenant authentication
+- Tests live inside each app: `<app>/tests/`
+
+### REST API URL Structure
+
+All endpoints under `/api/v3/`:
+
+| Prefix | App |
+|---|---|
+| `/api/v3/datasets` | `datasets_api` |
+| `/api/v3/genotype_browser` | `genotype_browser` |
+| `/api/v3/enrichment` | `enrichment_api` |
+| `/api/v3/gene_scores` | `gene_scores` |
+| `/api/v3/gene_sets` | `gene_sets` |
+| `/api/v3/measures` | `measures_api` |
+| `/api/v3/pheno_tool` | `pheno_tool_api` |
+| `/api/v3/pheno_browser` | `pheno_browser_api` |
+| `/api/v3/common_reports` | `common_reports_api` |
+| `/api/v3/genomic_scores` | `genomic_scores_api` |
+| `/api/v3/gene_profiles` | `gene_profiles_api` |
+| `/api/v3/gene_view` | `gene_view` |
+| `/api/v3/genome` | `genomes_api` |
+| `/api/v3/families` | `family_api` |
+| `/api/v3/person_sets` | `person_sets_api` |
+| `/api/v3/query_state` | `query_state_save` |
+| `/api/v3/user_queries` | `user_queries` |
+| `/api/v3/sentry` | `sentry` |
+| `/api/v3/instance` | `gpf_instance` |
+| `/api/v3/users/...`, `/api/v3/groups/...` | `users_api`, `groups_api` |
+| `/o/` | OAuth2 provider |
 
 ### Data Flow
 
 ```
 REST Request → GPF Web Django App
-                → QueryTransformer (request normalization)
-                → GPF Core (GPFInstance / study)
-                    → Genotype Storage (DuckDB / Parquet / Impala)
-                    → Annotation Engine
-                    → Genomic Resource Repository
-                → ResponseTransformer (result formatting)
-              → StreamingHttpResponse
+    → QueryBaseView (OAuth2 auth + dataset permissions)
+    → QueryTransformer (request normalization)
+    → GPF Core (GPFInstance / study)
+        → Genotype Storage (DuckDB / Parquet / Impala)
+        → Annotation Engine
+        → Genomic Resource Repository
+    → ResponseTransformer (result formatting)
+  → StreamingHttpResponse
 ```
+
+### Test Structure
+
+Both `gain_core` and `gpf_core` use a `tests/small/` vs
+`tests/integration/` split:
+- `tests/small/` — unit/fast tests (default for
+  development and CI)
+- `tests/integration/` — tests requiring external
+  services or longer runtime
+
+`gpf_web` unit tests live inside each Django app:
+`gpf_web/gpf_web/<app>/tests/`
+Integration tests are in `gpf_web/gpf_web_tests/integration/`.
+
+Key conftest patterns:
+- **`grr_scheme` parametrization** — tests tagged with
+  `grr_rw`, `grr_full`, `grr_http`, `grr_tabix` markers
+  are automatically parametrized across GRR protocols
+  (inmemory, file, s3, http). Enable S3/HTTP with
+  `--enable-s3-testing` / `--enable-http-testing`.
+- **`genotype_storage_factory` parametrization** — tests
+  tagged with `gs_*` markers run against the appropriate
+  storage backends.
+- Architecture tests in `gain_core/tests/` enforce the
+  dependency direction rule via `pytestarch`.
+
+### CLI Tools
+
+**gain_core CLIs:**
+- `grr_manage` — genomic resource repository management
+- `grr_browse` — GRR browser
+- `annotate_columns` / `annotate_vcf` / `annotate_doc`
+  — annotation tools
+- `annotate_variant_effects` /
+  `annotate_variant_effects_vcf` — effect annotation
+
+**gpf_core CLIs:**
+- `import_tools` / `import_genotypes` — genotype data
+  import
+- `pheno_import` / `build_pheno_browser` /
+  `update_pheno_descriptions` — phenotype tools
+- `generate_gene_profile` /
+  `convert_gene_profile_to_duckdb` — gene profiles
+- `gpf_validation_runner` — instance validation
+- `gpf_instance_adjustments` — instance adjustments
+- `ped2ped`, `draw_pedigree` — pedigree utilities
+- `denovo_liftover`, `dae_liftover`, `cnv_liftover`,
+  `vcf_liftover` — liftover tools
+- `denovo2vcf`, `dae2vcf`, `vcf2tsv` — format converters
+- `simple_study_import` — simplified study import
+- `generate_common_report` — common reports
+- `generate_denovo_gene_sets` — denovo gene sets
+- `enrichment_cache_builder` — enrichment cache
+
+**gpf_web CLIs:**
+- `wgpf` — GPF web server launcher
+- `wdaemanage` — Django management command wrapper
 
 ## Key Dependencies
 
 - **Python 3.12**, Django 5.2, DRF 3.16
 - **DuckDB 1.5** — primary embedded storage
 - **dask** — parallel computing
-- **pandas**, **numpy**, **pyarrow** — data analysis
-- **pysam** — SAM/BAM file handling
-- **pydantic** — data validation
+- **pandas 2.2**, **numpy 2.2**, **pyarrow >=18** — data
+  analysis
+- **pysam 0.23** — SAM/BAM file handling
+- **pydantic 2.8** — data validation
+- **lark 1.2** — parsing (GRR search grammar)
+- **fsspec / s3fs** — filesystem abstraction + S3 access
 - **Sentry SDK** — error tracking in production
+- Dev: **ruff 0.14**, **mypy 1.15**, **pytest**,
+  **pytest-xdist**, **pytestarch**
 
 ## Django Settings
 
-Multiple settings files in `gpf_web/gpf_web/gpf_web/`: `settings.py`, `test_settings.py`, `default_settings.py`, `gunicorn_settings.py`, `mypy_settings.py`.
+Settings files in `gpf_web/gpf_web/gpf_web/`:
+
+- `default_settings.py` — base settings (all others
+  import from here)
+- `settings.py` — local development
+- `test_settings.py` — pytest
+  (`DJANGO_SETTINGS_MODULE`)
+- `gunicorn_settings.py` — production gunicorn
+- `mypy_settings.py` — mypy django-stubs config
+- `eager_settings.py` — eager study loading
+- `remote_settings.py` — remote/deployed settings
+- `wgpf_settings.py` — wgpf CLI settings
+- `silk_settings.py` — Django Silk profiler
 
 <!-- BEGIN BEADS INTEGRATION v:2 profile:minimal -->
 ## Beads Issue Tracker
@@ -194,95 +465,3 @@ git commit -m "sync beads"
 
 <!-- END BEADS INTEGRATION -->
 
-### Using bv as an AI sidecar
-
-bv is a graph-aware triage engine for Beads projects (.beads/beads.jsonl). Instead of parsing JSONL or hallucinating graph traversal, use robot flags for deterministic, dependency-aware outputs with precomputed metrics (PageRank, betweenness, critical path, cycles, HITS, eigenvector, k-core).
-
-**Scope boundary:** bv handles *what to work on* (triage, priority, planning). For agent-to-agent coordination (messaging, work claiming, file reservations), use [MCP Agent Mail](https://github.com/Dicklesworthstone/mcp_agent_mail).
-
-**⚠️ CRITICAL: Use ONLY `--robot-*` flags. Bare `bv` launches an interactive TUI that blocks your session.**
-
-#### The Workflow: Start With Triage
-
-**`bv --robot-triage` is your single entry point.** It returns everything you need in one call:
-- `quick_ref`: at-a-glance counts + top 3 picks
-- `recommendations`: ranked actionable items with scores, reasons, unblock info
-- `quick_wins`: low-effort high-impact items
-- `blockers_to_clear`: items that unblock the most downstream work
-- `project_health`: status/type/priority distributions, graph metrics
-- `commands`: copy-paste shell commands for next steps
-
-bv --robot-triage        # THE MEGA-COMMAND: start here
-bv --robot-next          # Minimal: just the single top pick + claim command
-
-# Token-optimized output (TOON) for lower LLM context usage:
-bv --robot-triage --format toon
-export BV_OUTPUT_FORMAT=toon
-bv --robot-next
-
-#### Other Commands
-
-**Planning:**
-| Command | Returns |
-|---------|---------|
-| `--robot-plan` | Parallel execution tracks with `unblocks` lists |
-| `--robot-priority` | Priority misalignment detection with confidence |
-
-**Graph Analysis:**
-| Command | Returns |
-|---------|---------|
-| `--robot-insights` | Full metrics: PageRank, betweenness, HITS (hubs/authorities), eigenvector, critical path, cycles, k-core, articulation points, slack |
-| `--robot-label-health` | Per-label health: `health_level` (healthy\|warning\|critical), `velocity_score`, `staleness`, `blocked_count` |
-| `--robot-label-flow` | Cross-label dependency: `flow_matrix`, `dependencies`, `bottleneck_labels` |
-| `--robot-label-attention [--attention-limit=N]` | Attention-ranked labels by: (pagerank × staleness × block_impact) / velocity |
-
-**History & Change Tracking:**
-| Command | Returns |
-|---------|---------|
-| `--robot-history` | Bead-to-commit correlations: `stats`, `histories` (per-bead events/commits/milestones), `commit_index` |
-| `--robot-diff --diff-since <ref>` | Changes since ref: new/closed/modified issues, cycles introduced/resolved |
-
-**Other Commands:**
-| Command | Returns |
-|---------|---------|
-| `--robot-burndown <sprint>` | Sprint burndown, scope changes, at-risk items |
-| `--robot-forecast <id\|all>` | ETA predictions with dependency-aware scheduling |
-| `--robot-alerts` | Stale issues, blocking cascades, priority mismatches |
-| `--robot-suggest` | Hygiene: duplicates, missing deps, label suggestions, cycle breaks |
-| `--robot-graph [--graph-format=json\|dot\|mermaid]` | Dependency graph export |
-| `--export-graph <file.html>` | Self-contained interactive HTML visualization |
-
-#### Scoping & Filtering
-
-bv --robot-plan --label backend              # Scope to label's subgraph
-bv --robot-insights --as-of HEAD~30          # Historical point-in-time
-bv --recipe actionable --robot-plan          # Pre-filter: ready to work (no blockers)
-bv --recipe high-impact --robot-triage       # Pre-filter: top PageRank scores
-bv --robot-triage --robot-triage-by-track    # Group by parallel work streams
-bv --robot-triage --robot-triage-by-label    # Group by domain
-
-#### Understanding Robot Output
-
-**All robot JSON includes:**
-- `data_hash` — Fingerprint of source beads.jsonl (verify consistency across calls)
-- `status` — Per-metric state: `computed|approx|timeout|skipped` + elapsed ms
-- `as_of` / `as_of_commit` — Present when using `--as-of`; contains ref and resolved SHA
-
-**Two-phase analysis:**
-- **Phase 1 (instant):** degree, topo sort, density — always available immediately
-- **Phase 2 (async, 500ms timeout):** PageRank, betweenness, HITS, eigenvector, cycles — check `status` flags
-
-**For large graphs (>500 nodes):** Some metrics may be approximated or skipped. Always check `status`.
-
-#### jq Quick Reference
-
-bv --robot-triage | jq '.quick_ref'                        # At-a-glance summary
-bv --robot-triage | jq '.recommendations[0]'               # Top recommendation
-bv --robot-plan | jq '.plan.summary.highest_impact'        # Best unblock target
-bv --robot-insights | jq '.status'                         # Check metric readiness
-bv --robot-insights | jq '.Cycles'                         # Circular deps (must fix!)
-bv --robot-label-health | jq '.results.labels[] | select(.health_level == "critical")'
-
-**Performance:** Phase 1 instant, Phase 2 async (500ms timeout). Prefer `--robot-plan` over `--robot-insights` when speed matters. Results cached by data hash.
-
-Use bv instead of parsing beads.jsonl—it computes PageRank, critical paths, cycles, and parallel tracks deterministically.
