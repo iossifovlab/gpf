@@ -317,6 +317,16 @@ class AnnotationConfigParser:
         """Collect resources matching a given query."""
         labels_query: dict[str, Callable[[str], bool]] = {}
 
+        annotator_resources_map = {
+            "position_score": "position_score",
+            "position_score_annotator": "position_score",
+            "allele_score": "allele_score",
+            "allele_score_annotator": "allele_score",
+            "cnv_collection": "cnv_collection",
+            "cnv_collection_annotator": "cnv_collection",
+            "gene_score_annotator": "gene_score",
+        }
+
         config_parser = Lark(AnnotationConfigParser.ANNOTATION_CONFIG_GRAMMAR)
         tree = config_parser.parse(resource_id)
 
@@ -332,7 +342,8 @@ class AnnotationConfigParser:
 
         def match(resource: GenomicResource) -> bool:
             return (
-                resource.get_type() == annotator_type
+                resource.get_type() == annotator_resources_map.get(
+                    annotator_type, "")
                 and fnmatch.fnmatch(resource.get_id(), parsed_id)
                 and AnnotationConfigParser.match_labels_query(
                    labels_query, resource.get_labels()))
