@@ -380,6 +380,22 @@ def test_wildcard_basic(test_grr: GenomicResourceRepo) -> None:
     ]
 
 
+def test_wildcard_for_new_pos_score(test_grr: GenomicResourceRepo) -> None:
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score_annotator: score_*
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo(
+            "position_score_annotator", [], {"resource_id": "score_one"},
+            annotator_id="A0_score_one",
+        ),
+        AnnotatorInfo(
+            "position_score_annotator", [], {"resource_id": "score_two"},
+            annotator_id="A0_score_two",
+        ),
+    ]
+
+
 def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: "scores/**/subscore"
