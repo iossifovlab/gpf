@@ -24,7 +24,7 @@ https://iossifovlab.com/gpfuserdocs/.
 - **`federation/`**, **`rest_client/`** — federation and
   REST client
 - **`spliceai_annotator/`**,
-  **`external_vep_annotator/`**,
+  **`gain_vep_annotator/`**,
   **`gain_demo_annotator/`** — external annotation
   plugins
 - **`docs/`** — documentation sources

@@ -493,7 +493,7 @@ EOT
           impala2_storage \
           gcp_storage \
           rest_client \
-          external_vep_annotator \
+          gain_vep_annotator \
           federation \
           spliceai_annotator \
           environment.yml dev-environment.yml VERSION BUILD

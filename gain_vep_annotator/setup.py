@@ -4,7 +4,7 @@ import setuptools
 import versioneer
 
 setuptools.setup(
-    name="gpf_vep_annotator",
+    name="gain_vep_annotator",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     author="Lubomir Chorbadjiev",
