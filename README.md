@@ -25,7 +25,7 @@ https://iossifovlab.com/gpfuserdocs/.
   REST client
 - **`spliceai_annotator/`**,
   **`external_vep_annotator/`**,
-  **`external_demo_annotator/`** — external annotation
+  **`gain_demo_annotator/`** — external annotation
   plugins
 - **`docs/`** — documentation sources
 

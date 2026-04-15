@@ -4,7 +4,7 @@ import setuptools
 import versioneer
 
 setuptools.setup(
-    name="gpf_external_demo_annotator",
+    name="gain_demo_annotator",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     author="Lubomir Chorbadjiev",

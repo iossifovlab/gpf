@@ -137,7 +137,7 @@ gain_core  ←  gpf_core  ←  gpf_web
 - **`rest_client/`** — REST API client library
 - **`spliceai_annotator/`**,
   **`external_vep_annotator/`**,
-  **`external_demo_annotator/`** — external annotation
+  **`gain_demo_annotator/`** — external annotation
   plugins (Docker-based)
 
 ### Plugin System
