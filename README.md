@@ -19,7 +19,7 @@ https://iossifovlab.com/gpfuserdocs/.
 - **`gpf_web/`** — Web application and REST API
   (Django 5.2). Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
-- **`impala_storage/`**, **`impala2_storage/`**,
+- **`gpf_impala_storage/`**, **`impala2_storage/`**,
   **`gpf_gcp_storage/`** — optional genotype storages
 - **`gpf_federation/`**, **`rest_client/`** — federation and
   REST client

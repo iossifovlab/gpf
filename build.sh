@@ -235,7 +235,7 @@ EOT
     build_run_detached bash -c '
       cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf \
-        ruff check --exclude impala_storage \
+        ruff check --exclude gpf_impala_storage \
         --exclude impala2_storage \
         --exclude typings \
         --exclude migrations \
@@ -453,7 +453,7 @@ EOT
     build_run cp BUILD gain_core/gain/__build__.py
     build_run cp BUILD gpf_core/gpf/__build__.py
     build_run cp BUILD gpf_web/gpf_web/__build__.py
-    build_run cp BUILD impala_storage/impala_storage/__build__.py
+    build_run cp BUILD gpf_impala_storage/impala_storage/__build__.py
     build_run cp BUILD impala2_storage/impala2_storage/__build__.py
     build_run cp BUILD rest_client/rest_client/__build__.py
     build_run cp BUILD gpf_federation/federation/__build__.py
@@ -489,7 +489,7 @@ EOT
           --exclude pylintrc \
           --transform "s,^,gpf/," \
           gain_core/ gpf_core/ gpf_web/ \
-          impala_storage \
+          gpf_impala_storage \
           impala2_storage \
           gpf_gcp_storage \
           rest_client \
@@ -507,7 +507,7 @@ EOT
     defer_ret build_run_ctx_reset
     build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run rm -rf gain_core/gain/__build__.py gpf_core/gpf/__build__.py gpf_web/gpf_web/__build__.py VERSION
-    build_run rm -rf impala_storage/impala_storage/__build__.py BUILD
+    build_run rm -rf gpf_impala_storage/impala_storage/__build__.py BUILD
     build_run rm -rf impala2_storage/impala2_storage/__build__.py BUILD
   }
 
