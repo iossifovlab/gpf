@@ -1,17 +1,17 @@
 #!/usr/bin/bash
 
-for d in /wd/gain_core /wd/gpf_core /wd/gpf_web /wd/rest_client; do
+for d in /wd/gain_core /wd/gpf_core /wd/gpf_web; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
 
-rm -rf /wd/rest_client/tmp
-mkdir -p /wd/rest_client/tmp
+rm -rf /wd/gpf_rest_client/tmp
+mkdir -p /wd/gpf_rest_client/tmp
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    python /wd/rest_client/setup_testing_remote.py
+    python /wd/gpf_rest_client/setup_testing_remote.py
 
-export GRR_DEFINITION_FILE="/wd/rest_client/tmp/grr_definition.yaml"
+export GRR_DEFINITION_FILE="/wd/gpf_rest_client/tmp/grr_definition.yaml"
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     wdaemanage migrate
@@ -39,6 +39,6 @@ export GRR_DEFINITION_FILE="/wd/rest_client/tmp/grr_definition.yaml"
 
 while true; do
     /opt/conda/bin/conda run --no-capture-output -n gpf \
-        wdaemanage runserver backend:21011
+        wdaemanage runserver 0.0.0.0:21010
     sleep 10
 done

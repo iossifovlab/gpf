@@ -21,7 +21,7 @@ https://iossifovlab.com/gpfuserdocs/.
   `gpf` and `gain`.
 - **`gpf_impala_storage/`**, **`gpf_impala2_storage/`**,
   **`gpf_gcp_storage/`** — optional genotype storages
-- **`gpf_federation/`**, **`rest_client/`** — federation and
+- **`gpf_federation/`**, **`gpf_rest_client/`** — federation and
   REST client
 - **`spliceai_annotator/`**,
   **`gain_vep_annotator/`**,
@@ -111,14 +111,14 @@ mypy gpf_web --exclude gpf_web/docs/ \
 
 ### REST Client and Federation (optional)
 
-If you want to work with `gpf_federation` and `rest_client`
+If you want to work with `gpf_federation` and `gpf_rest_client`
 modules, install additional dependencies and then the
 packages:
 
 ```bash
 mamba env update --name gpf \
     --file ./gpf_federation/federation-environment.yml
-pip install -e rest_client
+pip install -e gpf_rest_client
 pip install -e gpf_federation
 ```
 

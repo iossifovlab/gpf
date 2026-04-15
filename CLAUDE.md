@@ -134,7 +134,7 @@ gain_core  ←  gpf_core  ←  gpf_web
 - **`gpf_impala_storage/`**, **`gpf_impala2_storage/`**,
   **`gpf_gcp_storage/`** — optional storage backends
 - **`gpf_federation/`** — federated query support
-- **`rest_client/`** — REST API client library
+- **`gpf_rest_client/`** — REST API client library
 - **`spliceai_annotator/`**,
   **`gain_vep_annotator/`**,
   **`gain_demo_annotator/`** — external annotation

@@ -455,7 +455,7 @@ EOT
     build_run cp BUILD gpf_web/gpf_web/__build__.py
     build_run cp BUILD gpf_impala_storage/impala_storage/__build__.py
     build_run cp BUILD gpf_impala2_storage/impala2_storage/__build__.py
-    build_run cp BUILD rest_client/rest_client/__build__.py
+    build_run cp BUILD gpf_rest_client/rest_client/__build__.py
     build_run cp BUILD gpf_federation/federation/__build__.py
     build_run cp BUILD spliceai_annotator/spliceai_annotator/__build__.py
 
@@ -492,7 +492,7 @@ EOT
           gpf_impala_storage \
           gpf_impala2_storage \
           gpf_gcp_storage \
-          rest_client \
+          gpf_rest_client \
           gain_vep_annotator \
           gpf_federation \
           spliceai_annotator \
