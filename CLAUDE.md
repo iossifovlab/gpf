@@ -131,7 +131,7 @@ gain_core  ←  gpf_core  ←  gpf_web
 - **`gpf_web/`** — Web application: Django REST API on
   top of GPF. Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
-- **`gpf_impala_storage/`**, **`impala2_storage/`**,
+- **`gpf_impala_storage/`**, **`gpf_impala2_storage/`**,
   **`gpf_gcp_storage/`** — optional storage backends
 - **`gpf_federation/`** — federated query support
 - **`rest_client/`** — REST API client library

@@ -236,7 +236,7 @@ EOT
       cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf \
         ruff check --exclude gpf_impala_storage \
-        --exclude impala2_storage \
+        --exclude gpf_impala2_storage \
         --exclude typings \
         --exclude migrations \
         --exclude docs \
@@ -454,7 +454,7 @@ EOT
     build_run cp BUILD gpf_core/gpf/__build__.py
     build_run cp BUILD gpf_web/gpf_web/__build__.py
     build_run cp BUILD gpf_impala_storage/impala_storage/__build__.py
-    build_run cp BUILD impala2_storage/impala2_storage/__build__.py
+    build_run cp BUILD gpf_impala2_storage/impala2_storage/__build__.py
     build_run cp BUILD rest_client/rest_client/__build__.py
     build_run cp BUILD gpf_federation/federation/__build__.py
     build_run cp BUILD spliceai_annotator/spliceai_annotator/__build__.py
@@ -490,7 +490,7 @@ EOT
           --transform "s,^,gpf/," \
           gain_core/ gpf_core/ gpf_web/ \
           gpf_impala_storage \
-          impala2_storage \
+          gpf_impala2_storage \
           gpf_gcp_storage \
           rest_client \
           gain_vep_annotator \
@@ -508,7 +508,7 @@ EOT
     build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run rm -rf gain_core/gain/__build__.py gpf_core/gpf/__build__.py gpf_web/gpf_web/__build__.py VERSION
     build_run rm -rf gpf_impala_storage/impala_storage/__build__.py BUILD
-    build_run rm -rf impala2_storage/impala2_storage/__build__.py BUILD
+    build_run rm -rf gpf_impala2_storage/impala2_storage/__build__.py BUILD
   }
 
 }
