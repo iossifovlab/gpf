@@ -9,9 +9,9 @@ services:
     volumes:
     - ..:/wd
     environment:
-    - DAE_DB_DIR=/wd/federation/tmp/gpf_instance
+    - DAE_DB_DIR=/wd/gpf_federation/tmp/gpf_instance
 
-    entrypoint: /wd/federation/scripts/backend/run_gpf.sh
+    entrypoint: /wd/gpf_federation/scripts/backend/run_gpf.sh
 
     healthcheck:
       test: ["CMD-SHELL", "curl -X GET http://backend:21010/api/v3/datasets/hierarchy"]
@@ -23,12 +23,12 @@ services:
   runner:
     build:
       context: ..
-      dockerfile: federation/Dockerfile.runner
+      dockerfile: gpf_federation/Dockerfile.runner
     volumes:
     - ..:/wd
     environment:
       - TEST_REMOTE_HOST=http://backend:21010
-    entrypoint: /wd/federation/scripts/runner/run_tests.sh
+    entrypoint: /wd/gpf_federation/scripts/runner/run_tests.sh
     depends_on:
       backend:
         condition: service_healthy

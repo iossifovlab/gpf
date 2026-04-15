@@ -456,7 +456,7 @@ EOT
     build_run cp BUILD impala_storage/impala_storage/__build__.py
     build_run cp BUILD impala2_storage/impala2_storage/__build__.py
     build_run cp BUILD rest_client/rest_client/__build__.py
-    build_run cp BUILD federation/federation/__build__.py
+    build_run cp BUILD gpf_federation/federation/__build__.py
     build_run cp BUILD spliceai_annotator/spliceai_annotator/__build__.py
 
     local image_name="gpf-package"
@@ -494,7 +494,7 @@ EOT
           gcp_storage \
           rest_client \
           gain_vep_annotator \
-          federation \
+          gpf_federation \
           spliceai_annotator \
           environment.yml dev-environment.yml VERSION BUILD
     )

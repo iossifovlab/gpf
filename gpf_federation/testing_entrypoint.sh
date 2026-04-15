@@ -5,13 +5,13 @@ for d in /wd/gain_core /wd/gpf_core /wd/gpf_web; do
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
 
-rm -rf /wd/federation/tmp
-mkdir /wd/federation/tmp
+rm -rf /wd/gpf_federation/tmp
+mkdir /wd/gpf_federation/tmp
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    python /wd/federation/setup_testing_remote.py
+    python /wd/gpf_federation/setup_testing_remote.py
 
-export GRR_DEFINITION_FILE="/wd/federation/tmp/grr_definition.yaml"
+export GRR_DEFINITION_FILE="/wd/gpf_federation/tmp/grr_definition.yaml"
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     wdaemanage migrate
