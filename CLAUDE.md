@@ -135,7 +135,7 @@ gain_core  ←  gpf_core  ←  gpf_web
   **`gpf_gcp_storage/`** — optional storage backends
 - **`gpf_federation/`** — federated query support
 - **`gpf_rest_client/`** — REST API client library
-- **`spliceai_annotator/`**,
+- **`gain_spliceai_annotator/`**,
   **`gain_vep_annotator/`**,
   **`gain_demo_annotator/`** — external annotation
   plugins (Docker-based)

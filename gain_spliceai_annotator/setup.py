@@ -4,7 +4,7 @@ import setuptools
 import versioneer
 
 setuptools.setup(
-    name="gpf_spliceai_annotator",
+    name="gain_spliceai_annotator",
     version=versioneer.get_version(),  # type: ignore
     cmdclass=versioneer.get_cmdclass(),  # type: ignore
     author="Lubomir Chorbadjiev",

@@ -457,7 +457,7 @@ EOT
     build_run cp BUILD gpf_impala2_storage/impala2_storage/__build__.py
     build_run cp BUILD gpf_rest_client/rest_client/__build__.py
     build_run cp BUILD gpf_federation/federation/__build__.py
-    build_run cp BUILD spliceai_annotator/spliceai_annotator/__build__.py
+    build_run cp BUILD gain_spliceai_annotator/spliceai_annotator/__build__.py
 
     local image_name="gpf-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
@@ -495,7 +495,7 @@ EOT
           gpf_rest_client \
           gain_vep_annotator \
           gpf_federation \
-          spliceai_annotator \
+          gain_spliceai_annotator \
           environment.yml dev-environment.yml VERSION BUILD
     )
   }

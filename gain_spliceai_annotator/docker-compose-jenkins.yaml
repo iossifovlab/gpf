@@ -13,10 +13,10 @@ services:
   runner:
     build:
       context: ..
-      dockerfile: spliceai_annotator/Dockerfile.runner
+      dockerfile: gain_spliceai_annotator/Dockerfile.runner
     volumes:
     - ..:/wd
-    entrypoint: /wd/spliceai_annotator/scripts/run_tests.sh
+    entrypoint: /wd/gain_spliceai_annotator/scripts/run_tests.sh
     deploy:
       resources:
         reservations:

@@ -23,7 +23,7 @@ https://iossifovlab.com/gpfuserdocs/.
   **`gpf_gcp_storage/`** — optional genotype storages
 - **`gpf_federation/`**, **`gpf_rest_client/`** — federation and
   REST client
-- **`spliceai_annotator/`**,
+- **`gain_spliceai_annotator/`**,
   **`gain_vep_annotator/`**,
   **`gain_demo_annotator/`** — external annotation
   plugins
