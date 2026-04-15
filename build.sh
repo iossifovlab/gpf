@@ -491,7 +491,7 @@ EOT
           gain_core/ gpf_core/ gpf_web/ \
           impala_storage \
           impala2_storage \
-          gcp_storage \
+          gpf_gcp_storage \
           rest_client \
           gain_vep_annotator \
           gpf_federation \

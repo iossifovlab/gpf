@@ -20,7 +20,7 @@ https://iossifovlab.com/gpfuserdocs/.
   (Django 5.2). Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
 - **`impala_storage/`**, **`impala2_storage/`**,
-  **`gcp_storage/`** — optional genotype storages
+  **`gpf_gcp_storage/`** — optional genotype storages
 - **`gpf_federation/`**, **`rest_client/`** — federation and
   REST client
 - **`spliceai_annotator/`**,
@@ -160,7 +160,7 @@ gcloud config list project
 gcloud auth application-default login
 ```
 
-Run GCP storage tests (from the `gcp_storage/` directory):
+Run GCP storage tests (from the `gpf_gcp_storage/` directory):
 
 ```bash
 pytest -v gcp_storage/tests/

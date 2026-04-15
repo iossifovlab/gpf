@@ -132,7 +132,7 @@ gain_core  ←  gpf_core  ←  gpf_web
   top of GPF. Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
 - **`impala_storage/`**, **`impala2_storage/`**,
-  **`gcp_storage/`** — optional storage backends
+  **`gpf_gcp_storage/`** — optional storage backends
 - **`gpf_federation/`** — federated query support
 - **`rest_client/`** — REST API client library
 - **`spliceai_annotator/`**,
