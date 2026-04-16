@@ -17,13 +17,14 @@ class WDAEConfig(AppConfig):
 
     def ready(self) -> None:
         super().ready()
-        is_runserver = any(arg.casefold() == "runserver" for arg in sys.argv)
+        logger.info("WDAEConfig application started with: %s", sys.argv)
 
-        if not is_runserver:
+        is_runserver = any(arg.casefold() == "runserver" for arg in sys.argv)
+        is_gunicorn = any(arg.casefold() == "gunicorn" for arg in sys.argv)
+        if not is_runserver and not is_gunicorn:
             return
 
         logger.info("WDAEConfig application starting...")
-
         config_filepath = getattr(settings, "GPF_INSTANCE_CONFIG_PATH", None)
 
         logger.info("GPF instance config: %s", config_filepath)
