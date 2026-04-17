@@ -1,5 +1,5 @@
 import logging
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
@@ -8,11 +8,15 @@ from django.db.models import Count, Q
 from django.db.models.query import QuerySet
 from gpf_instance.gpf_instance import permission_update
 from rest_framework import filters, mixins, permissions, status, viewsets
-from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.decorators import api_view
+from rest_framework.decorators import (
+    authentication_classes as authentication_classes_decorator,
+)
 from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.authentication import (
     GPFOAuth2Authentication,
+    ReadOnlyDBAuthentication,
     SessionAuthenticationWithoutCSRF,
 )
 
@@ -42,6 +46,23 @@ class GroupsViewSet(
     search_fields = ("name",)
     lookup_field = "name"
 
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(
+        self, request: Request, *args: Any, **kwargs: Any,
+    ) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
+        return super().partial_update(request, *args, **kwargs, partial=True)
+
     def get_serializer_class(  # pyright: ignore
         self,
     ) -> type[GroupSerializer]:
@@ -64,8 +85,11 @@ class GroupsViewSet(
 
 
 @api_view(["POST"])
-@authentication_classes(
-    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+    GPFOAuth2Authentication,
+    SessionAuthenticationWithoutCSRF,
+))
 @permission_update
 def add_group_to_dataset(request: Request) -> Response:
     """Add group to dataset."""
@@ -87,8 +111,11 @@ def add_group_to_dataset(request: Request) -> Response:
 
 
 @api_view(["POST"])
-@authentication_classes(
-    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+    GPFOAuth2Authentication,
+    SessionAuthenticationWithoutCSRF,
+))
 @permission_update
 def remove_group_from_dataset(request: Request) -> Response:
     """Remove group from dataset."""
@@ -112,6 +139,11 @@ def remove_group_from_dataset(request: Request) -> Response:
 
 
 @api_view(["POST"])
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+    GPFOAuth2Authentication,
+    SessionAuthenticationWithoutCSRF,
+))
 @permission_update
 def add_user_to_group(request: Request) -> Response:
     """Add user to group."""
@@ -140,6 +172,11 @@ def add_user_to_group(request: Request) -> Response:
 
 
 @api_view(["POST"])
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+    GPFOAuth2Authentication,
+    SessionAuthenticationWithoutCSRF,
+))
 @permission_update
 def remove_user_from_group(request: Request) -> Response:
     """Remove user from group."""

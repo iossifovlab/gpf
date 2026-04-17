@@ -356,3 +356,5 @@ TEMPLATES = [
         },
     },
 ]
+
+READ_ONLY_DATABASE = False

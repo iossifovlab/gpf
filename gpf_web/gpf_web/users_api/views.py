@@ -27,11 +27,18 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from gpf_instance.gpf_instance import permission_update
 from oauth2_provider.models import get_application_model
 from rest_framework import filters, permissions, status, views, viewsets
-from rest_framework.decorators import action, api_view, authentication_classes
+from rest_framework.decorators import (
+    action,
+    api_view,
+)
+from rest_framework.decorators import (
+    authentication_classes as authentication_classes_decorator,
+)
 from rest_framework.request import Request
 from rest_framework.response import Response
 from utils.authentication import (
     GPFOAuth2Authentication,
+    ReadOnlyDBAuthentication,
     SessionAuthenticationWithoutCSRF,
 )
 from utils.email_regex import is_email_valid
@@ -119,6 +126,8 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, **kwargs: Any,
     ) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
         return super().create(request, *args, **kwargs)
 
     @request_logging(logger)
@@ -136,6 +145,8 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
         data = cast(dict[str, Any], request.data)
         if pk is not None:
             pk = int(pk)
@@ -153,6 +164,8 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
         data = cast(dict[str, Any], request.data)
         if pk is not None:
             pk = int(pk)
@@ -170,6 +183,8 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
         if pk is not None:
             pk = int(pk)
         if request.user.pk == pk:
@@ -208,6 +223,8 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @action(detail=True, methods=["get", "post"])
     def password_reset(self, request: Request, pk: int) -> Response:
         """Reset the password for a user."""
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
         self.check_permissions(request)
         user_model = get_user_model()
         try:
@@ -239,6 +256,8 @@ class ForgotPassword(views.APIView):
     @request_logging(logger)
     def post(self, request: Request) -> HttpResponse:
         """Send a reset password email to the user."""
+        auth = ReadOnlyDBAuthentication()
+        auth.authenticate(request)
         data = request.data
         form = WdaePasswordForgottenForm(data)  # pyright: ignore
         is_valid = form.is_valid()
@@ -466,6 +485,9 @@ class WdaeLoginView(views.APIView):
     """View for logging in."""
 
     @request_logging(logger)
+    @authentication_classes_decorator((
+        ReadOnlyDBAuthentication,
+    ))
     def get(self, request: Request) -> HttpResponse:
         """Render the login form."""
         next_uri = request.GET.get("next")
@@ -490,6 +512,9 @@ class WdaeLoginView(views.APIView):
         )
 
     @request_logging(logger)
+    @authentication_classes_decorator((
+        ReadOnlyDBAuthentication,
+    ))
     def post(self, request: Request) -> Response | HttpResponse:
         """Handle the login form."""
         data = request.data
@@ -523,6 +548,9 @@ class WdaeLoginView(views.APIView):
 
 @request_logging_function_view(logger)
 @api_view(["POST"])
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+))
 def change_password(request: Request) -> Response:
     """Change the password for a user."""
     data = request.data
@@ -553,6 +581,9 @@ def change_password(request: Request) -> Response:
 
 @request_logging_function_view(logger)
 @api_view(["POST"])
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+))
 def register(request: Request) -> Response:
     """Register a new user."""
     user_model = get_user_model()
@@ -633,7 +664,7 @@ def register(request: Request) -> Response:
 @request_logging_function_view(logger)
 @csrf_clear
 @api_view(["POST"])
-@authentication_classes(
+@authentication_classes_decorator(
     (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def logout(request: Request) -> Response:
     """Log out the currently logged-in user."""
@@ -644,7 +675,7 @@ def logout(request: Request) -> Response:
 @request_logging_function_view(logger)
 @ensure_csrf_cookie
 @api_view(["GET"])
-@authentication_classes(
+@authentication_classes_decorator(
     (GPFOAuth2Authentication, ))
 def get_user_info(request: Request) -> Response:
     """Get user info for currently logged-in user."""
@@ -671,6 +702,9 @@ def get_user_info(request: Request) -> Response:
 
 @request_logging_function_view(logger)
 @api_view(["POST"])
+@authentication_classes_decorator((
+    ReadOnlyDBAuthentication,
+))
 def check_verif_code(request: Request) -> Response:
     """Check if a verification code is valid."""
     data = request.data
