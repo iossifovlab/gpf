@@ -20,7 +20,7 @@ class WDAEConfig(AppConfig):
         logger.info("WDAEConfig application started with: %s", sys.argv)
 
         is_runserver = any(arg.casefold() == "runserver" for arg in sys.argv)
-        is_gunicorn = any(arg.casefold() == "gunicorn" for arg in sys.argv)
+        is_gunicorn = any("gunicorn" in arg.casefold() for arg in sys.argv)
         if not is_runserver and not is_gunicorn:
             return
 
