@@ -2,11 +2,15 @@
 
 from collections.abc import Callable
 
+from django.conf import settings
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from rest_framework import exceptions
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import (
+    BaseAuthentication,
+    SessionAuthentication,
+)
 from rest_framework.request import Request
 
 
@@ -56,6 +60,24 @@ class GPFOAuth2Authentication(OAuth2Authentication):
                 user = auth.application.user
             return user, auth
         return retval  # no user authenticated, just pass on
+
+
+class ReadOnlyDBAuthentication(BaseAuthentication):
+    """
+    Authentication class intended to be used as a safeguard
+    when we want the database to be read-only.
+
+    This is designed to be used when we want to migrate the production instance
+    soon, and want to ensure that the database state is frozen, so that
+    no new data can be missed during the migration.
+    """
+
+    def authenticate(self, _request: Request) -> None:
+        """Authenticate the request."""
+        if settings.READ_ONLY_DATABASE:
+            raise exceptions.AuthenticationFailed(
+                "Database is in read-only mode.",
+            )
 
 
 def oauth_cookie_to_header(
