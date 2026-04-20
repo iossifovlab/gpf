@@ -5,6 +5,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
+import traceback
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from types import TracebackType
@@ -21,7 +22,6 @@ from gain.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
 )
-import traceback
 
 logger = logging.getLogger(__name__)
 

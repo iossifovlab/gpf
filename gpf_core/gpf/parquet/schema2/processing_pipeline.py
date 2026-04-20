@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import itertools
 import logging
-from collections.abc import Iterable, Sequence
 import traceback
+from collections.abc import Iterable, Sequence
 from types import TracebackType
 from typing import cast
 

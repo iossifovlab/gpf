@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
+import traceback
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
@@ -14,7 +15,6 @@ from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from gain.utils.processing_pipeline import Filter
-import traceback
 
 logger = logging.getLogger(__name__)
 

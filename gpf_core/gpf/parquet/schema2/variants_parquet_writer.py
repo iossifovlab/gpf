@@ -5,9 +5,9 @@ import logging
 import os
 import pathlib
 import time
+import traceback
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
-import traceback
 from types import TracebackType
 from typing import cast
 

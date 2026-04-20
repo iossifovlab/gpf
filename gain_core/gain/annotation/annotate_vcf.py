@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import sys
+import traceback
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from dataclasses import dataclass
@@ -64,7 +65,6 @@ from gain.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from gain.utils.regions import Region
 from gain.utils.verbosity_configuration import VerbosityConfiguration
-import traceback
 
 logger = logging.getLogger("annotate_vcf")
 
