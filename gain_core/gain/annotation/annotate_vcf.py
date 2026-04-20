@@ -64,6 +64,7 @@ from gain.utils.fs_utils import is_compressed_filename, tabix_index_filename
 from gain.utils.processing_pipeline import Filter, PipelineProcessor, Source
 from gain.utils.regions import Region
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+import traceback
 
 logger = logging.getLogger("annotate_vcf")
 
@@ -107,7 +108,7 @@ class _VCFSource(Source):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.vcf.close()
 
@@ -198,7 +199,7 @@ class _VCFBatchSource(Source):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.source.__exit__(exc_type, exc_value, exc_tb)
 
@@ -359,7 +360,7 @@ class _VCFBatchWriter(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during writing vcf: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 

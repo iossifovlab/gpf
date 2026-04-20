@@ -14,6 +14,7 @@ from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
 from gain.utils.processing_pipeline import Filter
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +119,7 @@ class AnnotationPipelineContextManager(AbstractContextManager):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         return exc_type is None
 
 

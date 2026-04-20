@@ -8,6 +8,7 @@ from types import TracebackType
 from typing import Any
 
 from gain.utils.regions import Region
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class PipelineProcessor(AbstractContextManager):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.source.__exit__(exc_type, exc_value, exc_tb)
         for variant_filter in self.filters:

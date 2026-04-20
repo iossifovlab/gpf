@@ -21,6 +21,7 @@ from gain.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
 )
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -315,7 +316,7 @@ class AnnotationPipeline:
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         self.close()
         return exc_type is None
 
