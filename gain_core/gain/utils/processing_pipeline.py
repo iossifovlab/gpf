@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import logging
+import traceback
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
@@ -58,7 +59,7 @@ class PipelineProcessor(AbstractContextManager):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.source.__exit__(exc_type, exc_value, exc_tb)
         for variant_filter in self.filters:

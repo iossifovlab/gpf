@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import traceback
 from collections.abc import Iterable, Sequence
 from types import TracebackType
 from typing import cast
@@ -129,7 +130,7 @@ class AnnotationPipelineVariantsFilter(
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         return exc_type is None
 
     def filter(self, data: FullVariant) -> FullVariant:
@@ -175,7 +176,7 @@ class AnnotationPipelineVariantsBatchFilter(
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         return exc_type is None
 
     def filter(

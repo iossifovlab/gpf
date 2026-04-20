@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import sys
+import traceback
 from collections.abc import Iterable, Sequence
 from contextlib import closing
 from dataclasses import dataclass
@@ -107,7 +108,7 @@ class _VCFSource(Source):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.vcf.close()
 
@@ -198,7 +199,7 @@ class _VCFBatchSource(Source):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.source.__exit__(exc_type, exc_value, exc_tb)
 
@@ -359,7 +360,7 @@ class _VCFBatchWriter(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during writing vcf: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 

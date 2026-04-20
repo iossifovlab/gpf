@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import time
+import traceback
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from types import TracebackType
@@ -186,7 +187,7 @@ class VariantsParquetWriter(AbstractContextManager):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         return exc_type is None
 
     def _build_family_filename(
@@ -417,7 +418,7 @@ class Schema2VariantConsumer(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
@@ -441,7 +442,7 @@ class Schema2VariantBatchConsumer(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
@@ -466,7 +467,7 @@ class Schema2SummaryVariantConsumer(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
@@ -490,7 +491,7 @@ class Schema2SummaryVariantBatchConsumer(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 

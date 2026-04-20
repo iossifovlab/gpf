@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
+import traceback
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
@@ -118,7 +119,7 @@ class AnnotationPipelineContextManager(AbstractContextManager):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         return exc_type is None
 
 

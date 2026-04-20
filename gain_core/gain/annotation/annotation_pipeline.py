@@ -5,6 +5,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
+import traceback
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from types import TracebackType
@@ -315,7 +316,7 @@ class AnnotationPipeline:
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
         self.close()
         return exc_type is None
 

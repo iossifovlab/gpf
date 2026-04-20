@@ -220,7 +220,7 @@ class _CSVBatchSource(Source):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.source.__exit__(exc_type, exc_value, exc_tb)
 
@@ -266,7 +266,7 @@ class _CSVWriter(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.out_file.close()
 
@@ -316,7 +316,7 @@ class _CSVBatchWriter(Filter):
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb)
+                exc_type, exc_value, traceback.format_tb(exc_tb))
 
         self.writer.__exit__(exc_type, exc_value, exc_tb)
 
