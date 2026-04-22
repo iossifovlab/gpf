@@ -129,13 +129,13 @@ class _ScoreDef:
         default_pos_aggregators = {
             "float": "mean",
             "int": "mean",
-            "str": "join(,)",
+            "str": "list",
             "bool": None,
         }
         default_allele_aggregators = {
             "float": "max",
             "int": "max",
-            "str": "join(,)",
+            "str": "list",
             "bool": None,
         }
         if self.pos_aggregator is None:
