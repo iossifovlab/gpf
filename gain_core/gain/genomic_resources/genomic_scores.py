@@ -767,10 +767,16 @@ class GenomicScore(ResourceConfigValidationMixin):
         pos_begin: int | None,
         pos_end: int | None,
     ) -> Iterator[ScoreLine]:
-        for line in self.table.get_records_in_region(
-            chrom, pos_begin, pos_end,
-        ):
-            yield ScoreLine(line, self.score_definitions)
+        try:
+            for line in self.table.get_records_in_region(
+                chrom, pos_begin, pos_end,
+            ):
+                yield ScoreLine(line, self.score_definitions)
+        except Exception:
+            logger.exception(
+                "Error fetching lines for region %s:%s-%s in resource %s",
+                chrom, pos_begin, pos_end, self.resource_id)
+            raise
 
     def get_all_chromosomes(self) -> list[str]:
         if not self.is_open():
