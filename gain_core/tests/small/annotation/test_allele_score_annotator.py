@@ -240,7 +240,12 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
     (VCFAllele("1", 16, "CA", "G"), (0.03, "cag")),
     (VCFAllele("1", 16, "C", "CG"), (2.0, "ccg")),
     (VCFAllele("1", 16, "C", "CA"), (1.0, "cca")),
-    (Region("1", 10, 20), (1.02, "ac,ag,at,ca,cca,ccg,ct,cag")),
+    (
+        Region("1", 10, 20),
+        (
+            1.02, ["ac", "ag", "at", "ca", "cca", "ccg", "ct", "cag"],
+        ),
+    ),
 ])
 def test_allele_score_annotator_with_default_annotation(
     annotation_pipeline: AnnotationPipeline,

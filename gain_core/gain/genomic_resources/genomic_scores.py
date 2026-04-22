@@ -1477,6 +1477,39 @@ class CNV:
         return self.pos_end - self.pos_begin
 
 
+@dataclass
+class _CNVScoreDef(_ScoreDef):
+
+    def __post_init__(self) -> None:
+        if self.value_type is None:
+            return
+        default_na_values = {
+            "str": {},
+            "float": {"", "nan", ".", "NA"},
+            "int": {"", "nan", ".", "NA"},
+            "bool": {},
+        }
+        default_pos_aggregators = {
+            "float": "mean",
+            "int": "mean",
+            "str": "join(,)",
+            "bool": None,
+        }
+        default_allele_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "join(,)",
+            "bool": None,
+        }
+        if self.pos_aggregator is None:
+            self.pos_aggregator = default_pos_aggregators[self.value_type]
+        if self.allele_aggregator is None:
+            self.allele_aggregator = \
+                default_allele_aggregators[self.value_type]
+        if self.na_values is None:
+            self.na_values = default_na_values[self.value_type]
+
+
 class CnvCollection(GenomicScore):
     """A collection of CNVs."""
 
@@ -1535,6 +1568,51 @@ class CnvCollection(GenomicScore):
             cnvs.append(CNV(line.chrom, line.pos_begin, line.pos_end,
                             attributes))
         return cnvs
+
+
+    @staticmethod
+    def _parse_scoredef_config(
+        config: dict[str, Any],
+    ) -> dict[str, _ScoreDef]:
+        """Parse ScoreDef configuration."""
+        scores = {}
+
+        for score_conf in config["scores"]:
+            value_parser = SCORE_TYPE_PARSERS[score_conf.get("type", "float")]
+
+            col_name = score_conf.get("column_name") \
+                or score_conf.get("name")
+            col_index_str = score_conf.get("column_index") \
+                or score_conf.get("index")
+            col_index = int(col_index_str) if col_index_str else None
+
+            hist_conf = build_histogram_config(score_conf)
+            nuc_aggregator = score_conf.get("nucleotide_aggregator")
+            allele_aggregator = score_conf.get("allele_aggregator")
+            if nuc_aggregator is not None:
+                logger.warning(
+                    "Use of 'nucleotide_aggregator' is deprecated, use "
+                    "'allele_aggregator' instead.")
+                assert allele_aggregator is None
+                allele_aggregator = nuc_aggregator
+
+            score_def = _CNVScoreDef(
+                score_id=score_conf["id"],
+                desc=score_conf.get("desc", ""),
+                value_type=score_conf.get("type"),
+                pos_aggregator=score_conf.get("position_aggregator"),
+                allele_aggregator=allele_aggregator,
+                small_values_desc=score_conf.get("small_values_desc"),
+                large_values_desc=score_conf.get("large_values_desc"),
+                col_name=col_name,
+                col_index=col_index,
+                hist_conf=hist_conf,
+                value_parser=value_parser,
+                na_values=score_conf.get("na_values"),
+            )
+
+            scores[score_conf["id"]] = score_def
+        return scores
 
 
 _INMEMORY_CNV_CACHE: dict[str, GenomicScore] = {}

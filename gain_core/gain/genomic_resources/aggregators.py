@@ -4,8 +4,8 @@ import abc
 import math
 import re
 from collections import Counter
-from collections.abc import Callable
-from typing import Any, cast
+from collections.abc import Callable, Iterable
+from typing import Any, Generator, cast
 
 
 class Aggregator(abc.ABC):
@@ -284,6 +284,13 @@ class ListAggregator(Aggregator):
         super().__init__()
         self.values: list[Any] = []
 
+    def _flatten(self, items: Any) -> Generator[Any, None, None]:
+        for item in items:
+            if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
+                yield from self._flatten(item)
+            else:
+                yield item
+
     def _add_internal(
         self, value: Any,
         **kwargs: Any,  # noqa: ARG002
@@ -296,7 +303,7 @@ class ListAggregator(Aggregator):
         self.values.clear()
 
     def get_final(self) -> Any:
-        return self.values
+        return list(self._flatten(self.values))
 
 
 class DictAggregator(Aggregator):
