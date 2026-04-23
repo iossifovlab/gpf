@@ -689,6 +689,7 @@ class CategoricalHistogram(Statistic):
         self,
         outfile: IO,
         score_id: str,
+        *,
         y_axis_label: str | None = None,
         small_values_description: str | None = None,
         large_values_description: str | None = None,
@@ -911,8 +912,8 @@ def plot_histogram(
             hist.plot(
                 outfile,
                 score_id,
-                small_values_desc,
-                large_values_desc,
+                small_values_description=small_values_desc,
+                large_values_description=large_values_desc,
             )
         return
 
