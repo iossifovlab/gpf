@@ -1569,7 +1569,6 @@ class CnvCollection(GenomicScore):
                             attributes))
         return cnvs
 
-
     @staticmethod
     def _parse_scoredef_config(
         config: dict[str, Any],
@@ -1612,7 +1611,7 @@ class CnvCollection(GenomicScore):
             )
 
             scores[score_conf["id"]] = score_def
-        return scores
+        return cast(dict[str, _ScoreDef], scores)
 
 
 _INMEMORY_CNV_CACHE: dict[str, GenomicScore] = {}

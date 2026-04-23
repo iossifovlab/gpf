@@ -4,8 +4,8 @@ import abc
 import math
 import re
 from collections import Counter
-from collections.abc import Callable, Iterable
-from typing import Any, Generator, cast
+from collections.abc import Callable, Generator, Iterable
+from typing import Any, cast
 
 
 class Aggregator(abc.ABC):
@@ -286,7 +286,10 @@ class ListAggregator(Aggregator):
 
     def _flatten(self, items: Any) -> Generator[Any, None, None]:
         for item in items:
-            if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
+            if (
+                isinstance(item, Iterable)
+                and not isinstance(item, (str, bytes))
+            ):
                 yield from self._flatten(item)
             else:
                 yield item
