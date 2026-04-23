@@ -40,8 +40,8 @@ import {
   PersonSet, PersonSetCollection, PersonSetCollections } from 'app/datasets/datasets';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { Store, StoreModule } from '@ngrx/store';
-import { PresentInParent, presentInParentReducer } from 'app/present-in-parent/present-in-parent.state';
-import { PedigreeSelector, pedigreeSelectorReducer } from 'app/pedigree-selector/pedigree-selector.state';
+import { presentInParentReducer } from 'app/present-in-parent/present-in-parent.state';
+import { pedigreeSelectorReducer } from 'app/pedigree-selector/pedigree-selector.state';
 import { FamilyTags } from 'app/family-tags/family-tags';
 import { GeneSet, GeneSetsCollection } from 'app/gene-sets/gene-sets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
@@ -229,7 +229,7 @@ const allStatesMock = [
   {
     id: 'personSetCollection',
     checkedValues: ['checkedValue1']
-  } as PedigreeSelector,
+  },
   ['familyId1'],
   {
     selectedFamilyTags: ['tag1'],
@@ -315,23 +315,23 @@ class MockQueryService {
   public streamingSubject = new Subject();
   public streamingFinishedSubject = new Subject();
   public downloadVariants(): Observable<HttpResponse<Blob>> {
-    return of(null) as Observable<HttpResponse<Blob>>;
+    return of(null);
   }
 
   public cancelStreamPost(): void {
     return null;
   }
 
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   public getGenotypePreviewVariantsByFilter(
     dataset: Dataset,
     filter,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     maxVariantsCount: number = 1001,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     callback?: () => void
   ): GenotypePreviewVariantsArray {
     return new GenotypePreviewVariantsArray();
   }
+  /* eslint-enable */
 }
 
 
@@ -455,7 +455,7 @@ describe('GenotypeBrowserComponent', () => {
       {
         presentInParent: [],
         rarity: null
-      } as PresentInParent
+      }
     ]));
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
@@ -478,7 +478,7 @@ describe('GenotypeBrowserComponent', () => {
         rarityType: 'interval',
         rarityIntervalStart: 0,
         rarityIntervalEnd: 1,
-      }} as PresentInParent;
+      }};
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
     component.ngAfterViewInit();
@@ -492,15 +492,17 @@ describe('GenotypeBrowserComponent', () => {
     allStatesMock[5] = {
       presentInParent: ['neither'],
       rarity: {
-        rarityType: 'ultraRare'
-      }} as PresentInParent;
+        rarityType: 'ultraRare',
+        rarityIntervalStart: 0,
+        rarityIntervalEnd: 1,
+      }};
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       mockDataset,
       {
         presentInParent: [],
         rarity: null
-      } as PresentInParent
+      }
     ]));
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));

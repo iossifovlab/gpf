@@ -753,13 +753,13 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should toggle dropdown', () => {
-    component['dropdownTrigger'] = {panelOpen: true, closePanel: jest.fn()} as never as MatAutocompleteTrigger;
+    component['dropdownTrigger'] = {panelOpen: true, closePanel: jest.fn()} as unknown as MatAutocompleteTrigger;
     const closeSpy = jest.spyOn(component['dropdownTrigger'], 'closePanel');
     component.openCloseDropdown();
     expect(component.isDropdownOpen).toBe(false);
     expect(closeSpy).toHaveBeenCalledWith();
 
-    component['dropdownTrigger'] = {panelOpen: false, openPanel: jest.fn()} as never as MatAutocompleteTrigger;
+    component['dropdownTrigger'] = {panelOpen: false, openPanel: jest.fn()} as unknown as MatAutocompleteTrigger;
     const openSpy = jest.spyOn(component['dropdownTrigger'], 'openPanel');
     component.openCloseDropdown();
     expect(component.isDropdownOpen).toBe(true);

@@ -43,9 +43,9 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
     fixture.detectChanges();
 
     expect(component.xScale.domain()).toStrictEqual(['0', '1', '2', '3']);
@@ -72,9 +72,9 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     expect(component.xScale.domain()).toStrictEqual(
       ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
@@ -112,11 +112,11 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
 
     component.logScaleY = true;
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     expect(component.xScale.domain()).toStrictEqual(
       ['0', '1', '2']
@@ -147,9 +147,9 @@ describe('HistogramComponent', () => {
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
 
-    const changes = {bins: binsChange, bars: barsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -168,9 +168,9 @@ describe('HistogramComponent', () => {
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
 
-    const changes = {bins: binsChange, bars: barsChange, rangesCounts: rangesCountsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange, rangesCounts: rangesCountsChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     expect(component.insideRangeText).toBe('2 (6.67%)');
   });
@@ -186,9 +186,9 @@ describe('HistogramComponent', () => {
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
 
-    const changes = {bins: binsChange, bars: barsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
     component.selectedStartIndex = 1;
@@ -210,9 +210,9 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     expect(component.showMinMaxInputWithDefaultValue).toBe(true);
   });
@@ -227,8 +227,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
     component.selectedStartIndex = 1;
@@ -249,8 +249,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
     component.selectedEndIndex = 2;
@@ -271,8 +271,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -295,9 +295,9 @@ describe('HistogramComponent', () => {
     const barsChange = new SimpleChange(component.bars, bars, true);
     const rangeStartChange = new SimpleChange(component.rangeStart, null, true);
     component.rangeStart = null;
-    const changes = {bins: binsChange, bars: barsChange, rangeStart: rangeStartChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange, rangeStart: rangeStartChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -318,9 +318,9 @@ describe('HistogramComponent', () => {
     const barsChange = new SimpleChange(component.bars, bars, true);
     const rangeEndChange = new SimpleChange(component.rangeEnd, null, true);
     component.rangeEnd = null;
-    const changes = {bins: binsChange, bars: barsChange, rangeEnd: rangeEndChange};
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange, rangeEnd: rangeEndChange};
 
-    component.ngOnChanges(changes as SimpleChanges);
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -340,8 +340,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -413,8 +413,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.setRangeStartFromInput('2');
     expect(component.rangeStart).toBe(2);
@@ -432,8 +432,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeStart = null;
     component.ngOnInit();
@@ -453,8 +453,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.setRangeEndFromInput('4');
     expect(component.rangeEnd).toBe(4);
@@ -472,8 +472,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeEnd = null;
     component.ngOnInit();
@@ -507,8 +507,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -526,8 +526,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -545,8 +545,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -564,8 +564,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.ngOnInit();
 
@@ -583,8 +583,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.startX = 215;
     expect(component.selectedStartIndex).toBe(2);
@@ -598,8 +598,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeStart = 3;
     component.startX = 870;
@@ -615,8 +615,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.endX = 215;
     expect(component.selectedEndIndex).toBe(1);
@@ -630,8 +630,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeEnd = 2;
     component.endX = -130;
@@ -661,8 +661,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.isInteractive = false;
 
@@ -681,8 +681,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeStart = null;
     component.ngOnInit();
@@ -702,8 +702,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeEnd = null;
     component.ngOnInit();
@@ -723,8 +723,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.setRangeStartFromInput('-40');
 
@@ -741,8 +741,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.setRangeEndFromInput('80');
 
@@ -759,8 +759,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.domainMax = 20;
     component.rangeEnd = 10;
@@ -782,8 +782,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeStart = undefined;
     // trigger validation without changing range start value
@@ -802,8 +802,8 @@ describe('HistogramComponent', () => {
     component.bars = bars;
     const binsChange = new SimpleChange(component.bins, bins, true);
     const barsChange = new SimpleChange(component.bars, bars, true);
-    const changes = {bins: binsChange, bars: barsChange};
-    component.ngOnChanges(changes as SimpleChanges);
+    const changes: SimpleChanges = {bins: binsChange, bars: barsChange};
+    component.ngOnChanges(changes);
 
     component.rangeEnd = undefined;
     // trigger validation without changing range end value

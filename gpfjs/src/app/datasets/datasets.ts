@@ -93,7 +93,7 @@ export class PersonSetCollections {
         result = result.concat(ps.domain);
       }
     }
-    result.push({color: '#E0E0E0', id: 'missing-person', name: 'missing-person'} as PersonSet); // Default legend value
+    result.push({color: '#E0E0E0', id: 'missing-person', name: 'missing-person'}); // Default legend value
     return result;
   }
 }

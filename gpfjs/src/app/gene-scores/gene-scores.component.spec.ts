@@ -11,7 +11,7 @@ import { GeneScoresService } from './gene-scores.service';
 import { geneScoresReducer, setGeneScoreCategorical, setGeneScoreContinuous } from './gene-scores.state';
 import { Store, StoreModule } from '@ngrx/store';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
-import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
+import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
 
@@ -130,7 +130,7 @@ describe('GeneScoresComponent', () => {
     component.selectedCategoricalHistogramView = 'range selector';
     component.categoricalValues = ['name1', 'name2', 'name3'];
 
-    component.switchCategoricalHistogramView('click selector' as CategoricalHistogramView);
+    component.switchCategoricalHistogramView('click selector');
 
     expect(component.selectedCategoricalHistogramView).toBe('click selector');
     expect(component.categoricalValues).toStrictEqual([]);
@@ -147,7 +147,7 @@ describe('GeneScoresComponent', () => {
     component.selectedCategoricalHistogramView = 'click selector';
     component.categoricalValues = ['name1', 'name2', 'name3'];
 
-    component.switchCategoricalHistogramView('click selector' as CategoricalHistogramView);
+    component.switchCategoricalHistogramView('click selector');
 
     expect(component.selectedCategoricalHistogramView).toBe('click selector');
     expect(component.categoricalValues).toStrictEqual(['name1', 'name2', 'name3']);

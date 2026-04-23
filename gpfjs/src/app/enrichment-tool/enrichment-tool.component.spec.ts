@@ -23,7 +23,7 @@ import { enrichmentModelsReducer } from 'app/enrichment-models/enrichment-models
 import { datasetIdReducer } from 'app/datasets/datasets.state';
 import { geneSymbolsReducer } from 'app/gene-symbols/gene-symbols.state';
 import { geneSetsReducer } from 'app/gene-sets/gene-sets.state';
-import { geneScoresReducer } from 'app/gene-scores/gene-scores.state';
+import { geneScoresReducer, GeneScoresState } from 'app/gene-scores/gene-scores.state';
 import { errorsReducer } from 'app/common/errors.state';
 import { DenovoPersonSetCollection, GeneSet, GeneSetsCollection, GeneSetType } from 'app/gene-sets/gene-sets';
 import { EnrichmentResult, EnrichmentResults } from 'app/enrichment-query/enrichment-result';
@@ -267,7 +267,7 @@ describe('EnrichmentToolComponent', () => {
       rangeEnd: null,
       values: ['val1', 'val2'],
       categoricalView: 'range selector'
-    };
+    } as GeneScoresState;
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetMock,

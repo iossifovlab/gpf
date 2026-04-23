@@ -325,7 +325,7 @@ describe('GeneProfilesTableComponent', () => {
   });
 
   it('should update when change happens', () => {
-    const change = {} as SimpleChanges;
+    const change: SimpleChanges = {};
     component.ngOnChanges(change);
     component.leaves.forEach((leaf, index) => {
       expect(leaf.id).toStrictEqual(gridData[index].id);
@@ -342,7 +342,7 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should search', () => {
     component.config = cloneDeep(configMock);
-    const change = {} as SimpleChanges;
+    const change: SimpleChanges = {};
     component.ngOnChanges(change);
     component.search('mockSearch');
 
@@ -389,7 +389,7 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should sort genes', () => {
     component.config = cloneDeep(configMock);
-    const change = {} as SimpleChanges;
+    const change: SimpleChanges = {};
     component.ngOnChanges(change);
     component.genes = undefined;
 
@@ -550,7 +550,7 @@ describe('GeneProfilesTableComponent', () => {
     component.config = cloneDeep(configMock);
     component.ngOnInit();
 
-    const change = {} as SimpleChanges;
+    const change: SimpleChanges = {};
     component.ngOnChanges(change);
     expect(component.leavesIds).toStrictEqual([
       'column1',

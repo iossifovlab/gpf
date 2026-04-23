@@ -76,7 +76,7 @@ describe('GenomicScoresComponent', () => {
       rangeEnd: null,
       values: ['value1', 'value2', 'value3'],
       categoricalView: 'range selector',
-    } as GenomicScoreState;
+    };
 
     fixture.detectChanges();
   });

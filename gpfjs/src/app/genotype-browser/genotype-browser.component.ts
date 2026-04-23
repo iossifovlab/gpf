@@ -52,7 +52,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
   public showTable = false;
   public legend: Array<PersonSet>;
 
-  public disableQueryButtons;
+  public disableQueryButtons: boolean;
   private routerSubscription: Subscription;
 
   public selectedDatasetId: string;
