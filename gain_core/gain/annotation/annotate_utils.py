@@ -83,7 +83,7 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
         return ",".join(stringify(v, vcf=vcf) for v in value)
     if isinstance(value, dict):
         return ";".join(
-            f"{stringify(k, vcf=vcf)}: {stringify(v, vcf=vcf)}"
+            f"{stringify(k, vcf=vcf)}:{stringify(v, vcf=vcf)}"
             for k, v in value.items()
         )
     return str(value)

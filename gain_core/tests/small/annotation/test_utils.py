@@ -135,21 +135,21 @@ def test_stringify_tuple_vcf() -> None:
 
 
 def test_stringify_dict_notvcf() -> None:
-    assert stringify({"a": 1, "b": 2}, vcf=False) == "a: 1;b: 2"
-    assert stringify({"key": None}, vcf=False) == "key: "
-    assert stringify({"x": True, "y": False}, vcf=False) == "x: yes;y: "
+    assert stringify({"a": 1, "b": 2}, vcf=False) == "a:1;b:2"
+    assert stringify({"key": None}, vcf=False) == "key:"
+    assert stringify({"x": True, "y": False}, vcf=False) == "x:yes;y:"
     assert stringify({}, vcf=False) == ""
 
 
 def test_stringify_dict_vcf() -> None:
-    assert stringify({"a": 1, "b": 2}, vcf=True) == "a: 1;b: 2"
-    assert stringify({"key": None}, vcf=True) == "key: ."
-    assert stringify({"x": True, "y": False}, vcf=True) == "x: yes;y: ."
+    assert stringify({"a": 1, "b": 2}, vcf=True) == "a:1;b:2"
+    assert stringify({"key": None}, vcf=True) == "key:."
+    assert stringify({"x": True, "y": False}, vcf=True) == "x:yes;y:."
     assert stringify({}, vcf=True) == ""
 
 
 def test_stringify_nested_structures() -> None:
     assert stringify([[1, 2], [3, 4]], vcf=False) == "1,2,3,4"
-    assert stringify([{"a": 1}, {"b": 2}], vcf=False) == "a: 1,b: 2"
-    assert stringify({"a": [1, 2], "b": 3.5}, vcf=False) == "a: 1,2;b: 3.5"
-    assert stringify({"outer": {"inner": 1}}, vcf=False) == "outer: inner: 1"
+    assert stringify([{"a": 1}, {"b": 2}], vcf=False) == "a:1,b:2"
+    assert stringify({"a": [1, 2], "b": 3.5}, vcf=False) == "a:1,2;b:3.5"
+    assert stringify({"outer": {"inner": 1}}, vcf=False) == "outer:inner:1"
