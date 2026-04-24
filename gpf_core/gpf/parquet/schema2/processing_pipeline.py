@@ -7,6 +7,7 @@ from collections.abc import Iterable, Sequence
 from types import TracebackType
 from typing import cast
 
+from gain.annotation.annotate_utils import stringify
 from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
 )
@@ -53,10 +54,15 @@ class AnnotationPipelineVariantsFilterMixin:
             # pylint: disable=protected-access
             summary_allele._effects = allele_effects  # noqa: SLF001
             del annotation.context["allele_effects"]
-        public_attributes = {
-            key: value for key, value in annotation.context.items()
-            if key not in self._annotation_internal_attributes
-        }
+        public_attributes = {}
+        for key, value in annotation.context.items():
+            if key in self._annotation_internal_attributes:
+                continue
+            ainfo = self.annotation_pipeline.get_attribute_info(key)
+            if ainfo and ainfo.value_type == "str" and value is not None and \
+                    not isinstance(value, str):
+                value = stringify(value)
+            public_attributes[key] = value
         summary_allele.update_attributes(public_attributes)
 
 

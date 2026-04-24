@@ -298,6 +298,7 @@ class DummyAnnotator(Annotator):
         attributes = [AttributeInfo(
             "index", "index",
             internal=False,
+            _type="int",
             parameters={})]
         info = AnnotatorInfo(
             "dummy_annotator",
