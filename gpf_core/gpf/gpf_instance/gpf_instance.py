@@ -2,6 +2,7 @@
 # pylint: disable=import-outside-toplevel
 from __future__ import annotations
 
+import copy
 import logging
 import os
 from functools import cached_property
@@ -47,6 +48,24 @@ from gpf.studies.study import GenotypeData
 from gpf.studies.variants_db import VariantsDb
 
 logger = logging.getLogger(__name__)
+
+
+_DEFAULT_GRR_DEFINITION = {
+    "id": "default_gpf_grr",
+    "type": "group",
+    "children": [
+        {
+            "id": "default_gpf",
+            "type": "http",
+            "url": "https://grr-gpf.iossifovlab.com",
+        },
+        {
+            "id": "default",
+            "type": "http",
+            "url": "https://grr.iossifovlab.com",
+        },
+    ],
+}
 
 
 class GPFInstance:
@@ -160,12 +179,20 @@ class GPFInstance:
         # pylint: disable=import-outside-toplevel
         from gain.genomic_resources.repository_factory import (
             build_genomic_resource_repository,
+            get_default_grr_definition_path,
         )
         if self.dae_config.grr:
             self._grr = build_genomic_resource_repository(
                 self.dae_config.grr.to_dict())
             return self._grr
-        self._grr = build_genomic_resource_repository()
+        # check user or environment GRR definition
+        grr_file = get_default_grr_definition_path()
+        if grr_file is not None:
+            self._grr = build_genomic_resource_repository(file_name=grr_file)
+            return self._grr
+        self._grr = build_genomic_resource_repository(
+            definition=copy.deepcopy(_DEFAULT_GRR_DEFINITION),
+        )
         return self._grr
 
     @cached_property
