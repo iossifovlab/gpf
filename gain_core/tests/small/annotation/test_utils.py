@@ -104,3 +104,52 @@ def test_stringify_gene_rank_score_values() -> None:
     assert stringify(12345., vcf=False) == "12345"
     assert stringify(1234., vcf=False) == "1234"
     assert stringify(123., vcf=False) == "123"
+
+
+def test_stringify_list_notvcf() -> None:
+    assert stringify([1, 2, 3], vcf=False) == "1,2,3"
+    assert stringify(["a", "b", "c"], vcf=False) == "a,b,c"
+    assert stringify([1.5, 123.5, 123456.7], vcf=False) == "1.5,123.5,1.23e+05"
+    assert stringify([None, "", True], vcf=False) == ",,yes"
+    assert stringify([], vcf=False) == ""
+
+
+def test_stringify_list_vcf() -> None:
+    assert stringify([1, 2, 3], vcf=True) == "1,2,3"
+    assert stringify(["a", "b", "c"], vcf=True) == "a,b,c"
+    assert stringify([None, "", True], vcf=True) == ".,.,yes"
+    assert stringify([], vcf=True) == ""
+
+
+def test_stringify_tuple_notvcf() -> None:
+    assert stringify((1, 2, 3), vcf=False) == "1,2,3"
+    assert stringify(("a", "b"), vcf=False) == "a,b"
+    assert stringify((None, True, "x"), vcf=False) == ",yes,x"
+    assert stringify((), vcf=False) == ""
+
+
+def test_stringify_tuple_vcf() -> None:
+    assert stringify((1, 2, 3), vcf=True) == "1,2,3"
+    assert stringify((None, True, "x"), vcf=True) == ".,yes,x"
+    assert stringify((), vcf=True) == ""
+
+
+def test_stringify_dict_notvcf() -> None:
+    assert stringify({"a": 1, "b": 2}, vcf=False) == "a: 1;b: 2"
+    assert stringify({"key": None}, vcf=False) == "key: "
+    assert stringify({"x": True, "y": False}, vcf=False) == "x: yes;y: "
+    assert stringify({}, vcf=False) == ""
+
+
+def test_stringify_dict_vcf() -> None:
+    assert stringify({"a": 1, "b": 2}, vcf=True) == "a: 1;b: 2"
+    assert stringify({"key": None}, vcf=True) == "key: ."
+    assert stringify({"x": True, "y": False}, vcf=True) == "x: yes;y: ."
+    assert stringify({}, vcf=True) == ""
+
+
+def test_stringify_nested_structures() -> None:
+    assert stringify([[1, 2], [3, 4]], vcf=False) == "1,2,3,4"
+    assert stringify([{"a": 1}, {"b": 2}], vcf=False) == "a: 1,b: 2"
+    assert stringify({"a": [1, 2], "b": 3.5}, vcf=False) == "a: 1,2;b: 3.5"
+    assert stringify({"outer": {"inner": 1}}, vcf=False) == "outer: inner: 1"

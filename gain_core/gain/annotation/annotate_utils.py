@@ -79,6 +79,13 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
         return "yes" if value else ("." if vcf else "")
     if vcf is True and value == "":
         return "."
+    if isinstance(value, (list, tuple)):
+        return ",".join(stringify(v, vcf=vcf) for v in value)
+    if isinstance(value, dict):
+        return ";".join(
+            f"{stringify(k, vcf=vcf)}: {stringify(v, vcf=vcf)}"
+            for k, v in value.items()
+        )
     return str(value)
 
 
