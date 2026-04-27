@@ -237,7 +237,8 @@ GENE_SCORES_TEMPLATE = """
                     <span class="close">&times;</span>
                     <img src="{{ score.get_histogram_image_filename(score_id) }}"
                         alt="{{ "HISTOGRAM FOR " + score_id }}"
-                        title="{{ score_id | replace(" ", "_") }}">
+                        title="{{ score_id | replace(" ", "_") }}"
+                        style="max-width: min(100%, 800px);">
                 </div>
             </div>
         {%- endfor %}
