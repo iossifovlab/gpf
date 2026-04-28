@@ -168,10 +168,16 @@ repo.
 
 **Defined in `core/pyproject.toml`:**
 
-1. **`gpf.genotype_storage.factories`** — inmemory,
+1. **`gain.genomic_resources.plugins`** —
+   GPFInstanceContextProvider (gpf hooks into the gain
+   plugin system; the entry point lives here because the
+   provider references gpf-core code)
+2. **`gain.genomic_resources.implementations`** —
+   enrichment backgrounds (gene weights, Samocha)
+3. **`gpf.genotype_storage.factories`** — inmemory,
    duckdb (legacy, standard, parquet, S3, S3 parquet),
    parquet
-2. **`gpf.import_tools.storages`** — import storage
+4. **`gpf.import_tools.storages`** — import storage
    backends matching each genotype storage type
    (schema2, inmemory, duckdb variants, parquet)
 

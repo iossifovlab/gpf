@@ -113,6 +113,16 @@ duckdb_s3_parquet = "gpf.duckdb_storage.duckdb_import_storage:DuckDbS3ParquetImp
 duckdb_s3 = "gpf.duckdb_storage.duckdb_import_storage:DuckDbS3ImportStorage"
 parquet = "gpf.parquet_storage.storage:ParquetImportStorage"
 
+# gpf-side plugins that hook into the gain plugin system.
+# These cannot live in the gain repo because they reference gpf-core
+# code (GPFInstance, enrichment_tool); gain doesn't depend on gpf.
+[project.entry-points."gain.genomic_resources.plugins"]
+gpf_instance_context = "gpf.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider"
+
+[project.entry-points."gain.genomic_resources.implementations"]
+gene_weights_enrichment_background = "gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background"
+samocha_enrichment_background = "gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background"
+
 [dependency-groups]
 dev = [
     "coverage",

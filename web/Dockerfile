@@ -36,12 +36,13 @@ RUN git clone https://github.com/iossifovlab/gain.git /gain \
 WORKDIR /workspace
 
 # Workspace manifests first — maximises layer cache hits when only source
-# changes.
+# changes. README.md files are required by hatchling's metadata validation
+# (the `readme = "README.md"` field in each pyproject.toml).
 COPY pyproject.toml uv.lock ruff.toml mypy.ini pylintrc ./
-COPY core/pyproject.toml ./core/
-COPY web/pyproject.toml ./web/
+COPY core/pyproject.toml core/README.md ./core/
+COPY web/pyproject.toml web/README.md ./web/
 COPY federation/pyproject.toml ./federation/
-COPY rest_client/pyproject.toml ./rest_client/
+COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 
 # gpf-core is a runtime dependency of gpf-web (via the GPFInstance plugin
 # entry point). Copy its source so uv sync can install it editable.

@@ -29,10 +29,10 @@ RUN git clone https://github.com/iossifovlab/gain.git /gain \
 WORKDIR /workspace
 
 COPY pyproject.toml uv.lock ruff.toml mypy.ini pylintrc ./
-COPY core/pyproject.toml ./core/
-COPY web/pyproject.toml ./web/
+COPY core/pyproject.toml core/README.md ./core/
+COPY web/pyproject.toml web/README.md ./web/
 COPY federation/pyproject.toml ./federation/
-COPY rest_client/pyproject.toml ./rest_client/
+COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 
 # Federation depends on gpf-core + gpf-web; copy their sources so uv sync can
 # install them editable.
