@@ -47,9 +47,14 @@ def runProject(Map args) {
                 if [ ! -f "\$pylint_rcfile" ]; then
                     pylint_rcfile=/workspace/pylintrc
                 fi
+                # `--recursive=y` is what makes web's Django project
+                # layout (a `gpf_web/` directory containing multiple
+                # Django apps as peer packages) lintable end-to-end; for
+                # the other stages it's a no-op.
                 pylint --rcfile="\$pylint_rcfile" \\
                        --load-plugins=pylint_junit \\
                        --output-format=pylint_junit.JUnitReporter \\
+                       --recursive=y \\
                        --exit-zero ${pkg} > /reports/pylint.xml
                 pytest ${pytestArgs} \\
                     --junitxml=/reports/pytest.xml \\
@@ -177,7 +182,14 @@ pipeline {
                                         pkg: 'gpf_web',
                                         tests: 'gpf_web/',
                                         mypyTarget: 'gpf_web',
-                                        mypyExtra: '--config-file /workspace/web/mypy.ini',
+                                        // -p forces module-name resolution
+                                        // for `gpf_web` — the bare name is
+                                        // ambiguous because /workspace/web
+                                        // also has a `gpf_web/` Django
+                                        // project layout dir without an
+                                        // __init__.py.
+                                        mypyExtra:
+                                            '--config-file /workspace/web/mypy.ini -p',
                                         pytestArgs: '-n 5',
                                         distPkg: 'gpf-web',
                                         dockerRunExtra:

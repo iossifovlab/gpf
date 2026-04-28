@@ -9,7 +9,7 @@ from scipy.stats import t
 from sklearn.linear_model import LinearRegression as LinearRegressionSK
 
 
-class LinearRegression(LinearRegressionSK):
+class LinearRegression(LinearRegressionSK):  # pylint: disable=too-many-ancestors
     """Class to build linear regression models."""
 
     def __init__(self, **kwargs: Any) -> None:

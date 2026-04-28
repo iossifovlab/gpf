@@ -5,9 +5,9 @@ from contextlib import AbstractContextManager
 
 import pytest_mock
 from gpf_instance.gpf_instance import WGPFInstance
+from wdae import wgpf
 
 from gpf_web_tests.integration.testing import LiveServer
-from wdae import wgpf
 
 
 def test_wgpf_run_simple(
