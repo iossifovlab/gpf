@@ -9,15 +9,15 @@ https://iossifovlab.com/gpfuserdocs/.
 
 ## Repository overview
 
-- **`gpf_core/`** — GPF core library: genotype storage,
+- **`core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
-- **`gpf_web/`** — Web application and REST API
+- **`web/`** — Web application and REST API
   (Django 5.2). Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
-- **`gpf_impala_storage/`**, **`gpf_impala2_storage/`**,
-  **`gpf_gcp_storage/`** — optional genotype storages
-- **`gpf_federation/`**, **`gpf_rest_client/`** — federation and
+- **`impala_storage/`**, **`impala2_storage/`**,
+  **`gcp_storage/`** — optional genotype storages
+- **`federation/`**, **`rest_client/`** — federation and
   REST client
 - **`docs/`** — documentation sources
 
@@ -68,8 +68,8 @@ Then install the GPF packages into the active `gpf`
 environment:
 
 ```bash
-pip install -e gpf_core
-pip install -e gpf_web
+pip install -e core
+pip install -e web
 ```
 
 Tip: after changing package code, re-run the editable
@@ -80,7 +80,7 @@ installs if imports fail.
 Quick cycles (examples):
 
 ```bash
-cd gpf_core
+cd core
 pytest -v tests/small/test_file.py
 pytest -v tests/small/module/
 ```
@@ -88,37 +88,37 @@ pytest -v tests/small/module/
 Full suites (parallel):
 
 ```bash
-cd gpf_core
+cd core
 conda run -n gpf pytest -v -n 10 tests/
 
-cd ../gpf_web
+cd ../web
 conda run -n gpf pytest -v -n 5 gpf_web/
 ```
 
 Test markers and configuration are defined in
-`gpf_core/pytest.ini` (e.g., `gs_inmemory`, `gs_duckdb`,
+`core/pytest.ini` (e.g., `gs_inmemory`, `gs_duckdb`,
 `gs_duckdb_parquet`, `grr_rw`, `grr_ro`, `grr_http`).
 
 ### 4) Linting and type checking
 
 ```bash
 ruff check --fix .
-mypy gpf --exclude gpf_core/docs/
-mypy gpf_web --exclude gpf_web/docs/ \
-    --exclude gpf_web/conftest.py
+mypy gpf --exclude core/docs/
+mypy gpf_web --exclude web/docs/ \
+    --exclude web/conftest.py
 ```
 
 ### REST Client and Federation (optional)
 
-If you want to work with `gpf_federation` and `gpf_rest_client`
-modules, install additional dependencies and then the
-packages:
+If you want to work with the `federation` and
+`rest_client` modules, install additional dependencies
+and then the packages:
 
 ```bash
 mamba env update --name gpf \
-    --file ./gpf_federation/federation-environment.yml
-pip install -e gpf_rest_client
-pip install -e gpf_federation
+    --file ./federation/federation-environment.yml
+pip install -e rest_client
+pip install -e federation
 ```
 
 ### Additional genotype storages (optional)
@@ -159,7 +159,7 @@ gcloud config list project
 gcloud auth application-default login
 ```
 
-Run GCP storage tests (from the `gpf_gcp_storage/` directory):
+Run GCP storage tests (from the `gcp_storage/` directory):
 
 ```bash
 pytest -v gcp_storage/tests/
@@ -169,7 +169,7 @@ Run integration tests against the GCP genotype storage
 definition:
 
 ```bash
-pytest -v ../gpf_core/tests/ \
+pytest -v ../core/tests/ \
     --gsf gcp_storage/tests/gcp_storage.yaml
 ```
 
@@ -195,10 +195,9 @@ git commit --no-verify
 - Prefer `environment.yml` over `requirements.txt`
   (legacy).
 - If imports fail after changes, re-run
-  `pip install -e gpf_core` and/or
-  `pip install -e gpf_web`. If `gain` imports fail,
-  re-run `pip install -e ../gain` from the sibling
-  `gain` checkout.
+  `pip install -e core` and/or `pip install -e web`.
+  If `gain` imports fail, re-run `pip install -e ../gain`
+  from the sibling `gain` checkout.
 - Some tests may be flaky with high parallelism; reduce
   `-n` or run without it.
 

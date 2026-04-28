@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for d in /wd/gpf_core /wd/gpf_web /wd/gpf_rest_client; do
+for d in /wd/core /wd/web /wd/rest_client; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
@@ -11,15 +11,15 @@ done
         --junitxml=/wd/test-results/resttests-junit.xml \
         --cov-config /wd/coveragerc \
         --cov rest_client \
-        /wd/gpf_rest_client/tests \
+        /wd/rest_client/tests \
         --url http://backend:21011 \
         --mailhog http://mail:8025
 
 /opt/conda/bin/conda run -n gpf \
     coverage xml
 
-cp /wd/gpf_rest_client/coverage.xml /wd/test-results/
+cp /wd/rest_client/coverage.xml /wd/test-results/
 
 /opt/conda/bin/conda run -n gpf \
-    coverage html --title gpf_rest_client -d /wd/test-results/coverage-html
+    coverage html --title rest_client -d /wd/test-results/coverage-html
 

@@ -1,18 +1,18 @@
 #!/usr/bin/bash
 
 
-for d in /wd/gpf_core /wd/gpf_web; do
+for d in /wd/core /wd/web; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install .
 done
 
-rm -rf /wd/gpf_federation/tmp
-mkdir /wd/gpf_federation/tmp
+rm -rf /wd/federation/tmp
+mkdir /wd/federation/tmp
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    python /wd/gpf_federation/setup_testing_remote.py
+    python /wd/federation/setup_testing_remote.py
 
-export GRR_DEFINITION_FILE="/wd/gpf_federation/tmp/grr_definition.yaml"
+export GRR_DEFINITION_FILE="/wd/federation/tmp/grr_definition.yaml"
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     wdaemanage migrate

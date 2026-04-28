@@ -30,8 +30,8 @@ git clone https://github.com/iossifovlab/gain.git ../gain
 pip install -e ../gain
 
 # Install core packages in editable mode
-pip install -e gpf_core
-pip install -e gpf_web
+pip install -e core
+pip install -e web
 ```
 
 ## Commands
@@ -40,19 +40,19 @@ pip install -e gpf_web
 
 ```bash
 # Run a single test file
-cd gpf_core && pytest -v tests/small/path/to/test_file.py
+cd core && pytest -v tests/small/path/to/test_file.py
 
 # Run a test module
-cd gpf_core && pytest -v tests/small/module/
+cd core && pytest -v tests/small/module/
 
 # Run GPF tests in parallel
-cd gpf_core && pytest -v -n 10 tests/
+cd core && pytest -v -n 10 tests/
 
 # Run GPF Web tests in parallel
-cd gpf_web && pytest -v -n 5 gpf_web/
+cd web && pytest -v -n 5 gpf_web/
 ```
 
-Test markers in `gpf_core/pytest.ini`: genotype storage
+Test markers in `core/pytest.ini`: genotype storage
 (`gs_impala`, `gs_impala2`, `gs_inmemory`, `gs_gcp`,
 `gs_duckdb`, `gs_duckdb_parquet`, `gs_schema2`,
 `gs_parquet` and `no_gs_*` exclusion variants) and GRR
@@ -67,9 +67,9 @@ All tests run with `PYTHONHASHSEED=0`.
 ruff check --fix .
 
 # Type checking (slow, 2-5 minutes)
-mypy gpf --exclude gpf_core/docs/
-mypy gpf_web --exclude gpf_web/docs/ \
-    --exclude gpf_web/conftest.py
+mypy gpf --exclude core/docs/
+mypy gpf_web --exclude web/docs/ \
+    --exclude web/conftest.py
 ```
 
 Config: `ruff.toml` (line-length: 80, target: py310),
@@ -98,7 +98,7 @@ Services defined in `docker-compose.yaml`:
   `minioadmin/minioadmin`, bucket `test-bucket`
 - **Apache httpd** (port 28080) — HTTP fixture server for
   `grr_http` tests; serves
-  `gpf_core/tests/.test_grr/`
+  `core/tests/.test_grr/`
 
 ### Do NOT run locally
 
@@ -109,30 +109,30 @@ submodule — it's only for CI (Jenkins).
 
 ### Dependency Direction
 
-Strict layering (`gain` lives in
+Strict layering (the `gain` package lives in
 <https://github.com/iossifovlab/gain>):
 
 ```
-gain  ←  gpf_core  ←  gpf_web
+gain  ←  gpf  ←  gpf_web
 ```
 
-`gpf_core` must **never** import from `gpf_web`. `gain`
-must **never** import from `gpf_core` or `gpf_web` —
+The `gpf` package must **never** import from `gpf_web`.
+`gain` must **never** import from `gpf` or `gpf_web` —
 that rule is enforced by pytestarch tests in the gain
 repository.
 
 ### Package Structure
 
-- **`gpf_core/`** — GPF core library: genotype storage,
+- **`core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
-- **`gpf_web/`** — Web application: Django REST API on
+- **`web/`** — Web application: Django REST API on
   top of GPF. Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
-- **`gpf_impala_storage/`**, **`gpf_impala2_storage/`**,
-  **`gpf_gcp_storage/`** — optional storage backends
-- **`gpf_federation/`** — federated query support
-- **`gpf_rest_client/`** — REST API client library
+- **`impala_storage/`**, **`impala2_storage/`**,
+  **`gcp_storage/`** — optional storage backends
+- **`federation/`** — federated query support
+- **`rest_client/`** — REST API client library
 
 The `gain` package and its annotator plugins
 (`gain_spliceai_annotator`, `gain_vep_annotator`,
@@ -149,7 +149,7 @@ points provided by the external `gain` package
 `gain.annotation.annotators`) are documented in the gain
 repo.
 
-**Defined in `gpf_core/setup.py`:**
+**Defined in `core/setup.py`:**
 
 1. **`gpf.genotype_storage.factories`** — inmemory,
    duckdb (legacy, standard, parquet, S3, S3 parquet),
@@ -158,12 +158,12 @@ repo.
    backends matching each genotype storage type
    (schema2, inmemory, duckdb variants, parquet)
 
-**Defined in `gpf_web/setup.py`:**
+**Defined in `web/setup.py`:**
 
 3. **`console_scripts`** — `wgpf` (web server launcher),
    `wdaemanage` (Django management wrapper)
 
-### GPF Core Submodules (`gpf_core/gpf/`)
+### GPF Core Submodules (`core/gpf/`)
 
 - **`gpf_instance/`** — `GPFInstance` class: central
   coordinator that wires together all GPF components
@@ -206,11 +206,11 @@ repo.
   liftover, format converters, validation runner)
 - **`utils/`** — shared utilities
 
-### GPF Web Structure (`gpf_web/gpf_web/`)
+### GPF Web Structure (`web/gpf_web/`)
 
 The web layer is a Django project. The Django project
-package is `gpf_web/gpf_web/gpf_web/` (settings, urls,
-wsgi). Django apps sit at `gpf_web/gpf_web/<app_name>/`.
+package is `web/gpf_web/gpf_web/` (settings, urls, wsgi).
+Django apps sit at `web/gpf_web/<app_name>/`.
 
 **Django apps (INSTALLED_APPS order):**
 
@@ -306,16 +306,16 @@ REST Request → GPF Web Django App
 
 ### Test Structure
 
-`gpf_core` uses a `tests/small/` vs `tests/integration/`
+`core` uses a `tests/small/` vs `tests/integration/`
 split:
 - `tests/small/` — unit/fast tests (default for
   development and CI)
 - `tests/integration/` — tests requiring external
   services or longer runtime
 
-`gpf_web` unit tests live inside each Django app:
-`gpf_web/gpf_web/<app>/tests/`
-Integration tests are in `gpf_web/gpf_web_tests/integration/`.
+`web` unit tests live inside each Django app:
+`web/gpf_web/<app>/tests/`
+Integration tests are in `web/gpf_web_tests/integration/`.
 
 Key conftest patterns:
 - **`grr_scheme` parametrization** — tests tagged with
@@ -336,7 +336,7 @@ CLIs from the external `gain` package (`grr_manage`,
 [`iossifovlab/gain`](https://github.com/iossifovlab/gain)
 repository.
 
-**gpf_core CLIs:**
+**core CLIs:**
 - `import_tools` / `import_genotypes` — genotype data
   import
 - `pheno_import` / `build_pheno_browser` /
@@ -354,7 +354,7 @@ repository.
 - `generate_denovo_gene_sets` — denovo gene sets
 - `enrichment_cache_builder` — enrichment cache
 
-**gpf_web CLIs:**
+**web CLIs:**
 - `wgpf` — GPF web server launcher
 - `wdaemanage` — Django management command wrapper
 
@@ -375,7 +375,7 @@ repository.
 
 ## Django Settings
 
-Settings files in `gpf_web/gpf_web/gpf_web/`:
+Settings files in `web/gpf_web/gpf_web/`:
 
 - `default_settings.py` — base settings (all others
   import from here)

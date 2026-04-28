@@ -1,4 +1,4 @@
-name: gpf_rest_client_build
+name: rest_client_build
 
 services:
 
@@ -9,7 +9,7 @@ services:
     restart: "no"
     volumes:
       - ../:/wd
-    entrypoint: /wd/gpf_rest_client/integration/setup.sh
+    entrypoint: /wd/rest_client/integration/setup.sh
 
   mail:
     image: mailhog/mailhog
@@ -22,8 +22,8 @@ services:
     depends_on:
       - setup
     environment:
-      DAE_DB_DIR: /wd/gpf_rest_client/tmp/gpf_instance
-      GRR_DEFINITION_FILE: /wd/gpf_rest_client/tmp/grr_definition.yaml
+      DAE_DB_DIR: /wd/rest_client/tmp/gpf_instance
+      GRR_DEFINITION_FILE: /wd/rest_client/tmp/grr_definition.yaml
       WDAE_ALLOWED_HOST: "*"
       WDAE_DEBUG: true
       WDAE_PUBLIC_HOSTNAME: resttest
@@ -31,7 +31,7 @@ services:
       WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://backend:21011"
     volumes:
       - ../:/wd
-    entrypoint: /wd/gpf_rest_client/backend-entrypoint.sh
+    entrypoint: /wd/rest_client/backend-entrypoint.sh
 
     healthcheck:
       test: ["CMD-SHELL", "curl -X GET http://backend:21011/api/v3/datasets/hierarchy"]
@@ -43,10 +43,10 @@ services:
   tests:
     build:
       context: ../
-      dockerfile: gpf_rest_client/Dockerfile.rest_client
+      dockerfile: rest_client/Dockerfile.rest_client
     volumes:
       - ../:/wd
-    entrypoint: /wd/gpf_rest_client/run_resttests.sh
+    entrypoint: /wd/rest_client/run_resttests.sh
     depends_on:
       backend:
         condition: service_healthy
