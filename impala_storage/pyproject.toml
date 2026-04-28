@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gpf-impala-storage"
+description = "GPF schema1 genotype storage on Apache Impala v3.x"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Lubomir Chorbadjiev", email = "lubomir.chorbadjiev@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "gpf-core",
+    "impyla>=0.17",
+    "sqlalchemy>=2.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/IossifovLab/gpf"
+
+[project.scripts]
+"dae2parquet.py" = "impala_storage.tools.dae2parquet:main"
+"vcf2parquet.py" = "impala_storage.tools.vcf2parquet:main"
+"denovo2parquet.py" = "impala_storage.tools.denovo2parquet:main"
+"cnv2parquet.py" = "impala_storage.tools.cnv2parquet:main"
+genotype_data_tool = "impala_storage.tools.genotype_data_tool:main"
+remote_instance_mirror = "impala_storage.tools.remote_instance_mirror:main"
+
+[project.entry-points."gpf.genotype_storage.factories"]
+impala = "impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage"
+
+[project.entry-points."gpf.import_tools.storages"]
+impala = "impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage"
+
+[dependency-groups]
+dev = [
+    "mypy==1.15.0",
+    "pylint",
+    "pylint-junit",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist",
+    "ruff==0.14.6",
+]
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0.dev0"
+
+[tool.hatch.version.raw-options]
+root = ".."
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build.targets.wheel]
+packages = ["impala_storage"]
+exclude = ["impala_storage/tests"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/impala_storage"]
+exclude = ["impala_storage/tests"]

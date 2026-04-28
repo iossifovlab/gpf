@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gpf-gcp-storage"
+description = "GPF genotype storage on the Google Cloud Platform"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Lubomir Chorbadjiev", email = "lubomir.chorbadjiev@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "gcsfs",
+    "google-cloud-bigquery",
+    "google-cloud-storage",
+    "gpf-core",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/IossifovLab/gpf"
+
+[project.entry-points."gpf.genotype_storage.factories"]
+gcp = "gcp_storage.gcp_genotype_storage:GcpGenotypeStorage"
+
+[project.entry-points."gpf.import_tools.storages"]
+gcp = "gcp_storage.gcp_import_storage:GcpImportStorage"
+
+[dependency-groups]
+dev = [
+    "mypy==1.15.0",
+    "pylint",
+    "pylint-junit",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist",
+    "ruff==0.14.6",
+]
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0.dev0"
+
+[tool.hatch.version.raw-options]
+root = ".."
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build.targets.wheel]
+packages = ["gcp_storage"]
+exclude = ["gcp_storage/tests"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/gcp_storage"]
+exclude = ["gcp_storage/tests"]

@@ -1,0 +1,156 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gpf-core"
+description = "GPF: Genotypes and Phenotypes in Families"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Lubomir Chorbadjiev", email = "lubomir.chorbadjiev@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "apsw>=3.52",
+    "cerberus>=1.3",
+    "dask>=2026.1",
+    "dask-jobqueue>=0.9",
+    "deprecation>=2.1",
+    "distributed>=2026.1",
+    "docker>=7.1",
+    "duckdb>=1.5",
+    "filelock>=3.19",
+    "fsspec>=2026.2",
+    "gain-core",
+    "intervaltree",
+    "jinja2>=3.1",
+    "lark>=1.2",
+    "markdown2>=2.4",
+    "matplotlib>=3.8",
+    "networkx>=3.6",
+    "numpy>=2.2",
+    "pandas>=2.2",
+    "psutil",
+    "pyarrow>=18",
+    "pyBigWig>=0.3",
+    "pydantic>=2.8",
+    "pyliftover>=0.4",
+    "pysam>=0.23",
+    "python-box>=7.1",
+    "pyyaml>=6",
+    "requests>=2.32",
+    "s3fs>=2026.2",
+    "scikit-learn>=1.5",
+    "scipy>=1.15",
+    "seaborn>=0.13",
+    "sentry-sdk>=2.12",
+    "sqlglot>=28",
+    "toolz>=0.12",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/IossifovLab/gpf"
+
+[project.scripts]
+grr_cache_repo = "gpf.tools.grr_cache_repo:cli_cache_repo"
+annotate_schema2_parquet = "gpf.parquet.schema2.annotate_schema2_parquet:cli"
+pheno_import = "gpf.pheno.pheno_import:main"
+import_tools_pheno = "gpf.pheno.import_tools:main"
+import_phenotypes = "gpf.pheno.import_tools:main"
+build_pheno_browser = "gpf.pheno.build_pheno_browser:main"
+update_pheno_descriptions = "gpf.pheno.update_pheno_descriptions:main"
+agp_exporter = "gpf.gene_profile.exporter:cli_export"
+ped2ped = "gpf.tools.ped2ped:main"
+draw_pedigree = "gpf.tools.draw_pedigree:main"
+generate_vcf_score_histogram = "gpf.tools.generate_vcf_score_histogram:main"
+gpf_validation_runner = "gpf.tools.gpf_validation_runner:main"
+gpf_instance_adjustments = "gpf.gpf_instance.adjustments.gpf_instance_adjustments:cli"
+gpf_convert_study_config = "gpf.tools.gpf_convert_study_config:main"
+denovo_liftover = "gpf.tools.liftover_tools:denovo_liftover_main"
+dae_liftover = "gpf.tools.liftover_tools:dae_liftover_main"
+cnv_liftover = "gpf.tools.liftover_tools:cnv_liftover_main"
+vcf_liftover = "gpf.tools.liftover_tools:vcf_liftover_main"
+import_tools = "gpf.import_tools.cli:main"
+import_genotypes = "gpf.import_tools.cli:main"
+generate_gene_profile = "gpf.gene_profile.generate_gene_profile:main"
+convert_gene_profile_to_duckdb = "gpf.gene_profile.convert_gene_profile_to_duckdb:main"
+generate_common_report = "gpf.tools.generate_common_report:main"
+generate_denovo_gene_sets = "gpf.tools.generate_denovo_gene_sets:main"
+build_coding_length_enrichment_background = "gpf.enrichment_tool.build_coding_length_enrichment_background:cli"
+build_ur_synonymous_enrichment_background = "gpf.enrichment_tool.build_ur_synonymous_enrichment_background:cli"
+enrichment_cache_builder = "gpf.enrichment_tool.enrichment_cache_builder:cli"
+to_gpf_gene_models_format = "gpf.tools.to_gpf_gene_models_format:main"
+simple_study_import = "gpf.tools.simple_study_import:main"
+denovo2vcf = "gpf.tools.denovo2vcf:main"
+dae2vcf = "gpf.tools.dae2vcf:main"
+vcf2tsv = "gpf.tools.vcf2tsv:main"
+
+[project.entry-points."gpf.genotype_storage.factories"]
+inmemory = "gpf.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage"
+duckdb_legacy = "gpf.duckdb_storage.duckdb_legacy_genotype_storage:DuckDbLegacyStorage"
+duckdb = "gpf.duckdb_storage.duckdb_genotype_storage:duckdb_storage_factory"
+duckdb_parquet = "gpf.duckdb_storage.duckdb_genotype_storage:duckdb_parquet_storage_factory"
+duckdb_s3_parquet = "gpf.duckdb_storage.duckdb_genotype_storage:duckdb_s3_parquet_storage_factory"
+duckdb_s3 = "gpf.duckdb_storage.duckdb_genotype_storage:duckdb_s3_storage_factory"
+parquet = "gpf.parquet_storage.storage:ParquetGenotypeStorage"
+
+[project.entry-points."gpf.import_tools.storages"]
+schema2 = "gpf.schema2_storage.schema2_import_storage:Schema2ImportStorage"
+inmemory = "gpf.inmemory_storage.inmemory_import_storage:InmemoryImportStorage"
+duckdb_legacy = "gpf.duckdb_storage.duckdb_import_storage:DuckDbLegacyImportStorage"
+duckdb = "gpf.duckdb_storage.duckdb_import_storage:DuckDbImportStorage"
+duckdb_parquet = "gpf.duckdb_storage.duckdb_import_storage:DuckDbParquetImportStorage"
+duckdb_s3_parquet = "gpf.duckdb_storage.duckdb_import_storage:DuckDbS3ParquetImportStorage"
+duckdb_s3 = "gpf.duckdb_storage.duckdb_import_storage:DuckDbS3ImportStorage"
+parquet = "gpf.parquet_storage.storage:ParquetImportStorage"
+
+[dependency-groups]
+dev = [
+    "coverage",
+    "mypy==1.15.0",
+    "pandas-stubs",
+    "pyarrow-stubs",
+    "pylint",
+    "pylint-junit",
+    "pytest",
+    "pytest-cov",
+    "pytest-doctestplus>=1.2",
+    "pytest-mock",
+    "pytest-xdist",
+    "pytestarch",
+    "ruff==0.14.6",
+    "types-docker",
+    "types-psutil",
+    "types-pyyaml",
+]
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0.dev0"
+
+[tool.hatch.version.raw-options]
+root = ".."
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "gpf/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["gpf"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/gpf",
+    "/README.md",
+]
+
+[tool.coverage.run]
+omit = ["*/_version.py"]

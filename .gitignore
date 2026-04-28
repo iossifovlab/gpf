@@ -89,6 +89,15 @@ VERSION
 BUILD
 wdae/wdae/wdae/__build__.py
 impala_storage/impala_storage/__build__.py
+
+# hatch-vcs generated version files
+core/gpf/_version.py
+web/gpf_web/gpf_web/_version.py
+federation/federation/_version.py
+rest_client/rest_client/_version.py
+gcp_storage/gcp_storage/_version.py
+impala_storage/impala_storage/_version.py
+impala2_storage/impala2_storage/_version.py
 in.vcf.gz.tbi
 test.txt.gz.tbi
 monkeytype.sqlite3

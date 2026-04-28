@@ -12,26 +12,43 @@ Simplex Collection with ~2,600 autism families).
 
 ## Environment Setup
 
-**This project requires conda/mamba.** All tools must be
-installed via conda, not system pip.
+**This project supports two workflows: Conda/Mamba and
+uv (pyproject-driven, the same workspace pattern as the
+gain repo).**
 
 The `gain` package lives in a separate repository
 (<https://github.com/iossifovlab/gain>) and must be
-checked out and installed alongside this one before the
-GPF packages will import.
+checked out as a sibling and installed alongside this
+one before the GPF packages will import:
+
+```bash
+git clone https://github.com/iossifovlab/gain.git ../gain
+```
+
+Conda/Mamba workflow:
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
 conda activate gpf
 
-# Install gain from a sibling checkout
-git clone https://github.com/iossifovlab/gain.git ../gain
-pip install -e ../gain
-
-# Install core packages in editable mode
+pip install -e ../gain/core
 pip install -e core
 pip install -e web
+```
+
+uv workspace workflow (root `pyproject.toml` is a virtual
+coordinator with `[tool.uv] package = false`):
+
+```bash
+# Default: gpf-core + gpf-web
+uv sync
+
+# Everything: all workspace members + every dev group
+uv sync --all-packages --all-groups
+
+# A single sub-project
+uv sync --package gpf-impala-storage --group dev
 ```
 
 ## Commands
@@ -149,7 +166,7 @@ points provided by the external `gain` package
 `gain.annotation.annotators`) are documented in the gain
 repo.
 
-**Defined in `core/setup.py`:**
+**Defined in `core/pyproject.toml`:**
 
 1. **`gpf.genotype_storage.factories`** — inmemory,
    duckdb (legacy, standard, parquet, S3, S3 parquet),
@@ -158,7 +175,7 @@ repo.
    backends matching each genotype storage type
    (schema2, inmemory, duckdb variants, parquet)
 
-**Defined in `web/setup.py`:**
+**Defined in `web/pyproject.toml`:**
 
 3. **`console_scripts`** — `wgpf` (web server launcher),
    `wdaemanage` (Django management wrapper)

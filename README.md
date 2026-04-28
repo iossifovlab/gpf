@@ -33,49 +33,72 @@ Release notes live in `docs/changes.rst`.
 
 ## Development
 
-We recommend using a Conda/Mamba environment. All
-development tools (pytest, ruff, mypy) are installed via
-Conda, not system pip.
+Two supported workflows: Conda/Mamba (long-standing) and
+uv (pyproject-driven). Pick one.
 
-### 1) Create and activate the environment
+The `gain` package lives in a separate repository
+(<https://github.com/iossifovlab/gain>) and must be
+checked out and installed alongside this one before the
+GPF packages will import:
 
-From the repository root:
+```bash
+git clone https://github.com/iossifovlab/gain.git ../gain
+```
+
+### Option A: Conda/Mamba
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
-
 conda activate gpf
+
+pip install -e ../gain/core
+pip install -e core
+pip install -e web
+
+# Optional storages and extensions:
+pip install -e federation
+pip install -e rest_client
+pip install -e gcp_storage
+pip install -e impala_storage
+pip install -e impala2_storage
 ```
 
 Notes:
-- Prefer `environment.yml` over the legacy
-  `requirements.txt`.
 - Always activate the `gpf` environment before running
   tools or tests.
+- After changing package code, re-run the editable
+  installs if imports fail.
 
-### 2) Install core packages in editable mode
+### Option B: uv workspace
 
-The `gain` package is no longer part of this repository.
-Clone it next to this repository and install it first:
+This repo is a uv workspace (see root `pyproject.toml`).
+Runtime dependencies are declared per sub-project; dev
+tools live in each sub-project's own `dev` dependency
+group. The root `pyproject.toml` is a virtual coordinator
+(`[tool.uv] package = false`) that defaults to installing
+just `gpf-core` + `gpf-web` — the storage backends and
+the federation/rest_client extensions are workspace
+members but optional.
 
 ```bash
-git clone https://github.com/iossifovlab/gain.git
-pip install -e ../gain
+# Default: install gpf-core + gpf-web
+uv sync
+
+# Everything: all workspace members + every dev group
+uv sync --all-packages --all-groups
+
+# A single sub-project
+uv sync --package gpf-impala-storage --group dev
+
+# Activate the venv (optional; `uv run` works without it)
+source .venv/bin/activate
 ```
 
-Then install the GPF packages into the active `gpf`
-environment:
+The lockfile (`uv.lock`) is committed. Use `uv lock
+--upgrade` to refresh.
 
-```bash
-pip install -e core
-pip install -e web
-```
-
-Tip: after changing package code, re-run the editable
-installs if imports fail.
-
-### 3) Run tests
+### Run tests
 
 Quick cycles (examples):
 
@@ -99,7 +122,7 @@ Test markers and configuration are defined in
 `core/pytest.ini` (e.g., `gs_inmemory`, `gs_duckdb`,
 `gs_duckdb_parquet`, `grr_rw`, `grr_ro`, `grr_http`).
 
-### 4) Linting and type checking
+### Linting and type checking
 
 ```bash
 ruff check --fix .
@@ -108,24 +131,10 @@ mypy gpf_web --exclude web/docs/ \
     --exclude web/conftest.py
 ```
 
-### REST Client and Federation (optional)
+### Optional genotype storages
 
-If you want to work with the `federation` and
-`rest_client` modules, install additional dependencies
-and then the packages:
-
-```bash
-mamba env update --name gpf \
-    --file ./federation/federation-environment.yml
-pip install -e rest_client
-pip install -e federation
-```
-
-### Additional genotype storages (optional)
-
-Some storages are not included in the default installation.
-Install their dependencies only if you plan to use or
-develop them.
+Install storage backends with extra conda dependencies if
+you plan to use or develop them.
 
 #### Apache Impala genotype storage
 
@@ -190,14 +199,16 @@ git commit --no-verify
 
 ## Common pitfalls
 
-- Always activate the `gpf` Conda environment before
-  running commands: `conda activate gpf`.
-- Prefer `environment.yml` over `requirements.txt`
-  (legacy).
-- If imports fail after changes, re-run
-  `pip install -e core` and/or `pip install -e web`.
-  If `gain` imports fail, re-run `pip install -e ../gain`
-  from the sibling `gain` checkout.
+- Conda users: always activate the `gpf` environment
+  before running commands (`conda activate gpf`), and
+  re-run `pip install -e core` if imports fail.
+- uv users: prefer `uv run <cmd>` over activating the
+  venv, and re-run `uv sync` (or `uv sync --all-packages
+  --all-groups` if you've installed the optional
+  workspace members) after pulling changes to pick up
+  lockfile updates.
+- If `gain` imports fail, re-install gain from its
+  sibling checkout (`pip install -e ../gain/core`).
 - Some tests may be flaky with high parallelism; reduce
   `-n` or run without it.
 

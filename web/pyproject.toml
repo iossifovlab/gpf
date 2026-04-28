@@ -1,0 +1,117 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gpf-web"
+description = "GPF: Genotypes and Phenotypes in Families — Web application"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Lubomir Chorbadjiev", email = "lubomir.chorbadjiev@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "django>=5.2,<5.3",
+    "django-cors-headers>=4.7",
+    "django-oauth-toolkit>=3",
+    "djangorestframework>=3.16",
+    "gain-core",
+    "gpf-core",
+    "gunicorn>=22",
+    "importlib-metadata>=8.6",
+    "mysqlclient>=2.2",
+    "requests>=2.32",
+    "requests-oauthlib>=2",
+    "sentry-sdk>=2.12",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/IossifovLab/gpf"
+
+[project.scripts]
+wgpf = "gpf_web.wgpf:cli"
+wdaemanage = "gpf_web.wdaemanage:main"
+"wdaemanage.py" = "gpf_web.wdaemanage:main"
+
+[dependency-groups]
+dev = [
+    "coverage",
+    "django-stubs==5.2.2",
+    "mypy==1.15.0",
+    "pylint",
+    "pylint-django",
+    "pylint-junit",
+    "pytest",
+    "pytest-cov",
+    "pytest-django",
+    "pytest-mock",
+    "pytest-xdist",
+    "ruff==0.14.6",
+    "types-requests",
+    "types-requests-oauthlib",
+]
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0.dev0"
+
+[tool.hatch.version.raw-options]
+root = ".."
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "gpf_web/gpf_web/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "gpf_web/common_reports_api",
+    "gpf_web/datasets_api",
+    "gpf_web/enrichment_api",
+    "gpf_web/family_api",
+    "gpf_web/gene_profiles_api",
+    "gpf_web/gene_scores",
+    "gpf_web/gene_sets",
+    "gpf_web/gene_view",
+    "gpf_web/genomes_api",
+    "gpf_web/genomic_scores_api",
+    "gpf_web/genotype_browser",
+    "gpf_web/gpf_instance",
+    "gpf_web/gpf_web",
+    "gpf_web/gpfjs",
+    "gpf_web/groups_api",
+    "gpf_web/measures_api",
+    "gpf_web/person_sets_api",
+    "gpf_web/pheno_browser_api",
+    "gpf_web/pheno_tool_api",
+    "gpf_web/query_base",
+    "gpf_web/query_state_save",
+    "gpf_web/sentry",
+    "gpf_web/studies",
+    "gpf_web/user_queries",
+    "gpf_web/users_api",
+    "gpf_web/utils",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/gpf_web",
+    "/README.md",
+]
+exclude = [
+    "/gpf_web_tests",
+    "**/tests",
+]
+
+[tool.coverage.run]
+omit = ["*/_version.py"]

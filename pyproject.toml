@@ -1,0 +1,41 @@
+[project]
+name = "gpf-monorepo"
+version = "0"
+description = "GPF monorepo virtual root — uv workspace coordinator"
+requires-python = ">=3.12"
+# Dependencies a fresh `uv sync` (no --package, no
+# --all-packages) installs by default. Limited to the two
+# always-needed members; the storage backends and the
+# federation/rest_client extensions are workspace members
+# but optional, install via
+# `uv sync --package gpf-<name> --group dev` (their CI
+# Dockerfiles do exactly this) or `uv sync --all-packages`.
+dependencies = [
+    "gpf-core",
+    "gpf-web",
+]
+
+[tool.uv]
+# Virtual root — no source code to build / install. Without
+# this, uv would try to build a wheel for `gpf-monorepo`.
+package = false
+
+[tool.uv.workspace]
+members = [
+    "core",
+    "web",
+    "federation",
+    "rest_client",
+    "gcp_storage",
+    "impala_storage",
+    "impala2_storage",
+]
+
+[tool.uv.sources]
+gpf-core = { workspace = true }
+gpf-web = { workspace = true }
+gpf-federation = { workspace = true }
+gpf-rest-client = { workspace = true }
+gpf-gcp-storage = { workspace = true }
+gpf-impala-storage = { workspace = true }
+gpf-impala2-storage = { workspace = true }

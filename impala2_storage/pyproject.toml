@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gpf-impala2-storage"
+description = "GPF schema2 genotype storage on Apache Impala v4.x"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Lubomir Chorbadjiev", email = "lubomir.chorbadjiev@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "gpf-core",
+    "impyla>=0.17",
+    "sqlalchemy>=2.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/IossifovLab/gpf"
+
+[project.entry-points."gpf.genotype_storage.factories"]
+impala2 = "impala2_storage.schema2.impala2_genotype_storage:Impala2GenotypeStorage"
+
+[project.entry-points."gpf.import_tools.storages"]
+impala2 = "impala2_storage.schema2.impala2_import_storage:Impala2ImportStorage"
+
+[dependency-groups]
+dev = [
+    "mypy==1.15.0",
+    "pylint",
+    "pylint-junit",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist",
+    "ruff==0.14.6",
+]
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0.dev0"
+
+[tool.hatch.version.raw-options]
+root = ".."
+version_scheme = "no-guess-dev"
+
+[tool.hatch.build.targets.wheel]
+packages = ["impala2_storage"]
+exclude = ["impala2_storage/tests"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/impala2_storage"]
+exclude = ["impala2_storage/tests"]
