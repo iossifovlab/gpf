@@ -10,7 +10,6 @@ import sqlglot
 from duckdb import (
     ConstraintException,
 )
-from gain.utils.sql_utils import to_duckdb_transpile
 from sqlglot import column, expressions, select
 from sqlglot.expressions import (
     Count,
@@ -25,6 +24,7 @@ from sqlglot.expressions import (
 )
 
 from gpf.pheno.common import MeasureType
+from gpf.utils.sql_utils import to_duckdb_transpile
 
 
 class PhenoBrowser:

@@ -36,7 +36,6 @@ from gain.task_graph.cli_tools import (
     task_graph_run_with_results,
 )
 from gain.task_graph.graph import TaskGraph
-from gain.utils.sql_utils import to_duckdb_transpile
 from pydantic import BaseModel
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
@@ -68,6 +67,7 @@ from gpf.pheno.prepare.measure_classifier import (
     determine_histogram_type,
     inference_reference_impl,
 )
+from gpf.utils.sql_utils import to_duckdb_transpile
 from gpf.variants.attributes import Status
 
 logger = logging.getLogger(__name__)

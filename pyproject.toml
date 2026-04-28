@@ -21,14 +21,17 @@ dependencies = [
 package = false
 
 [tool.uv.workspace]
+# gcp_storage, impala_storage and impala2_storage have
+# their own pyproject.toml files but are deliberately not
+# workspace members — their heavy backend dependencies
+# (Google Cloud SDKs, Impala/Hadoop, openjdk) are pulled
+# in only when those packages are installed standalone
+# (`uv pip install -e ./impala_storage`).
 members = [
     "core",
     "web",
     "federation",
     "rest_client",
-    "gcp_storage",
-    "impala_storage",
-    "impala2_storage",
 ]
 
 [tool.uv.sources]
@@ -36,6 +39,7 @@ gpf-core = { workspace = true }
 gpf-web = { workspace = true }
 gpf-federation = { workspace = true }
 gpf-rest-client = { workspace = true }
-gpf-gcp-storage = { workspace = true }
-gpf-impala-storage = { workspace = true }
-gpf-impala2-storage = { workspace = true }
+# gain-core lives in a sibling repo
+# (https://github.com/iossifovlab/gain). Point at it
+# locally so workspace installs do not hit PyPI.
+gain-core = { path = "../gain/core", editable = true }

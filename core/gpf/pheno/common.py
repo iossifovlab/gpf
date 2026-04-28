@@ -6,10 +6,11 @@ from typing import Any
 
 import duckdb
 import sqlglot
-from gain.utils.sql_utils import to_duckdb_transpile
 from pydantic import BaseModel, ConfigDict
 from sqlglot import insert, select
 from sqlglot.expressions import Table, table_
+
+from gpf.utils.sql_utils import to_duckdb_transpile
 
 IMPORT_METADATA_TABLE = table_("import_metadata")
 

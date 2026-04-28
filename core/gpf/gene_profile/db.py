@@ -7,7 +7,6 @@ from typing import Any
 import duckdb
 import numpy as np
 from box import Box
-from gain.utils.sql_utils import to_duckdb_transpile
 from sqlglot import column, select
 from sqlglot.expressions import (
     ColumnConstraint,
@@ -23,6 +22,7 @@ from sqlglot.expressions import (
 )
 
 from gpf.gene_profile.statistic import GPStatistic
+from gpf.utils.sql_utils import to_duckdb_transpile
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,6 @@ from typing import Any, cast
 import duckdb
 import pandas as pd
 import sqlglot
-from gain.utils.sql_utils import glot_and, to_duckdb_transpile
 from sqlglot import column, expressions, select
 from sqlglot.expressions import (
     Null,
@@ -20,6 +19,7 @@ from sqlglot.expressions import (
 )
 
 from gpf.pheno.common import MeasureType
+from gpf.utils.sql_utils import glot_and, to_duckdb_transpile
 from gpf.variants.attributes import Role, Sex, Status
 
 

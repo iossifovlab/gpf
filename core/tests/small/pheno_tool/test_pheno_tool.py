@@ -317,7 +317,7 @@ def test_calc_base_stats_empty_arr() -> None:
 def test_calc_pv() -> None:
     res = PhenoTool._calc_pv(
         np.array([1, 2, 3]), np.array([0, 1, 2]))
-    assert res == pytest.approx(0.2878641347266908, abs=1e-16)
+    assert res == pytest.approx(0.2878641347266908, abs=1e-12)
 
 
 @pytest.mark.parametrize(

@@ -29,12 +29,16 @@ dependencies = [
     "gpf-core",
     "gunicorn>=22",
     "importlib-metadata>=8.6",
-    "mysqlclient>=2.2",
     "requests>=2.32",
     "requests-oauthlib>=2",
     "sentry-sdk>=2.12",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+# MySQL backend support (requires system libmysqlclient or
+# libmariadb-dev). Default deployments use sqlite.
+mysql = ["mysqlclient>=2.2"]
 
 [project.urls]
 Homepage = "https://github.com/IossifovLab/gpf"
