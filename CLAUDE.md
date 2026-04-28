@@ -15,13 +15,21 @@ Simplex Collection with ~2,600 autism families).
 **This project requires conda/mamba.** All tools must be
 installed via conda, not system pip.
 
+The `gain` package lives in a separate repository
+(<https://github.com/iossifovlab/gain>) and must be
+checked out and installed alongside this one before the
+GPF packages will import.
+
 ```bash
 mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
 conda activate gpf
 
+# Install gain from a sibling checkout
+git clone https://github.com/iossifovlab/gain.git ../gain
+pip install -e ../gain
+
 # Install core packages in editable mode
-pip install -e gain_core
 pip install -e gpf_core
 pip install -e gpf_web
 ```
@@ -37,9 +45,6 @@ cd gpf_core && pytest -v tests/small/path/to/test_file.py
 # Run a test module
 cd gpf_core && pytest -v tests/small/module/
 
-# Run GAIN tests in parallel
-cd gain_core && pytest -v -n 10 tests/
-
 # Run GPF tests in parallel
 cd gpf_core && pytest -v -n 10 tests/
 
@@ -53,9 +58,6 @@ Test markers in `gpf_core/pytest.ini`: genotype storage
 `gs_parquet` and `no_gs_*` exclusion variants) and GRR
 (`grr_rw`, `grr_ro`, `grr_full`, `grr_http`, `grr_tabix`).
 
-Test markers in `gain_core/pytest.ini`: `grr_rw`, `grr_ro`,
-`grr_full`, `grr_http`, `grr_tabix`.
-
 All tests run with `PYTHONHASHSEED=0`.
 
 ### Linting and Type Checking
@@ -65,8 +67,6 @@ All tests run with `PYTHONHASHSEED=0`.
 ruff check --fix .
 
 # Type checking (slow, 2-5 minutes)
-mypy gain --exclude gain_core/docs/ \
-    --exclude gain_core/gain/docs/
 mypy gpf --exclude gpf_core/docs/
 mypy gpf_web --exclude gpf_web/docs/ \
     --exclude gpf_web/conftest.py
@@ -98,7 +98,7 @@ Services defined in `docker-compose.yaml`:
   `minioadmin/minioadmin`, bucket `test-bucket`
 - **Apache httpd** (port 28080) — HTTP fixture server for
   `grr_http` tests; serves
-  `gain_core/tests/.test_grr/`
+  `gpf_core/tests/.test_grr/`
 
 ### Do NOT run locally
 
@@ -109,22 +109,20 @@ submodule — it's only for CI (Jenkins).
 
 ### Dependency Direction
 
-Strict layering enforced by pytestarch architecture tests
-(`gain_core/tests/test_architecture.py`):
+Strict layering (`gain` lives in
+<https://github.com/iossifovlab/gain>):
 
 ```
-gain_core  ←  gpf_core  ←  gpf_web
+gain  ←  gpf_core  ←  gpf_web
 ```
 
-`gain_core` must **never** import from `gpf_core` or
-`gpf_web`. `gpf_core` must **never** import from `gpf_web`.
+`gpf_core` must **never** import from `gpf_web`. `gain`
+must **never** import from `gpf_core` or `gpf_web` —
+that rule is enforced by pytestarch tests in the gain
+repository.
 
 ### Package Structure
 
-- **`gain_core/`** — GAIn (Genomic Annotation
-  Infrastructure): annotation engine, genomic resources,
-  effect annotation, task graph, gene scores/sets.
-  Python package: `gain`.
 - **`gpf_core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
@@ -135,74 +133,35 @@ gain_core  ←  gpf_core  ←  gpf_web
   **`gpf_gcp_storage/`** — optional storage backends
 - **`gpf_federation/`** — federated query support
 - **`gpf_rest_client/`** — REST API client library
-- **`gain_spliceai_annotator/`**,
-  **`gain_vep_annotator/`**,
-  **`gain_demo_annotator/`** — external annotation
-  plugins (Docker-based)
+
+The `gain` package and its annotator plugins
+(`gain_spliceai_annotator`, `gain_vep_annotator`,
+`gain_demo_annotator`) live in the separate
+[`iossifovlab/gain`](https://github.com/iossifovlab/gain)
+repository.
 
 ### Plugin System
 
-GPF uses Python entry points for extensibility.
-
-**Defined in `gain_core/setup.py`:**
-
-1. **`gain.genomic_resources.plugins`** — genomic context
-   providers (DefaultRepository, CLI, CLIAnnotation)
-2. **`gain.genomic_resources.implementations`** —
-   position/allele/NP scores, liftover chain, genome,
-   gene models, CNV collection, annotation pipeline,
-   gene score, gene set collection
-3. **`gain.annotation.annotators`** — all built-in
-   annotator types (score, effect, gene set, liftover,
-   normalize allele, CNV collection, chrom mapping,
-   gene score, simple effect, debug)
+GPF uses Python entry points for extensibility. Entry
+points provided by the external `gain` package
+(`gain.genomic_resources.plugins`,
+`gain.genomic_resources.implementations`,
+`gain.annotation.annotators`) are documented in the gain
+repo.
 
 **Defined in `gpf_core/setup.py`:**
 
-4. **`gain.genomic_resources.plugins`** —
-   GPFInstanceContextProvider
-5. **`gain.genomic_resources.implementations`** —
-   enrichment backgrounds (gene weights, Samocha)
-6. **`gpf.genotype_storage.factories`** — inmemory,
+1. **`gpf.genotype_storage.factories`** — inmemory,
    duckdb (legacy, standard, parquet, S3, S3 parquet),
    parquet
-7. **`gpf.import_tools.storages`** — import storage
+2. **`gpf.import_tools.storages`** — import storage
    backends matching each genotype storage type
    (schema2, inmemory, duckdb variants, parquet)
 
 **Defined in `gpf_web/setup.py`:**
 
-8. **`console_scripts`** — `wgpf` (web server launcher),
+3. **`console_scripts`** — `wgpf` (web server launcher),
    `wdaemanage` (Django management wrapper)
-
-### GAIN Submodules (`gain_core/gain/`)
-
-- **`annotation/`** — annotation pipeline engine,
-  annotator base classes, all built-in annotators,
-  processing pipeline, annotation config parsing
-- **`genomic_resources/`** — Genomic Resource Repository
-  (GRR): repository hierarchy (cached, group, factory),
-  resource implementations, fsspec protocol, genomic
-  context system. Sub-packages:
-  - `gene_models/` — gene model parsing and
-    serialization
-  - `genomic_position_table/` — tabular data backends
-    (tabix, BigWig, VCF, in-memory)
-  - `implementations/` — resource type implementations
-    (scores, genome, gene models, liftover, CNV,
-    annotation pipeline)
-  - `statistics/` — resource statistics (min/max)
-- **`effect_annotation/`** — variant effect prediction
-  (effect types, effect gene/transcript annotation)
-- **`task_graph/`** — DAG-based task orchestration
-- **`gene_scores/`** — gene-level score resources and
-  implementations
-- **`gene_sets/`** — gene set collection resources and
-  implementations
-- **`dask/`** — dask named cluster configuration
-- **`testing/`** — test fixture helpers for study import
-  (acgt, alla, foobar, t4c8 datasets)
-- **`utils/`** — shared utilities (fs_utils, helpers)
 
 ### GPF Core Submodules (`gpf_core/gpf/`)
 
@@ -347,8 +306,8 @@ REST Request → GPF Web Django App
 
 ### Test Structure
 
-Both `gain_core` and `gpf_core` use a `tests/small/` vs
-`tests/integration/` split:
+`gpf_core` uses a `tests/small/` vs `tests/integration/`
+split:
 - `tests/small/` — unit/fast tests (default for
   development and CI)
 - `tests/integration/` — tests requiring external
@@ -367,18 +326,15 @@ Key conftest patterns:
 - **`genotype_storage_factory` parametrization** — tests
   tagged with `gs_*` markers run against the appropriate
   storage backends.
-- Architecture tests in `gain_core/tests/` enforce the
-  dependency direction rule via `pytestarch`.
 
 ### CLI Tools
 
-**gain_core CLIs:**
-- `grr_manage` — genomic resource repository management
-- `grr_browse` — GRR browser
-- `annotate_columns` / `annotate_vcf` / `annotate_doc`
-  — annotation tools
-- `annotate_variant_effects` /
-  `annotate_variant_effects_vcf` — effect annotation
+CLIs from the external `gain` package (`grr_manage`,
+`grr_browse`, `annotate_columns`, `annotate_vcf`,
+`annotate_doc`, `annotate_variant_effects`,
+`annotate_variant_effects_vcf`) are documented in the
+[`iossifovlab/gain`](https://github.com/iossifovlab/gain)
+repository.
 
 **gpf_core CLIs:**
 - `import_tools` / `import_genotypes` — genotype data

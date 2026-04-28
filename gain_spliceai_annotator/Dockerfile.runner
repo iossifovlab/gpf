@@ -1,6 +1,0 @@
-FROM spliceai-base
-
-COPY gain_spliceai_annotator/spliceai-environment.yml /spliceai-environment.yml
-
-RUN /opt/conda/bin/mamba env update --name gpf --file /spliceai-environment.yml
-

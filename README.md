@@ -9,10 +9,6 @@ https://iossifovlab.com/gpfuserdocs/.
 
 ## Repository overview
 
-- **`gain_core/`** — GAIn (Genomic Annotation
-  Infrastructure): annotation engine, genomic resources,
-  effect annotation, task graph, gene scores/sets.
-  Python package: `gain`.
 - **`gpf_core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
@@ -23,11 +19,12 @@ https://iossifovlab.com/gpfuserdocs/.
   **`gpf_gcp_storage/`** — optional genotype storages
 - **`gpf_federation/`**, **`gpf_rest_client/`** — federation and
   REST client
-- **`gain_spliceai_annotator/`**,
-  **`gain_vep_annotator/`**,
-  **`gain_demo_annotator/`** — external annotation
-  plugins
 - **`docs/`** — documentation sources
+
+The `gain` package (annotation engine, genomic resources,
+effect annotation, task graph, gene scores/sets) lives in
+its own repository at
+<https://github.com/iossifovlab/gain>.
 
 Primary stack: Python 3.12, Django 5.2, dask, pandas,
 pyarrow, duckdb, pysam, pytest, mypy, ruff.
@@ -59,10 +56,18 @@ Notes:
 
 ### 2) Install core packages in editable mode
 
-Install GPF packages into the active `gpf` environment:
+The `gain` package is no longer part of this repository.
+Clone it next to this repository and install it first:
 
 ```bash
-pip install -e gain_core
+git clone https://github.com/iossifovlab/gain.git
+pip install -e ../gain
+```
+
+Then install the GPF packages into the active `gpf`
+environment:
+
+```bash
 pip install -e gpf_core
 pip install -e gpf_web
 ```
@@ -83,10 +88,7 @@ pytest -v tests/small/module/
 Full suites (parallel):
 
 ```bash
-cd gain_core
-conda run -n gpf pytest -v -n 10 tests/
-
-cd ../gpf_core
+cd gpf_core
 conda run -n gpf pytest -v -n 10 tests/
 
 cd ../gpf_web
@@ -94,16 +96,13 @@ conda run -n gpf pytest -v -n 5 gpf_web/
 ```
 
 Test markers and configuration are defined in
-`gain_core/pytest.ini` and `gpf_core/pytest.ini` (e.g.,
-`gs_inmemory`, `gs_duckdb`, `gs_duckdb_parquet`,
-`grr_rw`, `grr_ro`, `grr_http`).
+`gpf_core/pytest.ini` (e.g., `gs_inmemory`, `gs_duckdb`,
+`gs_duckdb_parquet`, `grr_rw`, `grr_ro`, `grr_http`).
 
 ### 4) Linting and type checking
 
 ```bash
 ruff check --fix .
-mypy gain --exclude gain_core/docs/ \
-    --exclude gain_core/gain/docs/
 mypy gpf --exclude gpf_core/docs/
 mypy gpf_web --exclude gpf_web/docs/ \
     --exclude gpf_web/conftest.py
@@ -196,8 +195,10 @@ git commit --no-verify
 - Prefer `environment.yml` over `requirements.txt`
   (legacy).
 - If imports fail after changes, re-run
-  `pip install -e gain_core`, `pip install -e gpf_core`,
-  and/or `pip install -e gpf_web`.
+  `pip install -e gpf_core` and/or
+  `pip install -e gpf_web`. If `gain` imports fail,
+  re-run `pip install -e ../gain` from the sibling
+  `gain` checkout.
 - Some tests may be flaky with high parallelism; reduce
   `-n` or run without it.
 

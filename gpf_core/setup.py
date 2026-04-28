@@ -30,13 +30,6 @@ setuptools.setup(
     scripts=[
     ],
     entry_points="""
-    [gain.genomic_resources.plugins]
-    gpf_instance_context=gpf.gpf_instance_plugin.gpf_instance_context_plugin:GPFInstanceContextProvider
-
-    [gain.genomic_resources.implementations]
-gene_weights_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
-    samocha_enrichment_background=gpf.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
-
     [gpf.genotype_storage.factories]
     inmemory=gpf.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
     duckdb_legacy=gpf.duckdb_storage.duckdb_legacy_genotype_storage:DuckDbLegacyStorage

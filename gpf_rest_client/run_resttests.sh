@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for d in /wd/gain_core /wd/gpf_core /wd/gpf_web /wd/gpf_rest_client; do
+for d in /wd/gpf_core /wd/gpf_web /wd/gpf_rest_client; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done

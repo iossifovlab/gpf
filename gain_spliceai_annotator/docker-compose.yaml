@@ -1,6 +1,0 @@
-services:
-
-  runner:
-    extends:
-      file: docker-compose-jenkins.yaml
-      service: runner
