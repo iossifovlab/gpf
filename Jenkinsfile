@@ -201,7 +201,16 @@ pipeline {
                     // a new jobDsl call, the Jenkins admin may need
                     // to approve the script under
                     // Manage Jenkins → In-process Script Approval.
-                    when { branch 'master' }
+                    //
+                    // TEMPORARY (one-shot bootstrap): the `when` guard
+                    // is commented out so this branch can seed the
+                    // root-level pipelineJobs before they reach
+                    // master. Restore the guard once
+                    // gpf-federation-integration / gpf-rest-client-
+                    // integration / gpf-nightly are visible on the
+                    // controller and the trigger stages start finding
+                    // them.
+                    // when { branch 'master' }
                     steps {
                         jobDsl(
                             targets: '**/jenkins-jobs/*.groovy',
