@@ -5,7 +5,7 @@ from datasets_api.permissions import get_instance_timestamp_etag
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from gpf import __version__ as VERSION  # type: ignore
+from gpf import __version__ as VERSION
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.decorators import api_view

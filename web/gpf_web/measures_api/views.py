@@ -115,7 +115,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
 
         m = df[pheno_measure]
         bars, bins = np.histogram(
-            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25,  # type: ignore
+            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25,
         )
 
         m_range = cast(

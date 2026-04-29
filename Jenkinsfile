@@ -181,15 +181,41 @@ pipeline {
                                         name: 'web',
                                         pkg: 'gpf_web',
                                         tests: 'gpf_web/',
-                                        mypyTarget: 'gpf_web',
-                                        // -p forces module-name resolution
-                                        // for `gpf_web` — the bare name is
-                                        // ambiguous because /workspace/web
-                                        // also has a `gpf_web/` Django
-                                        // project layout dir without an
-                                        // __init__.py.
+                                        // mypy needs `-p <pkg>` for each
+                                        // Django app inside web/gpf_web/.
+                                        // The bare names would be ambiguous
+                                        // because /workspace/web also has a
+                                        // `gpf_web/` Django project layout
+                                        // dir without an __init__.py.
+                                        mypyTarget:
+                                            '-p gpf_web ' +
+                                            '-p common_reports_api ' +
+                                            '-p datasets_api ' +
+                                            '-p enrichment_api ' +
+                                            '-p family_api ' +
+                                            '-p gene_profiles_api ' +
+                                            '-p gene_scores ' +
+                                            '-p gene_sets ' +
+                                            '-p gene_view ' +
+                                            '-p genomes_api ' +
+                                            '-p genomic_scores_api ' +
+                                            '-p genotype_browser ' +
+                                            '-p gpf_instance ' +
+                                            '-p gpfjs ' +
+                                            '-p groups_api ' +
+                                            '-p measures_api ' +
+                                            '-p person_sets_api ' +
+                                            '-p pheno_browser_api ' +
+                                            '-p pheno_tool_api ' +
+                                            '-p query_base ' +
+                                            '-p query_state_save ' +
+                                            '-p sentry ' +
+                                            '-p studies ' +
+                                            '-p user_queries ' +
+                                            '-p users_api ' +
+                                            '-p utils',
                                         mypyExtra:
-                                            '--config-file /workspace/web/mypy.ini -p',
+                                            '--config-file /workspace/web/mypy.ini',
                                         pytestArgs: '-n 5',
                                         distPkg: 'gpf-web',
                                         dockerRunExtra:
