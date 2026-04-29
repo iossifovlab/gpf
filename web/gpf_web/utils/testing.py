@@ -16,6 +16,8 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
+from gpf_instance.gpf_instance import WGPFInstance
+
 from gpf.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.build_pheno_browser import main as build_browser
@@ -23,7 +25,6 @@ from gpf.pheno.pheno_import import main as pheno_import
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import setup_dataset_config, vcf_study
 from gpf.testing.setup_helpers import setup_gpf_instance
-from gpf_instance.gpf_instance import WGPFInstance
 
 
 def setup_t4c8_grr(

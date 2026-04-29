@@ -6,6 +6,7 @@ from io import StringIO
 import numpy as np
 import pandas as pd
 import pytest
+
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.attributes import Role, Sex, Status
 

@@ -4,11 +4,12 @@ import pathlib
 import pytest
 from box import Box
 from gain.gene_sets.gene_set import GeneSet
+from pytest_mock import MockerFixture
+
 from gpf.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from gpf.gene_profile.statistic import GPStatistic
 from gpf.gpf_instance import GPFInstance
 from gpf.testing.alla_import import alla_gpf
-from pytest_mock import MockerFixture
 
 
 @pytest.fixture

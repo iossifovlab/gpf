@@ -6,7 +6,6 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from glob import glob
 
-import gpf.parquet.schema2.annotate_schema2_parquet
 import pytest
 import pytest_mock
 from gain.annotation.score_annotator import PositionScoreAnnotator
@@ -19,6 +18,8 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
+import gpf.parquet.schema2.annotate_schema2_parquet
 from gpf.gpf_instance import GPFInstance
 from gpf.parquet.schema2.annotate_schema2_parquet import cli, produce_regions
 from gpf.parquet.schema2.loader import ParquetLoader

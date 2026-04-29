@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from gain.genomic_resources.testing import setup_dae_transmitted
 from gain.utils.regions import Region
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.testing import build_families_data

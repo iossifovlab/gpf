@@ -9,6 +9,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils.regions import Region
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.import_tools.cli import run_with_project
 from gpf.import_tools.import_tools import ImportProject

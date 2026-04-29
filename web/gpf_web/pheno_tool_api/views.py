@@ -9,10 +9,6 @@ from datasets_api.permissions import (
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from gpf.pheno.common import MeasureType
-from gpf.pheno.pheno_data import Measure
-from gpf.pheno_tool.tool import PhenoResult
-from gpf.variants.attributes import Role
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
@@ -20,6 +16,10 @@ from rest_framework.response import Response
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
 
+from gpf.pheno.common import MeasureType
+from gpf.pheno.pheno_data import Measure
+from gpf.pheno_tool.tool import PhenoResult
+from gpf.variants.attributes import Role
 from pheno_tool_api.adapter import PhenoToolAdapter
 
 logger = logging.getLogger(__name__)

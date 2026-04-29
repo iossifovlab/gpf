@@ -3,11 +3,12 @@ import pathlib
 
 import pytest
 from box import Box
+from pytest_mock import MockerFixture
+
 from gpf.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from gpf.gene_profile.exporter import cli_export
 from gpf.gene_profile.statistic import GPStatistic
 from gpf.gpf_instance import GPFInstance
-from pytest_mock import MockerFixture
 
 
 @pytest.fixture

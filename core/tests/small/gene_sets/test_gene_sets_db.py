@@ -6,6 +6,7 @@ from gain.gene_sets.gene_set import (
 from gain.genomic_resources.repository import (
     GenomicResourceRepo,
 )
+
 from gpf.gene_sets.gene_sets_db import GeneSetsDb
 
 

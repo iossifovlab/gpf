@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import pytest_mock
+
 from gpf.pheno.pheno_data import PhenotypeGroup, PhenotypeStudy
 from gpf.pheno.registry import PhenoRegistry
 from gpf.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry

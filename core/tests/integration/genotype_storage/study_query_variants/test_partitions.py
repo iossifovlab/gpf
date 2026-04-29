@@ -8,6 +8,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils.regions import Region
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.person_sets import PSCQuery
 from gpf.studies.study import GenotypeData

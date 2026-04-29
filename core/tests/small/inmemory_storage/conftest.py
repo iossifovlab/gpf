@@ -6,6 +6,7 @@ from gain.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
 )
+
 from gpf.import_tools.import_tools import ImportProject
 
 # this content follows the 'refflat' gene model format

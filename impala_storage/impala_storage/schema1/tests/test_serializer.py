@@ -4,6 +4,7 @@ from typing import cast
 
 import pytest
 from gain.annotation.annotation_config import AttributeInfo
+
 from gpf.configuration.gpf_config_parser import FrozenBox
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
@@ -14,7 +15,6 @@ from gpf.import_tools.import_tools import ImportProject
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.family_variant import FamilyAllele
 from gpf.variants_loaders.dae.loader import DenovoLoader
-
 from impala_storage.schema1.impala_genotype_storage import (
     ImpalaGenotypeStorage,
 )

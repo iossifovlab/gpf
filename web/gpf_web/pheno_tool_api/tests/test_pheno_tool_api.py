@@ -5,12 +5,13 @@ import json
 import pytest
 import pytest_mock
 from django.test.client import Client
-from gpf.genotype_storage.genotype_storage_registry import (
-    GenotypeStorageRegistry,
-)
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from studies.study_wrapper import WDAEStudy
+
+from gpf.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 
 TOOL_URL = "/api/v3/pheno_tool"
 TOOL_DOWNLOAD_URL = "/api/v3/pheno_tool/download"

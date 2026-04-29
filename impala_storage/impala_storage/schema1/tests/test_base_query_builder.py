@@ -4,11 +4,11 @@ import pathlib
 import pytest
 from box import Box
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData, GenotypeDataStudy
 from gpf.testing.import_helpers import vcf_study
 from gpf.testing.t4c8_import import t4c8_gpf
-
 from impala_storage.schema1.family_variants_query_builder import (
     FamilyVariantsQueryBuilder,
 )

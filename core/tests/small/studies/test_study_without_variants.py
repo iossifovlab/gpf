@@ -2,6 +2,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from gain.genomic_resources.testing import setup_pedigree
+
 from gpf.import_tools.cli import run_with_project
 from gpf.studies.study import GenotypeData
 from gpf.testing.acgt_import import acgt_gpf

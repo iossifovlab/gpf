@@ -4,7 +4,6 @@ import textwrap
 
 from gpf.gpf_instance import GPFInstance
 from gpf.tools.reannotate_instance import cli
-
 from tests.integration.annotation.conftest import t4c8_study
 
 

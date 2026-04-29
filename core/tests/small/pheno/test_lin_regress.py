@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import numpy as np
+
 from gpf.pheno.utils.lin_regress import LinearRegression
 
 

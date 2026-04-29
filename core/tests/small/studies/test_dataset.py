@@ -3,6 +3,7 @@ import time
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.studies.study import GenotypeData
 from gpf.testing.acgt_import import acgt_gpf
 from gpf.testing.import_helpers import setup_dataset, vcf_study

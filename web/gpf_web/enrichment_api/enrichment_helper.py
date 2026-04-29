@@ -11,6 +11,9 @@ from gain.genomic_resources.repository import (
     GenomicResourceRepo,
     parse_resource_id_version,
 )
+from gpf_instance.extension import GPFTool
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+
 from gpf.enrichment_tool.base_enrichment_background import (
     BaseEnrichmentBackground,
     EnrichmentResult,
@@ -30,8 +33,6 @@ from gpf.enrichment_tool.gene_weights_background import (
 )
 from gpf.enrichment_tool.genotype_helper import GenotypeHelper
 from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
-from gpf_instance.extension import GPFTool
-from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
 logger = logging.getLogger(__name__)
 

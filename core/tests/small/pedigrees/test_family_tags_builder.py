@@ -2,6 +2,7 @@
 import pathlib
 
 import pytest
+
 from gpf.pedigrees.families_data import tag_families_data
 from gpf.pedigrees.family import FamilyTag
 from gpf.pedigrees.loader import FamiliesLoader

@@ -3,10 +3,10 @@ from typing import Any
 
 import pytest
 from gain.utils.regions import Region
+
 from gpf.person_sets import PersonSetCollection
 from gpf.studies.study import GenotypeData
 from gpf.variants.family_variant import FamilyVariant
-
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import WDAEStudy

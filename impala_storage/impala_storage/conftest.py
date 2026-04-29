@@ -19,6 +19,7 @@ from gain.genomic_resources.reference_genome import (
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+
 from gpf.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,
@@ -36,7 +37,6 @@ from gpf.import_tools.import_tools import (
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants_loaders.dae.loader import DenovoLoader
 from gpf.variants_loaders.vcf.loader import VcfLoader
-
 from impala_storage.schema1.annotation_decorator import (
     AnnotationPipelineDecorator,
 )

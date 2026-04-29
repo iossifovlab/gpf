@@ -5,6 +5,7 @@ import pathlib
 from collections.abc import Generator
 
 import pytest
+
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     GenotypeStorageRegistry,

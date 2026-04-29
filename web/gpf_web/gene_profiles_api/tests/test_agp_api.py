@@ -3,9 +3,10 @@ import pytest
 from box import Box
 from django.test.client import Client
 from gain.genomic_resources.gene_models import Exon, TranscriptModel
-from gpf.gene_profile.statistic import GPStatistic
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture
+
+from gpf.gene_profile.statistic import GPStatistic
 
 ROUTE_PREFIX = "/api/v3/gene_profiles"
 

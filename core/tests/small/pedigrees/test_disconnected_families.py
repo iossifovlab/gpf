@@ -3,6 +3,7 @@ import os
 from collections.abc import Callable
 
 import pytest
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.pedigrees.pedigrees import FamilyConnections

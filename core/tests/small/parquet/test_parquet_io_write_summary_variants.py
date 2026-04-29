@@ -8,6 +8,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils.regions import Region
+
 from gpf.duckdb_storage.duckdb_genotype_storage import (
     DuckDbStorage,
 )

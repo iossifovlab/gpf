@@ -4,6 +4,7 @@ import pathlib
 import box
 import duckdb
 import pytest
+
 from gpf.gene_profile.db import GeneProfileDBWriter
 from gpf.gene_profile.statistic import GPStatistic
 from gpf.gpf_instance import GPFInstance

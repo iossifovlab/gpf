@@ -7,6 +7,7 @@ from gain.annotation.annotation_pipeline import (
     AttributeInfo,
 )
 from gain.effect_annotation.effect import AlleleEffects
+
 from gpf.variants_loaders.raw.loader import (
     FullVariantsIterator,
     VariantsLoader,

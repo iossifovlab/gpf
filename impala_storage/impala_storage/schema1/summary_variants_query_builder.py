@@ -5,9 +5,9 @@ from typing import Any
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.utils.regions import Region
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.variants.variant import SummaryVariant
-
 from impala_storage.schema1.base_query_builder import (
     BaseQueryBuilder,
     RealAttrFilterType,

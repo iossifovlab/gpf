@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+
 from gpf.pheno_tool.pheno_tool_adapter import PhenoToolAdapter
 from gpf.pheno_tool.tool import PhenoResult
 from gpf.variants.attributes import Sex
-
 from pheno_tool_api.views import PhenoToolView
 
 

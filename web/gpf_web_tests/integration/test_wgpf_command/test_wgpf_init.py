@@ -4,8 +4,8 @@ from contextlib import AbstractContextManager
 
 import pytest
 from gpf_instance.gpf_instance import WGPFInstance
-from gpf_web.wgpf import cli
 
+from gpf_web.wgpf import cli
 from gpf_web_tests.integration.testing import LiveServer
 
 

@@ -14,6 +14,7 @@ from gain.genomic_resources.genomic_context import (
 from gain.genomic_resources.genomic_context_base import (
     SimpleGenomicContext,
 )
+
 from gpf.genotype_storage.genotype_storage_genomic_context_cli import (
     GC_GENOTYPE_STORAGES_KEY,
     CLIGenotypeStorageContextProvider,

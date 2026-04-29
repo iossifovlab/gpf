@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pytest_mock
-from gpf.testing.import_helpers import setup_dataset_config
 from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
 from utils.testing import setup_wgpf_instance
 
+from gpf.testing.import_helpers import setup_dataset_config
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 

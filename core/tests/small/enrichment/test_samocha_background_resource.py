@@ -6,6 +6,7 @@ from gain.genomic_resources.testing import (
     build_inmemory_test_resource,
     convert_to_tab_separated,
 )
+
 from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 
 

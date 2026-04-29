@@ -7,6 +7,7 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+
 from gpf.studies.study import GenotypeDataGroup
 from gpf.testing.acgt_import import acgt_gpf
 from gpf.testing.import_helpers import (

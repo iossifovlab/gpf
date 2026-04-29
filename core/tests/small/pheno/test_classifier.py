@@ -9,6 +9,7 @@ from gain.genomic_resources.histogram import (
     NullHistogram,
     NumberHistogram,
 )
+
 from gpf.pheno.common import InferenceConfig
 from gpf.pheno.prepare.measure_classifier import (
     Convertible,

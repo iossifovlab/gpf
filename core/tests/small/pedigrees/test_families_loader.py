@@ -4,10 +4,11 @@ import os
 from collections.abc import Callable
 
 import pytest
+from pandas.api.types import is_string_dtype
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.attributes import Role
-from pandas.api.types import is_string_dtype
 
 
 @pytest.mark.parametrize(

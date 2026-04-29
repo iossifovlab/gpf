@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Family, Person
 from gpf.pedigrees.layout import IndividualWithCoordinates, Layout

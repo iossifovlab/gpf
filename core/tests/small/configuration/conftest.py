@@ -2,6 +2,7 @@ import os
 from typing import Any
 
 import pytest
+
 from gpf.configuration.utils import validate_path
 
 sample_conf_schema_1 = {

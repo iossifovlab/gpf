@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 from gain.utils.regions import Region
+
 from gpf.studies.study import GenotypeDataStudy
 
 

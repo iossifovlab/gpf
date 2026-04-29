@@ -2,6 +2,7 @@
 from typing import Any, cast
 
 import pytest
+
 from gpf.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from gpf.studies.study import GenotypeData
 

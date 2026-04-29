@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.testing import setup_denovo, setup_pedigree
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.testing.alla_import import alla_gpf

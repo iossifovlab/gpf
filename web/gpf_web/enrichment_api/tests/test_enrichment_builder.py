@@ -1,9 +1,8 @@
 
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from gpf.studies.study import GenotypeData
-
 from enrichment_api.enrichment_builder import EnrichmentBuilder
+from gpf.studies.study import GenotypeData
 
 
 def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:

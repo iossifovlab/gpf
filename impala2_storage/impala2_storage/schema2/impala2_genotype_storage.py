@@ -11,9 +11,9 @@ from typing import Any, cast
 
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.parquet.partition_descriptor import PartitionDescriptor
-
 from impala2_storage.helpers.hdfs_helpers import HdfsHelpers
 from impala2_storage.helpers.impala_helpers import ImpalaHelpers
 from impala2_storage.schema2.impala_variants import ImpalaVariants

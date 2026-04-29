@@ -27,6 +27,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
+
 from gpf.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )

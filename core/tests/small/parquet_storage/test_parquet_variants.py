@@ -7,6 +7,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils.regions import Region
+
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )

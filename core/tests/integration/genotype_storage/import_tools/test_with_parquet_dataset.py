@@ -5,6 +5,7 @@ from collections.abc import Callable
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.import_tools.cli import run_with_project

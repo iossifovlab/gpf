@@ -11,6 +11,7 @@ from gain.genomic_resources.testing import (
     setup_dae_transmitted,
     setup_pedigree,
 )
+
 from gpf.tools.dae2vcf import main as dae2vcf_main
 
 

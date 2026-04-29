@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 import pytest_mock
 from box import BoxError
+
 from gpf.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,

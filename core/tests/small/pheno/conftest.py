@@ -6,6 +6,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+
 from gpf.pheno.browser import PhenoBrowser
 from gpf.pheno.pheno_data import PhenotypeData
 from gpf.pheno.registry import PhenoRegistry

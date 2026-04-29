@@ -16,6 +16,7 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+
 from gpf.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 from gpf.gene_sets.denovo_gene_set_helpers import (
     DenovoGeneSetHelpers,

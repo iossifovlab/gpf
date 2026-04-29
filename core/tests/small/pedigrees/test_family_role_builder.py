@@ -3,6 +3,7 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
+
 from gpf.pedigrees.family_role_builder import Family, FamilyRoleBuilder
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.attributes import Role

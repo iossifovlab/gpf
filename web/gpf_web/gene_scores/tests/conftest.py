@@ -2,6 +2,7 @@ from typing import cast
 
 import pytest
 from gain.gene_scores.gene_scores import GeneScoresDb
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 
 

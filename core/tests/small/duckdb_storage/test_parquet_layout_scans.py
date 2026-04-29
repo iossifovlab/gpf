@@ -8,6 +8,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
 from gpf.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )

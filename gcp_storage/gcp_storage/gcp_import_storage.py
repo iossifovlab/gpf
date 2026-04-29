@@ -3,6 +3,8 @@ from typing import Any, cast
 
 import yaml
 from gain.task_graph.graph import TaskGraph
+
+from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 from gpf.configuration.study_config_builder import StudyConfigBuilder
 from gpf.import_tools.import_tools import ImportProject, save_study_config
 from gpf.schema2_storage.schema2_import_storage import (
@@ -11,8 +13,6 @@ from gpf.schema2_storage.schema2_import_storage import (
 from gpf.schema2_storage.schema2_layout import (
     load_schema2_dataset_layout,
 )
-
-from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
 logger = logging.getLogger(__name__)
 

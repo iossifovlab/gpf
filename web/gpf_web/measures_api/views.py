@@ -12,12 +12,13 @@ from gain.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,
 )
-from gpf.pheno.common import MeasureType
-from gpf.variants.attributes import Role
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from gpf.pheno.common import MeasureType
+from gpf.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 

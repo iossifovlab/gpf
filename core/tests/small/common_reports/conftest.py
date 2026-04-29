@@ -2,6 +2,7 @@
 import os
 
 import pytest
+
 from gpf.person_sets import PersonSet, PersonSetCollection
 from gpf.studies.study import GenotypeData
 from gpf.variants.family_variant import FamilyVariant

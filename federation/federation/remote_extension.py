@@ -2,7 +2,6 @@ import copy
 import logging
 from typing import Any, cast
 
-from gpf.genomic_scores.scores import ScoreDesc
 from gpf_instance.extension import GPFExtensionBase
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
@@ -16,6 +15,7 @@ from federation.remote_study_wrapper import (
     RemoteWDAEStudyGroup,
 )
 from federation.utils import prefix_remote_identifier, prefix_remote_name
+from gpf.genomic_scores.scores import ScoreDesc
 from rest_client.rest_client import (
     GPFAnonymousSession,
     GPFClientSession,

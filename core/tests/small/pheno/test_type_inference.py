@@ -7,6 +7,8 @@ from gain.genomic_resources.histogram import (
     NumberHistogram,
     NumberHistogramConfig,
 )
+from pydantic import ValidationError
+
 from gpf.pheno.common import (
     InferenceConfig,
     MeasureHistogramConfigs,
@@ -18,7 +20,6 @@ from gpf.pheno.pheno_import import (
     merge_inference_configs,
 )
 from gpf.pheno.prepare.measure_classifier import InferenceReport
-from pydantic import ValidationError
 
 
 def test_valid_config_loads() -> None:

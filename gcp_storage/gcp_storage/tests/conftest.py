@@ -5,14 +5,14 @@ from typing import Any
 import pytest
 import yaml
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
+from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.testing.import_helpers import vcf_study
-
-from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
 
 @pytest.fixture(scope="session")

@@ -3,7 +3,6 @@ import logging
 import sys
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
-
 from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 
 

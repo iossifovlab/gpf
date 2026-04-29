@@ -3,6 +3,9 @@ import pathlib
 
 import pytest
 from gain.genomic_resources.testing import setup_denovo, setup_pedigree
+from studies.study_wrapper import WDAEStudy
+
+from enrichment_api.enrichment_helper import EnrichmentHelper
 from gpf.enrichment_tool.enrichment_cache_builder import (
     build_enrichment_event_counts_cache,
     cli,
@@ -13,9 +16,6 @@ from gpf.enrichment_tool.gene_weights_background import (
 from gpf.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.import_helpers import denovo_study
-from studies.study_wrapper import WDAEStudy
-
-from enrichment_api.enrichment_helper import EnrichmentHelper
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@ from typing import cast
 
 import numpy as np
 import pytest
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.family import Family
 from gpf.pedigrees.loader import FamiliesLoader

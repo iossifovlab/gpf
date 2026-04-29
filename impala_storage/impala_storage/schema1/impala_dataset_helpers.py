@@ -4,7 +4,6 @@ import os
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.tools.dataset_helpers import DatasetHelpers
-
 from impala_storage.schema1.impala_genotype_storage import (
     ImpalaGenotypeStorage,
 )

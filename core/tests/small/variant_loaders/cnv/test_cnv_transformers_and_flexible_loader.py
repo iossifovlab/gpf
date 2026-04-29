@@ -5,6 +5,7 @@ import textwrap
 import pytest
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.testing import convert_to_tab_separated
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.utils.variant_utils import mat2str
 from gpf.variants.core import Allele

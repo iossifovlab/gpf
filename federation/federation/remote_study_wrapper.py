@@ -3,7 +3,6 @@ import logging
 from collections.abc import Generator, Iterable
 from typing import Any, cast
 
-from gpf.pedigrees.families_data import FamiliesData
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     ResponseTransformerProtocol,
@@ -13,6 +12,7 @@ from studies.study_wrapper import (
 from federation.remote_phenotype_data import RemotePhenotypeData
 from federation.remote_study import RemoteGenotypeData
 from federation.utils import prefix_remote_identifier
+from gpf.pedigrees.families_data import FamiliesData
 from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)

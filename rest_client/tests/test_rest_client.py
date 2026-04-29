@@ -3,9 +3,9 @@ import json
 from typing import Any
 
 import pytest
-from gpf.pheno.common import MeasureType
 from requests import Response
 
+from gpf.pheno.common import MeasureType
 from rest_client.rest_client import RESTClient
 
 

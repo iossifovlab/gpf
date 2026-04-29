@@ -2,6 +2,7 @@
 from collections.abc import Callable
 
 import pytest
+
 from gpf.pedigrees.family import Family, FamilyTag
 from gpf.pedigrees.family_tag_builder import (
     check_family_tags_query,

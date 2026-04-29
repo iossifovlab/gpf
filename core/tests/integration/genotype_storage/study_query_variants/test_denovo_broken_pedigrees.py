@@ -8,6 +8,7 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf

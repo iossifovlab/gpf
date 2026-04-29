@@ -9,6 +9,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData

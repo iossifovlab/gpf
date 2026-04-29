@@ -2,6 +2,7 @@
 
 import pandas as pd
 import pytest
+
 from gpf.pheno.common import MeasureType
 from gpf.pheno.pheno_data import PhenotypeGroup
 from gpf.pheno.registry import PhenoRegistry

@@ -4,6 +4,7 @@ import textwrap
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree
+
 from gpf.pedigrees.families_data import FamiliesData, tag_families_data
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.attributes import Sex, Status

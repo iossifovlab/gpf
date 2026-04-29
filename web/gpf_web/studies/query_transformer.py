@@ -9,6 +9,7 @@ from typing import Any, ClassVar, cast
 from gain.effect_annotation.effect import EffectTypesMixin
 from gain.gene_scores.gene_scores import GeneScoresDb
 from gain.utils.regions import Region
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.person_filters import make_pedigree_filter, make_pheno_filter
 from gpf.person_filters.person_filters import make_pheno_filter_beta
@@ -25,7 +26,6 @@ from gpf.query_variants.sql.schema2.sql_query_builder import (
 from gpf.studies.study import GenotypeDataStudy
 from gpf.variants.attributes import Inheritance, Zygosity
 from gpf.variants.core import Allele
-
 from studies.study_wrapper import (
     QueryTransformerProtocol,
     WDAEAbstractStudy,

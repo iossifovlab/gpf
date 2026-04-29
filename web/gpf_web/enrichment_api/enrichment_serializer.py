@@ -1,6 +1,7 @@
 from typing import Any, cast
 
 from gain.effect_annotation.effect import EffectTypesMixin
+
 from gpf.enrichment_tool.event_counters import EnrichmentSingleResult
 
 

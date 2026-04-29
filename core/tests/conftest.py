@@ -13,6 +13,7 @@ from gain.genomic_resources.genomic_context import (
 from gain.genomic_resources.genomic_context_base import (
     GenomicContext,
 )
+
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     get_genotype_storage_factory,

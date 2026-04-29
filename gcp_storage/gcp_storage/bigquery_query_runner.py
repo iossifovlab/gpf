@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any
 
 from google.cloud.bigquery.client import Client
+
 from gpf.query_variants.query_runners import QueryRunner
 
 logger = logging.getLogger(__name__)

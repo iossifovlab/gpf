@@ -2,6 +2,7 @@
 from typing import cast
 
 import pytest
+
 from gpf.duckdb_storage.duckdb_genotype_storage import DuckDbParquetStorage
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,

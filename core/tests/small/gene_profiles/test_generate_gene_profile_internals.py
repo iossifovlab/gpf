@@ -13,6 +13,7 @@ from gain.genomic_resources.testing import (
 )
 from gain.testing.t4c8_import import setup_t4c8_grr
 from gain.utils.regions import Region
+
 from gpf.gene_profile.generate_gene_profile import (
     GeneProfileDBWriter,
     _calculate_variant_counts,

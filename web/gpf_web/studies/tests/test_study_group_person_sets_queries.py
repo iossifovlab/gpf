@@ -5,6 +5,8 @@ from typing import Any, cast
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+from gpf_instance.gpf_instance import WGPFInstance
+
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
@@ -12,8 +14,6 @@ from gpf.gpf_instance import GPFInstance
 from gpf.person_sets import PSCQuery
 from gpf.testing.acgt_import import acgt_gpf
 from gpf.testing.import_helpers import setup_dataset, vcf_study
-from gpf_instance.gpf_instance import WGPFInstance
-
 from studies.query_transformer import QueryTransformer, make_query_transformer
 from studies.response_transformer import (
     ResponseTransformer,

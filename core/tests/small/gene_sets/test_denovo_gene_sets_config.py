@@ -5,6 +5,7 @@ from typing import Any, cast
 
 import pytest
 import yaml
+
 from gpf.gene_sets.denovo_gene_sets_config import (
     EffectsCriteria,
     RecurrentCriteria,

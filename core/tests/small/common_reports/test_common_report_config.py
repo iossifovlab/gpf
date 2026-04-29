@@ -4,6 +4,7 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+
 from gpf.studies.study import GenotypeData
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.testing.import_helpers import denovo_study

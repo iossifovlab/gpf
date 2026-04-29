@@ -7,6 +7,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from gpf.studies.study import GenotypeData

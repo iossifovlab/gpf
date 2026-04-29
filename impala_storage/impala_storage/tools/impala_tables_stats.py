@@ -6,9 +6,9 @@ import time
 from contextlib import closing
 
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeDataStudy
-
 from impala_storage.schema1.impala_variants import ImpalaVariants
 
 logger = logging.getLogger("impala_tables_stats")

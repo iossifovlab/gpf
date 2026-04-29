@@ -1,15 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Any
 
+from gpf_instance.gpf_instance import WGPFInstance
+from studies.query_transformer import QueryTransformer
+from studies.response_transformer import ResponseTransformer
+
 from federation.remote_study_wrapper import (
     RemoteWDAEStudy,
     handle_denovo_gene_sets,
     handle_gene_sets,
     handle_genomic_scores,
 )
-from gpf_instance.gpf_instance import WGPFInstance
-from studies.query_transformer import QueryTransformer
-from studies.response_transformer import ResponseTransformer
 
 
 def test_query_variants_wdae_remote_study_filters(

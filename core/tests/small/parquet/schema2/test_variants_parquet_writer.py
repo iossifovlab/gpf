@@ -4,6 +4,7 @@ import pathlib
 import pyarrow.parquet as pq
 import pytest
 import pytest_mock
+
 from gpf.parquet.partition_descriptor import (
     PartitionDescriptor,
 )

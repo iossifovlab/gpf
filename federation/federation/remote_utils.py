@@ -1,6 +1,5 @@
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Family, FamilyTag, Person
-
 from rest_client.rest_client import RESTClient
 
 

@@ -1,14 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Any
 
+from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
+from gcp_storage.gcp_import_storage import GcpImportStorage
 from gpf.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
 from gpf.import_tools.import_tools import get_import_storage_factory
 from gpf.studies.study import GenotypeDataStudy
-
-from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
-from gcp_storage.gcp_import_storage import GcpImportStorage
 
 
 def test_genotype_storage_config(

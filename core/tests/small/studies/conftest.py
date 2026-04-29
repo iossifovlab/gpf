@@ -6,6 +6,7 @@ from typing import cast
 import pytest
 from box import Box
 from gain.gene_scores.gene_scores import GeneScoresDb
+
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )

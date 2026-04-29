@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pandas as pd
 import pytest
+
 from gpf.pheno.graphs import draw_linregres
 from gpf.variants.attributes import Role, Sex
 

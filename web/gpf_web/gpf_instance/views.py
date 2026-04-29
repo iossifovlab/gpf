@@ -5,13 +5,13 @@ from datasets_api.permissions import get_instance_timestamp_etag
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from gpf import __version__ as VERSION
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from gpf import __version__ as VERSION
 from gpf_instance.gpf_instance import (
     calc_and_set_cacheable_hash,
     get_cacheable_hash,

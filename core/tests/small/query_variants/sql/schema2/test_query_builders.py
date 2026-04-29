@@ -4,6 +4,7 @@ import pathlib
 import pandas as pd
 import pytest
 from gain.utils.regions import Region
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.sql.schema2.base_query_builder import (
     BaseQueryBuilder,

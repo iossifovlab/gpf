@@ -5,13 +5,14 @@ from io import StringIO
 from typing import Any, cast
 
 from gain.effect_annotation.effect import EffectTypesMixin
-from gpf.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
-from gpf.variants.attributes import Sex
 from gpf_instance.extension import GPFTool
 from studies.query_transformer import (
     QueryTransformer,
 )
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+
+from gpf.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
+from gpf.variants.attributes import Sex
 
 
 class PhenoToolAdapterBase(GPFTool):

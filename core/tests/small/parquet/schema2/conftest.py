@@ -14,6 +14,7 @@ from gain.annotation.annotation_pipeline import (
 from gain.annotation.effect_annotator import EffectAnnotatorAdapter
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.repository import GenomicResourceRepo
+
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.variant import SummaryVariant, SummaryVariantFactory
 from gpf.variants_loaders.raw.loader import (

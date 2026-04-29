@@ -4,7 +4,6 @@ import pathlib
 from gpf.gpf_instance import GPFInstance
 from gpf.parquet.schema2.annotate_schema2_parquet import cli
 from gpf.parquet.schema2.loader import ParquetLoader
-
 from tests.integration.annotation.conftest import t4c8_study
 
 

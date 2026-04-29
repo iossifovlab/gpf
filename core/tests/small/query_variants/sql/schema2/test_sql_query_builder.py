@@ -3,6 +3,12 @@ import pytest
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.utils.regions import Region
+from sqlglot import diff, exp, parse_one
+from sqlglot.diff import Keep
+from sqlglot.executor import execute
+from sqlglot.expressions import replace_placeholders
+from sqlglot.schema import Schema, ensure_schema
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.sql.schema2.sql_query_builder import (
@@ -11,11 +17,6 @@ from gpf.query_variants.sql.schema2.sql_query_builder import (
     RealAttrFilterType,
     SqlQueryBuilder,
 )
-from sqlglot import diff, exp, parse_one
-from sqlglot.diff import Keep
-from sqlglot.executor import execute
-from sqlglot.expressions import replace_placeholders
-from sqlglot.schema import Schema, ensure_schema
 
 FAMILY_VARIANT_SCHEMA = {
     "bucket_index": "int",

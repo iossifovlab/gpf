@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 import pytest_mock
 from gain.genomic_resources.testing import setup_directories
+
 from gpf.pheno.common import PhenoImportConfig
 from gpf.pheno.import_tools import main
 

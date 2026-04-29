@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import pytest_mock
+
 from gpf.pheno.pheno_data import PhenotypeStudy
 from gpf.pheno_tool.tool import PhenoResult, PhenoTool
 from gpf.variants.attributes import Sex

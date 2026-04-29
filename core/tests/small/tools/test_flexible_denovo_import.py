@@ -4,6 +4,7 @@ import pathlib
 from collections.abc import Callable
 
 import pytest
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.tools.simple_study_import import main

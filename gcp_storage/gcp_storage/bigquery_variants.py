@@ -6,13 +6,13 @@ import pandas as pd
 import yaml
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from google.cloud import bigquery
+
+from gcp_storage.bigquery_query_runner import BigQueryQueryRunner
 from gpf.query_variants.sql.schema2.base_query_builder import Dialect
 from gpf.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from gpf.variants.attributes import Role, Sex, Status
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant
-
-from gcp_storage.bigquery_query_runner import BigQueryQueryRunner
 
 logger = logging.getLogger(__name__)
 

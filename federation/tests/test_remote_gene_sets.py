@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from federation.gene_sets_db import RemoteGeneSetCollection
 
+from federation.gene_sets_db import RemoteGeneSetCollection
 from rest_client.rest_client import RESTClient
 
 

@@ -22,6 +22,11 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.testing.t4c8_import import t4c8_genes, t4c8_genome
+from studies.study_wrapper import WDAEStudy
+
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_helper import EnrichmentHelper
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 from gpf.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )
@@ -42,11 +47,6 @@ from gpf.testing.setup_helpers import (
 from gpf.variants.attributes import Inheritance
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariantFactory
-from studies.study_wrapper import WDAEStudy
-
-from enrichment_api.enrichment_builder import EnrichmentBuilder
-from enrichment_api.enrichment_helper import EnrichmentHelper
-from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 @pytest.fixture(scope="session")

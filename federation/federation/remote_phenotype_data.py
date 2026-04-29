@@ -5,6 +5,8 @@ from collections.abc import Generator, Iterable
 from typing import Any, cast
 
 import pandas as pd
+
+from federation.utils import prefix_remote_identifier, prefix_remote_name
 from gpf.common_reports.common_report import CommonReport
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.person_sets.person_sets import (
@@ -14,8 +16,6 @@ from gpf.person_sets.person_sets import (
 from gpf.pheno.common import ImportManifest, MeasureType
 from gpf.pheno.pheno_data import Instrument, Measure, PhenotypeData
 from gpf.variants.attributes import Role
-
-from federation.utils import prefix_remote_identifier, prefix_remote_name
 from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)

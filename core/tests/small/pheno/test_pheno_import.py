@@ -10,6 +10,8 @@ from gain.genomic_resources.testing import (
     setup_directories,
     setup_pedigree,
 )
+from sqlglot.expressions import table_
+
 from gpf.pheno.common import (
     DestinationConfig,
     InstrumentConfig,
@@ -25,7 +27,6 @@ from gpf.pheno.pheno_import import (
     load_measure_descriptions,
     main,
 )
-from sqlglot.expressions import table_
 
 
 @pytest.fixture

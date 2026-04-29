@@ -4,7 +4,6 @@ import sys
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.variants_loaders.vcf.loader import VcfLoader
-
 from impala_storage.schema1.import_commons import Variants2ParquetTool
 
 logger = logging.getLogger("vcf2parquet")

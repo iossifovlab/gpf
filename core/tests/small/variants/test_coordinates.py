@@ -1,8 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from gain.utils.dae_utils import dae2vcf_variant
-from gpf.variants.variant import SummaryAllele
 from pytest_mock import MockerFixture
+
+from gpf.variants.variant import SummaryAllele
 
 
 @pytest.mark.parametrize(

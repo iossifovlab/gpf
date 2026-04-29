@@ -1,6 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from collections.abc import Callable
 
+from studies.study_wrapper import WDAEStudy
+
+from enrichment_api.enrichment_helper import EnrichmentHelper
 from gpf.enrichment_tool.enrichment_utils import (
     get_enrichment_config,
 )
@@ -10,9 +13,6 @@ from gpf.enrichment_tool.gene_weights_background import (
 from gpf.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 from gpf.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
-from studies.study_wrapper import WDAEStudy
-
-from enrichment_api.enrichment_helper import EnrichmentHelper
 
 
 def test_gpf_fixture(t4c8_fixture: GPFInstance) -> None:

@@ -5,6 +5,7 @@ import pysam
 import pytest
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants_loaders.vcf.loader import VcfLoader
 from gpf.variants_loaders.vcf.serializer import VcfSerializer

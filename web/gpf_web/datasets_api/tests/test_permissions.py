@@ -6,7 +6,6 @@ from box import Box
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import override_settings
-from gpf.studies.study import GenotypeData, GenotypeDataGroup
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import WDAEStudy
 
@@ -19,6 +18,7 @@ from datasets_api.permissions import (
     remove_group_perm_from_dataset,
     user_has_permission,
 )
+from gpf.studies.study import GenotypeData, GenotypeDataGroup
 
 
 @pytest.fixture

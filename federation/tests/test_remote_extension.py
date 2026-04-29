@@ -3,16 +3,16 @@
 import pytest
 import pytest_mock
 import yaml
+from gpf_instance.gpf_instance import WGPFInstance
+from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
+from utils.testing import setup_t4c8_instance
+
 from federation.remote_extension import GPFRemoteExtension
 from federation.remote_pheno_tool_adapter import RemotePhenoToolAdapter
 from federation.remote_study_wrapper import (
     RemoteWDAEStudy,
     RemoteWDAEStudyGroup,
 )
-from gpf_instance.gpf_instance import WGPFInstance
-from studies.study_wrapper import WDAEStudy, WDAEStudyGroup
-from utils.testing import setup_t4c8_instance
-
 from rest_client.rest_client import (
     GPFAnonymousSession,
     GPFOAuthSession,

@@ -1,10 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+from sqlglot import column, parse_one
+
 from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_sql_expression_schema1,
 )
 from gpf.variants.attributes import Inheritance
-from sqlglot import column, parse_one
 
 
 @pytest.mark.parametrize(

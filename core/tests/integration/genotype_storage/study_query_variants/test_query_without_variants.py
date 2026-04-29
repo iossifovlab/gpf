@@ -6,6 +6,7 @@ import pytest
 from gain.genomic_resources.testing import (
     setup_pedigree,
 )
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.alla_import import alla_gpf

@@ -12,6 +12,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils import fs_utils
+
 from gpf.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )

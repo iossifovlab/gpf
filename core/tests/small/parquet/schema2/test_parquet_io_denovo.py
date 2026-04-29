@@ -7,6 +7,7 @@ from gain.annotation.annotation_pipeline import AnnotationPipeline
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.repository import GenomicResourceRepo
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.parquet.schema2.parquet_io import VariantsParquetWriterDeprecated
 from gpf.pedigrees.loader import FamiliesLoader

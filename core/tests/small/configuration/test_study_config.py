@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 import yaml
+
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.configuration.schemas.study_config import study_config_schema
 from gpf.configuration.study_config_builder import StudyConfigBuilder

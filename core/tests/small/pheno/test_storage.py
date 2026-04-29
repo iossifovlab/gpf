@@ -2,6 +2,7 @@
 import pathlib
 
 import pytest
+
 from gpf.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
 
 

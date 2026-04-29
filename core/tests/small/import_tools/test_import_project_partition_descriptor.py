@@ -3,6 +3,7 @@ import pathlib
 import textwrap
 
 from gain.genomic_resources.testing import setup_directories
+
 from gpf.import_tools.import_tools import ImportProject
 from gpf.testing.foobar_import import foobar_gpf
 

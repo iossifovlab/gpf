@@ -4,9 +4,10 @@ from unittest.mock import ANY
 
 import pytest
 from django.test.client import Client
-from gpf.variants.attributes import Role, Sex, Status
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+
+from gpf.variants.attributes import Role, Sex, Status
 
 
 @pytest.mark.parametrize("url,method,body", [

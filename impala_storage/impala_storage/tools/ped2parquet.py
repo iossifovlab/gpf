@@ -5,9 +5,9 @@ import os
 import sys
 
 from gain.utils.verbosity_configuration import VerbosityConfiguration
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.loader import FamiliesLoader
-
 from impala_storage.schema1.parquet_io import (
     ParquetWriter,
     VariantsParquetWriter,

@@ -22,8 +22,6 @@ from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
 )
-from gpf.gpf_instance.gpf_instance import GPFInstance
-from gpf.studies.study import GenotypeData
 from gpf_instance.gpf_instance import (
     WGPFInstance,
     get_wgpf_instance,
@@ -40,6 +38,9 @@ from studies.response_transformer import ResponseTransformer
 from studies.study_wrapper import WDAEStudy
 from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance, setup_wgpf_instance
+
+from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 

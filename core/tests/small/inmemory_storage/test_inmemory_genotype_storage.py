@@ -5,6 +5,7 @@ from typing import cast
 
 import pytest
 from box import Box
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.import_tools.cli import run_with_project
 from gpf.import_tools.import_tools import ImportProject

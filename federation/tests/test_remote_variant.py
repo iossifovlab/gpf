@@ -3,6 +3,7 @@ from typing import Any
 
 import numpy as np
 import pytest
+
 from federation.remote_variant import (
     RemoteAllele,
     RemoteFamilyAllele,

@@ -7,6 +7,7 @@ from gain.genomic_resources.testing import (
     setup_empty_gene_models,
     setup_genome,
 )
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.testing.setup_helpers import setup_gpf_instance
 

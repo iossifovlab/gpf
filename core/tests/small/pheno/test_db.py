@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from gpf.pheno.browser import PhenoBrowser
 from gpf.pheno.common import MeasureType
 from gpf.pheno.db import safe_db_name

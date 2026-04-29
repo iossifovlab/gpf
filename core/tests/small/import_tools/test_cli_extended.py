@@ -10,6 +10,7 @@ import pytest_mock
 import yaml
 from gain.genomic_resources.genomic_context import GenomicContext
 from gain.task_graph.sequential_executor import SequentialExecutor
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.import_tools import cli, import_tools
 from gpf.testing.alla_import import alla_gpf

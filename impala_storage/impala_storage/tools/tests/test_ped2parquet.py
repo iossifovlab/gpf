@@ -3,9 +3,9 @@ import os
 
 import pyarrow.parquet as pq
 import pytest
+
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 from gpf.pedigrees.families_data import FamiliesData
-
 from impala_storage.tools.ped2parquet import main
 
 

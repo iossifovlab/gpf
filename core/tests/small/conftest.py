@@ -28,6 +28,7 @@ from gain.genomic_resources.testing import (
     setup_gzip,
 )
 from gain.testing.t4c8_import import setup_t4c8_grr, t4c8_genes, t4c8_genome
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_data import PhenotypeData
 from gpf.studies.study import GenotypeData

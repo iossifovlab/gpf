@@ -8,6 +8,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils import fs_utils
+
 from gpf.variants_loaders.vcf.loader import VcfLoader
 
 

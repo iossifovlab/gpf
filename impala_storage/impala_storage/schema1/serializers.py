@@ -13,6 +13,7 @@ from typing import Any, ClassVar, cast
 import numpy as np
 import pyarrow as pa
 from gain.annotation.annotation_pipeline import AttributeInfo
+
 from gpf.pedigrees.family import Family
 from gpf.variants.attributes import (
     GeneticModel,

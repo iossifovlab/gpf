@@ -2,6 +2,7 @@
 import pyarrow.parquet as pq
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,

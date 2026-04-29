@@ -3,6 +3,7 @@ from typing import Any, cast
 
 import pytest
 from gain.utils.regions import Region
+
 from gpf.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,

@@ -12,6 +12,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
 from gpf.testing.import_helpers import vcf_study
 from gpf.testing.setup_helpers import setup_gpf_instance
 

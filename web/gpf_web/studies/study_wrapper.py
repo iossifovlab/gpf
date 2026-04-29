@@ -10,6 +10,7 @@ from typing import Any, Protocol, cast
 
 from box import Box
 from gain.utils.dae_utils import join_line
+
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.configuration.schemas.wdae_study_config import (
     wdae_study_config_schema,

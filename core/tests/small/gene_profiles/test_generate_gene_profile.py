@@ -13,6 +13,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.testing.t4c8_import import t4c8_grr
+
 from gpf.gene_profile.db import GeneProfileDB
 from gpf.gene_profile.generate_gene_profile import main
 from gpf.gpf_instance.gpf_instance import GPFInstance

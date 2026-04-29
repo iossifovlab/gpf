@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 import yaml
+
 from gpf.testing.acgt_import import acgt_gpf
 from gpf.testing.import_helpers import (
     StudyInputLayout,

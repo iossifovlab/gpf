@@ -1,14 +1,15 @@
 from abc import abstractmethod
 from typing import Any
 
+from gpf_instance.extension import GPFTool
+from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
+from utils.query_params import parse_query_params
+
 from gpf.common_reports.common_report import CommonReport
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import FamilyTag
 from gpf.pedigrees.family_tag_builder import check_family_tags_query
 from gpf.pedigrees.loader import FamiliesLoader
-from gpf_instance.extension import GPFTool
-from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
-from utils.query_params import parse_query_params
 
 
 class BaseCommonReportsHelper(GPFTool):

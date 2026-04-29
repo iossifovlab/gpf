@@ -4,6 +4,7 @@ import textwrap
 
 import pytest
 import pytest_mock
+
 from gpf.duckdb_storage.duckdb_storage_helpers import (
     create_s3_secret_clause,
 )

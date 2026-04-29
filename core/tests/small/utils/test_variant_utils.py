@@ -14,6 +14,7 @@ from gain.genomic_resources.testing import (
     build_filesystem_test_resource,
     setup_directories,
 )
+
 from gpf.utils.variant_utils import (
     BitmaskEnumTranslator,
     get_locus_ploidy,

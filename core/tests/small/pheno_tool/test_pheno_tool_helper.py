@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 import pytest_mock
 from box import Box
+
 from gpf.pheno_tool.tool import PhenoToolHelper
 from gpf.variants.attributes import Role
 

@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 import pytest_mock
+
 from gpf.query_variants.query_runners import QueryResult, QueryRunner
 
 

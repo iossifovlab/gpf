@@ -3,6 +3,7 @@ from io import StringIO
 
 import numpy as np
 import pytest
+
 from gpf.pedigrees.family import Family
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.utils.variant_utils import GenotypeType

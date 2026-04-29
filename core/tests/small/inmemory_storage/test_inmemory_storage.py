@@ -2,6 +2,7 @@
 import re
 
 import pytest
+
 from gpf.inmemory_storage.inmemory_genotype_storage import (
     InmemoryGenotypeStorage,
 )

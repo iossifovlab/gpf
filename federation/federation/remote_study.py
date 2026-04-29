@@ -2,6 +2,8 @@ from collections.abc import Generator, Iterable
 from typing import Any, cast
 
 from gain.utils.regions import Region
+
+from federation.utils import prefix_remote_identifier, prefix_remote_name
 from gpf.common_reports.common_report import CommonReport
 from gpf.configuration.gpf_config_parser import FrozenBox
 from gpf.genotype_storage.genotype_storage_registry import (
@@ -16,8 +18,6 @@ from gpf.person_sets.person_sets import parse_person_set_collection_config
 from gpf.studies.study import GenotypeDataStudy
 from gpf.variants.family_variant import FamilyVariant
 from gpf.variants.variant import SummaryVariant
-
-from federation.utils import prefix_remote_identifier, prefix_remote_name
 from rest_client.rest_client import RESTClient
 
 

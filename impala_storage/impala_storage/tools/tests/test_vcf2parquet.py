@@ -6,8 +6,8 @@ from collections.abc import Callable
 
 import pyarrow.parquet as pq
 import pytest
-from gpf.gpf_instance.gpf_instance import GPFInstance
 
+from gpf.gpf_instance.gpf_instance import GPFInstance
 from impala_storage.tools.vcf2parquet import main
 
 

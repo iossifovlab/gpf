@@ -16,6 +16,7 @@ from gain.genomic_resources.testing import (
     setup_vcf,
 )
 from gain.utils.regions import Region
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants.attributes import GeneticModel

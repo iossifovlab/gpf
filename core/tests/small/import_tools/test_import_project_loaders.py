@@ -7,6 +7,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
 from gpf.import_tools.import_tools import ImportProject
 from gpf.testing.acgt_import import acgt_gpf
 from gpf.testing.import_helpers import StudyInputLayout, setup_import_project

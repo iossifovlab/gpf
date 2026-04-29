@@ -6,8 +6,9 @@ from typing import Any, Protocol, cast
 
 import ijson
 import requests
-from gpf.pheno.common import MeasureType
 from requests.auth import HTTPBasicAuth
+
+from gpf.pheno.common import MeasureType
 
 logger = logging.getLogger(__name__)
 

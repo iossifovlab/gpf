@@ -17,9 +17,9 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
-from gpf.testing.import_helpers import vcf_study
 from gpf_instance.gpf_instance import WGPFInstance
 
+from gpf.testing.import_helpers import vcf_study
 from gpf_web_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 

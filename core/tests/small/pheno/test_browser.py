@@ -3,6 +3,7 @@ import pathlib
 
 import pytest
 import pytest_mock
+
 from gpf.pheno.browser import PhenoBrowser
 from gpf.pheno.common import MeasureType
 

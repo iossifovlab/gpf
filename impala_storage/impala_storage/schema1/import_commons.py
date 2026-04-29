@@ -12,6 +12,8 @@ from urllib.parse import urlparse
 import fsspec
 from gain.utils.dict_utils import recursive_dict_update
 from gain.utils.regions import Region
+from jinja2 import Template
+
 from gpf.configuration.gpf_config_parser import GPFConfigParser
 from gpf.configuration.study_config_builder import StudyConfigBuilder
 from gpf.gpf_instance.gpf_instance import GPFInstance
@@ -25,8 +27,6 @@ from gpf.variants_loaders.raw.loader import (
     VariantsLoader,
 )
 from gpf.variants_loaders.vcf.loader import VcfLoader
-from jinja2 import Template
-
 from impala_storage.helpers.partition_helper import MakefilePartitionHelper
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 from impala_storage.schema1.annotation_decorator import (
@@ -882,7 +882,7 @@ class BatchImporter:
         if gpf_instance is None:
             try:
                 gpf_instance = GPFInstance.build()
-            except Exception:  # noqa: pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 logger.exception("GPF not configured properly...")
 
         assert gpf_instance is not None

@@ -7,6 +7,7 @@ from gain.genomic_resources.testing import (
     setup_denovo,
     setup_pedigree,
 )
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 from gpf.testing.alla_import import alla_gpf
@@ -14,7 +15,6 @@ from gpf.testing.import_helpers import (
     denovo_study,
     study_update,
 )
-
 from studies.study_wrapper import WDAEStudy
 
 

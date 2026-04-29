@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import toml
+
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 

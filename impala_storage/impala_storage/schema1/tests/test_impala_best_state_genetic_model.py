@@ -4,6 +4,7 @@ import pathlib
 import numpy as np
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.studies.study import GenotypeData
 from gpf.testing.acgt_import import acgt_gpf

@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import pytest
+
 from gpf.variants.attributes import Inheritance, bitmask2inheritance
 
 

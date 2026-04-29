@@ -6,8 +6,9 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
-from gpf.parquet.helpers import merge_parquets, url_to_pyarrow_fs
 from pyarrow.fs import PyFileSystem
+
+from gpf.parquet.helpers import merge_parquets, url_to_pyarrow_fs
 
 
 def test_url_to_pyarrow_fs() -> None:

@@ -5,11 +5,11 @@ from typing import Any
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
+from gpf_instance.gpf_instance import WGPFInstance
+
 from gpf.duckdb_storage.duckdb_genotype_storage import duckdb_storage_factory
 from gpf.testing.alla_import import alla_gpf
 from gpf.testing.import_helpers import setup_dataset, vcf_study
-from gpf_instance.gpf_instance import WGPFInstance
-
 from studies.query_transformer import QueryTransformer, make_query_transformer
 from studies.study_wrapper import WDAEStudyGroup
 

@@ -4,6 +4,7 @@ import textwrap
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree
+
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.person_sets import (
     PersonSetCollection,

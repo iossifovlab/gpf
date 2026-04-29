@@ -8,15 +8,15 @@ import pyarrow as pa
 from gain.annotation.annotation_config import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.utils.regions import Region
+from impala.util import as_pandas
+from sqlalchemy import pool
+
 from gpf.inmemory_storage.raw_variants import RawFamilyVariants
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.query_variants.base_query_variants import QueryVariants
 from gpf.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from gpf.variants.attributes import Role, Sex, Status
-from impala.util import as_pandas
-from sqlalchemy import pool
-
 from impala_storage.helpers.impala_helpers import ImpalaHelpers
 from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
 from impala_storage.schema1.family_variants_query_builder import (

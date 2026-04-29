@@ -3,6 +3,7 @@ from collections.abc import Callable
 
 import pytest
 from gain.genomic_resources.genomic_context import GenomicContext
+
 from gpf.gpf_instance import GPFInstance
 
 

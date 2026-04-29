@@ -6,6 +6,8 @@ from typing import Any
 from gain.annotation.annotation_pipeline import AttributeInfo
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.utils.regions import Region, collapse
+from sqlglot import column
+
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
@@ -13,7 +15,6 @@ from gpf.query_variants.attribute_queries import (
 )
 from gpf.variants.attributes import Inheritance, Role, Sex
 from gpf.variants.core import Allele
-from sqlglot import column
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]

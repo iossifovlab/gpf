@@ -2,10 +2,10 @@
 import pytest
 from box import Box
 from datasets_api.models import Dataset
-from gpf.studies.study import GenotypeDataStudy
 from pytest_mock import MockerFixture
 from studies.study_wrapper import WDAEStudy
 
+from gpf.studies.study import GenotypeDataStudy
 from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
 
 

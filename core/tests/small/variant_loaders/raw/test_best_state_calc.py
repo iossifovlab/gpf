@@ -15,6 +15,7 @@ from gain.genomic_resources.testing import (
     setup_directories,
     setup_genome,
 )
+
 from gpf.pedigrees.family import Family
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.utils.variant_utils import best2gt, mat2str

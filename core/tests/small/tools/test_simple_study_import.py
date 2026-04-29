@@ -12,6 +12,7 @@ from gain.genomic_resources.testing import (
     setup_pedigree,
     setup_vcf,
 )
+
 from gpf.genotype_storage.genotype_storage import GenotypeStorage
 from gpf.import_tools.import_tools import ImportProject
 from gpf.testing.alla_import import alla_gpf

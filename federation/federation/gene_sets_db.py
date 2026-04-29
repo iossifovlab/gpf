@@ -5,9 +5,9 @@ from functools import cached_property
 from typing import Any
 
 from gain.gene_sets.gene_set import BaseGeneSetCollection, GeneSet
-from gpf.gene_sets.gene_sets_db import GeneSetsDb
 
 from federation.utils import prefix_remote_identifier, prefix_remote_name
+from gpf.gene_sets.gene_sets_db import GeneSetsDb
 from rest_client.rest_client import RESTClient
 
 logger = logging.getLogger(__name__)

@@ -5,6 +5,7 @@ import textwrap
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+
 from gpf.parquet.parquet_writer import merge_variants_parquets
 from gpf.parquet.partition_descriptor import PartitionDescriptor
 
