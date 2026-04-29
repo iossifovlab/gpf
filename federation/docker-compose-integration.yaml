@@ -1,0 +1,45 @@
+name: gpf-federation-integration
+
+# Integration-test stack for gpf-federation:
+#   - backend: same uv-built image as the per-project CI image, runs the
+#     wdae server on :21010 with a seeded t4c8 instance
+#   - runner: same image, runs pytest against the backend
+#
+# Driven by federation/Jenkinsfile.integration (downstream of the
+# Trigger federation integration stage in the root Jenkinsfile).
+
+services:
+
+  backend:
+    build:
+      context: ../
+      dockerfile: federation/Dockerfile
+    image: gpf-federation-ci:integration
+    entrypoint: /workspace/federation/scripts/backend/run_gpf.sh
+    healthcheck:
+      # python (always present in the image) instead of curl (not in
+      # python:3.12-slim).
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - |
+          import sys, urllib.request
+          r = urllib.request.urlopen(
+              "http://localhost:21010/api/v3/datasets/hierarchy", timeout=5)
+          sys.exit(0 if r.status == 200 else 1)
+      interval: 10s
+      retries: 12
+      start_period: 30s
+      timeout: 10s
+
+  runner:
+    image: gpf-federation-ci:integration
+    environment:
+      - TEST_REMOTE_HOST=http://backend:21010
+    entrypoint: /workspace/federation/scripts/runner/run_tests.sh
+    volumes:
+      - ./reports:/reports
+    depends_on:
+      backend:
+        condition: service_healthy

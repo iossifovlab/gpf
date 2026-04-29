@@ -1,38 +1,27 @@
-#!/usr/bin/bash
+#!/bin/bash
+set -euo pipefail
 
+# Backend entrypoint for the federation integration test stack. Seeds a
+# t4c8 GPF instance under /workspace/federation/tmp, runs the wdae
+# migrations, creates the test users + OAuth client, then serves wdae on
+# 0.0.0.0:21010 (the federation runner container reaches it via
+# TEST_REMOTE_HOST=http://backend:21010).
 
-for d in /wd/core /wd/web; do
-    cd ${d};
-    /opt/conda/bin/conda run --no-capture-output -n gpf pip install .
-done
+mkdir -p /workspace/federation/tmp
+rm -rf /workspace/federation/tmp/*
+python /workspace/federation/setup_testing_remote.py
 
-rm -rf /wd/federation/tmp
-mkdir /wd/federation/tmp
+export GRR_DEFINITION_FILE=/workspace/federation/tmp/grr_definition.yaml
+export DAE_DB_DIR=/workspace/federation/tmp/gpf_instance
 
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    python /wd/federation/setup_testing_remote.py
+wdaemanage migrate --noinput
+wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:admin
+wdaemanage user_create researcher@iossifovlab.com -p secret -g any_dataset:admin
+wdaemanage createapplication \
+    confidential client-credentials \
+    --user 1 \
+    --name "remote federation testing app" \
+    --client-id federation \
+    --client-secret secret
 
-export GRR_DEFINITION_FILE="/wd/federation/tmp/grr_definition.yaml"
-
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage migrate
-
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:admin
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    wdaemanage user_create researcher@iossifovlab.com -p secret -g any_dataset:admin
-
-/opt/conda/bin/conda run -n gpf \
-    wdaemanage createapplication \
-        confidential client-credentials \
-        --user 1 \
-        --name "remote federation testing app" \
-        --client-id federation \
-        --client-secret secret
-
-
-while true; do
-    /opt/conda/bin/conda run --no-capture-output -n gpf \
-        wdaemanage runserver 0.0.0.0:21010
-    sleep 10
-done
+exec wdaemanage runserver --noreload 0.0.0.0:21010

@@ -34,10 +34,11 @@ COPY web/pyproject.toml web/README.md ./web/
 COPY federation/pyproject.toml ./federation/
 COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 
-# Federation depends on gpf-core + gpf-web; copy their sources so uv sync can
-# install them editable.
+# Federation depends on gpf-core + gpf-web + gpf-rest-client; copy their
+# sources so uv sync can install them editable.
 COPY core/gpf/ ./core/gpf/
 COPY web/gpf_web/ ./web/gpf_web/
+COPY rest_client/rest_client/ ./rest_client/rest_client/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --package gpf-federation --group dev --frozen --no-install-project

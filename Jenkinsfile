@@ -177,6 +177,40 @@ pipeline {
                     }
                 }
 
+                stage('Apply Job DSL') {
+                    // Run jobDsl on master only — this is the
+                    // bootstrap that materialises (or updates) the
+                    // root-level pipelineJob() declarations under
+                    // **/jenkins-jobs/*.groovy. After this runs, the
+                    // gpf-federation-integration / gpf-rest-client-
+                    // integration jobs exist on the controller and
+                    // the Trigger ... integration stages below can
+                    // queue them. No separate gpf-seed pipelineJob
+                    // is needed — the multibranch project at
+                    // iossifovlab/gpf/master auto-runs this Jenkinsfile
+                    // on every master push, which is the same trigger
+                    // surface a dedicated seed job would have.
+                    //
+                    // Branch builds skip this stage; their Trigger
+                    // stages still wrap build() in catchError, so a
+                    // branch that touches the .groovy files before
+                    // they reach master just sees UNSTABLE there
+                    // until the next master build re-seeds.
+                    //
+                    // First-run note: on the first master build with
+                    // a new jobDsl call, the Jenkins admin may need
+                    // to approve the script under
+                    // Manage Jenkins → In-process Script Approval.
+                    when { branch 'master' }
+                    steps {
+                        jobDsl(
+                            targets: '**/jenkins-jobs/*.groovy',
+                            removedJobAction: 'IGNORE',
+                            removedViewAction: 'IGNORE',
+                        )
+                    }
+                }
+
                 stage('Sub-projects') {
                     parallel {
                         stage('core') {
@@ -320,6 +354,86 @@ pipeline {
                                 }
                             }
                             post { always { script { publishReports('rest_client') } } }
+                        }
+                    }
+                }
+
+                // The integration suites run as separate downstream
+                // jobs (gpf-federation-integration / gpf-rest-client-
+                // integration) so the heavy backend stack is wired up
+                // there, not in the per-project parallel stages.
+                // Declarative-pipeline default behaviour skips these
+                // triggers when a previous stage failed — so they only
+                // fire when core + web pytest came out clean (UNSTABLE
+                // from lint findings does NOT skip them, which is what
+                // we want).
+                //
+                // The downstream jobs are materialised by the
+                // `gpf-seed` pipeline (jenkins-jobs/Jenkinsfile.seed,
+                // tracks master). `wait: false, propagate: false`
+                // means an integration regression doesn't FAIL the
+                // parent — but `build()` still throws synchronously if
+                // the named job doesn't exist on the controller (e.g.
+                // before seed has run for the first time, or on a
+                // branch where the seed hasn't been re-run since
+                // those .groovy files were added). `catchError` keeps
+                // those bootstrap failures non-fatal: the parent build
+                // logs the error and stays UNSTABLE.
+
+                stage('Trigger federation integration') {
+                    steps {
+                        catchError(
+                            buildResult: 'UNSTABLE',
+                            stageResult: 'UNSTABLE',
+                            message:
+                                'Could not trigger ' +
+                                'gpf-federation-integration; has ' +
+                                'gpf-seed materialised it yet?',
+                        ) {
+                            build(
+                                job: '/gpf-federation-integration',
+                                parameters: [
+                                    string(
+                                        name: 'BRANCH_NAME',
+                                        value: env.BRANCH_NAME,
+                                    ),
+                                    string(
+                                        name: 'COMMIT_SHA',
+                                        value: env.GIT_COMMIT ?: '',
+                                    ),
+                                ],
+                                wait: false,
+                                propagate: false,
+                            )
+                        }
+                    }
+                }
+
+                stage('Trigger rest_client integration') {
+                    steps {
+                        catchError(
+                            buildResult: 'UNSTABLE',
+                            stageResult: 'UNSTABLE',
+                            message:
+                                'Could not trigger ' +
+                                'gpf-rest-client-integration; has ' +
+                                'gpf-seed materialised it yet?',
+                        ) {
+                            build(
+                                job: '/gpf-rest-client-integration',
+                                parameters: [
+                                    string(
+                                        name: 'BRANCH_NAME',
+                                        value: env.BRANCH_NAME,
+                                    ),
+                                    string(
+                                        name: 'COMMIT_SHA',
+                                        value: env.GIT_COMMIT ?: '',
+                                    ),
+                                ],
+                                wait: false,
+                                propagate: false,
+                            )
                         }
                     }
                 }

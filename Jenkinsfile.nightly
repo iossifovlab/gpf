@@ -1,0 +1,96 @@
+// Cron-scheduled orchestrator that rebuilds master from scratch
+// and re-runs the integration jobs unconditionally. Catches
+// dependency drift / silently-stale caches on quiet days.
+//
+// Three downstreams are exercised:
+//   - iossifovlab/gpf/master              — full rebuild, lint+tests+
+//                                           wheels for core + web +
+//                                           federation + rest_client
+//   - /gpf-federation-integration         — federation tests against a
+//                                           freshly seeded backend
+//   - /gpf-rest-client-integration        — rest_client tests against
+//                                           a freshly seeded backend
+//                                           + MailHog
+//
+// Each is wrapped in `catchError` so a failure in one doesn't mask
+// the others. By morning we want a single Zulip alert whose linked
+// build surfaces every failing downstream, not just whichever
+// broke first.
+
+pipeline {
+    // Same label exclusion the other gpf pipelines use — dory's
+    // docker daemon / resource profile doesn't fit our jobs.
+    agent { label '!dory' }
+
+    options {
+        // Generous: a cold master rebuild + both integration suites
+        // can comfortably reach 90 minutes; 4 hours leaves headroom
+        // for a slow/contended night without false-alarming.
+        timeout(time: 4, unit: 'HOURS')
+        // 40 keeps ~6 weeks of nightlies for trend analysis without
+        // bloating the controller's disk.
+        buildDiscarder(logRotator(numToKeepStr: '40'))
+    }
+
+    triggers {
+        // H = random minute around 02:00 UTC, smoothing controller
+        // load across nightly jobs.
+        cron('H 2 * * *')
+    }
+
+    stages {
+        stage('Rebuild master') {
+            steps {
+                catchError(buildResult: 'FAILURE',
+                           stageResult: 'FAILURE') {
+                    build(
+                        job: 'iossifovlab/gpf/master',
+                        wait: true,
+                        propagate: true,
+                    )
+                }
+            }
+        }
+
+        stage('Run gpf-federation-integration') {
+            steps {
+                catchError(buildResult: 'FAILURE',
+                           stageResult: 'FAILURE') {
+                    build(
+                        job: '/gpf-federation-integration',
+                        wait: true,
+                        propagate: true,
+                    )
+                }
+            }
+        }
+
+        stage('Run gpf-rest-client-integration') {
+            steps {
+                catchError(buildResult: 'FAILURE',
+                           stageResult: 'FAILURE') {
+                    build(
+                        job: '/gpf-rest-client-integration',
+                        wait: true,
+                        propagate: true,
+                    )
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            // Wrapped in an explicit node block: a pipeline-init
+            // failure can tear down the outer agent before post
+            // runs, leaving zulipSend without a FilePath context.
+            node('!dory') {
+                zulipSend(
+                    topic: 'nightly',
+                    message:
+                        "Nightly FAILED — ${env.BUILD_URL}",
+                )
+            }
+        }
+    }
+}

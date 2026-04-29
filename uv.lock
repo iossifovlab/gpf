@@ -1220,6 +1220,7 @@ name = "gpf-federation"
 source = { editable = "federation" }
 dependencies = [
     { name = "gpf-core" },
+    { name = "gpf-rest-client" },
     { name = "gpf-web" },
     { name = "ijson" },
     { name = "requests" },
@@ -1241,6 +1242,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "gpf-core", editable = "core" },
+    { name = "gpf-rest-client", editable = "rest_client" },
     { name = "gpf-web", editable = "web" },
     { name = "ijson", specifier = ">=3.2" },
     { name = "requests", specifier = ">=2.32" },

@@ -18,6 +18,7 @@ classifiers = [
 ]
 dependencies = [
     "gpf-core",
+    "gpf-rest-client",
     "gpf-web",
     "ijson>=3.2",
     "requests>=2.32",

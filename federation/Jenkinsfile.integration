@@ -1,0 +1,156 @@
+// Dedicated Jenkins pipeline for the gpf-federation integration suite.
+// Triggered downstream from `iossifovlab/gpf/<branch>`'s
+// "Trigger federation integration" stage after Sub-projects (core +
+// web tests + lint) finishes successfully. Can also be run manually
+// from the Jenkins UI with explicit BRANCH_NAME / COMMIT_SHA params.
+//
+// Stack: federation/docker-compose-integration.yaml brings up a wdae
+// backend container (entrypoint: scripts/backend/run_gpf.sh) seeded
+// with a t4c8 GPF instance, and a runner container that hits the
+// backend with pytest (TEST_REMOTE_HOST=http://backend:21010).
+
+pipeline {
+    agent { label '!dory' }
+
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'master',
+            description: 'Branch the upstream gpf build was ' +
+                'triggered from. The pipeline checks out ' +
+                'this branch unless COMMIT_SHA is set.',
+        )
+        string(
+            name: 'COMMIT_SHA',
+            defaultValue: '',
+            description: 'Specific commit SHA to test (takes ' +
+                'precedence over BRANCH_NAME). Empty = use ' +
+                'BRANCH_NAME HEAD.',
+        )
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        COMPOSE_PROJECT =
+            "gpf-federation-integration-${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Start') {
+            steps {
+                zulipSend(
+                    message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                    topic: "${env.JOB_NAME}",
+                )
+            }
+        }
+
+        stage('Prepare workspace') {
+            steps {
+                sh '''
+                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
+                        rm -rf reports federation/reports
+                    mkdir -p reports/integration federation/reports
+                    chmod 777 federation/reports
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                script {
+                    String ref = params.COMMIT_SHA?.trim() ?: \
+                                 params.BRANCH_NAME
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: ref]],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/iossifovlab/gpf.git',
+                        ]],
+                        extensions: [[$class: 'CloneOption',
+                                      shallow: true,
+                                      noTags: true,
+                                      depth: 1]],
+                    ])
+                }
+            }
+        }
+
+        stage('Build image') {
+            steps {
+                sh '''
+                    docker compose \
+                        -p "$COMPOSE_PROJECT" \
+                        -f federation/docker-compose-integration.yaml \
+                        build backend
+                '''
+            }
+        }
+
+        stage('Run integration tests') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            TEST_RC=0
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f federation/docker-compose-integration.yaml \
+                                run --rm runner \
+                                    || TEST_RC=$?
+                            cp federation/reports/*.xml \
+                                reports/integration/ 2>/dev/null || true
+                            exit $TEST_RC
+                        '''
+                    } finally {
+                        sh '''
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f federation/docker-compose-integration.yaml \
+                                down -v --remove-orphans || true
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                try {
+                    junit(
+                        allowEmptyResults: true,
+                        testResults: 'reports/integration/pytest.xml',
+                    )
+                    recordCoverage(
+                        tools: [[
+                            parser: 'COBERTURA',
+                            pattern: 'reports/integration/coverage.xml',
+                        ]],
+                        id: 'federation-integration-coverage',
+                        name: 'federation integration coverage',
+                        skipPublishingChecks: true,
+                        failOnError: false,
+                    )
+                    archiveArtifacts(
+                        artifacts: 'reports/integration/*.xml',
+                        allowEmptyArchive: true,
+                        fingerprint: false,
+                    )
+                } finally {
+                    zulipNotification(topic: "${env.JOB_NAME}")
+                }
+            }
+        }
+        cleanup {
+            sh '''
+                docker rmi gpf-federation-ci:integration 2>/dev/null || true
+            '''
+        }
+    }
+}

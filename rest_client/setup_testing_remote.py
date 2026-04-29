@@ -1,14 +1,20 @@
-import pathlib  # noqa: INP001
+# ruff: noqa: INP001
+# Standalone helper script run as the entrypoint of the integration
+# backend container — not a package member, so it has no neighbour
+# __init__.py. Hence the file-level INP001 suppression.
+"""Seed a t4c8 GPF instance for the rest_client integration test backend."""
+import pathlib
 
 from utils.testing import setup_t4c8_instance
 
-ROOT_PATH = pathlib.Path("/wd/rest_client/tmp")
+ROOT_PATH = pathlib.Path("/workspace/rest_client/tmp")
+ROOT_PATH.mkdir(parents=True, exist_ok=True)
 
 GRR_PATH = ROOT_PATH / "grr_definition.yaml"
 GRR_PATH.write_text(
-"""id: "remote"
-type: "directory"
-directory: "/wd/rest_client/tmp/t4c8_grr"
-""")
+    'id: "remote"\n'
+    'type: "directory"\n'
+    f'directory: "{ROOT_PATH}/t4c8_grr"\n',
+)
 
 setup_t4c8_instance(ROOT_PATH)
