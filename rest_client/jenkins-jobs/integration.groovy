@@ -47,7 +47,17 @@ pipelineJob('gpf-rest-client-integration') {
                     remote {
                         url('https://github.com/iossifovlab/gpf.git')
                     }
-                    branch('master')
+                    // Single-quoted Groovy string so `${BRANCH_NAME}`
+                    // is stored literally in the SCM config XML;
+                    // Jenkins's git plugin expands it at checkout
+                    // time using the BRANCH_NAME build parameter
+                    // (defaults to `master` per the parameters{}
+                    // block above). A branch trigger therefore loads
+                    // Jenkinsfile.integration from the same branch
+                    // it tests, not from master — important when the
+                    // pipeline definition lives on a non-master
+                    // branch.
+                    branch('${BRANCH_NAME}')
                 }
             }
             scriptPath('rest_client/Jenkinsfile.integration')
