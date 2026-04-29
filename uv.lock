@@ -1151,6 +1151,7 @@ dev = [
     { name = "types-docker" },
     { name = "types-psutil" },
     { name = "types-pyyaml" },
+    { name = "types-toml" },
 ]
 
 [package.metadata]
@@ -1211,6 +1212,7 @@ dev = [
     { name = "types-docker" },
     { name = "types-psutil" },
     { name = "types-pyyaml" },
+    { name = "types-toml" },
 ]
 
 [[package]]
@@ -3197,6 +3199,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/91/16/348015856ae09cd031cfe391799472f959f69888e816e71a16b38e70a671/types_requests_oauthlib-2.0.0.20260408.tar.gz", hash = "sha256:2503f978d0669d06224512b52be9c7b4b8e5f23ec7abdd12b214c40bb062ab73", size = 11144, upload-time = "2026-04-08T04:36:49.134Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/79/1e/6cf9700497d642d09e4bacffabe9be9f08451686a15f2e37010780c9a499/types_requests_oauthlib-2.0.0.20260408-py3-none-any.whl", hash = "sha256:27cf8eac7fd10d09f5f75b76d049baee7842d00f1b5543096cf05eb305fcee09", size = 14344, upload-time = "2026-04-08T04:36:48.302Z" },
+]
+
+[[package]]
+name = "types-toml"
+version = "0.10.8.20260408"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/71/9b/887564a51a84c96ba08b715570e546f0ea793df6372b736bfbc596ca5536/types_toml-0.10.8.20260408.tar.gz", hash = "sha256:6b30b031235565a12febb1388900b129f1adeabfcfa594da46d0372b2ac107ad", size = 9341, upload-time = "2026-04-08T04:27:54.394Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/f1/942d95ba026779bc6e3064f8b094216588dc3276cc328cf8e03a0541918d/types_toml-0.10.8.20260408-py3-none-any.whl", hash = "sha256:e958d4c660385e548705a298f17dc162baf44c8b6d6aff79aeefe75f4f77ac87", size = 9677, upload-time = "2026-04-08T04:27:53.526Z" },
 ]
 
 [[package]]

@@ -461,17 +461,17 @@ class FamiliesLoader(CLILoader):
 
                 def fill_sample_id(rec: pd.Series) -> pd.Series:
                     if not pd.isna(rec.sample_id):
-                        return cast(pd.Series, pd.Series([rec.sample_id]))
+                        return pd.Series([rec.sample_id])
                     if rec.generated or rec.not_sequenced:
                         return pd.Series([None])
-                    return cast(pd.Series, pd.Series([rec.personId]))
+                    return pd.Series([rec.personId])
 
             else:
 
                 def fill_sample_id(rec: pd.Series) -> pd.Series:
                     if not pd.isna(rec.sample_id):
-                        return cast(pd.Series, pd.Series([rec.sample_id]))
-                    return cast(pd.Series, pd.Series([rec.personId]))
+                        return pd.Series([rec.sample_id])
+                    return pd.Series([rec.personId])
 
             sample_ids = cast(
                 pd.Series,
@@ -611,7 +611,7 @@ class FamiliesLoader(CLILoader):
                 "sample_id": "sample_id",
             },
         )
-        df.sex = df.sex.apply(lambda v: v.name)
+        df["sex"] = df["sex"].apply(lambda v: v.name)
 
         return df
 

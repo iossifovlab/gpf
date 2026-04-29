@@ -11,7 +11,7 @@ import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
 from gain.utils.verbosity_configuration import VerbosityConfiguration
-from gpf import __version__  # type: ignore  # pylint: disable=C0412
+from gpf import __version__  # pylint: disable=C0412
 from gpf.pheno.build_pheno_browser import main as build_pheno_browser
 from gpf.tools.generate_common_report import (
     main as generate_common_report,

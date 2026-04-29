@@ -4,7 +4,7 @@ import sys
 
 from gain.utils.verbosity_configuration import VerbosityConfiguration
 
-from gpf import __version__  # type: ignore
+from gpf import __version__
 from gpf.gpf_instance import GPFInstance
 
 logger = logging.getLogger("gp_exporter")

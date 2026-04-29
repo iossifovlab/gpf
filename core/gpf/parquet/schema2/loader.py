@@ -226,12 +226,9 @@ class ParquetLoader:
         parquet_file = pq.ParquetFile(path)
         ped_df = parquet_file.read().to_pandas()
         parquet_file.close()
-        ped_df.role = ped_df.role.apply(  # pyright: ignore[reportCallIssue]
-            Role.from_value)  # type: ignore
-        ped_df.sex = ped_df.sex.apply(
-            Sex.from_value)  # type: ignore
-        ped_df.status = ped_df.status.apply(
-            Status.from_value)  # type: ignore
+        ped_df["role"] = ped_df["role"].apply(Role.from_value)  # type: ignore[arg-type]
+        ped_df["sex"] = ped_df["sex"].apply(Sex.from_value)  # type: ignore[arg-type]
+        ped_df["status"] = ped_df["status"].apply(Status.from_value)  # type: ignore[arg-type]
         ped_df.loc[ped_df.layout.isna(), "layout"] = None
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 

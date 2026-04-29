@@ -153,7 +153,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             if family is None:
                 continue
             family_genotypes = DenovoFamiliesGenotypes(
-                family, genotypes, best_state)  # type: ignore
+                family, genotypes, best_state)
             for fam, genotype, best_state in \
                     family_genotypes.family_genotype_iterator():
                 fv = FamilyVariant(
@@ -588,7 +588,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 # by a ','
                 person_ids = ",".join(
                     temp_df.iloc[
-                        variants_indices].loc[:, "person_id"],  # type: ignore
+                        variants_indices].loc[:, "person_id"],
                 ).replace(";", ",").split(",")
                 if "family_id" in temp_df.columns:
                     family_id = variant[4]  # type: ignore
@@ -637,7 +637,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         ),
                         "best_state": None,
                     }
-                    record = raw_df.loc[variants_indices[0]]  # type: ignore
+                    record = raw_df.loc[variants_indices[0]]
                     extra_attributes = record[extra_attributes_cols].to_dict()
 
                     result.append({**family_dict, **extra_attributes})
@@ -687,7 +687,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             extra_attributes_df = raw_df[extra_attributes_cols]
             denovo_df = denovo_df.join(extra_attributes_df)
-        denovo_df.chrom = denovo_df.chrom.apply(self._adjust_chrom)
+        denovo_df["chrom"] = denovo_df["chrom"].apply(self._adjust_chrom)
         denovo_df = denovo_df.dropna(axis=0, how="any", subset=[
             "position", "reference", "alternative"])
         return (denovo_df, extra_attributes_cols.tolist())

@@ -180,7 +180,7 @@ def _load_annotation_file(
         annot_df[col] = (
             annot_df[col]
             .astype(object)
-            .where(pd.notna(annot_df[col]), None)
+            .where(pd.notna(annot_df[col]), None)  # type: ignore[call-overload]
         )
     return annot_df
 

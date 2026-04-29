@@ -771,7 +771,7 @@ class FamilyVariant(SummaryVariant):
         for gi, fgi in gt2fgt:
             fgt[self.gt == gi] = fgi
 
-        return [list(fgt[:, m]) for m in range(fgt.shape[1])]
+        return [list(fgt[:, m]) for m in range(fgt.shape[1])]  # type: ignore[misc]
 
     @property
     def genetic_model(self) -> GeneticModel:

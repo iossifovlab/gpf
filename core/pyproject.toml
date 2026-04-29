@@ -141,6 +141,7 @@ dev = [
     "types-docker",
     "types-psutil",
     "types-pyyaml",
+    "types-toml",
 ]
 
 [tool.hatch.version]

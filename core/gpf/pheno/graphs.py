@@ -295,7 +295,7 @@ def draw_measure_violinplot(
 
     set_figure_size(fig, len(columns))
 
-    df_with_column_names.sex = df_with_column_names.sex.apply(
+    df_with_column_names["sex"] = df_with_column_names["sex"].apply(
         lambda s: s.name if s != Sex.unspecified else "M")
 
     violinplot(
@@ -470,7 +470,7 @@ def draw_categorical_violin_distribution(
         for x in values_domain
     ])
     ax.set_xlim(2 * -binned_maximum, len(columns) * 2 * binned_maximum)
-    ax.set_ylim(-1, np.max(bin_edges) + 1)  # pyright: ignore
+    ax.set_ylim(-1, float(np.max(bin_edges)) + 1)  # pyright: ignore
 
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")

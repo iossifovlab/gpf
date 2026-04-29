@@ -74,7 +74,7 @@ class GeneProfileDB:
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
             rows = connection.execute(
                 to_duckdb_transpile(query),
-            ).df().replace([np.nan], [None]).to_dict("records")
+            ).df().replace({np.nan: None}).to_dict("records")
         if len(rows) == 0:
             return None
         if len(rows) > 1:
@@ -241,7 +241,7 @@ class GeneProfileDB:
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
             return connection.execute(
                 to_duckdb_transpile(query),
-            ).df().replace([np.nan], [None]).to_dict("records")
+            ).df().replace({np.nan: None}).to_dict("records")
 
     def list_symbols(
         self, page: int, symbol_like: str | None = None,
@@ -279,7 +279,7 @@ class GeneProfileDB:
             return [
                 row["symbol_name"] for row in connection.execute(
                     to_duckdb_transpile(query),
-                ).df().replace([np.nan], [None]).to_dict("records")
+                ).df().replace({np.nan: None}).to_dict("records")
             ]
 
 
