@@ -2,14 +2,21 @@
 //
 // Runs per-sub-project CI in parallel. Each project:
 //   1. Builds its Dockerfile image from the repo root build context.
-//   2. Inside the container, runs ruff, mypy, pylint, and pytest with JUnit
-//      output, plus Cobertura coverage for pytest.
-//   3. Publishes JUnit + coverage reports to Jenkins.
+//   2. Inside the container, runs ruff, mypy, pylint, and pytest. ruff /
+//      mypy / pylint write text reports to /reports; pytest writes JUnit
+//      XML + Cobertura coverage.
+//   3. Publishes pytest's JUnit + coverage via `junit` and `recordCoverage`,
+//      and the lint reports via `recordIssues` (Warnings Next Generation
+//      plugin) with a `TOTAL > 0 → unstable` quality gate.
 //
-// Lint / type-check tools (ruff, mypy, pylint) only report via their JUnit
-// XML and don't gate the build. Pytest, however, propagates its exit code
-// so test failures fail the build (the post.always hook still publishes
-// the JUnit + coverage reports either way).
+// Result mapping:
+//   - pytest test failure  → stage exits non-zero  → build FAILURE
+//   - mypy / ruff / pylint findings  → recordIssues quality gate  → build
+//     UNSTABLE (the stage's exit code is unaffected)
+//
+// `recordIssues` keeps the lint findings in their own "Issues" tab in
+// Jenkins, separate from the "Tests" tab, which makes the FAILURE-vs-
+// UNSTABLE distinction visible at a glance.
 
 def runProject(Map args) {
     String name           = args.name                          // dir name, e.g. "core"
@@ -39,10 +46,15 @@ def runProject(Map args) {
             -v \$PWD/.git:/workspace/.git:ro \\
             ${dockerRunExtra} \\
             ${imageTag} \\
-            sh -c '
-                set +e
-                ruff check --output-format=junit --output-file=/reports/ruff.xml .
-                mypy ${mypyExtra} ${mypyTarget} --junit-xml=/reports/mypy.xml
+                sh -c '
+                # ruff / mypy / pylint are non-gating: --exit-zero or `|| true`
+                # ensures their non-zero exit codes never propagate. Their
+                # findings end up in /reports as text and are picked up by
+                # `recordIssues` in the post hook → UNSTABLE quality gate.
+                ruff check --exit-zero --output-format=concise . \\
+                    > /reports/ruff.txt
+                mypy ${mypyExtra} ${mypyTarget} \\
+                    > /reports/mypy.txt 2>&1 || true
                 pylint_rcfile=/workspace/${name}/pylintrc
                 if [ ! -f "\$pylint_rcfile" ]; then
                     pylint_rcfile=/workspace/pylintrc
@@ -52,10 +64,12 @@ def runProject(Map args) {
                 # Django apps as peer packages) lintable end-to-end; for
                 # the other stages it's a no-op.
                 pylint --rcfile="\$pylint_rcfile" \\
-                       --load-plugins=pylint_junit \\
-                       --output-format=pylint_junit.JUnitReporter \\
+                       --output-format=parseable \\
                        --recursive=y \\
-                       --exit-zero ${pkg} > /reports/pylint.xml
+                       --exit-zero ${pkg} > /reports/pylint.txt
+                # pytest IS gating: its exit code is the only thing that
+                # propagates out of this script and decides FAILURE vs
+                # SUCCESS for the stage.
                 pytest ${pytestArgs} \\
                     --junitxml=/reports/pytest.xml \\
                     --cov=${pkg} --cov-branch \\
@@ -71,25 +85,50 @@ def runProject(Map args) {
                 # mounted .git to produce a proper PEP 440 version.
                 uv build --package ${distPkg} --out-dir /dist
                 chmod -R a+rw /reports /dist
-                # Propagate pytest's exit code so test failures fail the
-                # build (FAILURE) instead of just being logged via JUnit
-                # (UNSTABLE). The post.always publishReports hook still
-                # uploads the XML reports either way. Lint / type-check
-                # failures from the steps above don't gate here — they
-                # surface via their JUnit XMLs only.
                 exit \$pytest_exit
             '
     """
 }
 
 def publishReports(String name) {
-    junit allowEmptyResults: true, testResults: "reports/${name}/*.xml"
+    // pytest results — `junit` marks UNSTABLE on test failures, but the
+    // stage already exited with the pytest exit code so a failure here
+    // surfaces as FAILURE.
+    junit allowEmptyResults: true, testResults: "reports/${name}/pytest.xml"
+
     recordCoverage(
         tools: [[parser: 'COBERTURA', pattern: "reports/${name}/coverage.xml"]],
         id: "${name}-coverage",
         name: "${name} coverage",
         skipPublishingChecks: true,
         failOnError: false,
+    )
+
+    // Static-analysis findings (ruff / mypy / pylint) — separate per-tool
+    // record so each gets its own "Issues" tab and trend chart. Quality
+    // gate marks the build UNSTABLE if any new finding appears; FAILURE
+    // is reserved for pytest test failures (and stage script errors).
+    recordIssues(
+        enabledForFailure: true,
+        aggregatingResults: false,
+        tools: [
+            ruff(
+                pattern: "reports/${name}/ruff.txt",
+                id: "${name}-ruff",
+                name: "${name} ruff",
+            ),
+            myPy(
+                pattern: "reports/${name}/mypy.txt",
+                id: "${name}-mypy",
+                name: "${name} mypy",
+            ),
+            pyLint(
+                pattern: "reports/${name}/pylint.txt",
+                id: "${name}-pylint",
+                name: "${name} pylint",
+            ),
+        ],
+        qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]],
     )
 }
 
