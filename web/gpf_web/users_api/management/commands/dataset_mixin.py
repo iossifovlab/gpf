@@ -21,7 +21,7 @@ class DatasetBaseMixin(DatasetHelpers):
                 return None
 
             return Dataset.objects.get(dataset_id=dataset_id)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.debug("dataset %s not found", dataset_id, exc_info=True)
         return None
 

@@ -535,7 +535,7 @@ class RawFamilyVariants(abc.ABC):
                     v.set_matched_alleles(alleles_matched)
                     return v
                 logger.info("no matched alleles for family variant: %s", v)
-            except Exception as ex:  # noqa: BLE001
+            except Exception as ex:
                 logger.warning(
                     "unexpected error: %s; %s", ex, v, exc_info=True)
                 return None

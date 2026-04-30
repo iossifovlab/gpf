@@ -273,7 +273,7 @@ class RemotePhenotypeData(PhenotypeData):
         sort_by: str | None = None,
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        measures = self.rest_client.get_browser_measures(
+        yield from self.rest_client.get_browser_measures(
             self._remote_pheno_id,
             instrument=instrument,
             search_term=search_term,
@@ -281,4 +281,3 @@ class RemotePhenotypeData(PhenotypeData):
             sort_by=sort_by,
             order_by=order_by,
         )
-        yield from measures

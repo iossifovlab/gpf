@@ -485,7 +485,7 @@ class GenotypeData(CommonStudyMixin, ABC):
                     "common report for %s already exists, loading it",
                     self.study_id)
                 return CommonReport.load(report_filename)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.warning(
                 "unable to load common report for %s", self.study_id,
                 exc_info=True)

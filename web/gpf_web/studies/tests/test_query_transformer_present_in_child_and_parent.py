@@ -136,8 +136,10 @@ def test_attributes_query_roles() -> None:
          [Role.prb.value | Role.dad.value],
          [Role.prb.value, Role.sib.value,
           Role.prb.value | Role.sib.value | Role.mom.value],
-         "((prb and not sib) or (sib and not prb) or (prb and sib)) "
-         "and (dad and not mom)"),
+         (
+             "((prb and not sib) or (sib and not prb) or (prb and sib)) "
+             "and (dad and not mom)"
+         )),
     ])
 def test_transform_present_in_child_and_present_in_parent_roles(
     present_in_child: set[str],
@@ -224,22 +226,28 @@ def test_transform_present_in_child_and_present_in_parent_inheritance(
         (
             {"father only", "mother only", "mother and father", "neither"},
             "homozygous",
-            "(mom~homozygous and not dad~homozygous) or "
-            "(dad~homozygous and not mom~homozygous) or "
-            "(mom~homozygous and dad~homozygous) or "
-            "(not mom and not dad)",
+            (
+                "(mom~homozygous and not dad~homozygous) or "
+                "(dad~homozygous and not mom~homozygous) or "
+                "(mom~homozygous and dad~homozygous) or "
+                "(not mom and not dad)"
+            ),
         ),
         (
             {"mother only", "neither"},
             "heterozygous",
-            "(mom~heterozygous and not dad~heterozygous) or "
-            "(not mom and not dad)",
+            (
+                "(mom~heterozygous and not dad~heterozygous) or "
+                "(not mom and not dad)"
+            ),
         ),
         (
             {"father only", "neither"},
             "heterozygous",
-            "(dad~heterozygous and not mom~heterozygous) or "
-            "(not mom and not dad)",
+            (
+                "(dad~heterozygous and not mom~heterozygous) or "
+                "(not mom and not dad)"
+            ),
         ),
         (
             {"mother and father", "neither"},
@@ -254,10 +262,12 @@ def test_transform_present_in_child_and_present_in_parent_inheritance(
         (
             {"father only", "mother only", "mother and father", "neither"},
             "heterozygous",
-            "(mom~heterozygous and not dad~heterozygous) or "
-            "(dad~heterozygous and not mom~heterozygous) or "
-            "(mom~heterozygous and dad~heterozygous) or "
-            "(not mom and not dad)",
+            (
+                "(mom~heterozygous and not dad~heterozygous) or "
+                "(dad~heterozygous and not mom~heterozygous) or "
+                "(mom~heterozygous and dad~heterozygous) or "
+                "(not mom and not dad)"
+            ),
         ),
     ],
 )

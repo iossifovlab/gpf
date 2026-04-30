@@ -373,9 +373,7 @@ def flexible_cnv_loader(
             cnv_plus_values=cnv_plus_values,
             cnv_minus_values=cnv_minus_values)
 
-        variant_generator = flexible_variant_loader(
+        yield from flexible_variant_loader(
             infile, header, line_splitter, transformers,
             filters=[],
         )
-
-        yield from variant_generator

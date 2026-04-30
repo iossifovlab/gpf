@@ -208,7 +208,7 @@ class QueryResult:
             try:
                 runner.close()
                 logger.debug("runner %s closed", runner.study_id)
-            except Exception as ex:  # noqa: BLE001
+            except Exception as ex:
                 logger.info(
                     "exception in result close: %s", type(ex), exc_info=True)
         logger.debug("emptying result queue %s", self.result_queue.qsize())

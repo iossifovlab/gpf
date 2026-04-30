@@ -216,46 +216,46 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
     result = {}
 
     result["id"] = args.pheno_name
-    delattr(args, "pheno_name")
+    del args.pheno_name
 
     result["input_dir"] = os.getcwd()
 
     result["work_dir"] = args.output
-    delattr(args, "output")
+    del args.output
 
     result["instrument_files"] = [args.instruments]
-    delattr(args, "instruments")
+    del args.instruments
 
     result["pedigree"] = args.pedigree
-    delattr(args, "pedigree")
+    del args.pedigree
 
     result["person_column"] = args.person_column
-    delattr(args, "person_column")
+    del args.person_column
 
     result["delimiter"] = "\t" if args.tab_separated else ","
-    delattr(args, "tab_separated")
+    del args.tab_separated
 
     result["skip_pedigree_measures"] = args.skip_pheno_common
-    delattr(args, "skip_pheno_common")
+    del args.skip_pheno_common
 
     result["inference_config"] = args.inference_config
-    delattr(args, "inference_config")
+    del args.inference_config
 
     if args.data_dictionary:
         result["data_dictionary"] = {
             "files": [{"path": args.data_dictionary}],
         }
-        delattr(args, "data_dictionary")
+        del args.data_dictionary
 
     if args.instrument_dictionary:
         result["instrument_dictionary"] = {
             "files": [{"path": args.instrument_dictionary}],
         }
-        delattr(args, "instrument_dictionary")
+        del args.instrument_dictionary
 
     if args.regression:
         result["study_config"] = {"regressions": args.regression}
-        delattr(args, "regression")
+        del args.regression
 
     return PhenoImportConfig.model_validate(result)
 

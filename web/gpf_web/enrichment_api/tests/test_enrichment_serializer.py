@@ -200,4 +200,4 @@ def test_serialize_enrichment_result(
     assert res["count"] == 3
     assert res["overlapped"] == 1
     assert res["expected"] == 3
-    assert res["pvalue"] == 0.5
+    assert res["pvalue"] == 0.5  # noqa: RUF069 — exact serialization roundtrip

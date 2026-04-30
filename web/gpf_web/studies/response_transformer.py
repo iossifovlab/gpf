@@ -332,7 +332,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
                         try:
                             assert col_format is not None
                             return str(col_format % val)
-                        except Exception:  # noqa: BLE001
+                        except Exception:
                             logger.warning(
                                 "error formatting variant: %s (%s) (%s)",
                                 v, col_format, val, exc_info=True)
@@ -381,7 +381,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
 
             except (
                 AttributeError, KeyError, IndexError, AssertionError,
-                Exception,  # noqa: BLE001
+                Exception,
             ):
                 if isinstance(v, FamilyVariant):
                     logger.warning(

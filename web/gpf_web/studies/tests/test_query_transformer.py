@@ -33,8 +33,10 @@ from studies.query_transformer import QueryTransformer
         ),
         (
             ["affected only", "unaffected only", "affected and unaffected"],
-            "(affected and not unaffected) or (unaffected and not affected)"
-            " or (affected and unaffected)",
+            (
+                "(affected and not unaffected) or "
+                "(unaffected and not affected) or (affected and unaffected)"
+            ),
         ),
     ],
 )

@@ -147,11 +147,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
 
-        variants = self._query_gene_view_summary_variants(
+        yield from self._query_gene_view_summary_variants(
             query_transformer, **kwargs,
         )
-
-        yield from variants
 
     def get_gene_view_summary_variants_download(
         self,

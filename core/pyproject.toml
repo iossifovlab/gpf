@@ -137,7 +137,7 @@ dev = [
     "pytest-mock",
     "pytest-xdist",
     "pytestarch",
-    "ruff==0.14.6",
+    "ruff==0.15.10",
     "types-docker",
     "types-psutil",
     "types-pyyaml",

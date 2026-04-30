@@ -317,13 +317,17 @@ class CNVLiftoverTool(LiftoverTool):
                         ]
                         assert len(person_ids) >= 1
                         line = [
-                            f"{liftover_annotatable.chrom}:"
-                            f"{liftover_annotatable.pos}-"
-                            f"{liftover_annotatable.pos_end}",
+                            (
+                                f"{liftover_annotatable.chrom}:"
+                                f"{liftover_annotatable.pos}-"
+                                f"{liftover_annotatable.pos_end}"
+                            ),
                             liftover_annotatable.type.name,
-                            f"{annotatable.chrom}:"
-                            f"{annotatable.pos}-"
-                            f"{annotatable.pos_end}",
+                            (
+                                f"{annotatable.chrom}:"
+                                f"{annotatable.pos}-"
+                                f"{annotatable.pos_end}"
+                            ),
                             annotatable.type.name,
                             str(size_diff),
                             fa.family_id,

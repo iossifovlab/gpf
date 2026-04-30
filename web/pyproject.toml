@@ -53,6 +53,7 @@ dev = [
     "coverage",
     "django-stubs==5.2.2",
     "mypy==1.15.0",
+    "pandas-stubs",
     "pylint",
     "pylint-django",
     "pylint-junit",
@@ -61,7 +62,7 @@ dev = [
     "pytest-django",
     "pytest-mock",
     "pytest-xdist",
-    "ruff==0.14.6",
+    "ruff==0.15.10",
     "types-requests",
     "types-requests-oauthlib",
 ]

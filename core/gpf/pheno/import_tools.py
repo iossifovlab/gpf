@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
 
     import_config = PhenoImportConfig.model_validate(raw_config)
     gpf_instance = get_gpf_instance(import_config)
-    delattr(args, "project")
+    del args.project
 
     if args.task_status_dir is None:
         args.task_status_dir = os.path.join(

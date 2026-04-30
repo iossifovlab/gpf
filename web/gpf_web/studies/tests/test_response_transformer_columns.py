@@ -98,10 +98,12 @@ def phenotype_person_sets(t4c8_study_1: GenotypeData) -> PersonSetCollection:
         ("reference", ["G", "G"]),
         ("alternative", ["C", "GA"]),
         ("family_person_attributes", [
-            "mom:F:unaffected;"
-            "dad:M:unaffected;"
-            "prb:M:affected;"
-            "sib:F:unaffected"]),
+            (
+                "mom:F:unaffected;"
+                "dad:M:unaffected;"
+                "prb:M:affected;"
+                "sib:F:unaffected"
+            )]),
         ("family_person_ids", ["mom3;dad3;p3;s3"]),
         ("carrier_person_ids", ["mom3;p3", "dad3;s3"]),
         ("carrier_person_attributes", [

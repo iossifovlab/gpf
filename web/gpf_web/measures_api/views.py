@@ -214,7 +214,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
                 categorical_hist_conf = \
                     CategoricalHistogramConfig.default_config()
                 categorical_hist_conf.label_rotation = 90
-                values = [value for key, value in counts.items()]
+                values = list(counts.values())
                 if min(values) * 10 < max(values):
                     categorical_hist_conf.y_log_scale = True
             else:

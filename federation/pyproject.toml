@@ -41,6 +41,7 @@ common_reports_helper = "federation.remote_common_reports_helper:RemoteCommonRep
 [dependency-groups]
 dev = [
     "mypy==1.15.0",
+    "pandas-stubs",
     "pylint",
     "pylint-junit",
     "pytest",
@@ -48,7 +49,8 @@ dev = [
     "pytest-django",
     "pytest-mock",
     "pytest-xdist",
-    "ruff==0.14.6",
+    "ruff==0.15.10",
+    "types-requests",
 ]
 
 [tool.hatch.version]

@@ -856,13 +856,11 @@ class WDAEStudy(WDAEAbstractStudy):
             for variant in variants:
                 v = transform(variant)
 
-                row_variant = response_transformer.build_variant_row(
+                yield response_transformer.build_variant_row(
                     self,
                     v, sources,
                     person_set_collection=psc_query.psc_id if psc_query
                     else None)
-
-                yield row_variant
         except GeneratorExit:
             pass
 
@@ -920,11 +918,9 @@ class WDAEStudy(WDAEAbstractStudy):
             self, **kwargs,
         )
 
-        variants = self.registry.query_summary_variants(
+        yield from self.registry.query_summary_variants(
             self.get_children_ids(leaves=True), query_kwargs,
         )
-
-        yield from variants
 
     def get_gene_view_summary_variants(
         self, frequency_column: str,
