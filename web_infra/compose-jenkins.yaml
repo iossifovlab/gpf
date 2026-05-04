@@ -84,11 +84,11 @@ services:
 
   backend-e2e:
     image: ${BACKEND_IMAGE:-gpf-web-api-prod:latest}
-    # gpf-e2e's playwright.config.ts hard-codes
-    # `http://gpf:8080/gpf` as the Jenkins baseURL. Until the
-    # config is updated to point at the frontend service, expose
-    # the backend under the `gpf` hostname so legacy specs keep
-    # resolving. New specs should target `frontend` directly.
+    # Tests now target the frontend service at http://frontend
+    # (web_e2e/tests/utils.ts) — Apache there reverse-proxies
+    # /api/ and /ws/ to backend:9001, so the SPA and API share
+    # one origin. Backend keeps a literal `backend` hostname
+    # because httpd.conf's ProxyPass uses that name.
     hostname: backend
     depends_on:
       instance-import:

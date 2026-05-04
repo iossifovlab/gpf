@@ -1,9 +1,15 @@
 import { Page, expect } from '@playwright/test';
 
 
-export const frontendUrl = 'http://gpf:8080/gpf';
+// Jenkins/CI: hit the gpf-web-ui-prod Apache (frontend service)
+// at root. The Apache config in web_ui/httpd.conf reverse-proxies
+// /api/ and /ws/ to backend:9001, so frontendUrl == backendUrl
+// (the SPA and the API are the same origin from the SPA's POV).
+// Mail goes through the mailhog service `mail` on its UI port 8025.
+// Local-dev URLs are kept commented below for reference.
+export const frontendUrl = 'http://frontend';
 export const backendUrl = frontendUrl;
-export const mailhogUrl = 'http://mailhog:8025';
+export const mailhogUrl = 'http://mail:8025';
 
 // for local dev with containers:
 // export const frontendUrl = 'http://localhost:8080/gpf';

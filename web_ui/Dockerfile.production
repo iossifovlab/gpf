@@ -31,7 +31,16 @@ COPY web_ui/package.json web_ui/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY web_ui/ ./
-RUN npm run build
+# `--configuration production` swaps environment.ts → environment.prod.ts
+# (fileReplacements in angular.json), so basePath becomes '' and the SPA
+# issues `api/v3/...` requests to its own origin — which httpd.conf
+# reverse-proxies to backend:9001. `--aot` matches the legacy
+# `npm run build:prod` script, minus its `--base-href /gpf/` /
+# `--deploy-url /gpf/` flags: the old combined-image deploy served the
+# SPA under `/gpf`, but the split layout serves it from the document
+# root, so a base-href is unnecessary and a wrong base-href would route
+# every internal link through the SPA fallback rule.
+RUN npm run build -- --configuration production --aot
 
 
 # 2) Django collectstatic — uses the just-built backend image
