@@ -53,3 +53,12 @@ generate_gene_profile \
 # generate common reports
 generate_common_report
 generate_denovo_gene_sets
+
+# create dev users for the e2e suite (idempotent: || true so reruns
+# don't fail once the users already exist)
+wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:any_user:admin || true
+wdaemanage user_create research@iossifovlab.com -p secret -g any_user || true
+wdaemanage user_create user_comp_vcf@iossifovlab.com -p secret -g any_user || true
+wdaemanage user_create user_comp_genotypes@iossifovlab.com -p secret -g any_user || true
+wdaemanage user_create user_all_genotypes@iossifovlab.com -p secret -g any_user || true
+wdaemanage user_create user_iossifov_2014@iossifovlab.com -p secret -g any_user || true

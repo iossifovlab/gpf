@@ -14,14 +14,13 @@
 # TODO(scope = first wired-up build):
 #   - The `gpf_e2e_instance/studies/**` content is .gitignore'd
 #     and produced at runtime by `web_e2e/gpf_e2e_instance/
-#     import_data.sh`. Add an `instance-import` one-shot service
-#     that runs that script before backend-e2e-migrate, or bake
+#     import_data.sh` (which also seeds the Playwright dev
+#     users via `wdaemanage user_create ...`). Add an
+#     `instance-import` one-shot service that runs that script
+#     after backend-e2e-migrate but before backend-e2e, or bake
 #     the imported instance into a small fixture image. Without
-#     it, the API will boot but most queries will 404.
-#   - Add a `backend-e2e-userseed` one-shot that calls
-#     `wdaemanage user_create ...` (see web_e2e/scripts/
-#     wdae_create_dev_users.sh) to provision the test users the
-#     Playwright suite logs in as.
+#     it, the API will boot but most queries will 404 and
+#     login will fail.
 
 name: gpf-web-e2e
 services:
