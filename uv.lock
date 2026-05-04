@@ -1065,7 +1065,7 @@ requires-dist = [
     { name = "pybigwig", specifier = ">=0.3" },
     { name = "pydantic", specifier = ">=2.8" },
     { name = "pyliftover", specifier = ">=0.4" },
-    { name = "pysam", specifier = ">=0.23" },
+    { name = "pysam", specifier = ">=0.24" },
     { name = "python-box", specifier = ">=7.1" },
     { name = "pyyaml", specifier = ">=6" },
     { name = "s3fs", specifier = ">=2026.2" },
