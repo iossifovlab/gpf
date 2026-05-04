@@ -2,12 +2,7 @@ node_modules
 data
 downloads
 import
-package-lock.json
 results
-/build-env/*
-/build-scripts-tmp/*
-Jenkinsfile.generated-stages.all
-.build-scripts-tmp-sessions
 ts-lint-report.xml
 cache/
 __pycache__
@@ -17,8 +12,7 @@ wdae-debug.log
 wdae-api.log
 /test-results/
 /playwright-report/
-/playwright/test-results/
-/playwright/.cache/
+/reports/
 logs
 wdae.sql
 gpf_e2e_instance/studies/**

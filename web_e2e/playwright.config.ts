@@ -18,8 +18,8 @@ export default defineConfig({
     },
   },
   globalTimeout: 3600000,
-  testDir: './playwright/tests',
-  outputDir: './playwright/test-results',
+  testDir: './tests',
+  outputDir: './reports/test-results',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -29,7 +29,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? undefined : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.JENKINS ? [['junit', { outputFile: './playwright/test-results/results.xml' }]] : [['html']],
+  reporter: process.env.JENKINS ? [['junit', { outputFile: './reports/junit-report.xml' }]] : [['html']],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
