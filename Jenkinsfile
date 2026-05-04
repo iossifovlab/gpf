@@ -520,6 +520,7 @@ pipeline {
                         REGISTRY      = 'registry.seqpipe.org'
                         BACKEND_REPO  = "${env.REGISTRY}/gpf-web-api"
                         FRONTEND_REPO = "${env.REGISTRY}/gpf-web-ui"
+                        BUNDLE_REPO   = "${env.REGISTRY}/gpf-web"
                         GIT_SHORT     = "${env.GIT_COMMIT.take(8)}"
                         // Two secret-text credentials, set up in Jenkins.
                         // Bound here for the whole stage but only used by
@@ -564,6 +565,22 @@ pipeline {
                                 -t "$FRONTEND_REPO:$BUILD_NUMBER" .
                             docker tag "$FRONTEND_REPO:$BUILD_NUMBER" \
                                        "$FRONTEND_REPO:$GIT_SHORT"
+
+                            # Build the combined bundle image: thin
+                            # assembly layer that copies the venv from
+                            # the backend image and the SPA + Django
+                            # static from the frontend image, plus
+                            # apache2 + supervisord. Single-container
+                            # deploy artifact (gunicorn on loopback
+                            # :9001, apache on :80).
+                            docker build \
+                                -f Dockerfile.production \
+                                --build-arg PYTHON_IMAGE=python:3.12-slim \
+                                --build-arg BACKEND_IMAGE="$BACKEND_REPO:$BUILD_NUMBER" \
+                                --build-arg FRONTEND_IMAGE="$FRONTEND_REPO:$BUILD_NUMBER" \
+                                -t "$BUNDLE_REPO:$BUILD_NUMBER" .
+                            docker tag "$BUNDLE_REPO:$BUILD_NUMBER" \
+                                       "$BUNDLE_REPO:$GIT_SHORT"
 
                             # Resolve and record the base-image digests
                             # this build used, so a future release
@@ -620,7 +637,9 @@ pipeline {
                                                "$BACKEND_REPO:latest"
                                     docker tag "$FRONTEND_REPO:$BUILD_NUMBER" \
                                                "$FRONTEND_REPO:latest"
-                                    for repo in "$BACKEND_REPO" "$FRONTEND_REPO"; do
+                                    docker tag "$BUNDLE_REPO:$BUILD_NUMBER" \
+                                               "$BUNDLE_REPO:latest"
+                                    for repo in "$BACKEND_REPO" "$FRONTEND_REPO" "$BUNDLE_REPO"; do
                                         docker push "$repo:$BUILD_NUMBER"
                                         docker push "$repo:$GIT_SHORT"
                                         docker push "$repo:latest"
@@ -746,7 +765,8 @@ pipeline {
                 # may be unset if the build failed before that stage —
                 # the rmi just no-ops then.
                 for repo in registry.seqpipe.org/gpf-web-api \
-                            registry.seqpipe.org/gpf-web-ui; do
+                            registry.seqpipe.org/gpf-web-ui \
+                            registry.seqpipe.org/gpf-web; do
                     for tag in "$BUILD_NUMBER" "${GIT_COMMIT:0:8}" latest; do
                         docker rmi "$repo:$tag" 2>/dev/null || true
                     done
