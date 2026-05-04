@@ -374,7 +374,27 @@ pipeline {
                             exit $TEST_RC
                         '''
                     } finally {
+                        // Dump per-service logs BEFORE compose down
+                        // wipes them — a `compose run --rm e2e-tests`
+                        // failure typically shows up as a single
+                        // "dependency failed to start: container ...
+                        // exited (1)" line with no diagnostic. Capture
+                        // backend-e2e + frontend-e2e + e2e-tests
+                        // stdout/stderr so the actual error surfaces
+                        // in the Jenkins stage output. instance-import
+                        // already had its logs dumped in the previous
+                        // stage. `|| true` per-service so a missing
+                        // service (e.g. e2e-tests never created
+                        // because backend-e2e errored first) doesn't
+                        // mask another's logs.
                         sh '''
+                            for svc in backend-e2e frontend-e2e e2e-tests; do
+                                echo "===== compose logs: $svc ====="
+                                docker compose \
+                                    -p "$COMPOSE_PROJECT" \
+                                    -f web_infra/compose-jenkins.yaml \
+                                    logs --no-color "$svc" || true
+                            done
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
