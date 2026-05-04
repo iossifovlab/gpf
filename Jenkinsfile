@@ -322,6 +322,91 @@ pipeline {
                             post { always { script { publishReports('web') } } }
                         }
 
+                        stage('web_ui') {
+                            steps {
+                                script {
+                                    String imageTag =
+                                        "gpf-web-ui-ci:${env.BUILD_NUMBER}"
+                                    sh label: 'Build web_ui image', script: """
+                                        docker build -f web_ui/Dockerfile \
+                                            -t ${imageTag} .
+                                    """
+                                    // ESLint + Stylelint + Jest run inline because
+                                    // runProject() is Python-specific (uv build,
+                                    // pylint, mypy, pytest). Single sh -c so all
+                                    // four reports land in one bind mount.
+                                    sh label: 'Run web_ui CI', script: """
+                                        mkdir -p reports/web_ui
+                                        docker run --rm \\
+                                            -v \$PWD/reports/web_ui:/reports \\
+                                            ${imageTag} \\
+                                            sh -c '
+                                                set +e
+                                                mkdir -p /reports/coverage
+                                                npx eslint "**/*.{html,ts}" \\
+                                                    --format checkstyle \\
+                                                    > /reports/ts-lint-report.xml
+                                                npx stylelint \\
+                                                    --custom-formatter \\
+                                                    stylelint-checkstyle-formatter \\
+                                                    "**/*.css" \\
+                                                    > /reports/css-lint-report.xml
+                                                JEST_JUNIT_OUTPUT_DIR=/reports \\
+                                                JEST_JUNIT_OUTPUT_NAME=jest.xml \\
+                                                    npx jest --ci \\
+                                                        --collectCoverageFrom=./src/** \\
+                                                        --coverageDirectory=/reports/coverage
+                                                jest_exit=\$?
+                                                # Rewrite container-absolute /app
+                                                # paths to web_ui/ so Jenkins coverage
+                                                # source mapping resolves files. This
+                                                # mirrors the runProject() sed for the
+                                                # python projects.
+                                                sed -i \\
+                                                    "s#<source>/app</source>#<source>web_ui</source>#g" \\
+                                                    /reports/coverage/cobertura-coverage.xml \\
+                                                    2>/dev/null || true
+                                                cp /reports/coverage/cobertura-coverage.xml \\
+                                                    /reports/coverage.xml \\
+                                                    2>/dev/null || true
+                                                chmod -R a+rw /reports
+                                                # Propagate jest's exit code so test
+                                                # failures fail the build (mirrors the
+                                                # python projects' pytest gating).
+                                                # eslint / stylelint failures don't
+                                                # gate; they surface through their
+                                                # report XMLs only.
+                                                exit \$jest_exit
+                                            '
+                                    """
+                                }
+                            }
+                            post {
+                                always {
+                                    script {
+                                        publishReports('web_ui')
+                                        recordIssues(
+                                            enabledForFailure: true,
+                                            aggregatingResults: false,
+                                            tools: [
+                                                checkStyle(
+                                                    pattern: 'reports/web_ui/ts-lint-report.xml',
+                                                    reportEncoding: 'UTF-8',
+                                                    id: 'web_ui-eslint',
+                                                    name: 'web_ui ESLint'),
+                                                checkStyle(
+                                                    pattern: 'reports/web_ui/css-lint-report.xml',
+                                                    reportEncoding: 'UTF-8',
+                                                    id: 'web_ui-stylelint',
+                                                    name: 'web_ui Stylelint'),
+                                            ],
+                                            qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         // federation and rest_client tests are integration
                         // tests that need a running gpf-web backend on
                         // localhost:21010 / localhost:21011 (the old
@@ -471,7 +556,7 @@ pipeline {
         }
         cleanup {
             sh '''
-                for img in gpf-core-ci gpf-web-ci gpf-federation-ci gpf-rest-client-ci; do
+                for img in gpf-core-ci gpf-web-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci; do
                     docker rmi "$img:${BUILD_NUMBER}" 2>/dev/null || true
                 done
             '''
