@@ -506,6 +506,134 @@ pipeline {
                     }
                 }
 
+                stage('Build & push prod images') {
+                    // Builds the wheel-based backend + Apache-based
+                    // frontend prod images here in the root build, tags
+                    // them for registry.seqpipe.org, and pushes on
+                    // master. Branch builds build-but-don't-push
+                    // (validates the Dockerfiles + that the wheels
+                    // install). Tags pushed on master:
+                    //   :${BUILD_NUMBER}  — Jenkins build identity
+                    //   :${GIT_SHORT}     — immutable git-anchored handle
+                    //   :latest           — moving pointer for prod
+                    environment {
+                        REGISTRY      = 'registry.seqpipe.org'
+                        BACKEND_REPO  = "${env.REGISTRY}/gpf-web-api"
+                        FRONTEND_REPO = "${env.REGISTRY}/gpf-web-ui"
+                        GIT_SHORT     = "${env.GIT_COMMIT.take(8)}"
+                        // Two secret-text credentials, set up in Jenkins.
+                        // Bound here for the whole stage but only used by
+                        // the master-only push path below.
+                        REGISTRY_USER = credentials('user.registry.seqpipe.org')
+                        REGISTRY_PASS = credentials('passwd.registry.seqpipe.org')
+                    }
+                    steps {
+                        sh '''
+                            # Pull base images up front so `docker image
+                            # inspect` further down can read a populated
+                            # RepoDigests. BuildKit-driven `docker build`
+                            # pulls images into BuildKit's content store
+                            # but doesn't always register them at the
+                            # daemon level with a <repo>:<tag> +
+                            # RepoDigests entry, which leaves NODE_IMAGE
+                            # / HTTPD_IMAGE empty in dist/base-images.lock.
+                            docker pull python:3.12-slim
+                            docker pull node:22.14.0-alpine
+                            docker pull httpd:2.4-alpine
+
+                            # Build backend; tag with build number first
+                            # so the frontend's --build-arg can reference
+                            # it. PYTHON_IMAGE is passed explicitly so the
+                            # Dockerfile is consistent across master (this
+                            # path, floating tag) and any future digest-
+                            # pinned release stage.
+                            docker build \
+                                -f web/Dockerfile.production \
+                                --build-arg PYTHON_IMAGE=python:3.12-slim \
+                                -t "$BACKEND_REPO:$BUILD_NUMBER" .
+                            docker tag "$BACKEND_REPO:$BUILD_NUMBER" \
+                                       "$BACKEND_REPO:$GIT_SHORT"
+
+                            # Build frontend; multi-stages collectstatic
+                            # from the backend image we just built.
+                            docker build \
+                                -f web_ui/Dockerfile.production \
+                                --build-arg NODE_IMAGE=node:22.14.0-alpine \
+                                --build-arg HTTPD_IMAGE=httpd:2.4-alpine \
+                                --build-arg BACKEND_IMAGE="$BACKEND_REPO:$BUILD_NUMBER" \
+                                -t "$FRONTEND_REPO:$BUILD_NUMBER" .
+                            docker tag "$FRONTEND_REPO:$BUILD_NUMBER" \
+                                       "$FRONTEND_REPO:$GIT_SHORT"
+
+                            # Resolve and record the base-image digests
+                            # this build used, so a future release
+                            # pipeline can rebuild from a tagged commit
+                            # against the same base layers. Archived
+                            # below in post.always with fingerprint:true
+                            # so the file survives even if the build
+                            # record rotates out.
+                            mkdir -p dist
+                            {
+                                echo "PYTHON_IMAGE=$(docker image inspect python:3.12-slim \
+                                    --format '{{index .RepoDigests 0}}')"
+                                echo "NODE_IMAGE=$(docker image inspect node:22.14.0-alpine \
+                                    --format '{{index .RepoDigests 0}}')"
+                                echo "HTTPD_IMAGE=$(docker image inspect httpd:2.4-alpine \
+                                    --format '{{index .RepoDigests 0}}')"
+                            } > dist/base-images.lock
+                            cat dist/base-images.lock
+
+                            # Fail loud if RepoDigests came back empty.
+                            # The release pipeline silently consumes
+                            # whatever this file contains and an empty
+                            # value only surfaces several stages later
+                            # as an opaque `docker build` failure.
+                            if grep -E '^[A-Z_]+=$' dist/base-images.lock; then
+                                echo "ERROR: empty digest(s) in" \
+                                     "dist/base-images.lock — see" \
+                                     "lines above. Refusing to" \
+                                     "publish a poisoned lockfile." >&2
+                                exit 1
+                            fi
+                        '''
+                        script {
+                            if (env.BRANCH_NAME == 'master') {
+                                // `--password-stdin` keeps the secret out
+                                // of the process list / shell trace. Use
+                                // `printf '%s'` (not `echo`) so the
+                                // password is sent byte-for-byte: echo
+                                // appends a trailing newline and POSIX
+                                // /bin/sh's echo also interprets backslash
+                                // escapes — both can silently mangle a
+                                // valid password into a 401. The trap
+                                // ensures docker logout runs even if a
+                                // push fails — agents are shared, don't
+                                // leave registry auth lying around.
+                                sh '''
+                                    echo "REGISTRY_USER bytes: $(printf '%s' "$REGISTRY_USER" | wc -c)"
+                                    echo "REGISTRY_PASS bytes: $(printf '%s' "$REGISTRY_PASS" | wc -c)"
+                                    printf '%s' "$REGISTRY_PASS" | docker login \
+                                        -u "$REGISTRY_USER" \
+                                        --password-stdin "$REGISTRY"
+                                    trap 'docker logout "$REGISTRY" || true' EXIT
+                                    docker tag "$BACKEND_REPO:$BUILD_NUMBER" \
+                                               "$BACKEND_REPO:latest"
+                                    docker tag "$FRONTEND_REPO:$BUILD_NUMBER" \
+                                               "$FRONTEND_REPO:latest"
+                                    for repo in "$BACKEND_REPO" "$FRONTEND_REPO"; do
+                                        docker push "$repo:$BUILD_NUMBER"
+                                        docker push "$repo:$GIT_SHORT"
+                                        docker push "$repo:latest"
+                                    done
+                                '''
+                            } else {
+                                echo "Skipping registry push: " +
+                                     "branch is ${env.BRANCH_NAME}, not master"
+                            }
+                        }
+                    }
+                }
+
                 // The integration suites run as separate downstream
                 // jobs (gpf-federation-integration / gpf-rest-client-
                 // integration) so the heavy backend stack is wired up
@@ -599,7 +727,7 @@ pipeline {
                         fingerprint: false,
                     )
                     archiveArtifacts(
-                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/conda/*.conda',
+                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/conda/*.conda, dist/base-images.lock',
                         allowEmptyArchive: true,
                         fingerprint: true,
                     )
@@ -612,6 +740,16 @@ pipeline {
             sh '''
                 for img in gpf-core-ci gpf-web-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
                     docker rmi "$img:${BUILD_NUMBER}" 2>/dev/null || true
+                done
+                # Registry-prefixed prod images. `:latest` only exists on
+                # master but the rmi is harmless on branches. GIT_SHORT
+                # may be unset if the build failed before that stage —
+                # the rmi just no-ops then.
+                for repo in registry.seqpipe.org/gpf-web-api \
+                            registry.seqpipe.org/gpf-web-ui; do
+                    for tag in "$BUILD_NUMBER" "${GIT_COMMIT:0:8}" latest; do
+                        docker rmi "$repo:$tag" 2>/dev/null || true
+                    done
                 done
             '''
         }
