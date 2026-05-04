@@ -153,9 +153,16 @@ pipeline {
             }
             steps {
                 script {
+                    // Only master triggers a registry push in the
+                    // parent gpf Jenkinsfile (the
+                    // `Build & push prod images` stage gates on
+                    // env.BRANCH_NAME == 'master'). Pulling for
+                    // any other branch — including gpf-gain-split
+                    // — would 404 the way build #2 did. Branches
+                    // always fall through to the build-from-wheels
+                    // path below.
                     boolean canPull = \
-                        (params.BRANCH_NAME == 'master' ||
-                         params.BRANCH_NAME == 'gpf-gain-split') \
+                        params.BRANCH_NAME == 'master' \
                         && params.UPSTREAM_BUILD?.trim()
                     if (canPull) {
                         String tag = params.UPSTREAM_BUILD
