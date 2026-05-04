@@ -1,0 +1,13 @@
+.modal-body {
+  width: 100%;
+  height: 715px;
+  max-width: 794px;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+}
+
+#close-button {
+  float: right;
+  border: none;
+  background-color: transparent;
+}

@@ -1,0 +1,88 @@
+.gene-plot-header-icon {
+  background: none;
+  border: none;
+  margin: 0;
+  outline: none;
+  padding: 0;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+.header-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  padding-right: 8px;
+}
+
+.checkbox-option {
+  margin-left: 5px;
+}
+
+label {
+  margin-left: 18px;
+  user-select: none;
+}
+
+.gene-plot-header {
+  padding: 0;
+  position: relative;
+  height: 43px;
+  display: flex;
+  align-content: space-between;
+  flex-flow: column wrap;
+  overflow: hidden;
+}
+
+#summary-alleles-count {
+  display: inline-grid;
+  min-width: 150px;
+  text-align: center;
+}
+
+#summary-alleles-count span {
+  margin-left: 8px;
+  background-color: #eee;
+  padding: 2px;
+  border: 1px solid rgba(0, 0, 0, 12.5%);
+}
+
+#download-summary-variants-button {
+  margin-left: 10px;
+  padding: 1px;
+  width: 35px;
+  height: 30px;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid #2a6395;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+  margin-left: 2px;
+  margin-top: -1px;
+}
+
+.loader:hover {
+  border-top-color: #173c5c;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.card {
+  min-width: 1200px;
+}
+
+.too-many-variants-warning {
+  background-color: #fff8c5c7;
+  color: #4d4007de;
+  font-size: 14px;
+}

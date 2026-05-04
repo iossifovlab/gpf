@@ -1,0 +1,61 @@
+.content {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#title {
+  margin-bottom: 0;
+}
+
+#header {
+  z-index: 199;
+  background-color: white;
+  padding-bottom: 0;
+}
+
+.container-fluid {
+  padding-bottom: 0;
+}
+
+.container-fluid a,
+h3 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.container-fluid a {
+  min-width: 90px;
+  max-width: 210px;
+  width: 8.3vw;
+  padding: 8px 10px 5px;
+  text-align: center;
+  font-weight: 500;
+  text-decoration: none;
+  background-color: #eee;
+  border: 2px solid #eee;
+  color: #8b8b8b;
+  border-radius: 5px 5px 0 0;
+  margin-left: 8px;
+}
+
+.highlighted-route {
+  background-color: white !important;
+  border: 2px solid #2a6395 !important;
+  border-bottom: 1px solid white !important;
+  color: #2a6395 !important;
+  height: 42px;
+  position: relative;
+  top: 2px;
+  pointer-events: none;
+  cursor: default;
+}
+
+#separator {
+  border-top: 2px solid #2a6395;
+}
+
+#header a {
+  user-select: none;
+}

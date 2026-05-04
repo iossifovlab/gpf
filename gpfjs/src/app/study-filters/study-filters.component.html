@@ -1,0 +1,28 @@
+<div *ngIf="rootDataset" class="form-block">
+  <div class="card">
+    <ul
+      ngbNav
+      #nav="ngbNav"
+      (navChange)="onNavChange()"
+      class="navbar bg-light nav-pills"
+      style="justify-content: flex-start">
+      <div class="nav-title-custom">Study filters</div>
+      <li [ngbNavItem]="'allStudies'" id="all-studies">
+        <a ngbNavLink>All</a>
+      </li>
+      <li [ngbNavItem]="'studies'" id="study-names">
+        <a ngbNavLink>Studies</a>
+        <ng-template ngbNavContent>
+          <div class="panel">
+            <gpf-treelist-checkbox
+              [data]="rootDataset"
+              [selectedStudies]="selectedStudies"
+              (checkboxChangeEvent)="updateState(selectedStudies)"></gpf-treelist-checkbox>
+            <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+          </div>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
+  </div>
+</div>

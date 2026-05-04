@@ -1,0 +1,8 @@
+.sorting-button {
+  display: flex;
+}
+
+.sorting-button span {
+  font-size: 17px;
+  font-weight: 600;
+}

@@ -1,0 +1,109 @@
+<div
+  class="panel"
+  style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
+  *ngIf="selectedGenomicScore && localState">
+  <div class="genomic-score-container">
+    <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
+
+    <ng-content *ngIf="localState.categoricalView !== 'dropdown selector'">
+      <gpf-helper-modal
+        style="height: 32px; margin-left: 4px; align-self: flex-end"
+        [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
+        [modalContent]="selectedGenomicScore.help"
+        [isMarkdown]="true"></gpf-helper-modal>
+    </ng-content>
+
+    <div *ngIf="isCategoricalHistogram(selectedGenomicScore.histogram)">
+      <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
+        <span>Mode</span>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('range selector')"
+          [ngClass]="{ 'selected-view': localState.categoricalView === 'range selector' }"
+          >range selector
+        </button>
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('click selector')"
+          [ngClass]="{ 'selected-view': localState.categoricalView === 'click selector' }"
+          >click selector
+        </button>
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('dropdown selector')"
+          [ngClass]="{ 'selected-view': localState.categoricalView === 'dropdown selector' }"
+          >dropdown selector
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <div
+    *ngIf="
+      selectedGenomicScore &&
+      isCategoricalHistogram(selectedGenomicScore.histogram) &&
+      localState.categoricalView === 'dropdown selector'
+    "
+    style="width: 100%">
+    <gpf-categorical-values-dropdown
+      [initialState]="localState.values"
+      [histogram]="selectedGenomicScore.histogram"
+      (updateSelectedValues)="replaceCategoricalValues($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)"></gpf-categorical-values-dropdown>
+  </div>
+
+  <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
+    <gpf-histogram
+      *ngIf="selectedGenomicScore && isNumberHistogram(selectedGenomicScore.histogram)"
+      [width]="800"
+      [height]="145"
+      [marginLeft]="180"
+      [bins]="selectedGenomicScore.histogram.bins"
+      [bars]="selectedGenomicScore.histogram.bars"
+      [logScaleX]="selectedGenomicScore.histogram.logScaleX"
+      [logScaleY]="selectedGenomicScore.histogram.logScaleY"
+      [smallValuesDesc]="selectedGenomicScore.histogram.smallValuesDesc"
+      [largeValuesDesc]="selectedGenomicScore.histogram.largeValuesDesc"
+      [rangeStart]="localState.rangeStart"
+      (rangeStartChange)="updateRangeStart($event)"
+      [rangeEnd]="localState.rangeEnd"
+      (rangeEndChange)="updateRangeEnd($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)"
+      style="display: block; margin-top: 17px">
+    </gpf-histogram>
+    <gpf-categorical-histogram
+      *ngIf="
+        selectedGenomicScore &&
+        isCategoricalHistogram(selectedGenomicScore.histogram) &&
+        localState.categoricalView === 'click selector'
+      "
+      [width]="700"
+      [height]="145"
+      [histogram]="selectedGenomicScore.histogram"
+      [initialSelectedValueNames]="localState.values"
+      [interactType]="localState.categoricalView"
+      (selectCategoricalValues)="replaceCategoricalValues($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)">
+    </gpf-categorical-histogram>
+    <gpf-categorical-histogram
+      *ngIf="
+        selectedGenomicScore &&
+        isCategoricalHistogram(selectedGenomicScore.histogram) &&
+        localState.categoricalView === 'range selector'
+      "
+      [width]="700"
+      [height]="145"
+      [histogram]="selectedGenomicScore.histogram"
+      [initialSelectedValueNames]="localState.values"
+      [interactType]="localState.categoricalView"
+      (selectCategoricalValues)="replaceCategoricalValues($event)"
+      (emitValidationErrors)="setHistogramValidationErrors($event)">
+    </gpf-categorical-histogram>
+  </div>
+
+  <div class="col-sm-11">
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  </div>
+</div>

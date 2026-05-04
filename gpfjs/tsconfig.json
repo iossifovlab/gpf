@@ -1,0 +1,30 @@
+{
+  "compileOnSave": false,
+  "angularCompilerOptions": {
+    "entryModule": "./app/app.module#AppModule",
+    "genDir": "./ngfactory",
+    "enableIvy": true,
+    "strictTemplates": true
+  },
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "outDir": "./dist/out-tsc",
+    "esModuleInterop": true,
+    "baseUrl": "src",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "target": "ESNext",
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "noImplicitThis": true,
+    "strictBindCallApply": true,
+    "useDefineForClassFields": false
+    }
+}

@@ -1,0 +1,50 @@
+<div class="family-filters-block form-block">
+  <div class="card">
+    <ul
+      ngbNav
+      #nav="ngbNav"
+      (navChange)="onNavChange()"
+      class="navbar bg-light nav-pills"
+      [ngClass]="{ 'panel-bottom': hasContent }"
+      id="list">
+      <div class="nav-title-custom">Family filters</div>
+      <li [ngbNavItem]="'allFamilies'" id="all-families">
+        <a ngbNavLink (click)="hasContent = false">All</a>
+      </li>
+      <li [ngbNavItem]="'familyIds'" id="family-ids">
+        <a ngbNavLink (click)="hasContent = true">Family Ids</a>
+        <ng-template ngbNavContent>
+          <gpf-family-ids></gpf-family-ids>
+        </ng-template>
+      </li>
+      <li [ngbNavItem]="'familyTags'" id="family-tags">
+        <a ngbNavLink (click)="hasContent = true">Family Tags</a>
+        <ng-template ngbNavContent>
+          <span *ngIf="showSelectedFamilies" id="families-count">Selected families: {{ selectedFamiliesCount }}</span>
+          <gpf-family-tags
+            [numOfCols]="numOfCols"
+            [tags]="orderedTagList"
+            (updateTagsLists)="updateTags($event)"
+            (chooseMode)="updateMode($event)"></gpf-family-tags>
+        </ng-template>
+      </li>
+      <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
+        <a ngbNavLink (click)="hasContent = true">Advanced</a>
+        <ng-template ngbNavContent>
+          <div id="filters">
+            <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters>
+          </div>
+        </ng-template>
+      </li>
+      <li [ngbNavItem]="'phenoMeasures'" *ngIf="showPhenoMeasuresButton" id="phenoMeasures">
+        <a ngbNavLink (click)="hasContent = true">Pheno Measures</a>
+        <ng-template ngbNavContent>
+          <div id="filters">
+            <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters-selector>
+          </div>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
+  </div>
+</div>

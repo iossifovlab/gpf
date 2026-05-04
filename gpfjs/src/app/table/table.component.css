@@ -1,0 +1,35 @@
+gpf-table-view-empty-cell {
+  display: table-cell;
+}
+
+gpf-table-view-header-cell {
+  display: table-cell;
+  height: auto;
+}
+
+gpf-table-view-cell {
+  display: table-cell;
+  height: 111px;
+  max-height: 111px;
+  border: 1px solid #ddd;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  padding: 8px;
+  text-align: center;
+}
+
+.table-header-sticky-div {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1002;
+}
+
+#legend-wrapper {
+  position: fixed;
+  bottom: 16px;
+  right: 48px;
+}

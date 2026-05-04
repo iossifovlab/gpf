@@ -1,0 +1,35 @@
+<div style="display: flex; justify-content: center; max-height: 700px; min-width: 1000px">
+  <svg id="pheno-tool-result" [attr.max-width]="width" [attr.max-height]="height" [attr.viewBox]="getViewBox()">
+    <text x="50%" y="20" alignment-baseline="middle" text-anchor="middle" class="description">
+      {{ phenoToolResults.description }}
+    </text>
+
+    <text x="0" y="70">with hit</text>
+    <text x="0" y="90">without hit</text>
+
+    <g #innerGroup transform="translate(30, 110)">
+      <g
+        *ngFor="let result of phenoToolResults.results; let i = index"
+        gpf-pheno-tool-results-chart-per-effect
+        [attr.transform]="'translate(' + (i * 250 + 100) + ',0)'"
+        [effectResults]="result"
+        [yScale]="yScale"></g>
+    </g>
+
+    <g [attr.transform]="'translate(' + columnCount * 220 + ', 600)'">
+      <rect x="0" y="0" width="150" height="65" fill-opacity="0" stroke-width="2" stroke="black"></rect>
+      <circle cx="10" cy="10" r="3" stroke="blue" fill="blue" stroke-width="2"></circle>
+      <text x="20" y="15">male with hit</text>
+      <circle cx="10" cy="25" r="3" stroke="blue" fill="white" stroke-width="2"></circle>
+      <text x="20" y="30">male without hit</text>
+      <circle cx="10" cy="40" r="3" stroke="red" fill="red" stroke-width="2"></circle>
+      <text x="20" y="45">female with hit</text>
+      <circle cx="10" cy="55" r="3" stroke="red" fill="white" stroke-width="2"></circle>
+      <text x="20" y="60">female without hit</text>
+    </g>
+  </svg>
+</div>
+
+<div id="image-download-container">
+  <a id="image-download">Download report as an image</a>
+</div>

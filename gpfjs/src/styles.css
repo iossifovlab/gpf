@@ -1,0 +1,596 @@
+html,
+body,
+material-app {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math";
+  overflow-y: scroll;
+}
+
+#header {
+  padding: 10px 26px;
+}
+
+#header h3 {
+  font-size: 20px;
+  display: inline;
+  vertical-align: -3px;
+}
+
+#header img {
+  display: inline-block;
+  height: 32px;
+  width: 32px;
+  margin-right: 10px;
+}
+
+a {
+  color: #2a6395;
+}
+
+input,
+button {
+  font-family: Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math";
+}
+
+@keyframes example {
+  from { background-color: red; }
+  to { background-color: inherit; }
+}
+
+/* The element to apply the animation to */
+.flashing {
+  animation: example 0.3s linear infinite alternate;
+}
+
+label {
+  margin-bottom: 0;
+  user-select: none;
+}
+
+.checkbox label {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.row-eq-height {
+  display: -webkit-box;
+  /* stylelint-disable */
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  /* stylelint-enable */
+  display: flex;
+}
+
+.card {
+  height: 100%;
+}
+
+.card-row {
+  margin-left: -15px;
+}
+
+.form-block {
+  margin-top: 20px;
+  border-radius: 3px;
+}
+
+.form-block-title {
+  font-weight: 500;
+  width: 120px;
+}
+
+.form-block .nav-item {
+  font-size: 0.9em;
+}
+
+.navbar {
+  padding: 0.5rem 1rem;
+}
+
+.form-block .navbar {
+  padding: 10px 20px;
+}
+
+.form-block .tab-content {
+  font-size: 0.9em;
+}
+
+.panel {
+  padding: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 12.5%);
+}
+
+.panel-bottom {
+  padding: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 12.5%);
+}
+
+.btn {
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: #2a6395;
+}
+
+.btn-group {
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-outline-primary {
+  border-color: #2a6395;
+}
+
+.btn-primary:hover {
+  background-color: #173f62;
+}
+
+.btn-right {
+  float: right;
+}
+
+.btn:disabled,
+.btn-primary:disabled {
+  cursor: not-allowed;
+}
+
+.btn-primary:disabled {
+  background-color: #3e5d7e;
+  border-color: #3e5d7e;
+}
+
+.btn-primary:disabled:hover {
+  background-color: #3e5d7e;
+}
+
+.form-block .alert {
+  margin-bottom: 0;
+  margin-top: 20px;
+}
+
+.form-block .alert ul {
+  margin: 0;
+  padding-left: 1em;
+}
+
+#search-box,
+#selected-value {
+  border: 1px solid #ccc;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding-left: 10px;
+  line-height: 34px;
+  outline: none;
+}
+
+.modal-fullscreen .modal-dialog {
+  max-width: 1200px;
+}
+
+.modal-fullscreen .pheno-browser-fullscreen-image {
+  max-width: 100%;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.nav-link {
+  margin-right: 8px;
+  color: #2a6395;
+  /* stylelint-disable */
+  -webkit-transition: height 0.01s;
+  -moz-transition: height 0.01s;
+  -ms-transition: height 0.01s;
+  -o-transition: height 0.01s;
+  /* stylelint-enable */
+  transition: height 0.01s;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #2a6395;
+}
+
+.navbar.navbar-custom .nav-link,
+.navbar-nav.navbar-custom .nav-link {
+  color: rgba(0, 0, 0, 50%);
+}
+
+.navbar.navbar-custom .nav-link.active,
+.navbar-nav.navbar-custom .nav-link.active {
+  background-color: #2a6395;
+  color: #fff;
+  border-radius: 0.25rem;
+}
+
+.dropdown-menu {
+  padding: 0;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: #2a6395;
+}
+
+.popover {
+  max-width: 500px;
+}
+
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+.modal-backdrop.fade {
+  transition: none;
+}
+
+.nav-title-custom {
+  font-family: Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math";
+  font-weight: 500;
+  width: 100px;
+  margin-right: 8px;
+}
+
+.pedigree-icon {
+  margin-bottom: -1px;
+  margin-right: 3px;
+  margin-left: 3px;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 0.1px solid #aaa;
+}
+
+#report-button,
+#table-preview-button,
+#enrichment-test-button,
+#save-query-dropdown-button {
+  margin-right: 8px;
+}
+
+.select-wrapper {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+}
+
+.select-wrapper select {
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select-wrapper .select-dropdown-icon {
+  position: absolute;
+  right: 5px;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.search-input-wrapper {
+  display: inline-flex;
+  position: relative;
+  width: 100%;
+  align-items: center;
+}
+
+.search-input {
+  padding-right: 25px;
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 50%;
+  margin-top: 7px;
+}
+
+.search-clear-icon {
+  opacity: 50%;
+  position: absolute;
+  right: 7px;
+}
+
+.search-clear-icon:hover {
+  cursor: pointer;
+}
+
+.search-loading-icon {
+  position: absolute;
+  right: 7px;
+  opacity: 50%;
+  display: inline-block;
+  animation: rotation 1.5s infinite;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* stylelint-disable-next-line at-rule-no-vendor-prefix */
+@-webkit-keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.clear-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  height: 38px;
+  width: 28px;
+  padding: 0;
+}
+
+.form-label {
+  width: 100%;
+}
+
+.checkbox-label {
+  width: 100%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 7px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.gpf-basic-table {
+  width: 100%;
+}
+
+.gpf-basic-table,
+.gpf-basic-table th,
+.gpf-basic-table td {
+  border: 1px solid #dee2e6;
+  text-align: center;
+}
+
+.gpf-basic-table th {
+  vertical-align: bottom;
+}
+
+.gpf-basic-table th,
+.gpf-basic-table td {
+  padding: 5px;
+}
+
+ngb-modal-window {
+  z-index: 1000;
+}
+
+.download-link {
+  color: #0645ad !important;
+  text-decoration: none;
+}
+
+.download-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.container {
+  width: 1140px;
+  margin: auto;
+  padding: 0 15px 30px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.btn-default {
+  background-color: #eee !important;
+  border: 1px solid #ddd !important;
+}
+
+.btn-default:focus {
+  outline: grey solid 2px;
+}
+
+#legend-wrapper {
+  direction: rtl;
+}
+
+.pedigree-modal .modal-lg .credential-modal {
+  --bs-modal-width: fit-content;
+
+  min-width: 620px;
+  padding: 0 50px;
+}
+
+gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
+  width: unset !important;
+}
+
+.pedigree-modal .modal-lg .svg-container {
+  max-width: 100% !important;
+}
+
+#family-ids-panel textarea,
+#gene-symbols-panel textarea,
+#person-ids-panel textarea,
+#regions-filter-panel textarea {
+  min-height: 70px;
+}
+
+.material-symbols-outlined {
+  font-weight: 400;
+}
+
+.material-symbols-outlined.bold {
+  font-weight: 800;
+}
+
+.material-symbols-outlined.sm {
+  font-size: 16px;
+}
+
+.material-symbols-outlined.md {
+  font-size: 20px;
+}
+
+.material-symbols-outlined.lg {
+  font-size: 32px;
+}
+
+.material-symbols-outlined.red {
+  color: red;
+}
+
+/* styles for genomic scores help */
+
+summary > h4 {
+  display: inline;
+}
+
+summary.details {
+  width: 100px;
+}
+
+.details-body {
+  margin-top: 10px;
+  margin-left: 30px;
+}
+
+.values-desc {
+  display: flex;
+  justify-content: space-between;
+  font-style: italic;
+  color: #acacac;
+  font-size: 14px;
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  margin-top: -23px;
+  margin-bottom: 10px;
+}
+
+.small-values,
+.large-values {
+  max-width: 170px;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.histogram-image img {
+  width: 100%;
+  height: 100%;
+  max-width: 600px;
+  max-height: 440px;
+}
+
+.modal-histogram {
+  text-align: center;
+  max-width: 745px;
+}
+
+.modal-content {
+  padding-bottom: 10px;
+}
+
+.modal-content a {
+  text-decoration: none;
+  color: #0645ad;
+  cursor: pointer;
+}
+
+.modal-content a:hover {
+  text-decoration: underline;
+}
+
+.credential-modal .modal-content {
+  padding: 6px;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+markdown h1,
+markdown h2,
+markdown h3,
+markdown h4,
+markdown h5,
+markdown h6 {
+  font-size: 1rem;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+markdown a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+markdown a:hover {
+  color: #0645ad;
+  text-decoration: underline;
+}
+
+.status-info {
+  font-style: italic;
+  text-align: center;
+  opacity: 75%;
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+
+mat-option[aria-selected="true"] {
+  background: white !important;
+}
+
+mat-option[aria-selected="true"]:hover {
+  background: rgba(0, 0, 0, 4%) !important;
+}
+
+mat-option.mat-mdc-option-active {
+  background: rgba(0, 0, 0, 4%) !important;
+}
+
+.mat-mdc-option .mat-pseudo-checkbox-minimal {
+  display: none;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.mdc-list-item__primary-text {
+  color: black !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  padding-right: 10px !important;
+  padding-top: 5px !important;
+}
+
+.mat-mdc-option {
+  min-height: 35px !important;
+  padding-left: 10px !important;
+  padding-right: 5px !important;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.mdc-menu-surface--open {
+  transform: none !important;
+  transition: none !important;
+}

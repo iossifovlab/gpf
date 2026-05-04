@@ -1,0 +1,14 @@
+<div class="panel" id="gene-symbols-panel">
+  <textarea
+    #textArea
+    id="text-area"
+    type="text"
+    (keyup)="setGeneSymbols(textArea.value)"
+    class="form-control"
+    spellcheck="false"
+    >{{ geneSymbols }}</textarea
+  >
+  <span id="sensitivity-note" style="color: #acacac; font-style: italic">* Gene symbols are case-sensitive</span>
+
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

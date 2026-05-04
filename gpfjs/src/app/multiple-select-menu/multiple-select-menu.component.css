@@ -1,0 +1,24 @@
+.form-control {
+  border-radius: 0;
+}
+
+.form-control:focus {
+  box-shadow: inset 0 -1px 0 #ddd;
+}
+
+label {
+  border: 1px solid #dedede;
+  background-color: #fff;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0%;
+}
+
+tr > td {
+  padding-top: 8px;
+}
+
+#check-uncheck-all-button {
+  border-radius: 0;
+}

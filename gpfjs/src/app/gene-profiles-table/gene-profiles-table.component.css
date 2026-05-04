@@ -1,0 +1,418 @@
+.table-row {
+  width: max-content;
+  display: grid;
+  grid-auto-columns: 110px;
+  grid-auto-flow: column;
+  grid-template-columns: 150px; /* Set 150px to first column (gene symbol), rest are 110px */
+}
+
+.table-body-row {
+  height: 35px;
+}
+
+.table-body-row:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+.table-body-row:hover {
+  background-color: #edf3ff;
+}
+
+.row-highlight {
+  background-color: #ffffd6 !important;
+}
+
+.row-highlight:nth-child(odd) {
+  background-color: #f7f7cb !important;
+}
+
+.row-highlight:hover {
+  background-color: #e4e9d7 !important;
+}
+
+#table-header {
+  position: sticky;
+  font-weight: bold;
+  padding-right: 25px;
+}
+
+#table-top {
+  display: grid;
+  top: 0;
+  position: sticky;
+}
+
+.cell {
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+.cell:nth-child(1) {
+  border-left: 1px solid #ddd;
+}
+
+.row-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 35px;
+}
+
+.header-cell {
+  background-color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  position: relative;
+}
+
+.active-sort-header {
+  background-color: #dfdfdf;
+}
+
+.header-cell.column-depth-1 {
+  white-space: nowrap;
+  line-height: 35px;
+  align-items: flex-end;
+  position: relative;
+  border-top: 1px solid #ddd;
+}
+
+.header-cell-content-span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+
+.header-gene-symbol-span {
+  width: 100% !important;
+  padding-left: 0 !important;
+}
+
+.column-depth-1 .header-cell-content-span,
+.column-depth-3 .header-cell-content-span,
+.column-depth-2 .header-cell-content-span:not(.vertical-text) {
+  width: 90%;
+  padding-left: 10px;
+}
+
+.header-cell-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-cell-content:not(.header-cell-vertical-content) {
+  min-width: 100%;
+  gap: unset;
+  justify-content: flex-end;
+}
+
+.header-cell-vertical-content {
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  gap: 0;
+}
+
+.header-button {
+  padding: 6px;
+  font-size: 14px;
+  line-height: 25px;
+}
+
+.column-filtering-button {
+  min-width: 35px;
+  padding-top: 0;
+  padding-bottom: 0;
+  user-select: none;
+  outline: none;
+  border: none;
+  background: none;
+}
+
+#category-filtering-button {
+  box-shadow: none;
+  border-radius: 0;
+  margin-right: 8px;
+  width: 43px;
+  height: 40px;
+}
+
+.dropdown-span {
+  position: fixed;
+  z-index: 3;
+}
+
+.dropdown-toggle::after {
+  content: none;
+}
+
+.search-input-wrapper {
+  border: 1px solid #ddd;
+  border-radius: 0;
+}
+
+.search-input-wrapper:hover {
+  border: 1px solid #c2c8cf;
+}
+
+.search-input-wrapper:focus-within {
+  border: 1px solid #83befc;
+}
+
+#gene-search-input {
+  border: 0;
+  line-height: normal;
+  padding-left: 10px;
+}
+
+#gene-search-input:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+#gene-search-label {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  height: 38px;
+  cursor: text;
+}
+
+#search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 60%;
+}
+
+#compare-genes-modal {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  z-index: 101;
+  padding: 8px;
+  width: 328px;
+  padding-right: 12px;
+}
+
+.compare-gene-item {
+  border: 1px solid #ddd;
+  padding-right: 0;
+  width: 145px;
+  background: #fcfcd2;
+}
+
+.compare-genes-gene-name {
+  vertical-align: text-top;
+  display: inline-block;
+  width: 80%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.compare-genes-close {
+  border: none;
+  width: 20%;
+  background: none;
+  opacity: 50%;
+  font-weight: lighter;
+  padding: 1px 6px;
+}
+
+.compare-genes-close:hover {
+  opacity: 100% !important;
+}
+
+#compare-genes-compare-button {
+  margin: 8px 2px 2px;
+  width: 100%;
+  height: 40px;
+  border-radius: 0;
+}
+
+.clickable {
+  color: #0645ad;
+  cursor: pointer;
+}
+
+.cell .clickable {
+  padding: 5px;
+}
+
+.clickable:hover {
+  text-decoration: underline;
+}
+
+.vertical-text {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  max-height: 150px;
+  text-align: left;
+  padding-bottom: 10px;
+}
+
+#loading {
+  display: table;
+  height: 44px;
+}
+
+#loading span {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+#nothing-found {
+  background-color: #fafafa;
+  border-bottom: 1px solid #ddd;
+  height: 43px;
+}
+
+#nothing-found span {
+  line-height: 43px;
+}
+
+#loading span,
+#nothing-found span {
+  font-style: italic;
+  padding-left: 12px;
+  opacity: 75%;
+}
+
+#above-table-bar {
+  display: flex;
+  justify-content: flex-start;
+  position: sticky;
+  padding: 7px 0;
+  background: #fff;
+  align-items: center;
+  z-index: 1;
+}
+
+.vertical-line {
+  border-left: 1px solid #d9d9d9;
+  height: 38px;
+  margin: 0 18px;
+}
+
+#keybinds-icon {
+  border: 1px solid #ddd;
+  padding: 2px 10px;
+  border-radius: 100%;
+}
+
+#keybinds-icon span {
+  user-select: none;
+  position: relative;
+  top: 1px;
+}
+
+.keybinds-tooltip {
+  border: 1px solid #ddd;
+  text-align: left;
+  position: absolute;
+  top: 51px;
+  left: 355px;
+  padding: 3px 10px;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  user-select: none;
+  line-height: 190%;
+  width: 440px;
+}
+
+.keybinds-tooltip-key {
+  border: 1px solid rgb(126, 126, 126, 41.2%);
+  padding: 1px 5px;
+}
+
+.keybinds-tooltip-command {
+  display: inline-flex;
+  width: 165px;
+}
+
+.multiple-select-menu {
+  margin: 0;
+}
+
+.grid-row-2-3 {
+  white-space: nowrap;
+}
+
+#filter-menu-icon {
+  margin-left: -3px;
+}
+
+.search-icon {
+  margin-top: -7px;
+}
+
+.search-clear-icon {
+  top: 8px;
+}
+
+.check {
+  padding-top: 5px;
+}
+
+.menu-button {
+  margin-top: 6px;
+  font-size: 20px;
+}
+
+#tabs-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
+#search-tabs-wrapper {
+  align-items: center;
+  gap: 15px;
+  background: #fff;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background-color: transparent;
+  color: #2a6395;
+  border-radius: 0.25rem;
+  border-color: transparent;
+  font-size: 16px;
+  height: 40px;
+}
+
+.active-tab {
+  background-color: #2a6395;
+  color: #fff;
+}
+
+.close-tab-button {
+  background-color: transparent;
+  border: none;
+  color: #2a6395;
+  vertical-align: middle;
+  padding: 0;
+  padding-top: 4px;
+}
+
+.active-tab > .close-tab-button {
+  color: white;
+}
+
+#reset-button {
+  margin-left: 10px;
+  font-size: 17px;
+  border: transparent;
+  background-color: transparent;
+  color: #0645ad;
+}

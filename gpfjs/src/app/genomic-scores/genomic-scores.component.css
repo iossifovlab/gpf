@@ -1,0 +1,23 @@
+#view-menu-button {
+  background: #2a6395;
+  color: white;
+  border: 1px solid #2a6395;
+  border-radius: 0.3rem;
+  padding: 5px 10px;
+  margin-left: 10px;
+}
+
+.title-wrapper {
+  width: auto;
+  font-weight: bold;
+  font-size: 16px;
+  max-width: 900px;
+}
+
+.genomic-score-container {
+  width: 65vw;
+  display: flex;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: center;
+}

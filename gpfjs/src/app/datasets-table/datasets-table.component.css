@@ -1,0 +1,13 @@
+.grid-container {
+  grid-template-columns: 30% 35% 35%;
+}
+
+.create-group {
+  display: block;
+  margin: 6px auto;
+  width: 50%;
+}
+
+.remove-group-button {
+  margin-top: 4px;
+}

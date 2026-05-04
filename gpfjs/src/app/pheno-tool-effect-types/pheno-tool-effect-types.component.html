@@ -1,0 +1,36 @@
+<div class="effect-card card">
+  <div class="card-header card-title">Effect Types</div>
+  <div class="card-block">
+    <div class="btn-group btn-group-sm">
+      <button (click)="selectButtonGroup('ALL')" class="btn btn-default">All</button>
+      <button (click)="selectButtonGroup('NONE')" class="btn btn-default">None</button>
+    </div>
+    <div class="row">
+      <div class="col-lg-4">
+        <gpf-effect-types-column
+          [effectTypesLabels]="phenoToolLGDs"
+          [effectTypes]="selectedEffectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effect-types-column>
+      </div>
+
+      <div class="col-lg-4">
+        <gpf-effect-types-column
+          [effectTypesLabels]="phenoToolOthers"
+          [effectTypes]="selectedEffectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effect-types-column>
+      </div>
+      <div class="col-lg-4">
+        <gpf-effect-types-column
+          *ngIf="variantTypes && variantTypes.has('CNV')"
+          [effectTypesLabels]="phenoToolCNV"
+          [effectTypes]="selectedEffectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effect-types-column>
+      </div>
+    </div>
+  </div>
+
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

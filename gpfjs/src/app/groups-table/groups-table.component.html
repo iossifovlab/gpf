@@ -1,0 +1,77 @@
+<div class="row">
+  <div class="col-12 mt-3">
+    <div class="grid-container" *ngIf="groups">
+      <div class="grid-header">Groups</div>
+      <div class="grid-header">Users</div>
+      <div class="grid-header">Datasets</div>
+      <div class="grid-header">Actions</div>
+      <ng-container *ngFor="let group of groups">
+        <div class="grid-cell" [attr.id]="group.name + '-group-cell'">
+          <span>{{ group.name }}</span>
+          <span
+            id="group-deletion-warning"
+            class="alert alert-warning"
+            *ngIf="!group.users.length && !group.datasets.length"
+            >Empty groups with no users or datasets will be deleted!</span
+          >
+        </div>
+
+        <div class="grid-cell list-cell" [attr.id]="group.name + '-users-cell'">
+          <div class="item-list" [attr.id]="group.name + '-users-list'">
+            <div class="item-wrapper" *ngFor="let user of group.users" [attr.id]="user + '-list-item'">
+              <span class="item" [title]="user">{{ user }}</span>
+              <gpf-confirm-button
+                *ngIf="!(group.name === 'admin' && currentUserEmail === user)"
+                (clicked)="removeUser(group, user)"
+                class="remove-group-button"
+                confirmText="Remove"
+                title="Remove user"
+                message="Remove user?"
+                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
+              </gpf-confirm-button>
+            </div>
+          </div>
+          <gpf-item-add-menu
+            [id]="group.name"
+            [getItems]="getUserNamesFunction(group)"
+            (addedItem)="addUser(group, $event)"></gpf-item-add-menu>
+        </div>
+
+        <div class="grid-cell list-cell" [attr.id]="group.name + '-datasets-cell'">
+          <div class="item-list" [attr.id]="group.name + '-datasets-list'">
+            <div
+              class="item-wrapper"
+              *ngFor="let dataset of group.datasets"
+              [attr.id]="dataset.datasetName + '-list-item'">
+              <span class="item" [title]="dataset.datasetName">{{ dataset.datasetName }}</span>
+              <gpf-confirm-button
+                *ngIf="group.name !== 'any_dataset' && group.name !== dataset.datasetId"
+                (clicked)="removeDataset(group, dataset.datasetId)"
+                confirmText="Remove"
+                title="Remove dataset"
+                message="Remove dataset?"
+                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
+              </gpf-confirm-button>
+            </div>
+          </div>
+          <gpf-item-add-menu
+            [id]="group.name"
+            [getItems]="getDatasetNamesFunction(group)"
+            (addedItem)="addDataset(group, $event)"></gpf-item-add-menu>
+        </div>
+
+        <div class="grid-cell" [attr.id]="group.name + '-actions-cell'">
+          <gpf-confirm-button
+            [attr.id]="group.name + '-delete-group-button'"
+            *ngIf="group.name !== 'admin'"
+            (clicked)="deleteGroup(group)"
+            confirmText="Delete"
+            title="Delete group"
+            message="Delete group?"
+            [iconStyle]="{ name: 'close', class: 'material-symbols-outlined' }">
+          </gpf-confirm-button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<div class="family-filters-block form-block">
+  <div class="card">
+    <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" id="person-filters-list">
+      <div class="nav-title-custom">Person filters</div>
+      <li [ngbNavItem]="'allPersons'" id="all-persons">
+        <a ngbNavLink>All</a>
+      </li>
+      <li [ngbNavItem]="'personIds'" id="person-ids">
+        <a ngbNavLink>Person Ids</a>
+        <ng-template ngbNavContent>
+          <gpf-person-ids></gpf-person-ids>
+        </ng-template>
+      </li>
+      <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
+        <a ngbNavLink>Advanced</a>
+        <ng-template ngbNavContent>
+          <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters>
+        </ng-template>
+      </li>
+      <li [ngbNavItem]="'phenoMeasures'" *ngIf="showPhenoMeasuresButton" id="phenoMeasures">
+        <a ngbNavLink>Pheno Measures</a>
+        <ng-template ngbNavContent>
+          <div id="filters">
+            <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters-selector>
+          </div>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
+  </div>
+</div>

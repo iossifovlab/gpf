@@ -1,0 +1,74 @@
+<div ngbDropdown autoClose="outside">
+  <button
+    (click)="focusNameInput(); toggleDropdown()"
+    [disabled]="disabled"
+    id="save-query-dropdown-button"
+    class="btn btn-default"
+    ngbDropdownAnchor
+    >Share/save query</button
+  >
+
+  <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
+    <p>Share</p>
+
+    <div id="share-url-div">
+      <input
+        id="link-input"
+        #link
+        readonly
+        type="disabled"
+        (click)="link.select()"
+        value="{{ url }}"
+        spellcheck="false" />
+      <div id="copy-link-button" [cdkCopyToClipboard]="url" (click)="openCopiedTooltip(); link.select()">
+        <span
+          ngbTooltip="Copied!"
+          [autoClose]="false"
+          triggers="manual"
+          #copiedTooltip="ngbTooltip"
+          class="material-symbols-outlined"
+          >content_copy</span
+        >
+      </div>
+    </div>
+
+    <div id="save-form">
+      <p style="border-top: 1px solid rgb(211, 211, 211); padding-top: 11px">Save</p>
+
+      <div>
+        <div style="margin-bottom: 8px">
+          <label for="name">Name</label>
+          <input
+            #nameInput
+            type="text"
+            class="form-control"
+            id="name"
+            required
+            autocomplete="off"
+            maxlength="256"
+            spellcheck="false"
+            (input)="saveButtonText = 'Save'" />
+        </div>
+
+        <div style="margin-bottom: 16px">
+          <label for="description">Description</label>
+          <textarea
+            #descInput
+            class="form-control"
+            id="description"
+            maxlength="1024"
+            style="resize: none; height: 150px"></textarea>
+        </div>
+
+        <button
+          (click)="saveUserQuery(nameInput.value, descInput.value)"
+          id="save-button"
+          type="button"
+          class="btn btn-success"
+          [disabled]="!nameInput.value"
+          >{{ saveButtonText }}</button
+        >
+      </div>
+    </div>
+  </div>
+</div>

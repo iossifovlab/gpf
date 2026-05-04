@@ -1,0 +1,108 @@
+.dataset-selector {
+  width: 380px;
+}
+
+#selected-dataset-name {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-toggle::after {
+  display: block;
+  float: right;
+  margin-top: -18px;
+  margin-left: 345px;
+}
+
+.dataset-selector .dropdown-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dataset-selector .dropdown-item.active {
+  color: white;
+}
+
+.content {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+}
+
+#datasets-dropdown-menu-button {
+  display: grid;
+  color: #000;
+}
+
+.show > #datasets-dropdown-menu-button,
+#datasets-dropdown-menu-button:hover,
+#datasets-dropdown-menu-button:active {
+  color: #fff;
+}
+
+.show .dropdown-toggle {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.warning-alert {
+  position: absolute;
+  top: 70px;
+  width: calc(100% - 30px);
+  min-height: 480px;
+  height: 100%;
+  left: 15px;
+  z-index: 100;
+}
+
+.disabled-tool {
+  opacity: 35%;
+  pointer-events: none;
+  user-select: none;
+}
+
+#register-alert {
+  background-color: #fff8c5c7;
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid #eaead2;
+  border-radius: 0;
+  height: 48px;
+  font-size: 14px;
+}
+
+#register-alert span {
+  margin-left: 16px;
+  color: #4d4007de;
+}
+
+:host::ng-deep.phenotype-icon {
+  color: #7e7e7e;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+:host::ng-deep.denovo-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  font-size: 18px;
+  width: 9px;
+}
+
+:host::ng-deep.star-icon {
+  font-variation-settings: "FILL" 1, "wght" 300, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  font-size: 11px;
+  transform: rotate(59deg) translate(-6px, 0);
+}
+
+:host::ng-deep.transmitted-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  font-size: 18px;
+}

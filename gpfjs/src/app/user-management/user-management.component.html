@@ -1,0 +1,156 @@
+<div class="form-block">
+  <div class="card">
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills">
+      <div class="nav-title-custom" style="width: unset">Access management</div>
+
+      <li ngbNavItem id="users">
+        <a ngbNavLink (click)="switchTableName('USERS')">Users</a>
+        <ng-template ngbNavContent>
+          <div class="table-toolbar">
+            <input
+              #searchBox
+              placeholder="Search"
+              autocomplete="off"
+              (keyup)="search(searchBox.value)"
+              (search)="search(searchBox.value)"
+              id="search-field"
+              class="search-input form-control my-0 py-1"
+              type="search"
+              [ngModel]="searchText"
+              spellcheck="false" />
+
+            <button
+              id="create-user-form-button"
+              class="btn btn-primary"
+              (click)="createMode ? cancelCreation() : (createMode = true)"
+              >Create user</button
+            >
+          </div>
+
+          <ng-container *ngIf="createMode">
+            <div class="create-container">
+              <div>
+                <label>Name:</label>
+                <input
+                  #nameBox
+                  autocomplete="off"
+                  id="name-box"
+                  class="search-input form-control my-0 py-1"
+                  type="text"
+                  pattern=".{3,}"
+                  required
+                  spellcheck="false" />
+              </div>
+              <div>
+                <label>Email:</label>
+                <input
+                  #emailBox
+                  autocomplete="off"
+                  id="email-box"
+                  class="search-input form-control my-0 py-1"
+                  type="email"
+                  email="true"
+                  pattern="^\w+([\.\-]?\w+)*@\w+([\.\-]?\w+)*(\.\w{2,3})+$"
+                  required
+                  spellcheck="false" />
+              </div>
+              <div *ngIf="creationError" class="creation-error alert alert-danger">
+                {{ creationError }}
+              </div>
+              <div class="creation-buttons">
+                <button
+                  id="create-user-button"
+                  class="btn btn-primary"
+                  (click)="createUser(nameBox.value, emailBox.value)"
+                  >Create</button
+                >
+                <button id="cancel-user-creation-button" class="btn btn-danger" (click)="cancelCreation()"
+                  >Cancel</button
+                >
+              </div>
+            </div>
+          </ng-container>
+
+          <gpf-users-table [users]="users" [currentUserEmail]="currentUserEmail"></gpf-users-table>
+        </ng-template>
+      </li>
+
+      <li ngbNavItem id="groups">
+        <a ngbNavLink (click)="switchTableName('GROUPS')">Groups</a>
+        <ng-template ngbNavContent>
+          <div class="table-toolbar">
+            <input
+              #searchBox
+              placeholder="Search"
+              autocomplete="off"
+              (keyup)="search(searchBox.value)"
+              (search)="search(searchBox.value)"
+              id="search-field"
+              class="search-input form-control my-0 py-1"
+              type="search"
+              aria-label="Search"
+              [ngModel]="searchText"
+              spellcheck="false" />
+
+            <button
+              id="create-group-form-button"
+              class="btn btn-primary"
+              (click)="createMode ? cancelCreation() : (createMode = true)"
+              >Create group</button
+            >
+          </div>
+          <ng-container *ngIf="createMode">
+            <div class="create-container">
+              <div>
+                <label>Group name:</label>
+                <input
+                  #groupNameBox
+                  autocomplete="off"
+                  id="group-name-box"
+                  class="search-input form-control my-0 py-1"
+                  type="text"
+                  pattern=".{3,}"
+                  required
+                  spellcheck="false" />
+              </div>
+              <div *ngIf="creationError" class="creation-error alert alert-danger">
+                {{ creationError }}
+              </div>
+              <div class="creation-buttons">
+                <button id="create-group-button" class="btn btn-primary" (click)="createGroup(groupNameBox.value)"
+                  >Create</button
+                >
+                <button id="cancel-group-creation-button" class="btn btn-danger" (click)="cancelCreation()"
+                  >Cancel</button
+                >
+              </div>
+            </div>
+          </ng-container>
+
+          <gpf-groups-table [groups]="groups" [currentUserEmail]="currentUserEmail"></gpf-groups-table>
+        </ng-template>
+      </li>
+      <li ngbNavItem id="datasets">
+        <a ngbNavLink (click)="switchTableName('DATASETS')">Datasets</a>
+        <ng-template ngbNavContent>
+          <div class="table-toolbar">
+            <input
+              #searchBox
+              placeholder="Search"
+              autocomplete="off"
+              (keyup)="search(searchBox.value)"
+              (search)="search(searchBox.value)"
+              id="search-field"
+              class="search-input form-control my-0 py-1"
+              type="search"
+              aria-label="Search"
+              [ngModel]="searchText"
+              spellcheck="false" />
+          </div>
+          <gpf-datasets-table [datasets]="datasets"></gpf-datasets-table>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
+  </div>
+</div>
