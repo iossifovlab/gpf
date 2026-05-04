@@ -256,6 +256,33 @@ pipeline {
             }
         }
 
+        stage('Import e2e instance') {
+            // Runs the `instance-import` compose one-shot —
+            // `wdaemanage migrate` + import_tools / import_genotypes
+            // / build_pheno_browser / generate_*_report + dev-user
+            // creation, all in one bash invocation against the
+            // writable bind-mount of web_e2e/gpf_e2e_instance.
+            //
+            // We `up -d --wait db instance-import` (rather than
+            // `run --rm instance-import`) so the named instance-
+            // import container persists in the project. Later
+            // `compose run --rm e2e-tests` then sees its
+            // service_completed_successfully condition satisfied
+            // without re-running the ~10 min import.
+            //
+            // --wait blocks until db is healthy AND instance-import
+            // has exited zero (compose ≥ v2.17 semantics for
+            // restart: "no" services without a healthcheck).
+            steps {
+                sh '''
+                    docker compose \
+                        -p "$COMPOSE_PROJECT" \
+                        -f web_infra/compose-jenkins.yaml \
+                        up -d --wait db instance-import
+                '''
+            }
+        }
+
         stage('Run e2e') {
             steps {
                 script {
@@ -263,7 +290,7 @@ pipeline {
                         sh '''
                             mkdir -p web_e2e/reports
                             # `compose run --rm e2e-tests` honours
-                            # backend-e2e-migrate / backend-e2e /
+                            # instance-import / backend-e2e /
                             # frontend-e2e healthcheck dependencies
                             # (declared in compose-jenkins.yaml),
                             # so it brings the stack up itself and

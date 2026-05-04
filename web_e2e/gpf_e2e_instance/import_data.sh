@@ -10,6 +10,13 @@ INSTANCE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 export DAE_DB_DIR="${INSTANCE_DIR}"
 
+# Apply Django migrations first so the wdae user/permission
+# tables exist before the user_create calls at the bottom. The
+# data imports below don't touch the Django ORM (storage is
+# duckdb/parquet under genotype_storage/ + phenotype_storage/),
+# so this single one-shot covers schema + data + users.
+wdaemanage migrate --noinput
+
 # cleanup
 rm -rf "${INSTANCE_DIR}"/wdae/*
 rm -rf "${INSTANCE_DIR}"/phenotype_storage/*
