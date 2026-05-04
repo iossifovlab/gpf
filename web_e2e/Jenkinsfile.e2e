@@ -270,22 +270,51 @@ pipeline {
             // creation, all in one bash invocation against the
             // writable bind-mount of web_e2e/gpf_e2e_instance.
             //
-            // We `up -d --wait db instance-import` (rather than
-            // `run --rm instance-import`) so the named instance-
-            // import container persists in the project. Later
-            // `compose run --rm e2e-tests` then sees its
+            // We `up -d` (rather than `run --rm`) so the named
+            // instance-import container persists in the project.
+            // Later `compose run --rm e2e-tests` then sees its
             // service_completed_successfully condition satisfied
             // without re-running the ~10 min import.
             //
-            // --wait blocks until db is healthy AND instance-import
-            // has exited zero (compose ≥ v2.17 semantics for
-            // restart: "no" services without a healthcheck).
+            // Don't use `up --wait` here: --wait waits for ALL
+            // transitively started services to reach
+            // running|healthy state, and the `mysql-data`
+            // busybox (volumes_from target for `db`) exits 0
+            // immediately after its echo — --wait treats that
+            // as a service that died and aborts the wait
+            // (build #3 lesson). Use the explicit
+            // `compose wait instance-import` instead, which
+            // blocks on just that one service and returns its
+            // actual exit code.
             steps {
                 sh '''
                     docker compose \
                         -p "$COMPOSE_PROJECT" \
                         -f web_infra/compose-jenkins.yaml \
-                        up -d --wait db instance-import
+                        up -d db instance-import
+
+                    # Block until instance-import exits; capture
+                    # its exit code so we can fail the stage on
+                    # a non-zero import. `|| EXIT_CODE=$?` so the
+                    # set -e default doesn't short-circuit before
+                    # the log dump runs.
+                    EXIT_CODE=0
+                    docker compose \
+                        -p "$COMPOSE_PROJECT" \
+                        -f web_infra/compose-jenkins.yaml \
+                        wait instance-import || EXIT_CODE=$?
+
+                    # Dump the import logs after wait so failures
+                    # surface in the Jenkins stage output (the
+                    # script's stdout/stderr stays inside the
+                    # container under `up -d`, not on the
+                    # compose invocation's stdout).
+                    docker compose \
+                        -p "$COMPOSE_PROJECT" \
+                        -f web_infra/compose-jenkins.yaml \
+                        logs --no-color instance-import
+
+                    exit "$EXIT_CODE"
                 '''
             }
         }
