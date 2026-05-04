@@ -99,9 +99,14 @@ services:
         condition: service_started
     volumes:
       # The gpf instance fixture lives in the e2e module;
-      # mount it read-only at /data and point gpf-core at it
+      # mount it writable at /data and point gpf-core at it
       # via DAE_DB_DIR. instance-import populated it above.
-      - ../web_e2e/gpf_e2e_instance:/data:ro
+      # Writable rather than :ro because WGPFInstance.__init__
+      # touches main_description.md and about_description.md
+      # on first startup if they're missing (gpf_instance/
+      # gpf_instance.py:102-109) — same behaviour production
+      # deployments rely on; build #12 caught the mismatch.
+      - ../web_e2e/gpf_e2e_instance:/data
       # GRR resources mount — same shape as gain's
       # web_infra/compose-jenkins.yaml. The path is the CSHL
       # Jenkins agents' shared GRR cache; runs on other hosts
