@@ -1,0 +1,9 @@
+person_id,family_id,status,sex,instrument_1.measure_1,LGDs,missense,synonymous
+f1.p1,f1,affected,M,110.71113,0,1.0,1.0
+f2.p1,f2,affected,F,75.83139,0,0.0,1.0
+f3.p1,f3,affected,M,96.63452,0,0.0,0.0
+f4.p1,f4,affected,F,99.54885,0,0.0,0.0
+f5.p1,f5,unaffected,M,80.17125,0,0.0,0.0
+f6.p1,f6,affected,F,66.97819,0,0.0,0.0
+f7.p1,f7,affected,M,70.01276,0,0.0,0.0
+f8.p1,f8,affected,F,78.45678,0,0.0,0.0

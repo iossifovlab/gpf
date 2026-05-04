@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1	f4.mom	f4.dad	f4.p1	f4.s1	f5.mom	f5.dad	f5.p1	f5.s1
+chr1	930202	.	C	T	.	.	EFF=SYN	GT	1/1	0/0	0/1	0/1	1/1	0/0	0/1	0/1	1/1	0/0	0/1	0/1	1/1	0/0	0/1	0/1	1/1	0/0	1/0	0/1
+chr1	930311	.	C	T	.	.	EFF=MIS	GT	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	1/0	1/1	1/0	1/0	1/0	1/1	0/1	0/1

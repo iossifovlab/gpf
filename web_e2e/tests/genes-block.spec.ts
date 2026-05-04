@@ -1,0 +1,514 @@
+/* eslint-disable indent */
+import { test, expect } from '@playwright/test';
+import * as utils from './utils';
+import * as path from 'path';
+import { scanCSV } from 'nodejs-polars';
+
+test.describe('Genes block tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+  });
+
+  test('should display gene symbols panel', async({ page }) => {
+    await expect(page.locator('#gene-symbols-panel')).toBeHidden();
+
+    await page.click('#gene-symbols');
+    await expect(page.locator('#gene-symbols-panel')).toBeVisible();
+  });
+
+  test('should display gene sets panel', async({ page }) => {
+    await expect(page.locator('.gene-sets-panel')).toBeHidden();
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await expect(page.locator('#gene-sets-panel')).toBeVisible();
+  });
+
+  test('should display error alert in gene sets panel when the textarea is empty', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await expect(page.locator('css=.alert-danger')).toBeVisible();
+
+    await page.click('input#search-box');
+
+    await page.locator('mat-option').first().click();
+    await expect(page.locator('css=.alert-danger')).not.toBeVisible();
+  });
+
+  test('should display error alert in gene sets panel when the textarea is cleared', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await page.click('input#search-box');
+
+    await page.locator('mat-option').first().click();
+
+    await page.locator('#selected-value').click();
+    await expect(page.locator('css=.alert-danger')).toBeVisible();
+  });
+
+  test('should display gene weights panel', async({ page }) => {
+    await expect(page.locator('#gene-scores-panel')).toBeHidden();
+
+    await page.getByRole('tab', { name: 'Gene Scores' }).click();
+    await expect(page.locator('#gene-scores-panel')).toBeVisible();
+  });
+});
+
+test.describe('Genes sybmols tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+  });
+
+  test('should display error alert in gene symbols panel when the textarea is empty', async({ page }) => {
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    await page.keyboard.type('SAMD11');
+    await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+  });
+
+  test('error message display when textarea contains invalid gene', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially(', DIABLO, CHD*');
+    await expect(page.getByText('Invalid genes: CHD*')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols state resetting when switching tabs', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+    await page.getByText('Phenotype browser').click();
+    await page.getByText('Genotype browser').click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols state resetting when switching tools', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+
+    await page.getByText('Phenotype browser').click();
+    await page.getByText('Genotype browser').click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols errors resetting when switching tabs', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD*');
+    await expect(page.getByText('Invalid genes: CHD*')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-genes-block').getByRole('tab', { name: 'All' }).click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols errors resetting when switching tools', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('333');
+    await expect(page.getByText('Invalid genes: 333')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.getByText('Phenotype browser').click();
+    await page.getByText('Genotype browser').click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('if gene symbols are loaded correctly when loading query', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2, CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('DIABLO, SHANK2, CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('if gene symbols are formatted correctly when loading query with two genes', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2');
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('DIABLO\nSHANK2');
+  });
+
+  test('loaded variants when there are duplicate gene symbols', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('POGZ');
+    await page.locator('gpf-effect-types').getByText('All').click();
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('16 variants selected');
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('\nPOGZ\nPOGZ');
+    await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('16 variants selected');
+  });
+
+  test('case sensitivity of gene symbols', async({ page }) => {
+    await expect(page.getByText('* Gene symbols are case-sensitive')).toBeVisible();
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected');
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('chd8');
+    await expect(page.getByText('Invalid genes: chd8')).toBeVisible();
+    await expect(page.getByRole('button', {name: 'Table Preview'})).toBeDisabled();
+  });
+
+  test('if gene symbols input is trimmed when loading query', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('  ');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toHaveCount(1);
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('\n');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toHaveCount(1);
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toHaveCount(0);
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected');
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+
+    await expect(async() => {
+      await page.getByRole('button', {name: 'Table Preview'}).click();
+      await expect(page.locator('gpf-genotype-preview-table')).toBeVisible({timeout: 5000});
+    }).toPass({intervals: [1000, 2000, 3000]});
+
+    await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected', { timeout: 180000 });
+  });
+});
+
+test.describe('Genes sets tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+  });
+
+  [
+    {
+      collection: 'Protein domains',
+      expectedSearchCondition: '7tm_1 (286): 7 transmembrane receptor (rhodopsin family)',
+      expectedDownloadCount: '286'
+    },
+    {
+      collection: 'SFARI Genes',
+      expectedSearchCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
+      expectedDownloadCount: '910'
+    },
+
+  ].forEach(data => {
+    test('should properly display "' + data.expectedSearchCondition + '" in "' +
+      data.collection + '" collection, and the counts should match', async({ page }) => {
+        await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+        await page.getByRole('tab', { name: 'Gene Sets' }).click();
+        const geneSetsRequest = page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
+        await page.locator('select#selected-collection').selectOption(data.collection);
+        await geneSetsRequest;
+        await page.getByPlaceholder('Select or start typing to search').click();
+
+        const expectedSetName = data.expectedSearchCondition;
+        const geneSetName = expectedSetName.substring(0, expectedSetName.indexOf('(') - 1);
+
+        await page.getByPlaceholder('Select or start typing to search').pressSequentially(geneSetName);
+        await page.waitForResponse(
+            resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+        );
+        await page.waitForLoadState('load');
+
+        await page.locator('.sets-dropdown mat-option').first().click();
+
+        await expect(page.locator('span#selected-value')).toContainText(expectedSetName);
+
+        const actualCountElement = await page.locator(
+            'span:has-text("Count:")'
+        ).textContent();
+        const actualCount = actualCountElement.replace('Count: ', '').replace(' (Download)', '').trim();
+        const expectedCount = data.expectedDownloadCount;
+        expect(actualCount).toEqual(expectedCount);
+        });
+    });
+
+  test('should select gene set, share query then check the state of gene set', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await page.locator('select#selected-collection').selectOption('GO Terms');
+    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
+
+    await page.getByPlaceholder('Select or start typing to search').pressSequentially('GO:0000003');
+
+    await page.locator('.sets-dropdown mat-option').filter({hasText: 'GO:0000003 (10): reproduction'}).click();
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('span#selected-value')).toContainText('GO:0000003 (10): reproduction');
+    await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+  });
+
+  test('should reset invalid gene sets state when switching to All tab', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await expect(page.getByText('Please select a gene set.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-genes-block').getByRole('tab', { name: 'All' }).click();
+    await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should reset invalid gene sets state when switching to other tool', async({ page }) => {
+    await page.getByRole('tab', { name: 'Gene Sets' }).click();
+    await expect(page.getByText('Please select a gene set.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+});
+
+
+test.describe('Gene block download tests ', () => {
+test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
+});
+
+[
+    {
+      id: 1,
+      collection: 'Relevant Gene Sets',
+      searchValue: 'synaptic clefts inhibitory',
+      geneSet: 'synaptic clefts inhibitory (41): Ken H. Loh, et al. '+
+      'Proteomic Analysis of Unbounded Cellular Compartments: Synaptic Clefts. Cell (2016)',
+      numOfRows: 42
+    },
+    {
+      id: 2,
+      searchValue: 'ABC1',
+      collection: 'Protein domains',
+      geneSet: 'ABC1 (5): ABC1 atypical kinase-like domain',
+      numOfRows: 6
+    },
+    {
+      id: 3,
+      searchValue: 'GO:0000019',
+      collection: 'GO Terms',
+      geneSet: 'GO:0000019 (4): regulation_of_mitotic_recombination',
+      numOfRows: 5
+    }
+].forEach(data => {
+     test('should download "' + data.geneSet + '" in the "' + data.collection +
+     '" collection and check whether the count in the name should matches ' +
+     'the downloaded"s file length and the gene set"s name matches the first value of the file', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
+
+    await page.locator('#gene-sets').click();
+    await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
+
+
+    await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
+    await page.getByPlaceholder('Select or start typing to search').click();
+    await page.getByPlaceholder('Select or start typing to search').focus();
+    await page.keyboard.type(data.searchValue);
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+  );
+
+      await expect(page.getByRole('option', {name: data.geneSet})).toBeVisible();
+      await page.getByRole('option', {name: data.geneSet}).click();
+
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.locator('gpf-gene-sets').getByRole('link', { name: 'Download' }).click();
+      const download = await downloadPromise;
+
+      const fixtureData = scanCSV(`playwright/fixtures/gene-sets/gene_sets${data.id}.csv`, {truncateRaggedLines: true});
+      const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
+      const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
+      const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+      expect(downloadFrame.height).toBe(data.numOfRows);
+    });
+  });
+});
+
+test.describe('Denovo gene set tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, { waitUntil: 'load' });
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+  });
+
+  test('basic functionality', async({ page }) => {
+      await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
+      await page.locator('#gene-sets').click();
+      await expect(page.locator('#gene-sets-panel')).toBeVisible();
+      await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
+
+      await page.getByRole('button', { name: 'Select studies' }).click();
+      await expect(page.locator('.modal-content')).toBeVisible();
+      await expect(page.locator('#hierarchy')).toBeVisible();
+      await expect(page.locator('#filters')).toBeVisible();
+      await expect(page.locator('#modal-filter-list')).toBeVisible();
+      await expect(page.locator('#dataset-denovo_helloworld')).not.toBeVisible();
+      await expect(page.locator('#dataset-vcf_helloworld')).not.toBeVisible();
+
+      await page.locator('#expand-helloworld_genotypes').click();
+      await expect(page.locator('#dataset-denovo_helloworld')).toBeVisible();
+      await expect(page.locator('#dataset-vcf_helloworld')).toBeVisible();
+
+      await expect(page.locator('#dataset-helloworld_genotypes')).toHaveCSS('opacity', '0.3');
+      await expect(page.locator('#dataset-helloworld_genotypes')).toHaveCSS('pointer-events', 'none');
+
+      await page.locator('#dataset-denovo_helloworld').click();
+      await expect(page.locator('#dataset-iossifov_2014_liftover')).toHaveClass('btn-sm text-wrap modified');
+      await expect(page.getByText('Affected Status:')).toBeVisible();
+
+      await page.locator('#denovo_helloworld-checkbox-affected').click();
+      await page.locator('#denovo_helloworld-checkbox-unaffected').click();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('iossifov_2014_liftover: status: affected')
+      ).toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: affected')
+      ).toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: unaffected')
+      ).toBeVisible();
+      await page.mouse.click(0, 0); // close modal
+
+      await expect(page.locator('#selected-filter-list')).toBeVisible();
+      await expect(page.locator('#selected-filter-list')).toContainText('iossifov_2014_liftover: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('denovo_helloworld: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('denovo_helloworld: status: unaffected');
+
+
+      await page.locator('[id="remove-iossifov_2014_liftover: status: affected"]').click();
+      await page.locator('[id="remove-denovo_helloworld: status: affected"]').click();
+
+      await expect(page.locator('#selected-filter-list')).not.toContainText('iossifov_2014_liftover: status: affected');
+      await expect(page.locator('#selected-filter-list')).not.toContainText('denovo_helloworld: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('denovo_helloworld: status: unaffected');
+
+      await page.getByRole('button', { name: 'Select studies' }).click();
+
+      await expect(page.locator('#denovo_helloworld-checkbox-affected')).not.toBeChecked();
+      await expect(page.locator('#denovo_helloworld-checkbox-unaffected')).toBeChecked();
+      await expect(page.locator('#dataset-iossifov_2014_liftover')).toHaveClass('btn-sm text-wrap');
+      await expect(
+        page.locator('#modal-filter-list').getByText('iossifov_2014_liftover: status: affected')
+      ).not.toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: affected')
+      ).not.toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: unaffected')
+      ).toBeVisible();
+  });
+  test('should download denovo_helloworld with affected status', async({ page }) => {
+        await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
+        await page.locator('#gene-sets').click();
+        await expect(page.locator('#gene-sets-panel')).toBeVisible();
+        await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
+
+        await page.getByPlaceholder('Select or start typing to search').click();
+        await page.getByPlaceholder('Select or start typing to search').focus();
+        await page.keyboard.type('Missense');
+        await page.waitForResponse(
+          (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+        );
+
+      const geneSet ='Missense (5): Missense (denovo_helloworld:status:affected)';
+      await expect(page.getByRole('option', {name: geneSet})).toBeVisible();
+      await page.getByRole('option', {name: geneSet}).click();
+
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.locator('gpf-gene-sets').getByRole('link', { name: 'Download' }).click();
+      const download = await downloadPromise;
+
+      const fixtureData = scanCSV('playwright/fixtures/gene-sets/gene_sets4.csv', {truncateRaggedLines: true});
+      const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
+      const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
+      const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+      expect(downloadFrame.height).toBe(6);
+    }
+  );
+});
