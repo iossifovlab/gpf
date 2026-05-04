@@ -220,6 +220,15 @@ pipeline {
                     }
                 }
 
+                stage('Conda builder image') {
+                    steps {
+                        sh '''
+                            docker build -f conda-builder/Dockerfile \
+                                -t gpf-conda-builder-ci:${BUILD_NUMBER} conda-builder
+                        '''
+                    }
+                }
+
                 stage('Sub-projects') {
                     parallel {
                         stage('core') {
@@ -452,6 +461,51 @@ pipeline {
                     }
                 }
 
+                stage('Conda packages') {
+                    steps {
+                        sh '''
+                            # Derive the hatch-vcs PEP 440 version from any wheel name;
+                            # pass it to rattler-build via env so the conda package
+                            # version matches the wheel's.
+                            VCS_VERSION=$(ls dist/core/*.whl | head -1 \
+                                | sed 's#.*gpf_core-##' \
+                                | sed 's#-py3-none-any.whl$##')
+                            echo "VCS_VERSION=$VCS_VERSION"
+
+                            mkdir -p dist/conda
+                            # Run the conda-builder container as the Jenkins user
+                            # (instead of the image's default `mambauser`, UID
+                            # 57439). rattler-build creates its output `.conda`
+                            # via a 0600-mode tempfile, so files produced by
+                            # mambauser end up unreadable to Jenkins on the host;
+                            # matching UIDs sidesteps that entirely. HOME is
+                            # redirected to /tmp because /home/mambauser is not
+                            # writable by an arbitrary UID.
+                            DOCKER_USER="$(id -u):$(id -g)"
+                            for proj in core web federation rest_client; do
+                                mkdir -p conda/$proj
+                                docker run --rm \
+                                    --user "$DOCKER_USER" \
+                                    -e HOME=/tmp \
+                                    -v $PWD:/workspace \
+                                    -w /workspace \
+                                    -e VCS_VERSION="$VCS_VERSION" \
+                                    gpf-conda-builder-ci:${BUILD_NUMBER} \
+                                    rattler-build build \
+                                        --recipe $proj/conda-recipe/recipe.yaml \
+                                        --output-dir conda/$proj
+                                # Promote the final .conda artefact(s) out of
+                                # rattler-build's working tree. conda/$proj/bld/
+                                # holds 1000+ symlinks into build-env prefixes;
+                                # archiveArtifacts walking that tree has raced
+                                # with it. dist/conda/ stays clean and holds
+                                # only the published packages.
+                                cp conda/$proj/noarch/*.conda dist/conda/
+                            done
+                        '''
+                    }
+                }
+
                 // The integration suites run as separate downstream
                 // jobs (gpf-federation-integration / gpf-rest-client-
                 // integration) so the heavy backend stack is wired up
@@ -545,7 +599,7 @@ pipeline {
                         fingerprint: false,
                     )
                     archiveArtifacts(
-                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz',
+                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/conda/*.conda',
                         allowEmptyArchive: true,
                         fingerprint: true,
                     )
@@ -556,7 +610,7 @@ pipeline {
         }
         cleanup {
             sh '''
-                for img in gpf-core-ci gpf-web-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci; do
+                for img in gpf-core-ci gpf-web-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
                     docker rmi "$img:${BUILD_NUMBER}" 2>/dev/null || true
                 done
             '''
