@@ -29,8 +29,17 @@ FROM ${PYTHON_IMAGE} AS builder
 # can override at build time to pin to a specific SHA.
 ARG GAIN_REF=master
 
+# git for the gain-core install below; gcc + pkg-config +
+# libmariadb-dev for compiling mysqlclient (gpf-web's [mysql]
+# extra — no manylinux wheel exists for it on PyPI, so it
+# always builds from source). All build-only deps; the runtime
+# stage below just keeps libmariadb3.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git \
+ && apt-get install -y --no-install-recommends \
+        git \
+        gcc \
+        pkg-config \
+        libmariadb-dev \
  && rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/gpf \
@@ -43,7 +52,16 @@ WORKDIR /wheels
 COPY dist/core/gpf_core-*.whl ./
 COPY dist/web/gpf_web-*.whl ./
 
-RUN /opt/gpf/bin/pip install --no-cache-dir /wheels/*.whl
+# Install the wheels and explicitly pin mysqlclient to match
+# gpf-web's [mysql] optional extra (pyproject.toml: mysql =
+# ["mysqlclient>=2.2"]). Adding it here rather than via the
+# extra avoids pip's awkward extras-with-file-path syntax;
+# downside is the version constraint is duplicated and could
+# drift if the extra is bumped — but it's a single line in two
+# files.
+RUN /opt/gpf/bin/pip install --no-cache-dir \
+        /wheels/*.whl \
+        "mysqlclient>=2.2"
 
 
 # 2) Runtime: minimal slim image, just the runtime deps + the venv.
