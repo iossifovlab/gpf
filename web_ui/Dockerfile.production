@@ -54,9 +54,11 @@ RUN mkdir -p /static/gpf/static \
 FROM ${HTTPD_IMAGE} AS runtime
 
 # Angular SPA at the document root. Angular 19's
-# @angular/build:application emits the SPA under
-# dist/<project>/browser/.
-COPY --from=angular /app/dist/gpfjs/browser /usr/local/apache2/htdocs/
+# @angular/build:application normally emits the SPA under
+# dist/<project>/browser/, but gpf's angular.json overrides
+# outputPath.browser to "" so the SPA lands directly at
+# dist/<project>/.
+COPY --from=angular /app/dist/gpfjs /usr/local/apache2/htdocs/
 
 # Django admin / DRF static files baked alongside.
 COPY --from=django-static /static/gpf/static /usr/local/apache2/htdocs/static/
