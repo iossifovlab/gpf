@@ -33,7 +33,6 @@
 npm-debug.log
 testem.log
 /typings
-package-lock.json
 css-lint-report.xml
 ts-lint-report.xml
 .angular
@@ -42,9 +41,6 @@ ts-lint-report.xml
 .DS_Store
 Thumbs.db
 *.swp
-
-# npm package-lock
-package-lock.json
 
 # build scripts
 /build-env
