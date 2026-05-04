@@ -675,6 +675,51 @@ pipeline {
                 // those bootstrap failures non-fatal: the parent build
                 // logs the error and stays UNSTABLE.
 
+                stage('Trigger web_e2e') {
+                    // Downstream gate for the gpf-web-e2e job (DSL at
+                    // web_e2e/jenkins-jobs/e2e.groovy). Runs on every
+                    // branch — the e2e job clones the same branch /
+                    // commit and either pulls the prod images this
+                    // pipeline just pushed (master / gpf-gain-split)
+                    // or copies the wheel artefacts archived above
+                    // (`dist/core/*.whl` + `dist/web/*.whl`) and
+                    // builds the prod images locally.
+                    steps {
+                        catchError(
+                            buildResult: 'UNSTABLE',
+                            stageResult: 'UNSTABLE',
+                            message:
+                                'Could not trigger ' +
+                                'gpf-web-e2e; has gpf-seed ' +
+                                'materialised it yet?',
+                        ) {
+                            build(
+                                job: '/gpf-web-e2e',
+                                parameters: [
+                                    string(
+                                        name: 'BRANCH_NAME',
+                                        value: env.BRANCH_NAME,
+                                    ),
+                                    string(
+                                        name: 'COMMIT_SHA',
+                                        value: env.GIT_COMMIT ?: '',
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_PROJECT',
+                                        value: env.JOB_NAME,
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_BUILD',
+                                        value: env.BUILD_NUMBER,
+                                    ),
+                                ],
+                                wait: false,
+                                propagate: false,
+                            )
+                        }
+                    }
+                }
+
                 stage('Trigger federation integration') {
                     steps {
                         catchError(
