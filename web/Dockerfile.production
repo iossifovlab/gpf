@@ -61,9 +61,18 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/gpf /opt/gpf
+
+# GRR definition for the production deployment + e2e Jenkins
+# stack: points at /grr (mounted from /mnt/cephfs/seqpipe/grr on
+# the CSHL agents). Compose / k8s deployments override
+# GRR_DEFINITION_FILE if they want a different layout (e.g. the
+# multi-repo `grr-definition-dir.yaml` style gain ships).
+COPY web/scripts/grr-definition.yaml /grr-definition.yaml
+
 ENV PATH=/opt/gpf/bin:$PATH \
     PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=gpf_web.production_settings
+    DJANGO_SETTINGS_MODULE=gpf_web.production_settings \
+    GRR_DEFINITION_FILE=/grr-definition.yaml
 
 EXPOSE 9001
 

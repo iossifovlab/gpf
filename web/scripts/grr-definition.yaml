@@ -1,0 +1,5 @@
+id: "grr.sync"
+type: "directory"
+directory: /grr
+public_url: "https://grr.iossifovlab.com"
+read_only: true

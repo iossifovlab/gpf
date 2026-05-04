@@ -97,9 +97,19 @@ services:
       # mount it read-only at /data and point gpf-core at it
       # via DAE_DB_DIR.
       - ../web_e2e/gpf_e2e_instance:/data:ro
+      # GRR resources mount — same shape as gain's
+      # web_infra/compose-jenkins.yaml. The path is the CSHL
+      # Jenkins agents' shared GRR cache; runs on other hosts
+      # need to provide an equivalent /grr or override
+      # GRR_DEFINITION_FILE to a different definition.
+      - /mnt/cephfs/seqpipe/grr:/grr
     environment:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
+      # /grr-definition.yaml is baked into the backend image
+      # (see web/Dockerfile.production); it points at the /grr
+      # mount above.
+      GRR_DEFINITION_FILE: /grr-definition.yaml
       WDAE_DB_NAME: gpf
       WDAE_DB_USER: seqpipe
       WDAE_DB_PASSWORD: secret
