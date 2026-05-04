@@ -163,7 +163,7 @@ test.describe('Gene browser download tests', () => {
       const downloadedFile = await downloadPromise;
 
       const fixtureData = scanCSV(await downloadedFile.path(), {sep: '\t'});
-      const downloadData = scanCSV('playwright/fixtures/gene-browser/' + expectedPath, {sep: '\t'});
+      const downloadData = scanCSV('fixtures/gene-browser/' + expectedPath, {sep: '\t'});
       const fixtureFrame = await fixtureData.collect();
       const downloadFrame = await downloadData.collect();
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());

@@ -181,7 +181,7 @@ test.describe('Pheno browser tests', () => {
 
     const downloadData = scanCSV(await download.path(), {sep: ',', nullValues: '-'});
     const fixtureData = scanCSV(
-      'playwright/fixtures/pheno-browser/measures_hello_world.csv',
+      'fixtures/pheno-browser/measures_hello_world.csv',
       {
         sep: ',',
         nullValues: '-'

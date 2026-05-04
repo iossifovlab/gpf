@@ -241,7 +241,7 @@ test.describe('Genomic scores tests', () => {
     const download = await downloadPromise;
 
     const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-    const downloadData = scanCSV('playwright/fixtures/genomic-scores/variants-1.tsv', {sep: '\t'});
+    const downloadData = scanCSV('fixtures/genomic-scores/variants-1.tsv', {sep: '\t'});
     const fixtureFrame = (await fixtureData.collect()).sort('family id');
     const downloadFrame = (await downloadData.collect()).sort('family id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -373,7 +373,7 @@ test.describe('Genomic scores tests', () => {
     await page.getByText('Download').click();
     const download = await downloadPromise;
     const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-    const fixtureData = scanCSV('playwright/fixtures/genomic-scores/pheno-report.csv', {nullValues: '-'});
+    const fixtureData = scanCSV('fixtures/genomic-scores/pheno-report.csv', {nullValues: '-'});
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -515,7 +515,7 @@ test.describe('Genomic scores tests', () => {
     const download = await downloadPromise;
 
     const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-    const downloadData = scanCSV('playwright/fixtures/genomic-scores/variants.tsv', {sep: '\t'});
+    const downloadData = scanCSV('fixtures/genomic-scores/variants.tsv', {sep: '\t'});
     const fixtureFrame = (await fixtureData.collect()).sort('family id');
     const downloadFrame = (await downloadData.collect()).sort('family id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());

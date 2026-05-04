@@ -330,7 +330,7 @@ test.describe('Variant reports download tests', () => {
       const download = await downloadPromise;
 
       const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-      const downloadData = scanCSV(`playwright/fixtures/variant-reports/families${cell.index}.ped`, {sep: '\t'});
+      const downloadData = scanCSV(`fixtures/variant-reports/families${cell.index}.ped`, {sep: '\t'});
       const fixtureFrame = (await fixtureData.select(cell.columnsToCheck).collect()).sort('familyId');
       const downloadFrame = (await downloadData.select(cell.columnsToCheck).collect()).sort('familyId');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -344,7 +344,7 @@ test.describe('Variant reports download tests', () => {
     const columnsToCheck = ['familyId', 'personId', 'momId', 'dadId', 'sex', 'status', 'role'];
 
     const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-    const downloadData = scanCSV('playwright/fixtures/variant-reports/families-all.ped', {sep: '\t'});
+    const downloadData = scanCSV('fixtures/variant-reports/families-all.ped', {sep: '\t'});
     const fixtureFrame = await fixtureData.select(columnsToCheck).collect();
     const downloadFrame = await downloadData.select(columnsToCheck).collect();
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -363,7 +363,7 @@ test.describe('Variant reports download tests', () => {
     const columnsToCheck = ['familyId', 'personId', 'momId', 'dadId', 'sex', 'status', 'role'];
 
     const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-    const downloadData = scanCSV('playwright/fixtures/variant-reports/families-pedigrees.ped', {sep: '\t'});
+    const downloadData = scanCSV('fixtures/variant-reports/families-pedigrees.ped', {sep: '\t'});
     const fixtureFrame = (await fixtureData.select(columnsToCheck).collect()).sort('familyId');
     const downloadFrame = (await downloadData.select(columnsToCheck).collect()).sort('familyId');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());

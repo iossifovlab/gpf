@@ -123,7 +123,7 @@ test.describe('Family filters block tests', () => {
     await page.locator('#download-button').click();
     const download = await downloadPromise;
     const fixtureData = scanCSV(
-      'playwright/fixtures/genotype-browser/variants-2.tsv',
+      'fixtures/genotype-browser/variants-2.tsv',
       {
         sep: '\t',
         inferSchemaLength: 0
@@ -155,7 +155,7 @@ test.describe('Family filters block tests', () => {
     await page.locator('#download-button').click();
     const download = await downloadPromise;
     const fixtureData = scanCSV(
-      'playwright/fixtures/genotype-browser/variants-3.tsv',
+      'fixtures/genotype-browser/variants-3.tsv',
       {
         sep: '\t',
         inferSchemaLength: 0
@@ -525,7 +525,7 @@ test.describe('Pheno Measures tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
 
     const download = await downloadPromise;
-    const fixtureData = scanCSV('playwright/fixtures/genotype-browser/variants-5.tsv', {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/genotype-browser/variants-5.tsv', {sep: '\t'});
     const downloadData = scanCSV(await download.path(), {sep: '\t'});
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
@@ -575,7 +575,7 @@ test.describe('Pheno Measures tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
 
     const download = await downloadPromise;
-    const fixtureData = scanCSV('playwright/fixtures/genotype-browser/variants-4.tsv', {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/genotype-browser/variants-4.tsv', {sep: '\t'});
     const downloadData = scanCSV(await download.path(), {sep: '\t'});
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
@@ -763,7 +763,7 @@ test.describe('Pheno Measures tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
     const download = await downloadPromise;
 
-    const fixtureData = scanCSV('playwright/fixtures/pheno-tool/pheno_report18.csv');
+    const fixtureData = scanCSV('fixtures/pheno-tool/pheno_report18.csv');
     const downloadData = scanCSV(await download.path());
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');

@@ -394,7 +394,7 @@ test.beforeEach(async({ page }) => {
       await page.locator('gpf-gene-sets').getByRole('link', { name: 'Download' }).click();
       const download = await downloadPromise;
 
-      const fixtureData = scanCSV(`playwright/fixtures/gene-sets/gene_sets${data.id}.csv`, {truncateRaggedLines: true});
+      const fixtureData = scanCSV(`fixtures/gene-sets/gene_sets${data.id}.csv`, {truncateRaggedLines: true});
       const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
       const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
       const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);
@@ -503,7 +503,7 @@ test.describe('Denovo gene set tests', () => {
       await page.locator('gpf-gene-sets').getByRole('link', { name: 'Download' }).click();
       const download = await downloadPromise;
 
-      const fixtureData = scanCSV('playwright/fixtures/gene-sets/gene_sets4.csv', {truncateRaggedLines: true});
+      const fixtureData = scanCSV('fixtures/gene-sets/gene_sets4.csv', {truncateRaggedLines: true});
       const downloadData = scanCSV(await download.path(), {truncateRaggedLines: true});
       const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
       const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);

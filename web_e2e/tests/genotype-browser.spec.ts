@@ -457,7 +457,7 @@ test.describe('Genotype browser download tests', () => {
     await page.getByRole('button', { name: 'Download' }).click();
     const download = await downloadPromise;
     const fixtureData = scanCSV(await download.path(), { sep: '\t'});
-    const downloadData = scanCSV('playwright/fixtures/genotype-browser/variants-1.tsv', { sep: '\t'});
+    const downloadData = scanCSV('fixtures/genotype-browser/variants-1.tsv', { sep: '\t'});
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());

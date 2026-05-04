@@ -138,7 +138,7 @@ test.describe('Pheno tool download tests', () => {
     await page.getByText('Download').click();
     const download = await downloadPromise;
     const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-    const fixtureData = scanCSV('playwright/fixtures/pheno-tool/pheno_report1.csv', {nullValues: '-'});
+    const fixtureData = scanCSV('fixtures/pheno-tool/pheno_report1.csv', {nullValues: '-'});
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -159,7 +159,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText('Download').click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -188,7 +188,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText('Download').click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -210,7 +210,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText('Download').click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -249,7 +249,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText('Download').click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -272,7 +272,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText('Download').click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -310,7 +310,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('button', { name: 'Download' }).click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -355,7 +355,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('button', { name: 'Download' }).click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
@@ -391,7 +391,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('button', { name: 'Download' }).click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
-      const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
+      const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());

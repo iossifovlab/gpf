@@ -455,7 +455,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
 
     const download = await downloadPromise;
-    const fixtureData = scanCSV('playwright/fixtures/gene-scores/variants1.tsv', {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/gene-scores/variants1.tsv', {sep: '\t'});
     const downloadData = scanCSV(await download.path(), {sep: '\t'});
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
@@ -496,7 +496,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
 
     const download = await downloadPromise;
-    const fixtureData = scanCSV('playwright/fixtures/gene-scores/variants2.tsv', {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/gene-scores/variants2.tsv', {sep: '\t'});
     const downloadData = scanCSV(await download.path(), {sep: '\t'});
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
@@ -605,7 +605,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.getByRole('button', {name: 'Download'}).click();
 
     const download = await downloadPromise;
-    const fixtureData = scanCSV('playwright/fixtures/gene-scores/variants3.tsv', {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/gene-scores/variants3.tsv', {sep: '\t'});
     const downloadData = scanCSV(await download.path(), {sep: '\t'});
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
