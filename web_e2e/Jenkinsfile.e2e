@@ -194,9 +194,21 @@ pipeline {
                         """
                     } else {
                         if (params.UPSTREAM_PROJECT?.trim()) {
+                            // Pull the gpf core/web wheels AND the
+                            // gain-core wheel that the parent gpf
+                            // build copied from gain into dist/gain/
+                            // (Fetch gain wheel stage). web/
+                            // Dockerfile.production now expects
+                            // dist/gain/gain_core-*.whl alongside
+                            // the gpf wheels; copying it through the
+                            // parent build (rather than re-pulling
+                            // from gain master) keeps this e2e build
+                            // pinned to the exact gain artefact the
+                            // parent gpf build was assembled with.
                             copyArtifacts(
                                 filter: 'dist/core/*.whl, ' +
-                                        'dist/web/*.whl',
+                                        'dist/web/*.whl, ' +
+                                        'dist/gain/*.whl',
                                 fingerprintArtifacts: true,
                                 projectName: params.UPSTREAM_PROJECT,
                                 selector:
@@ -205,15 +217,21 @@ pipeline {
                                         : lastSuccessful(),
                             )
                         } else {
-                            // Run as root inside the container so
-                            // we can `apt-get install git` (uv
-                            // build → hatch-vcs needs git to
-                            // derive the PEP 440 version; without
+                            // Manual run with no upstream link —
+                            // build gpf wheels from source and pull
+                            // the gain wheel directly from gain
+                            // master's last successful build (no
+                            // gpf parent to inherit from).
+                            //
+                            // uv build runs as root inside the
+                            // container so we can `apt-get install
+                            // git` (uv build → hatch-vcs needs git
+                            // to derive the PEP 440 version; without
                             // it, wheels get the `0.0.0.dev0`
                             // fallback). chown the outputs back to
                             // the host UID at the end so the rest
-                            // of the pipeline can read them
-                            // without root permissions.
+                            // of the pipeline can read them without
+                            // root permissions.
                             sh '''
                                 mkdir -p dist/core dist/web
                                 docker run --rm \
@@ -234,6 +252,14 @@ pipeline {
                                         chown -R "$HOST_UID:$HOST_GID" dist
                                     '
                             '''
+                            copyArtifacts(
+                                filter: 'dist/core/*.whl',
+                                fingerprintArtifacts: true,
+                                projectName: 'iossifovlab/gain/master',
+                                selector: lastSuccessful(),
+                                target: 'dist/gain',
+                                flatten: true,
+                            )
                         }
                         sh '''
                             docker build \

@@ -20,23 +20,13 @@ ARG PYTHON_IMAGE=python:3.12-slim
 # 1) Builder: install the wheels into an isolated venv at /opt/gpf.
 FROM ${PYTHON_IMAGE} AS builder
 
-# gpf-core depends on gain-core, which is published only to the
-# iossifovlab Anaconda.org channel — not to PyPI. A vanilla
-# `pip install /wheels/*.whl` therefore fails to resolve it. We
-# install gain-core from the upstream gain repo first so the
-# local wheel install below sees it as already-satisfied.
-# GAIN_REF defaults to the gain default branch; the meta-repo
-# can override at build time to pin to a specific SHA.
-ARG GAIN_REF=master
-
-# git for the gain-core install below; gcc + pkg-config +
-# libmariadb-dev for compiling mysqlclient (gpf-web's [mysql]
-# extra — no manylinux wheel exists for it on PyPI, so it
-# always builds from source). All build-only deps; the runtime
-# stage below just keeps libmariadb3.
+# gcc + pkg-config + libmariadb-dev for compiling mysqlclient
+# (gpf-web's [mysql] extra — no manylinux wheel exists for it
+# on PyPI, so it always builds from source against the C
+# client lib). All build-only deps; the runtime stage below
+# just keeps libmariadb3.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-        git \
         gcc \
         pkg-config \
         libmariadb-dev \
@@ -45,10 +35,15 @@ RUN apt-get update \
 RUN python -m venv /opt/gpf \
  && /opt/gpf/bin/pip install --no-cache-dir --upgrade pip
 
-RUN /opt/gpf/bin/pip install --no-cache-dir \
-    "git+https://github.com/iossifovlab/gain.git@${GAIN_REF}#subdirectory=core"
-
 WORKDIR /wheels
+# gain-core wheel — copied into dist/gain/ by the parent
+# Jenkinsfile's `Fetch gain wheel` stage from gain's last
+# successful master build. gpf-core depends on gain-core, which
+# isn't on PyPI; bundling the wheel locally lets the single
+# `pip install /wheels/*.whl` below resolve everything against
+# the local wheel dir without needing network access to a
+# private registry or a git+ install in the image.
+COPY dist/gain/gain_core-*.whl ./
 COPY dist/core/gpf_core-*.whl ./
 COPY dist/web/gpf_web-*.whl ./
 

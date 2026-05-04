@@ -229,6 +229,44 @@ pipeline {
                     }
                 }
 
+                stage('Fetch gain wheel') {
+                    // Pull the gain-core wheel from gain's last
+                    // successful master build into dist/gain/.
+                    // Consumed by web/Dockerfile.production (the
+                    // backend prod image's builder stage installs
+                    // /wheels/*.whl which now includes gain-core)
+                    // and re-archived to dist/gain/*.whl by the
+                    // archiveArtifacts at the end so downstream
+                    // jobs (gpf-web-e2e) can copy the same wheel
+                    // and test against the exact same gain build
+                    // this gpf build was assembled with.
+                    //
+                    // selector: lastSuccessful() pulls the most
+                    // recent green gain master. No build-arg
+                    // parameter for now — the gain → gpf trigger
+                    // (which would pin to a specific gain build
+                    // number) is separate work.
+                    //
+                    // flatten: true drops the dist/core/ prefix
+                    // so the wheel lands at dist/gain/gain_core-
+                    // <version>-py3-none-any.whl rather than
+                    // dist/gain/dist/core/gain_core-...whl.
+                    steps {
+                        copyArtifacts(
+                            filter: 'dist/core/*.whl',
+                            fingerprintArtifacts: true,
+                            projectName: 'iossifovlab/gain/master',
+                            selector: lastSuccessful(),
+                            target: 'dist/gain',
+                            flatten: true,
+                        )
+                        sh '''
+                            ls -la dist/gain/
+                            test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
+                        '''
+                    }
+                }
+
                 stage('Sub-projects') {
                     parallel {
                         stage('core') {
