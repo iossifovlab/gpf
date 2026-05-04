@@ -2,14 +2,22 @@
 
 set -e
 
+# Resolve INSTANCE_DIR to the directory holding this script,
+# regardless of CWD. This makes the script location-
+# independent: works whether the instance is mounted at /data
+# in the e2e backend container or sits inside a dev checkout.
+INSTANCE_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+export DAE_DB_DIR="${INSTANCE_DIR}"
+
 # cleanup
-rm -rf ${WD}/gpf_e2e_instance/wdae/*
-rm -rf ${WD}/gpf_e2e_instance/phenotype_storage/*
-rm -rf ${WD}/gpf_e2e_instance/genotype_storage/*
-rm -rf ${WD}/gpf_e2e_instance/gpdb.duckdb
+rm -rf "${INSTANCE_DIR}"/wdae/*
+rm -rf "${INSTANCE_DIR}"/phenotype_storage/*
+rm -rf "${INSTANCE_DIR}"/genotype_storage/*
+rm -rf "${INSTANCE_DIR}"/gpdb.duckdb
 
 # import comp data
-cd ${WD}/gpf_e2e_instance/input_data/genotypes/comp
+cd "${INSTANCE_DIR}"/input_data/genotypes/comp
 rm -rf OUTPUT
 import_tools import_project_comp_vcf.yaml -f -vv -j 1
 import_tools import_project_comp_denovo.yaml -f -vv -j 1
@@ -18,31 +26,31 @@ import_tools import_project_comp_all.yaml -f -vv -j 1
 cd -
 
 # import iossifov 2014
-cd ${WD}/gpf_e2e_instance/input_data/genotypes/iossifov_2014
+cd "${INSTANCE_DIR}"/input_data/genotypes/iossifov_2014
 rm -rf OUTPUT
 import_tools import_project.yaml -f -vv -j 1
 cd -
 
 # import multi
-cd ${WD}/gpf_e2e_instance/input_data/genotypes/multi
+cd "${INSTANCE_DIR}"/input_data/genotypes/multi
 rm -rf OUTPUT
 import_tools import_project.yaml -f -vv -j 1
 cd -
 
 # import helloworld data
-cd ${WD}/gpf_e2e_instance/input_data/genotypes/helloworld
+cd "${INSTANCE_DIR}"/input_data/genotypes/helloworld
 rm -rf OUTPUT
 import_genotypes denovo_helloworld.yaml -f -vv -j 1
 import_genotypes vcf_helloworld.yaml -f -vv -j 1
 
 cd -
 
-cd ${WD}/gpf_e2e_instance/input_data/phenotypes/helloworld
+cd "${INSTANCE_DIR}"/input_data/phenotypes/helloworld
 rm -rf .task-progress .task-log work
 import_phenotypes import_project.yaml -f -vv -j 1
 
 build_pheno_browser -j 1 --force pheno_helloworld \
-    --gpf-instance ${WD}/gpf_e2e_instance/gpf_instance.yaml
+    --gpf-instance "${INSTANCE_DIR}"/gpf_instance.yaml
 
 cd -
 
