@@ -1,0 +1,20 @@
+FROM  mcr.microsoft.com/playwright:v1.54.0-jammy
+
+ENV NODE_ENV=development
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy only the dependency files first to optimize Docker caching.
+# package-lock.json is committed alongside package.json so `npm ci`
+# resolves deterministically.
+COPY package.json package-lock.json ./
+
+# Install dependencies with npm ci for reproducible installs.
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+# Copy all application source files into the container
+COPY . .
+
+
+SHELL ["/bin/bash", "-c"]

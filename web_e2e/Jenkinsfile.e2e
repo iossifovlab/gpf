@@ -1,0 +1,327 @@
+// Dedicated Jenkins pipeline for the gpf web_e2e (Playwright)
+// suite. Triggered downstream from
+// `iossifovlab/gpf/<branch>`'s `Trigger web_e2e` stage after
+// the parent build's `Build & push prod images` stage finishes;
+// runs for every branch the parent triggers from. Can also be
+// run manually from the Jenkins UI with explicit BRANCH_NAME /
+// COMMIT_SHA params.
+//
+// Expected Jenkins job setup:
+//   - Script path: web_e2e/Jenkinsfile.e2e
+//   - Defined by web_e2e/jenkins-jobs/e2e.groovy as the
+//     `gpf-web-e2e` pipelineJob (loaded via the seed job).
+//
+// Self-contained: clones the gpf monorepo at the requested
+// branch/commit, then either (a) on master / gpf-gain-split:
+// pulls the prod images the parent already pushed to
+// `registry.seqpipe.org` (~30s) or (b) on other branches: copies
+// the wheels the parent archived (`dist/core/*.whl` +
+// `dist/web/*.whl`) and builds the wheel-based backend image and
+// Apache-based frontend image locally (~5 min). Either way, the
+// Playwright suite runs against the resulting images via the
+// `web_infra/compose-jenkins.yaml` e2e stack.
+
+pipeline {
+    // Excludes `dory` (matches the root Jenkinsfile's choice).
+    // Any other agent has docker + the standard tools.
+    agent { label '!dory' }
+
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'gpf-gain-split',
+            description: 'Branch the upstream gpf build was ' +
+                'triggered from. The pipeline checks out ' +
+                'this branch unless COMMIT_SHA is set.',
+        )
+        string(
+            name: 'COMMIT_SHA',
+            defaultValue: '',
+            description: 'Specific commit SHA to test (takes ' +
+                'precedence over BRANCH_NAME). Empty = use ' +
+                'BRANCH_NAME HEAD.',
+        )
+        string(
+            name: 'UPSTREAM_PROJECT',
+            defaultValue: '',
+            description: 'Upstream Jenkins project name ' +
+                '(e.g. iossifovlab/gpf/gpf-gain-split) the ' +
+                'wheel artefacts are copied from. Empty = ' +
+                'build the wheels from source instead.',
+        )
+        string(
+            name: 'UPSTREAM_BUILD',
+            defaultValue: '',
+            description: 'Upstream build number to copy ' +
+                'wheel artefacts from. Empty = use the ' +
+                'last successful build of UPSTREAM_PROJECT.',
+        )
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        BACKEND_IMAGE  = "gpf-web-api-prod:${env.BUILD_NUMBER}"
+        FRONTEND_IMAGE = "gpf-web-ui-prod:${env.BUILD_NUMBER}"
+        COMPOSE_PROJECT =
+            "gpf-web-e2e-${env.BUILD_NUMBER}"
+        COMPOSE_NETWORK =
+            "gpf-web-e2e-${env.BUILD_NUMBER}_default"
+    }
+
+    stages {
+        stage('Start') {
+            steps {
+                zulipSend(
+                    message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                    topic: "${env.JOB_NAME}",
+                )
+            }
+        }
+
+        stage('Prepare workspace') {
+            steps {
+                // Playwright writes traces / videos to
+                // web_e2e/reports as root (the e2e-tests
+                // container has no USER directive), so the host
+                // Jenkins user can't `rm` them on the next build.
+                // Run the cleanup inside an alpine container as
+                // root to sidestep that. Then mkdir runs on the
+                // host so the new reports dir is Jenkins-owned and
+                // the post-stage host-side `cp` can write into it.
+                sh '''
+                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
+                        rm -rf dist reports web_e2e/reports
+                    mkdir -p reports/web_e2e
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                script {
+                    String ref = params.COMMIT_SHA?.trim() ?: \
+                                 params.BRANCH_NAME
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: ref]],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/iossifovlab/gpf.git',
+                        ]],
+                        extensions: [[$class: 'CloneOption',
+                                      shallow: true,
+                                      noTags: true,
+                                      depth: 1]],
+                    ])
+                }
+            }
+        }
+
+        stage('Prepare backend/frontend images') {
+            // Three paths:
+            //   1. Master / gpf-gain-split triggered downstream
+            //      of the parent — the parent already pushed the
+            //      prod images to `registry.seqpipe.org` tagged
+            //      with its BUILD_NUMBER, which is passed in via
+            //      UPSTREAM_BUILD. Pull and retag locally;
+            //      ~30s vs ~5 min for the wheels+build path.
+            //   2. Branch triggered downstream — the parent does
+            //      not push images for non-master builds, so the
+            //      registry has nothing to pull. Copy the wheels
+            //      the parent archived and build prod images
+            //      locally.
+            //   3. Manual run with no upstream link — container-
+            //      build the wheels from source, then build
+            //      prod images locally.
+            // After either build path, the local images are tagged
+            // as $BACKEND_IMAGE / $FRONTEND_IMAGE so the
+            // compose-jenkins stack and `post.cleanup` don't have
+            // to care which path produced them.
+            //
+            // The pull path explicitly `docker login`s with the
+            // shared registry credentials. We can't rely on the
+            // agent's ~/.docker/config.json being authenticated:
+            // the parent Jenkinsfile's master-push stage runs
+            // `docker logout` on EXIT, which invalidates any
+            // pre-saved auth for that agent.
+            environment {
+                REGISTRY_USER = credentials('user.registry.seqpipe.org')
+                REGISTRY_PASS = credentials('passwd.registry.seqpipe.org')
+            }
+            steps {
+                script {
+                    boolean canPull = \
+                        (params.BRANCH_NAME == 'master' ||
+                         params.BRANCH_NAME == 'gpf-gain-split') \
+                        && params.UPSTREAM_BUILD?.trim()
+                    if (canPull) {
+                        String tag = params.UPSTREAM_BUILD
+                        sh """
+                            # Same login pattern as the parent
+                            # Jenkinsfile's push stage:
+                            # `printf` (not `echo`) to avoid the
+                            # POSIX-sh trailing newline /
+                            # backslash-escape pitfalls; trap
+                            # logout so the agent is left clean
+                            # even on failure.
+                            printf '%s' "\$REGISTRY_PASS" | \
+                                docker login \
+                                    -u "\$REGISTRY_USER" \
+                                    --password-stdin \
+                                    registry.seqpipe.org
+                            trap 'docker logout registry.seqpipe.org || true' EXIT
+
+                            docker pull \
+                                'registry.seqpipe.org/gpf-web-api:${tag}'
+                            docker pull \
+                                'registry.seqpipe.org/gpf-web-ui:${tag}'
+                            docker tag \
+                                'registry.seqpipe.org/gpf-web-api:${tag}' \
+                                "\$BACKEND_IMAGE"
+                            docker tag \
+                                'registry.seqpipe.org/gpf-web-ui:${tag}' \
+                                "\$FRONTEND_IMAGE"
+                        """
+                    } else {
+                        if (params.UPSTREAM_PROJECT?.trim()) {
+                            copyArtifacts(
+                                filter: 'dist/core/*.whl, ' +
+                                        'dist/web/*.whl',
+                                fingerprintArtifacts: true,
+                                projectName: params.UPSTREAM_PROJECT,
+                                selector:
+                                    params.UPSTREAM_BUILD?.trim()
+                                        ? specific(params.UPSTREAM_BUILD)
+                                        : lastSuccessful(),
+                            )
+                        } else {
+                            // Run as root inside the container so
+                            // we can `apt-get install git` (uv
+                            // build → hatch-vcs needs git to
+                            // derive the PEP 440 version; without
+                            // it, wheels get the `0.0.0.dev0`
+                            // fallback). chown the outputs back to
+                            // the host UID at the end so the rest
+                            // of the pipeline can read them
+                            // without root permissions.
+                            sh '''
+                                mkdir -p dist/core dist/web
+                                docker run --rm \
+                                    -v "$PWD:/wd" -w /wd \
+                                    -e HOME=/tmp \
+                                    -e HOST_UID="$(id -u)" \
+                                    -e HOST_GID="$(id -g)" \
+                                    python:3.12-slim \
+                                    sh -c '
+                                        set -eu
+                                        apt-get update -qq
+                                        apt-get install -y --no-install-recommends -qq git
+                                        pip install --no-cache-dir uv
+                                        uv build --package gpf-core \
+                                                --out-dir dist/core
+                                        uv build --package gpf-web \
+                                                --out-dir dist/web
+                                        chown -R "$HOST_UID:$HOST_GID" dist
+                                    '
+                            '''
+                        }
+                        sh '''
+                            docker build \
+                                -f web/Dockerfile.production \
+                                -t "$BACKEND_IMAGE" .
+                            docker build \
+                                -f web_ui/Dockerfile.production \
+                                --build-arg BACKEND_IMAGE="$BACKEND_IMAGE" \
+                                -t "$FRONTEND_IMAGE" .
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build e2e image') {
+            // Playwright runner image — always built locally; not
+            // pushed to the registry (only its inputs are: the
+            // committed package-lock.json and the test sources).
+            steps {
+                sh '''
+                    docker compose \
+                        -p "$COMPOSE_PROJECT" \
+                        -f web_infra/compose-jenkins.yaml \
+                        build e2e-tests
+                '''
+            }
+        }
+
+        stage('Run e2e') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            mkdir -p web_e2e/reports
+                            # `compose run --rm e2e-tests` honours
+                            # backend-e2e-migrate / backend-e2e /
+                            # frontend-e2e healthcheck dependencies
+                            # (declared in compose-jenkins.yaml),
+                            # so it brings the stack up itself and
+                            # only invokes `npx playwright test`
+                            # once everything is ready.
+                            #
+                            # `|| TEST_RC=$?` keeps the script
+                            # going on test failure so the JUnit
+                            # report still gets copied.
+                            TEST_RC=0
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f web_infra/compose-jenkins.yaml \
+                                run --rm e2e-tests \
+                                    || TEST_RC=$?
+                            cp web_e2e/reports/junit-report.xml \
+                                reports/web_e2e/junit.xml \
+                                2>/dev/null || true
+                            exit $TEST_RC
+                        '''
+                    } finally {
+                        sh '''
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f web_infra/compose-jenkins.yaml \
+                                down -v --remove-orphans || true
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                try {
+                    junit(
+                        allowEmptyResults: true,
+                        testResults: 'reports/web_e2e/*.xml',
+                    )
+                    archiveArtifacts(
+                        artifacts: 'reports/web_e2e/*.xml, ' +
+                                   'web_e2e/reports/**',
+                        allowEmptyArchive: true,
+                        fingerprint: false,
+                    )
+                } finally {
+                    zulipNotification(topic: "${env.JOB_NAME}")
+                }
+            }
+        }
+        cleanup {
+            sh '''
+                for img in "$BACKEND_IMAGE" "$FRONTEND_IMAGE"; do
+                    docker rmi "$img" 2>/dev/null || true
+                done
+            '''
+        }
+    }
+}
