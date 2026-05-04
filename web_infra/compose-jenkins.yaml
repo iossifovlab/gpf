@@ -130,11 +130,13 @@ services:
       WDAE_ALLOWED_HOST: "*"
       WDAE_DEBUG: "False"
     healthcheck:
-      # The combined gpf-web image runs gunicorn on loopback
-      # 9001 under supervisord; the split gpf-web-api image
-      # binds 9001 publicly. Either way 9001 is the canonical
-      # backend port.
-      test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/instance"]
+      # /api/v3/instance is a URL-include prefix, not an endpoint;
+      # the bare path 404s. /api/v3/instance/version is the real
+      # leaf route — unauthenticated GET, returns {"version": ...},
+      # doesn't require WGPFInstance to be preloaded. Build #13
+      # spent ~9 min racking up 404s on the prefix before compose
+      # gave up.
+      test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/instance/version"]
       interval: 10s
       timeout: 5s
       retries: 5
