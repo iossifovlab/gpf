@@ -77,3 +77,25 @@ wdaemanage user_create user_comp_vcf@iossifovlab.com -p secret -g any_user || tr
 wdaemanage user_create user_comp_genotypes@iossifovlab.com -p secret -g any_user || true
 wdaemanage user_create user_all_genotypes@iossifovlab.com -p secret -g any_user || true
 wdaemanage user_create user_iossifov_2014@iossifovlab.com -p secret -g any_user || true
+
+# Register the SPA's OAuth2 application. The SPA's log-in
+# button (web_ui/src/app/users/users.component.ts) issues a
+# PKCE authorization-code request with client_id=gpfjs and
+# redirect_uri=<origin>/login; users_api.get_default_application
+# expects exactly that record (settings.DEFAULT_OAUTH_APPLICATION_CLIENT
+# = "gpfjs"). createapplication has no --update mode, so guard
+# with `|| true` for re-runs against a populated DB.
+#
+# --skip-authorization bypasses the consent screen — the e2e
+# tests log in non-interactively, they don't drive the
+# "Authorize gpfjs" form. --no-hash-client-secret is fine for
+# a public PKCE client (the secret isn't used). redirect-uris
+# covers both the CI compose hostname (frontend) and the
+# loopback URL local devs would hit.
+wdaemanage createapplication \
+    --client-id gpfjs \
+    --name gpfjs \
+    --skip-authorization \
+    --no-hash-client-secret \
+    --redirect-uris "http://frontend/login http://localhost:8080/gpf/login http://127.0.0.1:8080/gpf/login http://localhost:4200/login" \
+    public authorization-code || true

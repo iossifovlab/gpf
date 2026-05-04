@@ -127,8 +127,35 @@ services:
       WDAE_DB_PORT: 3306
       WDAE_SECRET_KEY: "django-insecure-e2e-not-a-real-secret-only-for-jenkins"
       WDAE_EMAIL_HOST: mail
+      # The email-verification flow ("create user → click link in
+      # mail" — exercised by app.spec.ts:188+) embeds this URL into
+      # outbound mail. Default is http://localhost:8000, which the
+      # Playwright browser inside the e2e network can't reach
+      # (chromium loopback ≠ container loopback). Point at the
+      # frontend Apache so /api/v3/users/{set,reset}_password
+      # resolves through the same proxy as every other API call.
+      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://frontend"
       WDAE_ALLOWED_HOST: "*"
       WDAE_DEBUG: "False"
+    # Override Dockerfile.production's ENTRYPOINT (4 workers) with a
+    # single-worker gunicorn for e2e. There's a pre-existing race in
+    # gpf-web's datasets_api.Dataset.recreate_dataset_perm: it calls
+    # `objects.get_or_create(dataset_id=...)` against a model whose
+    # dataset_id field has no `unique=True`, so concurrent first-load
+    # workers each insert their own row and the next request's get()
+    # raises MultipleObjectsReturned (500). E2E hammers the API hard
+    # enough to surface this every time. Single worker = no race.
+    # The full fix (unique constraint + migration) belongs in
+    # gpf-web's datasets_api models and should be tracked separately.
+    #
+    # Compose `command:` is appended to the image's ENTRYPOINT — so
+    # we override `entrypoint:` instead to take full control of argv.
+    entrypoint:
+      - gunicorn
+      - gpf_web.wsgi:application
+      - --bind=0.0.0.0:9001
+      - --workers=1
+      - --timeout=1200
     healthcheck:
       # /api/v3/instance is a URL-include prefix, not an endpoint;
       # the bare path 404s. /api/v3/instance/version is the real

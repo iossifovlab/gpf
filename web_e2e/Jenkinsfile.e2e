@@ -351,22 +351,41 @@ pipeline {
                     try {
                         sh '''
                             mkdir -p web_e2e/reports
-                            # `compose run --rm e2e-tests` honours
-                            # instance-import / backend-e2e /
-                            # frontend-e2e healthcheck dependencies
-                            # (declared in compose-jenkins.yaml),
-                            # so it brings the stack up itself and
-                            # only invokes `npx playwright test`
-                            # once everything is ready.
+
+                            # Explicitly bring up the long-running
+                            # services first. The previous stage
+                            # already exited instance-import 0; if we
+                            # let the next `compose run --rm e2e-tests`
+                            # resolve depends_on by itself, compose
+                            # decides instance-import "needs" to be
+                            # re-created (its container was created
+                            # for an earlier `up` cycle) and re-runs
+                            # the whole import. Two imports against
+                            # the same MariaDB volume produce duplicate
+                            # rows in datasets_api_dataset, which then
+                            # trip MultipleObjectsReturned in
+                            # gpf_instance.reload_datasets and 500 on
+                            # /api/v3/datasets/visible.
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f web_infra/compose-jenkins.yaml \
+                                up -d mail backend-e2e frontend-e2e
+
+                            # --no-deps: skip dependency resolution
+                            # entirely. backend-e2e / frontend-e2e are
+                            # already up from the call above; mail is
+                            # too. instance-import has already exited
+                            # successfully, and we deliberately don't
+                            # want compose to re-run it.
                             #
-                            # `|| TEST_RC=$?` keeps the script
-                            # going on test failure so the JUnit
-                            # report still gets copied.
+                            # `|| TEST_RC=$?` keeps the script going
+                            # on test failure so the JUnit report
+                            # still gets copied.
                             TEST_RC=0
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
-                                run --rm e2e-tests \
+                                run --rm --no-deps e2e-tests \
                                     || TEST_RC=$?
                             cp web_e2e/reports/junit-report.xml \
                                 reports/web_e2e/junit.xml \
