@@ -20,8 +20,24 @@ ARG PYTHON_IMAGE=python:3.12-slim
 # 1) Builder: install the wheels into an isolated venv at /opt/gpf.
 FROM ${PYTHON_IMAGE} AS builder
 
+# gpf-core depends on gain-core, which is published only to the
+# iossifovlab Anaconda.org channel — not to PyPI. A vanilla
+# `pip install /wheels/*.whl` therefore fails to resolve it. We
+# install gain-core from the upstream gain repo first so the
+# local wheel install below sees it as already-satisfied.
+# GAIN_REF defaults to the gain default branch; the meta-repo
+# can override at build time to pin to a specific SHA.
+ARG GAIN_REF=master
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git \
+ && rm -rf /var/lib/apt/lists/*
+
 RUN python -m venv /opt/gpf \
  && /opt/gpf/bin/pip install --no-cache-dir --upgrade pip
+
+RUN /opt/gpf/bin/pip install --no-cache-dir \
+    "git+https://github.com/iossifovlab/gain.git@${GAIN_REF}#subdirectory=core"
 
 WORKDIR /wheels
 COPY dist/core/gpf_core-*.whl ./
