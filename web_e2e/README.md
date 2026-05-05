@@ -1,178 +1,232 @@
-## Run e2e instance
+# gpf web_e2e — Playwright suite
 
-Activate your `gpf` conda environment (make sure your packages are up to date with pip install):
+End-to-end tests for the GPF web stack. Two ways to run them:
+
+- **Local dev** — fastest cycle. Run the backend with `wdaemanage runserver`, the frontend with `ng serve`, and Playwright against `http://127.0.0.1:8080/gpf`. This is what you want day-to-day.
+- **Jenkins-mirrored compose stack** — runs the same images CI runs, against the same `web_infra/compose-jenkins.yaml`. Use this only when reproducing a Jenkins-only failure.
+
+This README walks through both. For a snapshot of currently-failing tests and the cluster-level reasoning behind the CI configuration choices (single-worker backend, capped Playwright workers, OAuth seeding), see [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md) in the meta-repo.
+
+---
+
+## Local-dev workflow
+
+### Prerequisites (one-time)
 
 ```bash
+# 1. Activate the gpf conda env (created per the top-level gpf README)
 conda activate gpf
+
+# 2. Make sure gpf-core, gpf-web, and gain are editable-installed
+pip install -e ../gain/core
+pip install -e core
+pip install -e web
+
+# 3. Install the SPA's npm deps (web_ui is the gpfjs source)
+cd web_ui && npm install && cd ..
+
+# 4. Install Playwright + browsers (one-off, ~500 MB)
+cd web_e2e
+npm install
+npx playwright install --with-deps chromium
+cd ..
 ```
 
-Source the `setenv.sh` file in the `gpf-e2e` directory:
+### Bring the data up (once per checkout, or after a schema change)
+
+`import_data.sh` is **self-contained**: it migrates the Django DB, imports genotypes/phenotypes into `web_e2e/gpf_e2e_instance/`, generates common reports & gene profiles, seeds the dev users (`admin@iossifovlab.com` etc., password `secret`), and registers the OAuth `gpfjs` application. Re-running it is idempotent for the user and OAuth steps; the genotype/phenotype imports clean and rebuild from scratch.
 
 ```bash
-source ./setenv.sh
+# from the gpf checkout root
+export DAE_DB_DIR="$PWD/web_e2e/gpf_e2e_instance"
+export DJANGO_SETTINGS_MODULE=gpf_web.settings  # or wgpf_settings; see below
+./web_e2e/gpf_e2e_instance/import_data.sh
 ```
 
-Import data: 
+The script's `wdaemanage createapplication` call uses redirect URIs that include `http://localhost:4200/login` and `http://127.0.0.1:8080/gpf/login`, so both dev-server topologies (Angular CLI on 4200 against Django on 8000, **or** `wgpf` on 8080) authenticate out of the box.
+
+### Run the dev servers
+
+Open two terminals:
 
 ```bash
-./gpf_e2e_instance/import_data.sh
+# Terminal 1 — Django backend on :8000
+conda activate gpf
+export DAE_DB_DIR="$PWD/web_e2e/gpf_e2e_instance"
+wdaemanage runserver
 ```
 
-Apply django migrations, create users and Oauth application:
-
 ```bash
-wdaemanage migrate
-
-wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:admin
-wdaemanage user_create research@iossifovlab.com -p secret -g any_user
-wdaemanage user_create user_comp_vcf@iossifovlab.com -p secret -g any_user
-wdaemanage user_create user_comp_genotypes@iossifovlab.com -p secret -g any_user
-wdaemanage user_create user_all_genotypes@iossifovlab.com -p secret -g any_user
-wdaemanage user_create user_iossifov_2014@iossifovlab.com -p secret -g any_user
-
-wdaemanage createapplication --user 1 \
-    --redirect-uris "http://localhost:4200/login" \
-    --name "GPF Genotypes and Phenotypes in Families" \
-    --client-id gpfjs  public authorization-code --skip-authorization
-```
-
-Run Django development server:
-
-```bash
-wdaemanage.py runserver
-```
-
-Run Angular development server from `gpfjs` directory: 
-
-```bash
+# Terminal 2 — Angular SPA on :4200, proxied to backend at :8000
+cd web_ui
 ng serve
 ```
 
-The e2e instance can now be browsed at `http://localhost:4200/`
+Browse the instance at <http://localhost:4200/>. Log in as `admin@iossifovlab.com` / `secret`.
 
-## Run tests
+### Run the Playwright suite
 
-In the gpf-e2e dir
+`web_e2e/tests/utils.ts` and `web_e2e/playwright.config.ts` automatically switch URLs based on `process.env.JENKINS`:
 
-Install packages:
+| Env                | `frontendUrl` / `baseURL`              | Used by                         |
+| ------------------ | -------------------------------------- | ------------------------------- |
+| no env vars        | `http://127.0.0.1:8080/gpf`            | local `wgpf`-style deploy       |
+| `JENKINS=1`        | `http://frontend`                      | the compose stack (CI)          |
 
-```
-sudo rm -rf node_modules
-npm install
-```
+If you're running the dev-server topology (`ng serve` on 4200 + `wdaemanage runserver` on 8000), point Playwright at the SPA dev server with the local-dev override block already commented in `tests/utils.ts`:
 
-Setup mailhog:
-
-```bash
-docker compose up --detach
-```
-
-Edit `gpf-e2e/playwright/tests/utils.ts`:
-Replace:
 ```ts
-export const frontendUrl = 'http://gpf:8080/gpf';
-export const backendUrl = frontendUrl;
-export const mailhogUrl = 'http://mailhog:8025';
+// web_e2e/tests/utils.ts — uncomment for ng-serve / runserver
+// export const frontendUrl = 'http://localhost:4200';
+// export const backendUrl  = 'http://localhost:8000';
+// export const mailhogUrl  = 'http://localhost:8025';
 ```
 
-with:
-```ts
-export const backendUrl = 'http://localhost:8000';
-export const frontendUrl = 'http://localhost:4200';
-export const mailhogUrl = 'http://localhost:8025';
-```
+Don't commit that swap — leave the production `http://frontend` URLs as the default for CI. Then:
 
-Edit `gpf-e2e/playwright.config.ts`:
-Replace:
 ```bash
-workers: process.env.CI ? undefined : undefined,
-```
+cd web_e2e
 
-with:
-```bash
-workers: process.env.CI ? 1 : 1,
-
-```
-
-Run tests in terminal:
-
-```
+# headless run, default reporter
 npx playwright test
-```
 
-Run tests using playwright's UI:
-
-```
+# UI mode (most useful for writing/debugging a single spec)
 npx playwright test --ui
+
+# one spec by file
+npx playwright test tests/datasets.spec.ts
+
+# match a test name with -g
+npx playwright test -g "should display \"GPF"
+
+# slow it down + open the inspector at the first failing line
+PWDEBUG=1 npx playwright test tests/datasets.spec.ts
 ```
 
-Run a specific spec:
+### Mailhog (for the user-creation / forgotten-password specs)
 
-```
-npx playwright test -g <spec name>
-```
+The verification-email tests poll Mailhog for a message containing the freshly-created user's email and follow the link inside. For local dev:
 
-
-## Run e2e instance in docker containers
-(This workflow is used on Jenkins. Do this only if you debug Jenkins/docker specific issue)
-
-Clear the previous e2e test instance:
-
-```
-./build_cleanup.sh
+```bash
+# in another terminal
+docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
 ```
 
-Setup a fresh one:
+Or use the `mail` service from `web_infra/compose-jenkins.yaml` if you're already running that stack. Either way, point Django at it via env:
 
-```
-./build_setup.sh
-```
-
-After completion, the instance can be browsed at:
-
-```
-http://localhost:8080/gpf
+```bash
+export WDAE_EMAIL_HOST=localhost
+export WDAE_EMAIL_PORT=1025
+export WDAE_EMAIL_VERIFICATION_ENDPOINT=http://localhost:4200
 ```
 
+---
 
-## Run local gpfjs on docker container gpf
+## Jenkins-mirrored compose stack
 
-Change `gpfjs/src/environments/environment.ts` line:
+Use this only when you're reproducing a CI-only failure. It runs the same images Jenkins builds (`gpf-web-api-prod` + `gpf-web-ui-prod`), wires them via `web_infra/compose-jenkins.yaml`, and fires the Playwright suite from the `e2e-tests` service.
 
-```
-const basePath = 'http://localhost:8000';
-```
+### Build the prod images locally
 
-to:
+CI pulls them from `registry.seqpipe.org`; locally we build from the repo wheels.
 
-```
-const basePath = 'http://<instance ip>:9001;
-```
+```bash
+# from the gpf root
+mkdir -p dist/core dist/web dist/gain
 
-To get <instance ip>:
+# 1. gain-core wheel (gpf-core depends on it)
+cd ../gain && uv build --package gain-core --out-dir ../gpf/dist/gain && cd ../gpf
 
-Inspect the IP address on which GPF system is accessible. To this end run
+# 2. gpf-core + gpf-web wheels
+uv build --package gpf-core --out-dir dist/core
+uv build --package gpf-web  --out-dir dist/web
 
-```
-docker ps --filter label="build-scripts=local"
-```
+# 3. backend image (Django + gunicorn)
+docker build -f web/Dockerfile.production    -t gpf-web-api-prod:local .
 
-The output of this command should look like the following:
-
-```
-CONTAINER ID   IMAGE                                                      COMMAND                  CREATED...   STA...
-0352bc66baa5   registry.seqpipe.org/seqpipe-gpf-full:master_57c04e5-664   "supervisord -c /etc…"   45 minu...   Up ...
-f9fa020327e8   seqpipe/seqpipe-docker-impala:latest                       "supervisord -c /etc…"   49 minu...   Up ...
-b7856fa20651   mysql:5.7                                                  "docker-entrypoint.s…"   49 minu...   Up ...
+# 4. frontend image (Angular SPA + Apache reverse-proxy)
+docker build -f web_ui/Dockerfile.production \
+    --build-arg BACKEND_IMAGE=gpf-web-api-prod:local \
+    -t gpf-web-ui-prod:local .
 ```
 
-Find the container ID that corresponds to `registry.seqpipe.org/seqpipe-gpf-full` image.
-In the above mentioned case this is the container with ID `0352bc66baa5`.
+### Bring the stack up
 
-Run following command to inspect IP address of this container:
+```bash
+export BACKEND_IMAGE=gpf-web-api-prod:local
+export FRONTEND_IMAGE=gpf-web-ui-prod:local
+export COMPOSE_PROJECT=gpf-web-e2e-local
 
+# 1. Run instance-import to its completion
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    up -d db instance-import
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    wait instance-import
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    logs --no-color instance-import
+
+# 2. Bring up backend + frontend explicitly (mirrors Jenkinsfile.e2e —
+#    explicit up so step 3's --no-deps doesn't trigger a re-import)
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    up -d mail backend-e2e frontend-e2e
+
+# 3. Run the suite
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    run --rm --no-deps e2e-tests
 ```
-docker inspect \
-    --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
-    0352bc66baa5
+
+### Iterate on a subset
+
+```bash
+# Single spec
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    run --rm --no-deps e2e-tests \
+    npx playwright test --reporter=list tests/datasets.spec.ts
+
+# Single test by name
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    run --rm --no-deps e2e-tests \
+    npx playwright test --reporter=list -g "should display \"GPF"
+
+# Sanity-check the API from inside the network
+docker run --rm --network "${COMPOSE_PROJECT}_default" curlimages/curl:latest \
+    sh -c 'curl -fsS http://frontend/api/v3/instance/version && echo'
 ```
+
+### Tear down
+
+```bash
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+    down -v --remove-orphans
+```
+
+`-v` removes the named MariaDB volume; on next start `instance-import` re-runs from a clean DB. **Don't skip it between runs** — the instance-import script doesn't dedupe Dataset rows, and a stale DB will surface the `Dataset.dataset_id` race (see issue 1 in [`issues/br-issues.sh`](../../issues/br-issues.sh)).
+
+### What's special about the compose stack
+
+A few things differ from a vanilla `wdaemanage runserver` setup. They're load-bearing:
+
+- **Backend runs `gunicorn --workers=1`.** `web_infra/compose-jenkins.yaml` overrides the production entrypoint. The 4-worker default races on `datasets_api.Dataset.recreate_dataset_perm`'s `get_or_create` — concurrent first-load workers each insert a row because `dataset_id` lacks `unique=True`, then `MultipleObjectsReturned` 500s the next request. Tracked separately in `issues/br-issues.sh`. Until that lands, keep the override.
+- **Apache (frontend) reverse-proxies `/api/`, `/ws/`, `/o/`, `/accounts/`** to the backend on port 9001. The SPA fallback `RewriteRule` excludes those prefixes so they don't get rewritten to `index.html`.
+- **`/o/` and `/accounts/` are required for OAuth.** The SPA's log-in button does `window.location = /o/authorize/?...`, which the backend redirects to `/accounts/login/`. Both must be proxied.
+- **Playwright workers are capped at 4 in CI.** With a single-worker backend, the default (CPU count, ~16) overloads `/api/v3/genotype_browser/query` past the 60s deadline. Local-dev (without `CI=1`) keeps the default.
+- **`WDAE_EMAIL_VERIFICATION_ENDPOINT=http://frontend`.** Django bakes this URL into outbound mail; without it, the user-creation specs follow a `localhost:8000` link that chromium inside the network can't reach.
+
+---
+
+## Triaging a failure
+
+1. Look up the spec in [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md). Most of the currently-failing specs are listed with hypotheses and reproduction commands.
+2. If it's not there, run it standalone with `--reporter=list` and Playwright's trace:
+   ```bash
+   PLAYWRIGHT_HTML_REPORT=playwright-report \
+   npx playwright test --trace=on tests/foo.spec.ts -g "name"
+   npx playwright show-report playwright-report
+   npx playwright show-trace test-results/.../trace.zip
+   ```
+3. For backend errors, dump per-service logs from the compose stack:
+   ```bash
+   docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+       logs --no-color backend-e2e --tail 200
+   ```
+4. Open a new ticket in `issues/br-issues.sh` (template: any of the existing five entries).
