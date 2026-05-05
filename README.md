@@ -5,7 +5,7 @@ manages large databases of genetic variants and phenotypic
 measurements from family collections.
 
 User documentation: see the GPF documentation at
-https://iossifovlab.com/gpfuserdocs/.
+https://iossifovlab.com/gpfdocs/.
 
 ## Repository overview
 

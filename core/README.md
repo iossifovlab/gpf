@@ -9,4 +9,4 @@ the Simons Simplex Collection, a collection of ~2,600 families with one child
 diagnosed with autism.
 
 Information on how to use GPF could be found in the
-[GPF documentation](https://iossifovlab.com/gpfuserdocs/)
+[GPF documentation](https://iossifovlab.com/gpfdocs/)

@@ -6,7 +6,7 @@ see the GPF repository
 [https://github.com/iossifovlab/gpf](https://github.com/iossifovlab/gpf)
 
 Information on how to use GPF User Interface could be found in the
-[GPF documentation](https://iossifovlab.com/gpfuserdocs/user_interface/gpf_user_interface.html)
+[GPF documentation](https://iossifovlab.com/gpfdocs/user_interface/gpf_user_interface.html)
 
 ## Development server
 
