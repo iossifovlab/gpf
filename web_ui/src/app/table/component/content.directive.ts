@@ -6,7 +6,7 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 })
 export class GpfTableCellContentDirective {
   public constructor(
-    public readonly templateRef: TemplateRef<any>,
+    public readonly templateRef: TemplateRef<unknown>,
     public readonly viewContainer: ViewContainerRef
   ) { }
 }

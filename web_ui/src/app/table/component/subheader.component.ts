@@ -1,6 +1,9 @@
 import { Input, Component, ContentChildren, QueryList, TemplateRef, AfterContentInit } from '@angular/core';
 import { GpfTableCellContentDirective } from './content.directive';
 
+type TableRow = Record<string, unknown>;
+type SortableTableRow = TableRow & { arrayPosition?: number };
+
 @Component({
   selector: 'gpf-table-subheader',
   template: '',
@@ -10,9 +13,9 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
   @ContentChildren(GpfTableCellContentDirective) public contentChildren: QueryList<GpfTableCellContentDirective>;
   @Input() public field: string;
   @Input() public caption: string;
-  @Input() public comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
+  @Input() public comparator: (leftVal: TableRow, rightVal: TableRow) => number = this.defaultComparator;
 
-  public contentTemplateRef: TemplateRef<any>;
+  public contentTemplateRef: TemplateRef<unknown>;
 
   public get sortable(): string | boolean {
     return this.field || this.comparator !== this.defaultComparator;
@@ -24,9 +27,9 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
     }
   }
 
-  public defaultComparator(a: any, b: any): number {
-    let leftVal = a[this.field];
-    let rightVal = b[this.field];
+  public defaultComparator(a: TableRow, b: TableRow): number {
+    let leftVal: unknown = a[this.field];
+    let rightVal: unknown = b[this.field];
 
     if (leftVal === '-') {
       leftVal = null;
@@ -44,20 +47,24 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
       return 1;
     }
 
-    if (!isNaN(leftVal) && !isNaN(rightVal)) {
-      return Number(leftVal) - Number(rightVal);
+    const leftNum = Number(leftVal);
+    const rightNum = Number(rightVal);
+    if (!isNaN(leftNum) && !isNaN(rightNum)) {
+      return leftNum - rightNum;
     }
-    return leftVal.localeCompare(rightVal);
+    const leftStr = typeof leftVal === 'string' ? leftVal : JSON.stringify(leftVal);
+    const rightStr = typeof rightVal === 'string' ? rightVal : JSON.stringify(rightVal);
+    return leftStr.localeCompare(rightStr);
   }
 
-  public sort(data: any, ascending: boolean) {
+  public sort(data: SortableTableRow[], ascending: boolean): void {
     data.forEach((element, idx) => {
       element.arrayPosition = idx;
     });
     data.sort((a, b) => {
       const compareResult = ascending ? this.comparator(a, b) : this.comparator(b, a);
       if (compareResult === 0) {
-        return a.arrayPosition - b.arrayPosition;
+        return (a.arrayPosition ?? 0) - (b.arrayPosition ?? 0);
       }
       return compareResult;
     });
