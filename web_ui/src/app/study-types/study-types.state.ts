@@ -18,5 +18,5 @@ export const resetStudyTypes = createAction(
 export const studyTypesReducer = createReducer(
   initialState,
   on(setStudyTypes, (state: string[], {studyTypes}) => cloneDeep(studyTypes)),
-  on(reset, resetStudyTypes, state => cloneDeep(initialState)),
+  on(reset, resetStudyTypes, _state => cloneDeep(initialState)),
 );

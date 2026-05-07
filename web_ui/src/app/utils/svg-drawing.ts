@@ -7,7 +7,7 @@ export const affectedStatusColors: Record<string, string> = {
 };
 
 const getTrianglePoints = (plotX: number, plotY: number, size: number): string => {
-  const height = Math.sqrt(Math.pow(size, 2) - Math.pow((size / 2.0), 2));
+  const height = Math.sqrt(Math.pow(size, 2) - Math.pow(size / 2.0, 2));
   const x1 = plotX - (size / 2.0);
   const y1 = plotY + (height / 2.0);
   const x2 = plotX + (size / 2.0);

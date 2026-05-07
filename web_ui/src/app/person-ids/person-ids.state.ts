@@ -18,5 +18,5 @@ export const resetPersonIds = createAction(
 export const personIdsReducer = createReducer(
   initialState,
   on(setPersonIds, (state, {personIds}) => personIds),
-  on(reset, resetPersonIds, state => cloneDeep(initialState)),
+  on(reset, resetPersonIds, _state => cloneDeep(initialState)),
 );

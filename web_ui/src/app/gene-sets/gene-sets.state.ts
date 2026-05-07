@@ -38,5 +38,5 @@ export const geneSetsReducer = createReducer(
     geneSet: cloneDeep(geneSet)
   })),
   on(getGeneSetsValues, (state) => cloneDeep(state)),
-  on(reset, resetGeneSetsValues, state => cloneDeep(initialState)),
+  on(reset, resetGeneSetsValues, _state => cloneDeep(initialState)),
 );

@@ -84,7 +84,7 @@ export class PhenoToolMeasureComponent implements OnInit {
           this.measureSelectorComponent.selectMeasure(this.selectedMeasure, false);
         }
         this.normalizeBy = selectPhenoToolMeasureState.normalizeBy.length
-        ? selectPhenoToolMeasureState.normalizeBy as Regression[] : [];
+          ? selectPhenoToolMeasureState.normalizeBy as Regression[] : [];
         this.validateState();
       });
   }

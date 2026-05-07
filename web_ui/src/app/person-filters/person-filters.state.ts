@@ -123,6 +123,6 @@ export const personFiltersReducer = createReducer(
   }),
   on(resetFamilyFilterStates, (state) => ({...state, familyFilters: null})),
   on(resetPersonFilterStates, (state) => ({...state, personFilters: null})),
-  on(reset, resetPersonFilters, (state) => initialState),
+  on(reset, resetPersonFilters, (_state) => initialState),
 );
 

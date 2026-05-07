@@ -18,5 +18,5 @@ export const resetStudyFilters = createAction(
 export const studyFiltersReducer = createReducer(
   initialState,
   on(setStudyFilters, (state, {studyFilters}) => studyFilters),
-  on(reset, resetStudyFilters, state => cloneDeep(initialState)),
+  on(reset, resetStudyFilters, _state => cloneDeep(initialState)),
 );

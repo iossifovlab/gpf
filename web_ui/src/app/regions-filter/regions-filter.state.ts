@@ -18,5 +18,5 @@ export const resetRegionsFilters = createAction(
 export const regionsFiltersReducer = createReducer(
   initialState,
   on(setRegionsFilters, (state, {regionsFilter}) => regionsFilter),
-  on(reset, resetRegionsFilters, state => cloneDeep(initialState)),
+  on(reset, resetRegionsFilters, _state => cloneDeep(initialState)),
 );

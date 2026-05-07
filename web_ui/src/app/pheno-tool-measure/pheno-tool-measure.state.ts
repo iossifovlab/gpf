@@ -26,5 +26,5 @@ export const resetPhenoToolMeasure = createAction(
 export const phenoToolMeasureReducer = createReducer(
   initialState,
   on(setPhenoToolMeasure, (state, { phenoToolMeasure }) => cloneDeep(phenoToolMeasure)),
-  on(reset, resetPhenoToolMeasure, state => cloneDeep(initialState)),
+  on(reset, resetPhenoToolMeasure, _state => cloneDeep(initialState)),
 );

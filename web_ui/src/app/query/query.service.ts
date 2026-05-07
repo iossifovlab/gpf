@@ -74,7 +74,7 @@ export class QueryService {
     }).node('!.*', data => {
       this.streamingUpdateSubject.next(true);
       this.streamingSubject.next(data);
-    }).done(data => {
+    }).done(_data => {
       this.streamingFinishedSubject.next(true);
       // Emit null so the loading service can stop the loading overlay even if no variants were received
       this.streamingSubject.next(null);

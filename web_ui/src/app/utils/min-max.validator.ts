@@ -11,7 +11,7 @@ export class MinValidatorDirective implements Validator {
   @Input() public min: number;
 
   public validate(control: AbstractControl): {[key: string]: any} {
-    return Number(control.value) >= Number(this.min) ? null : {'min': true};
+    return Number(control.value) >= Number(this.min) ? null : {min: true};
   }
 }
 
@@ -25,6 +25,6 @@ export class MaxValidatorDirective implements Validator {
   @Input() public max: number;
 
   public validate(control: AbstractControl): {[key: string]: any} {
-    return Number(control.value) <= Number(this.max) ? null : {'max': true};
+    return Number(control.value) <= Number(this.max) ? null : {max: true};
   }
 }

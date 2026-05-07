@@ -88,5 +88,5 @@ export const geneProfilesReducer = createReducer(
     headerLeaves: cloneDeep(headerLeaves)
   })),
   on(setGeneProfilesValues, (state: GeneProfiles, { geneProfiles }) => cloneDeep(geneProfiles)),
-  on(resetGeneProfilesValues, state => cloneDeep(initialState))
+  on(resetGeneProfilesValues, _state => cloneDeep(initialState))
 );

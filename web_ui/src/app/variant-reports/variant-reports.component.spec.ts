@@ -29,19 +29,6 @@ class MockDatasetsService {
   }
 }
 
-class MockDatasetsDenovoService {
-  public getSelectedDataset(): object {
-    return {id: 'Denovo', accessRights: true, commonReport: {enabled: true}};
-  }
-  public getSelectedDatasetObservable(): object {
-    return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
-  }
-  public getDatasetsLoadedObservable = (): Observable<null> => of();
-  public getDataset(): Observable<object> {
-    return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
-  }
-}
-
 class ResizeServiceMock {
   public addResizeEventListener(): null {
     return null;

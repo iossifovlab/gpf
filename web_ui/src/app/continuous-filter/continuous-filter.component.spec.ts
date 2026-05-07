@@ -64,10 +64,10 @@ class MeasuresServiceMock {
   }
 
   public getMeasurePartitions(
-    datasetId: string,
-    measureName: string,
-    rangeStart: number,
-    rangeEnd: number
+    _datasetId: string,
+    _measureName: string,
+    _rangeStart: number,
+    _rangeEnd: number
   ): Observable<Partitions> {
     return of(
       new Partitions(0, 0, 5, 30, 10, 60)

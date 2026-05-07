@@ -15,5 +15,5 @@ export const resetDatasetId = createAction(
 export const datasetIdReducer = createReducer(
   datasetIdInitialState,
   on(setDatasetId, (state, {datasetId}) => datasetId),
-  on(resetDatasetId, (state,) => datasetIdInitialState),
+  on(resetDatasetId, (_state,) => datasetIdInitialState),
 );

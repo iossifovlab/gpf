@@ -17,5 +17,5 @@ export const resetUniqueFamilyVariantsFilter = createAction(
 export const uniqueFamilyVariantsFilterReducer = createReducer(
   initialState,
   on(setUniqueFamilyVariantsFilter, (state, {uniqueFamilyVariantsFilter}) => uniqueFamilyVariantsFilter),
-  on(reset, resetUniqueFamilyVariantsFilter, state => initialState),
+  on(reset, resetUniqueFamilyVariantsFilter, _state => initialState),
 );

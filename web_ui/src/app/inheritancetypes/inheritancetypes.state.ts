@@ -18,5 +18,5 @@ export const inheritanceTypesReducer = createReducer(
   on(setInheritanceTypes, (state: string[], {inheritanceTypes}) => {
     return inheritanceTypes ? [...inheritanceTypes] : initialState;
   }),
-  on(reset, resetInheritanceTypes, state => [...initialState]),
+  on(reset, resetInheritanceTypes, _state => [...initialState]),
 );

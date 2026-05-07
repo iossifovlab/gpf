@@ -1,4 +1,3 @@
-import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { BrowserQueryFilter, PersonSetCollection } from './genotype-browser';
 
 describe('BrowserQueryFilter', () => {

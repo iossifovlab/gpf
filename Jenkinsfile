@@ -431,7 +431,26 @@ pipeline {
                             post {
                                 always {
                                     script {
-                                        publishReports('web_ui')
+                                        // publishReports() is Python-specific
+                                        // (pytest junit + ruff/mypy/pylint
+                                        // recordIssues). For web_ui we publish
+                                        // jest's junit + the cobertura coverage
+                                        // here, and the lint findings via the
+                                        // separate recordIssues below.
+                                        junit(
+                                            allowEmptyResults: true,
+                                            testResults: 'reports/web_ui/jest.xml',
+                                        )
+                                        recordCoverage(
+                                            tools: [[
+                                                parser: 'COBERTURA',
+                                                pattern: 'reports/web_ui/coverage.xml',
+                                            ]],
+                                            id: 'web_ui-coverage',
+                                            name: 'web_ui coverage',
+                                            skipPublishingChecks: true,
+                                            failOnError: false,
+                                        )
                                         recordIssues(
                                             enabledForFailure: true,
                                             aggregatingResults: false,

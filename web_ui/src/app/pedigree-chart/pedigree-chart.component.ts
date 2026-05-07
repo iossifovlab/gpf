@@ -304,7 +304,9 @@ export class PedigreeChartComponent implements OnInit {
     const toMoveX = leftmostGroupX - offset;
     const toMoveY = leftmostGroupY - offset;
 
-    groups.forEach(g => g.forEach(group => {group.xCenter -= toMoveX; group.yCenter -= toMoveY}));
+    groups.forEach(g => g.forEach(group => {
+      group.xCenter -= toMoveX; group.yCenter -= toMoveY;
+    }));
   }
 
   private centerChildrenOfParents(mates: MatingUnit): number {

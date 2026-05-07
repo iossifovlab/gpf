@@ -16,7 +16,7 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 
 class UsersGroupsServiceMock {
-  public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
+  public getGroups(page: number, _searchTerm: string): Observable<UserGroup[]> {
     let pageBody: UserGroup[];
     if (page === 1) {
       pageBody = [
@@ -34,7 +34,7 @@ class UsersGroupsServiceMock {
 }
 
 class UsersServiceMock {
-  public getUsers(page: number, searchTerm: string): Observable<User[]> {
+  public getUsers(page: number, _searchTerm: string): Observable<User[]> {
     let pageBody: User[];
     if (page === 1) {
       pageBody = [
@@ -62,7 +62,7 @@ class UsersServiceMock {
 }
 
 class DatasetsServiceMock {
-  public getManagementDatasets(page: number, searchTerm: string): Observable<DatasetPermissions[]> {
+  public getManagementDatasets(page: number, _searchTerm: string): Observable<DatasetPermissions[]> {
     let pageBody: DatasetPermissions[];
     if (page === 1) {
       pageBody = [

@@ -1,7 +1,7 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 
 export function IsMoreThanOrEqual(property: string, validationOptions?: ValidationOptions) {
-  return function(object: Object, propertyName: string) {
+  return function(object: object, propertyName: string) {
     registerDecorator({
       name: 'isMoreThanOrEqual',
       target: object.constructor,
@@ -17,7 +17,7 @@ export function IsMoreThanOrEqual(property: string, validationOptions?: Validati
               return true;
             }
             return typeof value === 'number' && typeof relatedValue === 'number' && value >= relatedValue;
-          } catch (exception) {
+          } catch (_exception) {
             return false;
           }
         },

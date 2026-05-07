@@ -24,5 +24,5 @@ export const resetPedigreeSelector = createAction(
 export const pedigreeSelectorReducer = createReducer(
   initialState,
   on(setPedigreeSelector, (state: PedigreeSelector, { pedigreeSelector }) => cloneDeep(pedigreeSelector)),
-  on(reset, resetPedigreeSelector, state => cloneDeep(initialState))
+  on(reset, resetPedigreeSelector, _state => cloneDeep(initialState))
 );

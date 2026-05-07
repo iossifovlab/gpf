@@ -17,5 +17,5 @@ export const resetPresentInChild = createAction(
 export const presentInChildReducer = createReducer(
   initialState,
   on(setPresentInChild, (state: string[], {presentInChild}) => [...presentInChild]),
-  on(reset, resetPresentInChild, state => [...initialState]),
+  on(reset, resetPresentInChild, _state => [...initialState]),
 );

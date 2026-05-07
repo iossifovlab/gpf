@@ -45,5 +45,5 @@ export const presentInParentReducer = createReducer(
     }
     return state;
   }),
-  on(reset, resetPresentInParent, state => cloneDeep(initialState)),
+  on(reset, resetPresentInParent, _state => cloneDeep(initialState)),
 );

@@ -34,7 +34,7 @@ describe('CheckboxListComponent', () => {
   });
 
   it('should emit', () => {
-    component.itemsUpdateEvent = {emit() {}} as any;
+    component.itemsUpdateEvent = {emit: function() {}} as any;
     const emitSpy = jest.spyOn(component.itemsUpdateEvent, 'emit');
 
     component.selectedItems = undefined;

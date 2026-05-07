@@ -126,7 +126,11 @@
         "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/member-ordering": "off",
         "@stylistic/semi": "warn",
-        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-unused-vars": ["warn", {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }],
         "indent": ["warn", 2, {"SwitchCase": 1}],
         "@stylistic/max-len": [
           "warn",

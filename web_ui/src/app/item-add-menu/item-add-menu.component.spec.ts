@@ -30,7 +30,7 @@ describe('ItemAddMenuComponent', () => {
     fixture = TestBed.createComponent(ItemAddMenuComponent);
     component = fixture.componentInstance;
 
-    component.getItems = (page: number, searchText: string): Observable<Item[]> => {
+    component.getItems = (page: number, _searchText: string): Observable<Item[]> => {
       if (page === 1) {
         return of([item1, item2, item3]);
       } else if (page === 2) {

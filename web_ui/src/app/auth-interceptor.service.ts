@@ -75,7 +75,7 @@ export class AuthInterceptorService implements HttpInterceptor {
           this.refreshTokenInProgress = false;
           this.tokenRefreshedSource.next(true);
         }),
-        catchError((err, caught) => {
+        catchError((err, _caught) => {
           this.refreshTokenInProgress = false;
           throw err;
         })
