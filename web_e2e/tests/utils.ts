@@ -74,6 +74,30 @@ export async function loginAdmin(page: Page, user = username, pass = password): 
   await login(page, user, pass);
 }
 
+// tb-nxl: per-worker user pool. Reads Playwright's auto-exported
+// TEST_PARALLEL_INDEX (bounded [0, workers-1], reused across retries) and
+// logs in as e2e_worker_<N>@iossifovlab.com. Each worker writes to its own
+// user row — no cross-spec admin-row sharing under workers=16.
+//
+// E2E_WORKER_COUNT (set by web_infra/compose-jenkins.yaml + Jenkinsfile.e2e,
+// matched by import_data.sh's provisioning loop) bounds the pool. Out-of-range
+// throws so a future workers bump that forgets the provisioning surfaces
+// loudly instead of as a flaky 401.
+export async function loginWorkerUser(page: Page): Promise<void> {
+  const idx = parseInt(process.env.TEST_PARALLEL_INDEX ?? '0', 10);
+  const poolSize = parseInt(process.env.E2E_WORKER_COUNT ?? '16', 10);
+  if (idx >= poolSize) {
+    throw new Error(
+      `loginWorkerUser: TEST_PARALLEL_INDEX=${idx} exceeds pool size ` +
+      `E2E_WORKER_COUNT=${poolSize}. Bump E2E_WORKER_COUNT in ` +
+      `web_infra/compose-jenkins.yaml + Jenkinsfile.e2e (and the ` +
+      `provisioning loop in web_e2e/gpf_e2e_instance/import_data.sh ` +
+      `picks it up automatically) so each parallel worker has its own user.`,
+    );
+  }
+  await login(page, `e2e_worker_${idx}@iossifovlab.com`, 'secret');
+}
+
 export async function navigateToHome(page: Page, dataset = 'ALL_genotypes'): Promise<void> {
   await page.goto(`${page.url()}datasets/${dataset}/${toolPageLinks.geneBrowser}`);
 }

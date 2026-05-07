@@ -90,6 +90,10 @@ services:
       WDAE_DB_PORT: 3306
       WDAE_LOG_DIR: /logs
       WDAE_SECRET_KEY: "django-insecure-e2e-not-a-real-secret-only-for-jenkins"
+      # tb-nxl: per-worker user pool size. import_data.sh provisions
+      # e2e_worker_0..N-1; e2e-tests reads the same value to size
+      # Playwright's `workers`. Must stay in sync (one source of truth).
+      E2E_WORKER_COUNT: "${E2E_WORKER_COUNT:-16}"
     entrypoint: ["bash", "/data/import_data.sh"]
     restart: "no"
 
@@ -200,4 +204,7 @@ services:
     environment:
       CI: "1"
       JENKINS: "1"
+      # tb-nxl: matches the value passed to instance-import so
+      # Playwright's worker count never exceeds the provisioned pool.
+      E2E_WORKER_COUNT: "${E2E_WORKER_COUNT:-16}"
     command: ["npx", "playwright", "test"]

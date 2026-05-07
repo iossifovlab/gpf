@@ -29,8 +29,16 @@ export default defineConfig({
    * marks them `flaky`). Local stays at 0 retries for fast fail signal. */
   retries: process.env.CI ? 1 : 0,
   /* tb-g1z: 8→16 paired with gunicorn --workers 16 in
-   * web/Dockerfile.production to keep the browser:backend ratio at 1:1. */
-  workers: process.env.CI ? 16 : undefined,
+   * web/Dockerfile.production to keep the browser:backend ratio at 1:1.
+   * tb-nxl: read E2E_WORKER_COUNT (single source of truth shared with
+   * import_data.sh's per-worker user pool — see web_e2e/tests/utils.ts
+   * loginWorkerUser). CI default 16, local default 4 (matches the
+   * provisioning default; bigger local CPUs can override via the env
+   * var to keep parallelIndex bounded by the provisioned pool). */
+  workers: parseInt(
+    process.env.E2E_WORKER_COUNT ?? (process.env.CI ? '16' : '4'),
+    10,
+  ),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.JENKINS ? [['junit', { outputFile: './reports/junit-report.xml' }]] : [['html']],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

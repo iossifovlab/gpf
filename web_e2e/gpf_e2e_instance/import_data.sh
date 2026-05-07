@@ -88,6 +88,22 @@ wdaemanage user_create user_iossifov_2014@iossifovlab.com -p secret -g any_user 
 # to iossifov_2014_liftover via navigateToDatasetPage).
 wdaemanage user_create gp_state_test@iossifovlab.com -p secret -g any_dataset:any_user || true
 
+# tb-nxl: per-worker user pool. utils.loginWorkerUser(page) picks
+# e2e_worker_<TEST_PARALLEL_INDEX> so each Playwright worker writes to
+# its own user row — no cross-spec admin-row sharing under workers=16.
+# Pool size matches Playwright's `workers` (single source of truth:
+# E2E_WORKER_COUNT, plumbed via web_infra/compose-jenkins.yaml).
+# any_dataset:any_user (no `admin` group) is deliberate: an accidental
+# /management write hits 403 instead of stomping shared state — see
+# tb-nxl Q5 for the structural reasoning. Tests that genuinely need the
+# admin group go through tests/_literal_admin.ts loginLiteralAdmin and
+# are confined to user-management.spec.ts (CI grep enforced).
+e2e_worker_count="${E2E_WORKER_COUNT:-16}"
+for i in $(seq 0 $((e2e_worker_count - 1))); do
+    wdaemanage user_create "e2e_worker_${i}@iossifovlab.com" \
+        -p secret -g any_dataset:any_user || true
+done
+
 # Register the SPA's OAuth2 application. The SPA's log-in
 # button (web_ui/src/app/users/users.component.ts) issues a
 # PKCE authorization-code request with client_id=gpfjs and
