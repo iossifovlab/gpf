@@ -1,60 +1,14 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 
-// Serial: every test in this block writes the same global
-// /api/v3/instance/description file. Running them in parallel
-// workers lets one test's clear-and-save stomp another test's
-// expected description right when the second test logs out and
-// the SPA's full-reload re-fetches the description.
-test.describe.serial('Home page description tests', () => {
-  test.beforeEach(async({ page }) => {
-    await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
-    await utils.loginWorkerUser(page);
-    await page.waitForSelector('gpf-home');
-  });
-
-  test('should add description', async({ page }) => {
-    await page.locator('#edit-icon').click();
-    await expect(page.locator('.editor')).toBeVisible();
-    await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    await page.getByText('Save').click();
-
-    await expect(page.locator('.editor')).not.toBeVisible();
-    await page.reload();
-    await expect(page.locator('#edit-container p')).toHaveText('Test description');
-
-    await page.locator('#edit-icon').click();
-    await page.locator('gpf-markdown-editor').locator('textarea').clear();
-
-    await page.getByText('Save').click();
-    await expect(page.locator('#empty-description')).toBeVisible();
-  });
-
-  test('should check if editing description is disabled when no access rights', async({ page }) => {
-    await page.locator('#edit-icon').click();
-    await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    await page.getByText('Save').click();
-
-
-    await utils.logout(page);
-    await page.waitForSelector('gpf-home');
-    await expect(page.locator('#edit-container p')).toHaveText('Test description');
-    await expect(page.locator('#edit-icon')).not.toBeVisible();
-
-    await utils.loginWorkerUser(page);
-    await page.waitForSelector('gpf-home');
-
-    await page.locator('#edit-icon').click();
-    await page.locator('gpf-markdown-editor').locator('textarea').clear();
-
-    await page.getByText('Save').click();
-    await expect(page.locator('#empty-description')).toBeVisible();
-
-    await utils.logout(page);
-    await page.waitForSelector('gpf-home');
-    await expect(page.locator('gpf-markdown-editor')).not.toBeVisible();
-  });
-});
+// tb-nxl-fix: the 'Home page description tests' describe that used to
+// live here (2 tests writing the global /api/v3/instance/description
+// file via #edit-icon — admin-only) moved to user-management.spec.ts.
+// loginWorkerUser users have no admin group, so #edit-icon never
+// appears for them; build #28 surfaced this as 'should add description'
+// failing and the .serial sibling getting skipped. user-management.spec
+// owns the file-level serial worker that all admin Management/edit
+// writes share.
 
 test.describe('Home page tests', () => {
   test.beforeEach(async({ page }) => {
