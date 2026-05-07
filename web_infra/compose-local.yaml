@@ -1,0 +1,42 @@
+# Local-dev overlay for the e2e compose stack. Adds host
+# port publishings on top of compose-jenkins.yaml so a real
+# browser on the host can reach the SPA, the backend API, and
+# Mailhog. CI doesn't use this file — only compose-jenkins.yaml.
+#
+# Use:
+#   export BACKEND_IMAGE=gpf-web-api-prod:local
+#   export FRONTEND_IMAGE=gpf-web-ui-prod:local
+#   docker compose -p gpf-web-e2e-local \
+#       -f web_infra/compose-jenkins.yaml \
+#       -f web_infra/compose-local.yaml \
+#       up -d db instance-import
+#   docker compose -p gpf-web-e2e-local \
+#       -f web_infra/compose-jenkins.yaml \
+#       -f web_infra/compose-local.yaml \
+#       wait instance-import
+#   docker compose -p gpf-web-e2e-local \
+#       -f web_infra/compose-jenkins.yaml \
+#       -f web_infra/compose-local.yaml \
+#       up -d mail backend-e2e frontend-e2e
+#
+# Then browse:
+#   - SPA:     http://127.0.0.1:8080/
+#   - API:     http://127.0.0.1:9001/api/v3/instance/version
+#   - Mailhog: http://127.0.0.1:8025/
+#
+# Login note: the OAuth client's redirect_uris (registered by
+# import_data.sh) include http://localhost:8080/gpf/login and
+# http://127.0.0.1:8080/gpf/login but the prod frontend image
+# serves the SPA at root (/). To exercise the login flow in a
+# host browser, either edit the redirect_uris on the OAuth app
+# (wdaemanage shell into backend-e2e) or browse anonymously.
+services:
+  frontend-e2e:
+    ports:
+      - "127.0.0.1:8080:80"
+  backend-e2e:
+    ports:
+      - "127.0.0.1:9001:9001"
+  mail:
+    ports:
+      - "127.0.0.1:8025:8025"

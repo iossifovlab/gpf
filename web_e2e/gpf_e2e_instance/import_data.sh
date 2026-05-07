@@ -97,5 +97,5 @@ wdaemanage createapplication \
     --name gpfjs \
     --skip-authorization \
     --no-hash-client-secret \
-    --redirect-uris "http://frontend/login http://localhost:8080/gpf/login http://127.0.0.1:8080/gpf/login http://localhost:4200/login" \
+    --redirect-uris "http://frontend/login http://localhost:8080/gpf/login http://127.0.0.1:8080/gpf/login http://localhost:8080/login http://127.0.0.1:8080/login http://localhost:4200/login" \
     public authorization-code || true
