@@ -1,9 +1,3 @@
-/* SystemJS module definition */
-declare let module: NodeModule;
-interface NodeModule {
-  id: string;
-}
-
 // Minimal type stubs for the oboe streaming JSON parser. The library
 // ships no .d.ts; this is the surface QueryService actually uses.
 declare module 'oboe' {

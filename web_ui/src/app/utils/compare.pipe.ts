@@ -1,7 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
-type Comparator = (a: GenotypePreview, b: GenotypePreview) => number;
+// The comparator is wired into <gpf-table-subheader> via [comparator]
+// = "slot.source | compare", and that component's @Input is typed
+// over a generic row (object) so it can sort any kind of table data.
+// We therefore widen the parameter type to object here and narrow to
+// GenotypePreview internally — the pipe is only ever fed
+// GenotypePreview rows in practice.
+type Comparator = (a: object, b: object) => number;
 
 @Pipe({
   name: 'compare',
@@ -10,11 +16,13 @@ type Comparator = (a: GenotypePreview, b: GenotypePreview) => number;
 export class ComparePipe implements PipeTransform {
   public transform(field: string): Comparator {
     if (field === 'variant.location') {
-      return this.locationComparator;
+      return this.locationComparator as Comparator;
     }
-    return (a: GenotypePreview, b: GenotypePreview): number => {
-      let leftVal: unknown = a.get(field);
-      let rightVal: unknown = b.get(field);
+    return (a: object, b: object): number => {
+      const aPreview = a as GenotypePreview;
+      const bPreview = b as GenotypePreview;
+      let leftVal: unknown = aPreview.get(field);
+      let rightVal: unknown = bPreview.get(field);
       if (leftVal === '-') {
         leftVal = null;
       }

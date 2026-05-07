@@ -1,8 +1,9 @@
 import { Input, Component, ContentChildren, QueryList, TemplateRef, AfterContentInit } from '@angular/core';
 import { GpfTableCellContentDirective } from './content.directive';
 
-type TableRow = Record<string, unknown>;
-type SortableTableRow = TableRow & { arrayPosition?: number };
+// Rows can be any object shape; the subheader narrows to a dynamic
+// dictionary internally for the default field-based comparator.
+type SortableTableRow = object & { arrayPosition?: number };
 
 @Component({
   selector: 'gpf-table-subheader',
@@ -13,7 +14,7 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
   @ContentChildren(GpfTableCellContentDirective) public contentChildren: QueryList<GpfTableCellContentDirective>;
   @Input() public field: string;
   @Input() public caption: string;
-  @Input() public comparator: (leftVal: TableRow, rightVal: TableRow) => number = this.defaultComparator;
+  @Input() public comparator: (leftVal: object, rightVal: object) => number = this.defaultComparator;
 
   public contentTemplateRef: TemplateRef<unknown>;
 
@@ -27,9 +28,9 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
     }
   }
 
-  public defaultComparator(a: TableRow, b: TableRow): number {
-    let leftVal: unknown = a[this.field];
-    let rightVal: unknown = b[this.field];
+  public defaultComparator(a: object, b: object): number {
+    let leftVal: unknown = (a as Record<string, unknown>)[this.field];
+    let rightVal: unknown = (b as Record<string, unknown>)[this.field];
 
     if (leftVal === '-') {
       leftVal = null;
