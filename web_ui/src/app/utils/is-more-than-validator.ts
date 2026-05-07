@@ -1,7 +1,10 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 
-export function IsMoreThanOrEqual(property: string, validationOptions?: ValidationOptions) {
-  return function(object: object, propertyName: string) {
+export function IsMoreThanOrEqual(
+  property: string,
+  validationOptions?: ValidationOptions,
+): (object: object, propertyName: string) => void {
+  return function(object: object, propertyName: string): void {
     registerDecorator({
       name: 'isMoreThanOrEqual',
       target: object.constructor,
@@ -9,10 +12,15 @@ export function IsMoreThanOrEqual(property: string, validationOptions?: Validati
       options: validationOptions,
       constraints: [property],
       validator: {
-        validate: function(value: any, args: ValidationArguments): boolean {
-          const [relatedPropertyName] = args.constraints;
+        validate: function(value: unknown, args: ValidationArguments): boolean {
+          const [relatedPropertyName] = args.constraints as [string];
           try {
-            const relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], args.object as any);
+            const relatedValue = relatedPropertyName
+              .split('.')
+              .reduce<unknown>(
+                (a, b) => (a as Record<string, unknown>)[b],
+                args.object,
+              );
             if (relatedValue === null) {
               return true;
             }
@@ -22,7 +30,7 @@ export function IsMoreThanOrEqual(property: string, validationOptions?: Validati
           }
         },
         defaultMessage: function(args: ValidationArguments): string {
-          const [relatedPropertyName] = args.constraints;
+          const [relatedPropertyName] = args.constraints as [string];
           return `${propertyName} should be more than or equal to ${relatedPropertyName}`;
         }
       }

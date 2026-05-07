@@ -42,7 +42,9 @@ export class ComparePipe implements PipeTransform {
       if (!isNaN(leftNum) && !isNaN(rightNum)) {
         return leftNum - rightNum;
       }
-      return String(leftVal).localeCompare(String(rightVal));
+      const leftStr = typeof leftVal === 'string' ? leftVal : JSON.stringify(leftVal);
+      const rightStr = typeof rightVal === 'string' ? rightVal : JSON.stringify(rightVal);
+      return leftStr.localeCompare(rightStr);
     };
   }
 
@@ -60,8 +62,10 @@ export class ComparePipe implements PipeTransform {
       return Number(str);
     };
 
-    const leftVar = String(a.get('variant.location') ?? '');
-    const rightVar = String(b.get('variant.location') ?? '');
+    const leftRaw = a.get('variant.location');
+    const rightRaw = b.get('variant.location');
+    const leftVar = typeof leftRaw === 'string' ? leftRaw : '';
+    const rightVar = typeof rightRaw === 'string' ? rightRaw : '';
 
     const leftArr = leftVar.split(':');
     const rightArr = rightVar.split(':');

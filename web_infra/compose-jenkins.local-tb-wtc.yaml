@@ -1,0 +1,6 @@
+services:
+  e2e-tests:
+    volumes:
+      - ../web_e2e/tests:/app/tests
+      - ../web_e2e/playwright.config.ts:/app/playwright.config.ts
+      - ../web_e2e/reports:/reports

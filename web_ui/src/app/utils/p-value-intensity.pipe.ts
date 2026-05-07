@@ -6,7 +6,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: false
 })
 export class PValueIntensityPipe implements PipeTransform {
-  public transform(value: any, ..._args: any[]): any {
+  public transform(value: unknown): number | string {
     const numberValue = Number(value);
     if (isNaN(numberValue)) {
       return '';

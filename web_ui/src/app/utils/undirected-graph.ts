@@ -11,8 +11,8 @@ export interface Graph<T> {
 export type Vertex<T> = T;
 export type Edge<T> = [Vertex<T>, Vertex<T>];
 
-export function getOtherVertex<T>(vertex: Vertex<T>, edge: Edge<T>) {
-  let otherVertex: Vertex<T> = null;
+export function getOtherVertex<T>(vertex: Vertex<T>, edge: Edge<T>): Vertex<T> | null {
+  let otherVertex: Vertex<T> | null = null;
 
   if (edge[0] === vertex) {
     otherVertex = edge[1];
@@ -23,7 +23,7 @@ export function getOtherVertex<T>(vertex: Vertex<T>, edge: Edge<T>) {
   return otherVertex;
 }
 
-export function equalEdges<T>(edge1: Edge<T>, edge2: Edge<T>) {
+export function equalEdges<T>(edge1: Edge<T>, edge2: Edge<T>): boolean {
   return (edge1[0] === edge2[0] && edge1[1] === edge2[1]) || (edge1[0] === edge2[1] && edge1[1] === edge2[0]);
 }
 
@@ -90,16 +90,10 @@ export class UndirectedGraph<T> implements Graph<T> {
     const alreadyAddedVertices: Vertex<T>[] = [];
 
     for (let i = 0; i < this.edges.length; i++) {
-      const it = this.edges[i].entries();
-      let res = it.next();
-
-      while (!res.done) {
-        const [, edge] = res.value;
+      for (const [, edge] of this.edges[i].entries()) {
         if (alreadyAddedVertices.indexOf(edge[1]) === -1) {
           allEdges.push(edge);
         }
-
-        res = it.next();
       }
       alreadyAddedVertices.push(this.vertices[i]);
     }
@@ -112,7 +106,7 @@ export class UndirectedGraph<T> implements Graph<T> {
       const otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
 
       if (otherVertex === null) {
-        throw new Error(`Edge (${ edge[0] }, ${ edge[1] }) does not have vertex ${ vertex }`);
+        throw new Error(`Edge (${ String(edge[0]) }, ${ String(edge[1]) }) does not have vertex ${ String(vertex) }`);
       }
 
       this.checkVertex(otherVertex);
@@ -121,7 +115,7 @@ export class UndirectedGraph<T> implements Graph<T> {
 
   private checkVertex(vertex: Vertex<T>): void {
     if (!this.hasVertex(vertex)) {
-      throw new Error(`Graph does not have vertex ${ vertex }`);
+      throw new Error(`Graph does not have vertex ${ String(vertex) }`);
     }
   }
 }

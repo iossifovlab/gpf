@@ -281,7 +281,11 @@ export const solveSandwich = <T>(sandwichInstance: SandwichInstance<T>): Interva
     forbiddenGraph.addEdge(edge[0], edge[1]);
   }
 
-  const lexicalSort = (a: unknown, b: unknown): number => a.toString().localeCompare(b.toString());
+  // The vertex set carries a custom toString-compatible identity that the
+  // interval-sandwich algorithm relies on for stable order; preserve it.
+  const lexicalSort = (a: unknown, b: unknown): number =>
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
+    `${a}`.localeCompare(`${b}`);
 
   let realizationsQueue = new Array<Realization<T>>();
 

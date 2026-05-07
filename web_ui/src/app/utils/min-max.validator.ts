@@ -10,7 +10,7 @@ import { NG_VALIDATORS, Validator, AbstractControl } from '@angular/forms';
 export class MinValidatorDirective implements Validator {
   @Input() public min: number;
 
-  public validate(control: AbstractControl): {[key: string]: any} {
+  public validate(control: AbstractControl): Record<string, boolean> | null {
     return Number(control.value) >= Number(this.min) ? null : {min: true};
   }
 }
@@ -24,7 +24,7 @@ export class MinValidatorDirective implements Validator {
 export class MaxValidatorDirective implements Validator {
   @Input() public max: number;
 
-  public validate(control: AbstractControl): {[key: string]: any} {
+  public validate(control: AbstractControl): Record<string, boolean> | null {
     return Number(control.value) <= Number(this.max) ? null : {max: true};
   }
 }
