@@ -20,6 +20,12 @@ ARG PYTHON_IMAGE=python:3.12-slim
 # 1) Builder: install the wheels into an isolated venv at /opt/gpf.
 FROM ${PYTHON_IMAGE} AS builder
 
+# uv 0.11.3 — same version as the four CI test Dockerfiles
+# (core/, web/, federation/, rest_client/Dockerfile). Pinned so
+# the production builder uses the same resolver behaviour the test
+# images do.
+COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /uvx /usr/local/bin/
+
 # gcc + pkg-config + libmariadb-dev for compiling mysqlclient
 # (gpf-web's [mysql] extra — no manylinux wheel exists for it
 # on PyPI, so it always builds from source against the C
@@ -32,15 +38,19 @@ RUN apt-get update \
         libmariadb-dev \
  && rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv /opt/gpf \
- && /opt/gpf/bin/pip install --no-cache-dir --upgrade pip
+# UV_LINK_MODE=copy: avoids hardlink warnings when /root/.cache/uv
+# (where uv stages downloads) and /opt/gpf are on different
+# filesystems inside Docker overlays.
+ENV UV_LINK_MODE=copy
+
+RUN uv venv /opt/gpf
 
 WORKDIR /wheels
 # gain-core wheel — copied into dist/gain/ by the parent
 # Jenkinsfile's `Fetch gain wheel` stage from gain's last
 # successful master build. gpf-core depends on gain-core, which
 # isn't on PyPI; bundling the wheel locally lets the single
-# `pip install /wheels/*.whl` below resolve everything against
+# `uv pip install /wheels/*.whl` below resolve everything against
 # the local wheel dir without needing network access to a
 # private registry or a git+ install in the image.
 COPY dist/gain/gain_core-*.whl ./
@@ -50,13 +60,22 @@ COPY dist/web/gpf_web-*.whl ./
 # Install the wheels and explicitly pin mysqlclient to match
 # gpf-web's [mysql] optional extra (pyproject.toml: mysql =
 # ["mysqlclient>=2.2"]). Adding it here rather than via the
-# extra avoids pip's awkward extras-with-file-path syntax;
+# extra avoids uv's awkward extras-with-file-path syntax;
 # downside is the version constraint is duplicated and could
 # drift if the extra is bumped — but it's a single line in two
 # files.
-RUN /opt/gpf/bin/pip install --no-cache-dir \
-        /wheels/*.whl \
-        "mysqlclient>=2.2"
+#
+# --only-binary=:all: --no-binary=mysqlclient: tb-qp5 wheels-only
+# enforcement. Any future transitive dep that lacks a wheel for
+# cp312-manylinux_x86_64 fails the build loudly instead of silently
+# growing source-build residue (and silently bloating cold-build
+# wall time). mysqlclient is the documented exception — no
+# manylinux wheel exists on PyPI; it always builds from source
+# against the libmariadb-dev installed above.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --python /opt/gpf/bin/python \
+        --only-binary=:all: --no-binary=mysqlclient \
+        /wheels/*.whl "mysqlclient>=2.2"
 
 
 # 2) Runtime: minimal slim image, just the runtime deps + the venv.
