@@ -5,7 +5,7 @@ End-to-end tests for the GPF web stack. Two ways to run them:
 - **Local dev** — fastest cycle. Run the backend with `wdaemanage runserver`, the frontend with `ng serve`, and Playwright against `http://127.0.0.1:8080/gpf`. This is what you want day-to-day.
 - **Jenkins-mirrored compose stack** — runs the same images CI runs, against the same `web_infra/compose-jenkins.yaml`. Use this only when reproducing a Jenkins-only failure.
 
-This README walks through both. For a snapshot of currently-failing tests and the cluster-level reasoning behind the CI configuration choices (single-worker backend, capped Playwright workers, OAuth seeding), see [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md) in the meta-repo.
+This README walks through both. For a snapshot of currently-failing tests and the cluster-level reasoning behind the CI configuration choices (capped Playwright workers, OAuth seeding), see [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md) in the meta-repo.
 
 ---
 
@@ -204,16 +204,15 @@ docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
     down -v --remove-orphans
 ```
 
-`-v` removes the named MariaDB volume; on next start `instance-import` re-runs from a clean DB. **Don't skip it between runs** — the instance-import script doesn't dedupe Dataset rows, and a stale DB will surface the `Dataset.dataset_id` race (see issue 1 in [`issues/br-issues.sh`](../../issues/br-issues.sh)).
+`-v` removes the named MariaDB volume; on next start `instance-import` re-runs from a clean DB.
 
 ### What's special about the compose stack
 
 A few things differ from a vanilla `wdaemanage runserver` setup. They're load-bearing:
 
-- **Backend runs `gunicorn --workers=1`.** `web_infra/compose-jenkins.yaml` overrides the production entrypoint. The 4-worker default races on `datasets_api.Dataset.recreate_dataset_perm`'s `get_or_create` — concurrent first-load workers each insert a row because `dataset_id` lacks `unique=True`, then `MultipleObjectsReturned` 500s the next request. Tracked separately in `issues/br-issues.sh`. Until that lands, keep the override.
 - **Apache (frontend) reverse-proxies `/api/`, `/ws/`, `/o/`, `/accounts/`** to the backend on port 9001. The SPA fallback `RewriteRule` excludes those prefixes so they don't get rewritten to `index.html`.
 - **`/o/` and `/accounts/` are required for OAuth.** The SPA's log-in button does `window.location = /o/authorize/?...`, which the backend redirects to `/accounts/login/`. Both must be proxied.
-- **Playwright workers are capped at 4 in CI.** With a single-worker backend, the default (CPU count, ~16) overloads `/api/v3/genotype_browser/query` past the 60s deadline. Local-dev (without `CI=1`) keeps the default.
+- **Playwright workers are capped at 4 in CI** (`playwright.config.ts`). Local-dev (without `CI=1`) keeps Playwright's default.
 - **`WDAE_EMAIL_VERIFICATION_ENDPOINT=http://frontend`.** Django bakes this URL into outbound mail; without it, the user-creation specs follow a `localhost:8000` link that chromium inside the network can't reach.
 
 ---

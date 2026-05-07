@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class Dataset(models.Model):
     """Datasets and permissions on datasets."""
 
-    dataset_id: models.TextField = models.TextField()
+    dataset_id: models.TextField = models.TextField(unique=True)
     dataset_name: models.TextField = models.TextField(default="")
     broken: models.BooleanField = models.BooleanField(default=True)
     groups: models.ManyToManyField = models.ManyToManyField(Group)

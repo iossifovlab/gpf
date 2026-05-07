@@ -27,16 +27,6 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 0 : 0,
   /* Opt out of parallel tests on CI. */
-  // Cap CI workers to 4. The compose-jenkins backend-e2e runs
-  // gunicorn --workers=1 (workaround for the gpf-web Dataset
-  // race condition) and can only serve ~4 concurrent variant
-  // queries before /api/v3/genotype_browser/query starts
-  // queueing past the test's 60s waitForRequest deadline.
-  // Default (= CPU count, ~16 on the Jenkins agents) overwhelms
-  // it and triggers timeouts in gene-browser specs that pass
-  // locally at workers=4. Local-dev (no CI env var) keeps
-  // Playwright's default parallelism since dev backends usually
-  // have more capacity.
   workers: process.env.CI ? 4 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.JENKINS ? [['junit', { outputFile: './reports/junit-report.xml' }]] : [['html']],
