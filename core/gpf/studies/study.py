@@ -53,28 +53,28 @@ class CommonStudyMixin:
     "Mixin class for common study functionality to be reused."
 
     def __init__(self, config: Box) -> None:
-        self._description: str | None = None
         self.config = config
 
     @property
     def description(self) -> str | None:
         """Load and return description of a genotype data."""
-        if self._description is None:
-            description_file = self.config["description_file"]
-            if basename(description_file) != "description.md" \
-               and not exists(description_file):
-                # If a non-default description file was given, assert it exists
-                raise ValueError(
-                    f"missing description file {description_file}")
+        # Always read from disk, no in-process cache: gunicorn runs with
+        # multiple workers; caching here would let one worker's POST update
+        # only its own copy, leaving the others serving stale content.
+        description_file = self.config["description_file"]
+        if basename(description_file) != "description.md" \
+           and not exists(description_file):
+            # If a non-default description file was given, assert it exists
+            raise ValueError(
+                f"missing description file {description_file}")
 
-            if exists(description_file):
-                # the default description file may not yet exist
-                self._description = Path(description_file).read_text()
-        return self._description
+        if not exists(description_file):
+            # the default description file may not yet exist
+            return None
+        return Path(description_file).read_text()
 
     @description.setter
     def description(self, input_text: str) -> None:
-        self._description = None
         Path(self.config["description_file"]).write_text(input_text)
 
 
@@ -89,8 +89,6 @@ class GenotypeData(CommonStudyMixin, ABC):
         super().__init__(config)
         self._registry = registry
         self.studies = studies
-
-        self._description: str | None = None
 
         self._person_set_collections: dict[str, PersonSetCollection] | None = None  # noqa: E501
         self._parents: set[str] = set()
