@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { ConfigService } from 'app/config/config.service';
 import { Observable, of } from 'rxjs';
 import { map, take } from 'rxjs/operators';
@@ -10,7 +10,7 @@ import { GeneProfiles, selectGeneProfiles } from './gene-profiles-table.state';
 @Injectable({
   providedIn: 'root'
 })
-export class GeneProfilesTableService {
+export class GeneProfilesTableService implements OnDestroy {
   private readonly genesUrl = 'gene_profiles/table/rows';
   private readonly geneSymbolsUrl = 'gene_profiles/table/gene_symbols/';
   private readonly usersUrl = 'users/user_gp_state';
@@ -22,7 +22,13 @@ export class GeneProfilesTableService {
     private store: Store,
     private user: UsersService
 
-  ) {}
+  ) {
+    window.addEventListener('pagehide', this.flushPendingSaveOnUnload);
+  }
+
+  public ngOnDestroy(): void {
+    window.removeEventListener('pagehide', this.flushPendingSaveOnUnload);
+  }
 
   public getUserGeneProfilesState(): Observable<GeneProfiles> {
     if (!this.user.cachedUserInfo()?.loggedIn) {
@@ -47,6 +53,28 @@ export class GeneProfilesTableService {
         });
     }, 1000);
   }
+
+  // The trailing-edge debounce in saveUserGeneProfilesState would otherwise
+  // drop a state mutation made within ~1s of an unload (logout, refresh,
+  // tab close, external nav). sendBeacon is the only reliable POST that
+  // survives the unload.
+  private readonly flushPendingSaveOnUnload = (): void => {
+    if (this.saveStateDebouncer === null) {
+      return;
+    }
+    clearTimeout(this.saveStateDebouncer);
+    this.saveStateDebouncer = null;
+    if (!this.user.cachedUserInfo()?.loggedIn) {
+      return;
+    }
+    this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(geneProfilesState => {
+      const body = new Blob(
+        [JSON.stringify(geneProfilesState)],
+        { type: 'application/json' },
+      );
+      navigator.sendBeacon(this.config.baseUrl + this.usersUrl, body);
+    });
+  };
 
   public getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<any[]> {
     let url = this.config.baseUrl + this.genesUrl;
