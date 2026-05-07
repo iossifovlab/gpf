@@ -19,3 +19,5 @@ STATIC_ROOT = "/static/gpf/static"
 # wrappers (gain-infra, k8s manifests) override via env if they
 # want to lock it down.
 ALLOWED_HOSTS = ["*"]
+
+STUDIES_EAGER_LOADING = True
