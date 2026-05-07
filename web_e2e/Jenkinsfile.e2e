@@ -75,10 +75,25 @@ pipeline {
     stages {
         stage('Start') {
             steps {
-                zulipSend(
-                    message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
-                    topic: "${env.JOB_NAME}",
-                )
+                script {
+                    // Replace the default '#42' with
+                    // '#42 <branch>' (plus '@<short-sha>' on
+                    // manual COMMIT_SHA pins) so the build
+                    // list makes it obvious which branch a
+                    // build is for. Set before any stage that
+                    // can fail so the label is visible even
+                    // on early aborts.
+                    String label = params.BRANCH_NAME
+                    if (params.COMMIT_SHA?.trim()) {
+                        label += " @ ${params.COMMIT_SHA.take(7)}"
+                    }
+                    currentBuild.displayName = \
+                        "#${env.BUILD_NUMBER} ${label}"
+                    zulipSend(
+                        message: "Started build #${env.BUILD_NUMBER} [${label}] of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                        topic: "${env.JOB_NAME}",
+                    )
+                }
             }
         }
 
