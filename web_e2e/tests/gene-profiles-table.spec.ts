@@ -1,6 +1,15 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, Response } from '@playwright/test';
 import * as utils from './utils';
 import { searchInGeneProfilesTable } from './utils';
+
+interface GeneProfilesState {
+  openedTabs: string[];
+  searchValue: string;
+  highlightedRows: string[];
+  sortBy: string;
+  orderBy: string;
+  headerLeaves: string[];
+}
 
 test.describe('Gene profiles row data tests', () => {
   test.beforeEach(async({ page }) => {
@@ -482,7 +491,11 @@ test.describe('Gene profiles table functionality tests', () => {
   });
 });
 
-test.describe('Gene profiles table state tests', () => {
+// Serial: every test in this block writes to the same admin user's
+// /api/v3/users/user_gp_state row. Running them in parallel lets one
+// worker's beforeEach resetGeneProfiles stomp another worker's saved
+// state during its logout/login window.
+test.describe.serial('Gene profiles table state tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
@@ -495,10 +508,9 @@ test.describe('Gene profiles table state tests', () => {
 
 
   test('should check table state when navigating to Genotype browser', async({ page }) => {
+    const finalSave = waitForChangeTableSave(page);
     await changeTable(page);
-    await page.waitForResponse(
-      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
-    );
+    await finalSave;
 
     // go to Genotype browser and return to Gene Profiles
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
@@ -513,11 +525,9 @@ test.describe('Gene profiles table state tests', () => {
   });
 
   test('should check if table state is saved when logout and login', async({ page }) => {
-    const saveStateQuery = page.waitForResponse(
-      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
-    );
+    const finalSave = waitForChangeTableSave(page);
     await changeTable(page);
-    await saveStateQuery;
+    await finalSave;
 
     await utils.logout(page);
     await page.locator('#header a:text("Gene Profiles")').click();
@@ -528,11 +538,9 @@ test.describe('Gene profiles table state tests', () => {
   });
 
   test('should check reset table button', async({ page }) => {
-    const saveStateQuery = page.waitForResponse(
-      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
-    );
+    const finalSave = waitForChangeTableSave(page);
     await changeTable(page);
-    await saveStateQuery;
+    await finalSave;
 
     await utils.resetGeneProfiles(page);
     await page.waitForSelector('gpf-gene-profiles-table');
@@ -585,6 +593,41 @@ export async function changeTable(page: Page): Promise<void> {
 
   await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
   await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
+}
+
+// Wait for the trailing debounced save that includes changeTable()'s
+// FINAL drag-drop column reorder. gene-profiles-table.service.ts uses a
+// 1s trailing-edge debouncer, so a single fingerprint on the post-drag
+// header order uniquely identifies the trailing save and subsumes every
+// earlier mutation.
+//
+// The drag-drop in changeTable() moves CHD8 target genes within the
+// relevant_gene_sets_rank group, from FIRST sub-leaf (before chromatin
+// modifiers) to a LATER position (after chromatin modifiers). Default
+// order has CHD8 first; post-drag has chromatin first.
+export function waitForChangeTableSave(page: Page): Promise<Response> {
+  return page.waitForResponse(resp => {
+    if (!resp.url().includes('/api/v3/users/user_gp_state')) {
+      return false;
+    }
+    if (resp.request().method() !== 'POST') {
+      return false;
+    }
+    if (resp.status() !== 204) {
+      return false;
+    }
+    const body = resp.request().postDataJSON() as GeneProfilesState | null;
+    if (!body?.headerLeaves) {
+      return false;
+    }
+    const idxChd8 = body.headerLeaves.indexOf(
+      'relevant_gene_sets_rank.CHD8 target genes',
+    );
+    const idxChromatin = body.headerLeaves.indexOf(
+      'relevant_gene_sets_rank.chromatin modifiers',
+    );
+    return idxChd8 > 0 && idxChromatin > 0 && idxChd8 > idxChromatin;
+  });
 }
 
 async function checkDefaultTable(page: Page): Promise<void> {
