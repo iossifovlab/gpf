@@ -5,7 +5,7 @@ import { scanCSV } from 'nodejs-polars';
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
   });
 
@@ -23,7 +23,7 @@ test.describe('Gene browser basic display tests before query', () => {
 test.describe('Gene browser basic display tests after query', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Gene browser');
     await page.getByPlaceholder('Search gene').pressSequentially('chd8');
     await page.getByRole('button', { name: 'Go' }).click();
@@ -64,7 +64,7 @@ test.describe('Gene browser basic display tests after query', () => {
 test.describe('Gene browser family alleles count and table tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Gene browser');
     await page.getByPlaceholder('Search gene').pressSequentially('chd8');
     await page.getByRole('button', { name: 'Go' }).click();
@@ -131,7 +131,7 @@ test.describe('Gene browser family alleles count and table tests', () => {
 test.describe('Gene browser download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Gene browser');
   });
   const tests = [

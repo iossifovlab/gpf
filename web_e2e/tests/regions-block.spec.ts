@@ -5,7 +5,7 @@ test.describe('Regions block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 

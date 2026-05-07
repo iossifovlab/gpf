@@ -4,7 +4,7 @@ import * as utils from './utils';
 test.describe('Unique family variants filter tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
   });
 
   test('should disable unique family variants filter on a study', async({ page }) => {

@@ -1,5 +1,20 @@
 import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
+import { loginLiteralAdmin, LITERAL_ADMIN_EMAIL } from './_literal_admin';
+
+// tb-nxl: this is the only spec file allowed to import _literal_admin.
+// Jenkinsfile.e2e enforces this with a CI grep step. All other specs
+// must use utils.loginWorkerUser() — the per-worker pool that breaks
+// admin-row sharing across parallel workers.
+//
+// File-level serial mode: every test here writes to /management or
+// asserts on shared admin/group/dataset state. Two .serial describes
+// in the same file would still fan out across workers under
+// fullyParallel: true, so we configure the whole file as serial — all
+// tests run sequentially on a single worker. Slow but correct; the
+// alternative (cross-describe admin-row writes) is what tb-nxl exists
+// to prevent.
+test.describe.configure({ mode: 'serial' });
 
 test.describe('Management tests for reset password in Users', () => {
   test.beforeEach(async({ page }) => {
@@ -7,7 +22,7 @@ test.describe('Management tests for reset password in Users', () => {
   });
 
   test('should reset password', async({ page }) => {
-    await utils.login(page);
+    await loginLiteralAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
@@ -34,7 +49,7 @@ test.describe('Management tests for reset password in Users', () => {
   });
 
   test('should reset password when login', async({ page }) => {
-    await utils.loginAdmin(page);
+    await loginLiteralAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
@@ -68,7 +83,7 @@ test.describe('Management tests for reset password in Users', () => {
 test.describe('Users management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await loginLiteralAdmin(page);
     await navigateToManagement(page);
   });
   test('should not create user with already used email', async({ page }) => {
@@ -235,7 +250,7 @@ test.describe('Users management', () => {
 test.describe('Groups management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await loginLiteralAdmin(page);
     await page.locator('a:text("Management")').click();
   });
 
@@ -517,7 +532,7 @@ test.describe('Groups management', () => {
 test.describe('Datasets management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await loginLiteralAdmin(page);
     await navigateToManagement(page);
   });
 
@@ -700,6 +715,151 @@ test.describe('Datasets management', () => {
     await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).toContainText(groupName);
     await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(email);
     await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(username);
+  });
+});
+
+// tb-nxl: tests folded in from app.spec.ts. These need the admin group
+// (Management nav button visibility, /management write-throughs) and
+// so go through loginLiteralAdmin. Kept as a separate describe block
+// so the origin is visible; runs serial under the file-level config.
+test.describe('Admin surface (folded from app.spec.ts, tb-nxl)', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.navigateToHome(page);
+  });
+
+  test('should click on the "Management" button and navigate to "/management"', async({ page }) => {
+    const managementUrl = `${utils.frontendUrl}/management`;
+
+    await loginLiteralAdmin(page);
+
+    await page.locator('a:text("Management")').click();
+
+    const currentUrl = page.url();
+
+    expect(currentUrl).toBe(managementUrl);
+  });
+
+  test(`should check navigation bar for the right elements for ${LITERAL_ADMIN_EMAIL} user`, async({ page }) => {
+    await loginLiteralAdmin(page);
+
+    const navigationTabs = ['Home', 'Datasets', 'Gene profiles', 'User profile', 'Management', 'About'];
+    await expect(page.locator('#header a')).toHaveCount(navigationTabs.length);
+
+    for (const tab of navigationTabs) {
+      await expect(page.locator('#header a').getByText(tab)).toBeVisible();
+    }
+  });
+
+  test('should login admin and give user access rights for Hello World Genotypes, ' +
+       'then login user and verify his rights', async({ page }) => {
+    const newUserPasswordSuffix = '!!__3456';
+    await loginLiteralAdmin(page);
+    const username = utils.getRandomString();
+    const email = `${username}@mail.com`;
+
+    await page.locator('a:text("Management")').click();
+    await utils.createUser(page, email, username);
+
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
+      'button', { name: 'Add' }
+    ).click();
+    await page.getByRole('textbox', { name: 'Search' }).focus();
+    await page.keyboard.type('helloworld_genotypes');
+    await page.locator('button.add-item-button').filter({ hasText: 'helloworld_genotypes' }).click();
+    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
+
+    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
+    await page.locator('button:text("Reset")').click();
+    await utils.logout(page);
+
+    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
+    await page.getByText(email).first().click();
+    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+
+    await page.locator('#id_new_password1').fill('secret' + newUserPasswordSuffix);
+    await page.locator('#id_new_password2').fill('secret' + newUserPasswordSuffix);
+    await page.locator('input[value="Reset password"]').click();
+    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
+
+    await utils.login(page, email, 'secret' + newUserPasswordSuffix);
+
+    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
+    await expect(page.locator('#register-alert')).toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
+    await expect(page.locator('#register-alert')).toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
+    await expect(page.locator('#register-alert')).toBeVisible();
+  });
+
+  test('should login admin and give user access rights for ALL Genotypes, ' +
+     'then login user and verify his rights', async({ page }) => {
+    const newUserPasswordSuffix = '!!__3456';
+    await loginLiteralAdmin(page);
+    const username = utils.getRandomString();
+    const email = `${username}@mail.com`;
+
+    await page.locator('a:text("Management")').click();
+    await utils.createUser(page, email, username);
+
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
+      'button', { name: 'Add' }
+    ).click();
+    await page.getByRole('textbox', { name: 'Search' }).fill('ALL_genotypes');
+    await page.getByRole('button', { name: 'ALL_genotypes', exact: true }).click();
+    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
+
+    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
+    await page.locator('button:text("Reset")').click();
+    await utils.logout(page);
+
+    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
+    await page.getByText(email).first().click();
+    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+
+    await page.locator('#id_new_password1').fill('secret' + newUserPasswordSuffix);
+    await page.locator('#id_new_password2').fill('secret' + newUserPasswordSuffix);
+    await page.locator('input[value="Reset password"]').click();
+
+    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
+
+    await utils.login(page, email, 'secret' + newUserPasswordSuffix);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
+    await expect(page.locator('#register-alert')).toBeVisible();
   });
 });
 

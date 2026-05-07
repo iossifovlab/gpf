@@ -311,7 +311,7 @@ test.describe('Gene profiles gene comparison tests', () => {
 test.describe('Gene profiles table functionality tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('#header a:text("Gene Profiles")').click();
     await page.waitForSelector('gpf-gene-profiles-table');
     await page.waitForSelector('#loading', {state: 'detached'});

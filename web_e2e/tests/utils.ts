@@ -21,8 +21,13 @@ export const mailhogUrl = 'http://mail:8025';
 // export const frontendUrl = 'http://localhost:4200';
 // export const mailhogUrl = 'http://localhost:8025';
 
-export const username = process.env.GPF_STAGING_USERNAME ? process.env.GPF_STAGING_USERNAME : 'admin@iossifovlab.com';
-export const password = process.env.GPF_STAGING_PASSWORD ? process.env.GPF_STAGING_PASSWORD : 'secret';
+// tb-nxl: the `username` / `password` exports that lived here used to
+// silently default `login(page)` to admin@iossifovlab.com — exactly the
+// racy default this refactor exists to remove. The literal-admin
+// fallback (including the GPF_STAGING_USERNAME / GPF_STAGING_PASSWORD
+// env-var override for staging) now lives in tests/_literal_admin.ts,
+// scoped to the one spec allowed to use literal admin
+// (user-management.spec.ts).
 
 export const datasetIds = {
   allGenotypes: 'ALL Genotypes',
@@ -53,25 +58,27 @@ export async function logout(page: Page): Promise<void> {
   await page.waitForSelector('#log-in-button');
 }
 
-export async function login(page: Page, user = username, pass = password): Promise<void> {
-  if (user === undefined || pass === undefined) {
-    return;
-  }
+// tb-nxl: signature tightened — `user` no longer defaults to admin. Bare
+// `utils.login(page)` is now a TypeScript compile error (it used to
+// silently log in as admin@iossifovlab.com via the dropped `username`
+// export). Specs that want an isolated logged-in user use
+// loginWorkerUser(page) below; the one spec that needs literal admin
+// uses loginLiteralAdmin from tests/_literal_admin.ts. Bare explicit
+// callsites like `utils.login(page, 'research@iossifovlab.com')`
+// continue to work (the `pass` default of 'secret' covers the
+// provisioned test users).
+export async function login(page: Page, user: string, pass: string = 'secret'): Promise<void> {
   await page.locator('#log-in-button').click();
   expect(page.url()).toContain('login');
 
   await page.locator('#id_username').fill(user);
   await page.locator('#id_password').fill(pass);
   await Promise.all([
-    await page.waitForLoadState(),
-    await page.locator('.login-button').click()
+    page.waitForLoadState(),
+    page.locator('.login-button').click(),
   ]);
 
   await page.waitForSelector('#log-out-button');
-}
-
-export async function loginAdmin(page: Page, user = username, pass = password): Promise<void> {
-  await login(page, user, pass);
 }
 
 // tb-nxl: per-worker user pool. Reads Playwright's auto-exported

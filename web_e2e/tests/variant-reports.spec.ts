@@ -26,7 +26,7 @@ const tags: string[] = [
 test.describe('Variant reports tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.login(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
@@ -306,7 +306,7 @@ test.describe('Variant reports tests', () => {
 test.describe('Variant reports download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.login(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
@@ -373,7 +373,7 @@ test.describe('Variant reports download tests', () => {
 test.describe('Variant reports Iossifov count tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.login(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();

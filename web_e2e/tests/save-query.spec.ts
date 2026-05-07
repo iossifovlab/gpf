@@ -5,7 +5,7 @@ test.describe('Save query common tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await expect(page.locator('#save-query-dropdown')).toHaveAttribute('class', 'dropdown-menu');
     await page.locator('#save-query-dropdown-button').click();
@@ -24,7 +24,7 @@ test.describe('Save query tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
   });
 
   test('should open save query dropdown menu after pressing "Share/save query" button', async({ page }) => {

@@ -9,7 +9,7 @@ import * as utils from './utils';
 test.describe.serial('Home page description tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
-    await utils.login(page);
+    await utils.loginWorkerUser(page);
     await page.waitForSelector('gpf-home');
   });
 
@@ -41,7 +41,7 @@ test.describe.serial('Home page description tests', () => {
     await expect(page.locator('#edit-container p')).toHaveText('Test description');
     await expect(page.locator('#edit-icon')).not.toBeVisible();
 
-    await utils.login(page);
+    await utils.loginWorkerUser(page);
     await page.waitForSelector('gpf-home');
 
     await page.locator('#edit-icon').click();
@@ -59,7 +59,7 @@ test.describe.serial('Home page description tests', () => {
 test.describe('Home page tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
-    await utils.login(page);
+    await utils.loginWorkerUser(page);
     await page.waitForSelector('gpf-home');
   });
 
@@ -193,7 +193,7 @@ test.describe('Home page tests', () => {
     await expect(helloWorldGenotypesIcons.locator('.transmitted-icon')).toHaveCSS('color', 'rgb(220, 220, 220)');
     await expect(helloWorldGenotypesIcons.locator('.phenotype-icon')).toHaveCSS('color', 'rgb(220, 220, 220)');
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
 
     await expect(helloWorldGenotypesIcons).toHaveText('geneticskid_starfamily_historyhow_to_reg');
     await expect(helloWorldGenotypesIcons.locator('.denovo-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');

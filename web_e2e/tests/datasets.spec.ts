@@ -4,7 +4,7 @@ import * as utils from './utils';
 test.describe('Dataset navigation tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Dataset Statistics');
   });
 
@@ -78,7 +78,7 @@ test.describe('Dataset navigation tests', () => {
 test.describe('Access rights and icons', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
   });
   test('list of icons of different datasets in datasets dropdown', async({ page }) => {
     await utils.openDatasetDropdown(page);
@@ -129,7 +129,7 @@ test.describe('Access rights and icons', () => {
     await expect(helloWorldGenotypes.locator('.transmitted-icon')).toHaveCSS('color', 'rgb(220, 220, 220)');
     await expect(helloWorldGenotypes.locator('.phenotype-icon')).toHaveCSS('color', 'rgb(220, 220, 220)');
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.openDatasetDropdown(page);
 
     await expect(helloWorldGenotypes).toHaveText('Hello World Genotypesgeneticskid_starfamily_historyhow_to_reg');
@@ -149,7 +149,7 @@ test.describe('Access rights and icons', () => {
       page.locator('#datasets-dropdown-menu-button').locator('.phenotype-icon')
     ).toHaveCSS('color', 'rgb(220, 220, 220)');
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
     await expect(
       page.locator('#datasets-dropdown-menu-button').locator('.transmitted-icon')
@@ -168,7 +168,7 @@ test.describe('Access rights and icons', () => {
     await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
 
     // add any_user group to study
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await searchInTable(page, study);
@@ -194,7 +194,7 @@ test.describe('Access rights and icons', () => {
     await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
 
     // remove any_user from list of groups of the study
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await searchInTable(page, study);
@@ -213,7 +213,7 @@ test.describe('Access rights and icons', () => {
 
     // add group to reasearcher
     const researcher = 'research@iossifovlab.com';
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await searchInTable(page, researcher);
 
@@ -238,7 +238,7 @@ test.describe('Access rights and icons', () => {
 
     // remove group from groups list of research
     await utils.logout(page);
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await searchInTable(page, researcher);
 
@@ -259,7 +259,7 @@ test.describe('Access rights and icons', () => {
     await expect(page.locator('#download-measures')).toContainClass('disabled-download');
 
     // add any_user group to pheno study
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await searchInTable(page, study);
@@ -279,7 +279,7 @@ test.describe('Access rights and icons', () => {
     await expect(page.locator('#download-measures')).not.toContainClass('disabled-download');
 
     // remove any_user from list of groups of the pheno study
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await searchInTable(page, study);
@@ -299,7 +299,7 @@ test.describe('Access rights and icons', () => {
     await expect(page.locator('#download-measures')).toContainClass('disabled-download');
 
     // add pheno group to reasearcher
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await searchInTable(page, researcher);
 
@@ -319,7 +319,7 @@ test.describe('Access rights and icons', () => {
 
     // remove pheno group from groups list of research
     await utils.logout(page);
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Management")').click();
     await searchInTable(page, researcher);
 

@@ -7,7 +7,7 @@ import { scanCSV } from 'nodejs-polars';
 test.describe('Genes block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
@@ -55,7 +55,7 @@ test.describe('Genes block tests', () => {
 test.describe('Genes sybmols tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
     await page.getByRole('tab', { name: 'Gene Symbols' }).click();
   });
@@ -239,7 +239,7 @@ test.describe('Genes sybmols tests', () => {
 test.describe('Genes sets tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
@@ -344,7 +344,7 @@ test.describe('Genes sets tests', () => {
 test.describe('Gene block download tests ', () => {
 test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
 });
 
@@ -409,7 +409,7 @@ test.beforeEach(async({ page }) => {
 test.describe('Denovo gene set tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, { waitUntil: 'load' });
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
   });
 

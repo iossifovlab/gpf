@@ -66,7 +66,7 @@ test.describe('Gene profiles single view basic tests', () => {
 test.describe('Gene profiles navigation to single view tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('#header a:text("Gene Profiles")').click();
 
     await utils.resetGeneProfiles(page);
@@ -287,7 +287,7 @@ export const geneData =
 test.describe('Gene profiles single view dynamic data and links tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('#header a:text("Gene Profiles")').click();
 
     await utils.resetGeneProfiles(page);

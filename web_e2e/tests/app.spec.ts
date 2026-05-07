@@ -16,7 +16,7 @@ test.describe('App tests', () => {
   });
 
   test('should display "GPF: Genotypes and Phenotypes in Families" as a title', async({ page }) => {
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     const titleElement = page.title();
 
     const titleText = await titleElement;
@@ -27,7 +27,7 @@ test.describe('App tests', () => {
      'navigate to "/datasets/ALL_genotypes/gene-browser"', async({ page }) => {
     const expectedUrl = `${utils.frontendUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`;
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Gene browser');
 
     const currentUrl = page.url();
@@ -40,7 +40,7 @@ test.describe('App tests', () => {
   }) => {
     const savedQueriesUrl = `${utils.frontendUrl}/user-profile`;
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("User Profile")').click();
 
     const currentUrl = page.url();
@@ -48,23 +48,15 @@ test.describe('App tests', () => {
     expect(currentUrl).toBe(savedQueriesUrl);
   });
 
-  test('should click on the "Management" button and navigate to "/management"', async({ page }) => {
-    const managementUrl = `${utils.frontendUrl}/management`;
-
-    await utils.loginAdmin(page);
-
-    await page.locator('a:text("Management")').click();
-
-    const currentUrl = page.url();
-
-    expect(currentUrl).toBe(managementUrl);
-  });
+  // tb-nxl: the "Management button → /management" test moved to
+  // user-management.spec.ts — it asserts on the admin group's Management
+  // tab and so requires loginLiteralAdmin.
 
   test('should click on the "Gene profiles" button and ' +
      'navigate to "/autism-gene-profiles"', async({ page }) => {
     const geneProfilesUrl = `${utils.frontendUrl}/gene-profiles`;
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await page.locator('#header a:text("Gene Profiles")').click();
 
     const currentUrl = page.url();
@@ -74,6 +66,9 @@ test.describe('App tests', () => {
 });
 
 test.describe('App user access rights tests', () => {
+  // tb-nxl: admin entry was deliberately removed; the admin nav-bar
+  // assertion lives in user-management.spec.ts (it requires
+  // loginLiteralAdmin to see the Management tab).
   const userData = {
     unauthorized: {
       username: undefined,
@@ -89,13 +84,6 @@ test.describe('App user access rights tests', () => {
       navigationTabsCount: 5,
       navigationTabs: ['Home', 'Datasets', 'Gene profiles', 'User profile', 'About']
     },
-    admin: {
-      username: 'admin@iossifovlab.com',
-      password: 'secret',
-      hasDatasetRights: true,
-      navigationTabsCount: 6,
-      navigationTabs: ['Home', 'Datasets', 'Gene profiles', 'User profile', 'Management', 'About']
-    }
   };
 
   test.beforeEach(async({ page }) => {
@@ -128,7 +116,7 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
 
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
@@ -148,9 +136,9 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
   });
 
-  test('should login admin and check whether the phenotype and transmitted icons ' +
-    'have the correct color', async({ page }) => {
-    await utils.login(page, userData.admin.username, userData.admin.password);
+  test('should check that an authenticated worker user sees the phenotype and ' +
+    'transmitted icons in the dimmed-but-visible style', async({ page }) => {
+    await utils.loginWorkerUser(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
@@ -185,120 +173,15 @@ test.describe('App user access rights tests', () => {
     ).toHaveCSS('color', 'rgb(220, 220, 220)');
   });
 
-  test('should login admin and give user access rights for Hello World Genotypes, ' +
-       'then login user and verify his rights', async({ page }) => {
-    await utils.loginAdmin(page);
-    const username = utils.getRandomString();
-    const email = `${username}@mail.com`;
-
-    await page.locator('a:text("Management")').click();
-    await utils.createUser(page, email, username);
-
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
-      'button', { name: 'Add' }
-    ).click();
-    await page.getByRole('textbox', { name: 'Search' }).focus();
-    await page.keyboard.type('helloworld_genotypes');
-    await page.locator('button.add-item-button').filter({ hasText: 'helloworld_genotypes' }).click();
-    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
-
-    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
-    await page.locator('button:text("Reset")').click();
-    await utils.logout(page);
-
-    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText(email).first().click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
-
-    await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
-    await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
-    await page.locator('input[value="Reset password"]').click();
-    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
-
-    await utils.login(page, email, userData.normal.password + '!!__3456');
-
-    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    await expect(page.locator('#register-alert')).toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    await expect(page.locator('#register-alert')).toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
-    await expect(page.locator('#register-alert')).toBeVisible();
-  });
-
-  test('should login admin and give user access rights for ALL Genotypes, ' +
-     'then login user and verify his rights', async({ page }) => {
-    await utils.loginAdmin(page);
-    const username = utils.getRandomString();
-    const email = `${username}@mail.com`;
-
-    await page.locator('a:text("Management")').click();
-    await utils.createUser(page, email, username);
-
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
-      'button', { name: 'Add' }
-    ).click();
-    await page.getByRole('textbox', { name: 'Search' }).fill('ALL_genotypes');
-    await page.getByRole('button', { name: 'ALL_genotypes', exact: true }).click();
-    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
-
-    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
-    await page.locator('button:text("Reset")').click();
-    await utils.logout(page);
-
-    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText(email).first().click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
-
-    await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
-    await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
-    await page.locator('input[value="Reset password"]').click();
-
-    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
-
-    await utils.login(page, email, userData.normal.password + '!!__3456');
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
-
-    await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
-    await expect(page.locator('#register-alert')).toBeVisible();
-  });
+  // tb-nxl: the two "give user access rights" tests (Hello World and ALL
+  // Genotypes) moved to user-management.spec.ts — they create users via
+  // /management, which requires the admin group via loginLiteralAdmin.
 
   test('if Gene Browser tool is opened by default', async({ page }) => {
     await page.locator('a').filter({ hasText: 'Datasets'}).click();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
 
     await utils.logout(page);
@@ -311,10 +194,9 @@ test.describe('App user access rights tests', () => {
   test('should login and logout repeatedly', async({ page }) => {
     for (let i = 0; i < 10; i++) {
       /* eslint-disable no-await-in-loop */
-      await utils.loginAdmin(page);
+      await utils.loginWorkerUser(page);
       await utils.logout(page);
       /* eslint-enable */
     }
   });
 });
-

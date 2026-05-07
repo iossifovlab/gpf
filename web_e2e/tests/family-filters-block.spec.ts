@@ -6,7 +6,7 @@ import { scanCSV } from 'nodejs-polars';
 test.describe('Family filters block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
   });
 
@@ -260,7 +260,7 @@ test.describe('Family filters block tests', () => {
 test.describe('Pheno Measures tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
   });
 

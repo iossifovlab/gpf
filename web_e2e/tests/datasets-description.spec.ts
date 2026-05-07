@@ -9,7 +9,7 @@ import * as utils from './utils';
 test.describe.serial('Dataset description tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Dataset description');
   });
 
@@ -99,7 +99,7 @@ test.describe.serial('Dataset description tests', () => {
 test.describe('Dataset description access rights tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
   });
 
   test('should always show the dataset description button if the user is admin', async({ page }) => {
@@ -170,7 +170,7 @@ test.describe('Dataset description access rights tests', () => {
     await expect(page.locator('#edit-icon')).not.toBeVisible();
     await utils.logout(page);
 
-    await utils.loginAdmin(page);
+    await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('');
