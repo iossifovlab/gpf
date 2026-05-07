@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe('Dataset description tests', () => {
+// Serial: 'should save the markdown' writes/clears the shared denovoHelloWorld
+// dataset description file, while 'should display empty description placeholder
+// text' asserts #empty-description is visible. In parallel workers the sibling
+// can land between the write and the clear and see content instead of empty,
+// or vice versa. Same shape as the home-page-description fix (tb-lmz).
+test.describe.serial('Dataset description tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
@@ -65,15 +70,28 @@ test.describe('Dataset description tests', () => {
     await expect(page.locator('#empty-description')).toBeVisible();
     await expect(page.locator('markdown p')).not.toBeVisible();
 
+    // The SPA's markdown-editor save() does an optimistic UI update + a
+    // fire-and-forget POST to /datasets/description/<id>. Without waiting
+    // for the response the page can be torn down before the POST reaches
+    // the backend, leaving stale content for the next test run.
+    const isDescriptionSave = (resp: import('@playwright/test').Response): boolean =>
+      resp.url().includes('/api/v3/datasets/description/') && resp.request().method() === 'POST';
+
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').type('TEST DESCRIPTION ASDF');
-    await page.getByText('Save').click();
+    await Promise.all([
+      page.waitForResponse(isDescriptionSave),
+      page.getByText('Save').click(),
+    ]);
     await expect(page.locator('markdown p')).toHaveText('TEST DESCRIPTION ASDF');
     await expect(page.locator('#empty-description')).not.toBeVisible();
 
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('');
-    await page.getByText('Save').click();
+    await Promise.all([
+      page.waitForResponse(isDescriptionSave),
+      page.getByText('Save').click(),
+    ]);
     await expect(page.locator('#empty-description')).toBeVisible();
   });
 });
