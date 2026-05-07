@@ -92,5 +92,5 @@ EXPOSE 9001
 ENTRYPOINT ["gunicorn", \
             "gpf_web.wsgi:application", \
             "--bind", "0.0.0.0:9001", \
-            "--workers", "4", \
+            "--workers", "16", \
             "--timeout", "1200"]
