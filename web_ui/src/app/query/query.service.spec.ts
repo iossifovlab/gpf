@@ -375,7 +375,7 @@ describe('QueryService', () => {
     service['oboeInstance'] = {
       url: 'url',
       abort: (): void => {}
-    };
+    } as unknown as typeof service['oboeInstance'];
 
     const oboeInstanceSpy = jest.spyOn(service['oboeInstance'], 'abort');
     service.cancelStreamPost();
@@ -388,7 +388,7 @@ describe('QueryService', () => {
     service['summaryOboeInstance'] = {
       url: 'url',
       abort: (): void => {}
-    };
+    } as unknown as typeof service['summaryOboeInstance'];
 
     const summaryOboeInstanceSpy = jest.spyOn(service['summaryOboeInstance'], 'abort');
     service.cancelSummaryStreamPost();

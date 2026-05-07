@@ -58,7 +58,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
   public selectedDatasetId: string;
   public selectedDataset: Dataset;
 
-  public genotypeBrowserState: object;
+  public genotypeBrowserState: Record<string, unknown>;
   public loadingFinished: boolean;
 
   public variantsCountDisplay: string;

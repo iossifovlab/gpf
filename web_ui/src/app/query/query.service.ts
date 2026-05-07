@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
@@ -11,6 +11,8 @@ import { Dataset } from 'app/datasets/datasets';
 import { AuthService } from 'app/auth.service';
 import oboe from 'oboe';
 import { InstanceService } from 'app/instance.service';
+
+type QueryFilter = Record<string, unknown>;
 
 @Injectable()
 export class QueryService {
@@ -25,16 +27,16 @@ export class QueryService {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
-  private oboeInstance = null;
-  private summaryOboeInstance = null;
-  public streamingSubject = new Subject();
+  private oboeInstance: oboe.Instance | null = null;
+  private summaryOboeInstance: oboe.Instance | null = null;
+  public streamingSubject = new Subject<unknown>();
   public summaryStreamingSubject = new Subject<object>();
-  public streamingStartSubject = new Subject();
-  public streamingUpdateSubject = new Subject();
-  public streamingFinishedSubject = new Subject();
-  public summaryStreamingFinishedSubject = new Subject();
+  public streamingStartSubject = new Subject<boolean>();
+  public streamingUpdateSubject = new Subject<boolean>();
+  public streamingFinishedSubject = new Subject<boolean>();
+  public summaryStreamingFinishedSubject = new Subject<boolean>();
 
-  private familyVariantsSubscription = null;
+  private familyVariantsSubscription: Subscription | null = null;
 
   public constructor(
     private location: Location,
@@ -56,10 +58,10 @@ export class QueryService {
     return this.oboeInstance !== null;
   }
 
-  public streamPost(url: string, filter) {
+  public streamPost(url: string, filter: QueryFilter): Subject<unknown> {
     this.cancelStreamPost();
 
-    const headers = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.authService.accessToken !== '') {
       headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
@@ -74,11 +76,11 @@ export class QueryService {
     }).node('!.*', data => {
       this.streamingUpdateSubject.next(true);
       this.streamingSubject.next(data);
-    }).done(_data => {
+    }).done(() => {
       this.streamingFinishedSubject.next(true);
       // Emit null so the loading service can stop the loading overlay even if no variants were received
       this.streamingSubject.next(null);
-      this.familyVariantsSubscription.unsubscribe();
+      this.familyVariantsSubscription?.unsubscribe();
       this.familyVariantsSubscription = null;
       this.oboeInstance = null;
     }).fail(error => {
@@ -99,10 +101,10 @@ export class QueryService {
     }
   }
 
-  public summaryStreamPost(url: string, filter): Subject<object> {
+  public summaryStreamPost(url: string, filter: QueryFilter): Subject<object> {
     this.cancelSummaryStreamPost();
 
-    const headers = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.authService.accessToken !== '') {
       headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
@@ -114,7 +116,7 @@ export class QueryService {
       body: filter,
       withCredentials: true
     }).node('!.*', data => {
-      this.summaryStreamingSubject.next(data);
+      this.summaryStreamingSubject.next(data as object);
     }).done(() => {
       this.summaryStreamingFinishedSubject.next(true);
       this.summaryStreamingSubject.next(null);
@@ -129,12 +131,11 @@ export class QueryService {
   }
 
   public getGenotypePreviewVariantsByFilter(
-    dataset: Dataset, filter, maxVariantsCount: number = 1001,
+    dataset: Dataset, filter: QueryFilter, maxVariantsCount: number = 1001,
     callback?: () => void,
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
-    const queryFilter = { ...filter };
-    queryFilter['maxVariantsCount'] = maxVariantsCount;
+    const queryFilter: QueryFilter = { ...filter, maxVariantsCount: maxVariantsCount };
 
     this.familyVariantsSubscription = this.instanceService.getGenome().pipe(
       take(1),
@@ -142,7 +143,7 @@ export class QueryService {
         this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).pipe(
           tap(variant => {
             genotypePreviewVariantsArray.addPreviewVariant(
-              <Array<string>>variant,
+              variant as string[],
               dataset.genotypeBrowserConfig.columnIds
             );
             if (callback !== undefined) {
