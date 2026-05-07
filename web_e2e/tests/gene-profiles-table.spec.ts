@@ -496,18 +496,15 @@ test.describe('Gene profiles table functionality tests', () => {
 // worker's beforeEach resetGeneProfiles stomp another worker's saved
 // state during its logout/login window.
 //
-// Dedicated user: tb-wtc — the 'Gene profiles table functionality
-// tests' block above also logs in as admin and resets admin's
-// gp_user_state in its beforeEach. A functionality reset landing
-// between this block's `await finalSave` and its readback GET wipes
-// the row, the GET returns 204, and the SPA leaves the input empty.
-// Pinning this block to its own user (gp_state_test, provisioned in
-// gpf_e2e_instance/import_data.sh) breaks the admin-row sharing.
-const stateTestUser = 'gp_state_test@iossifovlab.com';
+// tb-nxl: the per-worker user pool (utils.loginWorkerUser) replaces
+// the tb-wtc-era gp_state_test pin — different Playwright workers
+// log in as different e2e_worker_<N> users, so the cross-block
+// stomping that motivated the dedicated user is gone. .serial here
+// remains for intra-block ordering between the three state tests.
 test.describe.serial('Gene profiles table state tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await utils.login(page, stateTestUser);
+    await utils.loginWorkerUser(page);
     await page.locator('#header a:text("Gene Profiles")').click();
     await page.waitForSelector('gpf-gene-profiles-table');
     await page.waitForSelector('#loading', {state: 'detached'});
@@ -542,7 +539,7 @@ test.describe.serial('Gene profiles table state tests', () => {
     await page.locator('#header a:text("Gene Profiles")').click();
     await checkDefaultTable(page);
 
-    await utils.login(page, stateTestUser);
+    await utils.loginWorkerUser(page);
     await checkTable(page);
   });
 

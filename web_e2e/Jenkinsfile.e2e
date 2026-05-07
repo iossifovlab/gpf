@@ -140,6 +140,37 @@ pipeline {
             }
         }
 
+        stage('Lint specs') {
+            // tb-nxl: structural guard. tests/_literal_admin.ts is
+            // intentionally not re-exported from tests/utils.ts — it's
+            // a separately-imported module so there's no obvious path
+            // for a non-management spec to reach loginLiteralAdmin.
+            // This grep is the second layer: if any spec other than
+            // user-management.spec.ts adds the import, the build fails
+            // here before any image work. The import-line pattern
+            // (`from './_literal_admin'`) is precise — comment-mention
+            // of the symbol elsewhere doesn't match.
+            steps {
+                sh '''
+                    set -eu
+                    leaks=$(grep -lE "from ['\\\"]\\./_literal_admin['\\\"]" \
+                                 web_e2e/tests/*.spec.ts \
+                            | grep -vE 'user-management\\.spec\\.ts$' || true)
+                    if [ -n "$leaks" ]; then
+                        echo "ERROR: tb-nxl structural guard violated." >&2
+                        echo "loginLiteralAdmin must only be imported from " >&2
+                        echo "  web_e2e/tests/user-management.spec.ts" >&2
+                        echo "but the following specs also import it:" >&2
+                        echo "$leaks" >&2
+                        echo "" >&2
+                        echo "Use utils.loginWorkerUser(page) instead — see" >&2
+                        echo "specs/2026-05-07-tb-nxl-web_e2e-per-worker-user-pool.md" >&2
+                        exit 1
+                    fi
+                '''
+            }
+        }
+
         stage('Prepare backend/frontend images') {
             // Three paths:
             //   1. Master / gpf-gain-split triggered downstream
