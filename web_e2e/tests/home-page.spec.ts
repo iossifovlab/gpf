@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe('Home page description tests', () => {
+// Serial: every test in this block writes the same global
+// /api/v3/instance/description file. Running them in parallel
+// workers lets one test's clear-and-save stomp another test's
+// expected description right when the second test logs out and
+// the SPA's full-reload re-fetches the description.
+test.describe.serial('Home page description tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
     await utils.login(page);
