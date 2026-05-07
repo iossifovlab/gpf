@@ -290,8 +290,10 @@ test.describe('Genes sets tests', () => {
   test('should select gene set, share query then check the state of gene set', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
     await page.getByRole('tab', { name: 'Gene Sets' }).click();
-    await page.locator('select#selected-collection').selectOption('GO Terms');
-    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
+    await Promise.all([
+      page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets'),
+      page.locator('select#selected-collection').selectOption('GO Terms'),
+    ]);
 
     await page.getByPlaceholder('Select or start typing to search').pressSequentially('GO:0000003');
 

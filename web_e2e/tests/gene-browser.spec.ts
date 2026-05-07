@@ -92,8 +92,10 @@ test.describe('Gene browser family alleles count and table tests', () => {
     test('should display the correct value when filtering with the "'
           + testCase.checkbox + '" checkbox and ' + testCase.type, async({ page }
     ) => {
-      await getAnyFilter(page, testCase.type, testCase.checkbox).click();
-      await page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query');
+      await Promise.all([
+        page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query'),
+        getAnyFilter(page, testCase.type, testCase.checkbox).click(),
+      ]);
       await expect(page.locator('#family-variants-count span')).toHaveText(testCase.expectedFamilyAllelesCount);
     });
   });
@@ -153,10 +155,14 @@ test.describe('Gene browser download tests', () => {
       await page.locator('#search-box').pressSequentially(gene);
       await page.locator('#search-box').press('Enter');
 
-      await getAnyFilter(page, filtersToUncheck[0].field, filtersToUncheck[0].filter).click();
-      await page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query');
-      await getAnyFilter(page, filtersToUncheck[1].field, filtersToUncheck[1].filter).click();
-      await page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query');
+      await Promise.all([
+        page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query'),
+        getAnyFilter(page, filtersToUncheck[0].field, filtersToUncheck[0].filter).click(),
+      ]);
+      await Promise.all([
+        page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query'),
+        getAnyFilter(page, filtersToUncheck[1].field, filtersToUncheck[1].filter).click(),
+      ]);
 
       const downloadPromise = page.waitForEvent('download');
       await page.locator('#download-family-variants-button').click();
