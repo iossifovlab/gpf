@@ -1,7 +1,12 @@
 from django.db import migrations, models
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor
+from django.db.migrations.state import StateApps
 
 
-def dedupe_datasets(apps, schema_editor):
+def dedupe_datasets(
+    apps: StateApps,
+    schema_editor: BaseDatabaseSchemaEditor,  # noqa: ARG001
+) -> None:
     Dataset = apps.get_model("datasets_api", "Dataset")
     DatasetHierarchy = apps.get_model("datasets_api", "DatasetHierarchy")
 

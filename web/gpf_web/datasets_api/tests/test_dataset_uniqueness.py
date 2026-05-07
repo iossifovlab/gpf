@@ -1,17 +1,21 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# PascalCase locals (PreDataset etc.) are the standard Django
+# historical-models pattern — the names rebind model classes at a
+# specific migration state, so C0103 is added to the file-level disable.
+# pylint: disable=W0621,C0103,C0114,C0116,W0212,W0613
 from collections.abc import Callable
 
 import pytest
 from django.contrib.auth.models import Group
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.state import StateApps
 
 from datasets_api.models import Dataset
 
 
 @pytest.fixture
 def migrate_to(transactional_db: None) -> Callable:  # noqa: ARG001
-    def _migrate_to(target: list[tuple[str, str]]):
+    def _migrate_to(target: list[tuple[str, str]]) -> StateApps:
         executor = MigrationExecutor(connection)
         executor.loader.build_graph()
         executor.migrate(target)
