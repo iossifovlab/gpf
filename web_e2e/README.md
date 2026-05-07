@@ -45,6 +45,8 @@ export DJANGO_SETTINGS_MODULE=gpf_web.settings  # or wgpf_settings; see below
 
 The script's `wdaemanage createapplication` call uses redirect URIs that include `http://localhost:4200/login` and `http://127.0.0.1:8080/gpf/login`, so both dev-server topologies (Angular CLI on 4200 against Django on 8000, **or** `wgpf` on 8080) authenticate out of the box.
 
+`import_data.sh` reads from whatever GRR your shell has configured. CI uses both `grr` and `grr_sfari` (combined as a group via `gpf_e2e_instance/grr-definition.yaml` — see the Jenkins-mirrored compose section below); local-dev uses your machine's default GRR. Once test fixtures start referencing `grr_sfari`-only resources, your local GRR will need both repos available too — point `GRR_DEFINITION_FILE` at `gpf_e2e_instance/grr-definition.yaml` (adjusting the `directory:` paths to your local layout) or roll your own definition with the same children.
+
 ### Run the dev servers
 
 Open two terminals:
@@ -125,6 +127,8 @@ export WDAE_EMAIL_VERIFICATION_ENDPOINT=http://localhost:4200
 ## Jenkins-mirrored compose stack
 
 Use this only when you're reproducing a CI-only failure. It runs the same images Jenkins builds (`gpf-web-api-prod` + `gpf-web-ui-prod`), wires them via `web_infra/compose-jenkins.yaml`, and fires the Playwright suite from the `e2e-tests` service.
+
+The compose stack bind-mounts two GRR repos from the CSHL Jenkins agents — `/mnt/cephfs/seqpipe/grr` and `/mnt/cephfs/seqpipe/grr_sfari` — and points `GRR_DEFINITION_FILE` at `gpf_e2e_instance/grr-definition.yaml`, which combines them as a `group` repo (`grr_sfari` first, so its enrichment backgrounds override matching IDs in `grr`). On a host without those mounts, either provide equivalent paths or override `GRR_DEFINITION_FILE` to a definition that uses your local layout.
 
 ### Build the prod images locally
 

@@ -69,10 +69,11 @@ services:
     volumes:
       - ../web_e2e/gpf_e2e_instance:/data:rw
       - /mnt/cephfs/seqpipe/grr:/grr
+      - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
     environment:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
-      GRR_DEFINITION_FILE: /grr-definition.yaml
+      GRR_DEFINITION_FILE: /data/grr-definition.yaml
       WDAE_DB_NAME: gpf
       WDAE_DB_USER: seqpipe
       WDAE_DB_PASSWORD: secret
@@ -108,18 +109,25 @@ services:
       # deployments rely on; build #12 caught the mismatch.
       - ../web_e2e/gpf_e2e_instance:/data
       # GRR resources mount — same shape as gain's
-      # web_infra/compose-jenkins.yaml. The path is the CSHL
-      # Jenkins agents' shared GRR cache; runs on other hosts
-      # need to provide an equivalent /grr or override
-      # GRR_DEFINITION_FILE to a different definition.
+      # web_infra/compose-jenkins.yaml. The paths are the CSHL
+      # Jenkins agents' shared GRR caches; runs on other hosts
+      # need to provide equivalent /grr + /grr_sfari or override
+      # GRR_DEFINITION_FILE to a different definition. Both
+      # mounts are required: the e2e instance fixture's
+      # grr-definition.yaml below combines them as a `group`
+      # repo with grr_sfari first (overriding overlapping
+      # enrichment IDs in grr).
       - /mnt/cephfs/seqpipe/grr:/grr
+      - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
     environment:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
-      # /grr-definition.yaml is baked into the backend image
-      # (see web/Dockerfile.production); it points at the /grr
-      # mount above.
-      GRR_DEFINITION_FILE: /grr-definition.yaml
+      # The prod image bakes /grr-definition.yaml (single /grr
+      # repo, see web/Dockerfile.production). Override here to
+      # the in-instance file that defines a group of /grr_sfari +
+      # /grr — e2e-only, leaves prod deployments on the single
+      # repo. The instance dir is bind-mounted at /data above.
+      GRR_DEFINITION_FILE: /data/grr-definition.yaml
       WDAE_DB_NAME: gpf
       WDAE_DB_USER: seqpipe
       WDAE_DB_PASSWORD: secret

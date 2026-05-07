@@ -1,0 +1,13 @@
+id: "local"
+type: group
+children:
+  - id: "grr_sfari.sync"
+    type: directory
+    directory: /grr_sfari
+    public_url: "https://grr-sfari.iossifovlab.com"
+    read_only: true
+  - id: "grr.sync"
+    type: directory
+    directory: /grr
+    public_url: "https://grr.iossifovlab.com"
+    read_only: true
