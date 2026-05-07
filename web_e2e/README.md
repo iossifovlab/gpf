@@ -214,6 +214,7 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
 - **`/o/` and `/accounts/` are required for OAuth.** The SPA's log-in button does `window.location = /o/authorize/?...`, which the backend redirects to `/accounts/login/`. Both must be proxied.
 - **Playwright workers are capped at 4 in CI** (`playwright.config.ts`). Local-dev (without `CI=1`) keeps Playwright's default.
 - **`WDAE_EMAIL_VERIFICATION_ENDPOINT=http://frontend`.** Django bakes this URL into outbound mail; without it, the user-creation specs follow a `localhost:8000` link that chromium inside the network can't reach.
+- **Backend logs are captured to `web_infra/wdae-logs/`.** Both `instance-import` and `backend-e2e` mount `./wdae-logs:/logs` and run with `WDAE_LOG_DIR=/logs`, so Django's `WatchedFileHandler` writes `wdae-debug.log` to a host bind that survives `compose down -v`. CI archives it (along with a wide combined `reports/web_e2e/compose.log` from `compose logs --no-color`) under the build's artefacts.
 
 ---
 
@@ -227,9 +228,10 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
    npx playwright show-report playwright-report
    npx playwright show-trace test-results/.../trace.zip
    ```
-3. For backend errors, dump per-service logs from the compose stack:
+3. For backend errors, either dump per-service logs from the running compose stack
    ```bash
    docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
        logs --no-color backend-e2e --tail 200
    ```
-4. Open a new ticket in `issues/br-issues.sh` (template: any of the existing five entries).
+   or, on a CI build, grab the `wdae-debug.log` and `compose.log` artefacts archived by the Jenkins job — `wdae-debug.log` has the per-request Django output, `compose.log` interleaves every service's stdout by timestamp.
+4. File a new issue with `br q "..."` (see `AGENTS.md` for the vocabulary). Use `br ready` to see the open queue.

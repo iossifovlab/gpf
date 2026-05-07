@@ -100,16 +100,21 @@ pipeline {
         stage('Prepare workspace') {
             steps {
                 // Playwright writes traces / videos to
-                // web_e2e/reports as root (the e2e-tests
-                // container has no USER directive), so the host
-                // Jenkins user can't `rm` them on the next build.
-                // Run the cleanup inside an alpine container as
-                // root to sidestep that. Then mkdir runs on the
-                // host so the new reports dir is Jenkins-owned and
-                // the post-stage host-side `cp` can write into it.
+                // web_e2e/reports and the backend writes Django
+                // file-logs to web_infra/wdae-logs as root (no
+                // USER directive in either container), so the
+                // host Jenkins user can't `rm` them on the next
+                // build. Run the cleanup inside an alpine
+                // container as root to sidestep that. Wiping
+                // wdae-logs each build keeps the captured
+                // artefact attributable to this build only.
+                // Then mkdir runs on the host so the new reports
+                // dir is Jenkins-owned and the post-stage
+                // host-side `cp` can write into it.
                 sh '''
                     docker run --rm -v "$PWD:/wd" -w /wd alpine \
-                        rm -rf dist reports web_e2e/reports
+                        rm -rf dist reports web_e2e/reports \
+                               web_infra/wdae-logs
                     mkdir -p reports/web_e2e
                 '''
             }
@@ -421,7 +426,20 @@ pipeline {
                         // service (e.g. e2e-tests never created
                         // because backend-e2e errored first) doesn't
                         // mask another's logs.
+                        //
+                        // Also write a wide combined compose.log
+                        // (every service interleaved by timestamp)
+                        // and copy the Django file-logs the backend
+                        // wrote to web_infra/wdae-logs into the
+                        // artefact tree. Both `|| true` so a capture
+                        // hiccup can't tank a green build.
                         sh '''
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f web_infra/compose-jenkins.yaml \
+                                logs --no-color \
+                                > reports/web_e2e/compose.log \
+                                2>&1 || true
                             for svc in backend-e2e frontend-e2e e2e-tests; do
                                 echo "===== compose logs: $svc ====="
                                 docker compose \
@@ -429,6 +447,9 @@ pipeline {
                                     -f web_infra/compose-jenkins.yaml \
                                     logs --no-color "$svc" || true
                             done
+                            cp -r web_infra/wdae-logs \
+                                  reports/web_e2e/ \
+                                  2>/dev/null || true
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
@@ -450,6 +471,8 @@ pipeline {
                     )
                     archiveArtifacts(
                         artifacts: 'reports/web_e2e/*.xml, ' +
+                                   'reports/web_e2e/compose.log, ' +
+                                   'reports/web_e2e/wdae-logs/**, ' +
                                    'web_e2e/reports/**',
                         allowEmptyArchive: true,
                         fingerprint: false,

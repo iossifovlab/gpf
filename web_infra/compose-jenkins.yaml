@@ -70,6 +70,15 @@ services:
       - ../web_e2e/gpf_e2e_instance:/data:rw
       - /mnt/cephfs/seqpipe/grr:/grr
       - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
+      # Django writes wdae-debug.log under WDAE_LOG_DIR
+      # (default_settings.py LOGGING). Bind to a host path the
+      # Jenkinsfile archives so the file logs survive `compose
+      # down -v` and end up in the build artefacts. Shared with
+      # backend-e2e — instance-import has exited before
+      # backend-e2e starts handling requests, so the writes
+      # don't overlap in time. WatchedFileHandler tolerates the
+      # file being replaced.
+      - ./wdae-logs:/logs
     environment:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
@@ -79,6 +88,7 @@ services:
       WDAE_DB_PASSWORD: secret
       WDAE_DB_HOST: db
       WDAE_DB_PORT: 3306
+      WDAE_LOG_DIR: /logs
       WDAE_SECRET_KEY: "django-insecure-e2e-not-a-real-secret-only-for-jenkins"
     entrypoint: ["bash", "/data/import_data.sh"]
     restart: "no"
@@ -119,6 +129,10 @@ services:
       # enrichment IDs in grr).
       - /mnt/cephfs/seqpipe/grr:/grr
       - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
+      # Django file logs (wdae-debug.log via WDAE_LOG_DIR);
+      # see the matching mount on instance-import above for the
+      # full rationale.
+      - ./wdae-logs:/logs
     environment:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
@@ -133,6 +147,7 @@ services:
       WDAE_DB_PASSWORD: secret
       WDAE_DB_HOST: db
       WDAE_DB_PORT: 3306
+      WDAE_LOG_DIR: /logs
       WDAE_SECRET_KEY: "django-insecure-e2e-not-a-real-secret-only-for-jenkins"
       WDAE_EMAIL_HOST: mail
       # The email-verification flow ("create user → click link in
