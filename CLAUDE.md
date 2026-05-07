@@ -12,9 +12,20 @@ Simplex Collection with ~2,600 autism families).
 
 ## Environment Setup
 
-**This project supports two workflows: Conda/Mamba and
-uv (pyproject-driven, the same workspace pattern as the
-gain repo).**
+**Two supported workflows:**
+
+- **Conda/Mamba** — local development only. Host-only
+  install via `environment.yml` + `dev-environment.yml`.
+  No conda Docker images: `Dockerfile.seqpipe` and the
+  per-storage Dockerfiles (`gcp_storage/`,
+  `impala_storage/`, `impala2_storage/`) were removed in
+  tb-qp5; the only remaining conda usage is host setup
+  for individual contributors.
+- **uv** — used by everything else: the four CI test
+  images (`core/`, `web/`, `federation/`,
+  `rest_client/Dockerfile`) and the production builder
+  (`web/Dockerfile.production`). uv is also a fine
+  alternative for local development.
 
 The `gain` package lives in a separate repository
 (<https://github.com/iossifovlab/gain>) and must be
@@ -25,7 +36,7 @@ one before the GPF packages will import:
 git clone https://github.com/iossifovlab/gain.git ../gain
 ```
 
-Conda/Mamba workflow:
+Conda/Mamba workflow (local dev):
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
@@ -50,6 +61,31 @@ uv sync --all-packages --all-groups
 # A single sub-project
 uv sync --package gpf-impala-storage --group dev
 ```
+
+### Production image: wheels-only invariant (tb-qp5)
+
+`web/Dockerfile.production` enforces a **wheels-only**
+install via `uv pip install --only-binary=:all:
+--no-binary=mysqlclient`. Any transitive dep without a
+cp312-manylinux_x86_64 wheel fails the build loudly
+instead of silently growing source-build residue and
+inflating cold-build time. `mysqlclient` is the one
+documented exception (no manylinux wheel exists on PyPI;
+it builds against `libmariadb-dev` installed in the same
+builder stage).
+
+To exempt another dep: add it to the `--no-binary=` list
+in `web/Dockerfile.production` with a justification
+comment alongside the mysqlclient note. Don't drop
+`--only-binary=:all:` — the strict default is the whole
+point of the invariant.
+
+The four CI test Dockerfiles (`core/`, `web/`,
+`federation/`, `rest_client/Dockerfile`) intentionally do
+**not** set `--only-binary=:all:`. They install workspace
+members from path sources via `uv sync`, which requires
+hatchling to build the package metadata — strict
+wheels-only would fail by design there.
 
 ## Commands
 
