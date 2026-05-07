@@ -19,7 +19,7 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
       deviation: undefined,
       mean: undefined,
     };
-    component.yScale = jest.fn() as any;
+    component.yScale = jest.fn() as unknown as typeof component.yScale;
     fixture.detectChanges();
   }));
 

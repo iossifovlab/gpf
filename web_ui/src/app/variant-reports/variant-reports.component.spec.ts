@@ -273,7 +273,7 @@ class VariantReportsServiceMock {
   }
 
   public downloadFamilies(): Observable<HttpResponse<Blob>> {
-    return of([] as any);
+    return of(new HttpResponse<Blob>({ body: new Blob() }));
   }
 }
 

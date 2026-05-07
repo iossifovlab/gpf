@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
-import { VariantReport } from './variant-reports';
+import { VariantReport, VariantReportJson } from './variant-reports';
 import { environment } from '../../environments/environment';
 import { map } from 'rxjs/operators';
 
@@ -21,7 +21,7 @@ export class VariantReportsService {
   public getVariantReport(datasetId: string): Observable<VariantReport> {
     const options = { withCredentials: true };
     const url = `${this.config.baseUrl}${this.variantsUrl}${datasetId}`;
-    return this.http.get(url, options).pipe(map(response => VariantReport.fromJson(response)));
+    return this.http.get<VariantReportJson>(url, options).pipe(map(response => VariantReport.fromJson(response)));
   }
 
   public getDownloadLink(): string {

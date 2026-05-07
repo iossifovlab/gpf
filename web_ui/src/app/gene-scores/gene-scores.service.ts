@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Partitions } from './gene-scores';
+import { Partitions, PartitionsJson } from './gene-scores';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
@@ -31,7 +31,11 @@ export class GeneScoresService {
     const options = { headers: headers };
 
     return this.http
-      .post(this.config.baseUrl + this.geneScoresPartitionsUrl, {score: score, min: min, max: max}, options)
-      .pipe(map((res: Partitions) => Partitions.fromJson(res)));
+      .post<PartitionsJson>(
+        this.config.baseUrl + this.geneScoresPartitionsUrl,
+        {score: score, min: min, max: max},
+        options,
+      )
+      .pipe(map((res) => Partitions.fromJson(res)));
   }
 }

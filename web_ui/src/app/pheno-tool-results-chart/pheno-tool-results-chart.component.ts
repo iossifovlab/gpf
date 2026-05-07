@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { PhenoToolResults, PhenoToolResult } from '../pheno-tool/pheno-tool-results';
 import * as d3 from 'd3';
 
@@ -9,7 +9,7 @@ import * as d3 from 'd3';
   standalone: false
 })
 export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterViewInit {
-  @ViewChild('innerGroup', {static: true}) public innerGroup: any;
+  @ViewChild('innerGroup', {static: true}) public innerGroup: ElementRef<SVGGElement>;
   @Input() public phenoToolResults: PhenoToolResults;
   @Input() public width = 1060;
   @Input() public height = 700;

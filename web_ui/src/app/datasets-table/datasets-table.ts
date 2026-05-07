@@ -1,3 +1,10 @@
+export interface DatasetPermissionsJson {
+  dataset_id: string;
+  dataset_name: string;
+  groups: string[];
+  users: { name: string; email: string }[];
+}
+
 export class DatasetPermissions {
   public constructor(
     public id: string,
@@ -6,12 +13,12 @@ export class DatasetPermissions {
     public users: { name: string; email: string }[],
   ) {}
 
-  public static fromJson(json): DatasetPermissions {
+  public static fromJson(json: DatasetPermissionsJson): DatasetPermissions {
     return new DatasetPermissions(
-      json['dataset_id'],
-      json['dataset_name'],
-      json['groups'],
-      json['users'],
+      json.dataset_id,
+      json.dataset_name,
+      json.groups,
+      json.users,
     );
   }
 

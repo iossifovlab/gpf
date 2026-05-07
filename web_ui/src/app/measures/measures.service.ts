@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { ContinuousMeasure, HistogramData, Measure, MeasureHistogram } from './measures';
-import { Partitions } from '../gene-scores/gene-scores';
+import { Partitions, PartitionsJson } from '../gene-scores/gene-scores';
 import { map } from 'rxjs/operators';
 
 @Injectable()
@@ -90,7 +90,7 @@ export class MeasuresService {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(
+    return this.http.post<PartitionsJson>(
       this.config.baseUrl + this.measurePartitionsUrl,
       { datasetId: datasetId, measure: measureName, min: rangeStart, max: rangeEnd },
       options

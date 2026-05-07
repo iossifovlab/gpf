@@ -25,14 +25,14 @@ describe('GeneService', () => {
 
   it('should get gene', async() => {
     const geneFromJsonSpy = jest.spyOn(Gene, 'fromJson');
-    geneFromJsonSpy.mockReturnValue('fakeGene' as any);
+    geneFromJsonSpy.mockReturnValue('fakeGene' as unknown as Gene);
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     const response = await lastValueFrom(service.getGene('fakeSymbol').pipe(take(1)));
-    expect(response).toBe('fakeGene' as any);
+    expect(response).toBe('fakeGene');
     expect(httpGetSpy.mock.calls[0][0]).toStrictEqual(environment.apiPath + 'genome/gene_models/default/fakeSymbol');
-    expect(geneFromJsonSpy.mock.calls[0][0]).toBe('fakeResponse' as any);
+    expect(geneFromJsonSpy.mock.calls[0][0]).toBe('fakeResponse');
   });
 
   it('should search genes', async() => {
@@ -40,7 +40,7 @@ describe('GeneService', () => {
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     const response = await lastValueFrom(service.searchGenes('fakeSearchTerm').pipe(take(1)));
-    expect(response).toBe('fakeResponse' as any);
+    expect(response).toBe('fakeResponse');
     expect(httpGetSpy.mock.calls[0][0]).toBe(
       environment.apiPath + 'genome/gene_models/search/fakeSearchTerm'
     );

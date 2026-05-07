@@ -61,7 +61,7 @@ class MockGeneService {
 
 class MockQueryService {
   public downloadVariantsSummary(): Observable<HttpResponse<Blob>> {
-    return of([] as any);
+    return of(new HttpResponse<Blob>({ body: new Blob() }));
   }
 
   public getSummaryVariants(): Observable<object> {
@@ -69,7 +69,7 @@ class MockQueryService {
   }
 
   public downloadVariants(): Observable<HttpResponse<Blob>> {
-    return of([] as any);
+    return of(new HttpResponse<Blob>({ body: new Blob() }));
   }
 
 
@@ -146,9 +146,12 @@ describe('GeneBrowserComponent', () => {
 
   it('should draw legend on filters div set', () => {
     expect(component).toBeTruthy();
-    jest.spyOn<any, any>(component, 'drawDenovoIcons').mockImplementation(() => null);
-    jest.spyOn<any, any>(component, 'drawTransmittedIcons').mockImplementation(() => null);
-    jest.spyOn<any, any>(component, 'drawEffectTypesIcons').mockImplementation(() => null);
+    jest.spyOn(component as unknown as { drawDenovoIcons: () => void },
+      'drawDenovoIcons').mockImplementation(() => null);
+    jest.spyOn(component as unknown as { drawTransmittedIcons: () => void },
+      'drawTransmittedIcons').mockImplementation(() => null);
+    jest.spyOn(component as unknown as { drawEffectTypesIcons: () => void },
+      'drawEffectTypesIcons').mockImplementation(() => null);
     component.filters = null;
     expect(component['drawDenovoIcons']).toHaveBeenCalledWith();
     expect(component['drawTransmittedIcons']).toHaveBeenCalledWith();
@@ -228,7 +231,8 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should reset filters on new request', async() => {
-    jest.spyOn<any, any>(component, 'updateShownTablePreviewVariantsArray').mockImplementation(() => null);
+    jest.spyOn(component as unknown as { updateShownTablePreviewVariantsArray: () => void },
+      'updateShownTablePreviewVariantsArray').mockImplementation(() => null);
     component.summaryVariantsFilter = new SummaryAllelesFilter(true, false, true);
     component.checkEffectType('CNV+', true);
     component.checkEffectType('missense', true);
@@ -272,7 +276,7 @@ describe('GeneBrowserComponent', () => {
       }
     };
 
-    component.onSubmit(mockEvent as any);
+    component.onSubmit(mockEvent as unknown as globalThis.Event);
 
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
       effectTypes: [

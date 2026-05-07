@@ -1,12 +1,23 @@
+interface PartitionBucket {
+  count: number;
+  percent: number;
+}
+
+export interface PartitionsJson {
+  left: PartitionBucket;
+  mid: PartitionBucket;
+  right: PartitionBucket;
+}
+
 export class Partitions {
-  public static fromJson(json: any): Partitions {
+  public static fromJson(json: PartitionsJson): Partitions {
     return new Partitions(
-      Number(json['left']['count']),
-      Number(json['left']['percent']),
-      Number(json['mid']['count']),
-      Number(json['mid']['percent']),
-      Number(json['right']['count']),
-      Number(json['right']['percent']),
+      Number(json.left.count),
+      Number(json.left.percent),
+      Number(json.mid.count),
+      Number(json.mid.percent),
+      Number(json.right.count),
+      Number(json.right.percent),
     );
   }
 

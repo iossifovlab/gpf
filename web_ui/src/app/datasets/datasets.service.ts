@@ -5,7 +5,7 @@ import { Observable, ReplaySubject, of } from 'rxjs';
 import { Dataset, DatasetHierarchy } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 import { map, take } from 'rxjs/operators';
-import { DatasetPermissions } from 'app/datasets-table/datasets-table';
+import { DatasetPermissions, DatasetPermissionsJson } from 'app/datasets-table/datasets-table';
 
 @Injectable()
 export class DatasetsService {
@@ -65,12 +65,12 @@ export class DatasetsService {
 
     const options = { withCredentials: true };
 
-    return this.http.get(url, options).pipe(
+    return this.http.get<DatasetPermissionsJson[] | null>(url, options).pipe(
       map((response) => {
         if (response === null) {
           return [] as DatasetPermissions[];
         }
-        return (response as object[]).map(dataset => DatasetPermissions.fromJson(dataset));
+        return response.map(dataset => DatasetPermissions.fromJson(dataset));
       })
     );
   }
@@ -78,8 +78,8 @@ export class DatasetsService {
   public getManagementDataset(datasetId: string): Observable<DatasetPermissions> {
     const url = `${this.config.baseUrl}${this.datasetUrl}/permissions/${datasetId}`;
 
-    return this.http.get(url).pipe(
-      map((response: object) => DatasetPermissions.fromJson(response))
+    return this.http.get<DatasetPermissionsJson>(url).pipe(
+      map((response) => DatasetPermissions.fromJson(response))
     );
   }
 

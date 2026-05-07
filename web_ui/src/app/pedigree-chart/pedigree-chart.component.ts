@@ -177,13 +177,7 @@ export class PedigreeChartComponent implements OnInit {
       return acc;
     }, new Map<number, IntervalForVertex<Individual>[]>());
 
-    const keys: Array<number> = [];
-    const rankIterator = individualsByRank.keys();
-    let itResult = rankIterator.next();
-    while (!itResult.done) {
-      keys.push(itResult.value);
-      itResult = rankIterator.next();
-    }
+    const keys: number[] = Array.from(individualsByRank.keys());
 
     const result: OrderedIndividuals[] = [];
     for (const key of keys.sort()) {
@@ -295,8 +289,10 @@ export class PedigreeChartComponent implements OnInit {
   private alignToTopLeft(groups: IndividualWithPosition[][]): void {
     const offset = 11;
 
-    const minStartXReducer = (g1, g2) => g1.xCenter < g2.xCenter ? g1 : g2;
-    const minStartYReducer = (g1, g2) => g1.yCenter < g2.yCenter ? g1 : g2;
+    const minStartXReducer = (g1: IndividualWithPosition, g2: IndividualWithPosition):
+      IndividualWithPosition => g1.xCenter < g2.xCenter ? g1 : g2;
+    const minStartYReducer = (g1: IndividualWithPosition, g2: IndividualWithPosition):
+      IndividualWithPosition => g1.yCenter < g2.yCenter ? g1 : g2;
 
     const leftmostGroupX = groups.map(group => group.reduce(minStartXReducer).xCenter).reduce((a, b) => Math.min(a, b));
     const leftmostGroupY = groups.map(group => group.reduce(minStartYReducer).yCenter).reduce((a, b) => Math.min(a, b));
