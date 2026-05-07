@@ -56,13 +56,18 @@ pip install -e ../gain/core
 pip install -e core
 pip install -e web
 
-# Optional storages and extensions:
+# Optional extensions:
 pip install -e federation
 pip install -e rest_client
-pip install -e gcp_storage
-pip install -e impala_storage
-pip install -e impala2_storage
 ```
+
+The optional storage backends (`gpf_impala_storage`,
+`gpf_impala2_storage`, `gpf_gcp_storage`) bring in heavy
+non-Python dependencies (Java/Hadoop, the Google Cloud
+SDKs) that aren't on PyPI as wheels. Install them via the
+uv workspace path below — `uv sync --package
+gpf-impala-storage --group dev` (and equivalents) — rather
+than mixing pip and conda for those.
 
 Notes:
 - Always activate the `gpf` environment before running
@@ -133,51 +138,23 @@ mypy gpf_web --exclude web/docs/ \
 
 ### Optional genotype storages
 
-Install storage backends with extra conda dependencies if
-you plan to use or develop them.
+The optional storage backends are workspace members
+installable via uv; see the `uv sync --package
+gpf-impala-storage --group dev` path under "Option B" above
+(or `gpf-impala2-storage`, `gpf-gcp-storage`).
 
-#### Apache Impala genotype storage
-
-```bash
-mamba env update --name gpf \
-    --file ./impala_storage/impala-environment.yml
-pip install -e impala_storage
-```
-
-#### Apache Impala2 genotype storage
-
-```bash
-mamba env update --name gpf \
-    --file ./impala2_storage/impala2-environment.yml
-pip install -e impala2_storage
-```
-
-#### GCP (BigQuery) genotype storage
-
-```bash
-mamba env update --name gpf \
-    --file ./gcp_storage/gcp-environment.yml
-pip install -e gcp_storage
-```
-
-Authenticate for the `seqpipe-gcp-storage-testing` project
-before running tests:
+GCP storage tests need application-default credentials for
+the `seqpipe-gcp-storage-testing` project:
 
 ```bash
 gcloud config list project
 gcloud auth application-default login
 ```
 
-Run GCP storage tests (from the `gcp_storage/` directory):
+Then, from the `gcp_storage/` directory:
 
 ```bash
 pytest -v gcp_storage/tests/
-```
-
-Run integration tests against the GCP genotype storage
-definition:
-
-```bash
 pytest -v ../core/tests/ \
     --gsf gcp_storage/tests/gcp_storage.yaml
 ```
