@@ -77,6 +77,16 @@ wdaemanage user_create user_comp_vcf@iossifovlab.com -p secret -g any_user || tr
 wdaemanage user_create user_comp_genotypes@iossifovlab.com -p secret -g any_user || true
 wdaemanage user_create user_all_genotypes@iossifovlab.com -p secret -g any_user || true
 wdaemanage user_create user_iossifov_2014@iossifovlab.com -p secret -g any_user || true
+# Dedicated user for gene-profiles-table.spec.ts state tests (tb-wtc): the
+# state block reads back admin's gp_user_state row after a debounced save,
+# but the functionality block (line ~311) also logs in as admin and resets
+# admin's gp_user_state in beforeEach. A functionality reset that lands
+# between the state test's `await finalSave` and its readback GET wipes
+# the row, the GET returns 204, and the SPA quietly leaves the input empty.
+# Pinning the state block to its own user breaks that admin-row sharing.
+# any_dataset:any_user mirrors admin's grants (state test :510 navigates
+# to iossifov_2014_liftover via navigateToDatasetPage).
+wdaemanage user_create gp_state_test@iossifovlab.com -p secret -g any_dataset:any_user || true
 
 # Register the SPA's OAuth2 application. The SPA's log-in
 # button (web_ui/src/app/users/users.component.ts) issues a
