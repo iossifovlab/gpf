@@ -165,16 +165,32 @@ services:
       WDAE_ALLOWED_HOST: "*"
       WDAE_DEBUG: "False"
     healthcheck:
-      # /api/v3/instance is a URL-include prefix, not an endpoint;
-      # the bare path 404s. /api/v3/instance/version is the real
-      # leaf route — unauthenticated GET, returns {"version": ...},
-      # doesn't require WGPFInstance to be preloaded. Build #13
-      # spent ~9 min racking up 404s on the prefix before compose
-      # gave up.
-      test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/instance/version"]
+      # tb-hi1: /api/v3/datasets/ requires WGPFInstance.studies_db
+      # to be populated. Previously this was /api/v3/instance/version,
+      # which deliberately bypassed WGPFInstance state — but with
+      # STUDIES_EAGER_LOADING and --workers 16, each gunicorn worker
+      # independently loads all studies at boot. /version answered 200
+      # from any worker that had finished its WSGI bootstrap, even
+      # while 15 others were still building combined families. compose
+      # up --wait flipped green and Playwright started racing the warmup,
+      # producing wildly variable timeout-fail counts on the same SHA
+      # (#31: 18 fails, #32: 209 fails — pure warmup-vs-traffic race).
+      #
+      # /api/v3/datasets/ exercises the same code path the SPA's first
+      # data XHR hits: the dataset list. A worker only returns 200 here
+      # after eager-loading completes for it. Per-worker race remains
+      # (the check lands on whichever worker gunicorn picks), so we
+      # bump retries to 30 (interval 10s = 5 min budget) so multiple
+      # checks have a high probability of catching all 16 workers
+      # ready by the time the check stops.
+      #
+      # gain's compose-jenkins.yaml uses the same pattern:
+      # /api/editor/pipeline_status?pipeline_id=pipeline/Clinical_annotation
+      # with --max-time 120.
+      test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/datasets/"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 30
 
   frontend-e2e:
     image: ${FRONTEND_IMAGE:-gpf-web-ui-prod:latest}
