@@ -12,7 +12,18 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   timeout: 180000,
   expect: {
-    timeout: 15000,
+    /* tb-iuv: rolled back from 15000 → 60000 (pre-tb-g1z value).
+     * Bisect of gpf-web-e2e #25 (no Mode A fails) → #26 (all 7 Mode A
+     * fails) pinned the regression to tb-g1z's 60s→15s expect.timeout
+     * cut. The 7 affected assertions are toHaveText('N variants
+     * selected') after submitting variant queries on iossifov_2014 /
+     * multi_liftover with specific filter combos (CHD8, GO terms,
+     * effect types) — under 16-way gunicorn contention these queries
+     * take 15–60s wall, so the tighter budget guaranteed timeout.
+     * Restoring to 60s is the conservative rollback; a real perf fix
+     * for the slow query paths is tracked separately (filed alongside
+     * this commit, see br notes on tb-iuv). */
+    timeout: 60000,
     toHaveScreenshot: {
       maxDiffPixels: 100
     },
