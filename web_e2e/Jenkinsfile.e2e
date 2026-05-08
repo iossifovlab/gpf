@@ -397,6 +397,28 @@ pipeline {
         }
 
         stage('Run e2e') {
+            options {
+                // tb-cj9: per-agent lock for the heaviest stage.
+                // 16 Playwright workers + a full backend stack
+                // contend hard with a sibling build on the same
+                // agent (32 workers fighting one docker daemon ->
+                // load-induced flakes). The `!dory` agent label
+                // doesn't pin to a dedicated host, so concurrent
+                // builds CAN land together. This lock keyed by
+                // NODE_NAME serialises Run-e2e stages on the same
+                // agent while still allowing parallel runs on
+                // different agents.
+                //
+                // Image-build stages (Prepare backend/frontend
+                // images, Build e2e image) and instance-import
+                // intentionally remain unlocked: they're cached
+                // on master, rarely wall-time-bound, and adding
+                // a synthetic outer-stage lock to cover them
+                // would require re-indenting the entire stages
+                // tree. Extend if measured contention there
+                // surfaces.
+                lock(resource: "e2e-on-${env.NODE_NAME}")
+            }
             steps {
                 script {
                     try {
