@@ -51,7 +51,21 @@ export default defineConfig({
      * the on-first-retry mode captures a trace only for tests that failed
      * once, which is the only case anyone reads the trace for anyway. */
     trace: process.env.JENKINS ? 'on-first-retry' : 'on-first-retry',
-    video: process.env.JENKINS ? { mode: 'retain-on-failure', size: { width: 1920, height: 1080 } }: { mode: 'retain-on-failure', size: { width: 1920, height: 1080 } },
+    /* tb-84q: CI mode 'on-first-retry' instead of 'retain-on-failure'.
+     * 'retain-on-failure' starts ffmpeg at the beginning of every test
+     * and deletes the file on pass — that means 16 concurrent 1080p
+     * ffmpeg processes recording continuously across all green tests,
+     * which overloads the Jenkins agent (observed on eyoree as >16
+     * /ms-playwright/.../ffmpeg-linux processes contributing to the
+     * tb-eqh MinIO timing-flake). 'on-first-retry' only records the
+     * retry attempt; with retries=1 every failure still has video
+     * evidence, but green tests never start ffmpeg. Same reasoning
+     * the trace setting above already applies. Local stays at
+     * retain-on-failure (no 16-way contention; retries=0 locally so
+     * on-first-retry would record nothing). */
+    video: process.env.JENKINS
+      ? { mode: 'on-first-retry', size: { width: 1920, height: 1080 } }
+      : { mode: 'retain-on-failure', size: { width: 1920, height: 1080 } },
     actionTimeout: 20000
   },
   projects: [
