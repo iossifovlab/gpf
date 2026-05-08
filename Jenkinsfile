@@ -293,6 +293,32 @@ pipeline {
                                                 run --rm minio-client
                                         '''
 
+                                        // tb-eqh: wait-for-minio sidecar.
+                                        // `up -d --wait` only verifies minio's
+                                        // own healthcheck (curl on localhost
+                                        // inside the minio container). That
+                                        // does NOT prove a sibling container
+                                        // can resolve `minio` via Docker's
+                                        // embedded DNS yet. The flake we hit
+                                        // is exactly that: test runner starts,
+                                        // first boto3 call returns empty
+                                        // addr_infos because resolv.conf
+                                        // lookup of `minio` returned nothing.
+                                        // A throwaway curl container attached
+                                        // to $COMPOSE_NETWORK exercises the
+                                        // exact same DNS+TCP+HTTP path the
+                                        // test runner will, and gates the
+                                        // test runner on it succeeding. The
+                                        // --retry flags expose any retry rate
+                                        // in the console log so we stay
+                                        // visible to the underlying race.
+                                        sh '''
+                                            docker run --rm --network "$COMPOSE_NETWORK" \
+                                                curlimages/curl:latest \
+                                                --retry 10 --retry-delay 2 --retry-all-errors \
+                                                -fsS http://minio:9000/minio/health/live
+                                        '''
+
                                         runProject(
                                             name: 'core',
                                             pkg: 'gpf',
@@ -307,7 +333,43 @@ pipeline {
                                                 '-v $PWD/core/tests/.test_grr:/workspace/core/tests/.test_grr',
                                         )
                                     } finally {
+                                        // tb-eqh: on core stage exit (success
+                                        // or failure), dump network + minio
+                                        // state into reports/core/ so a
+                                        // post-mortem of the next flake hit
+                                        // has bird's-eye evidence to pair
+                                        // with the worm's-eye conftest dump.
+                                        // Best-effort — every command guarded
+                                        // with `|| true` so a missing
+                                        // container or a teardown race never
+                                        // overrides the actual test exit
+                                        // code. publishReports('core') picks
+                                        // these up via the post stage.
                                         sh '''
+                                            mkdir -p reports/core
+                                            (
+                                                echo "=== docker network inspect $COMPOSE_NETWORK ==="
+                                                docker network inspect "$COMPOSE_NETWORK" 2>&1 || true
+                                                echo
+                                                echo "=== docker ps -a (compose project $COMPOSE_PROJECT) ==="
+                                                docker ps -a --filter "label=com.docker.compose.project=$COMPOSE_PROJECT" 2>&1 || true
+                                                echo
+                                                echo "=== docker logs ${COMPOSE_PROJECT}-minio-1 (tail 200) ==="
+                                                docker logs "${COMPOSE_PROJECT}-minio-1" --tail 200 2>&1 || true
+                                                echo
+                                                echo "=== sidecar DNS probe (busybox on $COMPOSE_NETWORK) ==="
+                                                docker run --rm --network "$COMPOSE_NETWORK" busybox sh -c '
+                                                    echo "--- /etc/resolv.conf ---"
+                                                    cat /etc/resolv.conf
+                                                    echo "--- nslookup minio ---"
+                                                    nslookup minio 2>&1 || true
+                                                    echo "--- getent hosts minio ---"
+                                                    getent hosts minio 2>&1 || true
+                                                    echo "--- ping -c 1 minio ---"
+                                                    ping -c 1 minio 2>&1 || true
+                                                ' 2>&1 || true
+                                            ) > reports/core/network-diagnostic.txt 2>&1 || true
+
                                             docker compose -p "$COMPOSE_PROJECT" down -v --remove-orphans || true
                                         '''
                                     }

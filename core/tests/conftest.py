@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+import subprocess
+import sys
 from collections.abc import Callable
 from typing import Any, cast
 
@@ -22,6 +24,88 @@ from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.gpf_instance_plugin.gpf_instance_context_plugin import (
     GPFInstanceGenomicContext,
 )
+
+# tb-eqh: dumped at most once per pytest session, on the first
+# fixture-setup or test-call failure whose traceback mentions
+# EndpointConnectionError. See _maybe_dump_minio_diagnostics below.
+_MINIO_DIAGNOSTICS_DUMPED = False
+
+
+def _dump_minio_diagnostics(reason: str) -> None:
+    """Dump in-container DNS + connectivity state to stderr.
+
+    tb-eqh worm's-eye view: the fixture failed against
+    http://${MINIO_HOST}:9000 with EndpointConnectionError. Capture
+    the resolver + hosts-table state from inside this test container
+    at the moment of failure so we can pair it with the Jenkinsfile
+    finally{} sidecar dump for triangulation. Best-effort: never
+    raise back into pytest's reporting path.
+    """
+    global _MINIO_DIAGNOSTICS_DUMPED
+    if _MINIO_DIAGNOSTICS_DUMPED:
+        return
+    _MINIO_DIAGNOSTICS_DUMPED = True
+
+    minio_host = os.environ.get("MINIO_HOST", "<unset>")
+    print(
+        f"\n=== tb-eqh minio diagnostics ({reason}, "
+        f"MINIO_HOST={minio_host!r}) ===",
+        file=sys.stderr, flush=True,
+    )
+    probe_host = minio_host if minio_host != "<unset>" else "minio"
+    for cmd in (
+        ["cat", "/etc/resolv.conf"],
+        ["getent", "hosts", probe_host],
+        ["getent", "ahosts", probe_host],
+    ):
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=5, check=False,
+            )
+            print(f"--- $ {' '.join(cmd)} ---", file=sys.stderr)
+            if result.stdout:
+                print(result.stdout, file=sys.stderr, end="")
+            if result.stderr:
+                print(f"(stderr) {result.stderr}",
+                      file=sys.stderr, end="")
+            if result.returncode != 0:
+                print(f"(rc={result.returncode})", file=sys.stderr)
+        except (subprocess.TimeoutExpired, FileNotFoundError,
+                OSError) as exc:
+            print(
+                f"--- $ {' '.join(cmd)} ERROR: {exc!r} ---",
+                file=sys.stderr,
+            )
+    print("=== end tb-eqh minio diagnostics ===\n",
+          file=sys.stderr, flush=True)
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(
+    item: pytest.Item,  # noqa: ARG001
+    call: pytest.CallInfo[None],
+) -> Any:
+    """Detect EndpointConnectionError failures and dump diagnostics.
+
+    tb-eqh: triggered exactly once per session, on the first
+    setup/call failure whose traceback contains
+    'EndpointConnectionError'. Hooks at report time (rather than
+    wrapping the s3 storage fixture) because the storage factory
+    layer parametrises tests programmatically — there is no clean
+    fixture wrap point. Hookwrapper lets us inspect the outcome
+    without changing it.
+    """
+    outcome = yield
+    if call.excinfo is None:
+        return
+    if _MINIO_DIAGNOSTICS_DUMPED:
+        return
+    exc_repr = repr(call.excinfo.value)
+    if "EndpointConnectionError" not in exc_repr:
+        return
+    _dump_minio_diagnostics(reason=f"{call.when} phase, {exc_repr[:80]}")
+    return outcome
 
 
 def _default_genotype_storage_configs(
