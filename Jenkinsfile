@@ -375,7 +375,32 @@ pipeline {
                                     }
                                 }
                             }
-                            post { always { script { publishReports('core') } } }
+                            post {
+                                always {
+                                    script { publishReports('core') }
+                                    // tb-eqh: the finally{} block in this
+                                    // stage writes a bird's-eye network
+                                    // diagnostic (docker network inspect,
+                                    // ps -a, minio logs, sibling DNS probe)
+                                    // to reports/core/network-diagnostic.txt
+                                    // — but publishReports() only handles
+                                    // XML reports, so the text file was not
+                                    // landing in the archived artifacts.
+                                    // Build #63 surfaced this: the
+                                    // worm's-eye conftest dump made it via
+                                    // JUnit stderr capture, but the
+                                    // bird's-eye file was lost. Archive it
+                                    // explicitly here. allowEmptyArchive so
+                                    // that a teardown race that prevents
+                                    // file creation doesn't fail the post
+                                    // stage.
+                                    archiveArtifacts(
+                                        artifacts: 'reports/core/network-diagnostic.txt',
+                                        allowEmptyArchive: true,
+                                        fingerprint: false,
+                                    )
+                                }
+                            }
                         }
 
                         stage('web') {
