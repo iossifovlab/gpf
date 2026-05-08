@@ -32,11 +32,12 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '40'))
     }
 
-    triggers {
-        // H = random minute around 02:00 UTC, smoothing controller
-        // load across nightly jobs.
-        cron('H 2 * * *')
-    }
+    // tb-7e7: cron lives in jenkins-jobs/nightly.groovy (the Job
+    // DSL), not here. A `triggers { cron(...) }` block in this
+    // Jenkinsfile only registers AFTER the pipeline has run once,
+    // and gpf-seed re-applies the DSL on every master push —
+    // wiping the registration before 02:00 UTC arrives. Putting the
+    // cron in the DSL means each seed run re-asserts it explicitly.
 
     stages {
         stage('Rebuild master') {
