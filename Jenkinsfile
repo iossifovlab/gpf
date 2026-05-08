@@ -777,15 +777,22 @@ pipeline {
                                         -u "$REGISTRY_USER" \
                                         --password-stdin "$REGISTRY"
                                     trap 'docker logout "$REGISTRY" || true' EXIT
-                                    docker tag "$BACKEND_REPO:$BUILD_NUMBER" \
-                                               "$BACKEND_REPO:latest"
-                                    docker tag "$FRONTEND_REPO:$BUILD_NUMBER" \
-                                               "$FRONTEND_REPO:latest"
-                                    docker tag "$BUNDLE_REPO:$BUILD_NUMBER" \
-                                               "$BUNDLE_REPO:latest"
+                                    # tb-w8d: tag :latest INSIDE the loop,
+                                    # immediately before pushing it. gain
+                                    # build #137 hit a race where a bulk
+                                    # docker tag :latest at the top of the
+                                    # push block was followed ~30s later
+                                    # by docker push :latest failing with
+                                    # "tag does not exist", because a
+                                    # concurrent process on the shared
+                                    # Docker daemon had untagged :latest
+                                    # in between. gpf has the same shape
+                                    # with one extra repo (BUNDLE) — fix
+                                    # preemptively.
                                     for repo in "$BACKEND_REPO" "$FRONTEND_REPO" "$BUNDLE_REPO"; do
                                         docker push "$repo:$BUILD_NUMBER"
                                         docker push "$repo:$GIT_SHORT"
+                                        docker tag "$repo:$BUILD_NUMBER" "$repo:latest"
                                         docker push "$repo:latest"
                                     done
                                 '''
