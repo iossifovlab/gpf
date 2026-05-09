@@ -884,6 +884,14 @@ pipeline {
                                         name: 'COMMIT_SHA',
                                         value: env.GIT_COMMIT ?: '',
                                     ),
+                                    string(
+                                        name: 'UPSTREAM_PROJECT',
+                                        value: env.JOB_NAME,
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_BUILD',
+                                        value: env.BUILD_NUMBER,
+                                    ),
                                 ],
                                 wait: false,
                                 propagate: false,
@@ -912,6 +920,14 @@ pipeline {
                                     string(
                                         name: 'COMMIT_SHA',
                                         value: env.GIT_COMMIT ?: '',
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_PROJECT',
+                                        value: env.JOB_NAME,
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_BUILD',
+                                        value: env.BUILD_NUMBER,
                                     ),
                                 ],
                                 wait: false,

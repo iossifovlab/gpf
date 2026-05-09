@@ -28,6 +28,21 @@ pipeline {
                 'precedence over BRANCH_NAME). Empty = use ' +
                 'BRANCH_NAME HEAD.',
         )
+        string(
+            name: 'UPSTREAM_PROJECT',
+            defaultValue: '',
+            description: 'Parent gpf job to inherit the gain ' +
+                'wheel from (e.g. iossifovlab/gpf/master). ' +
+                'Empty = manual run, fall back to gain master ' +
+                'lastSuccessful.',
+        )
+        string(
+            name: 'UPSTREAM_BUILD',
+            defaultValue: '',
+            description: 'Specific upstream gpf build number ' +
+                'to copy the gain wheel from. Empty + non-empty ' +
+                'UPSTREAM_PROJECT = lastSuccessful of that job.',
+        )
     }
 
     options {
@@ -78,6 +93,62 @@ pipeline {
                                       depth: 1]],
                     ])
                 }
+            }
+        }
+
+        stage('Fetch gain wheel') {
+            // rest_client/Dockerfile (since tb-eqh phase-5b)
+            // installs gain-core from a wheel staged at
+            // dist/gain/. This stage populates that directory
+            // before the docker build below — without it the
+            // `COPY dist/gain/ ./dist/gain/` step in the
+            // Dockerfile fails with "/dist/gain": not found.
+            //
+            // Two modes mirror web_e2e/Jenkinsfile.e2e:
+            //   * UPSTREAM_PROJECT set → copy dist/{core,web,
+            //     gain}/*.whl from the parent gpf build (the
+            //     selector pins to the exact build that
+            //     assembled the gpf image when UPSTREAM_BUILD
+            //     is also set, lastSuccessful() otherwise).
+            //     Filter mirrors web_e2e exactly even though
+            //     this Dockerfile only consumes dist/gain/ —
+            //     keeps the snippet uniform across downstream
+            //     jobs.
+            //   * UPSTREAM_PROJECT empty (manual run) → pull
+            //     gain master lastSuccessful directly. No
+            //     gpf-wheel build dance: this Dockerfile
+            //     builds gpf workspace members from path
+            //     sources via uv sync, so dist/core / dist/web
+            //     would be dead weight here.
+            steps {
+                script {
+                    if (params.UPSTREAM_PROJECT?.trim()) {
+                        copyArtifacts(
+                            filter: 'dist/core/*.whl, ' +
+                                    'dist/web/*.whl, ' +
+                                    'dist/gain/*.whl',
+                            fingerprintArtifacts: true,
+                            projectName: params.UPSTREAM_PROJECT,
+                            selector:
+                                params.UPSTREAM_BUILD?.trim()
+                                    ? specific(params.UPSTREAM_BUILD)
+                                    : lastSuccessful(),
+                        )
+                    } else {
+                        copyArtifacts(
+                            filter: 'dist/core/*.whl',
+                            fingerprintArtifacts: true,
+                            projectName: 'iossifovlab/gain/master',
+                            selector: lastSuccessful(),
+                            target: 'dist/gain',
+                            flatten: true,
+                        )
+                    }
+                }
+                sh '''
+                    ls -la dist/gain/
+                    test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
+                '''
             }
         }
 
