@@ -1,3 +1,9 @@
+// QueryService imports `oboe` as a default export. Mock it at the top
+// so subsequent `import oboe from 'oboe'` in the SUT resolves to the
+// jest.fn() — makeOboeStub() (tb-z39.1) wires up the fluent chain on
+// top of this. jest.mock is hoisted per-file by jest-preset-angular.
+jest.mock('oboe', () => ({ __esModule: true, default: jest.fn() }));
+
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -13,6 +19,7 @@ import {
   GenotypeBrowser,
   PersonFilter} from 'app/datasets/datasets';
 import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
+import { makeOboeStub } from './_test-helpers/oboe-stub';
 
 const queryMock = {
   data: {
@@ -395,5 +402,28 @@ describe('QueryService', () => {
 
     expect(summaryOboeInstanceSpy).toHaveBeenCalledWith();
     expect(service['summaryOboeInstance']).toBeNull();
+  });
+
+  it('makeOboeStub captures callbacks for later invocation (smoke)', () => {
+    const oboe = makeOboeStub();
+
+    const subject = service.streamPost('test/url', { foo: 'bar' });
+    expect(oboe.instance).toHaveBeenCalledTimes(1);
+
+    const emitted: unknown[] = [];
+    const sub = subject.subscribe(value => emitted.push(value));
+
+    const cb = oboe.latest();
+    expect(cb.node).toBeDefined();
+    expect(cb.done).toBeDefined();
+    expect(cb.fail).toBeDefined();
+
+    cb.node?.({ row: 1 });
+    cb.node?.({ row: 2 });
+    cb.done?.();
+
+    // streamPost emits each .node payload then a null sentinel on .done
+    expect(emitted).toStrictEqual([{ row: 1 }, { row: 2 }, null]);
+    sub.unsubscribe();
   });
 });
