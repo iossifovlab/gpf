@@ -93,7 +93,8 @@ services:
       # tb-nxl: per-worker user pool size. import_data.sh provisions
       # e2e_worker_0..N-1; e2e-tests reads the same value to size
       # Playwright's `workers`. Must stay in sync (one source of truth).
-      E2E_WORKER_COUNT: "${E2E_WORKER_COUNT:-16}"
+      # tb-iuv-fix: default 16 → 4 (see web_e2e/playwright.config.ts).
+      E2E_WORKER_COUNT: "${E2E_WORKER_COUNT:-4}"
     entrypoint: ["bash", "/data/import_data.sh"]
     restart: "no"
 
@@ -222,5 +223,6 @@ services:
       JENKINS: "1"
       # tb-nxl: matches the value passed to instance-import so
       # Playwright's worker count never exceeds the provisioned pool.
-      E2E_WORKER_COUNT: "${E2E_WORKER_COUNT:-16}"
+      # tb-iuv-fix: default 16 → 4 (see web_e2e/playwright.config.ts).
+      E2E_WORKER_COUNT: "${E2E_WORKER_COUNT:-4}"
     command: ["npx", "playwright", "test"]

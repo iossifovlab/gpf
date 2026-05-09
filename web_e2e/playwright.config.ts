@@ -39,15 +39,26 @@ export default defineConfig({
    * surfaces flaky-but-passing tests in the JUnit report (Playwright
    * marks them `flaky`). Local stays at 0 retries for fast fail signal. */
   retries: process.env.CI ? 1 : 0,
-  /* tb-g1z: 8→16 paired with gunicorn --workers 16 in
-   * web/Dockerfile.production to keep the browser:backend ratio at 1:1.
+  /* tb-iuv-fix: CI default 16 → 4. Reverts tb-g1z's 8→16 bump.
+   * The variant query API is StreamingHttpResponse (SSE) on a sync
+   * gunicorn worker that holds the connection for the whole stream
+   * duration. With CI=16 Playwright workers, all 16 sync gunicorn
+   * workers can be tied up simultaneously holding open streams,
+   * queueing every other request — which surfaced as the "Loading
+   * variants..." Mode A timeouts in builds #26-#37. Reproduced and
+   * fixed by local iter1 (workers=4: 1 fail = orthogonal Mode B) and
+   * iter2 (workers=8: 1 fail = same Mode B). 4 chosen over 8 for
+   * conservative headroom — leaves 12 free gunicorn workers for
+   * non-streaming requests at peak load. Costs ~5 min wall time vs
+   * tb-g1z's bench (workers=4 = 16.7 min, workers=16 = ~6.5 min);
+   * acceptable trade for stability.
    * tb-nxl: read E2E_WORKER_COUNT (single source of truth shared with
    * import_data.sh's per-worker user pool — see web_e2e/tests/utils.ts
-   * loginWorkerUser). CI default 16, local default 4 (matches the
+   * loginWorkerUser). CI default 4, local default 4 (matches the
    * provisioning default; bigger local CPUs can override via the env
    * var to keep parallelIndex bounded by the provisioned pool). */
   workers: parseInt(
-    process.env.E2E_WORKER_COUNT ?? (process.env.CI ? '16' : '4'),
+    process.env.E2E_WORKER_COUNT ?? '4',
     10,
   ),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
