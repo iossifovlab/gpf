@@ -33,75 +33,98 @@ Release notes live in `docs/changes.rst`.
 
 ## Development
 
-Two supported workflows: Conda/Mamba (long-standing) and
-uv (pyproject-driven). Pick one.
+`uv` is the primary supported workflow — it is what CI
+and the production image build use (the four CI test
+images and `web/Dockerfile.production`). The same path
+works for local development. `Conda/Mamba` is supported
+as an alternative for local development only; CI does
+not consume conda.
 
 The `gain` package lives in a separate repository
 (<https://github.com/iossifovlab/gain>) and must be
-checked out and installed alongside this one before the
-GPF packages will import:
+checked out as a sibling before either workflow will
+import it:
 
 ```bash
 git clone https://github.com/iossifovlab/gain.git ../gain
 ```
 
-### Option A: Conda/Mamba
-
-```bash
-mamba env create --name gpf --file ./environment.yml
-mamba env update --name gpf --file ./dev-environment.yml
-conda activate gpf
-
-pip install -e ../gain/core
-pip install -e core
-pip install -e web
-
-# Optional extensions:
-pip install -e federation
-pip install -e rest_client
-```
-
-The optional storage backends (`gpf_impala_storage`,
-`gpf_impala2_storage`, `gpf_gcp_storage`) bring in heavy
-non-Python dependencies (Java/Hadoop, the Google Cloud
-SDKs) that aren't on PyPI as wheels. Install them via the
-uv workspace path below — `uv sync --package
-gpf-impala-storage --group dev` (and equivalents) — rather
-than mixing pip and conda for those.
-
-Notes:
-- Always activate the `gpf` environment before running
-  tools or tests.
-- After changing package code, re-run the editable
-  installs if imports fail.
-
-### Option B: uv workspace
+### Option A: uv (recommended)
 
 This repo is a uv workspace (see root `pyproject.toml`).
 Runtime dependencies are declared per sub-project; dev
 tools live in each sub-project's own `dev` dependency
 group. The root `pyproject.toml` is a virtual coordinator
 (`[tool.uv] package = false`) that defaults to installing
-just `gpf-core` + `gpf-web` — the storage backends and
-the federation/rest_client extensions are workspace
-members but optional.
+just `gpf-core` + `gpf-web`. The `federation/` and
+`rest_client/` extensions are workspace members but
+optional; the heavy storage backends (`impala_storage/`,
+`impala2_storage/`, `gcp_storage/`) are deliberately not
+workspace members and install standalone (see "Optional
+genotype storages" below).
+
+`gain-core` is consumed as a wheel produced by gain's CI
+rather than as a sibling-repo path source. Build a fresh
+wheel before the first sync (and again whenever you pull
+new gain master, unless you opt into editable gain — see
+"gain-core: wheel install vs editable" below):
+
+```bash
+cd ../gain
+uv build --package gain-core --out-dir ../gpf/dist/gain
+cd ../gpf
+```
+
+Common sync invocations (all require `--find-links
+./dist/gain` so uv can resolve gain-core):
 
 ```bash
 # Default: install gpf-core + gpf-web
-uv sync
+uv sync --find-links ./dist/gain
 
 # Everything: all workspace members + every dev group
-uv sync --all-packages --all-groups
+uv sync --find-links ./dist/gain --all-packages --all-groups
 
-# A single sub-project
-uv sync --package gpf-impala-storage --group dev
+# A single workspace member
+uv sync --find-links ./dist/gain --package gpf-federation --group dev
 
 # Activate the venv (optional; `uv run` works without it)
 source .venv/bin/activate
 ```
 
-The lockfile (`uv.lock`) is committed. Use `uv lock
---upgrade` to refresh.
+Run any command in the project's environment without
+activation via `uv run`:
+
+```bash
+uv run pytest -v tests/small/
+uv run ruff check --fix .
+uv run mypy gpf --exclude core/docs/
+```
+
+Manage dependencies via uv (don't edit `pyproject.toml`
+deps directly — uv updates the lockfile in step):
+
+```bash
+# Add a runtime dep to a workspace member
+cd core && uv add <dep>
+
+# Add a dev dep
+cd core && uv add --group dev <dep>
+
+# Remove a dep
+cd core && uv remove <dep>
+
+# Refresh the entire lockfile
+uv lock --upgrade
+
+# Refresh just one dep
+uv lock --upgrade-package <dep>
+```
+
+The lockfile (`uv.lock`) is committed and managed by uv.
+After `git pull`, re-run `uv sync --find-links ./dist/gain`
+(plus `--all-packages --all-groups` if you've installed
+the optional extensions) to pick up lockfile updates.
 
 ### gain-core: wheel install vs editable
 
@@ -184,25 +207,43 @@ from picking up the local override; flipping it off
 exposes the file again so a clean `git checkout` snaps
 back to the committed state.
 
+### Option B: Conda/Mamba (local dev only)
+
+```bash
+mamba env create --name gpf --file ./environment.yml
+mamba env update --name gpf --file ./dev-environment.yml
+conda activate gpf
+
+pip install -e ../gain/core
+pip install -e core
+pip install -e web
+
+# Optional extensions:
+pip install -e federation
+pip install -e rest_client
+```
+
+CI does not consume conda. Conda users can follow the
+uv command shapes from inside an activated `gpf` env —
+e.g. `pip install -e ./impala_storage` for the storage
+backends, or running tests/lint without the `uv run`
+prefix.
+
 ### Run tests
 
-Quick cycles (examples):
-
 ```bash
+# Quick cycles
 cd core
-pytest -v tests/small/test_file.py
-pytest -v tests/small/module/
+uv run pytest -v tests/small/test_file.py
+uv run pytest -v tests/small/module/
+
+# Full suites in parallel
+cd core && uv run pytest -v -n 10 tests/
+cd web  && uv run pytest -v -n 5 gpf_web/
 ```
 
-Full suites (parallel):
-
-```bash
-cd core
-conda run -n gpf pytest -v -n 10 tests/
-
-cd ../web
-conda run -n gpf pytest -v -n 5 gpf_web/
-```
+Conda users: from inside an activated `gpf` env, drop the
+`uv run` prefix (`pytest -v -n 10 tests/` directly).
 
 Test markers and configuration are defined in
 `core/pytest.ini` (e.g., `gs_inmemory`, `gs_duckdb`,
@@ -211,18 +252,32 @@ Test markers and configuration are defined in
 ### Linting and type checking
 
 ```bash
-ruff check --fix .
-mypy gpf --exclude core/docs/
-mypy gpf_web --exclude web/docs/ \
+uv run ruff check --fix .
+uv run mypy gpf --exclude core/docs/
+uv run mypy gpf_web --exclude web/docs/ \
     --exclude web/conftest.py
 ```
 
 ### Optional genotype storages
 
-The optional storage backends are workspace members
-installable via uv; see the `uv sync --package
-gpf-impala-storage --group dev` path under "Option B" above
-(or `gpf-impala2-storage`, `gpf-gcp-storage`).
+The optional storage backends (`gpf_impala_storage`,
+`gpf_impala2_storage`, `gpf_gcp_storage`) bring in heavy
+non-Python dependencies (Java/Hadoop, the Google Cloud
+SDKs) that aren't on PyPI as wheels. They have their own
+`pyproject.toml` files but are deliberately **not**
+workspace members of the root coordinator — installing
+all workspace members would otherwise pull these heavy
+backend deps into the lockfile for everyone. Install
+them standalone into the active venv:
+
+```bash
+uv pip install -e ./impala_storage
+uv pip install -e ./impala2_storage
+uv pip install -e ./gcp_storage
+```
+
+Conda users: use plain `pip install -e ./impala_storage`
+(etc.) from inside the activated conda env — same shape.
 
 GCP storage tests need application-default credentials for
 the `seqpipe-gcp-storage-testing` project:
@@ -235,8 +290,8 @@ gcloud auth application-default login
 Then, from the `gcp_storage/` directory:
 
 ```bash
-pytest -v gcp_storage/tests/
-pytest -v ../core/tests/ \
+uv run pytest -v gcp_storage/tests/
+uv run pytest -v ../core/tests/ \
     --gsf gcp_storage/tests/gcp_storage.yaml
 ```
 
@@ -257,16 +312,20 @@ git commit --no-verify
 
 ## Common pitfalls
 
+- Prefer `uv run <cmd>` over activating the venv — works
+  in any fresh shell without state.
+- After `git pull`, re-run `uv sync --find-links
+  ./dist/gain` (add `--all-packages --all-groups` if
+  you've installed the optional workspace members) to
+  pick up lockfile updates.
+- After `git pull` in `../gain/`, rebuild the gain wheel
+  and re-sync: `cd ../gain && uv build --package gain-core
+  --out-dir ../gpf/dist/gain && cd ../gpf && uv sync
+  --find-links ./dist/gain`. Editable-gain users skip this
+  — see "Editable gain for local development" above.
 - Conda users: always activate the `gpf` environment
   before running commands (`conda activate gpf`), and
   re-run `pip install -e core` if imports fail.
-- uv users: prefer `uv run <cmd>` over activating the
-  venv, and re-run `uv sync` (or `uv sync --all-packages
-  --all-groups` if you've installed the optional
-  workspace members) after pulling changes to pick up
-  lockfile updates.
-- If `gain` imports fail, re-install gain from its
-  sibling checkout (`pip install -e ../gain/core`).
 - Some tests may be flaky with high parallelism; reduce
   `-n` or run without it.
 

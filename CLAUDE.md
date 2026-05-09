@@ -12,55 +12,79 @@ Simplex Collection with ~2,600 autism families).
 
 ## Environment Setup
 
-**Two supported workflows:**
-
-- **Conda/Mamba** — local development only. Host-only
-  install via `environment.yml` + `dev-environment.yml`.
-  No conda Docker images: `Dockerfile.seqpipe` and the
-  per-storage Dockerfiles (`gcp_storage/`,
-  `impala_storage/`, `impala2_storage/`) were removed in
-  tb-qp5; the only remaining conda usage is host setup
-  for individual contributors.
-- **uv** — used by everything else: the four CI test
-  images (`core/`, `web/`, `federation/`,
-  `rest_client/Dockerfile`) and the production builder
-  (`web/Dockerfile.production`). uv is also a fine
-  alternative for local development.
+`uv` is the primary workflow — used by all four CI test
+images (`core/`, `web/`, `federation/`,
+`rest_client/Dockerfile`) and the production builder
+(`web/Dockerfile.production`). Conda/Mamba is supported
+for local development only; CI does not consume it. See
+`README.md` for the conda setup commands.
 
 The `gain` package lives in a separate repository
 (<https://github.com/iossifovlab/gain>) and must be
-checked out as a sibling and installed alongside this
-one before the GPF packages will import:
+checked out as a sibling. Unlike before, gain is **not**
+a path source in `pyproject.toml`; it is consumed as a
+wheel built by gain's CI and dropped into `dist/gain/`
+(tb-eqh phase-5b — fixes the docker-layer-cache hazard
+of `RUN git clone gain ... checkout master`).
 
 ```bash
+# First-time bootstrap of a local checkout
 git clone https://github.com/iossifovlab/gain.git ../gain
+cd ../gain
+uv build --package gain-core --out-dir ../gpf/dist/gain
+cd ../gpf
+uv sync --find-links ./dist/gain
 ```
 
-Conda/Mamba workflow (local dev):
+The root `pyproject.toml` is a virtual coordinator
+(`[tool.uv] package = false`); default `uv sync`
+installs `gpf-core` + `gpf-web`. Common variants:
 
 ```bash
-mamba env create --name gpf --file ./environment.yml
-mamba env update --name gpf --file ./dev-environment.yml
-conda activate gpf
-
-pip install -e ../gain/core
-pip install -e core
-pip install -e web
-```
-
-uv workspace workflow (root `pyproject.toml` is a virtual
-coordinator with `[tool.uv] package = false`):
-
-```bash
-# Default: gpf-core + gpf-web
-uv sync
-
 # Everything: all workspace members + every dev group
-uv sync --all-packages --all-groups
+uv sync --find-links ./dist/gain --all-packages --all-groups
 
-# A single sub-project
-uv sync --package gpf-impala-storage --group dev
+# A single workspace member
+uv sync --find-links ./dist/gain --package gpf-federation --group dev
 ```
+
+The storage backends (`impala_storage/`, `impala2_storage/`,
+`gcp_storage/`) are deliberately **not** workspace members
+— their heavy backend deps (Hadoop, Google Cloud SDKs)
+would otherwise enter the workspace lockfile. Install
+standalone:
+
+```bash
+uv pip install -e ./impala_storage
+```
+
+Run any command in the project's environment without
+activation via `uv run` (canonical form — works in any
+fresh shell, no activation required):
+
+```bash
+uv run pytest -v tests/small/
+uv run ruff check --fix .
+uv run mypy gpf --exclude core/docs/
+```
+
+Manage dependencies via uv (don't edit `pyproject.toml`
+deps directly; uv updates the lockfile in step):
+
+```bash
+cd core && uv add <dep>                  # runtime dep
+cd core && uv add --group dev <dep>      # dev dep
+cd core && uv remove <dep>
+uv lock --upgrade                        # refresh whole lock
+uv lock --upgrade-package <dep>          # refresh one
+```
+
+After `git pull`, re-run `uv sync --find-links
+./dist/gain`. After `git pull` in `../gain/`, rebuild the
+gain wheel first (`uv build --package gain-core --out-dir
+../gpf/dist/gain` from `../gain/`) unless you've enabled
+the editable-gain override (see README.md → "Editable
+gain for local development").
 
 ### Production image: wheels-only invariant (tb-qp5)
 
@@ -93,16 +117,16 @@ wheels-only would fail by design there.
 
 ```bash
 # Run a single test file
-cd core && pytest -v tests/small/path/to/test_file.py
+cd core && uv run pytest -v tests/small/path/to/test_file.py
 
 # Run a test module
-cd core && pytest -v tests/small/module/
+cd core && uv run pytest -v tests/small/module/
 
 # Run GPF tests in parallel
-cd core && pytest -v -n 10 tests/
+cd core && uv run pytest -v -n 10 tests/
 
 # Run GPF Web tests in parallel
-cd web && pytest -v -n 5 gpf_web/
+cd web && uv run pytest -v -n 5 gpf_web/
 ```
 
 Test markers in `core/pytest.ini`: genotype storage
@@ -117,11 +141,11 @@ All tests run with `PYTHONHASHSEED=0`.
 
 ```bash
 # Ruff linting (fast, primary linter)
-ruff check --fix .
+uv run ruff check --fix .
 
 # Type checking (slow, 2-5 minutes)
-mypy gpf --exclude core/docs/
-mypy gpf_web --exclude web/docs/ \
+uv run mypy gpf --exclude core/docs/
+uv run mypy gpf_web --exclude web/docs/ \
     --exclude web/conftest.py
 ```
 
