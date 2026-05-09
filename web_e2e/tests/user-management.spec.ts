@@ -1190,9 +1190,24 @@ test.describe('Dataset description access rights '
 
     await page.locator('#header a:text("Datasets")').click();
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
+
+    // tb-pa6: same fire-and-forget POST race as the in-file
+    // `should save the markdown` test (line 1135). The SPA's
+    // markdown-editor save() does an optimistic UI update + a
+    // POST to /datasets/description/<id> without awaiting the
+    // response. Without waiting here, the test logs out and the
+    // researcher logs in before the save reaches the backend —
+    // researcher's GET sees an empty description and the
+    // toHaveText assertion at line 1200 times out.
+    const isDescriptionSave = (resp: import('@playwright/test').Response): boolean =>
+      resp.url().includes('/api/v3/datasets/description/') && resp.request().method() === 'POST';
+
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('IOSSIFOV TEST DESCRIPTION');
-    await page.getByText('Save').click();
+    await Promise.all([
+      page.waitForResponse(isDescriptionSave),
+      page.getByText('Save').click(),
+    ]);
     await utils.logout(page);
 
     await utils.login(page, 'user_iossifov_2014@iossifovlab.com');
@@ -1205,7 +1220,10 @@ test.describe('Dataset description access rights '
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('');
-    await page.getByText('Save').click();
+    await Promise.all([
+      page.waitForResponse(isDescriptionSave),
+      page.getByText('Save').click(),
+    ]);
 
     await page.locator('a:text("Management")').click();
     await page.locator(
