@@ -1,0 +1,37 @@
+# Local-dev overrides for `docker compose up`.
+#
+# Auto-loaded by `docker compose` when run from the repo root with
+# no `-f` flag — adds host-side port publishing so local pytest
+# runs can reach the fixture stack via the defaults in
+# gain/core/gain/genomic_resources/testing.py:
+#   * apache        → http://localhost:28080  (HTTP_HOST default)
+#   * minio         → http://localhost:29000  (MINIO_HOST default)
+#   * minio console → http://localhost:29001
+#
+# Host ports are deliberately offset (28080, 29000, 29001) so they
+# don't collide with the very common defaults on dev machines
+# (Apache, MinIO, Portainer, etc.). Container-side ports stay at
+# their service defaults (80, 9000, 9001) so CI's in-network
+# reachability is unchanged.
+#
+# Bound to 127.0.0.1 so the test stack isn't reachable from the LAN.
+#
+# CI passes `-f docker-compose.yaml` explicitly to skip this file —
+# without that, parallel matrix cells (multiple core/web stages) would
+# race on the same host ports and all but one would fail to start.
+#
+# Mirrors gain/docker-compose.override.yaml — both repos share the
+# same MINIO_HOST/HTTP_HOST contract via gain's testing helpers, so
+# local-dev port mappings stay symmetric. Added as part of tb-eqh
+# phase-5 alongside gpf adopting gain.s3_test_server_endpoint().
+
+services:
+
+  minio:
+    ports:
+      - "127.0.0.1:29000:9000"
+      - "127.0.0.1:29001:9001"
+
+  apache:
+    ports:
+      - "127.0.0.1:28080:80"

@@ -15,6 +15,7 @@ from gain.genomic_resources.genomic_context import (
 from gain.genomic_resources.genomic_context_base import (
     GenomicContext,
 )
+from gain.genomic_resources.testing import s3_test_server_endpoint
 
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
@@ -112,7 +113,11 @@ def _default_genotype_storage_configs(
     root_path: pathlib.Path,
 ) -> dict[str, dict[str, Any]]:
 
-    minio_host = os.environ.get("MINIO_HOST", "localhost")
+    # tb-eqh phase-5: parse MINIO_HOST via gain's helper so the env-var
+    # contract has a single source of truth. Accepts both `host` and
+    # `host:port`; default `localhost:29000` matches the override-file
+    # port mapping. Returns a fully-qualified URL.
+    s3_endpoint_url = f"{s3_test_server_endpoint()}/"
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
         os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"  # noqa: S105
     if "AWS_ACCESS_KEY_ID" not in os.environ:
@@ -150,7 +155,7 @@ def _default_genotype_storage_configs(
             "storage_type": "duckdb_s3_parquet",
             "memory_limit": "125MB",
             "bucket_url": f"s3://test-bucket{root_path}/duckdb-s3-parquet",
-            "endpoint_url": f"http://{minio_host}:9000/",
+            "endpoint_url": s3_endpoint_url,
             "use_ssl": False,
         },
 
@@ -170,7 +175,7 @@ def _default_genotype_storage_configs(
             "memory_limit": "125MB",
             "db": "storage_s3.db",
             "bucket_url": f"s3://test-bucket{root_path}/duckdb-s3",
-            "endpoint_url": f"http://{minio_host}:9000/",
+            "endpoint_url": s3_endpoint_url,
             "use_ssl": False,
         },
     }
