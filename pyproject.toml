@@ -39,7 +39,10 @@ gpf-core = { workspace = true }
 gpf-web = { workspace = true }
 gpf-federation = { workspace = true }
 gpf-rest-client = { workspace = true }
-# gain-core lives in a sibling repo
-# (https://github.com/iossifovlab/gain). Point at it
-# locally so workspace installs do not hit PyPI.
-gain-core = { path = "../gain/core", editable = true }
+# gain-core is NOT pinned to a path source here. It is consumed
+# as a wheel built by gain's CI. The gpf Jenkinsfile's
+# `Fetch gain wheel` stage drops it into dist/gain/, and each CI
+# Dockerfile passes that directory as `--find-links` to uv. For
+# local development with editable gain — copy
+# pyproject.local.toml.template to pyproject.local.toml and
+# follow README's "Editable gain for local development" section.

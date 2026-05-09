@@ -103,6 +103,87 @@ source .venv/bin/activate
 The lockfile (`uv.lock`) is committed. Use `uv lock
 --upgrade` to refresh.
 
+### gain-core: wheel install vs editable
+
+`gain-core` is **not** on PyPI and **no longer pinned to
+a sibling-repo path source** in `pyproject.toml` (it used
+to be — that pattern caused tb-eqh, where docker layer
+caching of `RUN git clone gain ... checkout master`
+served stale gain code across CI builds).
+
+The committed model: `gain-core` is consumed as a wheel
+that gets dropped into `dist/gain/` and resolved via
+`uv sync --find-links ./dist/gain`. CI provides the
+wheel automatically; local devs have two choices.
+
+#### CI
+
+The gpf Jenkinsfile's `Fetch gain wheel` stage uses
+`copyArtifacts` to pull `gain-core-*.whl` from
+`iossifovlab/gain/master`'s last successful build into
+`dist/gain/` before any docker build runs. Each CI
+Dockerfile then `COPY`s that wheel into the image and
+syncs against it. Wheel filenames encode the gain SHA
+(via `hatch-vcs`), so a moving gain master invalidates
+the docker layer cache by content — no more stale-clone
+class of bugs.
+
+#### Local dev — wheel from sibling clone (matches CI)
+
+If you don't need editable gain (e.g. you're working on
+gpf only, gain is read-only):
+
+```bash
+# Build a fresh gain wheel into gpf/dist/gain/
+cd ../gain
+uv build --package gain-core --out-dir ../gpf/dist/gain
+cd ../gpf
+uv sync --find-links ./dist/gain
+```
+
+Re-run the `uv build` step whenever you pull new gain
+master to refresh the wheel.
+
+#### Editable gain for local development
+
+If you're working across both repos and want gain edits
+to take effect without rebuilding a wheel, opt into the
+editable path source via the local override file:
+
+```bash
+# 1. Copy the template (once per checkout):
+cp pyproject.local.toml.template pyproject.local.toml
+# pyproject.local.toml is gitignored.
+
+# 2. Tell git to ignore future local edits to pyproject.toml,
+#    then merge in the override block from your local file:
+git update-index --skip-worktree pyproject.toml
+python -c "
+import pathlib, tomllib, tomlkit
+base = tomlkit.parse(pathlib.Path('pyproject.toml').read_text())
+local = tomllib.loads(pathlib.Path('pyproject.local.toml').read_text())
+for pkg, src in local.get('tool', {}).get('uv', {}).get('sources', {}).items():
+    base['tool']['uv']['sources'][pkg] = src
+pathlib.Path('pyproject.toml').write_text(tomlkit.dumps(base))
+"
+
+# 3. Sync — uv will now use the editable path source for gain-core.
+uv sync
+```
+
+To revert to the canonical (CI-shaped) state — e.g.
+before opening a PR:
+
+```bash
+git update-index --no-skip-worktree pyproject.toml
+git checkout -- pyproject.toml uv.lock
+```
+
+The `skip-worktree` bit prevents `git status`/`git add`
+from picking up the local override; flipping it off
+exposes the file again so a clean `git checkout` snaps
+back to the committed state.
+
 ### Run tests
 
 Quick cycles (examples):

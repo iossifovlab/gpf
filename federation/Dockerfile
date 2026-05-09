@@ -22,10 +22,6 @@ ENV UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
     PYTHONHASHSEED=0
 
-ARG GAIN_REVISION=master
-RUN git clone https://github.com/iossifovlab/gain.git /gain \
-    && git -C /gain checkout ${GAIN_REVISION}
-
 WORKDIR /workspace
 
 COPY pyproject.toml uv.lock ruff.toml mypy.ini pylintrc ./
@@ -40,13 +36,21 @@ COPY core/gpf/ ./core/gpf/
 COPY web/gpf_web/ ./web/gpf_web/
 COPY rest_client/rest_client/ ./rest_client/rest_client/
 
+# gain-core wheel: provided by the parent Jenkinsfile's `Fetch gain
+# wheel` stage (copyArtifacts from gain master's last successful build)
+# into dist/gain/. Wheel filename encodes the gain SHA, so a moving
+# gain master invalidates this COPY layer by content — no
+# docker-layer-cache stale-clone footgun (tb-eqh phase-5). Local devs:
+# `cd ../gain && uv build --package gain-core --out-dir ../gpf/dist/gain`.
+COPY dist/gain/ ./dist/gain/
+
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-federation --group dev --frozen --no-install-project
+    uv sync --package gpf-federation --group dev --find-links ./dist/gain --no-install-project
 
 COPY federation/ ./federation/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-federation --group dev --frozen
+    uv sync --package gpf-federation --group dev --find-links ./dist/gain
 
 ENV PATH="/workspace/.venv/bin:$PATH"
 WORKDIR /workspace/federation

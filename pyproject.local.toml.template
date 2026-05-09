@@ -1,0 +1,25 @@
+# Template for local-development override of gpf's dependency
+# resolution. Copy to `pyproject.local.toml` (gitignored) and
+# follow the workflow in README.md → "Editable gain for local
+# development".
+#
+# Why this exists: gpf's committed pyproject.toml resolves
+# `gain-core` from a wheel via `--find-links ./dist/gain` (CI
+# fetches the wheel from gain's pipeline; see the Jenkinsfile's
+# `Fetch gain wheel` stage). That gives CI a deterministic gain
+# version per build with no docker-layer-cache footgun (tb-eqh).
+#
+# But local devs working on gain + gpf simultaneously want an
+# editable install of gain so source edits take effect without
+# rebuilding a wheel. This template provides that override.
+#
+# uv does NOT auto-merge this file with pyproject.toml. The
+# README documents two workflows: a wrapper script (recommended)
+# or manual append + `git update-index --skip-worktree
+# pyproject.toml`.
+
+[tool.uv.sources]
+# Editable path source for gain-core. Assumes gain is checked out
+# as a sibling repo at ../gain/ (the conventional layout in
+# genomics-toolbox/). Adjust the path if your layout differs.
+gain-core = { path = "../gain/core", editable = true }

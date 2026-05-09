@@ -136,3 +136,15 @@ CLAUDE*.md
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# tb-eqh phase-5: gain wheel staging dir.
+# CI's `Fetch gain wheel` Jenkinsfile stage drops the latest
+# successful gain master wheel here. Local devs build on demand
+# via `cd ../gain && uv build --package gain-core --out-dir ../gpf/dist/gain`.
+/dist/
+
+# tb-eqh phase-5: local-development pyproject override
+# (path source for editable gain-core). Devs copy
+# pyproject.local.toml.template → pyproject.local.toml. See
+# README's "Editable gain for local development" section.
+pyproject.local.toml

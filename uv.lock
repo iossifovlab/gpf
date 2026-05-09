@@ -1015,7 +1015,8 @@ wheels = [
 
 [[package]]
 name = "gain-core"
-source = { editable = "../gain/core" }
+version = "2026.4.16.post1.dev53+g9b8d0c636.d20260509"
+source = { registry = "dist/gain" }
 dependencies = [
     { name = "apsw" },
     { name = "cerberus" },
@@ -1042,53 +1043,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "s3fs" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "apsw", specifier = ">=3.52" },
-    { name = "cerberus", specifier = ">=1.3" },
-    { name = "dask", specifier = ">=2026.1" },
-    { name = "dask-jobqueue", specifier = ">=0.9" },
-    { name = "distributed", specifier = ">=2026.1" },
-    { name = "docker", specifier = ">=7.1" },
-    { name = "filelock", specifier = ">=3.19" },
-    { name = "fsspec", specifier = ">=2026.2" },
-    { name = "intervaltree" },
-    { name = "jinja2", specifier = ">=3.1" },
-    { name = "lark", specifier = ">=1.2" },
-    { name = "markdown2", specifier = ">=2.4" },
-    { name = "matplotlib", specifier = ">=3.8" },
-    { name = "networkx", specifier = ">=3.6" },
-    { name = "numpy", specifier = ">=2.2" },
-    { name = "pandas", specifier = ">=2.2" },
-    { name = "psutil" },
-    { name = "pybigwig", specifier = ">=0.3" },
-    { name = "pydantic", specifier = ">=2.8" },
-    { name = "pyliftover", specifier = ">=0.4" },
-    { name = "pysam", specifier = ">=0.24" },
-    { name = "python-box", specifier = ">=7.1" },
-    { name = "pyyaml", specifier = ">=6" },
-    { name = "s3fs", specifier = ">=2026.2" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage" },
-    { name = "mypy", specifier = "==1.15.0" },
-    { name = "pandas-stubs" },
-    { name = "pyarrow-stubs" },
-    { name = "pylint" },
-    { name = "pylint-junit" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-doctestplus", specifier = ">=1.2" },
-    { name = "pytest-mock" },
-    { name = "pytest-xdist" },
-    { name = "pytestarch" },
-    { name = "ruff", specifier = "==0.14.6" },
-    { name = "types-docker" },
-    { name = "types-psutil" },
-    { name = "types-pyyaml" },
+sdist = { path = "gain_core-2026.4.16.post1.dev53+g9b8d0c636.d20260509.tar.gz" }
+wheels = [
+    { path = "gain_core-2026.4.16.post1.dev53+g9b8d0c636.d20260509-py3-none-any.whl" },
 ]
 
 [[package]]
@@ -1166,7 +1123,7 @@ requires-dist = [
     { name = "duckdb", specifier = ">=1.5,<2" },
     { name = "filelock", specifier = ">=3.19" },
     { name = "fsspec", specifier = ">=2026.2" },
-    { name = "gain-core", editable = "../gain/core" },
+    { name = "gain-core" },
     { name = "intervaltree" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "lark", specifier = ">=1.2" },
@@ -1373,7 +1330,7 @@ requires-dist = [
     { name = "django-cors-headers", specifier = ">=4.7" },
     { name = "django-oauth-toolkit", specifier = ">=3" },
     { name = "djangorestframework", specifier = ">=3.16" },
-    { name = "gain-core", editable = "../gain/core" },
+    { name = "gain-core" },
     { name = "gpf-core", editable = "core" },
     { name = "gunicorn", specifier = ">=22" },
     { name = "importlib-metadata", specifier = ">=8.6" },
