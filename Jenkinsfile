@@ -277,11 +277,25 @@ pipeline {
                                         // bucket setup job — run it inline
                                         // instead of via `up --wait`, which
                                         // races with short-lived services.
+                                        // tb-o19: pass -f docker-compose.yaml
+                                        // explicitly so docker compose does
+                                        // NOT auto-load
+                                        // docker-compose.override.yaml. The
+                                        // override file publishes host ports
+                                        // 127.0.0.1:29000/29001/28080 for
+                                        // local-dev `docker compose up`; in
+                                        // CI those host ports are global to
+                                        // the agent and any concurrent build
+                                        // would race on them. Mirrors gain's
+                                        // Jenkinsfile, which has used -f
+                                        // since the override file existed.
                                         sh '''
                                             mkdir -p core/tests/.test_grr
-                                            docker compose -p "$COMPOSE_PROJECT" \
+                                            docker compose -f docker-compose.yaml \
+                                                -p "$COMPOSE_PROJECT" \
                                                 up -d --wait apache minio
-                                            docker compose -p "$COMPOSE_PROJECT" \
+                                            docker compose -f docker-compose.yaml \
+                                                -p "$COMPOSE_PROJECT" \
                                                 run --rm minio-client
                                         '''
 
@@ -362,7 +376,7 @@ pipeline {
                                                 ' 2>&1 || true
                                             ) > reports/core/network-diagnostic.txt 2>&1 || true
 
-                                            docker compose -p "$COMPOSE_PROJECT" down -v --remove-orphans || true
+                                            docker compose -f docker-compose.yaml -p "$COMPOSE_PROJECT" down -v --remove-orphans || true
                                         '''
                                     }
                                 }
