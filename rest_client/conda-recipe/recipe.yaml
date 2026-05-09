@@ -1,0 +1,41 @@
+schema_version: 1
+
+context:
+  name: gpf-rest-client
+  version: ${{ env.get("VCS_VERSION") | default("0.0.0.dev0") }}
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  - path: ../../dist/rest_client
+    use_gitignore: false
+  - path: ../../LICENSE
+
+build:
+  noarch: python
+  number: 0
+  script:
+    interpreter: bash
+    content: |
+      set -euo pipefail
+      ls -la
+      "$PYTHON" -m pip install --no-deps --no-build-isolation -vv ./*.whl
+
+requirements:
+  host:
+    - python >=3.12
+    - pip
+  run:
+    - python >=3.12
+    - gpf-core ==${{ version }}
+    - gpf-web ==${{ version }}
+    - ijson >=3.2
+    - requests >=2.32
+
+about:
+  homepage: https://github.com/iossifovlab/gpf
+  summary: GPF REST Client — REST API client library for GPF
+  license: MIT
+  license_file: LICENSE

@@ -1,0 +1,78 @@
+# Combined production image for gpf-web (Django backend +
+# Angular frontend in one container, supervised by supervisord).
+#
+# Build from the repo root, after the split images:
+#
+#     docker build -f web/Dockerfile.production \
+#         -t gpf-web-api-prod:<tag> .
+#     docker build -f web_ui/Dockerfile.production \
+#         --build-arg BACKEND_IMAGE=gpf-web-api-prod:<tag> \
+#         -t gpf-web-ui-prod:<tag> .
+#     docker build -f Dockerfile.production \
+#         --build-arg BACKEND_IMAGE=gpf-web-api-prod:<tag> \
+#         --build-arg FRONTEND_IMAGE=gpf-web-ui-prod:<tag> \
+#         -t gpf-web-prod:<tag> .
+#
+# The image is a thin assembly: the venv comes from the
+# already-built backend image, the SPA + Django static come
+# from the already-built frontend image, and supervisord
+# foreground-runs gunicorn (loopback :9001) and apache2 (:80).
+# Single deploy artifact for environments where running two
+# containers + a network is overkill.
+
+# syntax=docker/dockerfile:1.7
+
+ARG PYTHON_IMAGE=python:3.12-slim
+ARG BACKEND_IMAGE=gpf-web-api-prod:latest
+ARG FRONTEND_IMAGE=gpf-web-ui-prod:latest
+
+
+# Pull in the already-built backend so we can copy the venv.
+FROM ${BACKEND_IMAGE} AS backend
+
+
+# Pull in the already-built frontend so we can copy the
+# pre-collected Apache htdocs (SPA + Django static).
+FROM ${FRONTEND_IMAGE} AS frontend
+
+
+# Runtime: same Python base as the backend (so /opt/gpf works
+# unchanged), plus apache2 + supervisor.
+FROM ${PYTHON_IMAGE} AS runtime
+
+# libmagic1 + libmariadb3 + curl: same runtime deps as the
+# backend image (the venv we copy in expects them). apache2
+# + supervisor are the new pieces specific to this image.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        apache2 \
+        curl \
+        libmagic1 \
+        libmariadb3 \
+        supervisor \
+ && rm -rf /var/lib/apt/lists/* \
+ && a2dismod -f autoindex 2>/dev/null || true
+
+# Bring the wheel-installed venv straight from the backend.
+COPY --from=backend /opt/gpf /opt/gpf
+
+# Bring the pre-built SPA + Django static (already merged
+# under htdocs/ by the frontend image's runtime stage).
+# Apache on Debian serves /var/www/html/ by default — switch
+# the document root in our config to that path.
+COPY --from=frontend /usr/local/apache2/htdocs/ /var/www/html/
+
+# Apache + supervisord configs.
+COPY httpd-combined.conf /etc/apache2/apache2.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+
+ENV PATH=/opt/gpf/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=gpf_web.production_settings
+
+EXPOSE 80
+
+# supervisord runs as PID 1; it forks gunicorn (loopback
+# :9001) and apache2 (:80) and forwards their stdio to the
+# container's stdio.
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

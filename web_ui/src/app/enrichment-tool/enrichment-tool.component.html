@@ -1,0 +1,20 @@
+<div *ngIf="selectedDataset?.id" class="container" style="margin-bottom: 20px">
+  <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
+  <gpf-enrichment-models-block [selectedDatasetId]="selectedDataset.id"></gpf-enrichment-models-block>
+
+  <div class="form-block button" style="display: inline-flex">
+    <input
+      id="enrichment-test-button"
+      [disabled]="disableQueryButtons"
+      class="btn btn-md btn-primary"
+      type="button"
+      value="Enrichment Test"
+      (click)="submitQuery()" />
+    <gpf-save-query
+      [disabled]="disableQueryButtons || !selectedDataset?.accessRights"
+      queryType="enrichment"></gpf-save-query>
+  </div>
+  <gpf-enrichment-table
+    [class.disabled-table-links]="!selectedDataset?.accessRights"
+    [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
+</div>

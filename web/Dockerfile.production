@@ -1,0 +1,122 @@
+# Production image for the gpf-web Django backend.
+#
+# Build from the repo root so the COPY paths resolve to
+# dist/core/ and dist/web/ (where the root Jenkinsfile's
+# parallel block writes the wheels):
+#
+#     docker build -f web/Dockerfile.production \
+#         -t gpf-web-api-prod:<tag> .
+#
+# The image installs only `gpf-core` and `gpf-web` —
+# storage backends and federation/rest_client are separate
+# packages and not part of the API runtime.
+# Single foreground process: gunicorn on 9001.
+
+# syntax=docker/dockerfile:1.7
+
+ARG PYTHON_IMAGE=python:3.12-slim
+
+
+# 1) Builder: install the wheels into an isolated venv at /opt/gpf.
+FROM ${PYTHON_IMAGE} AS builder
+
+# uv 0.11.3 — same version as the four CI test Dockerfiles
+# (core/, web/, federation/, rest_client/Dockerfile). Pinned so
+# the production builder uses the same resolver behaviour the test
+# images do.
+COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /uvx /usr/local/bin/
+
+# gcc + pkg-config + libmariadb-dev for compiling mysqlclient
+# (gpf-web's [mysql] extra — no manylinux wheel exists for it
+# on PyPI, so it always builds from source against the C
+# client lib). All build-only deps; the runtime stage below
+# just keeps libmariadb3.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        gcc \
+        pkg-config \
+        libmariadb-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# UV_LINK_MODE=copy: avoids hardlink warnings when /root/.cache/uv
+# (where uv stages downloads) and /opt/gpf are on different
+# filesystems inside Docker overlays.
+ENV UV_LINK_MODE=copy
+
+RUN uv venv /opt/gpf
+
+WORKDIR /wheels
+# gain-core wheel — copied into dist/gain/ by the parent
+# Jenkinsfile's `Fetch gain wheel` stage from gain's last
+# successful master build. gpf-core depends on gain-core, which
+# isn't on PyPI; bundling the wheel locally lets the single
+# `uv pip install /wheels/*.whl` below resolve everything against
+# the local wheel dir without needing network access to a
+# private registry or a git+ install in the image.
+COPY dist/gain/gain_core-*.whl ./
+COPY dist/core/gpf_core-*.whl ./
+COPY dist/web/gpf_web-*.whl ./
+
+# Install the wheels and explicitly pin mysqlclient to match
+# gpf-web's [mysql] optional extra (pyproject.toml: mysql =
+# ["mysqlclient>=2.2"]). Adding it here rather than via the
+# extra avoids uv's awkward extras-with-file-path syntax;
+# downside is the version constraint is duplicated and could
+# drift if the extra is bumped — but it's a single line in two
+# files.
+#
+# --only-binary=:all: --no-binary=mysqlclient: tb-qp5 wheels-only
+# enforcement. Any future transitive dep that lacks a wheel for
+# cp312-manylinux_x86_64 fails the build loudly instead of silently
+# growing source-build residue (and silently bloating cold-build
+# wall time). mysqlclient is the documented exception — no
+# manylinux wheel exists on PyPI; it always builds from source
+# against the libmariadb-dev installed above.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --python /opt/gpf/bin/python \
+        --only-binary=:all: --no-binary=mysqlclient \
+        /wheels/*.whl "mysqlclient>=2.2"
+
+
+# 2) Runtime: minimal slim image, just the runtime deps + the venv.
+FROM ${PYTHON_IMAGE} AS runtime
+
+# libmariadb3 is the Debian runtime lib for the `mysqlclient`
+# Python package (gpf-web's Django backend uses MySQL/MariaDB).
+# libmagic1 is for python-magic. curl is for the compose
+# healthcheck — slim ships without any HTTP client.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        libmagic1 \
+        libmariadb3 \
+        curl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/gpf /opt/gpf
+
+# GRR definition for the production deployment + e2e Jenkins
+# stack: points at /grr (mounted from /mnt/cephfs/seqpipe/grr on
+# the CSHL agents). Compose / k8s deployments override
+# GRR_DEFINITION_FILE if they want a different layout (e.g. the
+# multi-repo `grr-definition-dir.yaml` style gain ships).
+COPY web/scripts/grr-definition.yaml /grr-definition.yaml
+
+ENV PATH=/opt/gpf/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=gpf_web.production_settings \
+    GRR_DEFINITION_FILE=/grr-definition.yaml
+
+EXPOSE 9001
+
+# tb-iuv-fix follow-up: gunicorn workers 16 → 4. Reverts the
+# gunicorn side of tb-g1z (73cb803d), restoring the pre-tb-g1z
+# 4-worker config (matches web/gpf_web/run_gunicorn.sh's
+# `--workers 4` pattern). The matching playwright workers cut
+# (16 → 4) landed in tb-iuv-fix; this restores the 4:4
+# browser:gunicorn ratio. 16-way eager loading also dropped 4×
+# the RAM footprint of the prod pod under STUDIES_EAGER_LOADING.
+ENTRYPOINT ["gunicorn", \
+            "gpf_web.wsgi:application", \
+            "--bind", "0.0.0.0:9001", \
+            "--workers", "4", \
+            "--timeout", "1200"]

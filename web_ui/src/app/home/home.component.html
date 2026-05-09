@@ -1,0 +1,134 @@
+<div *ngIf="content && loadingFinished" id="home-wrapper">
+  <gpf-markdown-editor
+    (writeEvent)="writeDescription($event)"
+    [initialMarkdown]="homeDescription"></gpf-markdown-editor>
+
+  <div id="gene-profiles-section" *ngIf="geneProfilesConfig">
+    <h3>Gene profiles</h3>
+    <div class="separator"></div>
+
+    <div id="gene-profiles-wrapper">
+      <div id="all-genes-wrapper">
+        <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
+      </div>
+      <div id="single-gene-wrapper">
+        <div id="single-gene-title-wrapper">
+          <h4>Single gene</h4>
+        </div>
+
+        <div style="padding: 15px; align-items: baseline">
+          <input
+            matAutocompleteOrigin
+            #geneSearchHome="matAutocompleteOrigin"
+            #trigger="matAutocompleteTrigger"
+            matInput
+            [matAutocomplete]="geneDropdownHome"
+            [matAutocompleteConnectedTo]="geneSearchHome"
+            #searchBox
+            id="search-box"
+            placeholder="Search gene"
+            autocomplete="off"
+            spellcheck="false"
+            [(ngModel)]="geneSymbol"
+            (keyup)="searchBoxInput$.next(geneSymbol)"
+            (focus)="reset()"
+            (keydown.enter)="openSingleView(geneSymbol)" />
+
+          <mat-autocomplete autoActiveFirstOption #geneDropdownHome="matAutocomplete" class="genes-dropdown">
+            <mat-option
+              *ngFor="let suggestion of geneSymbolSuggestions"
+              class="dropdown-item"
+              type="button"
+              (click)="openSingleView(suggestion)"
+              (onSelectionChange)="openSingleView(suggestion)"
+              [value]="suggestion">
+              <span>{{ suggestion }}</span>
+            </mat-option>
+          </mat-autocomplete>
+        </div>
+        <div id="no-gene-found" [hidden]="!showError" class="alert alert-danger" role="alert">
+          <span>No such gene found!</span>
+        </div>
+      </div>
+
+      <gpf-markdown-editor
+        *ngIf="geneProfilesConfig.description"
+        [initialMarkdown]="geneProfilesConfig.description"
+        [editable]="false"></gpf-markdown-editor>
+    </div>
+  </div>
+  <h3 id="dataset-header">Datasets</h3>
+  <div class="separator"></div>
+
+  <div style="width: 100%">
+    <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content, nesting: 0 }"> </ng-container>
+  </div>
+  <div class="separator"></div>
+  <div id="footer">
+    <div id="version-container">
+      <span class="version-text">GPF version: </span>
+      <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
+      <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
+    </div>
+
+    <div id="documentation-link">
+      <a href="https://iossifovlab.com/gpfdocs/" target="_blank">User documentation</a>
+    </div>
+  </div>
+
+  <ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
+    <ng-container *ngFor="let entry of entries">
+      <ng-container *ngIf="datasets.includes(entry.id)">
+        <div
+          [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
+          style="position: relative; margin-bottom: 13px">
+          <div style="position: relative; display: inline-block; margin-right: 7px">
+            <span
+              #collapseIcon
+              *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"
+              class="collapse-dataset-icon material-icons material-symbols-outlined"
+              [ngClass]="{ rotate: nesting === 0 }"
+              (click)="toggleDatasetCollapse(entry); collapseIcon.classList.toggle('rotate')"
+              >expand_more</span
+            >
+
+            <h4>
+              <a [attr.href]="'datasets/' + entry.id" [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'">{{
+                entry.name
+              }}</a>
+            </h4>
+            <div style="display: inline-flex; align-items: center">
+              <div style="position: relative; top: 3px" [id]="entry.id + '-icons-wrapper'">
+                <div *ngIf="entry.hasDenovo" style="display: inline-flex" title="denovo">
+                  <span class="denovo-icon material-symbols-outlined md">genetics</span>
+                  <span class="star-icon material-symbols-outlined">kid_star</span>
+                </div>
+
+                <span
+                  *ngIf="entry.hasTransmitted"
+                  class="transmitted-icon material-symbols-outlined md"
+                  title="transmitted"
+                  [ngStyle]="{ color: entry.accessRights ? '#7e7e7e' : '#dcdcdc' }"
+                  >family_history</span
+                >
+                <span
+                  *ngIf="entry.phenotypeData"
+                  class="phenotype-icon material-symbols-outlined"
+                  title="phenotype"
+                  [ngStyle]="{ color: entry.accessRights ? '#7e7e7e' : '#dcdcdc' }"
+                  >how_to_reg</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <markdown>{{ entry.description }}</markdown>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="entry.children">
+        <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: entry.children, nesting: nesting + 1 }">
+        </ng-container>
+      </ng-container>
+    </ng-container>
+  </ng-template>
+</div>

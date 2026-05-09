@@ -1,0 +1,57 @@
+.title-wrapper {
+  width: auto;
+  font-weight: bold;
+  font-size: 16px;
+  max-width: 900px;
+}
+
+.measure-histograms-container {
+  display: flex;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+#view-menu-button {
+  background: #2a6395;
+  color: white;
+  border: 1px solid #2a6395;
+  border-radius: 0.3rem;
+  padding: 5px 10px;
+  margin-left: 10px;
+}
+
+.measure-histograms-panel {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  border-top: 0;
+  margin-left: 10px;
+}
+
+#measure-description-icon {
+  vertical-align: bottom;
+  color: #b4b4b4;
+}
+
+#measure-description-icon:hover {
+  color: #9b9b9b;
+  cursor: pointer;
+}
+
+#measure-description-button {
+  background-color: transparent;
+  border: none;
+}
+
+:host::ng-deep.tooltip-inner {
+  background-color: #414141 !important;
+}
+
+:host::ng-deep.tooltip-arrow::before {
+  opacity: 50% !important;
+}
+
+:host::ng-deep.tooltip.show {
+  opacity: 100% !important;
+}

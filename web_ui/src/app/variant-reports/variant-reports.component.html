@@ -1,0 +1,238 @@
+<div *ngIf="variantReport" class="variants-report-content">
+  <div class="card" style="border: 0">
+    <ul
+      ngbNav
+      #nav="ngbNav"
+      class="navbar bg-light nav-pills nav"
+      style="justify-content: flex-start; margin-bottom: 10px"
+      [destroyOnHide]="false">
+      <li ngbNavItem>
+        <a ngbNavLink>Families by number</a>
+        <ng-template ngbNavContent>
+          <ng-container *ngTemplateOutlet="familiesByNumber"></ng-container>
+        </ng-template>
+      </li>
+
+      <li ngbNavItem>
+        <a ngbNavLink>Families by pedigree</a>
+        <ng-template ngbNavContent>
+          <ng-container *ngTemplateOutlet="familiesByPedigree"></ng-container>
+        </ng-template>
+      </li>
+
+      <li *ngIf="selectedDataset.hasDenovo" ngbNavItem [disabled]="!variantReport.denovoReport">
+        <a ngbNavLink>Rate of de Novo variants</a>
+        <ng-template ngbNavContent>
+          <ng-container *ngTemplateOutlet="deNovoVariants"></ng-container>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
+  </div>
+
+  <ng-template #familiesByNumber>
+    <div id="download-total-families">
+      <a
+        [class.disabled-download]="!selectedDataset?.accessRights"
+        class="download-link"
+        [href]="getDownloadLink()"
+        download
+        >Download all families ({{ variantReport.familyReport.familiesTotal }})</a
+      >
+    </div>
+    <br />
+    <div id="families-by-number">
+      <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="variants-report-selector">
+        <div class="select-wrapper">
+          <select id="families-by-number-select" class="form-control" [(ngModel)]="currentPeopleCounter">
+            <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
+              <span>{{ peopleCounter.groupName }}</span>
+            </option>
+          </select>
+          <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+        </div>
+      </div>
+
+      <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row">
+        <div class="col-12">
+          <table class="gpf-basic-table">
+            <thead>
+              <th class="first-header-cell">
+                <div style="padding: 0">
+                  <div class="groups-title">{{ currentPeopleCounter.groupName }}</div>
+                  <div class="sex-title">Sex</div>
+                </div>
+              </th>
+
+              <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of currentPeopleCounter.rows">
+                <span>{{ row | getPeopleCounterRow }}</span>
+              </th>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of currentPeopleCounter.columns">
+                <th style="text-align: left; padding-left: 15px">{{ row }}</th>
+                <td *ngFor="let column of currentPeopleCounter.rows">
+                  <span>{{ currentPeopleCounter.getChildrenCounter(row, column).children }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #familiesByPedigree>
+    <div id="families-by-pedigree">
+      <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="col-sm-3 variants-report-selector">
+        <div class="select-wrapper">
+          <select id="families-by-pedigree-select" class="form-control" [(ngModel)]="currentPedigreeTable">
+            <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
+              <span>{{ pedigreeTable.groupName }}</span>
+            </option>
+          </select>
+          <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+        </div>
+      </div>
+
+      <div id="pedigree-toolbar">
+        <button (click)="openModal()" id="open-modal-button">Select tags</button>
+        <span *ngIf="tagsHeader" id="selected-tags-list" [title]="tagsHeader">{{ tagsHeader }}</span>
+        <form
+          id="dl-form"
+          (ngSubmit)="downloadTags($event)"
+          action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDataset.id }}"
+          method="post"
+          style="display: flex; align-items: center">
+          <span>Selected families: </span>
+          <span id="families-sum">{{ filteredFamiliesCount + ' / ' + totalFamiliesCount }}</span>
+          <input name="queryData" type="hidden" />
+          <button
+            [class.disabled-download]="!selectedDataset?.accessRights"
+            class="btn btn-md btn-primary btn-right"
+            id="download-button"
+            [disabled]="currentPedigreeTable.pedigrees.length === 0"
+            type="submit"
+            ><span class="material-symbols-outlined">download</span></button
+          >
+        </form>
+      </div>
+      <ng-template #tagsModal class="tags-modal">
+        <gpf-family-tags
+          [numOfCols]="tagsModalsNumberOfCols"
+          [tags]="orderedTagList"
+          (chooseMode)="setTagIntersection($event)"
+          (updateTagsLists)="setTags($event)"></gpf-family-tags>
+      </ng-template>
+    </div>
+
+    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
+      <div class="col-12">
+        <table class="gpf-basic-table">
+          <colgroup *ngIf="currentPedigreeTable.pedigrees.length !== 0">
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
+            <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
+              <tr
+                gpf-common-reports-row
+                [pedigreeGroup]="pedigreeGroup"
+                [modalSimpleView]="!selectedDataset.accessRights"></tr>
+            </ng-template>
+          </tbody>
+          <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">
+            <span>Nothing found</span>
+          </th>
+        </table>
+      </div>
+    </div>
+    <div *ngIf="currentPedigreeTable" id="legend-wrapper">
+      <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
+    </div>
+  </ng-template>
+
+  <ng-template #deNovoVariants>
+    <div id="de-novo-variants">
+      <div
+        *ngIf="variantReport.peopleReport.peopleCounters.length > 1"
+        class="col-sm-3"
+        class="variants-report-selector">
+        <div class="select-wrapper">
+          <select
+            id="denovo-variants-select"
+            class="form-control"
+            [(ngModel)]="currentDenovoReport"
+            (change)="calculateDenovoVariantsTableWidth()">
+            <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
+              <span>{{ denovoReport.groupName }}</span>
+            </option>
+          </select>
+          <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+        </div>
+      </div>
+
+      <h5 *ngIf="currentDenovoReport" id="de-novo-variants-legend-report">
+        <span>Legend:<br /></span>
+        <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
+        <span style="padding-left: 6px"
+          >("number of individuals with events", "percent of individuals with events")</span
+        >
+      </h5>
+
+      <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row">
+        <div class="col-12">
+          <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
+            <thead>
+              <th>Effect type</th>
+              <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
+                <div
+                  class="column-header"
+                  [attr.title]="
+                    'children with this ' +
+                    currentDenovoReport.groupName.toLowerCase() +
+                    ': ' +
+                    column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
+                  ">
+                  <span>{{ column }}</span>
+                </div>
+              </th>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let effectType of currentDenovoReport.effectGroups | getRows : currentDenovoReport.effectTypes"
+                [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
+                <th>{{ effectType }}</th>
+                <td
+                  *ngFor="
+                    let effectTypeData of effectType
+                      | getEffectTypeOrderByColumOrder : currentDenovoReport : currentDenovoReport.columns
+                  ">
+                  <div
+                    class="effect-type-data-values"
+                    title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
+                      effectTypeData.numberOfObservedEvents
+                    }}&#10;observed rate per individual: {{
+                      effectTypeData.observedRatePerChild | number
+                    }}&#10;number of individuals with events: {{
+                      effectTypeData.numberOfChildrenWithEvent
+                    }}&#10;percent of individuals with events: {{
+                      effectTypeData.percentOfChildrenWithEvents | percent
+                    }}">
+                    <span
+                      >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
+                      }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
+                      {{ effectTypeData.percentOfChildrenWithEvents | percent }})</span
+                    >
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>

@@ -1,0 +1,44 @@
+#legend {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 8px;
+  position: absolute;
+  bottom: 39px;
+}
+
+#legend-items-wrapper {
+  margin-bottom: 8px;
+  min-width: 220px;
+}
+
+.legend-item {
+  margin-bottom: 6px;
+  direction: ltr;
+  white-space: nowrap;
+}
+
+#expand-legend-button {
+  position: relative;
+  outline: none;
+  border-radius: 0;
+  color: #fff;
+  height: 40px;
+  width: 46px;
+  opacity: 75%;
+}
+
+#expand-legend-button-wrapper {
+  background-color: #fff;
+}
+
+#legend-icon {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: 4px;
+  left: 7px;
+}

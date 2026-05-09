@@ -1,0 +1,622 @@
+import { test, expect } from '@playwright/test';
+import * as utils from './utils';
+import { datasetIds } from './utils';
+import { scanCSV } from 'nodejs-polars';
+
+test.describe('Genotype browser tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginWorkerUser(page);
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+  });
+
+  test('should display filters blocks and buttons', async({ page }) => {
+    await expect(page.getByRole('button', { name: 'Table Preview' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Share/save query' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Download' })).toBeVisible();
+
+    await expect(page.locator('gpf-regions-block')).toBeVisible();
+    await expect(page.locator('gpf-genes-block')).toBeVisible();
+    await expect(page.locator('gpf-genotype-block')).toBeVisible();
+    await expect(page.locator('gpf-genomic-scores-block')).toBeVisible();
+    await expect(page.locator('gpf-family-filters-block')).toBeVisible();
+    await expect(page.locator('gpf-person-filters-block')).toBeVisible();
+    await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
+
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
+  });
+
+  test('should hide table preview results after changing a filter', async({ page }) => {
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
+
+    await page.locator('gpf-present-in-child').getByLabel('sibling only', {exact: true}).click();
+    await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+  });
+
+  test('should load query after filtering with scores and family and person filters', async({ page }) => {
+    await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
+
+    await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
+
+    const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
+    ' multiple values are separated by a vertical bar';
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
+    await page.locator(`mat-option:has-text("${clinsig}")`).click();
+
+    await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
+    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
+
+    await page.locator('gpf-person-filters-block').getByText('Pheno Measures').click();
+    await page.locator('gpf-person-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('10 variants selected', { timeout: 120000 });
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('#gene-scores-panel')).toBeVisible();
+    await expect(page.locator('gpf-genomic-scores')).toBeVisible();
+    await expect(page.locator('gpf-family-filters-block').locator('svg')).toBeVisible();
+    await expect(page.locator('gpf-person-filters-block').locator('svg')).toBeVisible();
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('10 variants selected', { timeout: 120000 });
+  });
+});
+
+test.describe('Genotype browser table preview result tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginWorkerUser(page);
+  });
+
+  [
+    {study: datasetIds.helloWorldGenotypes, count: '10'},
+    {study: datasetIds.denovoHelloWorld, count: '10'},
+    {study: datasetIds.vcfHelloWorld, count: '15'},
+    {study: datasetIds.iossifov2014Liftover, count: '8'},
+    {study: datasetIds.multiLiftover, count: '0'}
+  ].forEach(data => {
+    test('should display the correct overview paragraph ' +
+    'when gene symbol is "CHD8" at /' + data.study + '/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
+      await page.getByRole('tab', {name: 'Gene symbols'}).click();
+      await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+      await page.keyboard.type('CHD8');
+      await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {region: 'chr1:101806080-125000000', count: '7'},
+    {region: 'chr1:1592000-15929267', count: '5'},
+    {region: 'chrX:70000000-74000000', count: '2'}
+  ].forEach(data => {
+    test('should display the correct overview paragraph' +
+    ' when regions filter is "' + data.region + '" at /iossifov_2014_liftover/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+      await page.locator('#regions-filter').click();
+      await page.locator('gpf-regions-filter textarea').focus();
+      await page.keyboard.type(data.region);
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {
+      study: datasetIds.denovoHelloWorld,
+      affectedStatus: 'affected',
+      count: '61'
+    },
+    {
+      study: datasetIds.vcfHelloWorld,
+      affectedStatus: 'affected',
+      count: '19'
+    },
+    {
+      study: datasetIds.vcfHelloWorld,
+      affectedStatus: 'unaffected',
+      count: '27'
+    }
+  ].forEach(data => {
+    test('should display the correct overview paragraph when ' +
+    'affected status - ' + data.affectedStatus + ' is checked at /' + data.study + '/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
+
+      await page.locator('#pedigree-dropdown-menu-button').click();
+      await page.locator('gpf-pedigree-selector').getByRole('link', { name: 'Affected Status' }).click();
+      await page.locator('gpf-pedigree-selector').getByRole('button', {name: 'None'}).click();
+      await page.locator('gpf-pedigree-selector').getByLabel(data.affectedStatus, {exact: true}).click();
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {childGender: 'male', count: '406'},
+    {childGender: 'female', count: '169'},
+    {childGender: 'unspecified', count: '0'}
+  ].forEach(data => {
+    test('should display the correct data in overview paragraph when ' +
+        'child gender is ' + data.childGender, async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+
+      await page.locator('gpf-gender').getByRole('button', {name: 'None'}).click();
+      await page.locator(`[class="gender-icon ${data.childGender}"]`).click();
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {variantType: 'sub', count: '273'},
+    {variantType: 'ins', count: '87'},
+    {variantType: 'del', count: '212'}
+  ].forEach(data => {
+    test('should display the correct data in overview paragraph when only ' +
+    data.variantType + ' variant type checkbox is checked', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+
+      await page.locator('gpf-variant-types').getByRole('button', {name: 'None'}).click();
+      await page.locator('gpf-variant-types').getByLabel(data.variantType, {exact: true}).click();
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {effectType: 'All', count: '27'},
+    {effectType: 'LGDs', count: '0'},
+    {effectType: 'Nonsynonymous', count: '11'},
+    {effectType: 'Coding', count: '15'},
+    {effectType: 'UTRs', count: '0'}
+  ].forEach(data => {
+    test('should display the correct data in overview paragraph' +
+        ' where effect types are ' + data.effectType, async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.vcfHelloWorld, 'Genotype browser');
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
+      await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {
+      study: datasetIds.multiLiftover,
+      inheritanceType: 'mendelian',
+      count: '2'
+    },
+    {
+      study: datasetIds.denovoHelloWorld,
+      inheritanceType: 'denovo',
+      count: '61'
+    }
+  ].forEach(data => {
+    test('should display the correct overview paragraph when ' +
+    'inheritance types are ' + data.inheritanceType + ' at /' + data.study + '/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
+
+      await page.locator('gpf-inheritancetypes').getByRole('button', {name: 'None'}).click();
+      await page.locator('gpf-inheritancetypes').getByLabel(data.inheritanceType).click();
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {familyId: 'f1', count: '28'},
+    {familyId: 'f2', count: '23'},
+    {familyId: 'f3', count: '0'},
+  ].forEach(data => {
+    test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
+      await page.locator('#family-ids').click();
+      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {
+      study: datasetIds.iossifov2014Liftover,
+      geneSymbol: 'SCN2A',
+      effectType: 'LGDs',
+      overviewParagraph: '2 variants selected'
+    },
+    {
+      study: datasetIds.iossifov2014Liftover,
+      geneSymbol: 'NRXN1',
+      effectType: 'LGDs',
+      overviewParagraph: '1 variant selected'
+    },
+    {
+      study: datasetIds.iossifov2014Liftover,
+      geneSymbol: 'NRXN1',
+      effectType: 'All',
+      overviewParagraph: '1 variant selected'
+    }
+  ].forEach(data => {
+    test('should display the correct overview paragraph when effect types are ' +
+        data.effectType + ' and gene symbol is "' + data.geneSymbol +
+        '" at /' + data.study + '/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
+
+      await page.getByRole('tab', {name: 'Gene symbols'}).click();
+      await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+      await page.keyboard.type(data.geneSymbol);
+      await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
+      await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
+
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(data.overviewParagraph);
+    });
+  });
+
+  test('should display "2 variants selected" in overview paragraph ' +
+  'when family id is 11002 at /iossifov_2014/browser', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+
+    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+    await page.locator('#family-ids').click();
+    await page.locator('gpf-family-ids textarea').pressSequentially('11002');
+
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
+  });
+
+  test('should display "0 variants selected" in overview paragraph when the gene sets is ' +
+  'GO Terms - GO:0016917 GABA_receptor_activity and effect type LGDs at /iossifov_2014/browser', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+
+    await page.locator('gpf-effect-types').getByRole('button', {name: 'LGDs'}).click();
+
+    await page.locator('#gene-sets').click();
+    await page.locator('#selected-collection').click();
+    await page.locator('#selected-collection').selectOption('GO Terms');
+    await page.locator('#search-box').click();
+    await page.keyboard.type('GO:0016917');
+    await page.waitForSelector('[title="GO:0016917 (22): GABA_receptor_activity"]');
+    await page.getByText('GO:0016917 (22): GABA_receptor_activity').click();
+
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
+  });
+
+  [
+    {
+      effectTypes: ['missense'],
+      count: '4'
+    },
+    {
+      effectTypes: ['missense', 'synonymous'],
+      count: '5'
+    }
+  ].forEach(data => {
+    test('should display the correct overview paragraph when gene sets is GO Terms'+
+    ' - GO:0016917 and effect types are ' + data.effectTypes.toString() +
+    ' at /iossifov2014Liftover/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+
+      await page.locator('#gene-sets').click();
+      await page.locator('#selected-collection').click();
+      await page.locator('#selected-collection').selectOption('GO Terms');
+      await page.locator('#search-box').click();
+      await page.keyboard.type('GO:0016917');
+      await page.waitForSelector('[title="GO:0016917 (22): GABA_receptor_activity"]');
+      await page.getByText('GO:0016917 (22): GABA_receptor_activity').click();
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
+
+      for (const type of data.effectTypes) {
+        // eslint-disable-next-line no-await-in-loop
+        await page.locator('gpf-effect-types').getByLabel(type).click();
+      }
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+    });
+  });
+
+  [
+    {familyId: 'f1', values: {age: '166.33975219726562', iq: '124.9118881225586'}},
+    {familyId: 'f2', values: {age: '111.53800201416016', iq: '118.6941146850586'}},
+  ].forEach(data => {
+    test('should display the correct age and iq values in the measures column for "'
+    + data.familyId + '" family', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.vcfHelloWorld, 'Genotype browser');
+
+      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
+      await page.locator('#family-ids').click();
+      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
+
+      await page.getByRole('button', { name: 'Table Preview' }).click();
+      await expect(
+        page.locator('gpf-table-view-cell:nth-child(6) > div').nth(0)
+      ).toContainText(data.values.age);
+
+      await expect(
+        page.locator('gpf-table-view-cell:nth-child(6) > div').nth(1)
+      ).toContainText(data.values.iq);
+    });
+  });
+
+  test('should display the correct overview paragraph with ' +
+  'denovo inheritance types, affected only, 5\'UTR', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+
+    await page.locator('#pedigree-dropdown-menu-button').click();
+    await page.locator('gpf-pedigree-selector').getByRole('link', { name: 'Affected Status' }).click();
+    await page.locator('gpf-pedigree-selector').getByRole('button', {name: 'None'}).click();
+    await page.locator('gpf-pedigree-selector').getByLabel('affected', {exact: true}).click();
+
+    await page.locator('gpf-inheritancetypes').getByRole('button', {name: 'None'}).click();
+    await page.locator('gpf-inheritancetypes').getByLabel('denovo').click();
+
+    await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
+    await page.locator('gpf-effect-types').getByLabel('5\'UTR').click();
+
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('164 variants selected');
+  });
+
+  test('should load query, click table preview and check if table is visible repeatedly', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    for (let i = 0; i < 50; i++) {
+      /* eslint-disable no-await-in-loop */
+      await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+      await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+
+      await page.getByRole('button', {name: 'Share/save query'}).click();
+      await expect(page.locator('#save-query-dropdown')).toBeVisible();
+      const shareLinkUrl = await page.locator('#link-input').inputValue();
+      await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+      await expect(async() => {
+        await page.getByRole('button', {name: 'Table Preview'}).click();
+        await expect(page.locator('gpf-genotype-preview-table')).toBeVisible({timeout: 5000});
+      }).toPass({intervals: [1000]});
+      /* eslint-enable */
+    }
+  });
+
+  test('should load query, click table preview and check if loading screen is hidden repeatedly', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    for (let i = 0; i < 50; i++) {
+      /* eslint-disable no-await-in-loop */
+      await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+      await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+
+      await page.getByRole('button', {name: 'Share/save query'}).click();
+      await expect(page.locator('#save-query-dropdown')).toBeVisible();
+      const shareLinkUrl = await page.locator('#link-input').inputValue();
+      await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+      await page.getByRole('button', {name: 'Table Preview'}).click();
+      await expect(page.locator('.overlay')).not.toBeVisible();
+      /* eslint-enable */
+    }
+  });
+});
+
+test.describe('Genotype browser download tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginWorkerUser(page);
+    await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
+  });
+
+  test('should download all effect types CHD8 iossifov variants ' +
+  'and validate whether they are equal to the reference data', async({ page }) => {
+    await page.getByRole('tab', {name: 'Gene symbols'}).click();
+    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    await page.keyboard.type('CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+    await page.getByRole('button', { name: 'Download' }).click();
+    const download = await downloadPromise;
+    const fixtureData = scanCSV(await download.path(), { sep: '\t'});
+    const downloadData = scanCSV('fixtures/genotype-browser/variants-1.tsv', { sep: '\t'});
+    const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
+    const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+  });
+});
+
+
+test.describe('Genotype browser table tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginWorkerUser(page);
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+  });
+
+  test('should redirect to UCSC', async({ page }) => {
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+
+    const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=';
+
+    await page.waitForSelector('span:text("572 variants selected")');
+    await page.locator('#sort-child').getByText('family id').click();
+
+    await expect(
+      page.locator('a').filter({ hasText: /^chr4:41746278$/ }).first()
+    ).toHaveAttribute('href', baseUrl + 'chr4:41746278');
+
+
+    await expect(
+      page.locator('a').filter({ hasText: /^chr13:51374698$/ }).first()
+    ).toHaveAttribute('href', baseUrl + 'chr13:51374698');
+  });
+
+  test('should show details', async({ page }) => {
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await page.waitForSelector('span:text("572 variants selected")');
+    await page.locator('#sort-child').getByText('family id').click();
+
+    await page.getByText('Show details').first().click();
+    await expect(page.locator('.modal-content')).toBeVisible();
+    await expect(page.locator('.modal-content > .details-header')).toHaveCount(2);
+    await expect(page.locator('.modal-content > .details-header').nth(0)).toHaveText('Family id: 14699');
+    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: chr4:41746278');
+    await expect(page.locator('.modal-content > .grid-container')).toBeVisible();
+  });
+});
+
+test.describe('Genotype browser zygosity tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginWorkerUser(page);
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+  });
+
+  test('should check which filters have zygosity and if all types are selected by default', async({ page }) => {
+    await expect(page.locator('#pedigreeSelector-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('#presentInChild-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('#presentInParent-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('#carrierGender-zygosity-filter')).toBeVisible();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+
+    await expect(page.locator('gpf-effect-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-variant-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-inheritancetypes').locator('gpf-zygosity-filter')).not.toBeVisible();
+  });
+
+  test('should show error message when no zygosity type is selected', async({ page }) => {
+    await expect(
+      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
+    ).not.toBeVisible();
+
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await expect(
+      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
+    ).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').check();
+    await expect(
+      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
+    ).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('should check if zygosity types are loaded correctly after sharing query', async({ page }) => {
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous').uncheck();
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).not.toBeChecked();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).not.toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).not.toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).not.toBeChecked();
+  });
+
+  test('should check if zygosity types are reset when switching tools', async({ page }) => {
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous').uncheck();
+
+    await page.locator('a').filter({ hasText: 'Enrichment Tool'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+  });
+
+  test('should check if invalid zygosity state is reset when switching tools', async({ page }) => {
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
+    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous').uncheck();
+    await expect(
+      page.locator('#pedigreeSelector-zygosity-filter').getByText('Select at least one zygosity.')
+    ).toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
+    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
+    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(
+      page.locator('#pedigreeSelector-zygosity-filter').getByText('Select at least one zygosity.')
+    ).not.toBeVisible();
+
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+  });
+
+  test('should check if zygosity is not visible in Phenotype Tool', async({ page }) => {
+    await page.locator('a').filter({ hasText: 'Phenotype Tool'}).click();
+    await expect(page.locator('#presentInParent-zygosity-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-effect-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+  });
+});

@@ -1,0 +1,28 @@
+id: COMP_genotypes
+name: COMP Genotypes
+
+studies:
+- comp_denovo_liftover
+- comp_vcf_liftover
+study_type: 
+- WG
+has_complex: true
+enabled: true
+genotype_browser:
+  has_present_in_child: true
+  has_present_in_parent: true
+  has_pedigree_selector: false
+  variant_types: 
+  - sub
+  - ins
+  - del
+  - complex
+  selected_variant_types:
+  - sub
+  - ins
+  - del
+  - complex
+denovo_gene_sets:
+  enabled: false
+common_report:
+  enabled: false

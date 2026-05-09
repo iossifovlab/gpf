@@ -1,0 +1,48 @@
+schema_version: 1
+
+context:
+  name: gpf-web
+  version: ${{ env.get("VCS_VERSION") | default("0.0.0.dev0") }}
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  - path: ../../dist/web
+    use_gitignore: false
+  - path: ../../LICENSE
+
+build:
+  noarch: python
+  number: 0
+  script:
+    interpreter: bash
+    content: |
+      set -euo pipefail
+      ls -la
+      "$PYTHON" -m pip install --no-deps --no-build-isolation -vv ./*.whl
+
+requirements:
+  host:
+    - python >=3.12
+    - pip
+  run:
+    - python >=3.12
+    - django >=5.2,<5.3
+    - django-cors-headers >=4.7
+    - django-oauth-toolkit >=3
+    - djangorestframework >=3.16
+    - gain-core
+    - gpf-core ==${{ version }}
+    - gunicorn >=22
+    - importlib-metadata >=8.6
+    - requests >=2.32
+    - requests-oauthlib >=2
+    - sentry-sdk >=2.12
+
+about:
+  homepage: https://github.com/iossifovlab/gpf
+  summary: GPF Web — Django REST API on top of GPF
+  license: MIT
+  license_file: LICENSE

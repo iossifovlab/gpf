@@ -1,0 +1,10 @@
+#add-filter {
+  margin: -10px -16px;
+  padding: 10px;
+  border: 0;
+  width: 115px;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+}

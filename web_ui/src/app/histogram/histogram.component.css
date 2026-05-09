@@ -1,0 +1,63 @@
+.stepper {
+  width: 110px;
+  display: inline-block;
+  position: relative;
+}
+
+.steps {
+  width: 100%;
+}
+
+.step {
+  width: 20px;
+  height: 18px;
+  position: absolute;
+  right: 0;
+  margin: 1px;
+  z-index: 100;
+  vertical-align: middle;
+  line-height: 3px;
+  border: none;
+  text-align: center;
+  padding: 0;
+}
+
+.step:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+.step.up {
+  border-top-right-radius: 0.25rem;
+}
+
+.step.down {
+  bottom: 0;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.no-arrows {
+  appearance: textfield;
+}
+
+.no-arrows::-webkit-outer-spin-button,
+.no-arrows::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+label {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+:host::ng-deep#values-description {
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  font-style: italic;
+  color: #acacac;
+  font-size: 14px;
+  width: 100%;
+  max-width: 600px;
+}

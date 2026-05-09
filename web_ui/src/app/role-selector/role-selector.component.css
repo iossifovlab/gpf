@@ -1,0 +1,24 @@
+#search-box {
+  border-radius: 5px;
+  width: 100%;
+}
+
+#roles-container {
+  width: 15rem;
+}
+
+#roles-list {
+  margin-top: 10px;
+}
+
+.remove-role {
+  border: none;
+  background: none;
+  font-size: 22px;
+  color: red;
+  margin-top: -1px;
+}
+
+.role-wrapper {
+  display: flex;
+}

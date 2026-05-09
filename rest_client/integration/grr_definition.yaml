@@ -1,0 +1,4 @@
+id: "remote"
+type: "directory"
+directory: "/wd/rest_client/tmp/t4c8_grr"
+

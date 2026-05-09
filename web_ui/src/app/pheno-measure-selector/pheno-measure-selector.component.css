@@ -1,0 +1,41 @@
+#clear-measure-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#clear-pheno-measure-icon {
+  padding-top: 6px;
+  height: 10px;
+}
+
+.measures-dropdown {
+  border-radius: 0.375rem;
+  border: 1px solid rgba(0, 0, 0, 17%);
+  border-top: none;
+  padding: 0 !important;
+  box-shadow: none;
+  position: absolute;
+  background: white;
+  width: 100%;
+  z-index: 3;
+  top: 38px;
+  left: 1px;
+}
+
+.dropdown-item {
+  padding-left: 10px;
+  display: flex;
+  height: 30px;
+  align-items: center;
+}
+
+.dropdown-selected {
+  background-color: #f5f5f5;
+}
+
+#search-box {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

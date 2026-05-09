@@ -21,7 +21,6 @@ exclude = [
     "__pypackages__",
     "_build",
     "_version.py",
-    "versioneer.py",
     "buck-out",
     "build",
     "dist",
@@ -64,7 +63,23 @@ preview = true
 [lint.per-file-ignores]
 "test*.py" = ["S101", "SLF", "FBT001"]
 "conftest.py" = ["D"]
-"setup.py" = ["INP001"]
+
+[lint.isort]
+# Make first-party detection deterministic across local
+# (`ruff check .` from gpf root) and CI (`ruff check .` from
+# /workspace/<project>/) runs. Without this, ruff's `src`
+# auto-detection treats peer workspace members as third-party
+# in CI but as first-party locally, which produces inconsistent
+# I001 fixes.
+known-first-party = [
+    "gpf",
+    "gpf_web",
+    "federation",
+    "rest_client",
+    "gcp_storage",
+    "impala_storage",
+    "impala2_storage",
+]
 
 [lint.mccabe]
 max-complexity = 20

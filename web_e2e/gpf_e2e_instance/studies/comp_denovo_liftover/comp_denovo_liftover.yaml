@@ -1,0 +1,17 @@
+id: comp_denovo_liftover
+conf_dir: .
+has_denovo: true
+has_cnv: false
+has_transmitted: false
+phenotype_data: pheno_helloworld
+phenotype_tool: true
+phenotype_browser: true
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('comp_denovo_liftover/pedigree/pedigree.parquet')
+    meta: parquet_scan('comp_denovo_liftover/meta/meta.parquet')
+    summary: parquet_scan('comp_denovo_liftover/summary/*.parquet')
+    family: parquet_scan('comp_denovo_liftover/family/*.parquet')
+genotype_browser:
+  enabled: true

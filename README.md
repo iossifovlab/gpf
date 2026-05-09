@@ -5,29 +5,26 @@ manages large databases of genetic variants and phenotypic
 measurements from family collections.
 
 User documentation: see the GPF documentation at
-https://iossifovlab.com/gpfuserdocs/.
+https://iossifovlab.com/gpfdocs/.
 
 ## Repository overview
 
-- **`gain_core/`** — GAIn (Genomic Annotation
-  Infrastructure): annotation engine, genomic resources,
-  effect annotation, task graph, gene scores/sets.
-  Python package: `gain`.
-- **`gpf_core/`** — GPF core library: genotype storage,
+- **`core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
-- **`gpf_web/`** — Web application and REST API
+- **`web/`** — Web application and REST API
   (Django 5.2). Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
-- **`gpf_impala_storage/`**, **`gpf_impala2_storage/`**,
-  **`gpf_gcp_storage/`** — optional genotype storages
-- **`gpf_federation/`**, **`gpf_rest_client/`** — federation and
+- **`impala_storage/`**, **`impala2_storage/`**,
+  **`gcp_storage/`** — optional genotype storages
+- **`federation/`**, **`rest_client/`** — federation and
   REST client
-- **`gain_spliceai_annotator/`**,
-  **`gain_vep_annotator/`**,
-  **`gain_demo_annotator/`** — external annotation
-  plugins
 - **`docs/`** — documentation sources
+
+The `gain` package (annotation engine, genomic resources,
+effect annotation, task graph, gene scores/sets) lives in
+its own repository at
+<https://github.com/iossifovlab/gain>.
 
 Primary stack: Python 3.12, Django 5.2, dask, pandas,
 pyarrow, duckdb, pysam, pytest, mypy, ruff.
@@ -36,46 +33,82 @@ Release notes live in `docs/changes.rst`.
 
 ## Development
 
-We recommend using a Conda/Mamba environment. All
-development tools (pytest, ruff, mypy) are installed via
-Conda, not system pip.
+Two supported workflows: Conda/Mamba (long-standing) and
+uv (pyproject-driven). Pick one.
 
-### 1) Create and activate the environment
+The `gain` package lives in a separate repository
+(<https://github.com/iossifovlab/gain>) and must be
+checked out and installed alongside this one before the
+GPF packages will import:
 
-From the repository root:
+```bash
+git clone https://github.com/iossifovlab/gain.git ../gain
+```
+
+### Option A: Conda/Mamba
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
 mamba env update --name gpf --file ./dev-environment.yml
-
 conda activate gpf
+
+pip install -e ../gain/core
+pip install -e core
+pip install -e web
+
+# Optional extensions:
+pip install -e federation
+pip install -e rest_client
 ```
+
+The optional storage backends (`gpf_impala_storage`,
+`gpf_impala2_storage`, `gpf_gcp_storage`) bring in heavy
+non-Python dependencies (Java/Hadoop, the Google Cloud
+SDKs) that aren't on PyPI as wheels. Install them via the
+uv workspace path below — `uv sync --package
+gpf-impala-storage --group dev` (and equivalents) — rather
+than mixing pip and conda for those.
 
 Notes:
-- Prefer `environment.yml` over the legacy
-  `requirements.txt`.
 - Always activate the `gpf` environment before running
   tools or tests.
+- After changing package code, re-run the editable
+  installs if imports fail.
 
-### 2) Install core packages in editable mode
+### Option B: uv workspace
 
-Install GPF packages into the active `gpf` environment:
+This repo is a uv workspace (see root `pyproject.toml`).
+Runtime dependencies are declared per sub-project; dev
+tools live in each sub-project's own `dev` dependency
+group. The root `pyproject.toml` is a virtual coordinator
+(`[tool.uv] package = false`) that defaults to installing
+just `gpf-core` + `gpf-web` — the storage backends and
+the federation/rest_client extensions are workspace
+members but optional.
 
 ```bash
-pip install -e gain_core
-pip install -e gpf_core
-pip install -e gpf_web
+# Default: install gpf-core + gpf-web
+uv sync
+
+# Everything: all workspace members + every dev group
+uv sync --all-packages --all-groups
+
+# A single sub-project
+uv sync --package gpf-impala-storage --group dev
+
+# Activate the venv (optional; `uv run` works without it)
+source .venv/bin/activate
 ```
 
-Tip: after changing package code, re-run the editable
-installs if imports fail.
+The lockfile (`uv.lock`) is committed. Use `uv lock
+--upgrade` to refresh.
 
-### 3) Run tests
+### Run tests
 
 Quick cycles (examples):
 
 ```bash
-cd gpf_core
+cd core
 pytest -v tests/small/test_file.py
 pytest -v tests/small/module/
 ```
@@ -83,94 +116,46 @@ pytest -v tests/small/module/
 Full suites (parallel):
 
 ```bash
-cd gain_core
+cd core
 conda run -n gpf pytest -v -n 10 tests/
 
-cd ../gpf_core
-conda run -n gpf pytest -v -n 10 tests/
-
-cd ../gpf_web
+cd ../web
 conda run -n gpf pytest -v -n 5 gpf_web/
 ```
 
 Test markers and configuration are defined in
-`gain_core/pytest.ini` and `gpf_core/pytest.ini` (e.g.,
-`gs_inmemory`, `gs_duckdb`, `gs_duckdb_parquet`,
-`grr_rw`, `grr_ro`, `grr_http`).
+`core/pytest.ini` (e.g., `gs_inmemory`, `gs_duckdb`,
+`gs_duckdb_parquet`, `grr_rw`, `grr_ro`, `grr_http`).
 
-### 4) Linting and type checking
+### Linting and type checking
 
 ```bash
 ruff check --fix .
-mypy gain --exclude gain_core/docs/ \
-    --exclude gain_core/gain/docs/
-mypy gpf --exclude gpf_core/docs/
-mypy gpf_web --exclude gpf_web/docs/ \
-    --exclude gpf_web/conftest.py
+mypy gpf --exclude core/docs/
+mypy gpf_web --exclude web/docs/ \
+    --exclude web/conftest.py
 ```
 
-### REST Client and Federation (optional)
+### Optional genotype storages
 
-If you want to work with `gpf_federation` and `gpf_rest_client`
-modules, install additional dependencies and then the
-packages:
+The optional storage backends are workspace members
+installable via uv; see the `uv sync --package
+gpf-impala-storage --group dev` path under "Option B" above
+(or `gpf-impala2-storage`, `gpf-gcp-storage`).
 
-```bash
-mamba env update --name gpf \
-    --file ./gpf_federation/federation-environment.yml
-pip install -e gpf_rest_client
-pip install -e gpf_federation
-```
-
-### Additional genotype storages (optional)
-
-Some storages are not included in the default installation.
-Install their dependencies only if you plan to use or
-develop them.
-
-#### Apache Impala genotype storage
-
-```bash
-mamba env update --name gpf \
-    --file ./impala_storage/impala-environment.yml
-pip install -e impala_storage
-```
-
-#### Apache Impala2 genotype storage
-
-```bash
-mamba env update --name gpf \
-    --file ./impala2_storage/impala2-environment.yml
-pip install -e impala2_storage
-```
-
-#### GCP (BigQuery) genotype storage
-
-```bash
-mamba env update --name gpf \
-    --file ./gcp_storage/gcp-environment.yml
-pip install -e gcp_storage
-```
-
-Authenticate for the `seqpipe-gcp-storage-testing` project
-before running tests:
+GCP storage tests need application-default credentials for
+the `seqpipe-gcp-storage-testing` project:
 
 ```bash
 gcloud config list project
 gcloud auth application-default login
 ```
 
-Run GCP storage tests (from the `gpf_gcp_storage/` directory):
+Then, from the `gcp_storage/` directory:
 
 ```bash
 pytest -v gcp_storage/tests/
-```
-
-Run integration tests against the GCP genotype storage
-definition:
-
-```bash
-pytest -v ../gpf_core/tests/ \
+pytest -v ../core/tests/ \
     --gsf gcp_storage/tests/gcp_storage.yaml
 ```
 
@@ -191,13 +176,16 @@ git commit --no-verify
 
 ## Common pitfalls
 
-- Always activate the `gpf` Conda environment before
-  running commands: `conda activate gpf`.
-- Prefer `environment.yml` over `requirements.txt`
-  (legacy).
-- If imports fail after changes, re-run
-  `pip install -e gain_core`, `pip install -e gpf_core`,
-  and/or `pip install -e gpf_web`.
+- Conda users: always activate the `gpf` environment
+  before running commands (`conda activate gpf`), and
+  re-run `pip install -e core` if imports fail.
+- uv users: prefer `uv run <cmd>` over activating the
+  venv, and re-run `uv sync` (or `uv sync --all-packages
+  --all-groups` if you've installed the optional
+  workspace members) after pulling changes to pick up
+  lockfile updates.
+- If `gain` imports fail, re-install gain from its
+  sibling checkout (`pip install -e ../gain/core`).
 - Some tests may be flaky with high parallelism; reduce
   `-n` or run without it.
 

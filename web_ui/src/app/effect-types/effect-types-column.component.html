@@ -1,0 +1,13 @@
+<div class="effectypes-col">
+  <em>{{ columnName }}</em>
+  <div *ngFor="let effect of effectTypesLabels" class="checkbox">
+    <label>
+      <input
+        #checkbox
+        type="checkbox"
+        [checked]="effectTypes.has(effect)"
+        (change)="checkEffectType(effect, checkbox.checked); $event.stopPropagation()" />
+      <span style="margin-left: 5px">{{ effect }}</span>
+    </label>
+  </div>
+</div>

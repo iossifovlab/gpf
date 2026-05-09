@@ -1,0 +1,21 @@
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  align-content: center;
+  justify-content: flex-end;
+  flex-flow: row nowrap;
+}
+
+select {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none !important;
+  padding-right: 5px;
+}
+
+#clear-filter-icon {
+  padding-top: 5px;
+  height: 10px;
+}

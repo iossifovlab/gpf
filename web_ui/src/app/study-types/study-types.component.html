@@ -1,0 +1,10 @@
+<div>
+  <gpf-checkbox-list
+    [title]="'Study Types'"
+    [items]="studyTypes"
+    [selectedItems]="selectedValues"
+    [displayNames]="studyTypesDisplayNames"
+    (itemsUpdateEvent)="updateStudyTypes($event)">
+  </gpf-checkbox-list>
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

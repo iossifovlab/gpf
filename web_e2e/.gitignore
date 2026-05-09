@@ -1,0 +1,30 @@
+node_modules
+data
+downloads
+import
+results
+ts-lint-report.xml
+cache/
+__pycache__
+*actual.png
+*diff.png
+wdae-debug.log
+wdae-api.log
+/test-results/
+/playwright-report/
+/reports/
+logs
+wdae.sql
+# Outputs of gpf_e2e_instance/import_data.sh — populated when
+# the instance-import compose service runs against a writable
+# bind-mount of gpf_e2e_instance/.
+gpf_e2e_instance/studies/**
+gpf_e2e_instance/wdae/**
+gpf_e2e_instance/genotype_storage/**
+gpf_e2e_instance/phenotype_storage/**
+gpf_e2e_instance/gpdb.duckdb
+gpf_e2e_instance/input_data/genotypes/*/OUTPUT/**
+gpf_e2e_instance/input_data/phenotypes/*/.task-progress
+gpf_e2e_instance/input_data/phenotypes/*/.task-log
+gpf_e2e_instance/input_data/phenotypes/*/work/**
+/.task-log

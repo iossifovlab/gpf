@@ -1,0 +1,208 @@
+<div *ngIf="selectedGeneSetsCollection">
+  <div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
+    <div class="col-sm-3">
+      <div class="select-wrapper">
+        <select
+          class="row-sm-3 form-control"
+          title="{{ selectedGeneSetsCollection.desc }}"
+          [(ngModel)]="selectedGeneSetsCollection"
+          required
+          id="selected-collection">
+          <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
+        </select>
+        <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+      </div>
+
+      <button *ngIf="selectedGeneSetsCollection.name === 'denovo'" (click)="openModal()" id="open-modal-button"
+        >Select studies</button
+      >
+
+      <ng-template #denovoModal class="denovo-modal">
+        <div id="content-wrapper">
+          <div id="hierarchy-filters-wrapper">
+            <div id="hierarchy">
+              <ng-container
+                *ngFor="let dataset of denovoDatasetsHierarchy"
+                [ngTemplateOutlet]="Recursion"
+                [ngTemplateOutletContext]="{ $implicit: dataset }"></ng-container>
+            </div>
+
+            <div id="filters" *ngIf="activeDataset">
+              <div *ngFor="let collection of activeDataset.personSetCollections">
+                {{ collection.personSetCollectionName }}:
+                <div *ngFor="let personSet of collection.personSetCollectionLegend">
+                  <label [attr.for]="activeDataset.datasetId + '-checkbox-' + personSet.id">
+                    <input
+                      type="checkbox"
+                      [attr.id]="activeDataset.datasetId + '-checkbox-' + personSet.id"
+                      [ngModel]="
+                        isSelectedGeneType(activeDataset.datasetId, collection.personSetCollectionId, personSet.id)
+                      "
+                      (ngModelChange)="
+                        setSelectedGeneType(
+                          activeDataset.datasetId,
+                          collection.personSetCollectionId,
+                          personSet.id,
+                          $event
+                        )
+                      " />
+                    <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
+                    <span>{{ personSet.name }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <button id="close-button" class="material-symbols-outlined bold clickable" (click)="closeModal()"
+              >close</button
+            >
+          </div>
+
+          <div id="modal-filter-list">
+            <div *ngFor="let filter of datasetsList" class="filter">
+              <button (click)="removeFromList(filter)" class="remove-filter">
+                <span [id]="'remove-' + filter" class="material-symbols-outlined">close</span>
+              </button>
+              {{ filter }}
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template #Recursion let-dataset>
+        <div class="dataset-wrapper">
+          <span
+            #collapseIcon
+            *ngIf="dataset.children.length"
+            [id]="'expand-' + dataset.datasetId"
+            class="collapse-dataset-icon material-icons material-symbols-outlined"
+            [ngClass]="{ rotate: expandedDatasets.includes(dataset) }"
+            (click)="toggleDatasetCollapse(dataset)"
+            >expand_more</span
+          >
+          <div
+            [id]="'dataset-' + dataset.datasetId"
+            class="btn-sm text-wrap"
+            [class.active]="activeDataset?.datasetId === dataset.datasetId"
+            [class.modified]="
+              activeDataset?.datasetId !== dataset.datasetId && modifiedDatasetIds.has(dataset.datasetId)
+            "
+            [class.disabled-dataset]="!dataset.personSetCollections.length"
+            [style.opacity]="dataset.personSetCollections.length ? 1.0 : 0.3"
+            [ngStyle]="{ 'padding-left': (dataset.children.length ? 5 : 19) + 'px' }"
+            (click)="select(dataset)"
+            >{{ dataset.datasetName }}</div
+          >
+        </div>
+        <div *ngIf="dataset.children.length && expandedDatasets.includes(dataset)" class="children-container">
+          <ng-container
+            *ngFor="let child of dataset.children"
+            [ngTemplateOutlet]="Recursion"
+            [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
+        </div>
+      </ng-template>
+    </div>
+
+    <div class="col-sm-9">
+      <fieldset
+        style="display: inline-flex; flex-wrap: nowrap; width: 100%"
+        matAutocompleteOrigin
+        #geneSetsSearch="matAutocompleteOrigin"
+        [disabled]="selectedGeneSetsCollection.name === 'denovo' && currentGeneSetsTypes.length === 0">
+        <span
+          style="width: 100%"
+          [hidden]="!selectedGeneSet"
+          id="selected-value"
+          class="clickable"
+          (click)="reset(); openCloseDropdown()">
+          <span>{{
+            selectedGeneSet ? selectedGeneSet?.name + ' (' + selectedGeneSet?.count + '): ' + selectedGeneSet?.desc : ''
+          }}</span>
+        </span>
+        <div [hidden]="selectedGeneSet" style="display: inline-flex; flex-wrap: nowrap; width: 100%">
+          <input
+            matInput
+            [matAutocomplete]="geneSetsDropdown"
+            [matAutocompleteConnectedTo]="geneSetsSearch"
+            #dropdownTrigger="matAutocompleteTrigger"
+            #searchSetsBox
+            id="search-box"
+            style="width: 100%"
+            autocomplete="off"
+            [(ngModel)]="searchQuery"
+            (keyup)="onKeyboardEvent($event)"
+            placeholder="Select or start typing to search"
+            (click)="reset()"
+            spellcheck="false" />
+          <mat-autocomplete autoActiveFirstOption #geneSetsDropdown="matAutocomplete" class="sets-dropdown">
+            <mat-option [disabled]="true" class="status-info" *ngIf="isLoading && geneSets.length === 0"
+              >Loading...</mat-option
+            >
+            <mat-option
+              [disabled]="true"
+              class="status-info"
+              *ngIf="!isLoading && geneSets.length === 0 && searchSetsBox.value !== ''"
+              >Nothing found
+            </mat-option>
+            <mat-option
+              *ngFor="let element of geneSets"
+              class="dropdown-item"
+              type="button"
+              (click)="onSelect(element)"
+              (onSelectionChange)="onSelect(element)"
+              value="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
+              title="{{ element.name }} ({{ element.count }}): {{ element.desc }}">
+              <span
+                innerHtml="{{ element.name | boldMatching : searchQuery }} ({{ element.count }}): {{
+                  element.desc | boldMatching : searchQuery
+                }}">
+              </span>
+            </mat-option>
+          </mat-autocomplete>
+        </div>
+        <button
+          style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+          type="button"
+          class="dropdown-toggle btn btn-secondary dropdown-toggle-split"
+          (click)="openCloseDropdown()">
+        </button>
+      </fieldset>
+      <div *ngIf="selectedGeneSet">
+        <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
+        <span>(<a class="download-link" [href]="getDownloadLink()">Download</a>)</span>
+      </div>
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
+
+    <div *ngIf="selectedGeneSetsCollection.name === 'denovo'" id="selected-filter-list">
+      <div *ngFor="let filter of datasetsList" class="filter">
+        <button (click)="removeFromList(filter)" class="remove-filter">
+          <span [id]="'remove-' + filter" class="material-symbols-outlined">close</span>
+        </button>
+        {{ filter }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="geneSetsLoaded === null">
+  <div class="form-block" style="display: contents">
+    <div class="card">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>Loading gene sets...</i></span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div *ngIf="!selectedGeneSetsCollection && geneSetsLoaded !== null">
+  <div class="form-block" style="display: contents">
+    <div class="card">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>No gene sets collections available</i></span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

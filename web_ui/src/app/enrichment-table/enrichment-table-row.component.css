@@ -1,0 +1,21 @@
+td {
+  text-align: center;
+  padding: 10px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.link-td {
+  font-weight: bold;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.link-td:hover {
+  text-decoration: underline;
+}
+
+.link {
+  color: #0056b3;
+}

@@ -1,0 +1,170 @@
+table {
+  width: 600px;
+  max-width: 600px;
+  margin-bottom: 16px;
+  margin-right: 16px;
+}
+
+td {
+  vertical-align: middle;
+}
+
+th {
+  vertical-align: middle;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 4px;
+}
+
+a {
+  color: #0645ad;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.datasets-table {
+  width: 0 !important;
+  max-width: unset !important;
+  min-width: 600px;
+}
+
+.datasets-table th {
+  vertical-align: unset;
+  height: fit-content;
+}
+
+.datasets-table th,
+.datasets-table tr,
+.datasets-table td {
+  border: 1px solid #dee2e6;
+}
+
+.datasets-table a {
+  padding: 0;
+  width: unset;
+}
+
+.datasets-table tr td:first-of-type {
+  min-width: 160px;
+}
+
+.datasets-table thead span {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  width: 100%;
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.compact {
+  flex-direction: column !important;
+}
+
+#links-table td {
+  padding: 0 8px;
+  height: 16px;
+}
+
+#links-table {
+  display: block;
+  margin-bottom: 18px;
+  white-space: nowrap;
+}
+
+.wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.link-genotype-browser,
+.link-genotype-browser:hover {
+  cursor: pointer;
+  padding: 15px;
+}
+
+.compare-wrapper {
+  flex-direction: column;
+}
+
+.compare-wrapper table {
+  margin-right: 0;
+}
+
+.compare-wrapper .datasets-table {
+  border: 0;
+  display: block;
+  overflow: auto;
+  width: 600px !important;
+}
+
+.compare-div {
+  border-right: 15px solid #f1f1f1;
+}
+
+.compare-div .page-wrapper {
+  width: 616px;
+}
+
+.minimize-elements-wrapper {
+  position: absolute;
+  right: 7px;
+  margin-right: -9px;
+  cursor: pointer;
+}
+
+.minimize-button {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 10px;
+}
+
+.minimize-gene-symbol {
+  position: absolute;
+  right: 10px;
+  top: 35px;
+  padding-top: 5px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
+
+.error-modal div {
+  background-color: #f8d7da;
+}
+
+.modal-title,
+.modal-body {
+  color: #721c24;
+  text-align: center;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center !important;
+  z-index: 999;
+}
+
+h2 {
+  margin: 0;
+  padding-left: 10px;
+}
+
+.disabled-link {
+  color: #777;
+  pointer-events: none;
+}

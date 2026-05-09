@@ -1,0 +1,7 @@
+<div class="panel" id="regions-filter-panel">
+  <textarea #textArea class="form-control" type="text" (keyup)="setRegionsFilter(textArea.value)" spellcheck="false"
+    >{{ regionsFilter.regionsFilter }}
+  </textarea>
+
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

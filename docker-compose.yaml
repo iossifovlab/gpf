@@ -1,16 +1,30 @@
 services:
 
   minio:
-    image: minio/minio:latest
-    ports:
-      - 9000:9000
-      - 9001:9001
+    # tb-eqh: pinned to a known-good release. Late-2023 MinIO removed
+    # curl from the image (switched to ubi-micro), and `:latest` would
+    # silently break the curl-based healthcheck on any agent that
+    # pulled fresh. Different agents (eyoree/pooh/piglet) cached
+    # different `:latest` resolutions over time — likely a contributor
+    # to the 27-test S3 flake. Pin so the image we test against
+    # matches what we ship.
+    # See: github.com/minio/minio/issues/18372 + /18389
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    expose:
+      - "9000"
+      - "9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "http://localhost:9000/minio/health/live"]
+      # tb-eqh: switched from `curl http://localhost:9000/minio/health/live`
+      # to `mc ready local` — official MinIO pattern. The minio image
+      # has `mc` at /usr/bin/mc and the `local` alias preconfigured
+      # to http://localhost:9000. `mc ready` polls the cluster-readiness
+      # endpoint and exits 0 when ready; under docker's timeout=5s
+      # it gets killed and reported unhealthy if not.
+      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,18 +34,22 @@ services:
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb local/test-bucket;  # Create bucket
-      # /usr/bin/mc policy set public local/test-bucket;  # Make it public
+      /usr/bin/mc mb local/test-bucket;
       "
     depends_on:
       minio:
         condition: service_healthy
 
-
   apache:
     image: httpd:latest
-    container_name: http-fixture
-    ports:
-    - '28080:80'
+    expose:
+      - "80"
     volumes:
-      - ./gain_core/tests/.test_grr:/usr/local/apache2/htdocs/
+      - ./core/tests/.test_grr:/usr/local/apache2/htdocs/
+
+  mail:
+    image: mailhog/mailhog:latest
+    hostname: mail
+    expose:
+      - "1025"
+      - "8025"

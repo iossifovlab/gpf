@@ -1,0 +1,57 @@
+name: gpf-rest-client-integration
+
+# Integration-test stack for gpf-rest-client:
+#   - backend: same uv-built image as the per-project CI image, runs
+#     the wdae server on :21011 with a seeded t4c8 instance + two
+#     OAuth applications (federation, federation2)
+#   - mail: MailHog so the user-flow tests can assert on outgoing email
+#   - runner: same image, runs pytest against backend + mail
+#
+# Driven by rest_client/Jenkinsfile.integration (downstream of the
+# Trigger rest_client integration stage in the root Jenkinsfile).
+
+services:
+
+  mail:
+    image: mailhog/mailhog:latest
+    hostname: mail
+
+  backend:
+    build:
+      context: ../
+      dockerfile: rest_client/Dockerfile
+    image: gpf-rest-client-ci:integration
+    environment:
+      - WDAE_ALLOWED_HOST=*
+      - WDAE_DEBUG=true
+      - WDAE_PUBLIC_HOSTNAME=resttest
+      - WDAE_EMAIL_HOST=mail
+      - WDAE_EMAIL_VERIFICATION_ENDPOINT=http://backend:21011
+    entrypoint: /workspace/rest_client/scripts/backend/run_gpf.sh
+    healthcheck:
+      # python (always present in the image) instead of curl (not in
+      # python:3.12-slim).
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - |
+          import sys, urllib.request
+          r = urllib.request.urlopen(
+              "http://localhost:21011/api/v3/datasets/hierarchy", timeout=5)
+          sys.exit(0 if r.status == 200 else 1)
+      interval: 10s
+      retries: 12
+      start_period: 30s
+      timeout: 10s
+    depends_on:
+      - mail
+
+  runner:
+    image: gpf-rest-client-ci:integration
+    entrypoint: /workspace/rest_client/scripts/runner/run_tests.sh
+    volumes:
+      - ./reports:/reports
+    depends_on:
+      backend:
+        condition: service_healthy

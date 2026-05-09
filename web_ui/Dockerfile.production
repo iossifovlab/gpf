@@ -1,0 +1,75 @@
+# Production image for the gpf web_ui Angular frontend.
+#
+# Build from the repo root, passing the just-built backend
+# image as a build-arg so the django-static stage can run
+# `collectstatic` against the same gpf-core / gpf-web install
+# that's about to ship in production:
+#
+#     docker build -f web/Dockerfile.production \
+#         -t gpf-web-api-prod:<tag> .
+#     docker build -f web_ui/Dockerfile.production \
+#         --build-arg BACKEND_IMAGE=gpf-web-api-prod:<tag> \
+#         -t gpf-web-ui-prod:<tag> .
+#
+# Three stages: Angular builder → Django collectstatic →
+# Apache runtime. Single foreground process (the
+# `httpd:2.4-alpine` image's default `httpd-foreground` CMD).
+
+# syntax=docker/dockerfile:1.7
+
+ARG NODE_IMAGE=node:22.14.0-alpine
+ARG HTTPD_IMAGE=httpd:2.4-alpine
+ARG BACKEND_IMAGE=gpf-web-api-prod:latest
+
+
+# 1) Angular SPA build.
+FROM ${NODE_IMAGE} AS angular
+
+WORKDIR /app
+
+COPY web_ui/package.json web_ui/package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+COPY web_ui/ ./
+# `--configuration production` swaps environment.ts → environment.prod.ts
+# (fileReplacements in angular.json), so basePath becomes '' and the SPA
+# issues `api/v3/...` requests to its own origin — which httpd.conf
+# reverse-proxies to backend:9001. `--aot` matches the legacy
+# `npm run build:prod` script, minus its `--base-href /gpf/` /
+# `--deploy-url /gpf/` flags: the old combined-image deploy served the
+# SPA under `/gpf`, but the split layout serves it from the document
+# root, so a base-href is unnecessary and a wrong base-href would route
+# every internal link through the SPA fallback rule.
+RUN npm run build -- --configuration production --aot
+
+
+# 2) Django collectstatic — uses the just-built backend image
+#    so the same gpf-core / gpf-web install that's about to
+#    ship in production produces the static output.
+#    production_settings pins STATIC_ROOT='/static/gpf/static'
+#    (env vars don't override Python settings assignments, so
+#    we need a settings module that already has the path we
+#    want). collectstatic doesn't touch the DB, so this works
+#    at image-build time without a MySQL backend.
+FROM ${BACKEND_IMAGE} AS django-static
+
+ENV DJANGO_SETTINGS_MODULE=gpf_web.production_settings
+
+RUN mkdir -p /static/gpf/static \
+ && python -m django collectstatic --noinput --clear
+
+
+# 3) Apache runtime.
+FROM ${HTTPD_IMAGE} AS runtime
+
+# Angular SPA at the document root. Angular 19's
+# @angular/build:application normally emits the SPA under
+# dist/<project>/browser/, but gpf's angular.json overrides
+# outputPath.browser to "" so the SPA lands directly at
+# dist/<project>/.
+COPY --from=angular /app/dist/gpfjs /usr/local/apache2/htdocs/
+
+# Django admin / DRF static files baked alongside.
+COPY --from=django-static /static/gpf/static /usr/local/apache2/htdocs/static/
+
+COPY web_ui/httpd.conf /usr/local/apache2/conf/httpd.conf
