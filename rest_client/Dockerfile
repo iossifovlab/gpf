@@ -44,12 +44,12 @@ COPY web/gpf_web/ ./web/gpf_web/
 COPY dist/gain/ ./dist/gain/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-rest-client --group dev --find-links ./dist/gain --no-install-project
+    uv sync --package gpf-rest-client --group dev --upgrade-package gain-core --find-links ./dist/gain --no-install-project
 
 COPY rest_client/ ./rest_client/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-rest-client --group dev --find-links ./dist/gain
+    uv sync --package gpf-rest-client --group dev --upgrade-package gain-core --find-links ./dist/gain
 
 ENV PATH="/workspace/.venv/bin:$PATH"
 WORKDIR /workspace/rest_client

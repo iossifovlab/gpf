@@ -50,12 +50,12 @@ COPY core/gpf/ ./core/gpf/
 COPY dist/gain/ ./dist/gain/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-web --group dev --find-links ./dist/gain --no-install-project
+    uv sync --package gpf-web --group dev --upgrade-package gain-core --find-links ./dist/gain --no-install-project
 
 COPY web/ ./web/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-web --group dev --find-links ./dist/gain
+    uv sync --package gpf-web --group dev --upgrade-package gain-core --find-links ./dist/gain
 
 ENV PATH="/workspace/.venv/bin:$PATH"
 WORKDIR /workspace/web
