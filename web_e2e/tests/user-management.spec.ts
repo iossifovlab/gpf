@@ -663,8 +663,11 @@ test.describe('Datasets management', () => {
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await page.locator(`[id="${datasetName}-groups-cell"] [id="${groupName}-list-item"] gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"]`)).not.toBeVisible();
-
+    // tb-pa6: drop the meaningless `${groupName}-datasets-cell` assertion
+    // (only renders on the Groups tab; not.toBeVisible() against a
+    // non-existent locator passes trivially). Lines below verify the
+    // removal correctly via the `${datasetName}-groups-cell`
+    // (Datasets-tab) locator.
     await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).not.toContainText(groupName);
     await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(email);
     await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(username);
@@ -924,7 +927,12 @@ test.describe('Datasets access rights via Management '
     await searchInTable(page, study);
     await page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"] gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${group}-datasets-cell"] [id="${study}-list-item"]`)).not.toBeVisible();
+    // tb-pa6: assert against the locator visible on the Datasets tab
+    // (where this test sits). The previous assertion targeted
+    // `${group}-datasets-cell` which only renders on the Groups tab —
+    // .not.toBeVisible() against a never-rendered locator passes
+    // trivially, leaving an actually-failed Remove click silent.
+    await expect(page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"]`)).not.toBeVisible();
   });
 
   test('should give rights for vcf_helloworld to researcher', async({ page }) => {
@@ -1009,7 +1017,9 @@ test.describe('Datasets access rights via Management '
     await searchInTable(page, study);
     await page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"] gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${group}-datasets-cell"] [id="${study}-list-item"]`)).not.toBeVisible();
+    // tb-pa6: assert against the Datasets-tab locator (see twin fix
+    // ~85 lines above for vcf_helloworld → any_user).
+    await expect(page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"]`)).not.toBeVisible();
   });
 
   test('should give rights for pheno_helloworld to researcher', async({ page }) => {
