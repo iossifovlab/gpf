@@ -1218,6 +1218,13 @@ test.describe('Dataset description access rights '
 
     await loginLiteralAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
+    // tb-pa6: assert the description is loaded before opening the
+    // editor. Clicking #edit-icon before the GET completes leaves
+    // markdown-editor's initialMarkdown empty, which makes the
+    // subsequent fill('') + Save a no-op (markdown===initialMarkdown,
+    // writeEvent never emitted, POST never fires, waitForResponse
+    // times out).
+    await expect(page.locator('markdown p')).toHaveText('IOSSIFOV TEST DESCRIPTION');
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('');
     await Promise.all([
