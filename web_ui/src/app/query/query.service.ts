@@ -142,18 +142,27 @@ export class QueryService {
       mergeMap(genome =>
         this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).pipe(
           tap(variant => {
-            genotypePreviewVariantsArray.addPreviewVariant(
-              variant as string[],
-              dataset.genotypeBrowserConfig.columnIds
-            );
-            if (callback !== undefined) {
-              callback();
-            }
+            // streamPost emits null on stream-done as a "no more variants"
+            // sentinel (see streamPost.done()). Skip addPreviewVariant on
+            // null — addPreviewVariant → GenotypePreview.fromJson would
+            // throw on `null.length`, killing the subscription before the
+            // callback runs and stranding consumers on "Loading variants..."
+            // for 0-variant queries (tb-iuv Mode A root cause).
             if (variant) {
+              genotypePreviewVariantsArray.addPreviewVariant(
+                variant as string[],
+                dataset.genotypeBrowserConfig.columnIds
+              );
               // Attach the genome version to each variant to generate USCS link
               genotypePreviewVariantsArray.genotypePreviews[
                 genotypePreviewVariantsArray.genotypePreviews.length - 1
               ].data.set('genome', genome);
+            }
+            // Always run callback (including on the null sentinel) so
+            // consumers can update count displays even when the result set
+            // is empty.
+            if (callback !== undefined) {
+              callback();
             }
           })
         )
