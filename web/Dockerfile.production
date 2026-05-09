@@ -108,8 +108,15 @@ ENV PATH=/opt/gpf/bin:$PATH \
 
 EXPOSE 9001
 
+# tb-iuv-fix follow-up: gunicorn workers 16 → 4. Reverts the
+# gunicorn side of tb-g1z (73cb803d), restoring the pre-tb-g1z
+# 4-worker config (matches web/gpf_web/run_gunicorn.sh's
+# `--workers 4` pattern). The matching playwright workers cut
+# (16 → 4) landed in tb-iuv-fix; this restores the 4:4
+# browser:gunicorn ratio. 16-way eager loading also dropped 4×
+# the RAM footprint of the prod pod under STUDIES_EAGER_LOADING.
 ENTRYPOINT ["gunicorn", \
             "gpf_web.wsgi:application", \
             "--bind", "0.0.0.0:9001", \
-            "--workers", "16", \
+            "--workers", "4", \
             "--timeout", "1200"]
