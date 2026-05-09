@@ -823,8 +823,8 @@ pipeline {
                     // web_e2e/jenkins-jobs/e2e.groovy). Runs on every
                     // branch — the e2e job clones the same branch /
                     // commit and either pulls the prod images this
-                    // pipeline just pushed (master / gpf-gain-split)
-                    // or copies the wheel artefacts archived above
+                    // pipeline just pushed (master only) or copies
+                    // the wheel artefacts archived above
                     // (`dist/core/*.whl` + `dist/web/*.whl`) and
                     // builds the prod images locally.
                     steps {

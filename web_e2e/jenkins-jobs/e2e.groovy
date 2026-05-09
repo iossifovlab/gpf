@@ -8,8 +8,8 @@
 // `iossifovlab/gpf/<branch>`'s `Trigger web_e2e` stage on
 // every branch, after the parent build's `Build & push prod
 // images` stage finishes. It can also be triggered manually
-// from the Jenkins UI (defaults: gpf-gain-split, copy wheels
-// from the last successful build of that branch).
+// from the Jenkins UI (defaults: master, copy wheels from
+// the last successful build of that branch).
 
 // Declared at the Jenkins root (not under `iossifovlab/`):
 // that path is a GitHub Organization Folder and rejects
@@ -34,7 +34,7 @@ pipelineJob('gpf-web-e2e') {
     parameters {
         stringParam(
             'BRANCH_NAME',
-            'gpf-gain-split',
+            'master',
             'Branch the upstream gpf build was triggered ' +
             'from. The pipeline checks out this branch ' +
             'unless COMMIT_SHA is set.',
@@ -49,7 +49,7 @@ pipelineJob('gpf-web-e2e') {
             'UPSTREAM_PROJECT',
             '',
             'Upstream Jenkins project name ' +
-            '(e.g. iossifovlab/gpf/gpf-gain-split) the wheel ' +
+            '(e.g. iossifovlab/gpf/master) the wheel ' +
             'artefacts are copied from. Empty = build the ' +
             'wheels from source instead.',
         )

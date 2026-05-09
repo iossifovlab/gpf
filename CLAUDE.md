@@ -153,11 +153,6 @@ Services defined in `docker-compose.yaml`:
   `grr_http` tests; serves
   `core/tests/.test_grr/`
 
-### Do NOT run locally
-
-`build.sh` requires Docker and a private `build-scripts`
-submodule — it's only for CI (Jenkins).
-
 ## Architecture
 
 ### Dependency Direction
