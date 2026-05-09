@@ -12,13 +12,13 @@
 //     `gpf-web-e2e` pipelineJob (loaded via the seed job).
 //
 // Self-contained: clones the gpf monorepo at the requested
-// branch/commit, then either (a) on master / gpf-gain-split:
-// pulls the prod images the parent already pushed to
-// `registry.seqpipe.org` (~30s) or (b) on other branches: copies
-// the wheels the parent archived (`dist/core/*.whl` +
-// `dist/web/*.whl`) and builds the wheel-based backend image and
-// Apache-based frontend image locally (~5 min). Either way, the
-// Playwright suite runs against the resulting images via the
+// branch/commit, then either (a) on master: pulls the prod
+// images the parent already pushed to `registry.seqpipe.org`
+// (~30s) or (b) on other branches: copies the wheels the
+// parent archived (`dist/core/*.whl` + `dist/web/*.whl`) and
+// builds the wheel-based backend image and Apache-based
+// frontend image locally (~5 min). Either way, the Playwright
+// suite runs against the resulting images via the
 // `web_infra/compose-jenkins.yaml` e2e stack.
 
 pipeline {
@@ -29,7 +29,7 @@ pipeline {
     parameters {
         string(
             name: 'BRANCH_NAME',
-            defaultValue: 'gpf-gain-split',
+            defaultValue: 'master',
             description: 'Branch the upstream gpf build was ' +
                 'triggered from. The pipeline checks out ' +
                 'this branch unless COMMIT_SHA is set.',
@@ -45,7 +45,7 @@ pipeline {
             name: 'UPSTREAM_PROJECT',
             defaultValue: '',
             description: 'Upstream Jenkins project name ' +
-                '(e.g. iossifovlab/gpf/gpf-gain-split) the ' +
+                '(e.g. iossifovlab/gpf/master) the ' +
                 'wheel artefacts are copied from. Empty = ' +
                 'build the wheels from source instead.',
         )
@@ -173,10 +173,10 @@ pipeline {
 
         stage('Prepare backend/frontend images') {
             // Three paths:
-            //   1. Master / gpf-gain-split triggered downstream
-            //      of the parent — the parent already pushed the
-            //      prod images to `registry.seqpipe.org` tagged
-            //      with its BUILD_NUMBER, which is passed in via
+            //   1. Master triggered downstream of the parent —
+            //      the parent already pushed the prod images to
+            //      `registry.seqpipe.org` tagged with its
+            //      BUILD_NUMBER, which is passed in via
             //      UPSTREAM_BUILD. Pull and retag locally;
             //      ~30s vs ~5 min for the wheels+build path.
             //   2. Branch triggered downstream — the parent does
@@ -208,10 +208,9 @@ pipeline {
                     // parent gpf Jenkinsfile (the
                     // `Build & push prod images` stage gates on
                     // env.BRANCH_NAME == 'master'). Pulling for
-                    // any other branch — including gpf-gain-split
-                    // — would 404 the way build #2 did. Branches
-                    // always fall through to the build-from-wheels
-                    // path below.
+                    // any other branch would 404 the way build
+                    // #2 did. Branches always fall through to
+                    // the build-from-wheels path below.
                     boolean canPull = \
                         params.BRANCH_NAME == 'master' \
                         && params.UPSTREAM_BUILD?.trim()
