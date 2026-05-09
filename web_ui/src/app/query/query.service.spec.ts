@@ -426,4 +426,218 @@ describe('QueryService', () => {
     expect(emitted).toStrictEqual([{ row: 1 }, { row: 2 }, null]);
     sub.unsubscribe();
   });
+
+  describe('streamPost lifecycle', () => {
+    // Pulls the Nth argument of the Mth call out of a jest.Mock without
+    // tripping @typescript-eslint/no-unsafe-member-access. The mock-call
+    // tuple is typed as `unknown[]` in jest, but `mock.calls` itself is
+    // `any[][]` — this helper localises that cast.
+    const getCallArg = (mock: jest.Mock, callIdx: number, argIdx = 0): unknown => {
+      const calls = mock.mock.calls as unknown[][];
+      return calls[callIdx][argIdx];
+    };
+
+    let oboe: ReturnType<typeof makeOboeStub>;
+
+    beforeEach(() => {
+      oboe = makeOboeStub();
+      // AuthService.accessToken is a getter returning `this.authToken || ''`.
+      // Default to empty so we don't accidentally smuggle an Authorization
+      // header into the non-token tests; specific tests below override the
+      // backing field as needed.
+      service['authService']['authToken'] = null;
+    });
+
+    it('happy path: emits start, per-node updates, and finishes with null sentinel', () => {
+      const startSpy = jest.fn();
+      const updateSpy = jest.fn();
+      const dataSpy = jest.fn();
+      const finishedSpy = jest.fn();
+
+      service.streamingStartSubject.subscribe(startSpy);
+      service.streamingUpdateSubject.subscribe(updateSpy);
+      service.streamingSubject.subscribe(dataSpy);
+      service.streamingFinishedSubject.subscribe(finishedSpy);
+
+      const filter = { foo: 'bar' };
+      service.streamPost('test/url', filter);
+
+      expect(oboe.instance).toHaveBeenCalledTimes(1);
+      const opts = getCallArg(oboe.instance, 0) as Record<string, unknown>;
+      expect(opts).toStrictEqual(expect.objectContaining({
+        url: `${'http://localhost:8000/api/v3/'}test/url`,
+        method: 'POST',
+        body: filter,
+        withCredentials: true,
+      }));
+
+      expect(startSpy).toHaveBeenCalledTimes(1);
+      expect(startSpy).toHaveBeenCalledWith(true);
+
+      const cb = oboe.latest();
+      cb.node?.({ a: 1 });
+      cb.node?.({ a: 2 });
+      cb.node?.({ a: 3 });
+
+      expect(updateSpy).toHaveBeenCalledTimes(3);
+      expect(updateSpy).toHaveBeenNthCalledWith(1, true);
+      expect(updateSpy).toHaveBeenNthCalledWith(2, true);
+      expect(updateSpy).toHaveBeenNthCalledWith(3, true);
+      expect(dataSpy).toHaveBeenCalledTimes(3);
+      expect(dataSpy).toHaveBeenNthCalledWith(1, { a: 1 });
+      expect(dataSpy).toHaveBeenNthCalledWith(2, { a: 2 });
+      expect(dataSpy).toHaveBeenNthCalledWith(3, { a: 3 });
+
+      cb.done?.();
+
+      expect(finishedSpy).toHaveBeenCalledTimes(1);
+      expect(finishedSpy).toHaveBeenCalledWith(true);
+      // After done(): the null sentinel should be the last value emitted
+      // on streamingSubject (4th overall).
+      expect(dataSpy).toHaveBeenCalledTimes(4);
+      expect(dataSpy).toHaveBeenLastCalledWith(null);
+      expect(service['oboeInstance']).toBeNull();
+    });
+
+    it('empty stream: emits finished THEN null sentinel (tb-iuv NULL-SENTINEL ordering)', () => {
+      // Capture order across BOTH subjects by tagging events as they arrive.
+      const events: Array<{ subject: string; value: unknown }> = [];
+      service.streamingFinishedSubject.subscribe(value =>
+        events.push({ subject: 'finished', value: value })
+      );
+      service.streamingSubject.subscribe(value =>
+        events.push({ subject: 'data', value: value })
+      );
+
+      service.streamPost('test/url', { foo: 'bar' });
+      const cb = oboe.latest();
+      // No cb.node?.(...) — empty stream.
+      cb.done?.();
+
+      expect(events).toStrictEqual([
+        { subject: 'finished', value: true },
+        { subject: 'data', value: null },
+      ]);
+      expect(service['oboeInstance']).toBeNull();
+    });
+
+    it('failure path: logs to console.warn/error, emits finished + null sentinel, clears oboeInstance', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const finishedSpy = jest.fn();
+      const dataSpy = jest.fn();
+      service.streamingFinishedSubject.subscribe(finishedSpy);
+      service.streamingSubject.subscribe(dataSpy);
+
+      service.streamPost('test/url', { foo: 'bar' });
+      const cb = oboe.latest();
+      const err = new Error('boom');
+      cb.fail?.(err);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith(err);
+      expect(finishedSpy).toHaveBeenCalledTimes(1);
+      expect(finishedSpy).toHaveBeenCalledWith(true);
+      expect(dataSpy).toHaveBeenCalledTimes(1);
+      expect(dataSpy).toHaveBeenCalledWith(null);
+      expect(service['oboeInstance']).toBeNull();
+
+      warnSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
+
+    it('cancellation mid-stream: aborts + clears oboeInstance; subsequent done() still emits (oboe unaware)', () => {
+      const finishedSpy = jest.fn();
+      const dataSpy = jest.fn();
+      service.streamingFinishedSubject.subscribe(finishedSpy);
+      service.streamingSubject.subscribe(dataSpy);
+
+      service.streamPost('test/url', { foo: 'bar' });
+      const cb = oboe.latest();
+
+      service.cancelStreamPost();
+
+      expect(cb.abort).toHaveBeenCalledTimes(1);
+      expect(service['oboeInstance']).toBeNull();
+
+      // Snapshot pre-done emission counts so we can detect any post-done
+      // emissions deterministically.
+      const finishedBefore = finishedSpy.mock.calls.length;
+      const dataBefore = dataSpy.mock.calls.length;
+
+      // The SUT's done() callback closure is still wired to the same
+      // subjects, and oboe (at the JS layer) doesn't know it was aborted.
+      // So if the test invokes cb.done?.() it WILL fire emissions on the
+      // shared subjects. We assert what the SUT actually does:
+      //   - streamingFinishedSubject fires `true`
+      //   - streamingSubject fires `null`
+      //   - oboeInstance stays null (it was already null after cancel; the
+      //     done() handler unconditionally re-assigns it to null)
+      cb.done?.();
+
+      expect(finishedSpy.mock.calls).toHaveLength(finishedBefore + 1);
+      expect(finishedSpy).toHaveBeenLastCalledWith(true);
+      expect(dataSpy.mock.calls).toHaveLength(dataBefore + 1);
+      expect(dataSpy).toHaveBeenLastCalledWith(null);
+      expect(service['oboeInstance']).toBeNull();
+    });
+
+    it('double-submit: second streamPost aborts the first; oboe.latest() points to the second call', () => {
+      service.streamPost('first/url', { call: 1 });
+      const firstCb = oboe.latest();
+
+      service.streamPost('second/url', { call: 2 });
+      const secondCb = oboe.latest();
+
+      expect(oboe.instance).toHaveBeenCalledTimes(2);
+      expect(firstCb.abort).toHaveBeenCalledTimes(1);
+      // Latest is genuinely the SECOND call (different captured object).
+      expect(secondCb).not.toBe(firstCb);
+      // And the second oboe(opts) carried the second filter.
+      const secondOpts = getCallArg(oboe.instance, 1) as Record<string, unknown>;
+      expect(secondOpts.body).toStrictEqual({ call: 2 });
+      expect(secondOpts.url).toBe(`${'http://localhost:8000/api/v3/'}second/url`);
+    });
+
+    it('auth header — token present: opts.headers.Authorization === "Bearer <token>"', () => {
+      // accessToken getter reads `this.authToken || ''`.
+      service['authService']['authToken'] = 'tok-abc';
+
+      service.streamPost('test/url', { foo: 'bar' });
+
+      const opts = getCallArg(oboe.instance, 0) as { headers: Record<string, string> };
+      expect(opts.headers.Authorization).toBe('Bearer tok-abc');
+      expect(opts.headers['Content-Type']).toBe('application/json');
+    });
+
+    it('auth header — token empty: opts.headers has no Authorization key', () => {
+      // Default beforeEach sets authToken = null → accessToken returns ''.
+      service.streamPost('test/url', { foo: 'bar' });
+
+      const opts = getCallArg(oboe.instance, 0) as { headers: Record<string, string> };
+      // No Authorization header should be present at all.
+      expect('Authorization' in opts.headers).toBe(false);
+      expect(opts.headers.Authorization).toBeUndefined();
+      expect(opts.headers['Content-Type']).toBe('application/json');
+    });
+
+    it('isStreamingActive reflects state across start/done/cancel', () => {
+      expect(service.isStreamingActive()).toBe(false);
+
+      service.streamPost('test/url', { foo: 'bar' });
+      expect(service.isStreamingActive()).toBe(true);
+
+      const cb = oboe.latest();
+      cb.done?.();
+      expect(service.isStreamingActive()).toBe(false);
+
+      // Reset and verify cancel also returns to inactive.
+      service.streamPost('test/url', { foo: 'bar' });
+      expect(service.isStreamingActive()).toBe(true);
+      service.cancelStreamPost();
+      expect(service.isStreamingActive()).toBe(false);
+    });
+  });
 });
