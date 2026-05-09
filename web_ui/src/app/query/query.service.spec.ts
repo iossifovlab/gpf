@@ -11,14 +11,13 @@ import { QueryService } from './query.service';
 import { RouterModule } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { lastValueFrom, of, Subject, take } from 'rxjs';
+import { lastValueFrom, of, take } from 'rxjs';
 import {
   Column,
   Dataset,
   GeneBrowser,
   GenotypeBrowser,
   PersonFilter} from 'app/datasets/datasets';
-import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { makeOboeStub } from './_test-helpers/oboe-stub';
 
 const queryMock = {
@@ -159,6 +158,18 @@ const datasetMock = new Dataset(
 describe('QueryService', () => {
   let service: QueryService;
 
+  // Hoisted from streamPost / summaryStreamPost lifecycle describes (C4):
+  // pulls the Nth argument of the Mth call out of a jest.Mock without
+  // tripping @typescript-eslint/no-unsafe-member-access. The mock-call
+  // tuple is typed as `unknown[]` in jest, but `mock.calls` itself is
+  // `any[][]` — this helper localises that cast. Visible to all three
+  // lifecycle blocks (streamPost / summaryStreamPost /
+  // getGenotypePreviewVariantsByFilter).
+  const getCallArg = (mock: jest.Mock, callIdx: number, argIdx = 0): unknown => {
+    const calls = mock.mock.calls as unknown[][];
+    return calls[callIdx][argIdx];
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -293,91 +304,6 @@ describe('QueryService', () => {
     expect(res).toBe(summaryVariantsMock);
   });
 
-  it('should get genotype preview variants', () => {
-    const filter = {
-      datasetId: 'ALL_genotypes',
-      geneSymbols: [
-        'CHD3'
-      ],
-      maxVariantsCount: 12,
-      inheritanceTypeFilter: [
-        'denovo',
-        'mendelian'
-      ],
-      effectTypes: [
-        'frame-shift',
-        'nonsense',
-      ]
-    };
-    const resMock = [
-      ['14016'],
-      ['SSC CSHL WGS'],
-      ['chr14:21402010'],
-    ];
-    const genomeMock = 'hg38';
-    const genotypePreview = new GenotypePreview();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dataMap = new Map<string, any>();
-
-    dataMap.set('source1', resMock[0]);
-    dataMap.set('source2', resMock[1]);
-    dataMap.set('source3', resMock[2]);
-    dataMap.set('genome', genomeMock);
-
-    genotypePreview.data = dataMap;
-    const genotypePreviewArray = new GenotypePreviewVariantsArray();
-    genotypePreviewArray.genotypePreviews = [genotypePreview];
-
-    const spy = jest.spyOn(service, 'streamPost').mockImplementation(() => of(resMock) as Subject<unknown>);
-    const arrSpy = jest.spyOn(GenotypePreviewVariantsArray.prototype, 'addPreviewVariant');
-    jest.spyOn(service['instanceService'], 'getGenome').mockReturnValue(of(genomeMock));
-
-    const genotypePreviewResponse = service.getGenotypePreviewVariantsByFilter(datasetMock, filter, 12, () => {});
-
-    expect(spy).toHaveBeenCalledWith(service['genotypePreviewVariantsUrl'], filter);
-    expect(arrSpy).toHaveBeenCalledWith(resMock, datasetMock.genotypeBrowserConfig.columnIds);
-    expect(genotypePreviewResponse).toStrictEqual(genotypePreviewArray);
-  });
-
-  it('should get genotype preview variants without passing max count and callback', () => {
-    const filter = {
-      datasetId: 'ALL_genotypes',
-      geneSymbols: [
-        'CHD3'
-      ],
-      maxVariantsCount: 1001,
-      inheritanceTypeFilter: [
-        'denovo',
-        'mendelian'
-      ],
-      effectTypes: [
-        'frame-shift',
-        'nonsense',
-      ]
-    };
-    const resMock = [['14016']];
-    const genomeMock = 'hg38';
-    const genotypePreview = new GenotypePreview();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dataMap = new Map<string, any>();
-    dataMap.set('source1', resMock[0]);
-    dataMap.set('genome', genomeMock);
-
-    genotypePreview.data = dataMap;
-    const genotypePreviewArray = new GenotypePreviewVariantsArray();
-    genotypePreviewArray.genotypePreviews = [genotypePreview];
-
-    const spy = jest.spyOn(service, 'streamPost').mockImplementation(() => of(resMock) as Subject<unknown>);
-    const arrSpy = jest.spyOn(GenotypePreviewVariantsArray.prototype, 'addPreviewVariant');
-    jest.spyOn(service['instanceService'], 'getGenome').mockReturnValue(of(genomeMock));
-
-    const genotypePreviewResponse = service.getGenotypePreviewVariantsByFilter(datasetMock, filter);
-
-    expect(spy).toHaveBeenCalledWith(service['genotypePreviewVariantsUrl'], filter);
-    expect(arrSpy).toHaveBeenCalledWith(resMock, datasetMock.genotypeBrowserConfig.columnIds);
-    expect(genotypePreviewResponse).toStrictEqual(genotypePreviewArray);
-  });
-
   it('should cancel streaming', () => {
     service['oboeInstance'] = {
       url: 'url',
@@ -428,15 +354,6 @@ describe('QueryService', () => {
   });
 
   describe('streamPost lifecycle', () => {
-    // Pulls the Nth argument of the Mth call out of a jest.Mock without
-    // tripping @typescript-eslint/no-unsafe-member-access. The mock-call
-    // tuple is typed as `unknown[]` in jest, but `mock.calls` itself is
-    // `any[][]` — this helper localises that cast.
-    const getCallArg = (mock: jest.Mock, callIdx: number, argIdx = 0): unknown => {
-      const calls = mock.mock.calls as unknown[][];
-      return calls[callIdx][argIdx];
-    };
-
     let oboe: ReturnType<typeof makeOboeStub>;
 
     beforeEach(() => {
@@ -642,15 +559,6 @@ describe('QueryService', () => {
   });
 
   describe('summaryStreamPost lifecycle', () => {
-    // Mirrors the helper from streamPost lifecycle: pulls the Nth argument
-    // of the Mth call out of a jest.Mock without tripping
-    // @typescript-eslint/no-unsafe-member-access. mock.calls is `any[][]`
-    // — this localises that cast.
-    const getCallArg = (mock: jest.Mock, callIdx: number, argIdx = 0): unknown => {
-      const calls = mock.mock.calls as unknown[][];
-      return calls[callIdx][argIdx];
-    };
-
     let oboe: ReturnType<typeof makeOboeStub>;
 
     beforeEach(() => {
@@ -841,6 +749,132 @@ describe('QueryService', () => {
       expect('Authorization' in opts.headers).toBe(false);
       expect(opts.headers.Authorization).toBeUndefined();
       expect(opts.headers['Content-Type']).toBe('application/json');
+    });
+  });
+
+  describe('getGenotypePreviewVariantsByFilter lifecycle', () => {
+    // Drive the FULL rxjs pipeline (instanceService.getGenome | mergeMap
+    // streamPost | tap) via the oboe chain captured by makeOboeStub. We
+    // deliberately do NOT spy on streamPost itself — that is what hid
+    // tb-iuv (the null-sentinel emitted by streamPost.done() never reached
+    // the tap in the obsolete `of(resMock)` stub-style tests).
+    let oboe: ReturnType<typeof makeOboeStub>;
+    const filter = {
+      datasetId: 'ALL_genotypes',
+      geneSymbols: ['CHD3'],
+      inheritanceTypeFilter: ['denovo', 'mendelian'],
+      effectTypes: ['frame-shift', 'nonsense'],
+    };
+
+    beforeEach(() => {
+      oboe = makeOboeStub();
+      // AuthService.accessToken is a getter returning `this.authToken || ''`.
+      // Match the streamPost lifecycle convention.
+      service['authService']['authToken'] = null;
+      // Feed the genome through the mergeMap so the tap actually runs.
+      jest.spyOn(service['instanceService'], 'getGenome').mockReturnValue(of('hg38'));
+    });
+
+    it('null-sentinel only (tb-iuv regression): callback fires, no variant added, no throw', () => {
+      // tb-iuv: streamPost.done() emits null on the streamingSubject as a
+      // "no more variants" sentinel. Pre-fix, the tap unconditionally ran
+      // addPreviewVariant(null, ...) → GenotypePreview.fromJson(null,
+      // columns) → null.length TypeError → subscription died → callback
+      // never fired → consumer stranded on "Loading variants...".
+      // Post-fix (query.service.ts:151): `if (variant) { ... }` guards
+      // the addPreviewVariant + genome-attach block; the callback is
+      // OUTSIDE the guard so it always fires.
+      const callbackSpy = jest.fn();
+
+      const result = service.getGenotypePreviewVariantsByFilter(
+        datasetMock, filter, 12, callbackSpy,
+      );
+      const cb = oboe.latest();
+      // Drive ONLY done() — no node() — so the only emission is the null
+      // sentinel from streamPost.done().
+      cb.done?.();
+
+      expect(callbackSpy).toHaveBeenCalledTimes(1);
+      expect(result.genotypePreviews).toHaveLength(0);
+      expect(result.getVariantsCountFormatted(12)).toBe('0 variants selected');
+    });
+
+    it('single variant + null sentinel: callback fires per emission, genome attached, length 1', () => {
+      const callbackSpy = jest.fn();
+
+      const result = service.getGenotypePreviewVariantsByFilter(
+        datasetMock, filter, 12, callbackSpy,
+      );
+      const cb = oboe.latest();
+      cb.node?.(['row1-source1', 'row1-source2', 'row1-source3']);
+      cb.done?.();
+
+      // The SUT's tap runs unconditionally; only addPreviewVariant +
+      // genome-attach are gated by the null-guard. So the callback fires
+      // once per stream emission INCLUDING the null sentinel.
+      expect(callbackSpy).toHaveBeenCalledTimes(2);
+      expect(result.genotypePreviews).toHaveLength(1);
+      expect(result.getVariantsCountFormatted(12)).toBe('1 variant selected');
+      expect(result.genotypePreviews[0].data.get('genome')).toBe('hg38');
+    });
+
+    it('multiple variants + null sentinel: 3 nodes → length 3, genome attached to each', () => {
+      const callbackSpy = jest.fn();
+
+      const result = service.getGenotypePreviewVariantsByFilter(
+        datasetMock, filter, 12, callbackSpy,
+      );
+      const cb = oboe.latest();
+      cb.node?.(['r1-s1', 'r1-s2', 'r1-s3']);
+      cb.node?.(['r2-s1', 'r2-s2', 'r2-s3']);
+      cb.node?.(['r3-s1', 'r3-s2', 'r3-s3']);
+      cb.done?.();
+
+      // 3 node emissions + 1 null sentinel = 4 callback invocations.
+      expect(callbackSpy).toHaveBeenCalledTimes(4);
+      expect(result.genotypePreviews).toHaveLength(3);
+      expect(result.getVariantsCountFormatted(12)).toBe('3 variants selected');
+      for (const preview of result.genotypePreviews) {
+        expect(preview.data.get('genome')).toBe('hg38');
+      }
+    });
+
+    it('default maxVariantsCount (1001) when not passed: filter merged into oboe.body', () => {
+      const result = service.getGenotypePreviewVariantsByFilter(datasetMock, filter);
+      const cb = oboe.latest();
+      cb.node?.(['x', 'y', 'z']);
+      cb.done?.();
+
+      expect(oboe.instance).toHaveBeenCalledTimes(1);
+      const opts = getCallArg(oboe.instance, 0) as { body: Record<string, unknown> };
+      expect(opts.body).toStrictEqual({ ...filter, maxVariantsCount: 1001 });
+      // Sanity: tap still ran without error.
+      expect(result.genotypePreviews).toHaveLength(1);
+    });
+
+    it('custom maxVariantsCount honoured: opts.body.maxVariantsCount === 50', () => {
+      const callback = jest.fn();
+      service.getGenotypePreviewVariantsByFilter(datasetMock, filter, 50, callback);
+
+      expect(oboe.instance).toHaveBeenCalledTimes(1);
+      const opts = getCallArg(oboe.instance, 0) as { body: Record<string, unknown> };
+      expect(opts.body).toStrictEqual({ ...filter, maxVariantsCount: 50 });
+    });
+
+    it('callback is optional: tap does not throw when callback omitted', () => {
+      const result = service.getGenotypePreviewVariantsByFilter(datasetMock, filter, 12);
+      const cb = oboe.latest();
+
+      // The SUT does `if (callback !== undefined) { callback(); }` so the
+      // absence of a callback must NOT crash the tap. Drive a node + done
+      // and assert the result array was populated normally.
+      expect(() => {
+        cb.node?.(['a', 'b', 'c']);
+        cb.done?.();
+      }).not.toThrow();
+
+      expect(result.genotypePreviews).toHaveLength(1);
+      expect(result.getVariantsCountFormatted(12)).toBe('1 variant selected');
     });
   });
 });
