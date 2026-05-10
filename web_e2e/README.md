@@ -234,4 +234,4 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
        logs --no-color backend-e2e --tail 200
    ```
    or, on a CI build, grab the `wdae-debug.log` and `compose.log` artefacts archived by the Jenkins job — `wdae-debug.log` has the per-request Django output, `compose.log` interleaves every service's stdout by timestamp.
-4. File a new issue with `br q "..."` (see `AGENTS.md` for the vocabulary). Use `br ready` to see the open queue.
+4. File a new issue: `gh issue create --repo iossifovlab/gpf --label needs-triage`. The umbrella `genomics-toolbox/CLAUDE.md` documents the label vocabulary and the workflow loop.
