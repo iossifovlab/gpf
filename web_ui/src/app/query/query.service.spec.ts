@@ -465,7 +465,7 @@ describe('QueryService', () => {
       errorSpy.mockRestore();
     });
 
-    it('cancellation mid-stream: aborts + clears oboeInstance; subsequent done() still emits (oboe unaware)', () => {
+    it('cancellation mid-stream: aborts + clears oboeInstance; subsequent done() is suppressed by the abort-aware guard (tb-nzf)', () => {
       const finishedSpy = jest.fn();
       const dataSpy = jest.fn();
       service.streamingFinishedSubject.subscribe(finishedSpy);
@@ -484,20 +484,14 @@ describe('QueryService', () => {
       const finishedBefore = finishedSpy.mock.calls.length;
       const dataBefore = dataSpy.mock.calls.length;
 
-      // The SUT's done() callback closure is still wired to the same
-      // subjects, and oboe (at the JS layer) doesn't know it was aborted.
-      // So if the test invokes cb.done?.() it WILL fire emissions on the
-      // shared subjects. We assert what the SUT actually does:
-      //   - streamingFinishedSubject fires `true`
-      //   - streamingSubject fires `null`
-      //   - oboeInstance stays null (it was already null after cancel; the
-      //     done() handler unconditionally re-assigns it to null)
+      // oboe (at the JS layer) doesn't know it was aborted, so the test
+      // can still invoke cb.done?.(). After tb-nzf the SUT's done() bails
+      // when oboeInstance === null — subscribers who already saw the
+      // cancellation are NOT re-emitted to.
       cb.done?.();
 
-      expect(finishedSpy.mock.calls).toHaveLength(finishedBefore + 1);
-      expect(finishedSpy).toHaveBeenLastCalledWith(true);
-      expect(dataSpy.mock.calls).toHaveLength(dataBefore + 1);
-      expect(dataSpy).toHaveBeenLastCalledWith(null);
+      expect(finishedSpy.mock.calls).toHaveLength(finishedBefore);
+      expect(dataSpy.mock.calls).toHaveLength(dataBefore);
       expect(service['oboeInstance']).toBeNull();
     });
 
@@ -611,12 +605,11 @@ describe('QueryService', () => {
       // summaryStreamingSubject (3rd overall, after the 2 nodes).
       expect(dataSpy).toHaveBeenCalledTimes(3);
       expect(dataSpy).toHaveBeenLastCalledWith(null);
-      // Surprise: summaryStreamPost.done() does NOT clear
-      // summaryOboeInstance (unlike streamPost.done(), which assigns
-      // oboeInstance = null). We pin the actual SUT behaviour: after
-      // done() the instance handle remains set. Compare with
-      // cancelSummaryStreamPost(), which DOES clear it.
-      expect(service['summaryOboeInstance']).not.toBeNull();
+      // After tb-25g: summaryStreamPost.done() now clears
+      // summaryOboeInstance, mirroring streamPost.done(). Both paths
+      // (normal completion, explicit cancel) leave the instance handle
+      // null when streaming ends.
+      expect(service['summaryOboeInstance']).toBeNull();
 
       // streamingStartSubject MUST NOT have fired — summaryStreamPost has
       // no `streamingStartSubject.next(true)` (unlike streamPost).
@@ -642,12 +635,12 @@ describe('QueryService', () => {
         { subject: 'finished', value: true },
         { subject: 'data', value: null },
       ]);
-      // Surprise: done() does NOT clear summaryOboeInstance (see happy
-      // path test). Pin actual SUT behaviour.
-      expect(service['summaryOboeInstance']).not.toBeNull();
+      // After tb-25g: done() clears summaryOboeInstance (see happy-path
+      // test for the symmetric assertion).
+      expect(service['summaryOboeInstance']).toBeNull();
     });
 
-    it('failure path: logs warn/error, emits finished + null; leaves summaryOboeInstance set', () => {
+    it('failure path: logs warn/error, emits finished + null; clears summaryOboeInstance (tb-25g)', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -668,15 +661,15 @@ describe('QueryService', () => {
       expect(finishedSpy).toHaveBeenCalledWith(true);
       expect(dataSpy).toHaveBeenCalledTimes(1);
       expect(dataSpy).toHaveBeenCalledWith(null);
-      // Surprise: fail() does NOT clear summaryOboeInstance (see happy
-      // path test). Pin actual SUT behaviour.
-      expect(service['summaryOboeInstance']).not.toBeNull();
+      // After tb-25g: fail() clears summaryOboeInstance (mirrors
+      // streamPost.fail()).
+      expect(service['summaryOboeInstance']).toBeNull();
 
       warnSpy.mockRestore();
       errorSpy.mockRestore();
     });
 
-    it('cancel mid-stream: aborts + clears instance; later done() still emits (oboe unaware)', () => {
+    it('cancel mid-stream: aborts + clears instance; subsequent done() is suppressed by the abort-aware guard (tb-nzf)', () => {
       const finishedSpy = jest.fn();
       const dataSpy = jest.fn();
       service.summaryStreamingFinishedSubject.subscribe(finishedSpy);
@@ -695,20 +688,14 @@ describe('QueryService', () => {
       const finishedBefore = finishedSpy.mock.calls.length;
       const dataBefore = dataSpy.mock.calls.length;
 
-      // The SUT's done() callback closure is still wired to the same
-      // subjects, and oboe (at the JS layer) doesn't know it was aborted.
-      // Mirroring streamPost: the SUT has no abort-aware guard, so a
-      // subsequent cb.done?.() WILL re-emit through the subjects.
+      // oboe (at the JS layer) doesn't know it was aborted. After tb-nzf,
+      // summaryStreamPost.done() bails when summaryOboeInstance === null,
+      // so subscribers who already saw the cancellation are NOT
+      // re-emitted to (mirrors the streamPost cancel test).
       cb.done?.();
 
-      expect(finishedSpy.mock.calls).toHaveLength(finishedBefore + 1);
-      expect(finishedSpy).toHaveBeenLastCalledWith(true);
-      expect(dataSpy.mock.calls).toHaveLength(dataBefore + 1);
-      expect(dataSpy).toHaveBeenLastCalledWith(null);
-      // Note: summaryStreamPost's done() does NOT clear summaryOboeInstance
-      // (unlike streamPost.done(), which clears oboeInstance). After cancel
-      // it was already null, and done() leaves it null because there's no
-      // assignment in summaryStreamPost.done().
+      expect(finishedSpy.mock.calls).toHaveLength(finishedBefore);
+      expect(dataSpy.mock.calls).toHaveLength(dataBefore);
       expect(service['summaryOboeInstance']).toBeNull();
     });
 

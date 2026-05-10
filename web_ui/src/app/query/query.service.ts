@@ -77,6 +77,14 @@ export class QueryService {
       this.streamingUpdateSubject.next(true);
       this.streamingSubject.next(data);
     }).done(() => {
+      // Post-cancel re-emit guard (tb-nzf): cancelStreamPost() nulls
+      // oboeInstance, but oboe's done() callback may still fire (the
+      // abort doesn't model network completion in the stub, and a real
+      // race can deliver done after abort). Bail before re-emitting to
+      // subscribers who already saw the cancellation.
+      if (this.oboeInstance === null) {
+        return;
+      }
       this.streamingFinishedSubject.next(true);
       // Emit null so the loading service can stop the loading overlay even if no variants were received
       this.streamingSubject.next(null);
@@ -84,6 +92,10 @@ export class QueryService {
       this.familyVariantsSubscription = null;
       this.oboeInstance = null;
     }).fail(error => {
+      // Post-cancel re-emit guard (tb-nzf): see done() above.
+      if (this.oboeInstance === null) {
+        return;
+      }
       console.warn('oboejs encountered a fail event while streaming');
       console.error(error);
       this.streamingFinishedSubject.next(true);
@@ -118,13 +130,27 @@ export class QueryService {
     }).node('!.*', data => {
       this.summaryStreamingSubject.next(data as object);
     }).done(() => {
+      // Post-cancel re-emit guard (tb-nzf): mirror streamPost.done().
+      if (this.summaryOboeInstance === null) {
+        return;
+      }
       this.summaryStreamingFinishedSubject.next(true);
       this.summaryStreamingSubject.next(null);
+      // Symmetry with streamPost.done() (tb-25g): clear the instance
+      // handle so isSummaryStreamingActive() (when added) returns false
+      // after a normal completion, not just after explicit cancel.
+      this.summaryOboeInstance = null;
     }).fail(error => {
+      // Post-cancel re-emit guard (tb-nzf): mirror streamPost.fail().
+      if (this.summaryOboeInstance === null) {
+        return;
+      }
       console.warn('oboejs encountered a fail event while streaming');
       console.error(error);
       this.summaryStreamingFinishedSubject.next(true);
       this.summaryStreamingSubject.next(null);
+      // Symmetry with streamPost.fail() (tb-25g).
+      this.summaryOboeInstance = null;
     });
 
     return this.summaryStreamingSubject;
