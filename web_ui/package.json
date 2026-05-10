@@ -95,5 +95,10 @@
     "defaults",
     "not IE 11",
     "maintained node versions"
-  ]
+  ],
+  "overrides": {
+    "tar": "^7.5.11",
+    "serialize-javascript": "^7.0.5",
+    "@tootallnate/once": "^3.0.1"
+  }
 }
