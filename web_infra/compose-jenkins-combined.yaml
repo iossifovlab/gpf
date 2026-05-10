@@ -1,0 +1,87 @@
+# Combined-mode overlay for the gpf-web e2e Jenkins pipeline.
+# Use with the shared base:
+#
+#   docker compose -f compose-jenkins.yaml -f compose-jenkins-combined.yaml ...
+#
+# Defines a single `frontend` service that runs the supervisord
+# combined image (Dockerfile.production at the repo root):
+# gunicorn on 127.0.0.1:9001 + Apache on :80 in one container.
+# This is the single-artefact deployment shape — what
+# production actually ships. Apache's reverse-proxy lives
+# inside the same network namespace as gunicorn, so the
+# `backend` hostname from split mode has no analogue here:
+# /api/ and /ws/ resolve to localhost:9001 internally.
+#
+# Same compose service name (`frontend`) and same hostname
+# (`frontend`) as split mode's outward-facing service so that
+# `e2e-tests`' depends_on entry in the base compose file is
+# resolved identically in both modes and Playwright's
+# baseURL works unchanged.
+
+services:
+
+  frontend:
+    image: ${COMBINED_IMAGE:-gpf-web-prod:latest}
+    hostname: frontend
+    depends_on:
+      instance-import:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+    volumes:
+      # Same writable mount as split mode's backend service
+      # — WGPFInstance.__init__ touches main_description.md
+      # and about_description.md on first startup if missing
+      # (gpf_instance/gpf_instance.py:102-109). instance-import
+      # populated the rest of the tree already.
+      - ../web_e2e/gpf_e2e_instance:/data
+      # GRR resources — same group repo (grr_sfari over grr)
+      # as split mode. The combined image bakes a default
+      # /grr-definition.yaml that points at /grr only; the
+      # GRR_DEFINITION_FILE env var below overrides it to the
+      # in-instance file that combines both repos.
+      - /mnt/cephfs/seqpipe/grr:/grr
+      - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
+      # Django file logs — gunicorn (under supervisord) writes
+      # wdae-debug.log via WDAE_LOG_DIR exactly as the split-
+      # mode backend does. See the base compose file's
+      # instance-import service for the full rationale.
+      - ./wdae-logs:/logs
+    environment:
+      DJANGO_SETTINGS_MODULE: gpf_web.production_settings
+      DAE_DB_DIR: /data
+      GRR_DEFINITION_FILE: /data/grr-definition.yaml
+      WDAE_DB_NAME: gpf
+      WDAE_DB_USER: seqpipe
+      WDAE_DB_PASSWORD: secret
+      WDAE_DB_HOST: db
+      WDAE_DB_PORT: 3306
+      WDAE_LOG_DIR: /logs
+      WDAE_SECRET_KEY: "django-insecure-e2e-not-a-real-secret-only-for-jenkins"
+      WDAE_EMAIL_HOST: mail
+      # Same value as split mode: outbound mail's email-
+      # verification link points the chromium browser at the
+      # combined service via its compose-network hostname.
+      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://frontend"
+      WDAE_ALLOWED_HOST: "*"
+      WDAE_DEBUG: "False"
+    healthcheck:
+      # Hit /api/v3/datasets/ through Apache's reverse-proxy
+      # to gunicorn. Stricter than split mode's localhost:9001
+      # check: this only goes green when (a) Apache is up,
+      # (b) supervisord successfully started gunicorn,
+      # (c) gunicorn workers have completed STUDIES_EAGER_LOADING
+      # (the tb-hi1 race), and (d) httpd-combined.conf's
+      # ProxyPass routes /api/ correctly. A single failure
+      # surface for the whole packaging shape.
+      #
+      # Retries 30 / interval 10s = 5-min budget, mirroring
+      # split mode's backend healthcheck — gunicorn warm-up
+      # dominates startup time in either shape and Apache's
+      # extra hop adds negligible latency.
+      test: ["CMD", "curl", "-f", "http://localhost/api/v3/datasets/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30

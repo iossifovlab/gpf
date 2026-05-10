@@ -18,14 +18,15 @@
 pipelineJob('gpf-web-e2e') {
     description(
         'End-to-end Playwright test suite for the gpf web ' +
-        'stack. Builds the wheel-based backend production ' +
-        'image (gpf-core + gpf-web) and the Apache-based ' +
-        'frontend production image, brings up the full e2e ' +
-        'compose stack (db + mail + backend-e2e + ' +
-        'frontend-e2e), and runs `npx playwright test` ' +
-        'against it. Triggered downstream of ' +
-        'iossifovlab/gpf/<branch> after Build & push prod ' +
-        'images; safe to run manually.')
+        'stack. Builds (or pulls) the production images, ' +
+        'brings up the full e2e compose stack against the ' +
+        'production-deployment shape selected by ' +
+        '`STACK_MODE` — `split` runs separate gunicorn and ' +
+        'Apache containers (default), `combined` runs the ' +
+        'single supervisord-managed image production ships ' +
+        '— and runs `npx playwright test` against it. ' +
+        'Triggered downstream of iossifovlab/gpf/<branch> ' +
+        'after Build & push prod images; safe to run manually.')
 
     logRotator {
         numToKeep(20)
@@ -59,6 +60,15 @@ pipelineJob('gpf-web-e2e') {
             'Upstream build number to copy wheel artefacts ' +
             'from. Empty = use the last successful build of ' +
             'UPSTREAM_PROJECT.',
+        )
+        choiceParam(
+            'STACK_MODE',
+            ['split', 'combined'],
+            'Production-deployment shape the Playwright ' +
+            'suite runs against. `split` (default) runs the ' +
+            'two-container backend+frontend pair; `combined` ' +
+            'runs the single supervisord image (gpf-web-prod) ' +
+            'that production ships. Same suite in both modes.',
         )
     }
 

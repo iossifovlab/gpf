@@ -56,6 +56,19 @@ pipeline {
                 'wheel artefacts from. Empty = use the ' +
                 'last successful build of UPSTREAM_PROJECT.',
         )
+        choice(
+            name: 'STACK_MODE',
+            choices: ['split', 'combined'],
+            description: 'Which production-deployment shape ' +
+                'the e2e suite runs against. `split` is the ' +
+                'two-container backend+frontend pair (status ' +
+                'quo). `combined` is the single supervisord ' +
+                'image (gpf-web-prod) that runs gunicorn + ' +
+                'Apache in one container — the artefact prod ' +
+                'currently ships. Same Playwright suite in ' +
+                'both modes; the difference is what compose ' +
+                'overlay is loaded on top of compose-jenkins.yaml.',
+        )
     }
 
     options {
@@ -66,6 +79,20 @@ pipeline {
     environment {
         BACKEND_IMAGE  = "gpf-web-api-prod:${env.BUILD_NUMBER}"
         FRONTEND_IMAGE = "gpf-web-ui-prod:${env.BUILD_NUMBER}"
+        // COMBINED_IMAGE is always defined (cleanup's docker
+        // rmi loop iterates over all three names; missing
+        // images are silently ignored). The pull/build for
+        // it is gated on STACK_MODE in the prepare-images
+        // stage below.
+        COMBINED_IMAGE = "gpf-web-prod:${env.BUILD_NUMBER}"
+        // STACK_MODE re-exported so shell conditionals in
+        // sh-heredocs can fork on it; COMPOSE_OVERLAY is the
+        // overlay path that pairs with compose-jenkins.yaml
+        // for the chosen mode. Both are derived once here so
+        // every stage references one canonical value.
+        STACK_MODE      = "${params.STACK_MODE}"
+        COMPOSE_OVERLAY =
+            "web_infra/compose-jenkins-${params.STACK_MODE}.yaml"
         COMPOSE_PROJECT =
             "gpf-web-e2e-${env.BUILD_NUMBER}"
         COMPOSE_NETWORK =
@@ -87,6 +114,10 @@ pipeline {
                     if (params.COMMIT_SHA?.trim()) {
                         label += " @ ${params.COMMIT_SHA.take(7)}"
                     }
+                    // Append the stack-mode tag so combined-
+                    // mode runs are obvious in the build list
+                    // alongside split-mode (default) ones.
+                    label += " [${params.STACK_MODE}]"
                     currentBuild.displayName = \
                         "#${env.BUILD_NUMBER} ${label}"
                     zulipSend(
@@ -241,6 +272,23 @@ pipeline {
                             docker tag \
                                 'registry.seqpipe.org/gpf-web-ui:${tag}' \
                                 "\$FRONTEND_IMAGE"
+
+                            # Combined-mode adds a third pull:
+                            # the supervisord-managed bundle
+                            # the parent gpf Jenkinsfile pushes
+                            # alongside the split pair (registry
+                            # repo `gpf-web`, sibling of
+                            # gpf-web-api/gpf-web-ui). Skipped
+                            # when STACK_MODE=split since the
+                            # split overlay never references
+                            # \$COMBINED_IMAGE.
+                            if [ "\$STACK_MODE" = "combined" ]; then
+                                docker pull \
+                                    'registry.seqpipe.org/gpf-web:${tag}'
+                                docker tag \
+                                    'registry.seqpipe.org/gpf-web:${tag}' \
+                                    "\$COMBINED_IMAGE"
+                            fi
                         """
                     } else {
                         if (params.UPSTREAM_PROJECT?.trim()) {
@@ -319,6 +367,23 @@ pipeline {
                                 -f web_ui/Dockerfile.production \
                                 --build-arg BACKEND_IMAGE="$BACKEND_IMAGE" \
                                 -t "$FRONTEND_IMAGE" .
+
+                            # Combined-mode tacks on the bundle
+                            # build — Dockerfile.production at
+                            # the repo root is a thin assembly
+                            # over the two images we just built
+                            # (COPY --from=backend, --from=frontend
+                            # plus apache2 + supervisord). ~30s
+                            # extra; skipped entirely in split
+                            # mode because the split overlay
+                            # never references $COMBINED_IMAGE.
+                            if [ "$STACK_MODE" = "combined" ]; then
+                                docker build \
+                                    -f Dockerfile.production \
+                                    --build-arg BACKEND_IMAGE="$BACKEND_IMAGE" \
+                                    --build-arg FRONTEND_IMAGE="$FRONTEND_IMAGE" \
+                                    -t "$COMBINED_IMAGE" .
+                            fi
                         '''
                     }
                 }
@@ -334,6 +399,7 @@ pipeline {
                     docker compose \
                         -p "$COMPOSE_PROJECT" \
                         -f web_infra/compose-jenkins.yaml \
+                        -f $COMPOSE_OVERLAY \
                         build e2e-tests
                 '''
             }
@@ -367,6 +433,7 @@ pipeline {
                     docker compose \
                         -p "$COMPOSE_PROJECT" \
                         -f web_infra/compose-jenkins.yaml \
+                        -f $COMPOSE_OVERLAY \
                         up -d db instance-import
 
                     # Block until instance-import exits; capture
@@ -378,6 +445,7 @@ pipeline {
                     docker compose \
                         -p "$COMPOSE_PROJECT" \
                         -f web_infra/compose-jenkins.yaml \
+                        -f $COMPOSE_OVERLAY \
                         wait instance-import || EXIT_CODE=$?
 
                     # Dump the import logs after wait so failures
@@ -388,6 +456,7 @@ pipeline {
                     docker compose \
                         -p "$COMPOSE_PROJECT" \
                         -f web_infra/compose-jenkins.yaml \
+                        -f $COMPOSE_OVERLAY \
                         logs --no-color instance-import
 
                     exit "$EXIT_CODE"
@@ -424,6 +493,17 @@ pipeline {
                         sh '''
                             mkdir -p web_e2e/reports
 
+                            # Stack-mode-aware HTTP-tier service list.
+                            # Split mode runs gunicorn (backend) and
+                            # Apache (frontend) as two services;
+                            # combined mode runs both inside the
+                            # supervisord-managed `frontend`.
+                            if [ "$STACK_MODE" = "combined" ]; then
+                                web_services="frontend"
+                            else
+                                web_services="backend frontend"
+                            fi
+
                             # Explicitly bring up the long-running
                             # services first. The previous stage
                             # already exited instance-import 0; if we
@@ -441,12 +521,14 @@ pipeline {
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
-                                up -d mail backend-e2e frontend-e2e
+                                -f $COMPOSE_OVERLAY \
+                                up -d mail $web_services
 
                             # --no-deps: skip dependency resolution
-                            # entirely. backend-e2e / frontend-e2e are
-                            # already up from the call above; mail is
-                            # too. instance-import has already exited
+                            # entirely. backend / frontend (or just
+                            # frontend in combined mode) are already
+                            # up from the call above; mail is too.
+                            # instance-import has already exited
                             # successfully, and we deliberately don't
                             # want compose to re-run it.
                             #
@@ -457,6 +539,7 @@ pipeline {
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
+                                -f $COMPOSE_OVERLAY \
                                 run --rm --no-deps e2e-tests \
                                     || TEST_RC=$?
                             cp web_e2e/reports/junit-report.xml \
@@ -470,14 +553,20 @@ pipeline {
                         // failure typically shows up as a single
                         // "dependency failed to start: container ...
                         // exited (1)" line with no diagnostic. Capture
-                        // backend-e2e + frontend-e2e + e2e-tests
+                        // each HTTP-tier service + e2e-tests
                         // stdout/stderr so the actual error surfaces
                         // in the Jenkins stage output. instance-import
                         // already had its logs dumped in the previous
                         // stage. `|| true` per-service so a missing
                         // service (e.g. e2e-tests never created
-                        // because backend-e2e errored first) doesn't
+                        // because backend errored first) doesn't
                         // mask another's logs.
+                        //
+                        // In combined mode the only HTTP service is
+                        // `frontend` (supervisord forwards both
+                        // gunicorn and apache stdio to its docker
+                        // logs); split mode dumps `backend` then
+                        // `frontend` separately.
                         //
                         // Also write a wide combined compose.log
                         // (every service interleaved by timestamp)
@@ -486,17 +575,25 @@ pipeline {
                         // artefact tree. Both `|| true` so a capture
                         // hiccup can't tank a green build.
                         sh '''
+                            if [ "$STACK_MODE" = "combined" ]; then
+                                log_services="frontend e2e-tests"
+                            else
+                                log_services="backend frontend e2e-tests"
+                            fi
+
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
+                                -f $COMPOSE_OVERLAY \
                                 logs --no-color \
                                 > reports/web_e2e/compose.log \
                                 2>&1 || true
-                            for svc in backend-e2e frontend-e2e e2e-tests; do
+                            for svc in $log_services; do
                                 echo "===== compose logs: $svc ====="
                                 docker compose \
                                     -p "$COMPOSE_PROJECT" \
                                     -f web_infra/compose-jenkins.yaml \
+                                    -f $COMPOSE_OVERLAY \
                                     logs --no-color "$svc" || true
                             done
                             cp -r web_infra/wdae-logs \
@@ -505,6 +602,7 @@ pipeline {
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
+                                -f $COMPOSE_OVERLAY \
                                 down -v --remove-orphans || true
                         '''
                     }
@@ -536,7 +634,11 @@ pipeline {
         }
         cleanup {
             sh '''
-                for img in "$BACKEND_IMAGE" "$FRONTEND_IMAGE"; do
+                # $COMBINED_IMAGE is always defined in the env
+                # block, but only built/pulled when STACK_MODE
+                # = combined. `2>/dev/null || true` makes the
+                # missing-image case in split mode a no-op.
+                for img in "$BACKEND_IMAGE" "$FRONTEND_IMAGE" "$COMBINED_IMAGE"; do
                     docker rmi "$img" 2>/dev/null || true
                 done
             '''

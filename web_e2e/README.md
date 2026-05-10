@@ -126,7 +126,14 @@ export WDAE_EMAIL_VERIFICATION_ENDPOINT=http://localhost:4200
 
 ## Jenkins-mirrored compose stack
 
-Use this only when you're reproducing a CI-only failure. It runs the same images Jenkins builds (`gpf-web-api-prod` + `gpf-web-ui-prod`), wires them via `web_infra/compose-jenkins.yaml`, and fires the Playwright suite from the `e2e-tests` service.
+Use this only when you're reproducing a CI-only failure. It runs the same images Jenkins builds, wires them via `web_infra/compose-jenkins.yaml` plus a stack-mode overlay, and fires the Playwright suite from the `e2e-tests` service.
+
+There are two stack modes (matching the Jenkins job's `STACK_MODE` parameter):
+
+- **`split`** — two HTTP services, `backend` (gunicorn) + `frontend` (Apache reverse-proxy). What the job has historically run.
+- **`combined`** — one HTTP service, `frontend`, running the supervisord-managed `gpf-web-prod` image (gunicorn + Apache in one container — the artefact production currently ships).
+
+Both overlays expose a service literally named `frontend`; the test suite's `http://frontend` baseURL works unchanged. Pick a mode by passing the matching overlay file alongside the shared base.
 
 The compose stack bind-mounts two GRR repos from the CSHL Jenkins agents — `/mnt/cephfs/seqpipe/grr` and `/mnt/cephfs/seqpipe/grr_sfari` — and points `GRR_DEFINITION_FILE` at `gpf_e2e_instance/grr-definition.yaml`, which combines them as a `group` repo (`grr_sfari` first, so its enrichment backgrounds override matching IDs in `grr`). On a host without those mounts, either provide equivalent paths or override `GRR_DEFINITION_FILE` to a definition that uses your local layout.
 
@@ -152,30 +159,45 @@ docker build -f web/Dockerfile.production    -t gpf-web-api-prod:local .
 docker build -f web_ui/Dockerfile.production \
     --build-arg BACKEND_IMAGE=gpf-web-api-prod:local \
     -t gpf-web-ui-prod:local .
+
+# 5. combined image (only needed for `STACK_MODE=combined`)
+docker build -f Dockerfile.production \
+    --build-arg BACKEND_IMAGE=gpf-web-api-prod:local \
+    --build-arg FRONTEND_IMAGE=gpf-web-ui-prod:local \
+    -t gpf-web-prod:local .
 ```
 
 ### Bring the stack up
 
+Pick the overlay for the mode you want:
+
 ```bash
 export BACKEND_IMAGE=gpf-web-api-prod:local
 export FRONTEND_IMAGE=gpf-web-ui-prod:local
+export COMBINED_IMAGE=gpf-web-prod:local         # only used in combined mode
 export COMPOSE_PROJECT=gpf-web-e2e-local
 
+# Pick one:
+export OVERLAY=web_infra/compose-jenkins-split.yaml      # split mode
+# export OVERLAY=web_infra/compose-jenkins-combined.yaml # combined mode
+
 # 1. Run instance-import to its completion
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     up -d db instance-import
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     wait instance-import
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     logs --no-color instance-import
 
-# 2. Bring up backend + frontend explicitly (mirrors Jenkinsfile.e2e —
-#    explicit up so step 3's --no-deps doesn't trigger a re-import)
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
-    up -d mail backend-e2e frontend-e2e
+# 2. Bring up the HTTP tier explicitly (mirrors Jenkinsfile.e2e —
+#    explicit up so step 3's --no-deps doesn't trigger a re-import).
+#    In split mode this brings up `backend` + `frontend`; in
+#    combined mode just `frontend` (one supervisord container).
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
+    up -d mail frontend
 
 # 3. Run the suite
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     run --rm --no-deps e2e-tests
 ```
 
@@ -183,12 +205,12 @@ docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
 
 ```bash
 # Single spec
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     run --rm --no-deps e2e-tests \
     npx playwright test --reporter=list tests/datasets.spec.ts
 
 # Single test by name
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     run --rm --no-deps e2e-tests \
     npx playwright test --reporter=list -g "should display \"GPF"
 
@@ -200,7 +222,7 @@ docker run --rm --network "${COMPOSE_PROJECT}_default" curlimages/curl:latest \
 ### Tear down
 
 ```bash
-docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
+docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
     down -v --remove-orphans
 ```
 
@@ -214,7 +236,7 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
 - **`/o/` and `/accounts/` are required for OAuth.** The SPA's log-in button does `window.location = /o/authorize/?...`, which the backend redirects to `/accounts/login/`. Both must be proxied.
 - **Playwright workers are capped at 4 in CI** (`playwright.config.ts`). Local-dev (without `CI=1`) keeps Playwright's default.
 - **`WDAE_EMAIL_VERIFICATION_ENDPOINT=http://frontend`.** Django bakes this URL into outbound mail; without it, the user-creation specs follow a `localhost:8000` link that chromium inside the network can't reach.
-- **Backend logs are captured to `web_infra/wdae-logs/`.** Both `instance-import` and `backend-e2e` mount `./wdae-logs:/logs` and run with `WDAE_LOG_DIR=/logs`, so Django's `WatchedFileHandler` writes `wdae-debug.log` to a host bind that survives `compose down -v`. CI archives it (along with a wide combined `reports/web_e2e/compose.log` from `compose logs --no-color`) under the build's artefacts.
+- **Backend logs are captured to `web_infra/wdae-logs/`.** `instance-import` and the active HTTP service (split-mode `backend` or combined-mode `frontend`) mount `./wdae-logs:/logs` and run with `WDAE_LOG_DIR=/logs`, so Django's `WatchedFileHandler` writes `wdae-debug.log` to a host bind that survives `compose down -v`. CI archives it (along with a wide combined `reports/web_e2e/compose.log` from `compose logs --no-color`) under the build's artefacts.
 
 ---
 
@@ -230,8 +252,10 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
    ```
 3. For backend errors, either dump per-service logs from the running compose stack
    ```bash
-   docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml \
-       logs --no-color backend-e2e --tail 200
+   # split mode: backend; combined mode: frontend (supervisord
+   # forwards both gunicorn and apache stdio to its docker logs).
+   docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
+       logs --no-color backend --tail 200
    ```
    or, on a CI build, grab the `wdae-debug.log` and `compose.log` artefacts archived by the Jenkins job — `wdae-debug.log` has the per-request Django output, `compose.log` interleaves every service's stdout by timestamp.
 4. File a new issue: `gh issue create --repo iossifovlab/gpf --label needs-triage`. The umbrella `genomics-toolbox/CLAUDE.md` documents the label vocabulary and the workflow loop.

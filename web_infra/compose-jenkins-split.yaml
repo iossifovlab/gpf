@@ -1,0 +1,122 @@
+# Split-mode overlay for the gpf-web e2e Jenkins pipeline.
+# Use with the shared base:
+#
+#   docker compose -f compose-jenkins.yaml -f compose-jenkins-split.yaml ...
+#
+# Adds two services representing the two-container production
+# shape: gunicorn-only `backend` and Apache-only `frontend`
+# that reverse-proxies /api/ + /ws/ to backend:9001. The
+# combined-mode overlay (compose-jenkins-combined.yaml)
+# replaces both with one supervisord container that runs the
+# same processes side by side; tests treat them identically
+# because both overlays expose a service literally named
+# `frontend`.
+
+services:
+
+  backend:
+    image: ${BACKEND_IMAGE:-gpf-web-api-prod:latest}
+    # Tests target the frontend service at http://frontend
+    # (web_e2e/tests/utils.ts) — Apache there reverse-proxies
+    # /api/ and /ws/ to backend:9001, so the SPA and API share
+    # one origin. Backend keeps a literal `backend` hostname
+    # because httpd.conf's ProxyPass uses that name.
+    hostname: backend
+    depends_on:
+      instance-import:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+    volumes:
+      # The gpf instance fixture lives in the e2e module;
+      # mount it writable at /data and point gpf-core at it
+      # via DAE_DB_DIR. instance-import populated it above.
+      # Writable rather than :ro because WGPFInstance.__init__
+      # touches main_description.md and about_description.md
+      # on first startup if they're missing (gpf_instance/
+      # gpf_instance.py:102-109) — same behaviour production
+      # deployments rely on; build #12 caught the mismatch.
+      - ../web_e2e/gpf_e2e_instance:/data
+      # GRR resources mount — same shape as gain's
+      # web_infra/compose-jenkins.yaml. The paths are the CSHL
+      # Jenkins agents' shared GRR caches; runs on other hosts
+      # need to provide equivalent /grr + /grr_sfari or override
+      # GRR_DEFINITION_FILE to a different definition. Both
+      # mounts are required: the e2e instance fixture's
+      # grr-definition.yaml below combines them as a `group`
+      # repo with grr_sfari first (overriding overlapping
+      # enrichment IDs in grr).
+      - /mnt/cephfs/seqpipe/grr:/grr
+      - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
+      # Django file logs (wdae-debug.log via WDAE_LOG_DIR);
+      # see the matching mount on instance-import in the base
+      # for the full rationale.
+      - ./wdae-logs:/logs
+    environment:
+      DJANGO_SETTINGS_MODULE: gpf_web.production_settings
+      DAE_DB_DIR: /data
+      # The prod image bakes /grr-definition.yaml (single /grr
+      # repo, see web/Dockerfile.production). Override here to
+      # the in-instance file that defines a group of /grr_sfari +
+      # /grr — e2e-only, leaves prod deployments on the single
+      # repo. The instance dir is bind-mounted at /data above.
+      GRR_DEFINITION_FILE: /data/grr-definition.yaml
+      WDAE_DB_NAME: gpf
+      WDAE_DB_USER: seqpipe
+      WDAE_DB_PASSWORD: secret
+      WDAE_DB_HOST: db
+      WDAE_DB_PORT: 3306
+      WDAE_LOG_DIR: /logs
+      WDAE_SECRET_KEY: "django-insecure-e2e-not-a-real-secret-only-for-jenkins"
+      WDAE_EMAIL_HOST: mail
+      # The email-verification flow ("create user → click link in
+      # mail" — exercised by app.spec.ts:188+) embeds this URL into
+      # outbound mail. Default is http://localhost:8000, which the
+      # Playwright browser inside the e2e network can't reach
+      # (chromium loopback ≠ container loopback). Point at the
+      # frontend Apache so /api/v3/users/{set,reset}_password
+      # resolves through the same proxy as every other API call.
+      WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://frontend"
+      WDAE_ALLOWED_HOST: "*"
+      WDAE_DEBUG: "False"
+    healthcheck:
+      # tb-hi1: /api/v3/datasets/ requires WGPFInstance.studies_db
+      # to be populated. Previously this was /api/v3/instance/version,
+      # which deliberately bypassed WGPFInstance state — but with
+      # STUDIES_EAGER_LOADING and --workers 16, each gunicorn worker
+      # independently loads all studies at boot. /version answered 200
+      # from any worker that had finished its WSGI bootstrap, even
+      # while 15 others were still building combined families. compose
+      # up --wait flipped green and Playwright started racing the warmup,
+      # producing wildly variable timeout-fail counts on the same SHA
+      # (#31: 18 fails, #32: 209 fails — pure warmup-vs-traffic race).
+      #
+      # /api/v3/datasets/ exercises the same code path the SPA's first
+      # data XHR hits: the dataset list. A worker only returns 200 here
+      # after eager-loading completes for it. Per-worker race remains
+      # (the check lands on whichever worker gunicorn picks), so we
+      # bump retries to 30 (interval 10s = 5 min budget) so multiple
+      # checks have a high probability of catching all 16 workers
+      # ready by the time the check stops.
+      #
+      # gain's compose-jenkins.yaml uses the same pattern:
+      # /api/editor/pipeline_status?pipeline_id=pipeline/Clinical_annotation
+      # with --max-time 120.
+      test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/datasets/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-gpf-web-ui-prod:latest}
+    hostname: frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
