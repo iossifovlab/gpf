@@ -116,13 +116,13 @@ Import Tools configuration format
         vcf: 30M
 
     partition_description:
-        region_bin:     
+        region_bin:
             chromosomes: ['autosomes', chrX]  # All chromosomes not explicitly listed are grouped into 'other'.
             region_length: 30M   # this is optional. If ommitted, one region_per chromosome is created.
-        family_bin:  # creates family_bin partition. 
+        family_bin:  # creates family_bin partition.
                      # Families are randomly split into groups of size bin_size.
             bin_size: 10
-        frequency_bin:   # creates frequency_bin partition: 
+        frequency_bin:   # creates frequency_bin partition:
                          #    0 - de novo, 1 - ultra-rare, 
                          #    2 rare (frequency less than the rare_boundary), 
                          #    3 - common (frequency more than the rare_boundary)
