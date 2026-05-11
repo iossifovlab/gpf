@@ -26,14 +26,14 @@ WORKDIR /workspace
 
 COPY pyproject.toml uv.lock ruff.toml mypy.ini pylintrc ./
 COPY core/pyproject.toml core/README.md ./core/
-COPY web/pyproject.toml web/README.md ./web/
+COPY web_api/pyproject.toml web_api/README.md ./web_api/
 COPY federation/pyproject.toml ./federation/
 COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 
 # rest_client depends on gpf-core + gpf-web; copy their sources so uv sync can
 # install them editable.
 COPY core/gpf/ ./core/gpf/
-COPY web/gpf_web/ ./web/gpf_web/
+COPY web_api/gpf_web/ ./web_api/gpf_web/
 
 # gain-core wheel: provided by the parent Jenkinsfile's `Fetch gain
 # wheel` stage (copyArtifacts from gain master's last successful build)

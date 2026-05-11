@@ -2,10 +2,10 @@
 #
 # Build from the repo root so the workspace manifests and uv.lock are in the
 # build context:
-#     docker build -f web/Dockerfile -t gpf-web-ci .
+#     docker build -f web_api/Dockerfile -t gpf-web-ci .
 #
 # Default CMD runs the test suite. Override for linters:
-#     docker run --rm gpf-web-ci ruff check web/
+#     docker run --rm gpf-web-ci ruff check web_api/
 #     docker run --rm gpf-web-ci mypy gpf_web
 
 # syntax=docker/dockerfile:1.7
@@ -33,7 +33,7 @@ WORKDIR /workspace
 # (the `readme = "README.md"` field in each pyproject.toml).
 COPY pyproject.toml uv.lock ruff.toml mypy.ini pylintrc ./
 COPY core/pyproject.toml core/README.md ./core/
-COPY web/pyproject.toml web/README.md ./web/
+COPY web_api/pyproject.toml web_api/README.md ./web_api/
 COPY federation/pyproject.toml ./federation/
 COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 
@@ -52,12 +52,12 @@ COPY dist/gain/ ./dist/gain/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --package gpf-web --group dev --upgrade-package gain-core --find-links ./dist/gain --no-install-project
 
-COPY web/ ./web/
+COPY web_api/ ./web_api/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --package gpf-web --group dev --upgrade-package gain-core --find-links ./dist/gain
 
 ENV PATH="/workspace/.venv/bin:$PATH"
-WORKDIR /workspace/web
+WORKDIR /workspace/web_api
 
 CMD ["pytest", "-v", "gpf_web/"]

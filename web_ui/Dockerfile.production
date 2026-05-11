@@ -5,7 +5,7 @@
 # `collectstatic` against the same gpf-core / gpf-web install
 # that's about to ship in production:
 #
-#     docker build -f web/Dockerfile.production \
+#     docker build -f web_api/Dockerfile.production \
 #         -t gpf-web-api-prod:<tag> .
 #     docker build -f web_ui/Dockerfile.production \
 #         --build-arg BACKEND_IMAGE=gpf-web-api-prod:<tag> \

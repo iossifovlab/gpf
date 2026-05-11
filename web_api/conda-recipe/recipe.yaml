@@ -9,7 +9,7 @@ package:
   version: ${{ version }}
 
 source:
-  - path: ../../dist/web
+  - path: ../../dist/web_api
     use_gitignore: false
   - path: ../../LICENSE
 

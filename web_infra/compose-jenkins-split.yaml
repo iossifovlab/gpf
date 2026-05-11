@@ -58,7 +58,7 @@ services:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
       # The prod image bakes /grr-definition.yaml (single /grr
-      # repo, see web/Dockerfile.production). Override here to
+      # repo, see web_api/Dockerfile.production). Override here to
       # the in-instance file that defines a group of /grr_sfari +
       # /grr — e2e-only, leaves prod deployments on the single
       # repo. The instance dir is bind-mounted at /data above.

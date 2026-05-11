@@ -4,7 +4,7 @@
 //
 // Three downstreams are exercised:
 //   - iossifovlab/gpf/master              — full rebuild, lint+tests+
-//                                           wheels for core + web +
+//                                           wheels for core + web_api +
 //                                           federation + rest_client
 //   - /gpf-federation-integration         — federation tests against a
 //                                           freshly seeded backend

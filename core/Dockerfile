@@ -33,7 +33,7 @@ WORKDIR /workspace
 # (the `readme = "README.md"` field in each pyproject.toml).
 COPY pyproject.toml uv.lock ruff.toml mypy.ini pylintrc ./
 COPY core/pyproject.toml core/README.md ./core/
-COPY web/pyproject.toml web/README.md ./web/
+COPY web_api/pyproject.toml web_api/README.md ./web_api/
 COPY federation/pyproject.toml ./federation/
 COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 

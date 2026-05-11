@@ -143,17 +143,17 @@ CI pulls them from `registry.seqpipe.org`; locally we build from the repo wheels
 
 ```bash
 # from the gpf root
-mkdir -p dist/core dist/web dist/gain
+mkdir -p dist/core dist/web_api dist/gain
 
 # 1. gain-core wheel (gpf-core depends on it)
 cd ../gain && uv build --package gain-core --out-dir ../gpf/dist/gain && cd ../gpf
 
 # 2. gpf-core + gpf-web wheels
 uv build --package gpf-core --out-dir dist/core
-uv build --package gpf-web  --out-dir dist/web
+uv build --package gpf-web  --out-dir dist/web_api
 
 # 3. backend image (Django + gunicorn)
-docker build -f web/Dockerfile.production    -t gpf-web-api-prod:local .
+docker build -f web_api/Dockerfile.production    -t gpf-web-api-prod:local .
 
 # 4. frontend image (Angular SPA + Apache reverse-proxy)
 docker build -f web_ui/Dockerfile.production \

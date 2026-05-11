@@ -81,7 +81,7 @@ def runProject(Map args) {
                 if [ ! -f "\$pylint_rcfile" ]; then
                     pylint_rcfile=/workspace/pylintrc
                 fi
-                # --recursive=y is what makes the web stage Django
+                # --recursive=y is what makes the web_api stage Django
                 # layout (a gpf_web/ directory containing multiple
                 # Django apps as peer packages) lintable end-to-end; for
                 # the other stages it is a no-op.
@@ -224,7 +224,7 @@ pipeline {
                 stage('Fetch gain wheel') {
                     // Pull the gain-core wheel from gain's last
                     // successful master build into dist/gain/.
-                    // Consumed by web/Dockerfile.production (the
+                    // Consumed by web_api/Dockerfile.production (the
                     // backend prod image's builder stage installs
                     // /wheels/*.whl which now includes gain-core)
                     // and re-archived to dist/gain/*.whl by the
@@ -409,17 +409,17 @@ pipeline {
                             }
                         }
 
-                        stage('web') {
+                        stage('web_api') {
                             steps {
                                 script {
                                     runProject(
-                                        name: 'web',
+                                        name: 'web_api',
                                         pkg: 'gpf_web',
                                         tests: 'gpf_web/',
                                         // mypy needs `-p <pkg>` for each
-                                        // Django app inside web/gpf_web/.
+                                        // Django app inside web_api/gpf_web/.
                                         // The bare names would be ambiguous
-                                        // because /workspace/web also has a
+                                        // because /workspace/web_api also has a
                                         // `gpf_web/` Django project layout
                                         // dir without an __init__.py.
                                         mypyTarget:
@@ -450,7 +450,7 @@ pipeline {
                                             '-p users_api ' +
                                             '-p utils',
                                         mypyExtra:
-                                            '--config-file /workspace/web/mypy.ini',
+                                            '--config-file /workspace/web_api/mypy.ini',
                                         pytestArgs: '-n 5',
                                         distPkg: 'gpf-web',
                                         dockerRunExtra:
@@ -459,7 +459,7 @@ pipeline {
                                     )
                                 }
                             }
-                            post { always { script { publishReports('web') } } }
+                            post { always { script { publishReports('web_api') } } }
                         }
 
                         stage('web_ui') {
@@ -632,7 +632,7 @@ pipeline {
                             # redirected to /tmp because /home/mambauser is not
                             # writable by an arbitrary UID.
                             DOCKER_USER="$(id -u):$(id -g)"
-                            for proj in core web federation rest_client; do
+                            for proj in core web_api federation rest_client; do
                                 mkdir -p conda/$proj
                                 docker run --rm \
                                     --user "$DOCKER_USER" \
@@ -699,7 +699,7 @@ pipeline {
                             # path, floating tag) and any future digest-
                             # pinned release stage.
                             docker build \
-                                -f web/Dockerfile.production \
+                                -f web_api/Dockerfile.production \
                                 --build-arg PYTHON_IMAGE=python:3.12-slim \
                                 -t "$BACKEND_REPO:$BUILD_NUMBER" .
                             docker tag "$BACKEND_REPO:$BUILD_NUMBER" \
@@ -816,7 +816,7 @@ pipeline {
                 // there, not in the per-project parallel stages.
                 // Declarative-pipeline default behaviour skips these
                 // triggers when a previous stage failed — so they only
-                // fire when core + web pytest came out clean (UNSTABLE
+                // fire when core + web_api pytest came out clean (UNSTABLE
                 // from lint findings does NOT skip them, which is what
                 // we want).
                 //
@@ -839,7 +839,7 @@ pipeline {
                     // commit and either pulls the prod images this
                     // pipeline just pushed (master only) or copies
                     // the wheel artefacts archived above
-                    // (`dist/core/*.whl` + `dist/web/*.whl`) and
+                    // (`dist/core/*.whl` + `dist/web_api/*.whl`) and
                     // builds the prod images locally.
                     steps {
                         catchError(
@@ -975,7 +975,7 @@ pipeline {
         }
         cleanup {
             sh '''
-                for img in gpf-core-ci gpf-web-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
+                for img in gpf-core-ci gpf-web-api-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
                     docker rmi "$img:${BUILD_NUMBER}" 2>/dev/null || true
                 done
                 # Registry-prefixed prod images. `:latest` only exists on
