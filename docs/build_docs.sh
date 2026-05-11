@@ -8,6 +8,11 @@
 # Produces:
 #     docs/build/html/         rendered site
 #     docs/gpfdocs-html.tar.gz tarball consumed by docs/deploy/
+#
+# In CI, the Build docs Jenkinsfile stage only runs when the
+# `docs/**` tree changes (see `when { changeset 'docs/**' }` in
+# Jenkinsfile). Edits outside docs/ do not refresh the rendered
+# autodoc page until a subsequent docs-tree commit lands.
 
 set -euo pipefail
 
