@@ -11,8 +11,10 @@ logger = logging.getLogger(__name__)
 class Dataset(models.Model):
     """Datasets and permissions on datasets."""
 
-    dataset_id: models.TextField = models.TextField(unique=True)
-    dataset_name: models.TextField = models.TextField(default="")
+    dataset_id: models.CharField = models.CharField(
+        max_length=255, unique=True)
+    dataset_name: models.CharField = models.CharField(
+        max_length=255, default="")
     broken: models.BooleanField = models.BooleanField(default=True)
     groups: models.ManyToManyField = models.ManyToManyField(Group)
 
@@ -67,7 +69,7 @@ class Dataset(models.Model):
 class DatasetHierarchy(models.Model):
     """Data for dataset hierarchy and inheritance."""
 
-    instance_id: models.TextField = models.TextField()
+    instance_id: models.CharField = models.CharField(max_length=255)
     ancestor: models.ForeignKey[Any, Dataset] = models.ForeignKey(
         Dataset, on_delete=models.CASCADE, related_name="ancestor",
     )

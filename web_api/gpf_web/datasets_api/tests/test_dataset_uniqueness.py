@@ -6,11 +6,11 @@ from collections.abc import Callable
 
 import pytest
 from django.contrib.auth.models import Group
-from django.db import IntegrityError, connection, transaction
+from django.db import IntegrityError, connection, models, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.state import StateApps
 
-from datasets_api.models import Dataset
+from datasets_api.models import Dataset, DatasetHierarchy
 
 
 @pytest.fixture
@@ -118,3 +118,64 @@ def test_migration_repoints_hierarchy_fks_to_survivor(
         (survivor_pk, other_pk, True),
         (other_pk, survivor_pk, False),
     }
+
+
+# Identifier-field type regression (iossifovlab/gpf#836).
+#
+# These were ``TextField`` originally, which makes MySQL refuse to put a
+# UNIQUE constraint on the column ("BLOB/TEXT column used in key
+# specification without a key length"). The fields must be CharField with
+# a bounded ``max_length`` for the schema to apply on MySQL.
+
+
+def _field(model: type[models.Model], name: str) -> models.Field:
+    return model._meta.get_field(name)  # type: ignore[return-value]
+
+
+def test_dataset_id_is_charfield_255_and_unique() -> None:
+    field = _field(Dataset, "dataset_id")
+    assert isinstance(field, models.CharField), (
+        f"dataset_id must be CharField, got {type(field).__name__}"
+    )
+    assert field.max_length == 255
+    assert field.unique is True
+
+
+def test_dataset_name_is_charfield_255() -> None:
+    field = _field(Dataset, "dataset_name")
+    assert isinstance(field, models.CharField), (
+        f"dataset_name must be CharField, got {type(field).__name__}"
+    )
+    assert field.max_length == 255
+
+
+def test_datasethierarchy_instance_id_is_charfield_255() -> None:
+    field = _field(DatasetHierarchy, "instance_id")
+    assert isinstance(field, models.CharField), (
+        f"instance_id must be CharField, got {type(field).__name__}"
+    )
+    assert field.max_length == 255
+
+
+def test_migration_0010_leaves_models_as_charfield_255(
+    migrate_to: Callable,
+) -> None:
+    """Running through 0010 lands on CharField(255) for all three IDs."""
+    post = migrate_to([
+        ("datasets_api", "0010_identifier_fields_to_charfield"),
+    ])
+    PostDataset = post.get_model("datasets_api", "Dataset")
+    PostHierarchy = post.get_model("datasets_api", "DatasetHierarchy")
+
+    dataset_id = PostDataset._meta.get_field("dataset_id")
+    assert isinstance(dataset_id, models.CharField)
+    assert dataset_id.max_length == 255
+    assert dataset_id.unique is True
+
+    dataset_name = PostDataset._meta.get_field("dataset_name")
+    assert isinstance(dataset_name, models.CharField)
+    assert dataset_name.max_length == 255
+
+    instance_id = PostHierarchy._meta.get_field("instance_id")
+    assert isinstance(instance_id, models.CharField)
+    assert instance_id.max_length == 255
