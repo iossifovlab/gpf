@@ -1,0 +1,31 @@
+- name: check GPF docs host
+  hosts: all
+  tasks:
+
+  - name: debug
+    debug:
+      msg: "gpf docs directory: {{ base_path }}/gpfdocs"
+
+
+- name: deploy gpfdocs
+  hosts: all
+  tasks:
+
+  - name: copy gpfdocs-html.tar.gz
+    copy:
+      src: ../gpfdocs-html.tar.gz
+      dest: "{{ base_path }}/gpfdocs-html.tar.gz"
+
+  - name: clean user docs directory
+    file: path={{ base_path }}/gpfdocs state=absent
+
+  - name: ensure user docs directory exists
+    file: path={{ base_path }}/gpfdocs state=directory
+
+  - name: unarchive gpfdocs-html.tar.gz
+    unarchive: |
+      src={{ base_path }}/gpfdocs-html.tar.gz dest={{ base_path }}/gpfdocs
+      remote_src=yes
+
+  - name: clean gpfdocs-html.tar.gz
+    file: path={{ base_path }}/gpfdocs-html.tar.gz state=absent

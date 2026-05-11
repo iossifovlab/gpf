@@ -46,3 +46,19 @@ gpf-rest-client = { workspace = true }
 # local development with editable gain — copy
 # pyproject.local.toml.template to pyproject.local.toml and
 # follow README's "Editable gain for local development" section.
+
+[dependency-groups]
+# Sphinx toolchain for `docs/build_docs.sh`. Members mirror the
+# conda env that gpf_documentation used to ship from. Install
+# with `uv sync --group docs`.
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-copybutton",
+    "sphinxcontrib-httpdomain",
+    "ipython",
+    "sphinx-autorun",
+    "sphinxcontrib-video",
+    "sphinx-last-updated-by-git",
+    "jinja2",
+]

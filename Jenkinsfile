@@ -611,6 +611,68 @@ pipeline {
                     }
                 }
 
+                stage('Build docs') {
+                    // Migrated from iossifovlab/gpf_documentation
+                    // (iossifovlab/gpf#841). The source tree now lives in
+                    // docs/. Build runs inside the web_api CI image
+                    // (already has gpf + gpf_web installed under
+                    // /workspace/.venv); the docs dependency group from
+                    // the root pyproject.toml is layered on top at run-
+                    // time.
+                    //
+                    // Builds on every branch so doc regressions show up
+                    // pre-merge; the tarball is archived as a build
+                    // artifact. The actual push to iossifovlab.com is a
+                    // separate `Deploy docs` stage gated to master.
+                    steps {
+                        sh '''
+                            mkdir -p dist/docs
+                            docker run --rm \
+                                -v $PWD:/workspace \
+                                -v $PWD/.git:/workspace/.git:ro \
+                                -w /workspace \
+                                gpf-web-api-ci:${BUILD_NUMBER} \
+                                sh -c '
+                                    set -eu
+                                    # The `docs` group is defined on the
+                                    # root virtual workspace, so install
+                                    # without --package: this installs
+                                    # gpf-core + gpf-web (the root deps)
+                                    # plus the sphinx toolchain.
+                                    uv sync --group docs \
+                                        --upgrade-package gain-core \
+                                        --find-links ./dist/gain
+                                    bash docs/build_docs.sh
+                                '
+                            cp docs/gpfdocs-html.tar.gz dist/docs/
+                        '''
+                    }
+                }
+
+                stage('Deploy docs') {
+                    when { branch 'master' }
+                    // Master-only ansible push to iossifovlab.com.
+                    // Branch builds skip this stage; deployment of the
+                    // pipeline itself is first verified by the master
+                    // build that merges iossifovlab/gpf#841.
+                    steps {
+                        sh '''
+                            docker run --rm \
+                                -v $PWD:/workspace \
+                                -v $HOME/.ssh:/root/.ssh:ro \
+                                -w /workspace \
+                                gpf-web-api-ci:${BUILD_NUMBER} \
+                                sh -c '
+                                    set -eu
+                                    apt-get update
+                                    apt-get install -y --no-install-recommends \
+                                        ansible openssh-client
+                                    bash docs/deploy/docs_deploy.sh
+                                '
+                        '''
+                    }
+                }
+
                 stage('Conda packages') {
                     steps {
                         sh '''
