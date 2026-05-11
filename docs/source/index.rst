@@ -11,7 +11,7 @@ that manages genotypes and phenotypes derived from collections of families.
 The GPF interface allows interactive exploration of genetic variants,
 enrichment analysis for de novo mutations, and phenotype/genotype
 association tools. In addition, GPF allows researchers to share their data
-securely with the broader scientific community. See the 
+securely with the broader scientific community. See the
 `Analyzing the large and complex SFARI autism cohort data using the Genotypes
 and Phenotypes in Families (GPF)
 platform <https://genome.cshlp.org/content/35/10/2352>`_
