@@ -177,6 +177,36 @@ pipeline {
                     }
                 }
 
+                stage('Detect change scope') {
+                    // Sets env.DOCS_ONLY='true' iff every file in this
+                    // build's changeset lives under docs/. Heavy stages
+                    // (Sub-projects, Conda, prod images, downstream
+                    // triggers) gate on it and skip when only docs
+                    // changed. Build docs / Deploy docs keep their
+                    // existing `changeset 'docs/**'` clauses.
+                    //
+                    // Empty changeset (first build, manual rebuild, no
+                    // commits since last build) → DOCS_ONLY='false' →
+                    // full CI. Conservative default — only short-circuit
+                    // when we positively know it's docs-only.
+                    steps {
+                        script {
+                            def changedFiles = []
+                            for (changeSet in currentBuild.changeSets) {
+                                for (item in changeSet.items) {
+                                    changedFiles.addAll(item.affectedPaths)
+                                }
+                            }
+                            boolean isDocsOnly =
+                                !changedFiles.isEmpty() &&
+                                changedFiles.every { it.startsWith('docs/') }
+                            env.DOCS_ONLY = isDocsOnly ? 'true' : 'false'
+                            echo "Changeset: ${changedFiles.size()} file(s); " +
+                                 "DOCS_ONLY=${env.DOCS_ONLY}"
+                        }
+                    }
+                }
+
                 stage('Apply Job DSL') {
                     // Run jobDsl on master only — this is the
                     // bootstrap that materialises (or updates) the
@@ -213,6 +243,7 @@ pipeline {
                 }
 
                 stage('Conda builder image') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     steps {
                         sh '''
                             docker build -f conda-builder/Dockerfile \
@@ -260,6 +291,7 @@ pipeline {
                 }
 
                 stage('Sub-projects') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     parallel {
                         stage('core') {
                             environment {
@@ -627,8 +659,18 @@ pipeline {
                     // won't refresh the rendered autodoc page until a
                     // docs-side commit lands — accepted trade-off
                     // (iossifovlab/gpf#849 conversation).
+                    //
+                    // When DOCS_ONLY=true the Sub-projects > web_api
+                    // stage is skipped, so we build the web_api CI
+                    // image inline here. Idempotent — when Sub-projects
+                    // did run, the image already exists and the
+                    // docker build is a near-instant cache hit; we
+                    // still re-issue it so the stage is self-contained
+                    // and runnable in either mode.
                     steps {
                         sh '''
+                            docker build -f web_api/Dockerfile \
+                                -t gpf-web-api-ci:${BUILD_NUMBER} .
                             mkdir -p dist/docs
                             docker run --rm \
                                 -v $PWD:/workspace \
@@ -704,6 +746,7 @@ pipeline {
                 }
 
                 stage('Conda packages') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     steps {
                         sh '''
                             # Derive the hatch-vcs PEP 440 version from any wheel name;
@@ -749,6 +792,7 @@ pipeline {
                 }
 
                 stage('Build & push prod images') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     // Builds the wheel-based backend + Apache-based
                     // frontend prod images here in the root build, tags
                     // them for registry.seqpipe.org, and pushes on
@@ -925,6 +969,7 @@ pipeline {
                 // logs the error and stays UNSTABLE.
 
                 stage('Trigger web_e2e') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     // Downstream gate for the gpf-web-e2e job (DSL at
                     // web_e2e/jenkins-jobs/e2e.groovy). Runs on every
                     // branch — the e2e job clones the same branch /
@@ -970,6 +1015,7 @@ pipeline {
                 }
 
                 stage('Trigger federation integration') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     steps {
                         catchError(
                             buildResult: 'UNSTABLE',
@@ -1007,6 +1053,7 @@ pipeline {
                 }
 
                 stage('Trigger rest_client integration') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     steps {
                         catchError(
                             buildResult: 'UNSTABLE',
