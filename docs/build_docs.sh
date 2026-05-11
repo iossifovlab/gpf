@@ -13,6 +13,9 @@
 # `docs/**` tree changes (see `when { changeset 'docs/**' }` in
 # Jenkinsfile). Edits outside docs/ do not refresh the rendered
 # autodoc page until a subsequent docs-tree commit lands.
+#
+# The Deploy docs stage authenticates to iossifovlab.com via the
+# `gpf-docs-deploy` Jenkins-managed SSH credential.
 
 set -euo pipefail
 
