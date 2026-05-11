@@ -657,13 +657,31 @@ pipeline {
                     // build that merges iossifovlab/gpf#841.
                     steps {
                         sh '''
+                            # Mount the agent's ~/.ssh into /host-ssh
+                            # (not /root/.ssh) so we can copy it into
+                            # the container's /root/.ssh with the right
+                            # ownership and permissions. OpenSSH 10+
+                            # rejects ~/.ssh/config that isn't owned by
+                            # the user running ssh; mounting directly
+                            # leaves files owned by the agent UID (e.g.
+                            # 1000), which the container's root (UID 0)
+                            # then refuses with "Bad owner or
+                            # permissions on /root/.ssh/config". This
+                            # was an intermittent failure depending on
+                            # which agent picked up the build (gpf
+                            # master #5708 worked, #5709 didn't).
                             docker run --rm \
                                 -v $PWD:/workspace \
-                                -v $HOME/.ssh:/root/.ssh:ro \
+                                -v $HOME/.ssh:/host-ssh:ro \
                                 -w /workspace \
                                 gpf-web-api-ci:${BUILD_NUMBER} \
                                 sh -c '
                                     set -eu
+                                    mkdir -p /root/.ssh
+                                    cp -RL /host-ssh/. /root/.ssh/
+                                    chown -R root:root /root/.ssh
+                                    chmod 700 /root/.ssh
+                                    chmod 600 /root/.ssh/* 2>/dev/null || true
                                     apt-get update
                                     apt-get install -y --no-install-recommends \
                                         ansible openssh-client
