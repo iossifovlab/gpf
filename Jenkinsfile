@@ -632,7 +632,7 @@ pipeline {
                             # redirected to /tmp because /home/mambauser is not
                             # writable by an arbitrary UID.
                             DOCKER_USER="$(id -u):$(id -g)"
-                            for proj in core web federation rest_client; do
+                            for proj in core web_api federation rest_client; do
                                 mkdir -p conda/$proj
                                 docker run --rm \
                                     --user "$DOCKER_USER" \
@@ -816,7 +816,7 @@ pipeline {
                 // there, not in the per-project parallel stages.
                 // Declarative-pipeline default behaviour skips these
                 // triggers when a previous stage failed — so they only
-                // fire when core + web pytest came out clean (UNSTABLE
+                // fire when core + web_api pytest came out clean (UNSTABLE
                 // from lint findings does NOT skip them, which is what
                 // we want).
                 //
@@ -975,7 +975,7 @@ pipeline {
         }
         cleanup {
             sh '''
-                for img in gpf-core-ci gpf-web-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
+                for img in gpf-core-ci gpf-web-api-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
                     docker rmi "$img:${BUILD_NUMBER}" 2>/dev/null || true
                 done
                 # Registry-prefixed prod images. `:latest` only exists on
