@@ -1,0 +1,5 @@
+[iossifovlab]
+iossifovlab.com ansible_ssh_user=root
+
+[iossifovlab:vars]
+base_path="/var/www/iossifovlab.com/gpf_documentation"

@@ -148,3 +148,11 @@ CLAUDE*.md
 # pyproject.local.toml.template → pyproject.local.toml. See
 # README's "Editable gain for local development" section.
 pyproject.local.toml
+
+# Sphinx docs build artefacts. `docs/build_docs.sh` clones
+# gpf-getting-started here for `literalinclude` directives,
+# runs sphinx into docs/build/, and emits a tarball.
+/gpf-getting-started/
+/docs/build/
+/docs/gpfdocs-html.tar.gz
+/docs/.tmp/
