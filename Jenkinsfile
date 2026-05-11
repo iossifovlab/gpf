@@ -612,6 +612,7 @@ pipeline {
                 }
 
                 stage('Build docs') {
+                    when { changeset 'docs/**' }
                     // Migrated from iossifovlab/gpf_documentation
                     // (iossifovlab/gpf#841). The source tree now lives in
                     // docs/. Build runs inside the web_api CI image
@@ -620,10 +621,12 @@ pipeline {
                     // the root pyproject.toml is layered on top at run-
                     // time.
                     //
-                    // Builds on every branch so doc regressions show up
-                    // pre-merge; the tarball is archived as a build
-                    // artifact. The actual push to iossifovlab.com is a
-                    // separate `Deploy docs` stage gated to master.
+                    // Only runs when docs/** changed in this build's
+                    // commit range; saves ~2 min on code-only changes.
+                    // A docstring tweak in core/gpf or web_api/gpf_web
+                    // won't refresh the rendered autodoc page until a
+                    // docs-side commit lands — accepted trade-off
+                    // (iossifovlab/gpf#849 conversation).
                     steps {
                         sh '''
                             mkdir -p dist/docs
@@ -650,53 +653,53 @@ pipeline {
                 }
 
                 stage('Deploy docs') {
-                    when { branch 'master' }
-                    // Master-only ansible push to iossifovlab.com.
-                    // Branch builds skip this stage; deployment of the
-                    // pipeline itself is first verified by the master
-                    // build that merges iossifovlab/gpf#841.
+                    when {
+                        allOf {
+                            branch 'master'
+                            changeset 'docs/**'
+                        }
+                    }
+                    // Master-only ansible push to iossifovlab.com, only
+                    // when docs/** changed. Skipped on every branch
+                    // build and on master builds that don't touch the
+                    // docs tree, so the live site keeps serving the
+                    // last good build's content untouched.
+                    //
+                    // Uses the Jenkins-managed `gpf-docs-deploy` SSH
+                    // credential (set up 2026-05-11). Independent of
+                    // which '!dory' agent picks up the build; the
+                    // earlier bind-mount-the-agent's-~/.ssh approach
+                    // was agent-roulette and failed when the picked
+                    // agent didn't have the deploy key.
                     steps {
-                        sh '''
-                            # Mount the agent's ~/.ssh into /host-ssh
-                            # (not /root/.ssh) so we can copy it into
-                            # the container's /root/.ssh with the right
-                            # ownership and permissions. OpenSSH 10+
-                            # rejects ~/.ssh/config that isn't owned by
-                            # the user running ssh; mounting directly
-                            # leaves files owned by the agent UID (e.g.
-                            # 1000), which the container's root (UID 0)
-                            # then refuses with "Bad owner or
-                            # permissions on /root/.ssh/config". This
-                            # was an intermittent failure depending on
-                            # which agent picked up the build (gpf
-                            # master #5708 worked, #5709 didn't).
-                            docker run --rm \
-                                -v $PWD:/workspace \
-                                -v $HOME/.ssh:/host-ssh:ro \
-                                -w /workspace \
-                                gpf-web-api-ci:${BUILD_NUMBER} \
-                                sh -c '
-                                    set -eu
-                                    mkdir -p /root/.ssh
-                                    cp -RL /host-ssh/. /root/.ssh/
-                                    chown -R root:root /root/.ssh
-                                    chmod 700 /root/.ssh
-                                    chmod 600 /root/.ssh/* 2>/dev/null || true
-                                    apt-get update
-                                    apt-get install -y --no-install-recommends \
-                                        ansible openssh-client
-                                    # Populate known_hosts deterministically.
-                                    # Different Jenkins agents (label is
-                                    # "!dory") have different ssh history,
-                                    # so the agent ~/.ssh/known_hosts copy
-                                    # above may or may not contain the docs
-                                    # host. Append the live host key here so
-                                    # the deploy works regardless of agent.
-                                    ssh-keyscan -H iossifovlab.com \
-                                        >> /root/.ssh/known_hosts 2>/dev/null
-                                    bash docs/deploy/docs_deploy.sh
-                                '
-                        '''
+                        withCredentials([sshUserPrivateKey(
+                            credentialsId: 'gpf-docs-deploy',
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER',
+                        )]) {
+                            sh '''
+                                docker run --rm \
+                                    -v $PWD:/workspace \
+                                    -v $SSH_KEY:/deploy.key:ro \
+                                    -e SSH_USER \
+                                    -w /workspace \
+                                    gpf-web-api-ci:${BUILD_NUMBER} \
+                                    sh -c '
+                                        set -eu
+                                        apt-get update
+                                        apt-get install -y --no-install-recommends \
+                                            ansible openssh-client
+                                        mkdir -p /root/.ssh
+                                        chmod 700 /root/.ssh
+                                        ssh-keyscan -H iossifovlab.com \
+                                            > /root/.ssh/known_hosts 2>/dev/null
+                                        chmod 600 /root/.ssh/known_hosts
+                                        ANSIBLE_PRIVATE_KEY_FILE=/deploy.key \
+                                            ANSIBLE_REMOTE_USER="$SSH_USER" \
+                                            bash docs/deploy/docs_deploy.sh
+                                    '
+                            '''
+                        }
                     }
                 }
 
