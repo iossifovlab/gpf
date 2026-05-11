@@ -118,14 +118,14 @@ pipeline {
             //     gain master lastSuccessful directly. No
             //     gpf-wheel build dance: this Dockerfile
             //     builds gpf workspace members from path
-            //     sources via uv sync, so dist/core / dist/web
+            //     sources via uv sync, so dist/core / dist/web_api
             //     would be dead weight here.
             steps {
                 script {
                     if (params.UPSTREAM_PROJECT?.trim()) {
                         copyArtifacts(
                             filter: 'dist/core/*.whl, ' +
-                                    'dist/web/*.whl, ' +
+                                    'dist/web_api/*.whl, ' +
                                     'dist/gain/*.whl',
                             fingerprintArtifacts: true,
                             projectName: params.UPSTREAM_PROJECT,

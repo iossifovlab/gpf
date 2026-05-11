@@ -12,7 +12,7 @@ https://iossifovlab.com/gpfdocs/.
 - **`core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
-- **`web/`** — Web application and REST API
+- **`web_api/`** — Web application and REST API
   (Django 5.2). Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
 - **`impala_storage/`**, **`impala2_storage/`**,
@@ -35,7 +35,7 @@ Release notes live in `docs/changes.rst`.
 
 `uv` is the primary supported workflow — it is what CI
 and the production image build use (the four CI test
-images and `web/Dockerfile.production`). The same path
+images and `web_api/Dockerfile.production`). The same path
 works for local development. `Conda/Mamba` is supported
 as an alternative for local development only; CI does
 not consume conda.
@@ -216,7 +216,7 @@ conda activate gpf
 
 pip install -e ../gain/core
 pip install -e core
-pip install -e web
+pip install -e web_api
 
 # Optional extensions:
 pip install -e federation
@@ -238,8 +238,8 @@ uv run pytest -v tests/small/test_file.py
 uv run pytest -v tests/small/module/
 
 # Full suites in parallel
-cd core && uv run pytest -v -n 10 tests/
-cd web  && uv run pytest -v -n 5 gpf_web/
+cd core    && uv run pytest -v -n 10 tests/
+cd web_api && uv run pytest -v -n 5 gpf_web/
 ```
 
 Conda users: from inside an activated `gpf` env, drop the
@@ -254,8 +254,8 @@ Test markers and configuration are defined in
 ```bash
 uv run ruff check --fix .
 uv run mypy gpf --exclude core/docs/
-uv run mypy gpf_web --exclude web/docs/ \
-    --exclude web/conftest.py
+uv run mypy gpf_web --exclude web_api/docs/ \
+    --exclude web_api/conftest.py
 ```
 
 ### Optional genotype storages

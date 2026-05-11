@@ -29,7 +29,7 @@ package = false
 # (`uv pip install -e ./impala_storage`).
 members = [
     "core",
-    "web",
+    "web_api",
     "federation",
     "rest_client",
 ]

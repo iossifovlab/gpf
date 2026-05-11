@@ -1015,7 +1015,7 @@ wheels = [
 
 [[package]]
 name = "gain-core"
-version = "2026.4.16.post1.dev53+g9b8d0c636.d20260509"
+version = "2026.4.16.post1.dev55+gaefc192fa"
 source = { registry = "dist/gain" }
 dependencies = [
     { name = "apsw" },
@@ -1043,9 +1043,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "s3fs" },
 ]
-sdist = { path = "gain_core-2026.4.16.post1.dev53+g9b8d0c636.d20260509.tar.gz" }
+sdist = { path = "gain_core-2026.4.16.post1.dev55+gaefc192fa.tar.gz" }
 wheels = [
-    { path = "gain_core-2026.4.16.post1.dev53+g9b8d0c636.d20260509-py3-none-any.whl" },
+    { path = "gain_core-2026.4.16.post1.dev55+gaefc192fa-py3-none-any.whl" },
 ]
 
 [[package]]
@@ -1202,7 +1202,7 @@ dev = [
 requires-dist = [
     { name = "gpf-core", editable = "core" },
     { name = "gpf-rest-client", editable = "rest_client" },
-    { name = "gpf-web", editable = "web" },
+    { name = "gpf-web", editable = "web_api" },
     { name = "ijson", specifier = ">=3.2" },
     { name = "requests", specifier = ">=2.32" },
 ]
@@ -1234,7 +1234,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "gpf-core", editable = "core" },
-    { name = "gpf-web", editable = "web" },
+    { name = "gpf-web", editable = "web_api" },
 ]
 
 [[package]]
@@ -1264,7 +1264,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "gpf-core", editable = "core" },
-    { name = "gpf-web", editable = "web" },
+    { name = "gpf-web", editable = "web_api" },
     { name = "ijson", specifier = ">=3.2" },
     { name = "requests", specifier = ">=2.32" },
 ]
@@ -1285,7 +1285,7 @@ dev = [
 
 [[package]]
 name = "gpf-web"
-source = { editable = "web" }
+source = { editable = "web_api" }
 dependencies = [
     { name = "django" },
     { name = "django-cors-headers" },

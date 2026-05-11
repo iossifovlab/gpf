@@ -15,7 +15,7 @@
 // branch/commit, then either (a) on master: pulls the prod
 // images the parent already pushed to `registry.seqpipe.org`
 // (~30s) or (b) on other branches: copies the wheels the
-// parent archived (`dist/core/*.whl` + `dist/web/*.whl`) and
+// parent archived (`dist/core/*.whl` + `dist/web_api/*.whl`) and
 // builds the wheel-based backend image and Apache-based
 // frontend image locally (~5 min). Either way, the Playwright
 // suite runs against the resulting images via the
@@ -295,7 +295,7 @@ pipeline {
                             // Pull the gpf core/web wheels AND the
                             // gain-core wheel that the parent gpf
                             // build copied from gain into dist/gain/
-                            // (Fetch gain wheel stage). web/
+                            // (Fetch gain wheel stage). web_api/
                             // Dockerfile.production now expects
                             // dist/gain/gain_core-*.whl alongside
                             // the gpf wheels; copying it through the
@@ -305,7 +305,7 @@ pipeline {
                             // parent gpf build was assembled with.
                             copyArtifacts(
                                 filter: 'dist/core/*.whl, ' +
-                                        'dist/web/*.whl, ' +
+                                        'dist/web_api/*.whl, ' +
                                         'dist/gain/*.whl',
                                 fingerprintArtifacts: true,
                                 projectName: params.UPSTREAM_PROJECT,
@@ -331,7 +331,7 @@ pipeline {
                             // of the pipeline can read them without
                             // root permissions.
                             sh '''
-                                mkdir -p dist/core dist/web
+                                mkdir -p dist/core dist/web_api
                                 docker run --rm \
                                     -v "$PWD:/wd" -w /wd \
                                     -e HOME=/tmp \
@@ -346,7 +346,7 @@ pipeline {
                                         uv build --package gpf-core \
                                                 --out-dir dist/core
                                         uv build --package gpf-web \
-                                                --out-dir dist/web
+                                                --out-dir dist/web_api
                                         chown -R "$HOST_UID:$HOST_GID" dist
                                     '
                             '''
@@ -361,7 +361,7 @@ pipeline {
                         }
                         sh '''
                             docker build \
-                                -f web/Dockerfile.production \
+                                -f web_api/Dockerfile.production \
                                 -t "$BACKEND_IMAGE" .
                             docker build \
                                 -f web_ui/Dockerfile.production \

@@ -1,10 +1,10 @@
 # Production image for the gpf-web Django backend.
 #
 # Build from the repo root so the COPY paths resolve to
-# dist/core/ and dist/web/ (where the root Jenkinsfile's
+# dist/core/ and dist/web_api/ (where the root Jenkinsfile's
 # parallel block writes the wheels):
 #
-#     docker build -f web/Dockerfile.production \
+#     docker build -f web_api/Dockerfile.production \
 #         -t gpf-web-api-prod:<tag> .
 #
 # The image installs only `gpf-core` and `gpf-web` —
@@ -21,7 +21,7 @@ ARG PYTHON_IMAGE=python:3.12-slim
 FROM ${PYTHON_IMAGE} AS builder
 
 # uv 0.11.3 — same version as the four CI test Dockerfiles
-# (core/, web/, federation/, rest_client/Dockerfile). Pinned so
+# (core/, web_api/, federation/, rest_client/Dockerfile). Pinned so
 # the production builder uses the same resolver behaviour the test
 # images do.
 COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /uvx /usr/local/bin/
@@ -55,7 +55,7 @@ WORKDIR /wheels
 # private registry or a git+ install in the image.
 COPY dist/gain/gain_core-*.whl ./
 COPY dist/core/gpf_core-*.whl ./
-COPY dist/web/gpf_web-*.whl ./
+COPY dist/web_api/gpf_web-*.whl ./
 
 # Install the wheels and explicitly pin mysqlclient to match
 # gpf-web's [mysql] optional extra (pyproject.toml: mysql =
@@ -99,7 +99,7 @@ COPY --from=builder /opt/gpf /opt/gpf
 # the CSHL agents). Compose / k8s deployments override
 # GRR_DEFINITION_FILE if they want a different layout (e.g. the
 # multi-repo `grr-definition-dir.yaml` style gain ships).
-COPY web/scripts/grr-definition.yaml /grr-definition.yaml
+COPY web_api/scripts/grr-definition.yaml /grr-definition.yaml
 
 ENV PATH=/opt/gpf/bin:$PATH \
     PYTHONUNBUFFERED=1 \
@@ -110,7 +110,7 @@ EXPOSE 9001
 
 # tb-iuv-fix follow-up: gunicorn workers 16 → 4. Reverts the
 # gunicorn side of tb-g1z (73cb803d), restoring the pre-tb-g1z
-# 4-worker config (matches web/gpf_web/run_gunicorn.sh's
+# 4-worker config (matches web_api/gpf_web/run_gunicorn.sh's
 # `--workers 4` pattern). The matching playwright workers cut
 # (16 → 4) landed in tb-iuv-fix; this restores the 4:4
 # browser:gunicorn ratio. 16-way eager loading also dropped 4×

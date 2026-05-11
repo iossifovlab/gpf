@@ -13,9 +13,9 @@ Simplex Collection with ~2,600 autism families).
 ## Environment Setup
 
 `uv` is the primary workflow — used by all four CI test
-images (`core/`, `web/`, `federation/`,
+images (`core/`, `web_api/`, `federation/`,
 `rest_client/Dockerfile`) and the production builder
-(`web/Dockerfile.production`). Conda/Mamba is supported
+(`web_api/Dockerfile.production`). Conda/Mamba is supported
 for local development only; CI does not consume it. See
 `README.md` for the conda setup commands.
 
@@ -88,7 +88,7 @@ gain for local development").
 
 ### Production image: wheels-only invariant (tb-qp5)
 
-`web/Dockerfile.production` enforces a **wheels-only**
+`web_api/Dockerfile.production` enforces a **wheels-only**
 install via `uv pip install --only-binary=:all:
 --no-binary=mysqlclient`. Any transitive dep without a
 cp312-manylinux_x86_64 wheel fails the build loudly
@@ -99,12 +99,12 @@ it builds against `libmariadb-dev` installed in the same
 builder stage).
 
 To exempt another dep: add it to the `--no-binary=` list
-in `web/Dockerfile.production` with a justification
+in `web_api/Dockerfile.production` with a justification
 comment alongside the mysqlclient note. Don't drop
 `--only-binary=:all:` — the strict default is the whole
 point of the invariant.
 
-The four CI test Dockerfiles (`core/`, `web/`,
+The four CI test Dockerfiles (`core/`, `web_api/`,
 `federation/`, `rest_client/Dockerfile`) intentionally do
 **not** set `--only-binary=:all:`. They install workspace
 members from path sources via `uv sync`, which requires
@@ -126,7 +126,7 @@ cd core && uv run pytest -v tests/small/module/
 cd core && uv run pytest -v -n 10 tests/
 
 # Run GPF Web tests in parallel
-cd web && uv run pytest -v -n 5 gpf_web/
+cd web_api && uv run pytest -v -n 5 gpf_web/
 ```
 
 Test markers in `core/pytest.ini`: genotype storage
@@ -145,8 +145,8 @@ uv run ruff check --fix .
 
 # Type checking (slow, 2-5 minutes)
 uv run mypy gpf --exclude core/docs/
-uv run mypy gpf_web --exclude web/docs/ \
-    --exclude web/conftest.py
+uv run mypy gpf_web --exclude web_api/docs/ \
+    --exclude web_api/conftest.py
 ```
 
 Config: `ruff.toml` (line-length: 80, target: py310),
@@ -198,7 +198,7 @@ repository.
 - **`core/`** — GPF core library: genotype storage,
   studies, pedigrees, pheno, import tools, query API.
   Python package: `gpf`. Depends on `gain`.
-- **`web/`** — Web application: Django REST API on
+- **`web_api/`** — Web application: Django REST API on
   top of GPF. Python package: `gpf_web`. Depends on
   `gpf` and `gain`.
 - **`impala_storage/`**, **`impala2_storage/`**,
@@ -236,7 +236,7 @@ repo.
    backends matching each genotype storage type
    (schema2, inmemory, duckdb variants, parquet)
 
-**Defined in `web/pyproject.toml`:**
+**Defined in `web_api/pyproject.toml`:**
 
 3. **`console_scripts`** — `wgpf` (web server launcher),
    `wdaemanage` (Django management wrapper)
@@ -284,11 +284,11 @@ repo.
   liftover, format converters, validation runner)
 - **`utils/`** — shared utilities
 
-### GPF Web Structure (`web/gpf_web/`)
+### GPF Web Structure (`web_api/gpf_web/`)
 
 The web layer is a Django project. The Django project
-package is `web/gpf_web/gpf_web/` (settings, urls, wsgi).
-Django apps sit at `web/gpf_web/<app_name>/`.
+package is `web_api/gpf_web/gpf_web/` (settings, urls, wsgi).
+Django apps sit at `web_api/gpf_web/<app_name>/`.
 
 **Django apps (INSTALLED_APPS order):**
 
@@ -391,9 +391,9 @@ split:
 - `tests/integration/` — tests requiring external
   services or longer runtime
 
-`web` unit tests live inside each Django app:
-`web/gpf_web/<app>/tests/`
-Integration tests are in `web/gpf_web_tests/integration/`.
+`web_api` unit tests live inside each Django app:
+`web_api/gpf_web/<app>/tests/`
+Integration tests are in `web_api/gpf_web_tests/integration/`.
 
 Key conftest patterns:
 - **`grr_scheme` parametrization** — tests tagged with
@@ -432,7 +432,7 @@ repository.
 - `generate_denovo_gene_sets` — denovo gene sets
 - `enrichment_cache_builder` — enrichment cache
 
-**web CLIs:**
+**web_api CLIs:**
 - `wgpf` — GPF web server launcher
 - `wdaemanage` — Django management command wrapper
 
@@ -453,7 +453,7 @@ repository.
 
 ## Django Settings
 
-Settings files in `web/gpf_web/gpf_web/`:
+Settings files in `web_api/gpf_web/gpf_web/`:
 
 - `default_settings.py` — base settings (all others
   import from here)
