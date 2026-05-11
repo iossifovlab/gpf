@@ -685,6 +685,15 @@ pipeline {
                                     apt-get update
                                     apt-get install -y --no-install-recommends \
                                         ansible openssh-client
+                                    # Populate known_hosts deterministically.
+                                    # Different Jenkins agents (label is
+                                    # "!dory") have different ssh history,
+                                    # so the agent ~/.ssh/known_hosts copy
+                                    # above may or may not contain the docs
+                                    # host. Append the live host key here so
+                                    # the deploy works regardless of agent.
+                                    ssh-keyscan -H iossifovlab.com \
+                                        >> /root/.ssh/known_hosts 2>/dev/null
                                     bash docs/deploy/docs_deploy.sh
                                 '
                         '''
