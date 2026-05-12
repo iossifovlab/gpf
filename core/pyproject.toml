@@ -93,6 +93,7 @@ simple_study_import = "gpf.tools.simple_study_import:main"
 denovo2vcf = "gpf.tools.denovo2vcf:main"
 dae2vcf = "gpf.tools.dae2vcf:main"
 vcf2tsv = "gpf.tools.vcf2tsv:main"
+verify_parquet = "gpf.tools.verify_parquet:main"
 
 [project.entry-points."gpf.genotype_storage.factories"]
 inmemory = "gpf.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage"

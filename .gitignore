@@ -156,3 +156,7 @@ pyproject.local.toml
 /docs/build/
 /docs/gpfdocs-html.tar.gz
 /docs/.tmp/
+
+# Linked git worktrees used by Claude Code for isolated
+# feature development (see superpowers `using-git-worktrees`).
+/.worktrees/
