@@ -1,4 +1,4 @@
-FROM  mcr.microsoft.com/playwright:v1.54.0-jammy
+FROM  mcr.microsoft.com/playwright:v1.55.1-jammy
 
 ENV NODE_ENV=development
 
