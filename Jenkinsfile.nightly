@@ -2,7 +2,7 @@
 // and re-runs the integration jobs unconditionally. Catches
 // dependency drift / silently-stale caches on quiet days.
 //
-// Three downstreams are exercised:
+// Four downstreams are exercised:
 //   - iossifovlab/gpf/master              — full rebuild, lint+tests+
 //                                           wheels for core + web_api +
 //                                           federation + rest_client
@@ -11,11 +11,22 @@
 //   - /gpf-rest-client-integration        — rest_client tests against
 //                                           a freshly seeded backend
 //                                           + MailHog
+//   - /gpf-deploy-dory                    — wipe-and-redeploy gpf-web
+//                                           on dory (iossifovlab
+//                                           playground host) pinned
+//                                           to the master rebuild's
+//                                           BUILD_NUMBER. Gated on
+//                                           the prior three stages
+//                                           all succeeding — we will
+//                                           NOT wipe dory to install
+//                                           a known-bad build.
 //
-// Each is wrapped in `catchError` so a failure in one doesn't mask
-// the others. By morning we want a single Zulip alert whose linked
-// build surfaces every failing downstream, not just whichever
-// broke first.
+// The first three stages are wrapped in `catchError` so a failure
+// in one doesn't mask the others. By morning we want a single
+// Zulip alert whose linked build surfaces every failing
+// downstream, not just whichever broke first. The Deploy on dory
+// stage uses a `when` gate instead — firing a destructive deploy
+// after a known failure would be a real own-goal.
 
 pipeline {
     // Same label exclusion the other gpf pipelines use — dory's
@@ -24,8 +35,9 @@ pipeline {
 
     options {
         // Generous: a cold master rebuild + both integration suites
-        // can comfortably reach 90 minutes; 4 hours leaves headroom
-        // for a slow/contended night without false-alarming.
+        // + a wipe-and-redeploy on dory can comfortably reach 100
+        // minutes; 4 hours leaves headroom for a slow/contended
+        // night without false-alarming.
         timeout(time: 4, unit: 'HOURS')
         // 40 keeps ~6 weeks of nightlies for trend analysis without
         // bloating the controller's disk.
@@ -44,11 +56,22 @@ pipeline {
             steps {
                 catchError(buildResult: 'FAILURE',
                            stageResult: 'FAILURE') {
-                    build(
-                        job: 'iossifovlab/gpf/master',
-                        wait: true,
-                        propagate: true,
-                    )
+                    script {
+                        // Capture the downstream build's BUILD_NUMBER
+                        // so the `Deploy on dory` stage below can pin
+                        // gpf-web's image tag exactly to the image
+                        // this nightly just validated. Without the
+                        // pin, a regular master push landing during
+                        // the ~100-min nightly window would race —
+                        // dory would deploy whatever :latest points
+                        // at when the deploy stage runs, NOT what we
+                        // tested.
+                        env.MASTER_REBUILD_NUMBER = build(
+                            job: 'iossifovlab/gpf/master',
+                            wait: true,
+                            propagate: true,
+                        ).number.toString()
+                    }
                 }
             }
         }
@@ -76,6 +99,38 @@ pipeline {
                         propagate: true,
                     )
                 }
+            }
+        }
+
+        stage('Deploy on dory') {
+            // Wipes /opt/gpf-web/ on dory and redeploys the gpf-web
+            // stack pinned to the master rebuild's BUILD_NUMBER.
+            // NOT wrapped in catchError — if the deploy itself
+            // fails after the gate passed, we want to halt and
+            // alert. The deploy job has its own rescue/rollback,
+            // so on its own internal failure dory rolls back to the
+            // previous image automatically.
+            when {
+                expression {
+                    currentBuild.currentResult == 'SUCCESS'
+                }
+            }
+            steps {
+                build(
+                    job: 'gpf-deploy-dory',
+                    wait: true,
+                    propagate: true,
+                    parameters: [
+                        booleanParam(
+                            name: 'WIPE_FIRST',
+                            value: true,
+                        ),
+                        string(
+                            name: 'IMAGE_TAG',
+                            value: env.MASTER_REBUILD_NUMBER,
+                        ),
+                    ],
+                )
             }
         }
     }
