@@ -10,7 +10,7 @@
     "yaml": "^1.10.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.1",
+    "@playwright/test": "1.55.1",
     "@types/node": "22.13.0",
     "@typescript-eslint/eslint-plugin": "5.42.1",
     "@typescript-eslint/parser": "5.42.1",
