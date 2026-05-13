@@ -44,6 +44,20 @@ pipelineJob('gpf-release') {
             'whose GIT_COMMIT matches the tagged commit. Override ' +
             'only if the multibranch folder layout has changed.',
         )
+        stringParam(
+            'GAIN_PIN_VERSION',
+            '',
+            'OPTIONAL — pin the bundled gain wheel to this ' +
+            'CalVer-tagged gain release (e.g. 2026.5.12). Must ' +
+            'match ^\\d{4}\\.\\d+\\.\\d+$ if set. Fetched from ' +
+            'https://wheels.seqpipe.org/gain/. Leave empty for ' +
+            'the default behaviour: copy the gain wheel that ' +
+            'upstream gpf-master CI tested with. Sharp tool — ' +
+            'the release is NOT re-tested after the swap; the ' +
+            'operator certifies API compatibility. Only settable ' +
+            'via manual Jenkins UI trigger; the tag-push ' +
+            'dispatcher always leaves it empty.',
+        )
     }
 
     definition {

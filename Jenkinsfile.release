@@ -88,6 +88,20 @@ pipeline {
                 'tagged commit. Override only if the multibranch ' +
                 'folder layout has changed.',
         )
+        string(
+            name: 'GAIN_PIN_VERSION',
+            defaultValue: '',
+            description: 'OPTIONAL — pin the bundled gain wheel to ' +
+                'this CalVer-tagged gain release (e.g. 2026.5.12). ' +
+                'Must match ^\\d{4}\\.\\d+\\.\\d+$ if set. Fetched ' +
+                'from https://wheels.seqpipe.org/gain/. Leave empty ' +
+                'for the default behaviour: copy the gain wheel that ' +
+                'upstream gpf-master CI tested with. Sharp tool — ' +
+                'the release is NOT re-tested after the swap; the ' +
+                'operator certifies API compatibility. Only ' +
+                'settable via manual Jenkins UI trigger; the ' +
+                'tag-push dispatcher always leaves it empty.',
+        )
     }
 
     options {
@@ -123,9 +137,15 @@ pipeline {
         WHEELS_PATH     = '/data/wheels/gpf'
         ANACONDA_USER   = 'iossifovlab'
         CONDA_BUILDER   = "gpf-conda-builder-ci:${env.BUILD_NUMBER}"
-        // Lift params.TAG_NAME into env.TAG_NAME so the existing
-        // shell heredocs can keep using ${TAG_NAME} unchanged.
-        TAG_NAME        = "${params.TAG_NAME}"
+        // Lift params.TAG_NAME / params.GAIN_PIN_VERSION into env
+        // so shell heredocs / `sh '''...'''` blocks can keep using
+        // ${TAG_NAME} / ${GAIN_PIN_VERSION} unchanged. Declarative
+        // pipeline does expose params as env automatically, but
+        // the explicit lift makes the contract visible at the top
+        // of the file and survives any future move to scripted
+        // pipeline blocks.
+        TAG_NAME         = "${params.TAG_NAME}"
+        GAIN_PIN_VERSION = "${params.GAIN_PIN_VERSION}"
     }
 
     stages {
@@ -146,6 +166,18 @@ pipeline {
                             'not match the CalVer pattern ' +
                             '^\\d{4}\\.\\d+\\.\\d+$. Pre-release ' +
                             'suffixes are deferred to V2.'
+                        )
+                    }
+                    if (params.GAIN_PIN_VERSION &&
+                            !(params.GAIN_PIN_VERSION ==~ /^\d{4}\.\d+\.\d+$/)) {
+                        error(
+                            "GAIN_PIN_VERSION " +
+                            "'${params.GAIN_PIN_VERSION}' does " +
+                            'not match the CalVer pattern ' +
+                            '^\\d{4}\\.\\d+\\.\\d+$. Only released ' +
+                            'gain CalVer tags are accepted; ' +
+                            '.dev / rc / sha versions are not at ' +
+                            'wheels.seqpipe.org/gain/ anyway.'
                         )
                     }
                 }
@@ -262,6 +294,12 @@ pipeline {
             // gpf-core (representative); partial-state across the
             // four packages is handled by the publish lock +
             // idempotent re-push semantics in the Publish stage.
+            //
+            // Also probes the inverse condition for GAIN_PIN_VERSION
+            // when set: the pinned gain wheel MUST exist at
+            // wheels.seqpipe.org/gain/ — fail loud here, before any
+            // docker-build cost, instead of letting the
+            // `Fetch upstream artefacts` curl fail downstream.
             steps {
                 sh '''
                     # HEAD on the wheels index — 200 means already
@@ -293,6 +331,32 @@ pipeline {
                         echo "Tag mutation is rejected." \
                              "Cut a new tag instead."
                         exit 1
+                    fi
+
+                    # GAIN_PIN_VERSION existence probe (only when
+                    # the operator set the param). 200 → pinned
+                    # wheel exists, proceed. Anything else (404,
+                    # 5xx, network) is FATAL — unlike the gpf
+                    # probes above, here we WANT the URL to be
+                    # populated. Curl-failure-as-success would
+                    # silently fall back to no-pin behaviour and
+                    # the operator wouldn't know.
+                    if [ -n "$GAIN_PIN_VERSION" ]; then
+                        gain_url="https://${WHEELS_HOST}/gain/gain_core-${GAIN_PIN_VERSION}-py3-none-any.whl"
+                        gcode=$(curl -sS -o /dev/null \
+                            -w '%{http_code}' \
+                            "$gain_url")
+                        echo "Gain wheel probe: HTTP $gcode for $gain_url"
+                        if [ "$gcode" != "200" ]; then
+                            echo "ERROR: pinned gain wheel" \
+                                 "$gain_url not found (HTTP" \
+                                 "$gcode). Check the published" \
+                                 "gain releases at" \
+                                 "https://${WHEELS_HOST}/gain/" \
+                                 "and re-trigger with a valid" \
+                                 "GAIN_PIN_VERSION." >&2
+                            exit 1
+                        fi
                     fi
                 '''
             }
@@ -340,21 +404,85 @@ pipeline {
             //     exactly what passed CI, not whatever gain happens
             //     to be at when the release dispatches.
             //
+            // V2 override: if params.GAIN_PIN_VERSION is set, the
+            // gain wheel comes from wheels.seqpipe.org/gain/
+            // instead of upstream copyArtifacts. base-images.lock
+            // still comes from upstream master (it's the digest
+            // record for THIS gpf commit's build, unrelated to
+            // gain). Trusted-override semantics — the swapped wheel
+            // is NOT re-tested; the operator certifies API
+            // compatibility (see V2 design grilling Q3).
+            //
             // fingerprintArtifacts:true pairs with the master
             // archiveArtifacts' fingerprint:true so both files are
             // locatable even if the build record itself rotated.
             steps {
-                copyArtifacts(
-                    projectName: params.UPSTREAM_PROJECT,
-                    selector: specific(env.UPSTREAM_BUILD_NUMBER),
-                    filter: 'dist/base-images.lock, dist/gain/*.whl',
-                    fingerprintArtifacts: true,
-                )
+                script {
+                    if (params.GAIN_PIN_VERSION) {
+                        // Pinned path: base-images.lock only from
+                        // upstream; gain wheel from
+                        // wheels.seqpipe.org/gain/.
+                        copyArtifacts(
+                            projectName: params.UPSTREAM_PROJECT,
+                            selector: specific(env.UPSTREAM_BUILD_NUMBER),
+                            filter: 'dist/base-images.lock',
+                            fingerprintArtifacts: true,
+                        )
+                        sh '''
+                            mkdir -p dist/gain
+                            gain_url="https://${WHEELS_HOST}/gain/gain_core-${GAIN_PIN_VERSION}-py3-none-any.whl"
+                            echo "Fetching pinned gain wheel: $gain_url"
+                            # -f fails on HTTP error (404/5xx);
+                            # already validated in the pre-flight
+                            # probe, but defence in depth.
+                            curl -fSL -o \
+                                "dist/gain/gain_core-${GAIN_PIN_VERSION}-py3-none-any.whl" \
+                                "$gain_url"
+                        '''
+                    } else {
+                        // Default V1 path: copy both files from
+                        // upstream gpf-master CI build.
+                        copyArtifacts(
+                            projectName: params.UPSTREAM_PROJECT,
+                            selector: specific(env.UPSTREAM_BUILD_NUMBER),
+                            filter: 'dist/base-images.lock, dist/gain/*.whl',
+                            fingerprintArtifacts: true,
+                        )
+                    }
+                }
                 sh '''
                     cat dist/base-images.lock
                     ls -la dist/gain/
                     test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
                 '''
+                // Surface the bundled gain version everywhere it
+                // matters: top-of-build log, Notify Zulip message,
+                // and the failure Zulip message. In the pinned
+                // path GAIN_BUNDLED_VERSION matches the param
+                // value; in the default path it's parsed from the
+                // wheel filename (a .dev string like
+                // 0.1.dev123+gSHA).
+                script {
+                    def gainWheel = sh(
+                        script: 'ls dist/gain/gain_core-*.whl | head -1',
+                        returnStdout: true,
+                    ).trim()
+                    // gain_core-<version>-py3-none-any.whl
+                    def m = gainWheel =~
+                        /gain_core-(.+?)-py3-none-any\.whl$/
+                    if (m) {
+                        env.GAIN_BUNDLED_VERSION = m[0][1]
+                    } else {
+                        env.GAIN_BUNDLED_VERSION = '(unparsable)'
+                    }
+                    def source = params.GAIN_PIN_VERSION ?
+                        "pinned via GAIN_PIN_VERSION" :
+                        "auto from upstream gpf-master"
+                    echo(
+                        "Bundled gain version: " +
+                        "${env.GAIN_BUNDLED_VERSION} (${source})"
+                    )
+                }
             }
         }
 
@@ -635,21 +763,27 @@ EOF
 
         stage('Notify') {
             steps {
-                zulipSend(
-                    topic: 'gpf-releases',
-                    message:
-                        "Released ${env.TAG_NAME} — wheels: " +
-                        "https://${env.WHEELS_HOST}/gpf/, " +
-                        "conda: https://anaconda.org/" +
-                            "${env.ANACONDA_USER}, " +
-                        "docker: ${env.BACKEND_REPO}:" +
-                            "${env.TAG_NAME} + " +
-                        "${env.FRONTEND_REPO}:" +
-                            "${env.TAG_NAME} + " +
-                        "${env.BUNDLE_REPO}:" +
-                            "${env.TAG_NAME} " +
-                        "(all also tagged :stable)",
-                )
+                script {
+                    def gainNote = params.GAIN_PIN_VERSION ?
+                        "gain pinned to ${env.GAIN_BUNDLED_VERSION}" :
+                        "gain ${env.GAIN_BUNDLED_VERSION} (auto)"
+                    zulipSend(
+                        topic: 'gpf-releases',
+                        message:
+                            "Released ${env.TAG_NAME} " +
+                            "(${gainNote}) — wheels: " +
+                            "https://${env.WHEELS_HOST}/gpf/, " +
+                            "conda: https://anaconda.org/" +
+                                "${env.ANACONDA_USER}, " +
+                            "docker: ${env.BACKEND_REPO}:" +
+                                "${env.TAG_NAME} + " +
+                            "${env.FRONTEND_REPO}:" +
+                                "${env.TAG_NAME} + " +
+                            "${env.BUNDLE_REPO}:" +
+                                "${env.TAG_NAME} " +
+                            "(all also tagged :stable)",
+                    )
+                }
             }
         }
     }
@@ -671,12 +805,22 @@ EOF
             // outer agent is still alive) or pre-stage (where it
             // isn't).
             node('!dory') {
-                zulipSend(
-                    topic: 'gpf-releases',
-                    message:
-                        "Release ${params.TAG_NAME} FAILED — " +
-                        "${env.BUILD_URL}",
-                )
+                script {
+                    // Surface GAIN_PIN_VERSION in the failure
+                    // message when it was set — pinned releases
+                    // are the rarer / sharper code path and a
+                    // failure is more diagnosable if the pin is
+                    // visible at-a-glance.
+                    def pinNote = params.GAIN_PIN_VERSION ?
+                        " (gain pin: ${params.GAIN_PIN_VERSION})" :
+                        ""
+                    zulipSend(
+                        topic: 'gpf-releases',
+                        message:
+                            "Release ${params.TAG_NAME}${pinNote}" +
+                            " FAILED — ${env.BUILD_URL}",
+                    )
+                }
             }
         }
         cleanup {
