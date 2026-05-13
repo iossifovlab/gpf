@@ -1,0 +1,708 @@
+// Jenkins pipeline for the gpf monorepo's tag-driven release.
+//
+// Mirrors gain/Jenkinsfile.release with four gpf-specific deltas:
+//   1. `Fetch upstream artefacts` copies BOTH dist/base-images.lock
+//      AND dist/gain/*.whl from the upstream gpf master CI build —
+//      the gain wheel is the one gpf-master tested against.
+//   2. hatch-vcs verification iterates the four gpf dirs explicitly
+//      (core, web_api, federation, rest_client) so the foreign
+//      dist/gain/gain_core-*.whl is not checked against TAG_NAME.
+//   3. `Build prod Docker` builds three images in order — backend →
+//      frontend → bundle — with the bundle's --build-arg
+//      BACKEND_IMAGE/FRONTEND_IMAGE referencing :${TAG_NAME} (not
+//      :stable, which closes the race window with a concurrent
+//      publish re-pointing :stable).
+//   4. Zulip topic is `gpf-releases` (per-product; gain uses
+//      `releases`).
+//
+// Triggered by:
+//   - The root Jenkinsfile's `Dispatch release` stage when a CalVer
+//     tag (^\d{4}\.\d+\.\d+$) lands on the multibranch (fire and
+//     forget; the dispatcher does not block).
+//   - Manual UI trigger (re-runs after transient publish failures).
+//
+// Inputs (mirrored in jenkins-jobs/release.groovy for the UI form):
+//   - TAG_NAME        — the CalVer tag (e.g. 2026.5.13).
+//   - UPSTREAM_PROJECT — multibranch path used to find the master
+//                        CI build whose commit matches the tag
+//                        (default 'iossifovlab/gpf/master').
+//
+// Output: wheels published to wheels.seqpipe.org:/data/wheels/gpf,
+// conda packages to anaconda.org/iossifovlab (gpf-core, gpf-web,
+// gpf-federation, gpf-rest-client), and Docker images to
+// registry.seqpipe.org (gpf-web-api, gpf-web-ui, gpf-web) tagged
+// :${TAG_NAME} + :stable.
+
+import com.cloudbees.groovy.cps.NonCPS
+
+// Look up the upstream multibranch build whose GIT_COMMIT matches
+// the tagged commit. Wrapped in @NonCPS because WorkflowJob and
+// WorkflowRun are not Serializable: if either reference is held in
+// a CPS-scoped local across a CPS step (sh / echo / error / …),
+// the program-state save throws NotSerializableException and the
+// CPS thread dies (surfacing as a misleading
+// "agent seems to be removed or offline" before the underlying
+// NotSerializableException at end of pipeline).
+//
+// Therefore: do all Jenkins-API work here and return only
+// primitives / Serializable values to the CPS world.
+@NonCPS
+def findUpstreamBuildForCommit(String project, String sha) {
+    def job = jenkins.model.Jenkins.instance.getItemByFullName(project)
+    if (job == null) {
+        return [found: false, reason: 'missing']
+    }
+    for (b in job.getBuilds()) {
+        def gitData = b.getAction(hudson.plugins.git.util.BuildData)
+        if (gitData?.lastBuiltRevision?.sha1String == sha) {
+            return [
+                found:  true,
+                number: b.number,
+                result: b.result?.toString(),
+            ]
+        }
+    }
+    return [found: false, reason: 'no-match']
+}
+
+pipeline {
+    // !dory mirrors the root Jenkinsfile and the other gpf
+    // pipelines — dory's docker daemon / resource profile doesn't
+    // fit the root build's compose stacks (and our docker-build-
+    // heavy phases here).
+    agent { label '!dory' }
+
+    parameters {
+        string(
+            name: 'TAG_NAME',
+            defaultValue: '',
+            description: 'CalVer tag to release (e.g. 2026.5.13). ' +
+                'Must match ^\\d{4}\\.\\d+\\.\\d+$. Pre-release ' +
+                'suffixes are deferred to V2.',
+        )
+        string(
+            name: 'UPSTREAM_PROJECT',
+            defaultValue: 'iossifovlab/gpf/master',
+            description: 'Multibranch path used to locate the ' +
+                'master CI build whose GIT_COMMIT matches the ' +
+                'tagged commit. Override only if the multibranch ' +
+                'folder layout has changed.',
+        )
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        // 40 keeps several months of release history while still
+        // letting Jenkins reclaim disk on a job that runs once
+        // per CalVer tag.
+        buildDiscarder(logRotator(numToKeepStr: '40'))
+        // Concurrency: the publish lock is the only required
+        // serialization point. Pre-publish work uses separate
+        // workspaces (Jenkins @2/@3 suffixes) and BUILD_NUMBER, so
+        // overlapping releases are safe up to the lock. We
+        // deliberately do NOT disableConcurrentBuilds().
+        skipDefaultCheckout(true)
+    }
+
+    environment {
+        REGISTRY        = 'registry.seqpipe.org'
+        BACKEND_REPO    = "${env.REGISTRY}/gpf-web-api"
+        FRONTEND_REPO   = "${env.REGISTRY}/gpf-web-ui"
+        BUNDLE_REPO     = "${env.REGISTRY}/gpf-web"
+        REGISTRY_USER   = credentials('user.registry.seqpipe.org')
+        REGISTRY_PASS   = credentials('passwd.registry.seqpipe.org')
+        ANACONDA_TOKEN  = credentials('anaconda-token-iossifovlab')
+        WHEELS_HOST     = 'wheels.seqpipe.org'
+        // Stated explicitly so we don't rely on each Jenkins
+        // agent's ~/.ssh/config to map wheels.seqpipe.org to the
+        // right account. Without this, a build that landed on an
+        // agent whose ssh config didn't set `User seqpipe` would
+        // ssh in as the local jenkins user, hit a directory it
+        // can't write, and fail mkstemp during rsync.
+        WHEELS_USER     = 'seqpipe'
+        WHEELS_PATH     = '/data/wheels/gpf'
+        ANACONDA_USER   = 'iossifovlab'
+        CONDA_BUILDER   = "gpf-conda-builder-ci:${env.BUILD_NUMBER}"
+        // Lift params.TAG_NAME into env.TAG_NAME so the existing
+        // shell heredocs can keep using ${TAG_NAME} unchanged.
+        TAG_NAME        = "${params.TAG_NAME}"
+    }
+
+    stages {
+        stage('Validate + checkout tag') {
+            steps {
+                script {
+                    if (!params.TAG_NAME) {
+                        error('TAG_NAME parameter is required.')
+                    }
+                    // Defense-in-depth: the dispatcher in the root
+                    // Jenkinsfile already filters CalVer tags, but
+                    // gpf-release is also manually triggerable and
+                    // a typo in the UI should fail cleanly here,
+                    // not deep in the pipeline.
+                    if (!(params.TAG_NAME ==~ /^\d{4}\.\d+\.\d+$/)) {
+                        error(
+                            "TAG_NAME '${params.TAG_NAME}' does " +
+                            'not match the CalVer pattern ' +
+                            '^\\d{4}\\.\\d+\\.\\d+$. Pre-release ' +
+                            'suffixes are deferred to V2.'
+                        )
+                    }
+                }
+                // skipDefaultCheckout(true) means we own the
+                // checkout. shallow:false / noTags:false are
+                // load-bearing for hatch-vcs's `git describe
+                // --tags` to resolve the clean tag version
+                // without a .dev suffix.
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "refs/tags/${params.TAG_NAME}"]],
+                    extensions: [
+                        [$class: 'CloneOption',
+                         shallow: false,
+                         noTags: false,
+                         depth: 0],
+                    ],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/iossifovlab/gpf.git',
+                    ]],
+                ])
+                sh '''
+                    set -e
+                    described=$(git describe --tags --always --dirty)
+                    echo "git describe: $described"
+                    test "$described" = "${TAG_NAME}"
+                '''
+            }
+        }
+
+        stage('Pre-flight: master CI gate') {
+            // Find the master multibranch build whose GIT_COMMIT
+            // matches the tagged commit and assert tests passed.
+            // SUCCESS and UNSTABLE are both accepted: lint and
+            // type-check findings (ruff / mypy / pylint) mark the
+            // upstream build UNSTABLE but do not gate the release,
+            // mirroring the policy in the root Jenkinsfile.
+            // FAILURE (pytest non-zero, or the build broke before
+            // pytest ran) blocks the release.
+            //
+            // The integration suites (gpf-federation-integration,
+            // gpf-rest-client-integration) are NOT gated here — they
+            // fire wait:false,propagate:false from master and don't
+            // affect master's result. V1 trade-off: federation and
+            // rest_client wheels publish with lint-only confidence;
+            // the nightly's pre-deploy gate catches drift before any
+            // deploy fires. V2 may add --require-integration-green.
+            //
+            // Stash the matched build number for the copyArtifacts
+            // call below.
+            //
+            // Uses Jenkins core APIs that require in-process script
+            // approval the first time gpf-release runs (admin →
+            // "Manage Jenkins" → "In-process Script Approval").
+            steps {
+                script {
+                    def upstreamProject = params.UPSTREAM_PROJECT
+                    def tagSha = sh(
+                        script: 'git rev-parse HEAD',
+                        returnStdout: true,
+                    ).trim()
+                    def info = findUpstreamBuildForCommit(
+                        upstreamProject, tagSha)
+                    if (!info.found && info.reason == 'missing') {
+                        error(
+                            "Upstream project '${upstreamProject}' " +
+                            'not found. Override UPSTREAM_PROJECT ' +
+                            'if the multibranch path has changed.'
+                        )
+                    }
+                    if (!info.found) {
+                        error(
+                            "No ${upstreamProject} build found for " +
+                            "commit ${tagSha}. Tag a commit that " +
+                            'has been merged to master and built ' +
+                            'green.'
+                        )
+                    }
+                    if (!(info.result in ['SUCCESS', 'UNSTABLE'])) {
+                        error(
+                            "Upstream master build " +
+                            "#${info.number} for commit " +
+                            "${tagSha} did not pass tests " +
+                            "(${info.result}). Refusing to release."
+                        )
+                    }
+                    env.UPSTREAM_BUILD_NUMBER = info.number.toString()
+                    env.GIT_COMMIT = tagSha
+                    echo(
+                        "Upstream master build: #${info.number} " +
+                        "(${info.result}) for commit ${tagSha}"
+                    )
+                }
+            }
+        }
+
+        stage('Setup') {
+            // Workspace prep + conda-builder image. Deferred until
+            // the master CI gate passes so doomed releases don't
+            // pay the docker-build cost.
+            steps {
+                sh '''
+                    rm -rf reports dist conda
+                    mkdir -p reports dist conda
+                    docker build -f conda-builder/Dockerfile \
+                        -t "${CONDA_BUILDER}" conda-builder
+                '''
+            }
+        }
+
+        stage('Pre-flight: tag freshness') {
+            // Reject tag mutation: if any destination already has
+            // an artefact for ${TAG_NAME}, abort. Narrow probe on
+            // gpf-core (representative); partial-state across the
+            // four packages is handled by the publish lock +
+            // idempotent re-push semantics in the Publish stage.
+            steps {
+                sh '''
+                    # HEAD on the wheels index — 200 means already
+                    # published. Anything else (404, 5xx, network)
+                    # is treated as "not there yet, proceed" so a
+                    # flaky index doesn't block releases.
+                    code=$(curl -sS -o /dev/null \
+                        -w '%{http_code}' \
+                        "https://${WHEELS_HOST}/gpf/gpf_core-${TAG_NAME}-py3-none-any.whl")
+                    echo "Wheel index probe: HTTP $code"
+                    if [ "$code" = "200" ]; then
+                        echo "ERROR: gpf-core ${TAG_NAME} already" \
+                             "at https://${WHEELS_HOST}/gpf/"
+                        echo "Tag mutation is rejected." \
+                             "Cut a new tag instead."
+                        exit 1
+                    fi
+
+                    # Anaconda check: exit 0 means the package
+                    # exists; non-zero (1, 2, network) is treated
+                    # as "not there yet". Use --no-progress + 2>&1
+                    # to keep the build log readable.
+                    if docker run --rm "${CONDA_BUILDER}" \
+                        anaconda show \
+                            "${ANACONDA_USER}/gpf-core/${TAG_NAME}" \
+                            >/dev/null 2>&1; then
+                        echo "ERROR: gpf-core ${TAG_NAME} already" \
+                             "on Anaconda.org/${ANACONDA_USER}"
+                        echo "Tag mutation is rejected." \
+                             "Cut a new tag instead."
+                        exit 1
+                    fi
+                '''
+            }
+        }
+
+        stage('Pre-flight: credentials') {
+            // Touch each destination before any state mutates.
+            // Catches expired tokens, network failures, missing
+            // ssh keys before the publish phase begins.
+            steps {
+                sshagent(credentials: ['wheels-seqpipe-ssh-key']) {
+                    sh '''
+                        ssh -o BatchMode=yes \
+                            -o StrictHostKeyChecking=accept-new \
+                            "${WHEELS_USER}@${WHEELS_HOST}" true
+                    '''
+                }
+                sh '''
+                    docker run --rm \
+                        -e ANACONDA_TOKEN \
+                        "${CONDA_BUILDER}" \
+                        anaconda --token "$ANACONDA_TOKEN" whoami
+                '''
+                sh '''
+                    printf '%s' "$REGISTRY_PASS" | docker login \
+                        -u "$REGISTRY_USER" \
+                        --password-stdin "$REGISTRY"
+                    docker logout "$REGISTRY"
+                '''
+            }
+        }
+
+        stage('Fetch upstream artefacts') {
+            // Pull two files from the master build identified
+            // above:
+            //   - dist/base-images.lock: digests of python-slim /
+            //     node-alpine / httpd-alpine used by the master
+            //     build. Replayed via --build-arg below so the
+            //     release rebuild lands on the same base layers.
+            //   - dist/gain/*.whl: the gain-core wheel the master
+            //     build tested with (master CI fetched it at
+            //     lastSuccessful() of iossifovlab/gain/master).
+            //     Bundled into the gpf-web-api production image at
+            //     /wheels — pinning here means the release publishes
+            //     exactly what passed CI, not whatever gain happens
+            //     to be at when the release dispatches.
+            //
+            // fingerprintArtifacts:true pairs with the master
+            // archiveArtifacts' fingerprint:true so both files are
+            // locatable even if the build record itself rotated.
+            steps {
+                copyArtifacts(
+                    projectName: params.UPSTREAM_PROJECT,
+                    selector: specific(env.UPSTREAM_BUILD_NUMBER),
+                    filter: 'dist/base-images.lock, dist/gain/*.whl',
+                    fingerprintArtifacts: true,
+                )
+                sh '''
+                    cat dist/base-images.lock
+                    ls -la dist/gain/
+                    test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
+                '''
+            }
+        }
+
+        stage('Build wheels + sdists') {
+            // hatch-vcs derives the embedded version from `git
+            // describe --tags`; at a tagged commit this resolves
+            // to the clean ${TAG_NAME} with no .dev suffix.
+            // Verified immediately after build — a shallow clone
+            // would yield a dev version and we abort before
+            // publishing.
+            //
+            // Built inside ${CONDA_BUILDER} because uv is not
+            // installed on the Jenkins agents; the conda-builder
+            // image carries uv alongside rattler-build and
+            // anaconda-client.
+            //
+            // The dist-package names are not a clean dir → name
+            // substitution (web_api → gpf-web, not gpf-web-api) so
+            // the four `uv build` invocations are spelled out.
+            steps {
+                sh '''
+                    mkdir -p dist/core dist/web_api \
+                        dist/federation dist/rest_client
+                    DOCKER_USER="$(id -u):$(id -g)"
+                    docker run --rm \
+                        --user "$DOCKER_USER" \
+                        -e HOME=/tmp \
+                        -v $PWD:/workspace \
+                        -w /workspace \
+                        "${CONDA_BUILDER}" \
+                        bash -c '
+                            set -e
+                            uv build --package gpf-core \
+                                --out-dir dist/core
+                            uv build --package gpf-web \
+                                --out-dir dist/web_api
+                            uv build --package gpf-federation \
+                                --out-dir dist/federation
+                            uv build --package gpf-rest-client \
+                                --out-dir dist/rest_client
+                        '
+
+                    # Iterate the four gpf dirs explicitly — the
+                    # foreign dist/gain/gain_core-*.whl carries its
+                    # own version (whatever the upstream gpf master
+                    # CI build fetched from gain) and must NOT be
+                    # checked against TAG_NAME.
+                    bad=0
+                    for d in core web_api federation rest_client; do
+                        for whl in dist/"$d"/*.whl; do
+                            case "$whl" in
+                                *"-${TAG_NAME}-py3-none-any.whl") ;;
+                                *)
+                                    echo "$whl does not embed" \
+                                         "clean ${TAG_NAME}" >&2
+                                    bad=1
+                                    ;;
+                            esac
+                        done
+                    done
+                    if [ "$bad" != 0 ]; then
+                        echo "hatch-vcs did not resolve to" \
+                             "${TAG_NAME} — likely a shallow" \
+                             "clone. Aborting." >&2
+                        exit 1
+                    fi
+                '''
+            }
+        }
+
+        stage('Build conda packages') {
+            // Reuses the rattler-build flow from the root
+            // multibranch Conda packages stage, with VCS_VERSION
+            // pulled from the freshly built wheel filenames so the
+            // conda versions match.
+            steps {
+                sh '''
+                    VCS_VERSION=$(ls dist/core/*.whl \
+                        | head -1 \
+                        | sed 's#.*gpf_core-##' \
+                        | sed 's#-py3-none-any.whl$##')
+                    echo "VCS_VERSION=$VCS_VERSION"
+
+                    mkdir -p dist/conda
+                    DOCKER_USER="$(id -u):$(id -g)"
+                    for proj in core web_api federation rest_client; do
+                        mkdir -p conda/$proj
+                        docker run --rm \
+                            --user "$DOCKER_USER" \
+                            -e HOME=/tmp \
+                            -v $PWD:/workspace \
+                            -w /workspace \
+                            -e VCS_VERSION="$VCS_VERSION" \
+                            "${CONDA_BUILDER}" \
+                            rattler-build build \
+                                --recipe $proj/conda-recipe/recipe.yaml \
+                                --output-dir conda/$proj
+                        cp conda/$proj/noarch/*.conda dist/conda/
+                    done
+                '''
+            }
+        }
+
+        stage('Build prod Docker (digest-pinned)') {
+            // Same Dockerfiles the master build uses, but with
+            // PYTHON_IMAGE / NODE_IMAGE / HTTPD_IMAGE pinned to
+            // the digests captured by the upstream master build.
+            // Three images, built in order — the bundle's
+            // BACKEND_IMAGE / FRONTEND_IMAGE args reference
+            // :${TAG_NAME} (the locally-tagged backend/frontend
+            // from this same build), not :stable, which closes
+            // the race window with a concurrent publish re-
+            // pointing :stable. :stable is applied at push time
+            // inside the Publish stage.
+            steps {
+                sh '''
+                    set -a
+                    . dist/base-images.lock
+                    set +a
+                    echo "PYTHON_IMAGE=${PYTHON_IMAGE}"
+                    echo "NODE_IMAGE=${NODE_IMAGE}"
+                    echo "HTTPD_IMAGE=${HTTPD_IMAGE}"
+
+                    docker build \
+                        -f web_api/Dockerfile.production \
+                        --build-arg PYTHON_IMAGE="${PYTHON_IMAGE}" \
+                        -t "${BACKEND_REPO}:${TAG_NAME}" .
+
+                    docker build \
+                        -f web_ui/Dockerfile.production \
+                        --build-arg NODE_IMAGE="${NODE_IMAGE}" \
+                        --build-arg HTTPD_IMAGE="${HTTPD_IMAGE}" \
+                        --build-arg BACKEND_IMAGE="${BACKEND_REPO}:${TAG_NAME}" \
+                        -t "${FRONTEND_REPO}:${TAG_NAME}" .
+
+                    docker build \
+                        -f Dockerfile.production \
+                        --build-arg PYTHON_IMAGE="${PYTHON_IMAGE}" \
+                        --build-arg BACKEND_IMAGE="${BACKEND_REPO}:${TAG_NAME}" \
+                        --build-arg FRONTEND_IMAGE="${FRONTEND_REPO}:${TAG_NAME}" \
+                        -t "${BUNDLE_REPO}:${TAG_NAME}" .
+                '''
+            }
+        }
+
+        stage('Publish') {
+            // Serialize across overlapping releases. The lock
+            // collides only with another gpf-release currently in
+            // Publish; pre-publish stages of other gpf-release
+            // builds are unaffected. Separate from gain's
+            // `gain-release-publish` so a gain release and a gpf
+            // release can publish concurrently.
+            options {
+                lock(resource: 'gpf-release-publish')
+            }
+            steps {
+                // 1) Wheels + sdists → wheels.seqpipe.org
+                sshagent(credentials: ['wheels-seqpipe-ssh-key']) {
+                    sh '''
+                        files=$(ls \
+                            dist/core/gpf_core-*.whl \
+                            dist/core/gpf_core-*.tar.gz \
+                            dist/web_api/gpf_web-*.whl \
+                            dist/web_api/gpf_web-*.tar.gz \
+                            dist/federation/gpf_federation-*.whl \
+                            dist/federation/gpf_federation-*.tar.gz \
+                            dist/rest_client/gpf_rest_client-*.whl \
+                            dist/rest_client/gpf_rest_client-*.tar.gz)
+                        # Deliberate word-split on $files.
+                        rsync -av \
+                            -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+                            $files \
+                            "${WHEELS_USER}@${WHEELS_HOST}:${WHEELS_PATH}/"
+                        # Regenerate the simple/ index in a
+                        # throwaway python:3.12-slim container on
+                        # the wheels host: pip install pip2pi at
+                        # run time, then dir2pi against the mounted
+                        # wheels dir. Wheels host needs only docker;
+                        # no Python tooling installed there.
+                        #
+                        # setuptools is pinned <80 because libpip2pi
+                        # imports pkg_resources, which setuptools 80
+                        # removed; an unpinned install on Python 3.12
+                        # picks up setuptools 82+ and breaks dir2pi
+                        # with ModuleNotFoundError: pkg_resources.
+                        #
+                        # The heredoc lets ${WHEELS_PATH} expand on
+                        # the agent while \\$(id -u)/\\$(id -g)
+                        # remain literal so the remote shell
+                        # evaluates them — index files end up owned
+                        # by the SSH user, not root-in-container.
+                        # HOME=/tmp gives pip --user a writable home
+                        # for the random UID we're running as.
+                        ssh -o BatchMode=yes \
+                            -o StrictHostKeyChecking=accept-new \
+                            "${WHEELS_USER}@${WHEELS_HOST}" \
+                            bash <<EOF
+set -e
+docker run --rm \\
+    --user "\\$(id -u):\\$(id -g)" \\
+    -e HOME=/tmp \\
+    -v "${WHEELS_PATH}":/work \\
+    -w /work \\
+    python:3.12-slim \\
+    sh -c 'pip install --quiet --user "setuptools<80" pip2pi && /tmp/.local/bin/dir2pi .'
+EOF
+                    '''
+                }
+
+                // 2) Conda → Anaconda.org/iossifovlab.
+                //
+                // Uploaded with rattler-build's own `upload
+                // anaconda` subcommand instead of `anaconda-client`
+                // because the latter (via conda-package-handling
+                // 2.4.0) failed to extract metadata from the .conda
+                // files produced by rattler-build 0.63.1 ("Trouble
+                // reading metadata"). Using the same binary that
+                // built the package avoids that parser-version
+                // mismatch.
+                //
+                // --force replaces on conflict, giving us the same
+                // idempotent re-run semantics that anaconda-client
+                // had with --skip-existing (rattler-build doesn't
+                // ship a skip-existing flag, but our builds are
+                // deterministic so overwriting with the same
+                // content is harmless).
+                //
+                // Wrapped in `sh -c '…'` so /dist/conda/*.conda
+                // glob-expands inside the container, where the
+                // path actually exists. ANACONDA_TOKEN +
+                // ANACONDA_USER come in via -e so the inner
+                // single-quoted script can reference them without
+                // agent-side interpolation.
+                //
+                // --user runs the container as the Jenkins user
+                // (matches the build stage). Without it the
+                // container default is mambauser, which has no
+                // permission to read the .conda files owned by
+                // the Jenkins user. HOME=/tmp gives the random UID
+                // a writable home for any rattler-build cache
+                // lookups.
+                sh '''
+                    DOCKER_USER="$(id -u):$(id -g)"
+                    docker run --rm \
+                        --user "$DOCKER_USER" \
+                        -e HOME=/tmp \
+                        -e ANACONDA_TOKEN \
+                        -e ANACONDA_USER \
+                        -v "$PWD/dist/conda:/dist/conda:ro" \
+                        "${CONDA_BUILDER}" \
+                        sh -c 'rattler-build upload anaconda --owner "$ANACONDA_USER" --api-key "$ANACONDA_TOKEN" --force /dist/conda/*.conda'
+                '''
+
+                // 3) Docker → registry.seqpipe.org with
+                // :${TAG_NAME} immutable + :stable moving. Three
+                // repos (backend + frontend + bundle). Re-pushing
+                // same digest is a registry no-op.
+                //
+                // Tag :stable inside the loop, immediately before
+                // pushing it — closes the same race window that
+                // bit gain build #137 (concurrent activity on the
+                // shared daemon untagging :latest between a bulk
+                // tag step and the push).
+                sh '''
+                    printf '%s' "$REGISTRY_PASS" | docker login \
+                        -u "$REGISTRY_USER" \
+                        --password-stdin "$REGISTRY"
+                    trap 'docker logout "$REGISTRY" || true' EXIT
+
+                    for repo in "$BACKEND_REPO" "$FRONTEND_REPO" "$BUNDLE_REPO"; do
+                        docker push "$repo:$TAG_NAME"
+                        docker tag "$repo:$TAG_NAME" "$repo:stable"
+                        docker push "$repo:stable"
+                    done
+                '''
+            }
+        }
+
+        stage('Notify') {
+            steps {
+                zulipSend(
+                    topic: 'gpf-releases',
+                    message:
+                        "Released ${env.TAG_NAME} — wheels: " +
+                        "https://${env.WHEELS_HOST}/gpf/, " +
+                        "conda: https://anaconda.org/" +
+                            "${env.ANACONDA_USER}, " +
+                        "docker: ${env.BACKEND_REPO}:" +
+                            "${env.TAG_NAME} + " +
+                        "${env.FRONTEND_REPO}:" +
+                            "${env.TAG_NAME} + " +
+                        "${env.BUNDLE_REPO}:" +
+                            "${env.TAG_NAME} " +
+                        "(all also tagged :stable)",
+                )
+            }
+        }
+    }
+
+    post {
+        failure {
+            // The dispatcher fires us with wait:false,propagate:false,
+            // so failures here never bubble up to the multibranch
+            // tag-build. Announce on Zulip so the developer who
+            // pushed the tag finds out without hunting for a build
+            // URL.
+            //
+            // Wrapped in an explicit node block: a failure during
+            // pipeline init (e.g., a missing credential in the
+            // `environment {}` block) tears down the agent before
+            // post runs, leaving zulipSend without a FilePath
+            // context. Allocating our own node guarantees Zulip
+            // fires whether the failure was mid-stage (where the
+            // outer agent is still alive) or pre-stage (where it
+            // isn't).
+            node('!dory') {
+                zulipSend(
+                    topic: 'gpf-releases',
+                    message:
+                        "Release ${params.TAG_NAME} FAILED — " +
+                        "${env.BUILD_URL}",
+                )
+            }
+        }
+        cleanup {
+            // Strip ephemeral images this build produced. All
+            // `|| true` so a missing image (e.g. early failure
+            // before the docker build ran) doesn't fail the
+            // cleanup step.
+            //
+            // Same node-wrap rationale as `failure` above. ${...:-}
+            // shell defaults guard against pipeline-init failures
+            // that abort before the `environment {}` block sets
+            // BACKEND_REPO/FRONTEND_REPO/BUNDLE_REPO/CONDA_BUILDER/
+            // TAG_NAME — empty values turn the rmi into a harmless
+            // no-op.
+            node('!dory') {
+                sh '''
+                    docker rmi "${CONDA_BUILDER:-}" 2>/dev/null || true
+                    for repo in "${BACKEND_REPO:-}" "${FRONTEND_REPO:-}" "${BUNDLE_REPO:-}"; do
+                        [ -z "$repo" ] && continue
+                        for tag in "${TAG_NAME:-}" stable; do
+                            [ -z "$tag" ] && continue
+                            docker rmi "$repo:$tag" 2>/dev/null || true
+                        done
+                    done
+                '''
+            }
+        }
+    }
+}

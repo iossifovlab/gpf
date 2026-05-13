@@ -154,6 +154,46 @@ pipeline {
     }
 
     stages {
+        stage('Dispatch release') {
+            // A CalVer tag pushed to iossifovlab/gpf lands here as a
+            // multibranch tag-build. Fire the gpf-release pipelineJob
+            // (DSL at jenkins-jobs/release.groovy) and exit. The
+            // multibranch tag-build is intentionally a thin shim so
+            // this Jenkinsfile stays focused on per-branch CI;
+            // gpf-release owns the actual release flow.
+            //
+            // wait:false,propagate:false matches the Trigger web_e2e
+            // / Trigger ...-integration patterns: the dispatcher's
+            // tag-build always exits SUCCESS once gpf-release is
+            // queued; the release outcome lives in gpf-release's own
+            // build history + Zulip notifications.
+            //
+            // The CalVer regex here mirrors the one in
+            // Jenkinsfile.release for defense in depth (the release
+            // pipeline re-validates TAG_NAME on entry). The legacy
+            // 3.3.rcN.NNN tag train fails this regex and the stage
+            // is a no-op SUCCESS — those tags stay harmless.
+            when {
+                buildingTag()
+                expression {
+                    env.TAG_NAME ==~ /^\d{4}\.\d+\.\d+$/
+                }
+            }
+            steps {
+                build(
+                    job: '/gpf-release',
+                    parameters: [
+                        string(
+                            name: 'TAG_NAME',
+                            value: env.TAG_NAME,
+                        ),
+                    ],
+                    wait: false,
+                    propagate: false,
+                )
+            }
+        }
+
         stage('CI') {
             when { not { buildingTag() } }
             stages {
