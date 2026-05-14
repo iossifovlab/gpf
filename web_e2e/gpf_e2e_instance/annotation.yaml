@@ -28,7 +28,7 @@
     - source: CLNDN
 
 - liftover_annotator:
-    chain: liftover/hg38ToHg19
+    chain: liftover/hg38_to_hg19
     source_genome: hg38/genomes/GRCh38-hg38
     target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
     attributes:
