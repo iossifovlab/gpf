@@ -299,7 +299,7 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   test('should display "0 variants selected" in overview paragraph when the gene sets is ' +
-  'GO Terms - GO:0016917 GABA_receptor_activity and effect type LGDs at /iossifov_2014/browser', async({ page }) => {
+  'GO Terms - GO:0016917 and effect type LGDs at /iossifov_2014/browser', async({ page }) => {
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'LGDs'}).click();
@@ -309,8 +309,8 @@ test.describe('Genotype browser table preview result tests', () => {
     await page.locator('#selected-collection').selectOption('GO Terms');
     await page.locator('#search-box').click();
     await page.keyboard.type('GO:0016917');
-    await page.waitForSelector('[title="GO:0016917 (22): GABA_receptor_activity"]');
-    await page.getByText('GO:0016917 (22): GABA_receptor_activity').click();
+    await page.waitForSelector('[title="GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917"]');
+    await page.getByText('GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917').click();
 
     await page.getByRole('button', { name: 'Table Preview' }).click();
     await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
@@ -336,8 +336,8 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.locator('#selected-collection').selectOption('GO Terms');
       await page.locator('#search-box').click();
       await page.keyboard.type('GO:0016917');
-      await page.waitForSelector('[title="GO:0016917 (22): GABA_receptor_activity"]');
-      await page.getByText('GO:0016917 (22): GABA_receptor_activity').click();
+      await page.waitForSelector('[title="GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917"]');
+      await page.getByText('GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917').click();
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
 

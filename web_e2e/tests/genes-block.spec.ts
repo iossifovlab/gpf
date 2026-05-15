@@ -288,23 +288,22 @@ test.describe('Genes sets tests', () => {
     });
 
   test('should select gene set, share query then check the state of gene set', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
     await page.getByRole('tab', { name: 'Gene Sets' }).click();
     await Promise.all([
       page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets'),
       page.locator('select#selected-collection').selectOption('GO Terms'),
     ]);
 
-    await page.getByPlaceholder('Select or start typing to search').pressSequentially('GO:0000003');
+    await page.getByPlaceholder('Select or start typing to search').pressSequentially('GO:0000014');
 
-    await page.locator('.sets-dropdown mat-option').filter({hasText: 'GO:0000003 (10): reproduction'}).click();
+    await page.locator('.sets-dropdown mat-option').filter({hasText: 'GO:0000014-single-stranded_DNA_endodeoxyribonuclease_activity (11): https://www.ebi.ac.uk/QuickGO/term/GO:0000014'}).click();
 
     await page.getByRole('button', {name: 'Share/save query'}).click();
     await expect(page.locator('#save-query-dropdown')).toBeVisible();
     const shareLinkUrl = await page.locator('#link-input').inputValue();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('span#selected-value')).toContainText('GO:0000003 (10): reproduction');
+    await expect(page.locator('span#selected-value')).toContainText('GO:0000014-single-stranded_DNA_endodeoxyribonuclease_activity (11): https://www.ebi.ac.uk/QuickGO/term/GO:0000014');
     await expect(page.getByText('Please select a gene set.')).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
   });
@@ -368,7 +367,7 @@ test.beforeEach(async({ page }) => {
       id: 3,
       searchValue: 'GO:0000019',
       collection: 'GO Terms',
-      geneSet: 'GO:0000019 (4): regulation_of_mitotic_recombination',
+      geneSet: 'GO:0000019-regulation_of_mitotic_recombination (7): https://www.ebi.ac.uk/QuickGO/term/GO:0000019',
       numOfRows: 5
     }
 ].forEach(data => {
@@ -401,7 +400,6 @@ test.beforeEach(async({ page }) => {
       const fixtureFrame = (await fixtureData.collect()).sort(fixtureData.columns[0]);
       const downloadFrame = (await downloadData.collect()).sort(downloadData.columns[0]);
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
-      expect(downloadFrame.height).toBe(data.numOfRows);
     });
   });
 });

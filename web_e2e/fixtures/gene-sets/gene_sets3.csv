@@ -1,6 +1,9 @@
-GO:0000019
-regulation_of_mitotic_recombination
-BLM
+GO:0000019-regulation_of_mitotic_recombination
+https://www.ebi.ac.uk/QuickGO/term/GO:0000019
+ANKLE1
+ERCC2
 MLH1
-MRE11A
+MRE11
 RAD50
+TERF2
+ZSCAN4
