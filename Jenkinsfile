@@ -328,7 +328,11 @@ pipeline {
                                 script: '''
                                     set -euo pipefail
                                     url="${JENKINS_URL}job/iossifovlab/job/gain/job/master/api/json?tree=builds[number,result,artifacts[relativePath]]{0,40}"
-                                    curl -fsS "$url" | python3 - <<'PY'
+                                    # -g/--globoff: the Jenkins tree
+                                    # query contains [ ] { } which
+                                    # curl otherwise parses as URL
+                                    # globbing ("bad range in URL").
+                                    curl -fsS -g "$url" | python3 - <<'PY'
 import sys, json
 for b in json.load(sys.stdin).get("builds", []):
     if b.get("result") != "SUCCESS":
