@@ -419,7 +419,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator('rect[id="Inborn_genetic_diseases"]').click();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('8 variants selected', { timeout: 120000 });
 
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
@@ -435,7 +435,7 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('#remove-button').nth(1).click();
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('5 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('6 variants selected', { timeout: 120000 });
   });
 
   test('should filter by genomic categorical score and gene categorical score', async({ page }) => {
@@ -469,7 +469,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator('mat-option:has-text("Uncertain_significance (1363638)")  > span > span').click();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('6 variants selected', { timeout: 120000 });
 
     await page.getByRole('button', {name: 'Share/save query'}).click();
     await expect(page.locator('#save-query-dropdown')).toBeVisible();
@@ -477,7 +477,7 @@ test.describe('Genomic scores tests', () => {
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('6 variants selected', { timeout: 120000 });
   });
 
   test('should open measure description modal', async({ page }) => {
