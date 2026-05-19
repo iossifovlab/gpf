@@ -6,16 +6,16 @@ Release Notes
 
 * 2026.4.4
     * Changed default aggregator for string-type genomic scores from `join(,)`
-        to `list` for both position and allele scores.
+      to `list` for both position and allele scores.
     * Added support for using the default `grr-gpf` repository in GPF
-        instance configuration.
+      instance configuration.
     * Added support for list-of-string values in Schema2 parquet writer.
     * Improved logging for annotation tracebacks.
     * Improved debug logging in genomic scores fetch handling.
     * Fixed handling of small and large value descriptions in categorical
-        histogram plotting.
+      histogram plotting.
     * Adjusted stringify utility used by annotation tools and fixed dict
-        stringify behavior.
+      stringify behavior.
     * Various lint cleanups.
 
 * 2026.4.3
