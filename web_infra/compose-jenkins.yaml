@@ -63,6 +63,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      # Cold init every build: mysql-data declares no volume, so the
+      # data dir is ephemeral and MariaDB does a full first-boot
+      # bootstrap each run. Under concurrent e2e builds on one agent
+      # that can blow past retries*interval (~50s) and get marked
+      # unhealthy with no DB fault — gpf-web-e2e #109 failed here on
+      # the same SHA that #108 ran green. start_period stops failing
+      # checks from counting until init has had time to finish; a
+      # fast cold init still flips healthy at once, so the grace is
+      # effectively free.
+      start_period: 60s
 
   mail:
     image: mailhog/mailhog
