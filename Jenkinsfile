@@ -293,36 +293,72 @@ pipeline {
                 }
 
                 stage('Fetch gain wheel') {
-                    // Pull the gain-core wheel from gain's last
-                    // successful master build into dist/gain/.
+                    // Pull the gain-core wheel into dist/gain/.
                     // Consumed by web_api/Dockerfile.production (the
                     // backend prod image's builder stage installs
                     // /wheels/*.whl which now includes gain-core)
                     // and re-archived to dist/gain/*.whl by the
-                    // archiveArtifacts at the end so downstream
-                    // jobs (gpf-web-e2e) can copy the same wheel
-                    // and test against the exact same gain build
-                    // this gpf build was assembled with.
+                    // archiveArtifacts at the end so downstream jobs
+                    // (gpf-web-e2e) copy the same wheel and test
+                    // against the exact gain build this gpf build
+                    // was assembled with.
                     //
-                    // selector: lastSuccessful() pulls the most
-                    // recent green gain master. No build-arg
-                    // parameter for now — the gain → gpf trigger
-                    // (which would pin to a specific gain build
-                    // number) is separate work.
+                    // NOT selector: lastSuccessful(): gain skips
+                    // wheel building on docs-only commits, yet the
+                    // build still SUCCEEDS (its only artifact is the
+                    // docs tarball). lastSuccessful() then resolves
+                    // to a wheel-less build and copyArtifacts fails
+                    // for EVERY gpf build on every branch until a
+                    // non-docs gain build supersedes it. Instead ask
+                    // gain/master's API for the newest SUCCESS whose
+                    // artifacts actually include dist/core/*.whl and
+                    // copy from that specific build. curl + python3
+                    // only (both always on the CI agents) — no extra
+                    // Jenkins plugin needed; JENKINS_URL is exported
+                    // into sh by Jenkins.
                     //
-                    // flatten: true drops the dist/core/ prefix
-                    // so the wheel lands at dist/gain/gain_core-
+                    // flatten: true drops the dist/core/ prefix so
+                    // the wheel lands at dist/gain/gain_core-
                     // <version>-py3-none-any.whl rather than
                     // dist/gain/dist/core/gain_core-...whl.
                     steps {
-                        copyArtifacts(
-                            filter: 'dist/core/*.whl',
-                            fingerprintArtifacts: true,
-                            projectName: 'iossifovlab/gain/master',
-                            selector: lastSuccessful(),
-                            target: 'dist/gain',
-                            flatten: true,
-                        )
+                        script {
+                            String gainBuild = sh(
+                                returnStdout: true,
+                                script: '''
+                                    set -euo pipefail
+                                    url="${JENKINS_URL}job/iossifovlab/job/gain/job/master/api/json?tree=builds[number,result,artifacts[relativePath]]{0,40}"
+                                    curl -fsS "$url" | python3 - <<'PY'
+import sys, json
+for b in json.load(sys.stdin).get("builds", []):
+    if b.get("result") != "SUCCESS":
+        continue
+    if any(a["relativePath"].startswith("dist/core/")
+           and a["relativePath"].endswith(".whl")
+           for a in b.get("artifacts", [])):
+        print(b["number"])
+        break
+PY
+                                ''',
+                            ).trim()
+                            if (!gainBuild) {
+                                error('No iossifovlab/gain/master ' +
+                                    'SUCCESS build carries ' +
+                                    'dist/core/*.whl (newest ' +
+                                    'greens all docs-only?)')
+                            }
+                            echo "gain-core wheel from " +
+                                "gain/master #${gainBuild}"
+                            copyArtifacts(
+                                filter: 'dist/core/*.whl',
+                                fingerprintArtifacts: true,
+                                projectName:
+                                    'iossifovlab/gain/master',
+                                selector: specific(gainBuild),
+                                target: 'dist/gain',
+                                flatten: true,
+                            )
+                        }
                         sh '''
                             ls -la dist/gain/
                             test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
