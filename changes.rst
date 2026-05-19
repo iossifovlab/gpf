@@ -1,22 +1,22 @@
 Release Notes
 =============
  
- * 2026.4.5
-      * Fixed handling of histograms in gene score info page.
+* 2026.4.5
+    * Fixed handling of histograms in gene score info page.
 
-  * 2026.4.4
-      * Changed default aggregator for string-type genomic scores from `join(,)`
+* 2026.4.4
+    * Changed default aggregator for string-type genomic scores from `join(,)`
         to `list` for both position and allele scores.
-      * Added support for using the default `grr-gpf` repository in GPF
+    * Added support for using the default `grr-gpf` repository in GPF
         instance configuration.
-      * Added support for list-of-string values in Schema2 parquet writer.
-      * Improved logging for annotation tracebacks.
-      * Improved debug logging in genomic scores fetch handling.
-      * Fixed handling of small and large value descriptions in categorical
+    * Added support for list-of-string values in Schema2 parquet writer.
+    * Improved logging for annotation tracebacks.
+    * Improved debug logging in genomic scores fetch handling.
+    * Fixed handling of small and large value descriptions in categorical
         histogram plotting.
-      * Adjusted stringify utility used by annotation tools and fixed dict
+    * Adjusted stringify utility used by annotation tools and fixed dict
         stringify behavior.
-      * Various lint cleanups.
+    * Various lint cleanups.
 
 * 2026.4.3
     * Support for read-only database mode for the GPF web layer, intended as a
