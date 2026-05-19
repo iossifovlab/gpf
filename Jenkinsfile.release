@@ -381,10 +381,20 @@ pipeline {
                         anaconda --token "$ANACONDA_TOKEN" whoami
                 '''
                 sh '''
+                    # #855: validate registry creds in an isolated
+                    # per-build DOCKER_CONFIG. The old bare `docker
+                    # logout "$REGISTRY"` here mutated the shared
+                    # ~/.docker/config.json and could wipe a
+                    # concurrent master build's push auth — this
+                    # preflight is a prime trigger of #5742. Removing
+                    # the private config dir IS the logout, and
+                    # touches no shared state.
+                    export DOCKER_CONFIG="$WORKSPACE/.docker-cfg-$BUILD_NUMBER-preflight"
+                    mkdir -p "$DOCKER_CONFIG"
+                    trap 'rm -rf "$DOCKER_CONFIG"' EXIT
                     printf '%s' "$REGISTRY_PASS" | docker login \
                         -u "$REGISTRY_USER" \
                         --password-stdin "$REGISTRY"
-                    docker logout "$REGISTRY"
                 '''
             }
         }
@@ -747,10 +757,16 @@ EOF
                 // shared daemon untagging :latest between a bulk
                 // tag step and the push).
                 sh '''
+                    # #855: per-build DOCKER_CONFIG so a concurrent
+                    # job's `docker logout` can't drop our auth
+                    # between pushes (auth instance of the tb-w8d /
+                    # gain #137 shared-daemon race noted above).
+                    export DOCKER_CONFIG="$WORKSPACE/.docker-cfg-$BUILD_NUMBER-push"
+                    mkdir -p "$DOCKER_CONFIG"
                     printf '%s' "$REGISTRY_PASS" | docker login \
                         -u "$REGISTRY_USER" \
                         --password-stdin "$REGISTRY"
-                    trap 'docker logout "$REGISTRY" || true' EXIT
+                    trap 'docker logout "$REGISTRY" || true; rm -rf "$DOCKER_CONFIG"' EXIT
 
                     for repo in "$BACKEND_REPO" "$FRONTEND_REPO" "$BUNDLE_REPO"; do
                         docker push "$repo:$TAG_NAME"

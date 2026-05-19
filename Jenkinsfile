@@ -953,12 +953,29 @@ pipeline {
                                 // push fails — agents are shared, don't
                                 // leave registry auth lying around.
                                 sh '''
+                                    # #855: docker login/logout mutate a
+                                    # shared per-user ~/.docker/config.json.
+                                    # On a shared agent a concurrent job's
+                                    # `docker logout` EXIT trap (e.g. the
+                                    # release-pipeline registry preflight)
+                                    # wipes our auth between two pushes —
+                                    # master #5742: push :$BUILD_NUMBER OK,
+                                    # push :$GIT_SHORT -> "no basic auth
+                                    # credentials". Auth instance of the
+                                    # tb-w8d race documented below. A
+                                    # per-build DOCKER_CONFIG makes
+                                    # login/logout build-local; scoped to
+                                    # this sh (not the stage env) so the
+                                    # base-image pulls above keep using the
+                                    # default config.
+                                    export DOCKER_CONFIG="$WORKSPACE/.docker-cfg-$BUILD_NUMBER"
+                                    mkdir -p "$DOCKER_CONFIG"
                                     echo "REGISTRY_USER bytes: $(printf '%s' "$REGISTRY_USER" | wc -c)"
                                     echo "REGISTRY_PASS bytes: $(printf '%s' "$REGISTRY_PASS" | wc -c)"
                                     printf '%s' "$REGISTRY_PASS" | docker login \
                                         -u "$REGISTRY_USER" \
                                         --password-stdin "$REGISTRY"
-                                    trap 'docker logout "$REGISTRY" || true' EXIT
+                                    trap 'docker logout "$REGISTRY" || true; rm -rf "$DOCKER_CONFIG"' EXIT
                                     # tb-w8d: tag :latest INSIDE the loop,
                                     # immediately before pushing it. gain
                                     # build #137 hit a race where a bulk
