@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>gain &harr; gpf cross-repository development workflow</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #555;
+    --accent: #2a5d9f;
+    --warn: #a13;
+    --code-bg: #f4f4f6;
+    --border: #d8d8dc;
+    --table-stripe: #f9f9fb;
+  }
+  html { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  body {
+    color: var(--fg);
+    max-width: 920px;
+    margin: 2em auto;
+    padding: 0 1.5em;
+    line-height: 1.55;
+  }
+  h1 { font-size: 1.7em; margin-top: 0; border-bottom: 2px solid var(--border); padding-bottom: 0.3em; }
+  h2 { font-size: 1.3em; color: var(--accent); margin-top: 2em; border-bottom: 1px solid var(--border); padding-bottom: 0.2em; }
+  h3 { font-size: 1.08em; margin-top: 1.5em; }
+  h4 { font-size: 1em; margin-top: 1.2em; color: var(--muted); }
+  p, li { color: var(--fg); }
+  code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.8em 1em;
+    overflow-x: auto;
+    font-size: 0.88em;
+    line-height: 1.45;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1em;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.7em;
+    vertical-align: top;
+    text-align: left;
+  }
+  th { background: var(--code-bg); }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #eef4fb;
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout.warn {
+    border-left-color: var(--warn);
+    background: #fbeeee;
+  }
+  .muted { color: var(--muted); font-size: 0.92em; }
+  .file-ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
+  ul { padding-left: 1.3em; }
+  ol { padding-left: 1.5em; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+  .toc {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.8em 1em 0.8em 2.2em;
+    margin: 1.5em 0;
+  }
+  .toc ol { margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>gain &harr; gpf cross-repository development workflow</h1>
+
+<p class="muted">
+  How the two repositories relate, how CI consumes gain inside gpf builds, and how to
+  develop across both without breaking the canonical CI shape.
+</p>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#a">How gpf depends on gain</a></li>
+    <li><a href="#b">How Jenkins builds for gpf refer to gain</a></li>
+    <li><a href="#c">How to develop gpf locally</a></li>
+    <li><a href="#refs">Key files</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<h2 id="a">A. How gpf depends on gain</h2>
+
+<h3>Declaration shape</h3>
+
+<p>
+  <code>gain-core</code> is a plain dependency name in two places:
+</p>
+<ul>
+  <li><span class="file-ref">core/pyproject.toml:31</span></li>
+  <li><span class="file-ref">web_api/pyproject.toml:28</span></li>
+</ul>
+
+<p>
+  The committed <span class="file-ref">pyproject.toml:37&ndash;48</span> deliberately leaves
+  <code>gain-core</code> out of the <code>[tool.uv.sources]</code> block. uv resolves it like
+  any package, but the only place a wheel exists is <code>dist/gain/</code>, so consumers
+  point uv there via <code>--find-links ./dist/gain</code>.
+</p>
+
+<h3>Lockfile pin</h3>
+
+<p>
+  <code>uv.lock</code> records the exact resolved version (e.g.
+  <code>2026.5.2.post1.dev27+gc0d9fe7f1</code>) &mdash; a hatch-vcs-derived string
+  that encodes the gain SHA. The pin is a <strong>soft anchor</strong>: it represents
+  &ldquo;the gain I last tested gpf against,&rdquo; not &ldquo;the gain I will build against.&rdquo;
+</p>
+
+<p>
+  A developer updates it via:
+</p>
+
+<pre><code>cd ../gain &amp;&amp; uv build --package gain-core --out-dir ../gpf/dist/gain
+cd ../gpf &amp;&amp; uv lock --upgrade-package gain-core --find-links ./dist/gain</code></pre>
+
+<p>
+  and commits the new lockfile. Meta-repo bump commits with the title
+  <code>Bump gpf: ... &mdash; uv.lock: gain-core +&lt;SHA&gt;</code> record this pairing.
+</p>
+
+<h3>Why <code>--upgrade-package</code> is everywhere in CI</h3>
+
+<p>
+  Plain <code>uv sync --find-links ./dist/gain</code> honors the lock. If <code>dist/gain/</code>
+  contains a different wheel than the lockfile pins, sync fails.
+  <code>--upgrade-package gain-core</code> tells uv: &ldquo;re-resolve only this package against
+  <code>--find-links</code>, ignore the lock entry.&rdquo; Every CI Dockerfile carries this flag:
+</p>
+
+<ul>
+  <li><span class="file-ref">core/Dockerfile:49,54</span></li>
+  <li><span class="file-ref">web_api/Dockerfile:53,58</span></li>
+  <li><span class="file-ref">federation/Dockerfile:48,53</span></li>
+  <li><span class="file-ref">rest_client/Dockerfile:47,52</span></li>
+</ul>
+
+<hr>
+
+<h2 id="b">B. How Jenkins builds for gpf refer to gain</h2>
+
+<h3>gpf master CI &mdash; floating gain</h3>
+
+<p>
+  <span class="file-ref">Jenkinsfile:295&ndash;331</span> defines the
+  <code>Fetch gain wheel</code> stage:
+</p>
+
+<pre><code>copyArtifacts(
+    projectName: 'iossifovlab/gain/master',
+    selector:    lastSuccessful(),
+    filter:      'dist/core/*.whl',
+    target:      'dist/gain',
+    flatten:     true,
+)</code></pre>
+
+<p>
+  Every gpf master build pulls the most recent green gain master build. There is
+  <strong>no read of <code>.gitmodules</code></strong>, <strong>no read of gpf's
+  <code>uv.lock</code></strong>, no SHA matching of any kind.
+</p>
+
+<div class="callout warn">
+  <strong>Consequence:</strong> a gain master push can break gpf master CI with zero gpf
+  changes. The lockfile pin offers no protection because CI's <code>--upgrade-package
+  gain-core</code> bypasses it.
+</div>
+
+<h3>gpf release &mdash; deterministic per gpf tag</h3>
+
+<p>
+  <span class="file-ref">Jenkinsfile.release:402&ndash;497</span> has two paths in
+  <code>Fetch upstream artefacts</code>:
+</p>
+
+<h4>Default path (tag-push dispatcher)</h4>
+
+<pre><code>copyArtifacts(
+    projectName: 'iossifovlab/gpf/master',
+    selector:    specific(env.UPSTREAM_BUILD_NUMBER),
+    filter:      'dist/base-images.lock, dist/gain/*.whl',
+)</code></pre>
+
+<p>
+  The release pipeline finds the gpf-master CI build whose <code>GIT_COMMIT</code>
+  matches the tagged commit, and copies <em>that build's</em>
+  <code>dist/gain/*.whl</code>. Pulls the <strong>same gain wheel upstream gpf-master tested
+  with for that commit</strong>. Deterministic per gpf release &mdash; but the bundled gain
+  version is a <code>dev+SHA</code> string, <em>not</em> a clean CalVer.
+</p>
+
+<h4>Pinned path (<code>GAIN_PIN_VERSION=2026.5.12</code>, manual UI only)</h4>
+
+<p>
+  Curls the CalVer-tagged wheel from <code>wheels.seqpipe.org/gain/</code> instead.
+  <strong>Sharp tool:</strong> the gpf release is <em>not re-tested</em> after the
+  swap; the operator certifies API compatibility.
+</p>
+
+<h3>Production image &mdash; wheels-only bundle</h3>
+
+<p>
+  <span class="file-ref">web_api/Dockerfile.production:48&ndash;78</span>:
+</p>
+
+<pre><code>COPY dist/gain/gain_core-*.whl ./
+RUN uv pip install --only-binary=:all: --no-binary=mysqlclient /wheels/*.whl</code></pre>
+
+<p>
+  The released <code>registry.seqpipe.org/gpf-web:&lt;TAG&gt;</code> image bundles the gain
+  wheel inside its <code>/opt/gpf</code> venv. No network call to gain at install time
+  &mdash; the wheel is baked in.
+</p>
+
+<hr>
+
+<h2 id="c">C. How to develop gpf locally</h2>
+
+<p>
+  Two modes &mdash; pick one per checkout.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>CI shape (wheel)</th>
+      <th>Editable</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>What's installed</th>
+      <td>Wheel from <code>dist/gain/</code>, rebuilt on every gain SHA change</td>
+      <td><code>pip install -e ../gain/core</code> &mdash; gain source is live</td>
+    </tr>
+    <tr>
+      <th>After <code>git pull</code> in gain</th>
+      <td>
+        <code>cd ../gain &amp;&amp; uv build --package gain-core --out-dir
+        ../gpf/dist/gain &amp;&amp; cd ../gpf &amp;&amp; uv sync --upgrade-package
+        gain-core --find-links ./dist/gain</code>
+      </td>
+      <td>
+        <code>uv sync</code> &mdash; picks up gain's current working tree, no rebuild
+      </td>
+    </tr>
+    <tr>
+      <th>Config files</th>
+      <td>Untouched (CI shape)</td>
+      <td>
+        <code>pyproject.toml</code> has
+        <code>gain-core = { path = "../gain/core", editable = true }</code>
+        inline in the existing <code>[tool.uv.sources]</code> block;
+        <code>uv.lock</code> has <code>source = { editable = "../gain/core" }</code>
+      </td>
+    </tr>
+    <tr>
+      <th>Safety</th>
+      <td>Always safe to commit</td>
+      <td>Both files must be <code>skip-worktree</code> &mdash; committing them breaks CI</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Activating the editable override</h3>
+
+<p>
+  Add the path source <strong>inline</strong> inside the existing
+  <code>[tool.uv.sources]</code> block in <code>pyproject.toml</code>:
+</p>
+
+<pre><code>[tool.uv.sources]
+gpf-core = { workspace = true }
+gpf-web = { workspace = true }
+gpf-federation = { workspace = true }
+gpf-rest-client = { workspace = true }
+gain-core = { path = "../gain/core", editable = true }</code></pre>
+
+<p>
+  Then:
+</p>
+
+<pre><code>git update-index --skip-worktree pyproject.toml uv.lock
+uv sync</code></pre>
+
+<div class="callout warn">
+  <strong>Don't use the subheader form.</strong> Writing the override as a separate
+  <code>[tool.uv.sources.gain-core]</code> table (the form the README's tomlkit merge
+  script produces) can be silently normalized away by a later <code>uv sync</code>.
+  The inline-assignment form above survives sync intact.
+</div>
+
+<h3>Cross-repo PR ordering</h3>
+
+<p>
+  When a change needs both gain and gpf code:
+</p>
+
+<ol>
+  <li>Open and merge the gain PR.
+    <span class="muted">Until gain master goes green, gpf CI may transiently break &mdash;
+    even unrelated gpf branches.</span>
+  </li>
+  <li>Wait for gain master CI to publish a green build.
+    <span class="muted">This is what gpf's <code>Fetch gain wheel</code> stage reads.</span>
+  </li>
+  <li>Open the gpf PR.</li>
+</ol>
+
+<p>
+  While iterating locally, the editable override lets you test both halves of the
+  change together before either PR exists.
+</p>
+
+<h3>Pre-PR ritual</h3>
+
+<p>
+  Before pushing a gpf branch &mdash; especially one that exercises new gain
+  surface &mdash; reproduce the CI shape locally:
+</p>
+
+<pre><code># 1. Revert to CI shape
+git update-index --no-skip-worktree pyproject.toml uv.lock
+git checkout -- pyproject.toml uv.lock
+
+# 2. Rebuild gain wheel from gain's HEAD, re-resolve gpf
+cd ../gain &amp;&amp; uv build --package gain-core --out-dir ../gpf/dist/gain
+cd ../gpf &amp;&amp; uv sync --upgrade-package gain-core --find-links ./dist/gain
+
+# 3. Run tests under the CI shape
+uv run pytest -v tests/small/
+
+# 4. If uv.lock changed, commit it (the "Bump gpf ... +gSHA" workflow).
+#    If not, your branch doesn't need to bump the gain pin.
+
+# 5. Restore editable for ongoing dev
+#    (re-add the inline source, re-skip-worktree both files, uv sync)</code></pre>
+
+<h3>The genomics-toolbox meta-repo role</h3>
+
+<p>
+  Purely a <strong>human coordination record</strong>. Nothing in CI reads
+  <code>.gitmodules</code> or the meta-repo's submodule pins. The commit pattern
+  <code>Bump gpf: ...@&lt;gpf-SHA&gt; &mdash; uv.lock: gain-core +&lt;gain-SHA&gt;</code>
+  paired with an earlier <code>Bump gain: ...@&lt;gain-SHA&gt;</code> documents
+  &ldquo;these two SHAs are a tested combination.&rdquo;
+</p>
+
+<p>
+  Useful for:
+</p>
+<ul>
+  <li>
+    Reproducible clones:
+    <code>git clone seqpipe/genomics-toolbox &amp;&amp; git checkout &lt;meta-SHA&gt;
+    &amp;&amp; git submodule update --init --recursive</code>
+  </li>
+  <li>Documenting what got deployed</li>
+  <li>Shaping <code>../gain/</code>-relative editable workflows</li>
+</ul>
+
+<p>
+  But <em>not</em> for triggering or pinning CI builds.
+</p>
+
+<hr>
+
+<h2 id="refs">Key files</h2>
+
+<table>
+  <thead>
+    <tr><th>Path</th><th>Role</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="file-ref">gpf/pyproject.toml:37&ndash;48</td>
+      <td>Declaration policy &mdash; comment explains why <code>gain-core</code> has no source</td>
+    </tr>
+    <tr>
+      <td class="file-ref">gpf/core/Dockerfile:46&ndash;54</td>
+      <td>CI consumption template (same shape in <code>web_api</code>, <code>federation</code>, <code>rest_client</code>)</td>
+    </tr>
+    <tr>
+      <td class="file-ref">gpf/web_api/Dockerfile.production:48&ndash;78</td>
+      <td>Production wheel-bundle (wheels-only invariant)</td>
+    </tr>
+    <tr>
+      <td class="file-ref">gpf/Jenkinsfile:295&ndash;331</td>
+      <td><code>Fetch gain wheel</code> &mdash; floating (<code>lastSuccessful()</code>)</td>
+    </tr>
+    <tr>
+      <td class="file-ref">gpf/Jenkinsfile.release:402&ndash;497</td>
+      <td><code>Fetch upstream artefacts</code> &mdash; specific or pinned</td>
+    </tr>
+    <tr>
+      <td class="file-ref">gpf/pyproject.local.toml.template</td>
+      <td>Editable override blueprint</td>
+    </tr>
+    <tr>
+      <td class="file-ref">gpf/README.md:170&ndash;208</td>
+      <td>
+        README's editable workflow.
+        <span class="muted">Note: the merge script's subheader form caused inline
+        reversion in testing; use the inline-assignment form documented above instead.</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>
