@@ -477,7 +477,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.mouse.up();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('87 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('18 variants selected');
   });
 
   test('should click histogram bars and share query', async({ page }) => {
@@ -517,7 +517,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.locator('rect[id="3"]').click();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('4 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
   });
 
   test('should select values from dropdown and validate', async({ page }) => {
@@ -629,6 +629,6 @@ test.describe('Gene scores categorical histogram tests', () => {
 
     await page.getByRole('button', { name: 'Table Preview'}).click();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('4 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
   });
 });

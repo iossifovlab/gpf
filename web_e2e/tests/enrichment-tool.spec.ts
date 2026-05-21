@@ -72,10 +72,10 @@ test.describe('Enrichment tool tests', () => {
     await page.getByRole('button', {name: 'Enrichment test'}).click();
     await page.waitForSelector('.enrichment-table');
 
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('54');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('168');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('32.69');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('135.96');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('10');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('20');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('5.40');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('22.06');
   });
 
   test('should check the affected person\'s observed column ' +

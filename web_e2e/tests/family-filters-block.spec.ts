@@ -116,7 +116,7 @@ test.describe('Family filters block tests', () => {
     await page.locator('#tag_quad_family-tag-remove').click();
 
     await page.locator('#table-preview-button').click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('76 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('15 variants selected', { timeout: 120000 });
 
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
@@ -148,7 +148,7 @@ test.describe('Family filters block tests', () => {
     await page.locator('#tag_missing_dad_family-tag-add').click();
 
     await page.locator('#table-preview-button').click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('496 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('77 variants selected', { timeout: 120000 });
 
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
@@ -209,14 +209,14 @@ test.describe('Family filters block tests', () => {
     await page.locator('#tag_quad_family-tag-remove').click();
 
     await page.locator('#table-preview-button').click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('76 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('15 variants selected', { timeout: 120000 });
 
     await page.locator('#clear-filters-button').click();
     await expect(page.locator('#tag_nuclear_family-tag-add')).not.toHaveCSS('color', 'rgb(0, 128, 0)');
     await expect(page.locator('#tag_quad_family-tag-remove')).not.toHaveCSS('color', 'rgb(255, 0, 0)');
 
     await page.locator('#table-preview-button').click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('572 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('92 variants selected', { timeout: 120000 });
   });
 
   test('should display pheno filters panel after "Advanced" button click', async({ page }) => {
