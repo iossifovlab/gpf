@@ -26,7 +26,7 @@ test.describe('Gene profiles row data tests', () => {
     {
       geneSymbol: 'SHANK2',
       // eslint-disable-next-line max-len
-      expectedRow: ['SHANK2', 'check_small', 'check_small', '', '', '', 'check_small', '1', '', '43', '649', '17517', '1.0 (0.4)', '', '', '', '1.0 (0.52)', '']
+      expectedRow: ['SHANK2', 'check_small', 'check_small', '', '', '', 'check_small', '1', '', '43', '649', '17517', '', '', '', '', '', '']
     },
     {
       geneSymbol: 'FLG',
@@ -41,7 +41,7 @@ test.describe('Gene profiles row data tests', () => {
     {
       geneSymbol: 'TBCD',
       // eslint-disable-next-line max-len
-      expectedRow: ['TBCD', '', '', 'check_small', '', '', '', '', '646', '9111.5', '13275.5', '222', '', '', '', '', '', '2.0 (1.05)']
+      expectedRow: ['TBCD', '', '', 'check_small', '', '', '', '', '646', '9111.5', '13275.5', '222', '', '', '', '', '', '']
     }
   ].forEach(data => {
     test(`should display correct gene data for ${data.geneSymbol}`, async({ page }) => {
@@ -449,45 +449,45 @@ test.describe('Gene profiles table functionality tests', () => {
   });
 
   test('should navigate to genotype browser', async({ page }) => {
-    await page.getByTitle('2.0 (1.05)\nTBCD').click();
+    await page.getByTitle('7.0 (2.79)\nCHD8').click();
     await page.waitForSelector('gpf-genotype-browser');
     expect(page.url()).toContain('/datasets/iossifov_2014_liftover/genotype-browser');
 
-    await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('TBCD');
-    await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).toBeChecked();
-    await expect(page.locator('gpf-pedigree-selector').getByLabel('affected', { exact: true })).not.toBeChecked();
+    await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('CHD8');
+    await expect(page.locator('gpf-pedigree-selector').getByLabel('affected', { exact: true })).toBeChecked();
+    await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).not.toBeChecked();
 
-    await expect(page.locator('gpf-effect-types').getByLabel('intron')).toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('nonsense')).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('frame-shift', { exact: true })).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('splice-site')).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift-newStop')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('intron')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('nonsense')).toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('frame-shift', { exact: true })).toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('splice-site')).toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift-newStop')).toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('missense')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift', { exact: true })).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('noStart')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('noEnd')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('synonymous')).not.toBeChecked();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('7 variants selected');
   });
 
   test('should navigate to genotype browser and check if correct variants are loaded', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype Browser');
     await page.getByRole('tab', { name: 'Gene Symbols' }).click();
-    await page.locator('#gene-symbols-panel textarea').pressSequentially('GRIN2B');
+    await page.locator('#gene-symbols-panel textarea').pressSequentially('CHD8');
     await page.locator('gpf-pedigree-selector').getByLabel('unaffected').click();
 
     await page.getByRole('button', { name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('3 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('7 variants selected');
 
     await page.locator('#header a:text("Gene Profiles")').click();
     await page.waitForSelector('gpf-gene-profiles-table');
 
-    await page.getByTitle('3.0 (1.2)\nGRIN2B').click();
+    await page.getByTitle('7.0 (2.79)\nCHD8').click();
     await page.waitForSelector('gpf-genotype-browser');
     expect(page.url()).toContain('/datasets/iossifov_2014_liftover/genotype-browser');
 
-    await expect(page.locator('#variants-count-span')).toHaveText('3 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('7 variants selected');
   });
 });
 

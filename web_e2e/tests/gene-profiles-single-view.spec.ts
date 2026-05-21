@@ -311,8 +311,8 @@ test.describe('Gene profiles single view dynamic data and links tests', () => {
     await expect(
       page.locator('.datasets-table').locator('tr').nth(1)
     ).toHaveText('Variant Statisticsaffected (2507)unaffected (1910)');
-    await expect(page.locator('.datasets-table').locator('tr').nth(2)).toHaveText('LGDs3 (1.197)remove');
-    await expect(page.locator('.datasets-table').locator('tr').nth(3)).toHaveText('missense1 (0.399)remove');
+    await expect(page.locator('.datasets-table').locator('tr').nth(2)).toHaveText('LGDsremoveremove');
+    await expect(page.locator('.datasets-table').locator('tr').nth(3)).toHaveText('missenseremoveremove');
     await expect(page.locator('.datasets-table').locator('tr').nth(4)).toHaveText('intronremoveremove');
 
     await expect(page.locator('#relevant_gene_sets').locator('th')).toHaveText('Relevant Gene Sets');

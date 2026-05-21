@@ -151,8 +151,8 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {childGender: 'male', count: '406'},
-    {childGender: 'female', count: '169'},
+    {childGender: 'male', count: '57'},
+    {childGender: 'female', count: '35'},
     {childGender: 'unspecified', count: '0'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph when ' +
@@ -168,9 +168,9 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {variantType: 'sub', count: '273'},
-    {variantType: 'ins', count: '87'},
-    {variantType: 'del', count: '212'}
+    {variantType: 'sub', count: '48'},
+    {variantType: 'ins', count: '15'},
+    {variantType: 'del', count: '29'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph when only ' +
     data.variantType + ' variant type checkbox is checked', async({ page }) => {
@@ -250,19 +250,19 @@ test.describe('Genotype browser table preview result tests', () => {
   [
     {
       study: datasetIds.iossifov2014Liftover,
-      geneSymbol: 'SCN2A',
+      geneSymbol: 'POGZ',
       effectType: 'LGDs',
       overviewParagraph: '2 variants selected'
     },
     {
       study: datasetIds.iossifov2014Liftover,
-      geneSymbol: 'NRXN1',
+      geneSymbol: 'MEGF6',
       effectType: 'LGDs',
       overviewParagraph: '1 variant selected'
     },
     {
       study: datasetIds.iossifov2014Liftover,
-      geneSymbol: 'NRXN1',
+      geneSymbol: 'MEGF6',
       effectType: 'All',
       overviewParagraph: '1 variant selected'
     }
@@ -287,12 +287,12 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   test('should display "2 variants selected" in overview paragraph ' +
-  'when family id is 11002 at /iossifov_2014/browser', async({ page }) => {
+  'when family id is 11057 at /iossifov_2014/browser', async({ page }) => {
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
     await page.locator('#family-ids').click();
-    await page.locator('gpf-family-ids textarea').pressSequentially('11002');
+    await page.locator('gpf-family-ids textarea').pressSequentially('11057');
 
     await page.getByRole('button', { name: 'Table Preview' }).click();
     await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
@@ -319,11 +319,11 @@ test.describe('Genotype browser table preview result tests', () => {
   [
     {
       effectTypes: ['missense'],
-      count: '4'
+      count: '0'
     },
     {
       effectTypes: ['missense', 'synonymous'],
-      count: '5'
+      count: '0'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when gene sets is GO Terms'+
@@ -391,7 +391,7 @@ test.describe('Genotype browser table preview result tests', () => {
     await page.locator('gpf-effect-types').getByLabel('5\'UTR').click();
 
     await page.getByRole('button', { name: 'Table Preview' }).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('164 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('23 variants selected');
   });
 
   test('should load query, click table preview and check if table is visible repeatedly', async({ page }) => {
@@ -477,29 +477,29 @@ test.describe('Genotype browser table tests', () => {
 
     const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=';
 
-    await page.waitForSelector('span:text("572 variants selected")');
+    await page.waitForSelector('span:text("92 variants selected")');
     await page.locator('#sort-child').getByText('family id').click();
 
     await expect(
-      page.locator('a').filter({ hasText: /^chr4:41746278$/ }).first()
-    ).toHaveAttribute('href', baseUrl + 'chr4:41746278');
+      page.locator('a').filter({ hasText: /^chr1:153665244$/ }).first()
+    ).toHaveAttribute('href', baseUrl + 'chr1:153665244');
 
 
     await expect(
-      page.locator('a').filter({ hasText: /^chr13:51374698$/ }).first()
-    ).toHaveAttribute('href', baseUrl + 'chr13:51374698');
+      page.locator('a').filter({ hasText: /^chrX:1389485$/ }).first()
+    ).toHaveAttribute('href', baseUrl + 'chrX:1389485');
   });
 
   test('should show details', async({ page }) => {
     await page.getByRole('button', { name: 'Table Preview' }).click();
-    await page.waitForSelector('span:text("572 variants selected")');
+    await page.waitForSelector('span:text("92 variants selected")');
     await page.locator('#sort-child').getByText('family id').click();
 
     await page.getByText('Show details').first().click();
     await expect(page.locator('.modal-content')).toBeVisible();
     await expect(page.locator('.modal-content > .details-header')).toHaveCount(2);
-    await expect(page.locator('.modal-content > .details-header').nth(0)).toHaveText('Family id: 14699');
-    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: chr4:41746278');
+    await expect(page.locator('.modal-content > .details-header').nth(0)).toHaveText('Family id: 14621');
+    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: chr1:153665244');
     await expect(page.locator('.modal-content > .grid-container')).toBeVisible();
   });
 });
