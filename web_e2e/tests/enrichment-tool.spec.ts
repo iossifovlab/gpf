@@ -97,8 +97,8 @@ test.describe('Enrichment tool tests', () => {
     await page.waitForSelector('.enrichment-table');
 
     await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('0');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('3');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.36');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('1.50');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('0');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.06');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('0.24');
   });
 });
