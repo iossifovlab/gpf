@@ -250,9 +250,9 @@ test.describe('Genes sets tests', () => {
       expectedDownloadCount: '286'
     },
     {
-      collection: 'SFARI Genes',
-      expectedSearchCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
-      expectedDownloadCount: '910'
+      collection: 'GO Terms',
+      expectedSearchCondition: 'GO:0000015-phosphopyruvate_hydratase_complex (4): https://www.ebi.ac.uk/QuickGO/term/GO:0000015',
+      expectedDownloadCount: '4'
     },
 
   ].forEach(data => {
@@ -281,7 +281,7 @@ test.describe('Genes sets tests', () => {
         const actualCountElement = await page.locator(
             'span:has-text("Count:")'
         ).textContent();
-        const actualCount = actualCountElement.replace('Count: ', '').replace(' (Download)', '').trim();
+        const actualCount = actualCountElement?.replace('Count: ', '').replace(' (Download)', '').trim();
         const expectedCount = data.expectedDownloadCount;
         expect(actualCount).toEqual(expectedCount);
         });

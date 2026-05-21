@@ -282,8 +282,8 @@ test.describe('Pheno tool download tests', () => {
   [
     {
       id: '12',
-      collection: 'SFARI Genes',
-      set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
+      collection: 'GO Terms',
+      set: 'GO:0000015-phosphopyruvate_hydratase_complex (4): https://www.ebi.ac.uk/QuickGO/term/GO:0000015',
       measure: 'instrument_1.age'
     },
     {

@@ -53,7 +53,7 @@ test.describe('Enrichment tool tests', () => {
     await expect(page.locator('.enrichment-table')).toBeVisible();
   });
 
-  test('should display "54" and "168" in the affected person\'s observed column ' +
+  test('should check the affected person\'s observed column ' +
   'of LGDs and missense\'s rows respectively with gene set Main: FMRP Darnell', async({ page }) => {
     await page.locator('#gene-sets').click();
 
@@ -78,8 +78,8 @@ test.describe('Enrichment tool tests', () => {
     await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('135.96');
   });
 
-  test('should display "0" and "2" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
-  'with gene set MSigDB Pathways: BIOCARTA_PTEN_PATHWAY', async({ page }) => {
+  test('should check the affected person\'s observed column ' +
+  'of LGDs and missense\'s rows respectively with gene set MSigDB Pathways: BIOCARTA_PTEN_PATHWAY', async({ page }) => {
     await page.locator('#gene-sets').click();
     await page.waitForSelector('gpf-gene-sets');
 
@@ -89,16 +89,16 @@ test.describe('Enrichment tool tests', () => {
     await page.keyboard.type('BIOCARTA_PTEN_PATHWAY');
 
     await page.waitForSelector('[title="BIOCARTA_PTEN_PATHWAY (18): ' +
-    'http://www.broadinstitute.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY"]');
+    'http://www.gsea-msigdb.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY"]');
     await page.getByText('BIOCARTA_PTEN_PATHWAY (18): ' +
-    'http://www.broadinstitute.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY').click();
+    'http://www.gsea-msigdb.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY').click();
 
     await page.getByRole('button', {name: 'Enrichment test'}).click();
     await page.waitForSelector('.enrichment-table');
 
     await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('0');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('2');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.35');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('1.47');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('3');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.36');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('1.50');
   });
 });
