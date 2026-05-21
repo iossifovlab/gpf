@@ -6,7 +6,7 @@ input:
     file: IossifovWE2014.ped
   denovo:
     files:
-      - IossifovWE2014_liftover.tsv
+      - IossifovWE2014_liftover_chr1_14_X.tsv
     chrom: chrom38
     pos: pos38
     ref: ref38
