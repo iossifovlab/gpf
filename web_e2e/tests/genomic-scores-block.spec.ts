@@ -498,6 +498,11 @@ test.describe('Genomic scores tests', () => {
   test('should download with continuous histogram', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
 
+    // MPC only annotates missense variants; the default Effect Types
+    // selection is LGDs-only (no missense). Click All so the MPC range
+    // filter has a non-empty result set deterministically on Jenkins.
+    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
     'A deleteriousness prediction score for missense variants';
 
