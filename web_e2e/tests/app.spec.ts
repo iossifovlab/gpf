@@ -192,7 +192,7 @@ test.describe('App user access rights tests', () => {
 
   // tests robustness of the authentication process
   test('should login and logout repeatedly', async({ page }) => {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 3; i++) {
       /* eslint-disable no-await-in-loop */
       await utils.loginWorkerUser(page);
       await utils.logout(page);

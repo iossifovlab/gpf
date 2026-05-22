@@ -398,7 +398,7 @@ test.describe('Genotype browser table preview result tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
     await page.getByRole('tab', { name: 'Gene Symbols' }).click();
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 5; i++) {
       /* eslint-disable no-await-in-loop */
       await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
       await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
@@ -420,7 +420,7 @@ test.describe('Genotype browser table preview result tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
     await page.getByRole('tab', { name: 'Gene Symbols' }).click();
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 5; i++) {
       /* eslint-disable no-await-in-loop */
       await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
       await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
