@@ -45,7 +45,23 @@ test.describe('Genotype browser tests', () => {
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clinsig}")`).click();
+    await page.locator(`mat-option:has-text("${clinsig}") span`).click();
+
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('Pathogenic');
+    const pathogenic = page.locator('mat-option > span > span').filter({hasText: /^Pathogenic \(/});
+    await expect(pathogenic).toHaveCount(1);
+    await pathogenic.click();
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('Likely_pathogenic');
+    const likelyPathogenic = page.locator('mat-option > span > span').filter({hasText: /^Likely_pathogenic \(/});
+    await expect(likelyPathogenic).toHaveCount(1);
+    await likelyPathogenic.click();
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('Uncertain_significance');
+    const uncertainSig = page.locator('mat-option > span > span').filter({hasText: /^Uncertain_significance \(/});
+    await expect(uncertainSig).toHaveCount(1);
+    await uncertainSig.click();
 
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
     await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
@@ -56,7 +72,7 @@ test.describe('Genotype browser tests', () => {
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('10 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
 
     await page.getByRole('button', {name: 'Share/save query'}).click();
     await expect(page.locator('#save-query-dropdown')).toBeVisible();
@@ -69,7 +85,7 @@ test.describe('Genotype browser tests', () => {
     await expect(page.locator('gpf-person-filters-block').locator('svg')).toBeVisible();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('10 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
   });
 });
 
