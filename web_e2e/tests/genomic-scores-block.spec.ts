@@ -68,8 +68,7 @@ test.describe('Genomic scores tests', () => {
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
     await expect(page.locator('gpf-genomic-scores')).toBeVisible();
     await expect(page.locator('gpf-helper-modal')).toBeVisible();
-    await expect(page.getByRole('button', {name: 'Mode'})).toBeVisible();
-    await expect(page.locator('gpf-categorical-histogram')).toBeVisible();
+    await expect(page.locator('gpf-categorical-values-dropdown')).toBeVisible();
     await expect(page.locator('gpf-remove-button')).toBeVisible();
   });
 
@@ -150,20 +149,19 @@ test.describe('Genomic scores tests', () => {
     await expect(page.locator(`mat-option:has-text("${mpc}")`)).not.toBeVisible();
   });
 
-  test('should check if error message is shown when too many categorical values are selected', async({ page }) => {
+  test('should check error message is shown when no categorical values are selected', async({ page }) => {
     const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
     ' the concept specified by disease identifiers in CLNDISDB';
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clndn}") span`).click();
 
-    await expect(page.locator('gpf-categorical-histogram')).toBeVisible();
+    await expect(page.locator('gpf-categorical-values-dropdown')).toBeVisible();
     await expect(page.getByText(clndn)).toBeVisible();
 
-    await expect(page.locator('gpf-categorical-histogram svg')).toContainText('166066 values');
     await expect(page.locator('gpf-genomic-scores').locator('gpf-errors-alert')).toBeVisible();
     await expect(page.locator('gpf-genomic-scores gpf-errors-alert'))
-      .toHaveText('Please select less than 1000 values.');
+      .toHaveText('Please select at least one value.');
     await expect(page.getByRole('button', {name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', {name: 'Share/save query'})).toBeDisabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
@@ -176,14 +174,23 @@ test.describe('Genomic scores tests', () => {
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await page.locator('#search-box').focus();
+    await page.keyboard.type('Conflicting_classifications_of_pathogenicity');
+    const conflicting = page.locator('mat-option > span > span').filter({hasText: /^Conflicting_classifications_of_pathogenicity \(/});
+    await expect(conflicting).toHaveCount(1);
+    await conflicting.click();
+    await page.locator('#search-box').focus();
+    await page.keyboard.type('Likely_pathogenic');
+    const likelyPath = page.locator('mat-option > span > span').filter({hasText: /^Likely_pathogenic \(/});
+    await expect(likelyPath).toHaveCount(1);
+    await likelyPath.click();
+    await page.locator('#search-box').focus();
+    await page.keyboard.type('Benign/Likely_benign');
+    const benign = page.locator('mat-option > span > span').filter({hasText: /^Benign\/Likely_benign \(/});
+    await expect(benign).toHaveCount(1);
+    await benign.click();
 
-    await page.locator('rect[id="Conflicting_classifications_of_pathogenicity"]').click();
-    await page.locator('rect[id="Likely_pathogenic"]').click();
-    await page.locator('rect[id="Benign/Likely_benign"]').click();
-
-    await expect(page.locator('gpf-genomic-scores-block').getByText('3 values')).toBeVisible();
+    await expect(page.locator('.value-wrapper')).toHaveCount(3);
     await expect(page.locator('gpf-errors-alert').filter({ hasText: 'Please select at least one' })).not.toBeVisible();
 
     await page.getByRole('button', {name: 'Share/save query'}).click();
@@ -191,12 +198,11 @@ test.describe('Genomic scores tests', () => {
     const shareLinkUrl = await page.locator('#link-input').inputValue();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('gpf-genomic-scores-block').getByText('3 values')).toBeVisible();
+    await expect(page.locator('.value-wrapper')).toHaveCount(3);
     await expect(page.locator('gpf-errors-alert').filter({ hasText: 'Please select at least one' })).not.toBeVisible();
-    await expect(page.locator('rect[id="Conflicting_classifications_of_pathogenicity"]'))
-      .toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="Likely_pathogenic"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="Benign/Likely_benign"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(page.locator('#values-list').getByText(/Conflicting_classifications_of_pathogenicity/)).toBeVisible();
+    await expect(page.locator('#values-list').getByText(/Likely_pathogenic \(/)).toBeVisible();
+    await expect(page.locator('#values-list').getByText(/Benign\/Likely_benign \(/)).toBeVisible();
   });
 
   test('should check table result when filtering with categorical histogram', async({ page }) => {
@@ -206,8 +212,6 @@ test.describe('Genomic scores tests', () => {
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
     await page.locator('#search-box').focus();
     await page.keyboard.type('Pathogenic/Likely_pathogenic');
     await page.locator('mat-option:has-text("Pathogenic/Likely_pathogenic (27651)") > span > span').click();
@@ -224,15 +228,11 @@ test.describe('Genomic scores tests', () => {
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clndn}") span`).click();
 
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
-    await page.mouse.down();
-    await page.mouse.move(700, 400, {steps: 3});
-    await page.mouse.up();
-
-    await page.locator('[gpf-histogram-range-selector-line]').nth(1).hover();
-    await page.mouse.down();
-    await page.mouse.move(900, 400, {steps: 3});
-    await page.mouse.up();
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('not_provided');
+    const notProvidedDownload = page.locator('mat-option > span > span').filter({hasText: /^not_provided \(/});
+    await expect(notProvidedDownload).toHaveCount(1);
+    await notProvidedDownload.click();
 
     await page.locator('gpf-effect-types').getByText('All').click();
 
@@ -302,53 +302,13 @@ test.describe('Genomic scores tests', () => {
     await expect(page.locator(`mat-option:has-text("${clinsig}") span`)).toBeVisible();
   });
 
-  test('should check clndn histogram other bar and values count', async({ page }) => {
-    const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
-    ' the concept specified by disease identifiers in CLNDISDB';
 
-    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clndn}") span`).click();
-
-    await expect(page.locator('gpf-categorical-histogram')).toBeVisible();
-    await expect(page.getByText(clndn)).toBeVisible();
-
-    await expect(page.locator('gpf-categorical-histogram svg')).toContainText('166066 values');
-    await page.locator('[gpf-histogram-range-selector-line]').nth(1).hover();
-    await page.mouse.down();
-    await page.mouse.move(1200, 400, {steps: 3});
-    await page.mouse.up();
-
-    await expect(page.locator('gpf-categorical-histogram svg')).toContainText('10 values');
-    await expect(page.locator('rect[id="Other values"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-  });
-
-  test('should check clinsig histogram bars count', async({ page }) => {
+  test('should check clinsig "Other values" bar is not available in dropdown', async({ page }) => {
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
 
-    await expect(page.locator('gpf-genomic-scores').locator('rect[style*="fill: steelblue"]')).toHaveCount(21);
-    await expect(
-      page.locator('gpf-genomic-scores').locator('rect[style*="fill: steelblue"]').nth(20)
-    ).toHaveId('Other values');
-  });
-
-  test('should check clinsig histogram other bar in other modes', async({ page }) => {
-    const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
-    ' multiple values are separated by a vertical bar';
-    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clinsig}") span`).click();
-
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-
-    await expect(
-      page.locator('gpf-genomic-scores').locator('rect[style*="fill: lightsteelblue"]').nth(20)
-    ).toHaveId('Other values');
-
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
     await page.locator('gpf-categorical-values-dropdown #search-box').focus();
     await page.keyboard.type('Other values');
     await expect(page.locator('.values-suggestions-dropdown')).not.toBeVisible();
@@ -365,9 +325,12 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clndn}") span`).click();
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="not_provided"]').click();
+
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('not_provided');
+    const notProvidedPheno = page.locator('mat-option > span > span').filter({hasText: /^not_provided \(/});
+    await expect(notProvidedPheno).toHaveCount(1);
+    await notProvidedPheno.click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
     await page.getByText('Download').click();
@@ -390,18 +353,25 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clndn}") span`).click();
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="not_provided"]').click();
-    await page.locator('rect[id="Primary_ciliary_dyskinesia"]').click();
+
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('not_provided');
+    const notProvidedLoaded = page.locator('mat-option > span > span').filter({hasText: /^not_provided \(/});
+    await expect(notProvidedLoaded).toHaveCount(1);
+    await notProvidedLoaded.click();
+    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await page.keyboard.type('Primary_ciliary_dyskinesia');
+    const primaryCiliary = page.locator('mat-option > span > span').filter({hasText: /^Primary_ciliary_dyskinesia \(/});
+    await expect(primaryCiliary).toHaveCount(1);
+    await primaryCiliary.click();
 
     await page.getByRole('button', {name: 'Share/save query'}).click();
     await expect(page.locator('#save-query-dropdown')).toBeVisible();
     const shareLinkUrl = await page.locator('#link-input').inputValue();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('rect[id="not_provided"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="Primary_ciliary_dyskinesia"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(page.locator('#values-list').getByText(/not_provided \(/)).toBeVisible();
+    await expect(page.locator('#values-list').getByText(/Primary_ciliary_dyskinesia \(/)).toBeVisible();
   });
 
   test('should filter by multiple genomic scores', async({ page }) => {
@@ -412,11 +382,22 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clndn}") span`).click();
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="not_provided"]').click();
-    await page.locator('rect[id="not_specified"]').click();
-    await page.locator('rect[id="Inborn_genetic_diseases"]').click();
+
+    await page.locator('gpf-genomic-scores').nth(0).locator('#search-box').focus();
+    await page.keyboard.type('not_provided');
+    const notProvided = page.locator('mat-option > span > span').filter({hasText: /^not_provided \(/});
+    await expect(notProvided).toHaveCount(1);
+    await notProvided.click();
+    await page.locator('gpf-genomic-scores').nth(0).locator('#search-box').focus();
+    await page.keyboard.type('not_specified');
+    const notSpecified = page.locator('mat-option > span > span').filter({hasText: /^not_specified \(/});
+    await expect(notSpecified).toHaveCount(1);
+    await notSpecified.click();
+    await page.locator('gpf-genomic-scores').nth(0).locator('#search-box').focus();
+    await page.keyboard.type('Inborn_genetic_diseases');
+    const inbornGenetic = page.locator('mat-option > span > span').filter({hasText: /^Inborn_genetic_diseases \(/});
+    await expect(inbornGenetic).toHaveCount(1);
+    await inbornGenetic.click();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
     await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
@@ -426,9 +407,12 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
-    await page.getByRole('button', {name: 'Mode'}).nth(0).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="Uncertain_significance"]').click();
+
+    await page.locator('gpf-genomic-scores').nth(0).locator('#search-box').focus();
+    await page.keyboard.type('Uncertain_significance');
+    const uncertainSig = page.locator('mat-option > span > span').filter({hasText: /^Uncertain_significance \(/});
+    await expect(uncertainSig).toHaveCount(1);
+    await uncertainSig.click();
 
     await page.getByRole('button', {name: 'Table Preview'}).click();
     await expect(page.locator('#variants-count-span > span')).toHaveText('3 variants selected', { timeout: 120000 });
@@ -458,8 +442,7 @@ test.describe('Genomic scores tests', () => {
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${clinsig}") span`).click();
-    await page.getByRole('button', {name: 'Mode'}).nth(1).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+
     await page.locator('#search-box').focus();
     await page.keyboard.type('Pathogenic');
     await page.locator('mat-option:has-text("Pathogenic (158261)") > span > span').click();

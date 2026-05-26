@@ -126,36 +126,6 @@ describe('GenomicScoresComponent', () => {
     }));
   });
 
-  it('should reset state when switching categorical views', () => {
-    const state: GenomicScoreState = {
-      histogramType: 'categorical',
-      score: 'score',
-      rangeStart: null,
-      rangeEnd: null,
-      values: ['val1'],
-      categoricalView: 'range selector'
-    };
-
-    component.localState = state;
-    component.switchCategoricalHistogramView('click selector');
-    expect(component.localState.values).toStrictEqual([]);
-    expect(component.localState.categoricalView).toBe('click selector');
-
-    component.localState.values = ['val1', 'val2'];
-    component.switchCategoricalHistogramView('dropdown selector');
-    expect(component.localState.values).toStrictEqual([]);
-    expect(component.localState.categoricalView).toBe('dropdown selector');
-
-    component.localState.values = ['val1', 'val2'];
-    component.switchCategoricalHistogramView('range selector');
-    expect(component.localState.values).toStrictEqual(['name1', 'name2', 'name3', 'name4', 'name5']);
-    expect(component.localState.categoricalView).toBe('range selector');
-
-    component.switchCategoricalHistogramView('range selector');
-    expect(component.localState.values).toStrictEqual(['name1', 'name2', 'name3', 'name4', 'name5']);
-    expect(component.localState.categoricalView).toBe('range selector');
-  });
-
   it('should replace current selected values', () => {
     const state: GenomicScoreState = {
       histogramType: 'categorical',

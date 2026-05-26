@@ -72,8 +72,8 @@ export class GenomicScoresBlockComponent implements OnInit {
       state.histogramType = 'categorical';
       state.rangeStart = null;
       state.rangeEnd = null;
-      state.values = score.histogram.values.map(value => value.name);
-      state.categoricalView = 'range selector';
+      state.values = [];
+      state.categoricalView = 'dropdown selector';
     } else {
       state.histogramType = 'continuous';
       state.rangeStart = score.histogram.rangeMin;

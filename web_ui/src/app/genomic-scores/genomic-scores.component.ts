@@ -9,7 +9,7 @@ import {
 } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
-import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
+import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
 
 @Component({
   selector: 'gpf-genomic-scores',
@@ -24,7 +24,6 @@ export class GenomicScoresComponent implements OnInit {
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
   public histogramErrors: string[] = [];
-  private readonly maxBarCount = 25;
 
   // Refactor needed, not removal.
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
@@ -39,17 +38,11 @@ export class GenomicScoresComponent implements OnInit {
     this.localState = cloneDeep(this.initialState);
     this.validateState();
 
-    const histogram = this.selectedGenomicScore.histogram;
-    if (this.isCategoricalHistogram(histogram)) {
-      let barCount = 0;
-      if (histogram.displayedValuesCount) {
-        barCount = histogram.displayedValuesCount;
-      } else if (histogram.displayedValuesPercent) {
-        barCount = Math.floor(histogram.values.length / 100 * histogram.displayedValuesPercent);
-      }
-      if (barCount > this.maxBarCount) {
-        this.switchCategoricalHistogramView('dropdown selector');
-      }
+    if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)
+        && this.localState.categoricalView !== 'dropdown selector') {
+      this.localState.values = [];
+      this.localState.categoricalView = 'dropdown selector';
+      this.updateHistogramState();
     }
   }
 
@@ -80,19 +73,6 @@ export class GenomicScoresComponent implements OnInit {
   private updateHistogramState(): void {
     this.validateState();
     this.updateState.emit(this.localState);
-  }
-
-  public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
-    if (view === this.localState.categoricalView) {
-      return;
-    }
-    if (view === 'click selector' || view === 'dropdown selector') {
-      this.localState.values = [];
-    } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
-      this.localState.values = this.selectedGenomicScore.histogram.values.map(v => v.name);
-    }
-    this.localState.categoricalView = view;
-    this.updateHistogramState();
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {

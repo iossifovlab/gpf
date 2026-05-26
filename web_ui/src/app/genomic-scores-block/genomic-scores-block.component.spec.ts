@@ -218,8 +218,8 @@ describe('GenomicScoresBlockComponent', () => {
       score: 'score4',
       rangeStart: null,
       rangeEnd: null,
-      values: ['name6', 'name7', 'name8', 'name9', 'name10'],
-      categoricalView: 'range selector',
+      values: [],
+      categoricalView: 'dropdown selector',
     };
 
     component.addFilter(score, 3);
