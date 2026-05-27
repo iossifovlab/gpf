@@ -136,25 +136,28 @@ CI flow (master multibranch — `Jenkinsfile`):
 
 1. `web_ui` stage builds the SPA with
    `npm run build -- --configuration conda --base-href '/gpfjs/' --deploy-url '/static/gpfjs/gpfjs/'`
-   and copies `web_ui/dist/gpfjs/` to `dist/web_ui/gpfjs/`
-   (directory, not tarball — rattler-build auto-extracts
-   `.tar.gz` `path:` sources but treats directories as
-   copy-as-is, which preserves the on-disk layout the recipe
-   expects).
-2. `Conda packages` stage iterates the recipes in order
-   `core federation rest_client web_api`. The web_api recipe
-   lists the SPA tree as a required `source:` with
-   `target_directory: gpfjs-spa-src` and asserts `index.html`
-   exists post-copy; missing tree fails the recipe loudly.
-   The ordering means a SPA-side regression doesn't block the
-   other three artefacts.
+   and packages `web_ui/dist/gpfjs/` as
+   `dist/web_ui/gpfjs-spa.tar.gz`.
+2. `Conda packages` stage extracts the tarball back into
+   `dist/web_ui/gpfjs/` (with `--strip-components=1` to drop
+   the leading `gpfjs/` prefix the tar carries), then iterates
+   the recipes in order `core federation rest_client web_api`.
+   The web_api recipe lists the extracted SPA tree as a
+   required `source:` with `target_directory: gpfjs-spa-src`
+   and asserts `index.html` exists post-copy; missing tree
+   fails the recipe loudly. The ordering means a SPA-side
+   regression doesn't block the other three artefacts.
+   (Feeding the tarball directly to rattler-build does not
+   work — it auto-extracts `.tar.gz` `path:` sources with an
+   undocumented strip-top-level behaviour, so we control the
+   extraction explicitly in the Jenkinsfile.)
 3. `archiveArtifacts` includes
-   `dist/web_ui/gpfjs/**` with `fingerprint: true`,
+   `dist/web_ui/gpfjs-spa.tar.gz` with `fingerprint: true`,
    mirroring the gain wheel pattern so the release pipeline
    can find it later.
 
 Release flow (`Jenkinsfile.release`): `Fetch upstream
-artefacts` copies the SPA tree (alongside
+artefacts` copies the SPA tarball (alongside
 `dist/base-images.lock` and `dist/gain/*.whl`) from the
 master CI build matching the tagged commit, then
 `Build conda packages` uses it — same reordered loop.

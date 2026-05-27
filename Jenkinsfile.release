@@ -413,21 +413,22 @@ pipeline {
             //     /wheels — pinning here means the release publishes
             //     exactly what passed CI, not whatever gain happens
             //     to be at when the release dispatches.
-            //   - dist/web_ui/gpfjs/**: the conda-flavoured Angular
-            //     SPA dist tree, fed into the gpf-web conda recipe
-            //     so the released gpf-web package bundles the SPA.
-            //     Pulled here (not rebuilt) so the released conda's
-            //     SPA is byte-identical to what master CI tested
-            //     with — same precedent as the gain wheel, no
-            //     GAIN_PIN_VERSION-equivalent override (the SPA is
-            //     part of the gpf repo itself). Archived/fetched as
-            //     a directory tree rather than a tarball because
-            //     rattler-build auto-extracts .tar.gz path: sources.
+            //   - dist/web_ui/gpfjs-spa.tar.gz: the conda-flavoured
+            //     Angular SPA tarball, fed into the gpf-web conda
+            //     recipe so the released gpf-web package bundles
+            //     the SPA. Pulled here (not rebuilt) so the
+            //     released conda's SPA is byte-identical to what
+            //     master CI tested with — same precedent as the
+            //     gain wheel, no GAIN_PIN_VERSION-equivalent
+            //     override (the SPA is part of the gpf repo
+            //     itself). The Build conda packages stage below
+            //     extracts the tarball into dist/web_ui/gpfjs/
+            //     before rattler-build runs.
             //
             // V2 override: if params.GAIN_PIN_VERSION is set, the
             // gain wheel comes from wheels.seqpipe.org/gain/
             // instead of upstream copyArtifacts. base-images.lock
-            // and the SPA tree still come from upstream master
+            // and the SPA tarball still come from upstream master
             // (the SPA is gpf-side, unrelated to gain). Trusted-
             // override semantics — the swapped wheel is NOT re-
             // tested; the operator certifies API compatibility
@@ -439,13 +440,13 @@ pipeline {
             steps {
                 script {
                     if (params.GAIN_PIN_VERSION) {
-                        // Pinned path: base-images.lock + SPA tree
-                        // from upstream; gain wheel from
+                        // Pinned path: base-images.lock + SPA
+                        // tarball from upstream; gain wheel from
                         // wheels.seqpipe.org/gain/.
                         copyArtifacts(
                             projectName: params.UPSTREAM_PROJECT,
                             selector: specific(env.UPSTREAM_BUILD_NUMBER),
-                            filter: 'dist/base-images.lock, dist/web_ui/gpfjs/**',
+                            filter: 'dist/base-images.lock, dist/web_ui/gpfjs-spa.tar.gz',
                             fingerprintArtifacts: true,
                         )
                         sh '''
@@ -465,7 +466,7 @@ pipeline {
                         copyArtifacts(
                             projectName: params.UPSTREAM_PROJECT,
                             selector: specific(env.UPSTREAM_BUILD_NUMBER),
-                            filter: 'dist/base-images.lock, dist/gain/*.whl, dist/web_ui/gpfjs/**',
+                            filter: 'dist/base-images.lock, dist/gain/*.whl, dist/web_ui/gpfjs-spa.tar.gz',
                             fingerprintArtifacts: true,
                         )
                     }
@@ -474,16 +475,14 @@ pipeline {
                     cat dist/base-images.lock
                     ls -la dist/gain/
                     test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
-                    # SPA tree is REQUIRED — gpf-web conda recipe
+                    # SPA tarball is REQUIRED — gpf-web conda recipe
                     # will fail rattler-build's source-staging if it
                     # is missing, but fail loud here so the operator
                     # sees a clear "upstream master build did not
-                    # archive the SPA dist tree" message instead of a
-                    # rattler-build internals trace later. Probing
-                    # index.html (the SPA shell) is sufficient since
-                    # the angular build always emits it.
-                    ls -la dist/web_ui/gpfjs/ 2>&1 | head -20
-                    test -f dist/web_ui/gpfjs/index.html
+                    # archive the SPA tarball" message instead of a
+                    # rattler-build internals trace later.
+                    ls -la dist/web_ui/
+                    test -f dist/web_ui/gpfjs-spa.tar.gz
                 '''
                 // Surface the bundled gain version everywhere it
                 // matters: top-of-build log, Notify Zulip message,
@@ -596,10 +595,21 @@ pipeline {
                         | sed 's#-py3-none-any.whl$##')
                     echo "VCS_VERSION=$VCS_VERSION"
 
+                    # Expand the SPA tarball into dist/web_ui/gpfjs/
+                    # — the gpf-web conda recipe consumes that
+                    # directory as a `path:` source. See the master
+                    # Jenkinsfile's Conda packages stage for the
+                    # explanation; same logic here. --strip-components=1
+                    # drops the leading gpfjs/ prefix the tar carries.
+                    rm -rf dist/web_ui/gpfjs
+                    mkdir -p dist/web_ui/gpfjs
+                    tar -xzf dist/web_ui/gpfjs-spa.tar.gz \
+                        -C dist/web_ui/gpfjs --strip-components=1
+
                     mkdir -p dist/conda
                     DOCKER_USER="$(id -u):$(id -g)"
                     # web_api built LAST so a missing/malformed
-                    # dist/web_ui/gpfjs/ (required by its
+                    # dist/web_ui/gpfjs-spa.tar.gz (required by its
                     # recipe) doesn't abort core/federation/rest_client
                     # before they get a chance to be built. set -e in
                     # this script means a web_api conda failure still

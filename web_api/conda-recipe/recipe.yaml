@@ -22,13 +22,18 @@
 #      auto-extracts .tar.gz path: sources but treats directory
 #      path: sources as contents-copied-as-is. target_directory
 #      isolates the SPA contents from the wheel + LICENSE sources
-#      that share the work dir root.
+#      that share the work dir root. (CI archives this tree as a
+#      single .tar.gz for a clean Jenkins artefact list and
+#      extracts it back into this directory in the Conda packages
+#      stage before rattler-build runs; the recipe itself only
+#      ever sees the extracted directory.)
 #
 # REQUIRED — recipe fails fast if the SPA tree is missing.
 # Locally, build it via the three-step in README.md ("Conda
 # packaging"). In CI it falls out of the master multibranch
-# Jenkinsfile's web_ui stage; gpf-release fetches it through
-# copyArtifacts from the upstream master build.
+# Jenkinsfile's web_ui stage; gpf-release fetches the tarball
+# through copyArtifacts from the upstream master build and
+# extracts it before invoking rattler-build.
 
 schema_version: 1
 

@@ -328,10 +328,12 @@ cd web_api && uv build --package gpf-web --out-dir ../dist/web_api && cd ..
 #    --deploy-url match the URL layout the Django gpfjs app
 #    expects (STATIC_URL='/static/', index served at
 #    /gpfjs/). environment.conda.ts is swapped in by
-#    angular.json's `conda` configuration. Copy (don't tar)
-#    because rattler-build auto-extracts .tar.gz path: sources;
-#    directory path: sources are copied as-is, preserving the
-#    on-disk layout the recipe expects.
+#    angular.json's `conda` configuration. For local builds
+#    we copy the dist tree directly; the recipe consumes it as
+#    a `path:` directory source. (CI archives the same tree as
+#    dist/web_ui/gpfjs-spa.tar.gz for a clean Jenkins artefact
+#    list and extracts it back in the Conda packages stage —
+#    locally there's no archival step, so cp is sufficient.)
 cd web_ui
 npm ci
 npm run build -- --configuration conda \
