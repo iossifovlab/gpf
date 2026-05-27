@@ -10,7 +10,7 @@
 //
 // Expected Jenkins job setup:
 //   - Script path: docs_e2e/Jenkinsfile.docs-e2e
-//   - Defined by docs_e2e/jenkins-jobs/docs-e2e.groovy as the
+//   - Defined by docs_e2e/jenkins-jobs/docs_e2e.groovy as the
 //     `gpf-docs-e2e` pipelineJob, seeded by the main gpf
 //     Jenkinsfile's `Apply Job DSL` stage on master.
 //

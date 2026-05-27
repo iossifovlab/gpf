@@ -118,7 +118,7 @@ docs_e2e/
 ├── README.md                # this file
 ├── Jenkinsfile.docs-e2e     # downstream pipeline
 ├── jenkins-jobs/
-│   └── docs-e2e.groovy      # pipelineJob DSL, seeded by main gpf Jenkinsfile
+│   └── docs_e2e.groovy      # pipelineJob DSL, seeded by main gpf Jenkinsfile
 ├── conftest.py              # fixtures: install_gpf_web, getting_started_clone, …
 ├── guide_assertions.py      # deep module — uniform failure-message helpers
 ├── test_guide_assertions.py # unit tests for the module (pure Python)
