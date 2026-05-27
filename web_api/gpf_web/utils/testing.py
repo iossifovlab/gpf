@@ -865,6 +865,7 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         "--person-column", "personId",
         "-o", str(instance_path / "pheno" / "study_1_pheno"),
         "--task-status-dir", str(pheno_path / "status"),
+        "--task-log-dir", str(pheno_path / "task-log"),
         "--regression", str(pheno_path / "regressions.yaml"),
     ])
     build_browser([
@@ -873,6 +874,7 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         "-j", "1",
         "--force",
         "--task-status-dir", str(pheno_path / "status"),
+        "--task-log-dir", str(pheno_path / "task-log"),
     ])
 
 

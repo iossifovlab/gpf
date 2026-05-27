@@ -399,3 +399,66 @@ def test_import_generates_necessary_pedigree_columns(
         "status",
         "sex",
     })
+
+
+def test_main_defaults_task_log_dir_under_work_dir(
+    import_data_fixture: tuple[Path, Path, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """Regression test for #869.
+
+    When ``--task-log-dir`` is not passed, ``main()`` must anchor
+    the log dir under ``work_dir`` (== ``-o``), not under the
+    current working directory. Without this, parallel
+    pytest-xdist workers race on a shared CWD-rooted ``.task-log``.
+    """
+    ped_path, instruments_dir, out_dir, tasks_dir = import_data_fixture
+    cwd_isolated = tmp_path_factory.mktemp("cwd_isolated")
+    monkeypatch.chdir(cwd_isolated)
+
+    argv = [
+        "-p", str(ped_path.absolute()),
+        "-i", str(instruments_dir.absolute()),
+        "-j", "1",
+        "-o", str(out_dir.absolute()),
+        "-d", str(tasks_dir.absolute()),
+        "--pheno-id", "test",
+    ]
+    main(argv)
+
+    assert not (cwd_isolated / ".task-log").exists()
+    assert (out_dir / ".task-log" / "test").exists()
+
+
+def test_main_defaults_task_status_dir_under_work_dir(
+    import_data_fixture: tuple[Path, Path, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """Regression test for #869, sibling of the task-log default.
+
+    When ``-d``/``--task-status-dir`` is not passed, ``main()``
+    must anchor the status dir under ``work_dir``, not under CWD.
+    """
+    ped_path, instruments_dir, out_dir, _ = import_data_fixture
+    cwd_isolated = tmp_path_factory.mktemp("cwd_isolated_status")
+    monkeypatch.chdir(cwd_isolated)
+
+    argv = [
+        "-p", str(ped_path.absolute()),
+        "-i", str(instruments_dir.absolute()),
+        "-j", "1",
+        "-o", str(out_dir.absolute()),
+        "--pheno-id", "test",
+    ]
+    main(argv)
+
+    # The bug is "task-progress leaks into CWD". Gain only
+    # materialises .task-progress on disk when a task actually writes
+    # status (unlike .task-log, which ensure_log_dir creates eagerly),
+    # so asserting on its work_dir-side presence would test gain's
+    # internals rather than the regression. The negative-only check
+    # is enough: as long as the dir is not CWD-rooted, the race
+    # surface is gone.
+    assert not (cwd_isolated / ".task-progress").exists()

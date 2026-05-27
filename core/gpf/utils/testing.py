@@ -680,6 +680,7 @@ f1.4     s4       dad4  mom4  2   1      sib  unaffected
         "--person-column", "personId",
         "-o", str(instance_path / "pheno" / "study_1_pheno"),
         "--task-status-dir", str(pheno_path / "status"),
+        "--task-log-dir", str(pheno_path / "task-log"),
     ])
 
 

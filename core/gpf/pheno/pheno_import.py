@@ -177,7 +177,14 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         metavar="<person column>",
     )
 
-    TaskGraphCli.add_arguments(parser, use_commands=False)
+    # default_task_status_dir=None: opt into None-as-sentinel so the
+    # default-resolution block in main() (see #869) can anchor the
+    # status dir under the import's work_dir. Without this override,
+    # TaskGraphCli supplies the literal "./.task-progress" default and
+    # the relative path resolves against the caller's CWD — which is
+    # the race-prone behaviour we are fixing.
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, default_task_status_dir=None)
 
     return parser
 
@@ -283,6 +290,20 @@ def main(argv: list[str] | None = None) -> int:
     try:
         import_config = transform_cli_args(args)
         gpf_instance = get_gpf_instance(import_config)
+        # Default the task graph status + log dirs to paths anchored
+        # under the import's work_dir when the caller didn't pass
+        # --task-status-dir / --task-log-dir explicitly. Mirrors the
+        # canonical entry point in import_tools.py:72-74. Without these
+        # defaults, gain's TaskGraphCli falls back to
+        # os.getcwd() + ".task-log", which (a) leaks state into the
+        # CWD and (b) makes parallel pytest-xdist workers race on the
+        # shared mkdir. See iossifovlab/gpf#869.
+        if args.task_status_dir is None:
+            args.task_status_dir = os.path.join(
+                import_config.work_dir, ".task-progress", import_config.id)
+        if args.task_log_dir is None:
+            args.task_log_dir = os.path.join(
+                import_config.work_dir, ".task-log", import_config.id)
         import_pheno_data(import_config, gpf_instance, args)
     except KeyboardInterrupt:
         return 0
