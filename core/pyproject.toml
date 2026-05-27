@@ -61,7 +61,6 @@ dynamic = ["version"]
 Homepage = "https://github.com/IossifovLab/gpf"
 
 [project.scripts]
-grr_cache_repo = "gpf.tools.grr_cache_repo:cli_cache_repo"
 annotate_schema2_parquet = "gpf.parquet.schema2.annotate_schema2_parquet:cli"
 pheno_import = "gpf.pheno.pheno_import:main"
 import_tools_pheno = "gpf.pheno.import_tools:main"

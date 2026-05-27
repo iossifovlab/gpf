@@ -1069,7 +1069,7 @@ wheels = [
 
 [[package]]
 name = "gain-core"
-version = "2026.5.4.post1.dev3+g963de40c3"
+version = "2026.5.6.post1.dev8+g79167884d"
 source = { registry = "dist/gain" }
 dependencies = [
     { name = "apsw" },
@@ -1097,9 +1097,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "s3fs" },
 ]
-sdist = { path = "gain_core-2026.5.4.post1.dev3+g963de40c3.tar.gz" }
+sdist = { path = "gain_core-2026.5.6.post1.dev8+g79167884d.tar.gz" }
 wheels = [
-    { path = "gain_core-2026.5.4.post1.dev3+g963de40c3-py3-none-any.whl" },
+    { path = "gain_core-2026.5.6.post1.dev8+g79167884d-py3-none-any.whl" },
 ]
 
 [[package]]
