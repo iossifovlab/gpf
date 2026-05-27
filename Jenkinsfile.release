@@ -400,7 +400,7 @@ pipeline {
         }
 
         stage('Fetch upstream artefacts') {
-            // Pull two files from the master build identified
+            // Pull three files from the master build identified
             // above:
             //   - dist/base-images.lock: digests of python-slim /
             //     node-alpine / httpd-alpine used by the master
@@ -413,29 +413,37 @@ pipeline {
             //     /wheels — pinning here means the release publishes
             //     exactly what passed CI, not whatever gain happens
             //     to be at when the release dispatches.
+            //   - dist/web_ui/gpfjs-spa.tar.gz: the conda-flavoured
+            //     Angular SPA tarball, fed into the gpf-web conda
+            //     recipe so the released gpf-web package bundles the
+            //     SPA. Pulled here (not rebuilt) so the released
+            //     conda's SPA is byte-identical to what master CI
+            //     tested with — same precedent as the gain wheel,
+            //     no GAIN_PIN_VERSION-equivalent override (the SPA
+            //     is part of the gpf repo itself).
             //
             // V2 override: if params.GAIN_PIN_VERSION is set, the
             // gain wheel comes from wheels.seqpipe.org/gain/
             // instead of upstream copyArtifacts. base-images.lock
-            // still comes from upstream master (it's the digest
-            // record for THIS gpf commit's build, unrelated to
-            // gain). Trusted-override semantics — the swapped wheel
-            // is NOT re-tested; the operator certifies API
-            // compatibility (see V2 design grilling Q3).
+            // and the SPA tarball still come from upstream master
+            // (the SPA is gpf-side, unrelated to gain). Trusted-
+            // override semantics — the swapped wheel is NOT re-
+            // tested; the operator certifies API compatibility
+            // (see V2 design grilling Q3).
             //
             // fingerprintArtifacts:true pairs with the master
-            // archiveArtifacts' fingerprint:true so both files are
+            // archiveArtifacts' fingerprint:true so all files are
             // locatable even if the build record itself rotated.
             steps {
                 script {
                     if (params.GAIN_PIN_VERSION) {
-                        // Pinned path: base-images.lock only from
-                        // upstream; gain wheel from
+                        // Pinned path: base-images.lock + SPA
+                        // tarball from upstream; gain wheel from
                         // wheels.seqpipe.org/gain/.
                         copyArtifacts(
                             projectName: params.UPSTREAM_PROJECT,
                             selector: specific(env.UPSTREAM_BUILD_NUMBER),
-                            filter: 'dist/base-images.lock',
+                            filter: 'dist/base-images.lock, dist/web_ui/gpfjs-spa.tar.gz',
                             fingerprintArtifacts: true,
                         )
                         sh '''
@@ -450,12 +458,12 @@ pipeline {
                                 "$gain_url"
                         '''
                     } else {
-                        // Default V1 path: copy both files from
+                        // Default V1 path: copy all three from
                         // upstream gpf-master CI build.
                         copyArtifacts(
                             projectName: params.UPSTREAM_PROJECT,
                             selector: specific(env.UPSTREAM_BUILD_NUMBER),
-                            filter: 'dist/base-images.lock, dist/gain/*.whl',
+                            filter: 'dist/base-images.lock, dist/gain/*.whl, dist/web_ui/gpfjs-spa.tar.gz',
                             fingerprintArtifacts: true,
                         )
                     }
@@ -464,6 +472,14 @@ pipeline {
                     cat dist/base-images.lock
                     ls -la dist/gain/
                     test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
+                    # SPA tarball is REQUIRED — gpf-web conda recipe
+                    # will fail rattler-build's source-staging if it
+                    # is missing, but fail loud here so the operator
+                    # sees a clear "upstream master build did not
+                    # archive the SPA tarball" message instead of a
+                    # rattler-build internals trace later.
+                    ls -la dist/web_ui/
+                    test -f dist/web_ui/gpfjs-spa.tar.gz
                 '''
                 // Surface the bundled gain version everywhere it
                 // matters: top-of-build log, Notify Zulip message,
@@ -578,7 +594,15 @@ pipeline {
 
                     mkdir -p dist/conda
                     DOCKER_USER="$(id -u):$(id -g)"
-                    for proj in core web_api federation rest_client; do
+                    # web_api built LAST so a missing/malformed
+                    # dist/web_ui/gpfjs-spa.tar.gz (required by its
+                    # recipe) doesn't abort core/federation/rest_client
+                    # before they get a chance to be built. set -e in
+                    # this script means a web_api conda failure still
+                    # fails the stage and blocks the release — we just
+                    # stop coupling the other three artefacts to a
+                    # SPA-side regression.
+                    for proj in core federation rest_client web_api; do
                         mkdir -p conda/$proj
                         docker run --rm \
                             --user "$DOCKER_USER" \

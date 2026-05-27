@@ -111,6 +111,61 @@ members from path sources via `uv sync`, which requires
 hatchling to build the package metadata — strict
 wheels-only would fail by design there.
 
+### Conda packaging: gpf-web bundles the SPA
+
+The `gpf-web` conda recipe
+(`web_api/conda-recipe/recipe.yaml`) bundles the Angular SPA
+into the installed Django app at
+`<site-packages>/gpfjs/static/gpfjs/gpfjs/` — note the install
+prefix is `gpfjs/`, NOT `gpf_web/gpfjs/`: hatchling's
+`[tool.hatch.build.targets.wheel] packages` directive in
+`web_api/pyproject.toml` lifts each app to the top level.
+The `gpfjs/views.py` `index` view probes
+`finders.find("gpfjs/gpfjs/index.html")` and falls back to
+`templates/gpfjs/empty/empty.html` only when nothing's there
+— so a conda install gets the live SPA, a plain
+`pip install` of the wheel gets the empty fallback.
+
+The bundle is **conda-only**. The wheel stays SPA-free
+because `web_api/Dockerfile.production` consumes the same
+wheel and pairs it with the apache-served `gpf-web-ui`
+image; duplicating the SPA into the wheel would inflate the
+backend image without changing what's served.
+
+CI flow (master multibranch — `Jenkinsfile`):
+
+1. `web_ui` stage builds the SPA with
+   `npm run build -- --configuration conda --base-href '/gpfjs/' --deploy-url '/static/gpfjs/gpfjs/'`
+   and tars `web_ui/dist/gpfjs/` into
+   `dist/web_ui/gpfjs-spa.tar.gz`.
+2. `Conda packages` stage iterates the recipes in order
+   `core federation rest_client web_api`. The web_api recipe
+   lists the SPA tarball as a required `source:` and
+   asserts `index.html` exists post-untar; missing tarball
+   fails the recipe loudly. The ordering means a SPA-side
+   regression doesn't block the other three artefacts.
+3. `archiveArtifacts` includes
+   `dist/web_ui/gpfjs-spa.tar.gz` with `fingerprint: true`,
+   mirroring the gain wheel pattern so the release pipeline
+   can find it later.
+
+Release flow (`Jenkinsfile.release`): `Fetch upstream
+artefacts` copies the SPA tarball (alongside
+`dist/base-images.lock` and `dist/gain/*.whl`) from the
+master CI build matching the tagged commit, then
+`Build conda packages` uses it — same reordered loop.
+No re-build, so the released conda's SPA is byte-identical
+to what master CI tested with.
+
+For the local-build three-step (when iterating on the recipe
+itself), see `README.md` → "Conda packaging".
+
+The `--deploy-url '/static/gpfjs/gpfjs/'` baked into the
+build hardcodes the SPA's asset URLs to assume
+`STATIC_URL == '/static/'`. Don't change Django's
+`STATIC_URL` for conda-installed gpf-web without rebuilding
+the SPA with a matching deploy-url.
+
 ## Commands
 
 ### Testing
