@@ -35,6 +35,20 @@ RUN apt-get update \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# conda-index in the BASE env. The upstream gpf master archive
+# ships `dist/conda/*.conda` as a flat directory of artefacts,
+# not as a proper conda channel layout. mamba cannot install from
+# it as `-c file://...` without `noarch/repodata.json`. The
+# conftest's `conda_channel` fixture invokes
+# `/opt/conda/bin/python -m conda_index` (BASE env's python) to
+# build that index in a tempdir before the install runs.
+#
+# conda-index has a runtime dep on the `conda` Python module —
+# easier to host it in the base env where conda already lives
+# than to pull conda into the driver env.
+RUN mamba install -y -n base -c conda-forge conda-index \
+    && mamba clean -afy
+
 # Driver env. python-version 3.12 matches gpf-monorepo's
 # requires-python so subprocess invocations of gpf-shipped CLIs
 # from this env don't hit a Python-version mismatch (they run
@@ -46,15 +60,7 @@ RUN mamba create -y -n driver python=3.12 \
         pytest-timeout \
         httpx \
         pyyaml \
-        conda-index \
     && mamba clean -afy
-
-# conda-index above: the upstream gpf master archive ships
-# `dist/conda/*.conda` as a flat directory of artefacts, not as a
-# proper conda channel layout. mamba cannot install from it as
-# `-c file://...` without `noarch/repodata.json`. The conftest's
-# `conda_channel` fixture uses `python -m conda_index` to build
-# that index in a tempdir before the install runs.
 
 # The Jenkinsfile mounts the gpf workspace at /workspace and
 # invokes pytest from there. Working dir set here so an ad-hoc
