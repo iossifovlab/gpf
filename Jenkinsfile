@@ -1229,7 +1229,7 @@ pipeline {
                     // epic) and #872 (v1 infrastructure +
                     // main-body suite). Pipeline definition at
                     // docs_e2e/Jenkinsfile.docs-e2e, materialised
-                    // by docs_e2e/jenkins-jobs/docs-e2e.groovy
+                    // by docs_e2e/jenkins-jobs/docs_e2e.groovy
                     // via the Apply Job DSL stage above.
                     //
                     // Same shape as the other Trigger stages:
