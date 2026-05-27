@@ -69,12 +69,17 @@ def conda_channel():
             f"DOCS_E2E_CHANNEL={path} does not exist or is not a "
             f"directory. The Jenkinsfile copyArtifacts step should "
             f"populate dist/conda/; for local runs, point this at "
-            f"a directory of gpf_web-*.conda files.",
+            f"a directory of gpf-web-*.conda files.",
             pytrace=False,
         )
-    if not any(path.glob("gpf_web-*.conda")):
+    # The conda package name (per web_api/conda-recipe/recipe.yaml
+    # `name: gpf-web`) uses a dash. The Python module name
+    # `gpf_web` uses an underscore — conda normalizes between the
+    # two so `mamba install gpf_web` resolves to the dash-named
+    # package, but the on-disk artefact is always `gpf-web-*.conda`.
+    if not any(path.glob("gpf-web-*.conda")):
         pytest.fail(
-            f"No gpf_web-*.conda found in {path}. The freshly-built "
+            f"No gpf-web-*.conda found in {path}. The freshly-built "
             f"conda artefact this suite is supposed to test is "
             f"missing.",
             pytrace=False,
