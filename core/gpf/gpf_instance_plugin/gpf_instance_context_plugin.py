@@ -76,6 +76,9 @@ class GPFInstanceContextProvider(GenomicContextProvider):
     def init(self, **kwargs: Any) -> GenomicContext | None:
         """Initialize the GPF instance genomic context."""
         # pylint: disable=import-outside-toplevel
+        from gain.genomic_resources.repository_factory import (
+            build_genomic_resource_repository,
+        )
         from gpf.gpf_instance.gpf_instance import GPFInstance
         gpf_instance = kwargs.get("gpf_instance")
         if gpf_instance is not None:
@@ -84,9 +87,21 @@ class GPFInstanceContextProvider(GenomicContextProvider):
                     f"Invalid type for gpf_instance: {type(gpf_instance)}")
             return GPFInstanceGenomicContext(gpf_instance)
 
+        grr = None
+        if kwargs.get("grr_filename") is not None:
+            grr = build_genomic_resource_repository(
+                file_name=kwargs["grr_filename"])
+        elif kwargs.get("grr_directory") is not None:
+            grr = build_genomic_resource_repository({
+                "id": "local",
+                "type": "directory",
+                "directory": kwargs["grr_directory"],
+            })
+
         try:
             gpf_instance = GPFInstance.build(
-                config_filename=kwargs.get("instance"))
+                config_filename=kwargs.get("instance"),
+                grr=grr)
         except ValueError:
             return None
 
