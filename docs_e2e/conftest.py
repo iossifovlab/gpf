@@ -57,16 +57,33 @@ def _run(cmd, *, cwd=None, env=None, check=True, timeout=600):
 
 
 @pytest.fixture(scope="session")
-def conda_channel():
-    """Path to the local conda channel of freshly-built gpf-web
-    artefacts. Errors loud if absent — there is nothing useful
-    this suite can do without it."""
-    path = Path(os.environ.get(
+def conda_channel(tmp_path_factory):
+    """Path to a freshly-indexed local conda channel built from the
+    upstream gpf master archive's .conda artefacts.
+
+    The upstream Jenkins copyArtifacts step leaves
+    `DOCS_E2E_CHANNEL` as a *flat* directory of `.conda` files. A
+    proper conda channel needs a `noarch/` (and/or `linux-64/`)
+    subdirectory layout plus `repodata.json`. Without those, mamba
+    fails with `Could not read a file:// file […]/noarch/repodata.json`.
+
+    The fixture builds a session-scoped indexed channel in a tempdir:
+
+      1. Hardlink (fall back to copy) every `.conda` into
+         <tempdir>/noarch/ — the gpf packages all carry the `pyh*`
+         build tag indicating noarch/python, so they live there.
+      2. Run `python -m conda_index <tempdir>` to generate
+         `<tempdir>/noarch/repodata.json`.
+
+    Mamba then accepts `-c file://<tempdir>` and the install
+    proceeds. Source remains untouched (often a bind-mounted RO
+    workspace; tempdir keeps mutations local)."""
+    src = Path(os.environ.get(
         "DOCS_E2E_CHANNEL", "/workspace/dist/conda",
     ))
-    if not path.is_dir():
+    if not src.is_dir():
         pytest.fail(
-            f"DOCS_E2E_CHANNEL={path} does not exist or is not a "
+            f"DOCS_E2E_CHANNEL={src} does not exist or is not a "
             f"directory. The Jenkinsfile copyArtifacts step should "
             f"populate dist/conda/; for local runs, point this at "
             f"a directory of gpf-web-*.conda files.",
@@ -77,14 +94,38 @@ def conda_channel():
     # `gpf_web` uses an underscore — conda normalizes between the
     # two so `mamba install gpf_web` resolves to the dash-named
     # package, but the on-disk artefact is always `gpf-web-*.conda`.
-    if not any(path.glob("gpf-web-*.conda")):
+    if not any(src.glob("gpf-web-*.conda")):
         pytest.fail(
-            f"No gpf-web-*.conda found in {path}. The freshly-built "
+            f"No gpf-web-*.conda found in {src}. The freshly-built "
             f"conda artefact this suite is supposed to test is "
             f"missing.",
             pytrace=False,
         )
-    return path
+
+    channel = tmp_path_factory.mktemp("conda-channel", numbered=False)
+    noarch = channel / "noarch"
+    noarch.mkdir()
+    for conda_file in src.glob("*.conda"):
+        target = noarch / conda_file.name
+        try:
+            os.link(conda_file, target)
+        except OSError:
+            # Cross-filesystem or hardlink not permitted; fall back.
+            shutil.copy2(conda_file, target)
+
+    result = _run(
+        ["python", "-m", "conda_index", str(channel)],
+        timeout=300,
+    )
+    if result.returncode != 0:
+        pytest.fail(
+            "python -m conda_index failed:\n"
+            f"  stdout: {result.stdout.decode(errors='replace')[-2000:]}\n"
+            f"  stderr: {result.stderr.decode(errors='replace')[-2000:]}",
+            pytrace=False,
+        )
+
+    return channel
 
 
 @pytest.fixture(scope="session")

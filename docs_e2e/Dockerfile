@@ -46,7 +46,15 @@ RUN mamba create -y -n driver python=3.12 \
         pytest-timeout \
         httpx \
         pyyaml \
+        conda-index \
     && mamba clean -afy
+
+# conda-index above: the upstream gpf master archive ships
+# `dist/conda/*.conda` as a flat directory of artefacts, not as a
+# proper conda channel layout. mamba cannot install from it as
+# `-c file://...` without `noarch/repodata.json`. The conftest's
+# `conda_channel` fixture uses `python -m conda_index` to build
+# that index in a tempdir before the install runs.
 
 # The Jenkinsfile mounts the gpf workspace at /workspace and
 # invokes pytest from there. Working dir set here so an ad-hoc
