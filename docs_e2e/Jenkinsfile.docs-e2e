@@ -164,8 +164,14 @@ pipeline {
                 }
                 sh '''
                     ls -la dist/conda/
-                    test -n "$(ls dist/conda/gpf_web-*.conda 2>/dev/null)" \
-                        || { echo "ERROR: no gpf_web-*.conda in dist/conda/" >&2; exit 1; }
+                    # The conda package name is `gpf-web` (dash; per
+                    # web_api/conda-recipe/recipe.yaml). The Python
+                    # module is `gpf_web` (underscore). Conda
+                    # normalizes between the two for `mamba install`,
+                    # but the on-disk filename is always the dashed
+                    # form.
+                    test -n "$(ls dist/conda/gpf-web-*.conda 2>/dev/null)" \
+                        || { echo "ERROR: no gpf-web-*.conda in dist/conda/" >&2; exit 1; }
                 '''
             }
         }
