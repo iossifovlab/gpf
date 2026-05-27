@@ -547,13 +547,62 @@ pipeline {
                                     // runProject() is Python-specific (uv build,
                                     // pylint, mypy, pytest). Single sh -c so all
                                     // four reports land in one bind mount.
+                                    //
+                                    // The same stage also produces the conda-flavoured
+                                    // SPA tarball (dist/web_ui/gpfjs-spa.tar.gz)
+                                    // consumed by web_api/conda-recipe/recipe.yaml
+                                    // (the Conda packages stage below extracts it
+                                    // back into dist/web_ui/gpfjs/ before
+                                    // rattler-build runs).
+                                    // `--configuration conda` swaps environment.ts →
+                                    // environment.conda.ts (fileReplacements in
+                                    // angular.json); --base-href and --deploy-url
+                                    // bake the URL layout the Django gpfjs app
+                                    // expects (view serves the SPA from
+                                    // staticfile gpfjs/gpfjs/index.html;
+                                    // STATIC_URL='/static/'). Built here — not in
+                                    // conda-builder — so the heavy node toolchain
+                                    // stays out of the python-only conda-builder
+                                    // image. Built first within the sh -c so a
+                                    // broken angular build fails fast without
+                                    // paying for lint + jest first.
                                     sh label: 'Run web_ui CI', script: """
-                                        mkdir -p reports/web_ui
+                                        mkdir -p reports/web_ui dist/web_ui
                                         docker run --rm \\
                                             -v \$PWD/reports/web_ui:/reports \\
+                                            -v \$PWD/dist/web_ui:/dist \\
                                             ${imageTag} \\
                                             sh -c '
                                                 set +e
+                                                # 1) conda-flavoured SPA build +
+                                                #    tarball. Fail fast if angular
+                                                #    build is broken.
+                                                #    Archived as a single .tar.gz for
+                                                #    a clean Jenkins artefact list /
+                                                #    fingerprint surface (vs. ~150
+                                                #    files in a directory tree). The
+                                                #    Conda packages stage extracts it
+                                                #    back into dist/web_ui/gpfjs/
+                                                #    before rattler-build runs;
+                                                #    feeding the tarball directly to
+                                                #    rattler-build does not work
+                                                #    (it auto-extracts .tar.gz path:
+                                                #    sources with an undocumented
+                                                #    strip-top-level behaviour, so
+                                                #    we control the extraction
+                                                #    explicitly).
+                                                npm run build -- \\
+                                                    --configuration conda \\
+                                                    --base-href "/gpfjs/" \\
+                                                    --deploy-url "/static/gpfjs/gpfjs/"
+                                                ng_exit=\$?
+                                                if [ \$ng_exit -ne 0 ]; then
+                                                    exit \$ng_exit
+                                                fi
+                                                tar -czf /dist/gpfjs-spa.tar.gz \\
+                                                    -C dist gpfjs
+                                                chmod 644 /dist/gpfjs-spa.tar.gz
+                                                # 2) lint + test as before.
                                                 mkdir -p /reports/coverage
                                                 npx eslint "**/*.{html,ts}" \\
                                                     --format checkstyle \\
@@ -797,6 +846,25 @@ pipeline {
                                 | sed 's#-py3-none-any.whl$##')
                             echo "VCS_VERSION=$VCS_VERSION"
 
+                            # Expand the SPA tarball into dist/web_ui/gpfjs/
+                            # — the gpf-web conda recipe consumes that
+                            # directory as a `path:` source. Archived as a
+                            # tarball for a clean Jenkins artefact list;
+                            # extracted here so rattler-build sees the
+                            # directory directly (it would otherwise auto-
+                            # extract the tarball with an undocumented
+                            # strip-top-level behaviour). --strip-components=1
+                            # drops the leading gpfjs/ prefix the tar carries,
+                            # so the extracted layout sits at
+                            # dist/web_ui/gpfjs/index.html etc., matching the
+                            # recipe's source spec exactly. rm -rf first so a
+                            # re-run on a dirty workspace doesn't accumulate
+                            # stale content.
+                            rm -rf dist/web_ui/gpfjs
+                            mkdir -p dist/web_ui/gpfjs
+                            tar -xzf dist/web_ui/gpfjs-spa.tar.gz \
+                                -C dist/web_ui/gpfjs --strip-components=1
+
                             mkdir -p dist/conda
                             # Run the conda-builder container as the Jenkins user
                             # (instead of the image's default `mambauser`, UID
@@ -807,7 +875,14 @@ pipeline {
                             # redirected to /tmp because /home/mambauser is not
                             # writable by an arbitrary UID.
                             DOCKER_USER="$(id -u):$(id -g)"
-                            for proj in core web_api federation rest_client; do
+                            # web_api built LAST so a missing/malformed
+                            # dist/web_ui/gpfjs-spa.tar.gz (required by its
+                            # recipe) doesn't abort core/federation/rest_client
+                            # before they get a chance to publish. set -e in
+                            # this script means a web_api conda failure still
+                            # fails the stage — we just stop blocking the other
+                            # three artefacts on a SPA-side regression.
+                            for proj in core federation rest_client web_api; do
                                 mkdir -p conda/$proj
                                 docker run --rm \
                                     --user "$DOCKER_USER" \
@@ -1159,8 +1234,15 @@ pipeline {
                         allowEmptyArchive: true,
                         fingerprint: false,
                     )
+                    // dist/web_ui/gpfjs-spa.tar.gz is the conda-flavoured
+                    // Angular dist tarball; gpf-release fetches it from
+                    // this archive via copyArtifacts and the Conda
+                    // packages stage extracts it before feeding it to
+                    // the gpf-web conda recipe. fingerprint:true makes
+                    // the file findable even if the build record itself
+                    // rotates out, mirroring the gain wheel pattern.
                     archiveArtifacts(
-                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/conda/*.conda, dist/base-images.lock',
+                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/web_ui/gpfjs-spa.tar.gz, dist/conda/*.conda, dist/base-images.lock',
                         allowEmptyArchive: true,
                         fingerprint: true,
                     )

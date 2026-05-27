@@ -310,6 +310,57 @@ To bypass the pre-commit hook when committing:
 git commit --no-verify
 ```
 
+### Conda packaging
+
+The `gpf-web` conda package bundles the Angular SPA so
+`conda install gpf-web && wgpf` serves a fully working UI in
+one process — handy for poking at newly imported studies
+without a full split-mode docker deployment. CI assembles
+the package automatically; to rebuild it locally for
+testing, run the three-step:
+
+```bash
+# 1. Build the gpf-web wheel (same as for any other conda
+#    recipe in this repo).
+cd web_api && uv build --package gpf-web --out-dir ../dist/web_api && cd ..
+
+# 2. Build the conda-flavoured SPA dist tree. --base-href /
+#    --deploy-url match the URL layout the Django gpfjs app
+#    expects (STATIC_URL='/static/', index served at
+#    /gpfjs/). environment.conda.ts is swapped in by
+#    angular.json's `conda` configuration. For local builds
+#    we copy the dist tree directly; the recipe consumes it as
+#    a `path:` directory source. (CI archives the same tree as
+#    dist/web_ui/gpfjs-spa.tar.gz for a clean Jenkins artefact
+#    list and extracts it back in the Conda packages stage —
+#    locally there's no archival step, so cp is sufficient.)
+cd web_ui
+npm ci
+npm run build -- --configuration conda \
+    --base-href '/gpfjs/' \
+    --deploy-url '/static/gpfjs/gpfjs/'
+mkdir -p ../dist/web_ui
+cp -r dist/gpfjs ../dist/web_ui/
+cd ..
+
+# 3. Build the conda package.
+rattler-build build \
+    --recipe web_api/conda-recipe/recipe.yaml \
+    --output-dir conda/web_api
+```
+
+The recipe in `web_api/conda-recipe/recipe.yaml` lists the
+SPA tree as a required source; rattler-build fails fast
+if step 2 was skipped. The other three recipes (`core`,
+`federation`, `rest_client`) don't need the SPA and can
+build standalone with just step 1 + 3.
+
+The released wheel itself stays SPA-free — the bundle is
+conda-only. Production deploys consume the same wheel via
+`web_api/Dockerfile.production` and pair it with the
+apache-served `gpf-web-ui` image, so duplicating the SPA in
+the wheel would just inflate the production backend image.
+
 ## Common pitfalls
 
 - Prefer `uv run <cmd>` over activating the venv — works
