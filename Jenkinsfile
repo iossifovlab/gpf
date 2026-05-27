@@ -549,8 +549,8 @@ pipeline {
                                     // four reports land in one bind mount.
                                     //
                                     // The same stage also produces the conda-flavoured
-                                    // SPA tarball (dist/web_ui/gpfjs-spa.tar.gz)
-                                    // consumed by web_api/conda-recipe/recipe.yaml.
+                                    // SPA dist tree (dist/web_ui/gpfjs/) consumed by
+                                    // web_api/conda-recipe/recipe.yaml.
                                     // `--configuration conda` swaps environment.ts →
                                     // environment.conda.ts (fileReplacements in
                                     // angular.json); --base-href and --deploy-url
@@ -572,8 +572,16 @@ pipeline {
                                             sh -c '
                                                 set +e
                                                 # 1) conda-flavoured SPA build +
-                                                #    tarball. Fail fast if angular
-                                                #    build is broken.
+                                                #    copy the dist tree out. Fail fast
+                                                #    if angular build is broken.
+                                                #    Directory (not tarball) because
+                                                #    rattler-build auto-extracts
+                                                #    .tar.gz path: sources but treats
+                                                #    directory path: sources as
+                                                #    contents-copied-as-is — and we
+                                                #    need the on-disk gpfjs/ subdir
+                                                #    preserved so the recipe can find
+                                                #    index.html.
                                                 npm run build -- \\
                                                     --configuration conda \\
                                                     --base-href "/gpfjs/" \\
@@ -582,9 +590,8 @@ pipeline {
                                                 if [ \$ng_exit -ne 0 ]; then
                                                     exit \$ng_exit
                                                 fi
-                                                tar -czf /dist/gpfjs-spa.tar.gz \\
-                                                    -C dist gpfjs
-                                                chmod 644 /dist/gpfjs-spa.tar.gz
+                                                cp -r dist/gpfjs /dist/
+                                                chmod -R a+r /dist/gpfjs
                                                 # 2) lint + test as before.
                                                 mkdir -p /reports/coverage
                                                 npx eslint "**/*.{html,ts}" \\
@@ -840,7 +847,7 @@ pipeline {
                             # writable by an arbitrary UID.
                             DOCKER_USER="$(id -u):$(id -g)"
                             # web_api built LAST so a missing/malformed
-                            # dist/web_ui/gpfjs-spa.tar.gz (required by its
+                            # dist/web_ui/gpfjs/ (required by its
                             # recipe) doesn't abort core/federation/rest_client
                             # before they get a chance to publish. set -e in
                             # this script means a web_api conda failure still
@@ -1198,14 +1205,17 @@ pipeline {
                         allowEmptyArchive: true,
                         fingerprint: false,
                     )
-                    // dist/web_ui/gpfjs-spa.tar.gz is the conda-flavoured
-                    // Angular dist tarball; gpf-release fetches it from this
-                    // archive via copyArtifacts and feeds it to the gpf-web
-                    // conda recipe. fingerprint:true makes it findable even
-                    // if the build record itself rotates out, mirroring the
-                    // gain wheel pattern.
+                    // dist/web_ui/gpfjs/** is the conda-flavoured Angular
+                    // dist tree; gpf-release fetches it from this archive
+                    // via copyArtifacts and feeds it to the gpf-web conda
+                    // recipe. Archived as a tree (not tarball) because
+                    // rattler-build auto-extracts .tar.gz path: sources,
+                    // which loses the gpfjs/ prefix we need; directory
+                    // sources are copied as-is. fingerprint:true makes
+                    // the tree findable even if the build record itself
+                    // rotates out, mirroring the gain wheel pattern.
                     archiveArtifacts(
-                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/web_ui/gpfjs-spa.tar.gz, dist/conda/*.conda, dist/base-images.lock',
+                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/web_ui/gpfjs/**, dist/conda/*.conda, dist/base-images.lock',
                         allowEmptyArchive: true,
                         fingerprint: true,
                     )

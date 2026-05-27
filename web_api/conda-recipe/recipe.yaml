@@ -12,14 +12,19 @@
 #      it with the apache-served frontend image; bundling the
 #      SPA into the wheel would duplicate it in that path.
 #
-#   2. The conda-flavoured SPA tarball
-#      (../../dist/web_ui/gpfjs-spa.tar.gz), produced by the
-#      web_ui Jenkins stage with
+#   2. The conda-flavoured SPA dist tree
+#      (../../dist/web_ui/gpfjs/), produced by the web_ui
+#      Jenkins stage with
 #      `ng build --configuration conda
 #       --base-href '/gpfjs/'
 #       --deploy-url '/static/gpfjs/gpfjs/'`.
+#      Plain directory (not tarball) because rattler-build
+#      auto-extracts .tar.gz path: sources but treats directory
+#      path: sources as contents-copied-as-is. target_directory
+#      isolates the SPA contents from the wheel + LICENSE sources
+#      that share the work dir root.
 #
-# REQUIRED — recipe fails fast if the SPA tarball is missing.
+# REQUIRED — recipe fails fast if the SPA tree is missing.
 # Locally, build it via the three-step in README.md ("Conda
 # packaging"). In CI it falls out of the master multibranch
 # Jenkinsfile's web_ui stage; gpf-release fetches it through
@@ -38,7 +43,8 @@ package:
 source:
   - path: ../../dist/web_api
     use_gitignore: false
-  - path: ../../dist/web_ui/gpfjs-spa.tar.gz
+  - path: ../../dist/web_ui/gpfjs
+    target_directory: gpfjs-spa-src
   - path: ../../LICENSE
 
 build:
@@ -51,7 +57,7 @@ build:
       ls -la
       "$PYTHON" -m pip install --no-deps --no-build-isolation -vv ./*.whl
 
-      # Untar the SPA on top of the placeholder tree the wheel
+      # Copy the SPA tree next to the placeholder tree the wheel
       # ships at <site-packages>/gpfjs/static/gpfjs/empty/.
       # The gpfjs Django app installs as a top-level package
       # (hatchling [tool.hatch.build.targets.wheel] packages
@@ -61,13 +67,13 @@ build:
       # probes finders.find("gpfjs/gpfjs/index.html") and falls
       # back to the empty template only when nothing's there;
       # the two trees coexist as siblings without collision.
-      # Assertion at the end converts a malformed tarball or
-      # wrong-prefix archive into a loud build failure.
+      # Assertion at the end converts a missing-source or
+      # broken-build into a loud build failure.
       SITE_PACKAGES=$("$PYTHON" -c 'import site; print(site.getsitepackages()[0])')
-      TARGET="$SITE_PACKAGES/gpfjs/static/gpfjs"
+      TARGET="$SITE_PACKAGES/gpfjs/static/gpfjs/gpfjs"
       mkdir -p "$TARGET"
-      tar -xzf gpfjs-spa.tar.gz -C "$TARGET"
-      test -f "$TARGET/gpfjs/index.html"
+      cp -r gpfjs-spa-src/. "$TARGET/"
+      test -f "$TARGET/index.html"
 
 requirements:
   host:

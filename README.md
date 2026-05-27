@@ -324,18 +324,21 @@ testing, run the three-step:
 #    recipe in this repo).
 cd web_api && uv build --package gpf-web --out-dir ../dist/web_api && cd ..
 
-# 2. Build the conda-flavoured SPA tarball. --base-href /
+# 2. Build the conda-flavoured SPA dist tree. --base-href /
 #    --deploy-url match the URL layout the Django gpfjs app
 #    expects (STATIC_URL='/static/', index served at
 #    /gpfjs/). environment.conda.ts is swapped in by
-#    angular.json's `conda` configuration.
+#    angular.json's `conda` configuration. Copy (don't tar)
+#    because rattler-build auto-extracts .tar.gz path: sources;
+#    directory path: sources are copied as-is, preserving the
+#    on-disk layout the recipe expects.
 cd web_ui
 npm ci
 npm run build -- --configuration conda \
     --base-href '/gpfjs/' \
     --deploy-url '/static/gpfjs/gpfjs/'
 mkdir -p ../dist/web_ui
-tar -czf ../dist/web_ui/gpfjs-spa.tar.gz -C dist gpfjs
+cp -r dist/gpfjs ../dist/web_ui/
 cd ..
 
 # 3. Build the conda package.
@@ -345,7 +348,7 @@ rattler-build build \
 ```
 
 The recipe in `web_api/conda-recipe/recipe.yaml` lists the
-SPA tarball as a required source; rattler-build fails fast
+SPA tree as a required source; rattler-build fails fast
 if step 2 was skipped. The other three recipes (`core`,
 `federation`, `rest_client`) don't need the SPA and can
 build standalone with just step 1 + 3.
