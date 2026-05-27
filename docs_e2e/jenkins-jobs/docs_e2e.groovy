@@ -41,11 +41,15 @@ pipelineJob('gpf-docs-e2e') {
         )
     }
 
-    properties {
-        // Branch builds may queue while master is mid-run. Build
-        // discarder is set in the Jenkinsfile (numToKeepStr: 20).
-        disableConcurrentBuilds(abortPrevious: false)
-    }
+    // No properties{} block — matches the sibling DSLs
+    // (web_e2e/jenkins-jobs/e2e.groovy etc.). The
+    // disableConcurrentBuilds(abortPrevious: false) form added here
+    // initially is incompatible with this Jenkins's jobDsl version
+    // (it does not accept the abortPrevious arg). Per-agent
+    // serialisation that actually matters happens via the lock()
+    // around the Run-pytest stage in Jenkinsfile.docs-e2e — that's
+    // the meaningful concurrency guard. The buildDiscarder
+    // (numToKeepStr: 20) lives on the Jenkinsfile's options block.
 
     definition {
         cpsScm {
