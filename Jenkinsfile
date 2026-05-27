@@ -1221,6 +1221,68 @@ pipeline {
                         }
                     }
                 }
+
+                stage('Trigger docs-e2e') {
+                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
+                    // Guide-accuracy regression for the GPF
+                    // Getting Started Guide — see #871 (parent
+                    // epic) and #872 (v1 infrastructure +
+                    // main-body suite). Pipeline definition at
+                    // docs_e2e/Jenkinsfile.docs-e2e, materialised
+                    // by docs_e2e/jenkins-jobs/docs-e2e.groovy
+                    // via the Apply Job DSL stage above.
+                    //
+                    // Same shape as the other Trigger stages:
+                    // gated on `not DOCS_ONLY`, wait:false /
+                    // propagate:false so a docs-e2e failure
+                    // surfaces in its own job history without
+                    // blocking parent FAILURE. catchError keeps
+                    // a missing seed (e.g. on a brand-new
+                    // branch before gpf-seed has re-run) from
+                    // becoming fatal — parent stays UNSTABLE.
+                    //
+                    // v1 docs-only-gap (see #871 § Triggering):
+                    // A pure prose edit to
+                    // docs/source/administration/getting_started/**
+                    // sets DOCS_ONLY=true and so skips this
+                    // stage; the next code commit catches drift.
+                    // A path-aware carve-out is filed as a
+                    // follow-up; defer until v1 (#872) settles.
+                    steps {
+                        catchError(
+                            buildResult: 'UNSTABLE',
+                            stageResult: 'UNSTABLE',
+                            message:
+                                'Could not trigger ' +
+                                'gpf-docs-e2e; has gpf-seed ' +
+                                'materialised it yet?',
+                        ) {
+                            build(
+                                job: '/gpf-docs-e2e',
+                                parameters: [
+                                    string(
+                                        name: 'BRANCH_NAME',
+                                        value: env.BRANCH_NAME,
+                                    ),
+                                    string(
+                                        name: 'COMMIT_SHA',
+                                        value: env.GIT_COMMIT ?: '',
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_PROJECT',
+                                        value: env.JOB_NAME,
+                                    ),
+                                    string(
+                                        name: 'UPSTREAM_BUILD',
+                                        value: env.BUILD_NUMBER,
+                                    ),
+                                ],
+                                wait: false,
+                                propagate: false,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
