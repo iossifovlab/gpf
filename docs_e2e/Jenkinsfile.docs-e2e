@@ -1,0 +1,259 @@
+// Dedicated Jenkins pipeline for docs-e2e — guide-accuracy
+// regression for the GPF Getting Started Guide.
+//
+// Triggered downstream from iossifovlab/gpf/<branch>'s
+// `Trigger docs-e2e` stage after the parent build's
+// `Build & push prod images` stage finishes; runs for every
+// branch the parent triggers from. Can also be run manually
+// from the Jenkins UI with explicit BRANCH_NAME / COMMIT_SHA /
+// UPSTREAM_PROJECT / UPSTREAM_BUILD / STAGE_FILTER params.
+//
+// Expected Jenkins job setup:
+//   - Script path: docs_e2e/Jenkinsfile.docs-e2e
+//   - Defined by docs_e2e/jenkins-jobs/docs-e2e.groovy as the
+//     `gpf-docs-e2e` pipelineJob, seeded by the main gpf
+//     Jenkinsfile's `Apply Job DSL` stage on master.
+//
+// Self-contained: clones the gpf monorepo at the requested
+// branch/commit; copyArtifacts the conda packages
+// (dist/conda/*.conda) the upstream gpf build produced;
+// builds the docs-e2e driver image; runs pytest against the
+// freshly-built gpf_web conda artefact in a clean Miniforge
+// container; mounts the per-agent persistent gpf-grr-cache
+// docker volume so hg38 demand-pulls are reused across builds.
+
+pipeline {
+    // Excludes `dory`; matches the root Jenkinsfile and the
+    // web_e2e pipeline. Any other agent has docker + the
+    // standard tools.
+    agent { label '!dory' }
+
+    parameters {
+        string(
+            name: 'BRANCH_NAME',
+            defaultValue: 'master',
+            description: 'Branch the upstream gpf build was ' +
+                'triggered from. The pipeline checks out ' +
+                'this branch unless COMMIT_SHA is set.',
+        )
+        string(
+            name: 'COMMIT_SHA',
+            defaultValue: '',
+            description: 'Specific commit SHA to test (takes ' +
+                'precedence over BRANCH_NAME). Empty = use ' +
+                'BRANCH_NAME HEAD.',
+        )
+        string(
+            name: 'UPSTREAM_PROJECT',
+            defaultValue: '',
+            description: 'Upstream Jenkins project (e.g. ' +
+                'iossifovlab/gpf/master) the conda artefacts ' +
+                'are copied from. Empty = fall back to ' +
+                'iossifovlab/gpf/master lastSuccessful().',
+        )
+        string(
+            name: 'UPSTREAM_BUILD',
+            defaultValue: '',
+            description: 'Upstream build number to copy ' +
+                'conda artefacts from. Empty = use ' +
+                'lastSuccessful() of UPSTREAM_PROJECT.',
+        )
+        string(
+            name: 'STAGE_FILTER',
+            defaultValue: '',
+            description: 'Optional pytest -k expression to ' +
+                'narrow which test files run. Empty = run all ' +
+                'stages. Example: "test_main_body" to run only ' +
+                'the v1 main-body suite.',
+        )
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        DRIVER_IMAGE     = "gpf-docs-e2e-driver:${env.BUILD_NUMBER}"
+        // Per-agent persistent GRR cache. First build on a fresh
+        // agent demand-pulls hg38 (~3 GB, ~10 min); subsequent
+        // builds re-use the cache. Volume name is agent-global,
+        // not build-scoped — that's the point.
+        GRR_CACHE_VOLUME = "gpf-grr-cache"
+        // Container-local artefact dirs:
+        //   /workspace          — the gpf checkout (bind mount)
+        //   /workspace/dist/conda — copied conda packages
+        //   /grr-cache          — the GRR_CACHE_VOLUME
+    }
+
+    stages {
+        stage('Start') {
+            steps {
+                script {
+                    String label = params.BRANCH_NAME
+                    if (params.COMMIT_SHA?.trim()) {
+                        label += " @ ${params.COMMIT_SHA.take(7)}"
+                    }
+                    if (params.STAGE_FILTER?.trim()) {
+                        label += " [${params.STAGE_FILTER}]"
+                    }
+                    currentBuild.displayName =
+                        "#${env.BUILD_NUMBER} ${label}"
+                    zulipSend(
+                        message: "Started build #${env.BUILD_NUMBER} [${label}] of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                        topic: "${env.JOB_NAME}",
+                    )
+                }
+            }
+        }
+
+        stage('Prepare workspace') {
+            steps {
+                // pytest writes JUnit + log artefacts into
+                // reports/docs_e2e; the test driver writes
+                // tempdirs the conftest fixtures own. Run the
+                // wipe inside an alpine container as root so
+                // root-owned leftovers from a previous build
+                // don't trip the host-side rm.
+                sh '''
+                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
+                        rm -rf dist reports
+                    mkdir -p reports/docs_e2e dist
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                script {
+                    String ref = params.COMMIT_SHA?.trim() ?:
+                                 params.BRANCH_NAME
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: ref]],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/iossifovlab/gpf.git',
+                        ]],
+                        extensions: [[$class: 'CloneOption',
+                                      shallow: true,
+                                      noTags: true,
+                                      depth: 1]],
+                    ])
+                }
+            }
+        }
+
+        stage('Copy conda artefacts') {
+            // Pull the freshly-built dist/conda/*.conda from the
+            // upstream gpf build. (β)-mode install path per #871:
+            // the suite tests THIS build's conda, not whatever is
+            // published on the iossifovlab channel.
+            steps {
+                script {
+                    String project = params.UPSTREAM_PROJECT?.trim() ?:
+                                     'iossifovlab/gpf/master'
+                    def selector = params.UPSTREAM_BUILD?.trim() ?
+                                   specific(params.UPSTREAM_BUILD) :
+                                   lastSuccessful()
+                    copyArtifacts(
+                        filter: 'dist/conda/*.conda',
+                        fingerprintArtifacts: true,
+                        projectName: project,
+                        selector: selector,
+                    )
+                }
+                sh '''
+                    ls -la dist/conda/
+                    test -n "$(ls dist/conda/gpf_web-*.conda 2>/dev/null)" \
+                        || { echo "ERROR: no gpf_web-*.conda in dist/conda/" >&2; exit 1; }
+                '''
+            }
+        }
+
+        stage('Build driver image') {
+            steps {
+                sh '''
+                    docker build \
+                        -f docs_e2e/Dockerfile \
+                        -t "$DRIVER_IMAGE" \
+                        docs_e2e/
+                '''
+            }
+        }
+
+        stage('Run pytest') {
+            steps {
+                script {
+                    // tb-cj9-style per-agent lock: a docs-e2e
+                    // run takes a single backend port + writes
+                    // to the shared GRR cache. Concurrent builds
+                    // on the same agent could race on the cache
+                    // (GRR's atomic-rename writes are safe but
+                    // we have observed flakes under load). Lock
+                    // keyed by NODE_NAME, same idiom as
+                    // web_e2e's Run-e2e stage. The lock MUST be
+                    // taken here in `steps`, never in stage
+                    // options — declarative evaluates options
+                    // before agent allocation, env.NODE_NAME
+                    // unbound there.
+                    lock(resource: "docs-e2e-on-${env.NODE_NAME}") {
+                    try {
+                        String filter = params.STAGE_FILTER?.trim()
+                        String pytest_k =
+                            filter ? "-k '${filter}'" : ""
+                        sh """
+                            mkdir -p reports/docs_e2e
+
+                            docker run --rm \\
+                                -v "\$PWD:/workspace" \\
+                                -v "\$GRR_CACHE_VOLUME:/grr-cache" \\
+                                -e DOCS_E2E_CHANNEL=/workspace/dist/conda \\
+                                -e DOCS_E2E_GRR_CACHE=/grr-cache \\
+                                -w /workspace \\
+                                "\$DRIVER_IMAGE" \\
+                                mamba run --no-capture-output -n driver \\
+                                    pytest -v ${pytest_k} \\
+                                        --junitxml=/workspace/reports/docs_e2e/pytest.xml \\
+                                        docs_e2e/
+                        """
+                    } finally {
+                        // archiveArtifacts in the post block
+                        // picks the JUnit + any captured logs.
+                        // Nothing service-specific to dump here
+                        // — the suite is single-container; the
+                        // wgpf log is surfaced into pytest's
+                        // own stderr by the wgpf_server fixture
+                        // on failure.
+                        echo "Run pytest stage exiting (locked: docs-e2e-on-${env.NODE_NAME})"
+                    }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                try {
+                    junit(
+                        allowEmptyResults: true,
+                        testResults: 'reports/docs_e2e/*.xml',
+                    )
+                    archiveArtifacts(
+                        artifacts: 'reports/docs_e2e/**',
+                        allowEmptyArchive: true,
+                        fingerprint: false,
+                    )
+                } finally {
+                    zulipNotification(topic: "${env.JOB_NAME}")
+                }
+            }
+        }
+        cleanup {
+            sh '''
+                docker rmi "$DRIVER_IMAGE" 2>/dev/null || true
+            '''
+        }
+    }
+}
