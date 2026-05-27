@@ -191,4 +191,35 @@ test.describe('Pheno browser tests', () => {
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
+
+  test('should serve pheno distribution images via /static/images/', async({ page, request }) => {
+    // build_pheno_browser produces figure-distribution PNGs for the
+    // helloworld pheno; the SPA renders them as <img class="table-chart">
+    // with src='/static/images/pheno_helloworld/...'. This test catches
+    // breakage in the apache /static/images/ alias (PHENO_IMAGES_DIR
+    // env var) on either deployment shape — without it, all thumbnails
+    // 404 silently and the page looks fine to a quick visual scan.
+    const thumbnail = page.locator('img.table-chart').first();
+    await thumbnail.scrollIntoViewIfNeeded();
+    await expect(thumbnail).toBeVisible();
+
+    // naturalWidth === 0 means the browser tried to load the image and
+    // failed (404, decode error, ...). Real images are wider than 1px.
+    const naturalWidth = await thumbnail.evaluate(
+      (img) => (img as HTMLImageElement).naturalWidth
+    );
+    expect(naturalWidth).toBeGreaterThan(1);
+
+    // Cross-check at the HTTP layer: the SPA might render the <img>
+    // and silently fall back to a 0×0 if loaded, so probe the URL the
+    // SPA actually emitted. The SPA composes src as a relative URL
+    // ('static/images/...') and the browser resolves it via index.html's
+    // <base href="/">; here we resolve it explicitly against frontendUrl.
+    const src = await thumbnail.getAttribute('src');
+    expect(src).toMatch(/static\/images\//);
+    const absoluteSrc = new URL(src!, `${utils.frontendUrl}/`).toString();
+    const response = await request.get(absoluteSrc);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()['content-type']).toMatch(/^image\//);
+  });
 });

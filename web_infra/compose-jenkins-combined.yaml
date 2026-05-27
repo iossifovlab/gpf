@@ -67,6 +67,14 @@ services:
       WDAE_EMAIL_VERIFICATION_ENDPOINT: "http://frontend"
       WDAE_ALLOWED_HOST: "*"
       WDAE_DEBUG: "False"
+      # Override the image's production-default PHENO_IMAGES_DIR
+      # (set in Dockerfile.production to /data-phenodb/pheno/images/)
+      # to point at the e2e instance's actual image layout. The
+      # gpf_e2e_instance/gpf_instance.yaml sets `phenotype_images:
+      # '%(wd)s/phenotype_storage/images'`, which resolves to this
+      # path under the /data bind mount above. Trailing slash is
+      # mandatory — Apache concatenates URL suffixes verbatim.
+      PHENO_IMAGES_DIR: /data/phenotype_storage/images/
     healthcheck:
       # Hit /api/v3/datasets/ through Apache's reverse-proxy
       # to gunicorn. Stricter than split mode's localhost:9001

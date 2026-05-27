@@ -73,3 +73,11 @@ COPY --from=angular /app/dist/gpfjs /usr/local/apache2/htdocs/
 COPY --from=django-static /static/gpf/static /usr/local/apache2/htdocs/static/
 
 COPY web_ui/httpd.conf /usr/local/apache2/conf/httpd.conf
+
+# Default container path for the phenotype-browser image alias in
+# httpd.conf. Operators of split-mode deployments must mount the
+# phenodb here (or override this env var) and also point the GPF
+# instance YAML (phenotype_images: or phenotype_data.dir:) at the
+# same path. Trailing slash required — see httpd.conf for the
+# concatenation gotcha.
+ENV PHENO_IMAGES_DIR=/data-phenodb/pheno/images/

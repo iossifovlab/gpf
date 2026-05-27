@@ -115,6 +115,22 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    volumes:
+      # Read-only mirror of the backend's writable instance mount.
+      # Apache needs filesystem access to the phenotype-images
+      # directory referenced by PHENO_IMAGES_DIR below (the
+      # /static/images/ alias in httpd.conf). Backend keeps write
+      # access for the WGPFInstance first-startup file touches;
+      # apache only reads.
+      - ../web_e2e/gpf_e2e_instance:/data:ro
+    environment:
+      # Override the image's production-default PHENO_IMAGES_DIR
+      # (set in web_ui/Dockerfile.production to
+      # /data-phenodb/pheno/images/) to point at the e2e instance's
+      # actual image layout under the /data mount above. Matches
+      # compose-jenkins-combined.yaml's override. Trailing slash
+      # mandatory — Apache concatenates URL suffixes verbatim.
+      PHENO_IMAGES_DIR: /data/phenotype_storage/images/
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/"]
       interval: 10s
