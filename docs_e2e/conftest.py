@@ -392,6 +392,89 @@ def phenotype_instance(annotated_instance, getting_started_clone, gpf_env):
     )
 
 
+# The genotype_browser config getting_started_with_preview_columns.rst
+# tells the user to add to the example_dataset config (the guide's second,
+# final code-block — RST lines 127-161): the phenotype IQ columns, the
+# redefined `frequency` group (now carrying gnomAD), the new `clinvar` and
+# `proband_iq` column groups, and the preview_columns_ext that surfaces the
+# two new groups in the preview table. Kept byte-for-byte in sync with the
+# guide; a drift here is itself the guide-accuracy bug this suite catches.
+_PREVIEW_COLUMNS_BLOCK = (
+    "\n"
+    "genotype_browser:\n"
+    "  columns:\n"
+    "    phenotype:\n"
+    "      prb_verbal_iq:\n"
+    "        role: prb\n"
+    "        name: Verbal IQ\n"
+    "        source: iq.verbal_iq\n"
+    "\n"
+    "      prb_non_verbal_iq:\n"
+    "        role: prb\n"
+    "        name: Non-Verbal IQ\n"
+    "        source: iq.non_verbal_iq\n"
+    "\n"
+    "  column_groups:\n"
+    "    frequency:\n"
+    "      name: frequency\n"
+    "      columns:\n"
+    "      - allele_freq\n"
+    "      - gnomad_v4_genome_ALL_af\n"
+    "\n"
+    "    clinvar:\n"
+    "      name: ClinVar\n"
+    "      columns:\n"
+    "      - CLNSIG\n"
+    "      - CLNDN\n"
+    "\n"
+    "    proband_iq:\n"
+    "      name: Proband IQ\n"
+    "      columns:\n"
+    "      - prb_verbal_iq\n"
+    "      - prb_non_verbal_iq\n"
+    "\n"
+    "  preview_columns_ext:\n"
+    "    - clinvar\n"
+    "    - proband_iq\n"
+)
+
+
+@dataclass
+class PreviewColumnsInstance:
+    """The instance after the preview-columns guide's example_dataset edit."""
+
+    instance_dir: Path
+    dataset_yaml_path: Path
+
+
+@pytest.fixture(scope="session")
+def preview_columns_instance(phenotype_instance):
+    """Apply getting_started_with_preview_columns.rst: append the
+    genotype_browser column-group + phenotype-column config to the
+    example_dataset config.
+
+    The guide walks two edits (first the gnomAD/ClinVar column groups, then
+    the phenotype IQ columns), each followed by a ``wgpf`` restart. With the
+    suite's single-shared-server invariant we apply the guide's *final*
+    config — the second code-block (RST lines 127-161), a strict superset
+    that keeps the ClinVar + redefined-frequency groups and adds the
+    ``proband_iq`` phenotype group — and boot once. Every claim from both
+    edits holds in that end state.
+
+    Strict mode (#871): the only thing done here is the yaml edit a real
+    user types. The phenotype columns reference the ``iq.*`` measures of the
+    ``mini_pheno`` study attached by ``phenotype_instance``; chaining after
+    it keeps the linear-narrative ordering and ensures those measures
+    resolve when the server builds the dataset description.
+    """
+    dataset_yaml = phenotype_instance.dataset_yaml_path
+    dataset_yaml.write_text(dataset_yaml.read_text() + _PREVIEW_COLUMNS_BLOCK)
+    return PreviewColumnsInstance(
+        instance_dir=phenotype_instance.instance_dir,
+        dataset_yaml_path=dataset_yaml,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -399,19 +482,20 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(phenotype_instance, gpf_env):
+def wgpf_server(preview_columns_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``phenotype_instance`` — the last stage of the guide's
-    linear narrative (imports → annotation edit → pheno import + pheno
-    attach). The single shared server therefore starts after every
-    config edit the guide describes: it re-annotates the genotype data
-    on startup and serves the pheno-enabled example_dataset. Keeping the
-    suite to one wgpf process per session avoids two ``wgpf run``s racing
-    on the same ``DAE_DB_DIR`` parquet during re-annotation. Every
-    earlier claim (datasets visible, annotation download columns) holds
+    Depends on ``preview_columns_instance`` — the last stage of the
+    guide's linear narrative (imports → annotation edit → pheno import +
+    pheno attach → preview-column config). The single shared server
+    therefore starts after every config edit the guide describes: it
+    re-annotates the genotype data on startup and serves the pheno-enabled
+    example_dataset with its extended preview columns. Keeping the suite to
+    one wgpf process per session avoids two ``wgpf run``s racing on the same
+    ``DAE_DB_DIR`` parquet during re-annotation. Every earlier claim
+    (datasets visible, annotation download columns, pheno browser) holds
     equally in this final state, so sharing one server across all stages
     is sound.
 
@@ -421,14 +505,14 @@ def wgpf_server(phenotype_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(phenotype_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(preview_columns_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=phenotype_instance.instance_dir,
+        cwd=preview_columns_instance.instance_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
