@@ -555,3 +555,114 @@ def assert_image_response_ok(response, *, rst_ref, expectation):
         f"measure record drifted from the on-disk layout."
     )
     raise AssertionError(message)
+
+
+def _assert_group_members(
+        kind, expected, actual, *, group_name, rst_ref, expectation,
+):
+    """Assert ``expected`` is a subset of ``actual`` member values.
+
+    ``kind`` is "source" or "name" (used only in the message). Subset
+    semantics: a column group may carry members the guide does not
+    mention, so only the expected ones must be present.
+    """
+    if not expected:
+        return
+    missing = [e for e in expected if e not in actual]
+    if not missing:
+        return
+    available = ", ".join(repr(a) for a in actual) or "(none)"
+    raise AssertionError(
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  in preview column group {group_name!r}:\n"
+        f"  expected member {kind}s: {', '.join(map(str, expected))}\n"
+        f"  missing:               {', '.join(map(str, missing))}\n"
+        f"  actual member {kind}s:   [{available}]\n"
+        f"\n"
+        f"  Triage hint: The column group is present but a member column "
+        f"the guide names is absent. Most likely either (a) the column "
+        f"definition (the {kind}) in the guide drifted from the study "
+        f"config / annotation output, or (b) a referenced column was "
+        f"silently dropped because its underlying attribute/measure did "
+        f"not resolve (an unresolved column-group member is skipped at "
+        f"description-build time). If the new {kind} is correct, update "
+        f"the guide.",
+    )
+
+
+def assert_preview_table_column_group(
+        response, group_name, *,
+        expected_sources=None, expected_column_names=None,
+        rst_ref, expectation,
+):
+    """Assert a column group surfaces in a dataset's preview table.
+
+    Backs the preview-columns guide's claims that editing a study's
+    ``genotype_browser.column_groups`` + ``preview_columns_ext`` makes the
+    new/redefined column groups appear in the Genotype Browser preview
+    table. The single-dataset description endpoint
+    (``/api/v3/datasets/<id>``, shaped ``{"data": {...}}``) exposes the
+    resolved preview layout at
+    ``data.genotype_browser_config.table_columns`` — the same list the SPA
+    renders as the preview table. Each column group is shaped
+    ``{"name": <display name>, "columns": [{"source": ..., "name": ...}]}``.
+
+    ``group_name`` is matched against each entry's display ``name``. When
+    supplied, ``expected_sources`` / ``expected_column_names`` must each be
+    present (subset) among the group's resolved member columns — tolerating
+    extra members the guide does not mention.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with a '{group_name}' column group in the "
+                f"preview table"
+            ),
+        ))
+    data = response.json().get("data", {})
+    found, table_columns = _navigate(
+        data, "genotype_browser_config.table_columns")
+    table_columns = table_columns if (found and table_columns) else []
+    group = next(
+        (c for c in table_columns
+         if isinstance(c, dict) and c.get("name") == group_name),
+        None,
+    )
+    if group is None:
+        present = ", ".join(
+            repr(c.get("name")) for c in table_columns if isinstance(c, dict)
+        ) or "(none)"
+        raise AssertionError(
+            f'DRIFT at {rst_ref} — "{expectation}"\n'
+            f"\n"
+            f"  expected: a '{group_name}' column group in the preview "
+            f"table\n"
+            f"  actual:   preview column groups = [{present}]\n"
+            f"\n"
+            f"  Triage hint: The dataset description was returned but no "
+            f"preview column group is named {group_name!r}. Most likely "
+            f"either (a) the column_groups / preview_columns_ext edit was "
+            f"not applied to the example_dataset config (or the server did "
+            f"not pick it up — check the wgpf log dump), or (b) the group's "
+            f"display name in the guide drifted from the config. If the "
+            f"layout legitimately changed, update the guide.",
+        )
+    member_columns = group.get("columns") or []
+    actual_sources = [
+        col.get("source") for col in member_columns if isinstance(col, dict)
+    ]
+    actual_names = [
+        col.get("name") for col in member_columns if isinstance(col, dict)
+    ]
+    _assert_group_members(
+        "source", expected_sources, actual_sources,
+        group_name=group_name, rst_ref=rst_ref, expectation=expectation,
+    )
+    _assert_group_members(
+        "name", expected_column_names, actual_names,
+        group_name=group_name, rst_ref=rst_ref, expectation=expectation,
+    )

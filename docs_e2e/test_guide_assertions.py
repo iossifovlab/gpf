@@ -20,6 +20,7 @@ from docs_e2e.guide_assertions import (
     assert_image_response_ok,
     assert_pheno_instruments_available,
     assert_pheno_measures_present,
+    assert_preview_table_column_group,
     assert_query_returned_variants,
 )
 
@@ -633,4 +634,137 @@ class TestAssertImageResponseOk:
             )
         message = str(exc_info.value)
         assert "text/html" in message
+
+
+class TestAssertPreviewTableColumnGroup:
+    _RST = "getting_started_with_preview_columns.rst"
+
+    def _description(self, *table_columns):
+        # The single-dataset endpoint wraps the description in "data";
+        # the resolved preview layout is genotype_browser_config.table_columns.
+        return _FakeResponse(200, json_body={"data": {
+            "id": "example_dataset",
+            "genotype_browser_config": {"table_columns": list(table_columns)},
+        }})
+
+    def _group(self, name, *members):
+        # A column-group table_columns entry as build_genotype_data_description
+        # emits it: {"name": ..., "columns": [{"name", "source"}, ...]}.
+        return {
+            "name": name,
+            "columns": [
+                {"name": disp, "source": src} for disp, src in members
+            ],
+        }
+
+    def test_passes_when_group_present(self):
+        resp = self._description(
+            self._group("ClinVar", ("CLNSIG", "CLNSIG"), ("CLNDN", "CLNDN")),
+        )
+        assert_preview_table_column_group(
+            resp, "ClinVar",
+            rst_ref=f"{self._RST}:67",
+            expectation="ClinVar column group appears in the preview table",
+        )
+
+    def test_passes_when_expected_sources_present(self):
+        resp = self._description(
+            self._group("ClinVar", ("CLNSIG", "CLNSIG"), ("CLNDN", "CLNDN")),
+        )
+        assert_preview_table_column_group(
+            resp, "ClinVar",
+            expected_sources=["CLNSIG", "CLNDN"],
+            rst_ref=f"{self._RST}:73",
+            expectation="ClinVar group carries CLNSIG + CLNDN",
+        )
+
+    def test_passes_when_sources_a_subset(self):
+        # frequency carries allele_freq too; only gnomad is asserted.
+        resp = self._description(
+            self._group(
+                "frequency",
+                ("allele freq", "allele_freq"),
+                ("gnomad_v4_genome_ALL_af", "gnomad_v4_genome_ALL_af"),
+            ),
+        )
+        assert_preview_table_column_group(
+            resp, "frequency",
+            expected_sources=["gnomad_v4_genome_ALL_af"],
+            rst_ref=f"{self._RST}:69",
+            expectation="frequency group includes the gnomAD frequency",
+        )
+
+    def test_passes_when_expected_column_names_present(self):
+        resp = self._description(
+            self._group(
+                "Proband IQ",
+                ("Verbal IQ", "iq.verbal_iq"),
+                ("Non-Verbal IQ", "iq.non_verbal_iq"),
+            ),
+        )
+        assert_preview_table_column_group(
+            resp, "Proband IQ",
+            expected_sources=["iq.verbal_iq", "iq.non_verbal_iq"],
+            expected_column_names=["Verbal IQ", "Non-Verbal IQ"],
+            rst_ref=f"{self._RST}:159",
+            expectation="Proband IQ group carries both IQ measures",
+        )
+
+    def test_raises_when_group_absent(self):
+        resp = self._description(
+            self._group("frequency", ("allele freq", "allele_freq")),
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_preview_table_column_group(
+                resp, "ClinVar",
+                rst_ref=f"{self._RST}:67",
+                expectation="ClinVar column group appears in the preview table",
+            )
+        message = str(exc_info.value)
+        assert f"{self._RST}:67" in message
+        assert "ClinVar" in message
+        # Surfaces the groups that WERE present, to spot a rename.
+        assert "frequency" in message
+        assert "Triage" in message
+
+    def test_raises_when_a_source_missing(self):
+        resp = self._description(
+            self._group("ClinVar", ("CLNSIG", "CLNSIG")),
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_preview_table_column_group(
+                resp, "ClinVar",
+                expected_sources=["CLNSIG", "CLNDN"],
+                rst_ref=f"{self._RST}:73",
+                expectation="ClinVar group carries CLNSIG + CLNDN",
+            )
+        message = str(exc_info.value)
+        assert "CLNDN" in message
+        assert "missing" in message
+        assert "Triage" in message
+
+    def test_raises_when_a_column_name_missing(self):
+        resp = self._description(
+            self._group("Proband IQ", ("Verbal IQ", "iq.verbal_iq")),
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_preview_table_column_group(
+                resp, "Proband IQ",
+                expected_column_names=["Verbal IQ", "Non-Verbal IQ"],
+                rst_ref=f"{self._RST}:159",
+                expectation="Proband IQ group shows both IQ display names",
+            )
+        message = str(exc_info.value)
+        assert "Non-Verbal IQ" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(404, text="Dataset not found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_preview_table_column_group(
+                resp, "ClinVar",
+                rst_ref=f"{self._RST}:67",
+                expectation="ClinVar column group appears in the preview table",
+            )
+        message = str(exc_info.value)
+        assert "404" in message
         assert "Triage" in message
