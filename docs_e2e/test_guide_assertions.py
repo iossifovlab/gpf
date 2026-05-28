@@ -11,11 +11,13 @@ import pytest
 
 from docs_e2e.guide_assertions import (
     assert_command_succeeds,
+    assert_dataset_description_flag,
     assert_dataset_visible,
     assert_download_has_columns,
     assert_download_trailing_columns,
     assert_file_created,
     assert_genomic_score_available,
+    assert_pheno_instruments_available,
     assert_query_returned_variants,
 )
 
@@ -434,3 +436,116 @@ class TestAssertGenomicScoreAvailable:
             )
         message = str(exc_info.value)
         assert "503" in message
+
+
+class TestAssertPhenoInstrumentsAvailable:
+    def test_passes_when_all_instruments_present(self):
+        resp = _FakeResponse(
+            200,
+            json_body={
+                "instruments": ["basic_medical", "iq"],
+                "default": "basic_medical",
+            },
+        )
+        assert_pheno_instruments_available(
+            resp, ["basic_medical", "iq"],
+            rst_ref="getting_started_with_phenotype_data.rst:84",
+            expectation="Phenotype Browser shows the imported instruments",
+        )
+
+    def test_raises_when_an_instrument_missing(self):
+        resp = _FakeResponse(
+            200,
+            json_body={"instruments": ["basic_medical"], "default":
+                       "basic_medical"},
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_instruments_available(
+                resp, ["basic_medical", "iq"],
+                rst_ref="getting_started_with_phenotype_data.rst:84",
+                expectation="Phenotype Browser shows the imported instruments",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_phenotype_data.rst:84" in message
+        assert "iq" in message
+        # The instruments that ARE present are surfaced.
+        assert "basic_medical" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_instruments_available(
+                resp, ["basic_medical"],
+                rst_ref="getting_started_with_phenotype_data.rst:84",
+                expectation="Phenotype Browser shows the imported instruments",
+            )
+        message = str(exc_info.value)
+        assert "500" in message
+        assert "server" in message.lower() or "backend" in message.lower()
+
+
+class TestAssertDatasetDescriptionFlag:
+    def _described(self, **inner):
+        # The single-dataset endpoint wraps the description in "data".
+        return _FakeResponse(200, json_body={"data": inner})
+
+    def test_passes_when_top_level_flag_truthy(self):
+        resp = self._described(
+            id="example_dataset", phenotype_tool=True,
+        )
+        assert_dataset_description_flag(
+            resp, "phenotype_tool",
+            rst_ref="getting_started_with_phenotype_data.rst:114",
+            expectation="Phenotype Tool tab enabled for Example Dataset",
+        )
+
+    def test_passes_when_nested_flag_truthy(self):
+        resp = self._described(
+            id="example_dataset",
+            genotype_browser_config={"has_person_pheno_filters": True},
+        )
+        assert_dataset_description_flag(
+            resp, "genotype_browser_config.has_person_pheno_filters",
+            rst_ref="getting_started_with_phenotype_data.rst:118",
+            expectation="Person Filters expose Pheno Measures filters",
+        )
+
+    def test_raises_when_flag_falsy(self):
+        resp = self._described(
+            id="example_dataset", phenotype_tool=False,
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_description_flag(
+                resp, "phenotype_tool",
+                rst_ref="getting_started_with_phenotype_data.rst:114",
+                expectation="Phenotype Tool tab enabled for Example Dataset",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_phenotype_data.rst:114" in message
+        assert "phenotype_tool" in message
+        assert "Triage" in message
+
+    def test_raises_when_flag_absent(self):
+        resp = self._described(id="example_dataset")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_description_flag(
+                resp, "genotype_browser_config.has_family_pheno_filters",
+                rst_ref="getting_started_with_phenotype_data.rst:117",
+                expectation="Family Filters expose Pheno Measures filters",
+            )
+        message = str(exc_info.value)
+        assert "absent" in message
+        # Surfaces the keys that WERE present, to spot a rename.
+        assert "id" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(404, text="Dataset not found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_description_flag(
+                resp, "phenotype_browser",
+                rst_ref="getting_started_with_phenotype_data.rst:114",
+                expectation="Phenotype Browser tab enabled",
+            )
+        message = str(exc_info.value)
+        assert "404" in message
