@@ -883,6 +883,22 @@ pipeline {
                             # fails the stage — we just stop blocking the other
                             # three artefacts on a SPA-side regression.
                             for proj in core federation rest_client web_api; do
+                                # Wipe the rattler-build output dir for this
+                                # project first. `conda/` is NOT under `dist/`,
+                                # so the Prepare workspace `rm -rf dist` does
+                                # NOT clear it — on a reused agent workspace,
+                                # conda/$proj/noarch/ otherwise accumulates one
+                                # .conda per master build forever, and the `cp`
+                                # below copies that whole history into the
+                                # freshly-made dist/conda/. (Observed on
+                                # master #5791: ~25 stale versions per package
+                                # dating back ~18 days.) Wiping here keeps
+                                # dist/conda/ holding ONLY this build's
+                                # freshly-built packages — which is what the
+                                # comment on the cp already promised, and what
+                                # downstream consumers (gpf-release,
+                                # gpf-docs-e2e) assume.
+                                rm -rf conda/$proj
                                 mkdir -p conda/$proj
                                 docker run --rm \
                                     --user "$DOCKER_USER" \
