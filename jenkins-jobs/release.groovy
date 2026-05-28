@@ -13,7 +13,7 @@
 // path is a GitHub Organization Folder and rejects Job-DSL-managed
 // children. Sibling of `gpf-nightly`, `gpf-federation-integration`,
 // `gpf-rest-client-integration`, `gpf-web-e2e`, and
-// `gpf-deploy-dory`.
+// `gpf-staging-deploy`.
 pipelineJob('gpf-release') {
     description(
         'Tag-driven release pipeline for the gpf monorepo. ' +

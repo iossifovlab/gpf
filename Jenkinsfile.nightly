@@ -11,7 +11,7 @@
 //   - /gpf-rest-client-integration        — rest_client tests against
 //                                           a freshly seeded backend
 //                                           + MailHog
-//   - /gpf-deploy-dory                    — wipe-and-redeploy gpf-web
+//   - /gpf-staging-deploy                 — wipe-and-redeploy gpf-web
 //                                           on dory (iossifovlab
 //                                           playground host) pinned
 //                                           to the master rebuild's
@@ -117,7 +117,7 @@ pipeline {
             }
             steps {
                 build(
-                    job: 'gpf-deploy-dory',
+                    job: 'gpf-staging-deploy',
                     wait: true,
                     propagate: true,
                     parameters: [

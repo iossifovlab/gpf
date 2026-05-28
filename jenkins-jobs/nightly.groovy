@@ -6,7 +6,7 @@
 // The job is cron-triggered (~02:00 UTC) and rebuilds master plus
 // the integration suites (gpf-federation-integration +
 // gpf-rest-client-integration) unconditionally, then — if all
-// three pass — fires gpf-deploy-dory (gpf-infra-owned) to
+// three pass — fires gpf-staging-deploy (gpf-infra-owned) to
 // destroy+redeploy gpf-web on dory pinned to the rebuilt
 // BUILD_NUMBER.
 //
@@ -22,13 +22,13 @@
 // Declared at the Jenkins root (not under `iossifovlab/`): that
 // path is a GitHub Organization Folder and rejects Job-DSL-managed
 // children. Sibling of `gpf-federation-integration`,
-// `gpf-rest-client-integration`, and `gpf-deploy-dory`.
+// `gpf-rest-client-integration`, and `gpf-staging-deploy`.
 pipelineJob('gpf-nightly') {
     description(
         'Cron-scheduled orchestrator that rebuilds master from ' +
         'scratch, re-runs gpf-federation-integration + ' +
         'gpf-rest-client-integration unconditionally, and — if ' +
-        'all three succeed — fires gpf-deploy-dory to wipe and ' +
+        'all three succeed — fires gpf-staging-deploy to wipe and ' +
         'redeploy gpf-web on dory pinned to the rebuilt master ' +
         'BUILD_NUMBER. Catches dependency drift / silently-stale ' +
         'caches on quiet days. Sends a Zulip alert on failure ' +
