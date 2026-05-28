@@ -119,11 +119,12 @@ docs_e2e/
 ├── Jenkinsfile.docs-e2e     # downstream pipeline
 ├── jenkins-jobs/
 │   └── docs_e2e.groovy      # pipelineJob DSL, seeded by main gpf Jenkinsfile
-├── conftest.py              # fixtures: conda_channel, gpf_env_prefix, getting_started_clone, prepared_instance, wgpf_server
+├── conftest.py              # fixtures: conda_channel, gpf_env_prefix, getting_started_clone, prepared_instance, annotated_instance, wgpf_server
 ├── guide_assertions.py      # deep module — uniform failure-message helpers
 ├── test_guide_assertions.py # unit tests for the module (pure Python)
 ├── __init__.py
 └── tests/
     ├── __init__.py
-    └── test_main_body.py    # v1: main getting_started.rst body claims
+    ├── test_main_body.py    # v1: main getting_started.rst body claims
+    └── test_annotation.py   # getting_started_with_annotation.rst claims
 ```

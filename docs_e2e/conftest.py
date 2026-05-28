@@ -281,6 +281,53 @@ def prepared_instance(getting_started_clone, gpf_env):
     )
 
 
+# The gnomAD + ClinVar annotation block the annotation guide tells
+# the user to append to gpf_instance.yaml — the emphasized lines
+# 9-12 of the config code-block in
+# getting_started_with_annotation.rst (RST lines 44-55). Kept
+# byte-for-byte in sync with the guide; a drift here is itself a
+# guide-accuracy bug the annotation suite is meant to catch.
+_ANNOTATION_BLOCK = (
+    "\n"
+    "annotation:\n"
+    "  config:\n"
+    "    - allele_score: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL\n"
+    "    - allele_score: hg38/scores/ClinVar_20240730\n"
+)
+
+
+@dataclass
+class AnnotatedInstance:
+    """The instance after the annotation guide's config edit."""
+
+    instance_dir: Path
+    config_path: Path
+
+
+@pytest.fixture(scope="session")
+def annotated_instance(prepared_instance):
+    """Apply getting_started_with_annotation.rst: append the gnomAD +
+    ClinVar annotation block to minimal_instance/gpf_instance.yaml.
+
+    Mirrors exactly the edit the guide tells the user to make. The
+    re-annotation itself is NOT run here — per the guide it is
+    triggered by ``wgpf run`` ("When you start the GPF instance using
+    the wgpf tool, it will automatically re-annotate any genotype data
+    that is not up to date"). The shared ``wgpf_server`` fixture
+    depends on this fixture, so the single server starts against the
+    annotated config and re-annotates on startup.
+
+    Strict mode: the only thing done here is the yaml edit a real user
+    types. No hidden re-annotation CLI, no pre-warming.
+    """
+    config_path = prepared_instance.instance_dir / "gpf_instance.yaml"
+    config_path.write_text(config_path.read_text() + _ANNOTATION_BLOCK)
+    return AnnotatedInstance(
+        instance_dir=prepared_instance.instance_dir,
+        config_path=config_path,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -288,10 +335,20 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(prepared_instance, gpf_env):
+def wgpf_server(annotated_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
+
+    Depends on ``annotated_instance`` so the single shared server
+    starts *after* the annotation guide's config edit and re-annotates
+    on startup. This keeps the suite to one wgpf process per session —
+    two ``wgpf run``s against the same ``DAE_DB_DIR`` would race on the
+    genotype-storage parquet during re-annotation. The main-body claims
+    (datasets visible) hold equally before and after annotation, so
+    sharing one annotated server across both stages is sound; the
+    guide is a linear narrative and by the annotation section the
+    instance genuinely is annotated.
 
     On teardown, terminates wgpf and dumps the last few hundred
     lines of its combined stdout/stderr if any test in the
@@ -299,14 +356,14 @@ def wgpf_server(prepared_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(prepared_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(annotated_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=prepared_instance.instance_dir,
+        cwd=annotated_instance.instance_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

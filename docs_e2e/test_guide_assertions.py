@@ -12,9 +12,26 @@ import pytest
 from docs_e2e.guide_assertions import (
     assert_command_succeeds,
     assert_dataset_visible,
+    assert_download_has_columns,
+    assert_download_trailing_columns,
     assert_file_created,
+    assert_genomic_score_available,
     assert_query_returned_variants,
 )
+
+
+def _tsv(*headers):
+    """A download response whose body is a TSV with these headers."""
+    return _FakeResponse(200, text="\t".join(headers) + "\nrow1\trow2\n")
+
+
+# A realistic example_dataset download header: the fixed genotype
+# columns followed by the three annotation attributes as trailing
+# columns (see getting_started_with_annotation.rst).
+_ANNOTATED_HEADER = [
+    "family id", "study", "location", "variant", "worst effect", "genes",
+    "gnomad_v4_genome_ALL_af", "CLNDN", "CLNSIG",
+]
 
 
 class _FakeResponse:
@@ -288,3 +305,132 @@ class TestAssertQueryReturnedVariants:
         message = str(exc_info.value)
         assert "at least 3" in message
         assert "1 variant" in message
+
+
+class TestAssertDownloadHasColumns:
+    def test_passes_when_all_columns_present(self):
+        resp = _tsv(*_ANNOTATED_HEADER)
+        assert_download_has_columns(
+            resp, ["gnomad_v4_genome_ALL_af", "CLNSIG", "CLNDN"],
+            rst_ref="getting_started_with_annotation.rst:67",
+            expectation="download includes annotation attributes",
+        )
+
+    def test_raises_when_a_column_missing(self):
+        # gnomAD attribute absent — annotation did not take effect.
+        resp = _tsv(
+            "family id", "study", "worst effect", "genes",
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_download_has_columns(
+                resp, ["gnomad_v4_genome_ALL_af"],
+                rst_ref="getting_started_with_annotation.rst:67",
+                expectation="download includes gnomad_v4_genome_ALL_af",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_annotation.rst:67" in message
+        assert "gnomad_v4_genome_ALL_af" in message
+        # The actual header is surfaced so the operator can see what
+        # columns DID come through.
+        assert "worst effect" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_download_has_columns(
+                resp, ["gnomad_v4_genome_ALL_af"],
+                rst_ref="getting_started_with_annotation.rst:67",
+                expectation="download includes gnomad_v4_genome_ALL_af",
+            )
+        message = str(exc_info.value)
+        assert "500" in message
+        assert "server" in message.lower() or "backend" in message.lower()
+
+
+class TestAssertDownloadTrailingColumns:
+    def test_passes_when_columns_are_trailing_any_order(self):
+        # Live order is gnomad, CLNDN, CLNSIG — the helper is
+        # order-insensitive among the trailing columns, so passing
+        # the guide's prose order (CLNSIG before CLNDN) still passes.
+        resp = _tsv(*_ANNOTATED_HEADER)
+        assert_download_trailing_columns(
+            resp, ["gnomad_v4_genome_ALL_af", "CLNSIG", "CLNDN"],
+            rst_ref="getting_started_with_annotation.rst:91",
+            expectation="annotation attributes are the last columns",
+        )
+
+    def test_raises_when_a_column_trails_the_annotation_block(self):
+        # An extra column appended after the annotation block — the
+        # "last columns" claim no longer holds.
+        resp = _tsv(
+            "family id", "gnomad_v4_genome_ALL_af", "CLNDN", "CLNSIG",
+            "some_new_trailing_column",
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_download_trailing_columns(
+                resp, ["gnomad_v4_genome_ALL_af", "CLNSIG", "CLNDN"],
+                rst_ref="getting_started_with_annotation.rst:91",
+                expectation="annotation attributes are the last columns",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_annotation.rst:91" in message
+        assert "some_new_trailing_column" in message
+        assert "Triage" in message
+
+
+class TestAssertGenomicScoreAvailable:
+    def test_passes_when_score_present_dict_shape(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[
+                {"score": "gnomad_v4_genome_ALL_af"},
+                {"score": "CLNDN"},
+                {"score": "CLNSIG"},
+            ],
+        )
+        assert_genomic_score_available(
+            resp, "CLNSIG",
+            rst_ref="getting_started_with_annotation.rst:77",
+            expectation="CLNSIG is queryable as a genomic score",
+        )
+
+    def test_passes_when_score_present_string_shape(self):
+        resp = _FakeResponse(
+            200,
+            json_body=["gnomad_v4_genome_ALL_af", "CLNDN", "CLNSIG"],
+        )
+        assert_genomic_score_available(
+            resp, "gnomad_v4_genome_ALL_af",
+            rst_ref="getting_started_with_annotation.rst:77",
+            expectation="gnomad score is queryable",
+        )
+
+    def test_raises_when_score_missing(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[{"score": "gnomad_v4_genome_ALL_af"}],
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_genomic_score_available(
+                resp, "CLNSIG",
+                rst_ref="getting_started_with_annotation.rst:77",
+                expectation="CLNSIG is queryable as a genomic score",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_annotation.rst:77" in message
+        assert "CLNSIG" in message
+        # Lists what IS available so the operator can spot a rename.
+        assert "gnomad_v4_genome_ALL_af" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(503, text="Service Unavailable")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_genomic_score_available(
+                resp, "CLNSIG",
+                rst_ref="getting_started_with_annotation.rst:77",
+                expectation="CLNSIG is queryable as a genomic score",
+            )
+        message = str(exc_info.value)
+        assert "503" in message

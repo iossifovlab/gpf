@@ -228,3 +228,143 @@ def assert_file_created(path, *, rst_ref, expectation, after_command=None):
         f"  {triage}"
     )
     raise AssertionError(message)
+
+
+def _parse_tsv_header(response):
+    """Return the tab-separated header fields of a download response."""
+    text = getattr(response, "text", "") or ""
+    lines = text.splitlines()
+    if not lines:
+        return []
+    return lines[0].split("\t")
+
+
+def assert_download_has_columns(response, columns, *, rst_ref, expectation):
+    """Assert the genotype-browser download TSV header contains each
+    of ``columns``.
+
+    Backs the annotation guide's claim that the additional attributes
+    produced by annotation (``gnomad_v4_genome_ALL_af``, ``CLNSIG``,
+    ``CLNDN``) are included in the downloaded variants file. A non-200
+    status fails with HTTP-error triage; a missing column fails with a
+    hint pointing at the annotation config / re-annotation step.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with a TSV header containing {columns}"
+            ),
+        ))
+    header = _parse_tsv_header(response)
+    missing = [c for c in columns if c not in header]
+    if not missing:
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected columns: {', '.join(columns)}\n"
+        f"  missing:          {', '.join(missing)}\n"
+        f"  actual header:    {', '.join(header)}\n"
+        f"\n"
+        f"  Triage hint: The download succeeded but an expected "
+        f"annotation column is absent. Most likely either (a) the "
+        f"annotation config in gpf_instance.yaml did not take effect "
+        f"(re-check that `wgpf run` re-annotated — the wgpf log dump "
+        f"in the artefacts shows the configured annotators), or (b) "
+        f"the annotator's output attribute was renamed. If the new "
+        f"column name is correct, update the guide."
+    )
+    raise AssertionError(message)
+
+
+def assert_download_trailing_columns(
+        response, columns, *, rst_ref, expectation,
+):
+    """Assert the final columns of the download TSV header are exactly
+    ``columns`` (order-insensitive among themselves).
+
+    Backs the guide's claim that annotation attributes are appended
+    "as the last columns in the downloaded file". The inter-order of
+    the trailing columns is not asserted — the guide makes no claim
+    about it and it is cosmetic.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with {columns} as the trailing TSV columns"
+            ),
+        ))
+    header = _parse_tsv_header(response)
+    trailing = header[-len(columns):]
+    if set(trailing) == set(columns):
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected last {len(columns)} columns: "
+        f"{', '.join(sorted(columns))}\n"
+        f"  actual last {len(columns)} columns:   "
+        f"{', '.join(trailing)}\n"
+        f"  full header:    {', '.join(header)}\n"
+        f"\n"
+        f"  Triage hint: The annotation attributes are not the trailing "
+        f"block of the download. Either a column was appended after them "
+        f"(layout changed) or one of the expected attributes is missing. "
+        f"If the layout legitimately changed, update the guide's claim "
+        f"that they are the last columns."
+    )
+    raise AssertionError(message)
+
+
+def _score_id(item):
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        return item.get("score") or item.get("id") or item.get("name")
+    return None
+
+
+def assert_genomic_score_available(
+        response, score_id, *, rst_ref, expectation,
+):
+    """Assert ``score_id`` appears in the instance's genomic-scores
+    registry (``/api/v3/genomic_scores/``).
+
+    Backs the guide's claim that annotation attributes are usable as
+    genomic-score query filters. The response is a JSON list of score
+    descriptor dicts each carrying a ``score`` field; a list of bare
+    id strings is tolerated too.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with '{score_id}' among the genomic scores"
+            ),
+        ))
+    score_ids = [_score_id(item) for item in response.json()]
+    if score_id in score_ids:
+        return
+    available = ", ".join(repr(s) for s in score_ids) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected genomic score: {score_id!r}\n"
+        f"  available scores:       [{available}]\n"
+        f"\n"
+        f"  Triage hint: The score is not registered as a queryable "
+        f"genomic score. Most likely the annotation that produces it is "
+        f"not configured (re-check the annotation block in "
+        f"gpf_instance.yaml and that `wgpf run` re-annotated), or the "
+        f"score id in the guide drifted from the annotator's output "
+        f"attribute name."
+    )
+    raise AssertionError(message)
