@@ -113,13 +113,20 @@ def conda_channel(tmp_path_factory):
             # Cross-filesystem or hardlink not permitted; fall back.
             shutil.copy2(conda_file, target)
 
+    # Invoke conda_index via the BASE env's python — that env has
+    # both `conda_index` (installed via the Dockerfile's
+    # `mamba install -n base conda-index`) and the `conda` python
+    # module conda_index depends on at runtime. The driver env's
+    # python (which is the one running pytest right now) has
+    # neither; the explicit absolute path is the cleanest cross-env
+    # invocation.
     result = _run(
-        ["python", "-m", "conda_index", str(channel)],
+        ["/opt/conda/bin/python", "-m", "conda_index", str(channel)],
         timeout=300,
     )
     if result.returncode != 0:
         pytest.fail(
-            "python -m conda_index failed:\n"
+            "conda_index failed:\n"
             f"  stdout: {result.stdout.decode(errors='replace')[-2000:]}\n"
             f"  stderr: {result.stderr.decode(errors='replace')[-2000:]}",
             pytrace=False,
