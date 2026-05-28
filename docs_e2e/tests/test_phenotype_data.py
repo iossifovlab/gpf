@@ -22,17 +22,28 @@ Each test maps to one discrete prose claim. ``rst_ref`` points at the
 line in the guide source so a failure localizes the drift.
 """
 
+import pytest
+
 from docs_e2e.guide_assertions import (
     assert_command_succeeds,
     assert_dataset_description_flag,
     assert_dataset_visible,
+    assert_image_response_ok,
     assert_pheno_instruments_available,
+    assert_pheno_measures_present,
 )
 
 RST = "getting_started_with_phenotype_data.rst"
 
 # The two instruments import_project.yaml imports (RST lines 31-39).
 PHENO_INSTRUMENTS = ["basic_medical", "iq"]
+
+
+def _measures(wgpf_server, instrument):
+    return wgpf_server.client.get(
+        "/api/v3/pheno_browser/measures",
+        params={"dataset_id": "mini_pheno", "instrument": instrument},
+    )
 
 
 class TestPhenotypeImport:
@@ -74,6 +85,59 @@ class TestPhenotypeImport:
             expectation=(
                 "following the link shows the Phenotype Browser tab with "
                 "the imported data (the basic_medical + iq instruments)"
+            ),
+        )
+
+    def test_phenotype_browser_search_returns_measures(self, wgpf_server):
+        # RST lines 91-92: "you can search for phenotype instruments and
+        # measures". The measures endpoint reads the browser DB that
+        # `wgpf run` builds on startup — a non-empty result also confirms
+        # that build happened (an un-built browser DB returns []).
+        assert_pheno_measures_present(
+            _measures(wgpf_server, "basic_medical"),
+            rst_ref=f"{RST}:91",
+            expectation=(
+                "in the Phenotype Browser you can search for measures "
+                "(searching the basic_medical instrument returns measures)"
+            ),
+        )
+
+    def test_phenotype_browser_aggregated_figure_accessible(self, wgpf_server):
+        # RST line 92: "see the aggregated figures for the measures". Each
+        # measure record carries a `figure_distribution` image path built
+        # by `wgpf run`; the image is served by the pheno-browser images
+        # endpoint. Discover the path from the search result rather than
+        # hard-coding it, then fetch the image through the API.
+        resp = _measures(wgpf_server, "basic_medical")
+        assert_pheno_measures_present(
+            resp,
+            rst_ref=f"{RST}:92",
+            expectation="the Phenotype Browser lists measures with figures",
+        )
+        figures = [
+            m["measure"].get("figure_distribution")
+            for m in resp.json()
+            if m.get("measure", {}).get("figure_distribution")
+        ]
+        if not figures:
+            pytest.fail(
+                f'DRIFT at {RST}:92 — "see the aggregated figures for the '
+                f'measures"\n\n  No measure in the basic_medical search '
+                f"result carried a `figure_distribution` path. `wgpf run` "
+                f"builds these figures on startup; check the wgpf log dump "
+                f"for a build_pheno_browser failure, or whether the measure "
+                f"record's figure field was renamed.",
+                pytrace=False,
+            )
+        image = wgpf_server.client.get(
+            f"/api/v3/pheno_browser/images/mini_pheno/{figures[0]}",
+        )
+        assert_image_response_ok(
+            image,
+            rst_ref=f"{RST}:92",
+            expectation=(
+                "the aggregated figure for a measure is viewable through "
+                "the pheno-browser images endpoint"
             ),
         )
 

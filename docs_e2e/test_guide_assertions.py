@@ -17,7 +17,9 @@ from docs_e2e.guide_assertions import (
     assert_download_trailing_columns,
     assert_file_created,
     assert_genomic_score_available,
+    assert_image_response_ok,
     assert_pheno_instruments_available,
+    assert_pheno_measures_present,
     assert_query_returned_variants,
 )
 
@@ -39,10 +41,15 @@ _ANNOTATED_HEADER = [
 class _FakeResponse:
     """Minimal duck-typed httpx.Response stand-in."""
 
-    def __init__(self, status_code, json_body=None, text=""):
+    def __init__(
+        self, status_code, json_body=None, text="",
+        content=b"", headers=None,
+    ):
         self.status_code = status_code
         self._json = json_body
         self.text = text
+        self.content = content
+        self.headers = headers or {}
 
     def json(self):
         if self._json is None:
@@ -549,3 +556,81 @@ class TestAssertDatasetDescriptionFlag:
             )
         message = str(exc_info.value)
         assert "404" in message
+
+
+class TestAssertPhenoMeasuresPresent:
+    def _measures(self, *names):
+        return _FakeResponse(
+            200,
+            json_body=[{"measure": {"measure_id": n}} for n in names],
+        )
+
+    def test_passes_when_measures_returned(self):
+        assert_pheno_measures_present(
+            self._measures("basic_medical.age", "basic_medical.weight"),
+            rst_ref="getting_started_with_phenotype_data.rst:91",
+            expectation="searching basic_medical returns measures",
+        )
+
+    def test_raises_when_no_measures(self):
+        # An empty browser DB (wgpf run did not build it) yields [].
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_measures_present(
+                _FakeResponse(200, json_body=[]),
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="searching basic_medical returns measures",
+            )
+        message = str(exc_info.value)
+        assert "0 measure" in message
+        assert "build_pheno_browser" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_measures_present(
+                _FakeResponse(500, text="Internal Server Error"),
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="searching basic_medical returns measures",
+            )
+        message = str(exc_info.value)
+        assert "500" in message
+
+
+class TestAssertImageResponseOk:
+    def test_passes_on_image_bytes(self):
+        resp = _FakeResponse(
+            200, content=b"\xff\xd8\xff\xe0jpegdata",
+            headers={"content-type": "image/jpeg"},
+        )
+        assert_image_response_ok(
+            resp,
+            rst_ref="getting_started_with_phenotype_data.rst:91",
+            expectation="the measure's aggregated figure is viewable",
+        )
+
+    def test_raises_on_404(self):
+        # Figure file missing — wgpf run did not build the images.
+        resp = _FakeResponse(404, text="not found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_image_response_ok(
+                resp,
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="the measure's aggregated figure is viewable",
+            )
+        message = str(exc_info.value)
+        assert "404" in message
+
+    def test_raises_when_200_but_not_an_image(self):
+        # 200 with an empty body / non-image content-type is not a figure.
+        resp = _FakeResponse(
+            200, content=b"", headers={"content-type": "text/html"},
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_image_response_ok(
+                resp,
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="the measure's aggregated figure is viewable",
+            )
+        message = str(exc_info.value)
+        assert "text/html" in message
+        assert "Triage" in message

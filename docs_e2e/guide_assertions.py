@@ -476,3 +476,82 @@ def assert_dataset_description_flag(
         f"holds, update the guide."
     )
     raise AssertionError(message)
+
+
+def assert_pheno_measures_present(
+        response, *, min_count=1, rst_ref, expectation,
+):
+    """Assert the Phenotype Browser measures search returned at least
+    ``min_count`` measures (``/api/v3/pheno_browser/measures``).
+
+    Backs the guide's claim that you can search instruments and measures
+    in the Phenotype Browser. The measures endpoint reads from the
+    browser DB that ``wgpf run`` builds on startup; an un-built browser
+    DB is empty and the search yields nothing — so a non-empty result
+    also confirms ``wgpf run`` built the browser. The response is a JSON
+    list of ``{"measure": {...}}`` objects.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with at least {min_count} measure(s)"
+            ),
+        ))
+    measures = response.json()
+    count = len(measures)
+    if count >= min_count:
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: at least {min_count} measure(s) in the search result\n"
+        f"  actual:   {count} measure(s)\n"
+        f"\n"
+        f"  Triage hint: The measures endpoint responded but returned no "
+        f"measures. Most likely the per-study browser DB was not built — "
+        f"`wgpf run` builds it on startup (see wgpf.cli), so check the "
+        f"wgpf log dump for a build_pheno_browser failure. Less likely the "
+        f"instrument name in the test drifted from the import."
+    )
+    raise AssertionError(message)
+
+
+def assert_image_response_ok(response, *, rst_ref, expectation):
+    """Assert an image response is HTTP 200 with non-empty image content.
+
+    Backs the guide's claim that the measures' aggregated figures are
+    viewable. The pheno-browser images endpoint
+    (``/api/v3/pheno_browser/images/<pheno_id>/<path>``) returns the raw
+    image bytes with an ``image/*`` content-type, or 404 when the figure
+    file is absent (e.g. ``wgpf run`` did not build the browser images).
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected="HTTP 200 with image bytes",
+        ))
+    content = getattr(response, "content", b"") or b""
+    headers = getattr(response, "headers", {}) or {}
+    content_type = headers.get("content-type", "")
+    if content and content_type.startswith("image/"):
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: non-empty body with an image/* content-type\n"
+        f"  actual:   content-type={content_type!r}, "
+        f"{len(content)} byte(s)\n"
+        f"\n"
+        f"  Triage hint: The images endpoint returned 200 but not a "
+        f"usable image. Most likely the figure file referenced by the "
+        f"measure is missing from the browser images dir — `wgpf run` "
+        f"builds the figures on startup, so check the wgpf log dump for a "
+        f"build_pheno_browser failure, or whether the figure path in the "
+        f"measure record drifted from the on-disk layout."
+    )
+    raise AssertionError(message)
