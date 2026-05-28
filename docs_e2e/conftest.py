@@ -328,6 +328,70 @@ def annotated_instance(prepared_instance):
     )
 
 
+# The line getting_started_with_phenotype_data.rst (RST line 112) tells
+# the user to add to the example_dataset config to attach the imported
+# pheno study. Kept byte-for-byte in sync with the guide.
+_PHENOTYPE_DATA_LINE = "phenotype_data: mini_pheno\n"
+
+
+@dataclass
+class PhenotypeInstance:
+    """The instance after the phenotype guide's import + dataset edit.
+
+    Captures the ``import_phenotypes`` subprocess result so a per-test
+    assertion can feed it into ``assert_command_succeeds`` for triage.
+    """
+
+    instance_dir: Path
+    pheno_import: subprocess.CompletedProcess
+    dataset_yaml_path: Path
+
+
+@pytest.fixture(scope="session")
+def phenotype_instance(annotated_instance, getting_started_clone, gpf_env):
+    """Apply getting_started_with_phenotype_data.rst:
+
+    1. ``import_phenotypes input_phenotype_data/import_project.yaml`` —
+       imports the ``mini_pheno`` study into the instance's (default)
+       phenotype storage.
+    2. Append ``phenotype_data: mini_pheno`` to the example_dataset
+       config — attaches the pheno study so the genotype dataset gains
+       the Phenotype Browser / Phenotype Tool tabs + Pheno Measures
+       filters.
+
+    Both are exactly what the guide tells the user to type — a CLI
+    import and a one-line yaml edit. ``wgpf_server`` depends on this
+    fixture, so the single shared server serves the pheno-enabled
+    instance. Chained after ``annotated_instance`` to keep the suite's
+    linear-narrative ordering (imports → annotation edit → pheno).
+
+    Strict mode (#871): no hidden phenotype-storage config, no silent
+    migrate — the minimal_instance has no ``phenotype_storage:`` block
+    and ``import_phenotypes`` falls back to a default storage on its
+    own, which is the behaviour the guide relies on.
+    """
+    clone = getting_started_clone
+    instance_dir = annotated_instance.instance_dir
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(instance_dir)
+
+    pheno_import = _run(
+        ["import_phenotypes", "input_phenotype_data/import_project.yaml"],
+        cwd=clone, env=env, timeout=_IMPORT_TIMEOUT,
+    )
+
+    dataset_yaml = (
+        instance_dir / "datasets" / "example_dataset" / "example_dataset.yaml"
+    )
+    dataset_yaml.write_text(dataset_yaml.read_text() + _PHENOTYPE_DATA_LINE)
+
+    return PhenotypeInstance(
+        instance_dir=instance_dir,
+        pheno_import=pheno_import,
+        dataset_yaml_path=dataset_yaml,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -335,20 +399,21 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(annotated_instance, gpf_env):
+def wgpf_server(phenotype_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``annotated_instance`` so the single shared server
-    starts *after* the annotation guide's config edit and re-annotates
-    on startup. This keeps the suite to one wgpf process per session —
-    two ``wgpf run``s against the same ``DAE_DB_DIR`` would race on the
-    genotype-storage parquet during re-annotation. The main-body claims
-    (datasets visible) hold equally before and after annotation, so
-    sharing one annotated server across both stages is sound; the
-    guide is a linear narrative and by the annotation section the
-    instance genuinely is annotated.
+    Depends on ``phenotype_instance`` — the last stage of the guide's
+    linear narrative (imports → annotation edit → pheno import + pheno
+    attach). The single shared server therefore starts after every
+    config edit the guide describes: it re-annotates the genotype data
+    on startup and serves the pheno-enabled example_dataset. Keeping the
+    suite to one wgpf process per session avoids two ``wgpf run``s racing
+    on the same ``DAE_DB_DIR`` parquet during re-annotation. Every
+    earlier claim (datasets visible, annotation download columns) holds
+    equally in this final state, so sharing one server across all stages
+    is sound.
 
     On teardown, terminates wgpf and dumps the last few hundred
     lines of its combined stdout/stderr if any test in the
@@ -356,14 +421,14 @@ def wgpf_server(annotated_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(annotated_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(phenotype_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=annotated_instance.instance_dir,
+        cwd=phenotype_instance.instance_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

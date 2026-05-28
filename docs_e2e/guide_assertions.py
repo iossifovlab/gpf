@@ -368,3 +368,190 @@ def assert_genomic_score_available(
         f"attribute name."
     )
     raise AssertionError(message)
+
+
+def assert_pheno_instruments_available(
+        response, instruments, *, rst_ref, expectation,
+):
+    """Assert each of ``instruments`` is listed by the Phenotype Browser
+    instruments endpoint (``/api/v3/pheno_browser/instruments``).
+
+    Backs the phenotype guide's claim that, after ``import_phenotypes``,
+    the Phenotype Browser tab shows the imported instruments. The
+    response is a JSON object ``{"instruments": [...], "default": ...}``
+    whose ``instruments`` value is a list of instrument-name strings. A
+    non-200 status fails with HTTP-error triage; a missing instrument
+    fails with a hint pointing at the import step.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with instruments {instruments} listed"
+            ),
+        ))
+    listed = response.json().get("instruments", [])
+    missing = [i for i in instruments if i not in listed]
+    if not missing:
+        return
+    available = ", ".join(repr(i) for i in listed) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected instruments: {', '.join(instruments)}\n"
+        f"  missing:              {', '.join(missing)}\n"
+        f"  available:            [{available}]\n"
+        f"\n"
+        f"  Triage hint: The Phenotype Browser responded but an expected "
+        f"instrument is absent. Most likely either (a) the "
+        f"import_phenotypes step did not import the instrument (re-check "
+        f"its exit code + that import_project.yaml lists the instrument "
+        f"file), or (b) the instrument name in the guide drifted from "
+        f"what the import produces. If the new name is correct, update "
+        f"the guide."
+    )
+    raise AssertionError(message)
+
+
+def _navigate(obj, dotted_path):
+    """Walk a dotted key path into nested dicts.
+
+    Returns ``(found, value)``: ``found`` is False if any segment is
+    missing (or a non-dict is hit mid-path), in which case ``value`` is
+    None. Distinguishes a genuinely-absent key from a key present with a
+    falsy value, so the failure message can say "absent" vs. the value.
+    """
+    current = obj
+    for key in dotted_path.split("."):
+        if not isinstance(current, dict) or key not in current:
+            return False, None
+        current = current[key]
+    return True, current
+
+
+def assert_dataset_description_flag(
+        response, flag_path, *, rst_ref, expectation,
+):
+    """Assert a (possibly nested) flag in a dataset description is truthy.
+
+    Backs the phenotype guide's claims that attaching a phenotype db to
+    ``example_dataset`` enables the Phenotype Browser + Phenotype Tool
+    tabs and the genotype-browser Pheno Measures filters. The response
+    is the single-dataset description endpoint (``/api/v3/datasets/<id>``),
+    shaped ``{"data": {...}}``. ``flag_path`` is a dotted path into that
+    inner object, e.g. ``"phenotype_tool"`` or
+    ``"genotype_browser_config.has_person_pheno_filters"``.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with a truthy '{flag_path}' in the "
+                f"dataset description"
+            ),
+        ))
+    data = response.json().get("data", {})
+    found, value = _navigate(data, flag_path)
+    if found and value:
+        return
+    actual = "absent" if not found else f"{value!r}"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: dataset description flag '{flag_path}' truthy\n"
+        f"  actual:   {actual}\n"
+        f"  description keys: {', '.join(sorted(data)) or '(none)'}\n"
+        f"\n"
+        f"  Triage hint: The dataset description was returned but the "
+        f"phenotype flag is not set. Most likely either (a) the "
+        f"`phenotype_data: mini_pheno` line was not added to the "
+        f"example_dataset config (or the pheno study failed to import, so "
+        f"the attachment resolves to nothing), or (b) the description "
+        f"field that signals this tab was renamed. If the field moved, "
+        f"update the test's flag path; if the guide's claim no longer "
+        f"holds, update the guide."
+    )
+    raise AssertionError(message)
+
+
+def assert_pheno_measures_present(
+        response, *, min_count=1, rst_ref, expectation,
+):
+    """Assert the Phenotype Browser measures search returned at least
+    ``min_count`` measures (``/api/v3/pheno_browser/measures``).
+
+    Backs the guide's claim that you can search instruments and measures
+    in the Phenotype Browser. The measures endpoint reads from the
+    browser DB that ``wgpf run`` builds on startup; an un-built browser
+    DB is empty and the search yields nothing — so a non-empty result
+    also confirms ``wgpf run`` built the browser. The response is a JSON
+    list of ``{"measure": {...}}`` objects.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with at least {min_count} measure(s)"
+            ),
+        ))
+    measures = response.json()
+    count = len(measures)
+    if count >= min_count:
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: at least {min_count} measure(s) in the search result\n"
+        f"  actual:   {count} measure(s)\n"
+        f"\n"
+        f"  Triage hint: The measures endpoint responded but returned no "
+        f"measures. Most likely the per-study browser DB was not built — "
+        f"`wgpf run` builds it on startup (see wgpf.cli), so check the "
+        f"wgpf log dump for a build_pheno_browser failure. Less likely the "
+        f"instrument name in the test drifted from the import."
+    )
+    raise AssertionError(message)
+
+
+def assert_image_response_ok(response, *, rst_ref, expectation):
+    """Assert an image response is HTTP 200 with non-empty image content.
+
+    Backs the guide's claim that the measures' aggregated figures are
+    viewable. The pheno-browser images endpoint
+    (``/api/v3/pheno_browser/images/<pheno_id>/<path>``) returns the raw
+    image bytes with an ``image/*`` content-type, or 404 when the figure
+    file is absent (e.g. ``wgpf run`` did not build the browser images).
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected="HTTP 200 with image bytes",
+        ))
+    content = getattr(response, "content", b"") or b""
+    headers = getattr(response, "headers", {}) or {}
+    content_type = headers.get("content-type", "")
+    if content and content_type.startswith("image/"):
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: non-empty body with an image/* content-type\n"
+        f"  actual:   content-type={content_type!r}, "
+        f"{len(content)} byte(s)\n"
+        f"\n"
+        f"  Triage hint: The images endpoint returned 200 but not a "
+        f"usable image. Most likely the figure file referenced by the "
+        f"measure is missing from the browser images dir — `wgpf run` "
+        f"builds the figures on startup, so check the wgpf log dump for a "
+        f"build_pheno_browser failure, or whether the figure path in the "
+        f"measure record drifted from the on-disk layout."
+    )
+    raise AssertionError(message)

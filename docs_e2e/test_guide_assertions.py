@@ -11,11 +11,15 @@ import pytest
 
 from docs_e2e.guide_assertions import (
     assert_command_succeeds,
+    assert_dataset_description_flag,
     assert_dataset_visible,
     assert_download_has_columns,
     assert_download_trailing_columns,
     assert_file_created,
     assert_genomic_score_available,
+    assert_image_response_ok,
+    assert_pheno_instruments_available,
+    assert_pheno_measures_present,
     assert_query_returned_variants,
 )
 
@@ -37,10 +41,15 @@ _ANNOTATED_HEADER = [
 class _FakeResponse:
     """Minimal duck-typed httpx.Response stand-in."""
 
-    def __init__(self, status_code, json_body=None, text=""):
+    def __init__(
+        self, status_code, json_body=None, text="",
+        content=b"", headers=None,
+    ):
         self.status_code = status_code
         self._json = json_body
         self.text = text
+        self.content = content
+        self.headers = headers or {}
 
     def json(self):
         if self._json is None:
@@ -434,3 +443,194 @@ class TestAssertGenomicScoreAvailable:
             )
         message = str(exc_info.value)
         assert "503" in message
+
+
+class TestAssertPhenoInstrumentsAvailable:
+    def test_passes_when_all_instruments_present(self):
+        resp = _FakeResponse(
+            200,
+            json_body={
+                "instruments": ["basic_medical", "iq"],
+                "default": "basic_medical",
+            },
+        )
+        assert_pheno_instruments_available(
+            resp, ["basic_medical", "iq"],
+            rst_ref="getting_started_with_phenotype_data.rst:84",
+            expectation="Phenotype Browser shows the imported instruments",
+        )
+
+    def test_raises_when_an_instrument_missing(self):
+        resp = _FakeResponse(
+            200,
+            json_body={"instruments": ["basic_medical"], "default":
+                       "basic_medical"},
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_instruments_available(
+                resp, ["basic_medical", "iq"],
+                rst_ref="getting_started_with_phenotype_data.rst:84",
+                expectation="Phenotype Browser shows the imported instruments",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_phenotype_data.rst:84" in message
+        assert "iq" in message
+        # The instruments that ARE present are surfaced.
+        assert "basic_medical" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_instruments_available(
+                resp, ["basic_medical"],
+                rst_ref="getting_started_with_phenotype_data.rst:84",
+                expectation="Phenotype Browser shows the imported instruments",
+            )
+        message = str(exc_info.value)
+        assert "500" in message
+        assert "server" in message.lower() or "backend" in message.lower()
+
+
+class TestAssertDatasetDescriptionFlag:
+    def _described(self, **inner):
+        # The single-dataset endpoint wraps the description in "data".
+        return _FakeResponse(200, json_body={"data": inner})
+
+    def test_passes_when_top_level_flag_truthy(self):
+        resp = self._described(
+            id="example_dataset", phenotype_tool=True,
+        )
+        assert_dataset_description_flag(
+            resp, "phenotype_tool",
+            rst_ref="getting_started_with_phenotype_data.rst:114",
+            expectation="Phenotype Tool tab enabled for Example Dataset",
+        )
+
+    def test_passes_when_nested_flag_truthy(self):
+        resp = self._described(
+            id="example_dataset",
+            genotype_browser_config={"has_person_pheno_filters": True},
+        )
+        assert_dataset_description_flag(
+            resp, "genotype_browser_config.has_person_pheno_filters",
+            rst_ref="getting_started_with_phenotype_data.rst:118",
+            expectation="Person Filters expose Pheno Measures filters",
+        )
+
+    def test_raises_when_flag_falsy(self):
+        resp = self._described(
+            id="example_dataset", phenotype_tool=False,
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_description_flag(
+                resp, "phenotype_tool",
+                rst_ref="getting_started_with_phenotype_data.rst:114",
+                expectation="Phenotype Tool tab enabled for Example Dataset",
+            )
+        message = str(exc_info.value)
+        assert "getting_started_with_phenotype_data.rst:114" in message
+        assert "phenotype_tool" in message
+        assert "Triage" in message
+
+    def test_raises_when_flag_absent(self):
+        resp = self._described(id="example_dataset")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_description_flag(
+                resp, "genotype_browser_config.has_family_pheno_filters",
+                rst_ref="getting_started_with_phenotype_data.rst:117",
+                expectation="Family Filters expose Pheno Measures filters",
+            )
+        message = str(exc_info.value)
+        assert "absent" in message
+        # Surfaces the keys that WERE present, to spot a rename.
+        assert "id" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(404, text="Dataset not found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_description_flag(
+                resp, "phenotype_browser",
+                rst_ref="getting_started_with_phenotype_data.rst:114",
+                expectation="Phenotype Browser tab enabled",
+            )
+        message = str(exc_info.value)
+        assert "404" in message
+
+
+class TestAssertPhenoMeasuresPresent:
+    def _measures(self, *names):
+        return _FakeResponse(
+            200,
+            json_body=[{"measure": {"measure_id": n}} for n in names],
+        )
+
+    def test_passes_when_measures_returned(self):
+        assert_pheno_measures_present(
+            self._measures("basic_medical.age", "basic_medical.weight"),
+            rst_ref="getting_started_with_phenotype_data.rst:91",
+            expectation="searching basic_medical returns measures",
+        )
+
+    def test_raises_when_no_measures(self):
+        # An empty browser DB (wgpf run did not build it) yields [].
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_measures_present(
+                _FakeResponse(200, json_body=[]),
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="searching basic_medical returns measures",
+            )
+        message = str(exc_info.value)
+        assert "0 measure" in message
+        assert "build_pheno_browser" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        with pytest.raises(AssertionError) as exc_info:
+            assert_pheno_measures_present(
+                _FakeResponse(500, text="Internal Server Error"),
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="searching basic_medical returns measures",
+            )
+        message = str(exc_info.value)
+        assert "500" in message
+
+
+class TestAssertImageResponseOk:
+    def test_passes_on_image_bytes(self):
+        resp = _FakeResponse(
+            200, content=b"\xff\xd8\xff\xe0jpegdata",
+            headers={"content-type": "image/jpeg"},
+        )
+        assert_image_response_ok(
+            resp,
+            rst_ref="getting_started_with_phenotype_data.rst:91",
+            expectation="the measure's aggregated figure is viewable",
+        )
+
+    def test_raises_on_404(self):
+        # Figure file missing — wgpf run did not build the images.
+        resp = _FakeResponse(404, text="not found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_image_response_ok(
+                resp,
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="the measure's aggregated figure is viewable",
+            )
+        message = str(exc_info.value)
+        assert "404" in message
+
+    def test_raises_when_200_but_not_an_image(self):
+        # 200 with an empty body / non-image content-type is not a figure.
+        resp = _FakeResponse(
+            200, content=b"", headers={"content-type": "text/html"},
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_image_response_ok(
+                resp,
+                rst_ref="getting_started_with_phenotype_data.rst:91",
+                expectation="the measure's aggregated figure is viewable",
+            )
+        message = str(exc_info.value)
+        assert "text/html" in message
+        assert "Triage" in message
