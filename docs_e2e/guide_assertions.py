@@ -102,7 +102,16 @@ def assert_dataset_visible(response, dataset_id, *, rst_ref, expectation):
             ),
         ))
     data = response.json()
-    visible_ids = [item.get("id") for item in data if isinstance(item, dict)]
+    # /api/v3/datasets/visible returns a JSON list of dataset-id
+    # *strings* (e.g. ["denovo_example", "vcf_example"]). Tolerate
+    # a list of {"id": ...} dicts too, in case a caller passes a
+    # response from a richer datasets endpoint.
+    visible_ids = [
+        item if isinstance(item, str)
+        else item.get("id") if isinstance(item, dict)
+        else None
+        for item in data
+    ]
     if dataset_id in visible_ids:
         return
     visible_list = ", ".join(repr(i) for i in visible_ids) or "(none)"

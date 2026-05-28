@@ -1,6 +1,6 @@
 """Session fixtures for docs_e2e/tests/.
 
-Builds the system-under-test once per pytest run: install gpf_web
+Builds the system-under-test once per pytest run: install gpf-web
 from the local conda channel, clone gpf-getting-started, import
 the guide's demo data, configure the example dataset, then start
 ``wgpf run`` in a background subprocess and yield an httpx client.
@@ -14,7 +14,7 @@ transparent to the user's command path.
 Run requirements (set by the docs-e2e Jenkinsfile, or by the
 local-iteration command in docs_e2e/README.md):
 
-* ``DOCS_E2E_CHANNEL`` — directory of ``gpf_web-*.conda`` files.
+* ``DOCS_E2E_CHANNEL`` — directory of ``gpf-web-*.conda`` files.
 * ``DOCS_E2E_GRR_CACHE`` — directory persisted as the GRR cache.
 """
 
@@ -89,11 +89,12 @@ def conda_channel(tmp_path_factory):
             f"a directory of gpf-web-*.conda files.",
             pytrace=False,
         )
-    # The conda package name (per web_api/conda-recipe/recipe.yaml
-    # `name: gpf-web`) uses a dash. The Python module name
-    # `gpf_web` uses an underscore — conda normalizes between the
-    # two so `mamba install gpf_web` resolves to the dash-named
-    # package, but the on-disk artefact is always `gpf-web-*.conda`.
+    # The conda package is named `gpf-web` (dash) — per
+    # web_api/conda-recipe/recipe.yaml. Both the `mamba install`
+    # target and the on-disk artefact use the dash form; the guide
+    # is kept in sync (it says `mamba install gpf-web`). The Python
+    # *module* inside the package is still `gpf_web` (underscore),
+    # but that name never appears on a conda command line.
     if not any(src.glob("gpf-web-*.conda")):
         pytest.fail(
             f"No gpf-web-*.conda found in {src}. The freshly-built "
@@ -152,7 +153,12 @@ def grr_cache_dir():
 def gpf_env_prefix(tmp_path_factory, conda_channel):
     """Create a fresh gpf-web conda env from the local channel +
     the upstream channels the guide tells users to add."""
-    prefix = tmp_path_factory.mktemp("gpf-env-prefix", numbered=False)
+    # mamba create --prefix refuses to write into a directory that
+    # already exists as a non-conda folder ("Non-conda folder
+    # exists at prefix"). tmp_path_factory.mktemp() *creates* the
+    # dir, so point --prefix at a not-yet-existing subpath of it
+    # and let mamba create the leaf.
+    prefix = tmp_path_factory.mktemp("gpf-env", numbered=False) / "prefix"
     cmd = [
         "mamba", "create", "-y",
         "--prefix", str(prefix),
@@ -160,12 +166,12 @@ def gpf_env_prefix(tmp_path_factory, conda_channel):
         "-c", "iossifovlab",
         "-c", "bioconda",
         "-c", "conda-forge",
-        "gpf_web",
+        "gpf-web",
     ]
     result = _run(cmd, timeout=_INSTALL_TIMEOUT)
     if result.returncode != 0:
         pytest.fail(
-            "mamba create gpf_web failed:\n"
+            "mamba create gpf-web failed:\n"
             f"  stdout: {result.stdout.decode(errors='replace')[-4000:]}\n"
             f"  stderr: {result.stderr.decode(errors='replace')[-4000:]}",
             pytrace=False,
@@ -307,8 +313,19 @@ def wgpf_server(prepared_instance, gpf_env):
     )
     client = httpx.Client(base_url=base_url, timeout=60.0)
 
-    # Poll for readiness. /api/v3/instance is a cheap, public
-    # endpoint that exists once the Django app starts answering.
+    # Poll for readiness against /api/v3/datasets/ — the same
+    # endpoint the production compose healthcheck uses
+    # (web_infra/compose-jenkins-split.yaml). It returns 200 only
+    # once WGPFInstance.studies_db is fully populated, i.e. after
+    # the instance has finished building (loading reference genome
+    # + gene models from the GRR, which takes several seconds).
+    #
+    # Earlier this polled /api/v3/instance and accepted any
+    # status < 500 — but /api/v3/instance is NOT a route (it 404s),
+    # and 404 < 500 made the fixture report "ready" the instant
+    # Django started answering, long before studies loaded. Tests
+    # then saw an empty /datasets/visible. Require == 200 on
+    # /datasets/ so we wait for the instance, not just for Django.
     deadline = time.monotonic() + _WGPF_READY_TIMEOUT
     last_err = None
     while time.monotonic() < deadline:
@@ -320,8 +337,8 @@ def wgpf_server(prepared_instance, gpf_env):
                 pytrace=False,
             )
         try:
-            r = client.get("/api/v3/instance")
-            if r.status_code < 500:
+            r = client.get("/api/v3/datasets/")
+            if r.status_code == 200:
                 break
             last_err = f"HTTP {r.status_code}"
         except httpx.RequestError as exc:
