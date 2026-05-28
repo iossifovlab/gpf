@@ -1,6 +1,6 @@
 """Session fixtures for docs_e2e/tests/.
 
-Builds the system-under-test once per pytest run: install gpf_web
+Builds the system-under-test once per pytest run: install gpf-web
 from the local conda channel, clone gpf-getting-started, import
 the guide's demo data, configure the example dataset, then start
 ``wgpf run`` in a background subprocess and yield an httpx client.
@@ -14,7 +14,7 @@ transparent to the user's command path.
 Run requirements (set by the docs-e2e Jenkinsfile, or by the
 local-iteration command in docs_e2e/README.md):
 
-* ``DOCS_E2E_CHANNEL`` — directory of ``gpf_web-*.conda`` files.
+* ``DOCS_E2E_CHANNEL`` — directory of ``gpf-web-*.conda`` files.
 * ``DOCS_E2E_GRR_CACHE`` — directory persisted as the GRR cache.
 """
 
@@ -89,11 +89,12 @@ def conda_channel(tmp_path_factory):
             f"a directory of gpf-web-*.conda files.",
             pytrace=False,
         )
-    # The conda package name (per web_api/conda-recipe/recipe.yaml
-    # `name: gpf-web`) uses a dash. The Python module name
-    # `gpf_web` uses an underscore — conda normalizes between the
-    # two so `mamba install gpf_web` resolves to the dash-named
-    # package, but the on-disk artefact is always `gpf-web-*.conda`.
+    # The conda package is named `gpf-web` (dash) — per
+    # web_api/conda-recipe/recipe.yaml. Both the `mamba install`
+    # target and the on-disk artefact use the dash form; the guide
+    # is kept in sync (it says `mamba install gpf-web`). The Python
+    # *module* inside the package is still `gpf_web` (underscore),
+    # but that name never appears on a conda command line.
     if not any(src.glob("gpf-web-*.conda")):
         pytest.fail(
             f"No gpf-web-*.conda found in {src}. The freshly-built "
@@ -160,12 +161,12 @@ def gpf_env_prefix(tmp_path_factory, conda_channel):
         "-c", "iossifovlab",
         "-c", "bioconda",
         "-c", "conda-forge",
-        "gpf_web",
+        "gpf-web",
     ]
     result = _run(cmd, timeout=_INSTALL_TIMEOUT)
     if result.returncode != 0:
         pytest.fail(
-            "mamba create gpf_web failed:\n"
+            "mamba create gpf-web failed:\n"
             f"  stdout: {result.stdout.decode(errors='replace')[-4000:]}\n"
             f"  stderr: {result.stderr.decode(errors='replace')[-4000:]}",
             pytrace=False,

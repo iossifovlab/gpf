@@ -39,7 +39,7 @@ To use this environment, you need to activate it using the following command:
 
     mamba activate gpf
 
-Afterwards, install the `gpf_web` conda package:
+Afterwards, install the `gpf-web` conda package:
 
 .. code-block:: bash
 
@@ -47,7 +47,7 @@ Afterwards, install the `gpf_web` conda package:
         -c conda-forge \
         -c bioconda \
         -c iossifovlab \
-        gpf_web
+        gpf-web
 
 This command is going to install GPF and all of its dependencies.
 

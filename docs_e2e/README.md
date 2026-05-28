@@ -2,7 +2,7 @@
 
 Guide-accuracy regression for the [GPF Getting Started
 Guide][published-guide]. Drives the guide's setup → import → query
-flow as written, against the freshly-built `gpf_web` conda
+flow as written, against the freshly-built `gpf-web` conda
 package, and asserts each prose claim. Failures cite the RST
 file:line so drift surfaces directly to the line that needs
 updating (or to the regression that broke the claim).
@@ -21,11 +21,11 @@ Per build:
 1. **Test driver image** — `docs_e2e/Dockerfile` (base:
    `condaforge/miniforge3`) starts with `pytest + httpx` in a
    tiny `driver` mamba env.
-2. **Install** — `install_gpf_web` conftest fixture creates a
-   *fresh* gpf_web env from this build's `dist/conda/*.conda`
+2. **Install** — the `gpf_env_prefix` conftest fixture creates a
+   *fresh* gpf-web env from this build's `dist/conda/*.conda`
    artefacts (mounted at `/workspace/dist/conda`), layered on
    the upstream `iossifovlab`/`bioconda`/`conda-forge` channels.
-   Mirrors what `mamba install gpf_web` does for an end user.
+   Mirrors what `mamba install gpf-web` does for an end user.
 3. **Clone demo data** — `getting_started_clone` fixture
    shallow-clones `iossifovlab/gpf-getting-started` master.
    Same source `docs/build_docs.sh` uses.
@@ -58,7 +58,7 @@ Anything else is drift, not infrastructure. Fix the guide.
 ## Local iteration
 
 You need the same artefacts CI uses: a directory of
-`gpf_web-*.conda` files. Easiest path is to copy them from a
+`gpf-web-*.conda` files. Easiest path is to copy them from a
 recent green CI build. Then:
 
 ```bash
@@ -119,7 +119,7 @@ docs_e2e/
 ├── Jenkinsfile.docs-e2e     # downstream pipeline
 ├── jenkins-jobs/
 │   └── docs_e2e.groovy      # pipelineJob DSL, seeded by main gpf Jenkinsfile
-├── conftest.py              # fixtures: install_gpf_web, getting_started_clone, …
+├── conftest.py              # fixtures: conda_channel, gpf_env_prefix, getting_started_clone, prepared_instance, wgpf_server
 ├── guide_assertions.py      # deep module — uniform failure-message helpers
 ├── test_guide_assertions.py # unit tests for the module (pure Python)
 ├── __init__.py
