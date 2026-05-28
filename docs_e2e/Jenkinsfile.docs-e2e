@@ -217,7 +217,7 @@ pipeline {
                                 -e DOCS_E2E_GRR_CACHE=/grr-cache \\
                                 -w /workspace \\
                                 "\$DRIVER_IMAGE" \\
-                                mamba run --no-capture-output -n driver \\
+                                mamba run -n driver \\
                                     pytest -v ${pytest_k} \\
                                         --junitxml=/workspace/reports/docs_e2e/pytest.xml \\
                                         docs_e2e/

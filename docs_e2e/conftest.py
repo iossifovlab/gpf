@@ -153,7 +153,12 @@ def grr_cache_dir():
 def gpf_env_prefix(tmp_path_factory, conda_channel):
     """Create a fresh gpf-web conda env from the local channel +
     the upstream channels the guide tells users to add."""
-    prefix = tmp_path_factory.mktemp("gpf-env-prefix", numbered=False)
+    # mamba create --prefix refuses to write into a directory that
+    # already exists as a non-conda folder ("Non-conda folder
+    # exists at prefix"). tmp_path_factory.mktemp() *creates* the
+    # dir, so point --prefix at a not-yet-existing subpath of it
+    # and let mamba create the leaf.
+    prefix = tmp_path_factory.mktemp("gpf-env", numbered=False) / "prefix"
     cmd = [
         "mamba", "create", "-y",
         "--prefix", str(prefix),
@@ -308,8 +313,19 @@ def wgpf_server(prepared_instance, gpf_env):
     )
     client = httpx.Client(base_url=base_url, timeout=60.0)
 
-    # Poll for readiness. /api/v3/instance is a cheap, public
-    # endpoint that exists once the Django app starts answering.
+    # Poll for readiness against /api/v3/datasets/ — the same
+    # endpoint the production compose healthcheck uses
+    # (web_infra/compose-jenkins-split.yaml). It returns 200 only
+    # once WGPFInstance.studies_db is fully populated, i.e. after
+    # the instance has finished building (loading reference genome
+    # + gene models from the GRR, which takes several seconds).
+    #
+    # Earlier this polled /api/v3/instance and accepted any
+    # status < 500 — but /api/v3/instance is NOT a route (it 404s),
+    # and 404 < 500 made the fixture report "ready" the instant
+    # Django started answering, long before studies loaded. Tests
+    # then saw an empty /datasets/visible. Require == 200 on
+    # /datasets/ so we wait for the instance, not just for Django.
     deadline = time.monotonic() + _WGPF_READY_TIMEOUT
     last_err = None
     while time.monotonic() < deadline:
@@ -321,8 +337,8 @@ def wgpf_server(prepared_instance, gpf_env):
                 pytrace=False,
             )
         try:
-            r = client.get("/api/v3/instance")
-            if r.status_code < 500:
+            r = client.get("/api/v3/datasets/")
+            if r.status_code == 200:
                 break
             last_err = f"HTTP {r.status_code}"
         except httpx.RequestError as exc:

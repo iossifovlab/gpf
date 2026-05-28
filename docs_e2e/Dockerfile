@@ -69,5 +69,10 @@ WORKDIR /workspace
 
 # Default cmd is the canonical local-run invocation. CI overrides
 # with explicit pytest args.
-CMD ["mamba", "run", "--no-capture-output", "-n", "driver", \
+# Note: no `--no-capture-output` — mamba 2.x (shipped in the
+# current condaforge/miniforge3 base) removed that flag (streaming
+# is the default now) and chokes on it with
+# `exec: --: invalid option`. Plain `mamba run -n driver` streams
+# fine on both mamba 1.x and 2.x.
+CMD ["mamba", "run", "-n", "driver", \
      "pytest", "-v", "docs_e2e/"]

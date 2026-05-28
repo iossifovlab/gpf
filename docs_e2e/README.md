@@ -82,7 +82,7 @@ docker run --rm \
     -e DOCS_E2E_CHANNEL=/workspace/dist/conda \
     -e DOCS_E2E_GRR_CACHE=/grr-cache \
     gpf-docs-e2e:dev \
-    mamba run --no-capture-output -n driver \
+    mamba run -n driver \
         pytest -v docs_e2e/tests/test_main_body.py::TestDenovoImport
 ```
 

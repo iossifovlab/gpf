@@ -162,6 +162,21 @@ class TestAssertFileCreated:
 
 class TestAssertDatasetVisible:
     def test_passes_when_dataset_id_present(self):
+        # /api/v3/datasets/visible returns a list of dataset-id
+        # STRINGS — this is the real on-the-wire shape.
+        resp = _FakeResponse(
+            200,
+            json_body=["denovo_example", "vcf_example"],
+        )
+        assert_dataset_visible(
+            resp, "denovo_example",
+            rst_ref="getting_started.rst:213",
+            expectation="home page lists denovo_example",
+        )
+
+    def test_passes_when_response_is_list_of_dicts(self):
+        # Tolerate a richer {"id": ...} shape too, for callers that
+        # pass a response from a different datasets endpoint.
         resp = _FakeResponse(
             200,
             json_body=[
@@ -178,7 +193,7 @@ class TestAssertDatasetVisible:
     def test_raises_when_dataset_id_missing(self):
         resp = _FakeResponse(
             200,
-            json_body=[{"id": "vcf_example", "name": "VCF example"}],
+            json_body=["vcf_example"],
         )
         with pytest.raises(AssertionError) as exc_info:
             assert_dataset_visible(
