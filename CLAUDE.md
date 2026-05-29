@@ -199,6 +199,11 @@ Test markers in `core/pytest.ini`: genotype storage
 
 All tests run with `PYTHONHASHSEED=0`.
 
+The `docs_e2e/` guide-accuracy suite has its own agent guide —
+**`docs_e2e/CLAUDE.md`**. Key rule: it is container/runtime-only, so
+static checks miss fixture-wiring bugs — **always run it locally in the
+driver container before committing** (recipe there).
+
 ### Linting and Type Checking
 
 ```bash

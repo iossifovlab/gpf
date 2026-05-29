@@ -897,7 +897,7 @@ def wgpf_server(cnv_instance, gpf_env):
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=denovo_instance.instance_dir,
+        cwd=cnv_instance.instance_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -936,13 +936,18 @@ def wgpf_server(cnv_instance, gpf_env):
             last_err = repr(exc)
         time.sleep(1)
     else:
-        # Readiness timeout. Capture log for the failure message.
+        # Readiness timeout. Capture the wgpf log for the failure
+        # message. communicate() reads AND closes stdout, so we must use
+        # its return value — a second proc.stdout.read() here raises
+        # "read of closed file" and masks the real reason wgpf never
+        # became ready.
         proc.terminate()
         try:
-            proc.communicate(timeout=10)
+            out_b, _ = proc.communicate(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
-        out = proc.stdout.read().decode(errors="replace") if proc.stdout else ""
+            out_b, _ = proc.communicate()
+        out = out_b.decode(errors="replace") if out_b else ""
         pytest.fail(
             f"wgpf run did not become ready within "
             f"{_WGPF_READY_TIMEOUT}s (last error: {last_err}):\n"
