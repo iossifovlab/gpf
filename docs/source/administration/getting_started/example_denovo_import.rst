@@ -78,7 +78,7 @@ columns from that file that look as follows:
 * The fifth column contains the sex of the individual.
 
 We need a pedigree file describing the family's structure to import the data
-into GPF. The `SupplementaryData1_Children.tsv.gz` contains only the  children;
+into GPF. The `Supplementary_Data_1.tsv.gz` contains only the  children;
 it does not include information about their parents.
 Fortunately for the SSC collection, it is not difficult to build the whole
 families' structures from the information we have.
@@ -189,7 +189,7 @@ content:
     The resulting ``ssc_denovo.tsv`` file is also available in the
     `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
     repository under the subdirectory
-    ``example_imports/denovo_and_cnv_import/input_data``.
+    ``example_imports/denovo_and_cnv_import``.
 
 
 

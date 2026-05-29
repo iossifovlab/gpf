@@ -55,6 +55,37 @@ The line: would a real user, following the guide, type this?
 
 Anything else is drift, not infrastructure. Fix the guide.
 
+**Documented carve-out (#876):** the de novo sub-guide imports
+255K real SSC variants. docs-e2e guards *command accuracy*, not
+255K-scale import, so `denovo_instance` truncates the awk-produced
+`ssc_denovo.tsv` to the guide's first 50 variants (all chr1) before
+`import_genotypes` — which still runs **verbatim**. Only the input
+row count differs. This is the one place the suite feeds the guide's
+commands something other than what a user would; it is called out
+here and in `conftest.py` (`_DENOVO_VARIANT_CAP`).
+
+## Onboarding an agent (GRR cache seeding)
+
+The de novo sub-guide's "Caching GRR" step runs `grr_cache_repo -i
+minimal_instance/gpf_instance.yaml`, which bulk-downloads **~15 GB**
+of instance resources (hg38 genome, MANE gene models, gnomAD 4.1.0
+genome-wide frequencies, ClinVar). That is far too slow to run cold
+inside the build's 1 h wall, so it is paid **once per agent, out of
+band**, into the node-local `gpf-grr-cache` docker volume.
+
+Before an agent runs `gpf-docs-e2e` for the first time, seed it:
+
+* Run the **`gpf-docs-e2e-prewarm`** Jenkins job with `AGENT_LABEL`
+  set to that agent (e.g. `eyoree`). It clones gpf-getting-started,
+  appends the gnomAD + ClinVar annotation block, and runs
+  `grr_cache_repo` into the volume. ~40 min cold; idempotent.
+
+If an agent is not seeded, the build fails **fast** at fixture setup
+(the `grr_cache_seeded` guard) with a message naming the agent and
+this job — rather than silently cold-pulling 15 GB and blowing the
+wall. The same applies to local iteration below: the first run on a
+fresh `gpf-grr-cache` volume pays the cold pull.
+
 ## Local iteration
 
 You need the same artefacts CI uses: a directory of
@@ -119,7 +150,7 @@ docs_e2e/
 ├── Jenkinsfile.docs-e2e     # downstream pipeline
 ├── jenkins-jobs/
 │   └── docs_e2e.groovy      # pipelineJob DSL, seeded by main gpf Jenkinsfile
-├── conftest.py              # fixtures: conda_channel, gpf_env_prefix, getting_started_clone, prepared_instance, annotated_instance, phenotype_instance, preview_columns_instance, wgpf_server
+├── conftest.py              # fixtures: conda_channel, gpf_env_prefix, getting_started_clone, prepared_instance, annotated_instance, phenotype_instance, preview_columns_instance, denovo_instance, wgpf_server
 ├── guide_assertions.py      # deep module — uniform failure-message helpers
 ├── test_guide_assertions.py # unit tests for the module (pure Python)
 ├── __init__.py
@@ -128,5 +159,6 @@ docs_e2e/
     ├── test_main_body.py    # v1: main getting_started.rst body claims
     ├── test_annotation.py   # getting_started_with_annotation.rst claims
     ├── test_phenotype_data.py  # getting_started_with_phenotype_data.rst claims
-    └── test_preview_columns.py # getting_started_with_preview_columns.rst claims
+    ├── test_preview_columns.py # getting_started_with_preview_columns.rst claims
+    └── test_example_denovo.py  # example_denovo_import.rst claims
 ```

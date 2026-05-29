@@ -1,0 +1,147 @@
+// One-time per-agent seeding pipeline for docs-e2e.
+//
+// The gpf-docs-e2e build follows the Getting Started guide's
+// "Caching GRR" step verbatim — `grr_cache_repo -i
+// minimal_instance/gpf_instance.yaml`, which bulk-downloads ~15 GB
+// of instance annotation resources (hg38 genome, MANE gene models,
+// gnomAD 4.1.0 genome-wide frequencies, ClinVar). That download is
+// far too slow to run inside the build's 1 h wall on a cold agent.
+//
+// This job pays that cost OUT OF BAND: run it once against each
+// agent that will run gpf-docs-e2e, populating the agent-local
+// persistent `gpf-grr-cache` docker volume. Thereafter the build's
+// in-suite grr_cache_repo call is a fast warm validation, and the
+// `grr_cache_seeded` conftest guard passes. An unseeded agent fails
+// the build fast with a pointer back to this job.
+//
+// Expected Jenkins job setup:
+//   - Script path: docs_e2e/Jenkinsfile.docs-e2e-prewarm
+//   - Defined by docs_e2e/jenkins-jobs/docs_e2e_prewarm.groovy as
+//     the `gpf-docs-e2e-prewarm` pipelineJob, seeded by the main
+//     gpf Jenkinsfile's `Apply Job DSL` stage on master.
+//
+// Set AGENT_LABEL to the specific agent you are onboarding (e.g.
+// `eyoree`) — the cache volume is agent-local, so seeding one agent
+// does NOT seed the others.
+
+pipeline {
+    // Pin to the specific agent being seeded. The gpf-grr-cache
+    // volume is node-local; a broad label would seed an arbitrary
+    // agent, not the one you mean to onboard.
+    agent { label "${params.AGENT_LABEL}" }
+
+    parameters {
+        string(
+            name: 'AGENT_LABEL',
+            defaultValue: '!dory',
+            description: 'The specific agent to seed (e.g. ' +
+                '"eyoree"). The gpf-grr-cache volume is ' +
+                'node-local, so run this once per agent that ' +
+                'will run gpf-docs-e2e. The default "!dory" ' +
+                'picks an arbitrary non-dory agent — set a ' +
+                'concrete name to control which one.',
+        )
+        string(
+            name: 'GETTING_STARTED_REF',
+            defaultValue: 'master',
+            description: 'Branch/tag of iossifovlab/' +
+                'gpf-getting-started to derive the instance ' +
+                'config (and thus the resource set) from.',
+        )
+    }
+
+    options {
+        // The cold ~15 GB pull at GRR throughput is ~40 min; allow
+        // generous headroom. This job is rare (per-agent onboarding).
+        timeout(time: 2, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        // Same node-local volume the gpf-docs-e2e build mounts.
+        GRR_CACHE_VOLUME = "gpf-grr-cache"
+        // Pinned to match the docs-e2e driver image base.
+        MINIFORGE_IMAGE  = "condaforge/miniforge3:24.11.3-0"
+    }
+
+    stages {
+        stage('Start') {
+            steps {
+                script {
+                    currentBuild.displayName =
+                        "#${env.BUILD_NUMBER} seed ${env.NODE_NAME}"
+                    zulipSend(
+                        message: "Started GRR-cache prewarm #${env.BUILD_NUMBER} on agent ${env.NODE_NAME} (${env.BUILD_URL})",
+                        topic: "${env.JOB_NAME}",
+                    )
+                }
+            }
+        }
+
+        stage('Seed GRR cache') {
+            steps {
+                // Clone gpf-getting-started and append the same gnomAD
+                // + ClinVar annotation block the docs-e2e annotated_instance
+                // fixture adds — grr_cache_repo caches the ANNOTATION
+                // pipeline's resources, so the instance must carry the
+                // block or nothing is cached. Kept byte-for-byte in sync
+                // with conftest._ANNOTATION_BLOCK.
+                sh '''
+                    set -eu
+
+                    rm -rf gs
+                    git clone --depth 1 \
+                        --branch "$GETTING_STARTED_REF" \
+                        https://github.com/iossifovlab/gpf-getting-started.git \
+                        gs
+
+                    cat >> gs/minimal_instance/gpf_instance.yaml <<'YAML'
+
+annotation:
+  config:
+    - allele_score: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
+    - allele_score: hg38/scores/ClinVar_20240730
+YAML
+
+                    docker run --rm \
+                        -v "$PWD/gs:/gs" \
+                        -v "$GRR_CACHE_VOLUME:/grr-cache" \
+                        -w /gs \
+                        "$MINIFORGE_IMAGE" \
+                        bash -lc '
+                            set -eu
+                            mamba create -y -n prewarm \
+                                -c iossifovlab -c bioconda -c conda-forge \
+                                gpf-web
+                            cat > /root/.grr_definition.yaml <<YAML
+id: "seqpipe"
+type: "url"
+url: "https://grr.iossifovlab.com"
+cache_dir: "/grr-cache"
+YAML
+                            mamba run -n prewarm grr_cache_repo -i \
+                                minimal_instance/gpf_instance.yaml
+                        '
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'rm -rf gs || true'
+        }
+        success {
+            zulipSend(
+                message: "GRR-cache prewarm #${env.BUILD_NUMBER} on agent ${env.NODE_NAME} SUCCEEDED — gpf-docs-e2e can now run warm here (${env.BUILD_URL})",
+                topic: "${env.JOB_NAME}",
+            )
+        }
+        failure {
+            zulipSend(
+                message: "GRR-cache prewarm #${env.BUILD_NUMBER} on agent ${env.NODE_NAME} FAILED (${env.BUILD_URL})",
+                topic: "${env.JOB_NAME}",
+            )
+        }
+    }
+}

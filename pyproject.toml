@@ -47,6 +47,24 @@ gpf-rest-client = { workspace = true }
 # pyproject.local.toml.template to pyproject.local.toml and
 # follow README's "Editable gain for local development" section.
 
+[tool.pytest.ini_options]
+# Scope: this root pyproject.toml is the configfile only for pytest runs
+# rooted at the repo root — in practice just the docs_e2e suite
+# (`pytest docs_e2e/`). The package suites (core/, web_api/, federation/)
+# carry their own pytest.ini and resolve their own rootdir, so they are
+# unaffected by these options.
+#
+# A per-test wall under the docs-e2e Jenkins build's 1 h timeout: the
+# whole guide chain (conda solve, grr_cache_repo, imports, wgpf boot)
+# builds inside the FIRST server-backed test's session-fixture setup, so
+# without this a hang there aborts the build at the Jenkins level with no
+# JUnit. timeout_method="signal" (NOT "thread") is required because the
+# heavy steps are blocking subprocess.run() calls — only SIGALRM (signal,
+# main thread, Unix — all true here) can interrupt them; the thread method
+# would merely dump stacks while the subprocess ran on to its own timeout.
+timeout = 2400
+timeout_method = "signal"
+
 [dependency-groups]
 # Sphinx toolchain for `docs/build_docs.sh`. Members mirror the
 # conda env that gpf_documentation used to ship from. Install

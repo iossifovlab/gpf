@@ -39,7 +39,12 @@ import pytest
 
 _INSTALL_TIMEOUT = 1800        # 30 min cap for the conda solve+install
 _IMPORT_TIMEOUT = 1200         # 20 min per import_genotypes
-_WGPF_READY_TIMEOUT = 180      # 3 min for wgpf to start serving
+# 10 min: the shared server now loads the 255K-variant ssc_denovo study
+# alongside the example_dataset chain, so first-boot study/gene-model
+# loading runs longer than the original 3 min budget. The ssc_denovo
+# import (denovo_instance step 5) already applied the instance
+# annotation, so a clean boot should NOT re-annotate.
+_WGPF_READY_TIMEOUT = 600
 _WGPF_SHUTDOWN_TIMEOUT = 30
 
 
@@ -149,10 +154,56 @@ def grr_cache_dir():
     return path
 
 
+# The resource whose presence proves this agent's persistent GRR cache
+# has been seeded. The denovo guide's grr_cache_repo step
+# (example_denovo_import.rst "Caching GRR") bulk-downloads ~15 GB of
+# instance resources; the persistent gpf-grr-cache volume amortizes that
+# to a one-time per-agent cost paid OUT OF BAND by the gpf-docs-e2e-prewarm
+# job — never inside the wall-limited build. The cache lays files out as
+# <cache_dir>/<repo_id>/<resource_id>/... (GenomicResourceCachedRepo), so
+# we glob for the gnomAD resource tail rather than hard-coding the repo id.
+_SEED_MARKER_GLOB = "**/gnomAD_4.1.0/genomes/ALL/**/*"
+
+
 @pytest.fixture(scope="session")
-def gpf_env_prefix(tmp_path_factory, conda_channel):
+def grr_cache_seeded(grr_cache_dir):
+    """Fail fast if the agent's persistent GRR cache is not seeded.
+
+    Gates the expensive fixtures (conda solve, imports) so an unseeded
+    agent fails in seconds with an actionable message instead of letting
+    grr_cache_repo cold-pull ~15 GB and blow the build timeout. Run the
+    ``gpf-docs-e2e-prewarm`` job once per agent (see docs_e2e/README.md
+    § Onboarding an agent)."""
+    seeded = any(
+        p.is_file() and p.stat().st_size > 0
+        for p in grr_cache_dir.glob(_SEED_MARKER_GLOB)
+    )
+    if not seeded:
+        node = os.environ.get("NODE_NAME", "<this-agent>")
+        pytest.fail(
+            f"GRR cache at {grr_cache_dir} is not seeded (no "
+            f"gnomAD_4.1.0/genomes/ALL resource found). docs-e2e needs "
+            f"the ~15 GB instance resources pre-cached on this agent. "
+            f"Run the `gpf-docs-e2e-prewarm` Jenkins job against node "
+            f"'{node}' once, then re-trigger this build. See "
+            f"docs_e2e/README.md § Onboarding an agent.",
+            pytrace=False,
+        )
+    return grr_cache_dir
+
+
+@pytest.fixture(scope="session")
+def gpf_env_prefix(
+    tmp_path_factory,
+    conda_channel,
+    grr_cache_seeded,  # noqa: ARG001 — ordering dep: cold-cache guard
+):
     """Create a fresh gpf-web conda env from the local channel +
-    the upstream channels the guide tells users to add."""
+    the upstream channels the guide tells users to add.
+
+    Depends on ``grr_cache_seeded`` purely for its side effect: an
+    unseeded agent fails fast here, before this ~30 min conda solve,
+    rather than after a 15 GB cold GRR pull deeper in the chain."""
     # mamba create --prefix refuses to write into a directory that
     # already exists as a non-conda folder ("Non-conda folder
     # exists at prefix"). tmp_path_factory.mktemp() *creates* the
@@ -475,6 +526,229 @@ def preview_columns_instance(phenotype_instance):
     )
 
 
+# The awk pipeline example_denovo_import.rst (RST lines 111-124) tells
+# the user to run to build ssc_denovo.ped from Supplementary_Data_1.tsv.gz.
+# Reproduced byte-for-byte from the guide; a drift here is itself a
+# guide-accuracy bug this suite is meant to catch.
+_DENOVO_PED_AWK = r"""gunzip -c Supplementary_Data_1.tsv.gz | awk '
+    BEGIN {
+        OFS="\t"
+        print "familyId", "personId", "dadId", "momId", "status", "sex"
+    }
+    $1 == "SSC" {
+        fid = $2
+        if( fid in families == 0) {
+            families[fid] = 1
+            print fid, fid".mo", "0", "0", "unaffected", "F"
+            print fid, fid".fa", "0", "0", "unaffected", "M"
+        }
+        print fid, $3, fid".fa", fid".mo", $4, $5
+    }' > ssc_denovo.ped"""
+
+
+# The awk pipeline example_denovo_import.rst (RST lines 170-178) tells
+# the user to run to build ssc_denovo.tsv from Supplementary_Data_2.tsv.gz.
+# Reproduced byte-for-byte from the guide.
+_DENOVO_TSV_AWK = r"""gunzip -c Supplementary_Data_2.tsv.gz | cut -f 4,9 | awk '
+    BEGIN{
+        OFS="\t"
+        print "chrom", "pos", "ref", "alt", "person_id"
+    }
+    NR > 1 {
+        split($2, v, ":")
+        print v[1], v[2], v[3], v[4], $1
+    }' > ssc_denovo.tsv"""
+
+
+# The genotype_browser config block example_denovo_import.rst (RST lines
+# 340-356) tells the user to append to the ssc_denovo study config: a
+# `frequency` column group (allele_freq + gnomAD), a `clinvar` group
+# (CLNSIG + CLNDN), and preview_columns_ext surfacing clinvar in the
+# preview table. Kept byte-for-byte in sync with the guide.
+_DENOVO_COLUMNS_BLOCK = (
+    "\n"
+    "genotype_browser:\n"
+    "  column_groups:\n"
+    "    frequency:\n"
+    "      name: frequency\n"
+    "      columns:\n"
+    "      - allele_freq\n"
+    "      - gnomad_v4_genome_ALL_af\n"
+    "\n"
+    "    clinvar:\n"
+    "      name: ClinVar\n"
+    "      columns:\n"
+    "      - CLNSIG\n"
+    "      - CLNDN\n"
+    "\n"
+    "  preview_columns_ext:\n"
+    "    - clinvar\n"
+)
+
+
+# example_denovo_import.rst imports the ssc_denovo study and annotates it
+# against the instance's gnomAD + ClinVar pipeline. Two things keep this fast
+# and bounded under the build's 2400 s pytest-timeout:
+#
+#   1. The guide's grr_cache_repo step (run in denovo_instance below) caches
+#      the instance resources into the persistent gpf-grr-cache volume. That
+#      ~15 GB bulk download is paid OUT OF BAND by the gpf-docs-e2e-prewarm
+#      job (the grr_cache_seeded guard asserts it is already present), so the
+#      in-build call is a warm no-op validation — hence _GRR_CACHE_TIMEOUT.
+#
+#   2. STRICT-MODE EXCEPTION (#876): docs-e2e guards command accuracy, not
+#      255K-scale import. denovo_instance truncates the awk-produced
+#      ssc_denovo.tsv to the guide's first _DENOVO_VARIANT_CAP variants (all
+#      chr1) before import. import_genotypes still runs verbatim; only the row
+#      count differs, so the import completes in seconds against the warm
+#      cache. A 90 min cap would be meaningless under the pytest-timeout.
+_DENOVO_IMPORT_TIMEOUT = 600   # 10 min: warm cache + variant cap
+_GRR_CACHE_TIMEOUT = 600       # 10 min: warm-cache validation (prewarmed)
+_DENOVO_VARIANT_CAP = 50       # #876 carve-out — see note above
+
+
+@dataclass
+class DenovoInstance:
+    """The instance after example_denovo_import.rst: ssc_denovo imported
+    into minimal_instance and its study config edited with the
+    frequency/ClinVar preview column groups.
+
+    Captures each setup step's subprocess result so per-test assertions
+    can feed them into ``after_command=`` / ``assert_command_succeeds``
+    for triage.
+    """
+
+    instance_dir: Path
+    clone_path: Path
+    ped_awk: subprocess.CompletedProcess
+    tsv_awk: subprocess.CompletedProcess
+    grr_cache: subprocess.CompletedProcess
+    ssc_denovo_import: subprocess.CompletedProcess
+    study_config_path: Path
+
+
+@pytest.fixture(scope="session")
+def denovo_instance(
+        preview_columns_instance, getting_started_clone, gpf_env,
+        grr_cache_dir,
+):
+    """Apply example_denovo_import.rst: import the large ``ssc_denovo``
+    study (255K real SSC de novo variants) into the same
+    ``minimal_instance``, then edit the study config to add preview
+    columns.
+
+    Walks the guide's command path verbatim:
+
+    1. The Family-Data awk (RST lines 111-124): reads
+       ``Supplementary_Data_1.tsv.gz`` and writes ``ssc_denovo.ped``.
+    2. The variant awk (RST lines 170-178): reads
+       ``Supplementary_Data_2.tsv.gz`` and writes ``ssc_denovo.tsv``.
+    3. Writes ``~/.grr_definition.yaml`` (the guide's "Caching GRR" step)
+       pointing the GRR cache at the persistent ``grr_cache_dir`` volume,
+       then runs ``grr_cache_repo -i minimal_instance/gpf_instance.yaml`` to
+       cache the instance's annotation resources. ``grr_cache_repo`` ships in
+       gain-core, a transitive dependency of the ``gpf-web`` conda package,
+       so it is on PATH after the guide's ``mamba install gpf-web`` (no
+       separate install step). Against the prewarmed persistent volume this
+       is a fast validation; the ~15 GB cold download is paid out of band by
+       the ``gpf-docs-e2e-prewarm`` job, asserted present by the
+       ``grr_cache_seeded`` guard (see #876).
+    4. ``import_genotypes -v -j 10 .../ssc_denovo.yaml`` (RST line 279):
+       imports + annotates the study using the instance annotation.
+    5. Appends the genotype_browser column-group block (RST lines 340-356)
+       to the produced study config.
+
+    Chained after ``preview_columns_instance`` to keep the suite's single
+    ``wgpf run`` ordering: this is the last config edit the guide
+    describes, so the single shared server (which depends on this fixture)
+    boots against the fully-prepared instance.
+
+    Strict mode (#871): every step here is a CLI command or file edit the
+    guide tells the user to type. The only carve-out is the
+    ``_DENOVO_VARIANT_CAP`` truncation of the awk output (#876) — see the
+    constant's note; ``import_genotypes`` itself still runs verbatim.
+    """
+    clone = getting_started_clone
+    instance_dir = preview_columns_instance.instance_dir
+    import_dir = clone / "example_imports" / "denovo_and_cnv_import"
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(instance_dir)
+
+    # Steps 1-2: the two awk pipelines, run from the import dir.
+    ped_awk = _run(
+        ["bash", "-c", _DENOVO_PED_AWK],
+        cwd=import_dir, env=env,
+    )
+    tsv_awk = _run(
+        ["bash", "-c", _DENOVO_TSV_AWK],
+        cwd=import_dir, env=env,
+    )
+
+    # STRICT-MODE EXCEPTION (#876): cap the awk output to the guide's first
+    # _DENOVO_VARIANT_CAP variants (all chr1) so import_genotypes — still run
+    # verbatim below — completes in seconds against the warm cache. docs-e2e
+    # guards command accuracy, not 255K-scale import; only the row count
+    # differs. test_example_denovo asserts the awk command's success and that
+    # it produced ssc_denovo.tsv *before* this truncation mutates the file,
+    # so the awk claims stay honestly tested.
+    tsv_path = import_dir / "ssc_denovo.tsv"
+    if tsv_awk.returncode == 0 and tsv_path.exists():
+        rows = tsv_path.read_text().splitlines()
+        tsv_path.write_text(
+            "\n".join(rows[:_DENOVO_VARIANT_CAP + 1]) + "\n",
+        )
+
+    # Step 3: the guide's "Caching GRR" step — write ~/.grr_definition.yaml
+    # pointing at the persistent cache volume, then run grr_cache_repo to
+    # cache the instance's annotation resources. The grr_cache_seeded guard
+    # already asserted the agent's persistent volume holds these (~15 GB,
+    # pre-pulled out of band by gpf-docs-e2e-prewarm), so this is a warm
+    # validation, not the cold download.
+    grr_definition = Path.home() / ".grr_definition.yaml"
+    grr_definition.write_text(
+        'id: "seqpipe"\n'
+        'type: "url"\n'
+        'url: "https://grr.iossifovlab.com"\n'
+        f'cache_dir: "{grr_cache_dir}"\n',
+    )
+    grr_cache = _run(
+        [
+            "grr_cache_repo", "-i",
+            "minimal_instance/gpf_instance.yaml",
+        ],
+        cwd=clone, env=env, timeout=_GRR_CACHE_TIMEOUT,
+    )
+
+    # Step 4: import + annotate the (capped) study.
+    ssc_denovo_import = _run(
+        [
+            "import_genotypes", "-v", "-j", "10",
+            "example_imports/denovo_and_cnv_import/ssc_denovo.yaml",
+        ],
+        cwd=clone, env=env, timeout=_DENOVO_IMPORT_TIMEOUT,
+    )
+
+    # Step 5: append the genotype_browser column-group block to the study
+    # config the import produced. The study id is `ssc_denovo`, so the
+    # config lands under studies/<id>/<id>.yaml.
+    study_config = (
+        instance_dir / "studies" / "ssc_denovo" / "ssc_denovo.yaml"
+    )
+    if study_config.exists():
+        study_config.write_text(
+            study_config.read_text() + _DENOVO_COLUMNS_BLOCK)
+
+    return DenovoInstance(
+        instance_dir=instance_dir,
+        clone_path=clone,
+        ped_awk=ped_awk,
+        tsv_awk=tsv_awk,
+        grr_cache=grr_cache,
+        ssc_denovo_import=ssc_denovo_import,
+        study_config_path=study_config,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -482,22 +756,23 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(preview_columns_instance, gpf_env):
+def wgpf_server(denovo_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``preview_columns_instance`` — the last stage of the
-    guide's linear narrative (imports → annotation edit → pheno import +
-    pheno attach → preview-column config). The single shared server
-    therefore starts after every config edit the guide describes: it
-    re-annotates the genotype data on startup and serves the pheno-enabled
-    example_dataset with its extended preview columns. Keeping the suite to
-    one wgpf process per session avoids two ``wgpf run``s racing on the same
-    ``DAE_DB_DIR`` parquet during re-annotation. Every earlier claim
-    (datasets visible, annotation download columns, pheno browser) holds
-    equally in this final state, so sharing one server across all stages
-    is sound.
+    Depends on ``denovo_instance`` — the last stage of the guide's linear
+    narrative (imports → annotation edit → pheno import + pheno attach →
+    preview-column config → ssc_denovo import + study-column config).
+    ``denovo_instance`` transitively pulls the whole prior chain, so the
+    single shared server starts after every config edit the guide
+    describes: it serves the annotated, pheno-enabled example_dataset with
+    its extended preview columns AND the 255K-variant ssc_denovo study.
+    Keeping the suite to one wgpf process per session avoids two ``wgpf
+    run``s racing on the same ``DAE_DB_DIR`` parquet during re-annotation.
+    Every earlier claim (datasets visible, annotation download columns,
+    pheno browser) holds equally in this final state, so sharing one
+    server across all stages is sound.
 
     On teardown, terminates wgpf and dumps the last few hundred
     lines of its combined stdout/stderr if any test in the
@@ -505,14 +780,14 @@ def wgpf_server(preview_columns_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(preview_columns_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(denovo_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=preview_columns_instance.instance_dir,
+        cwd=denovo_instance.instance_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
