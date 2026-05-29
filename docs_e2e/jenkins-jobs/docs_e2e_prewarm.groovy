@@ -23,11 +23,11 @@ pipelineJob('gpf-docs-e2e-prewarm') {
 
     parameters {
         stringParam(
-            'AGENT_LABEL', '!dory',
-            'The specific agent to seed (e.g. "eyoree"). The ' +
-            'gpf-grr-cache volume is node-local — run once per ' +
-            'agent. "!dory" picks an arbitrary non-dory agent; ' +
-            'set a concrete name to control which one.',
+            'AGENT_LABEL', 'eyoree',
+            'The specific agent to seed. Must match the agent ' +
+            'gpf-docs-e2e runs on (its AGENT_LABEL default is also ' +
+            '"eyoree") — the gpf-grr-cache volume is node-local. ' +
+            'Set a different concrete name to seed another agent.',
         )
         stringParam(
             'GETTING_STARTED_REF', 'master',

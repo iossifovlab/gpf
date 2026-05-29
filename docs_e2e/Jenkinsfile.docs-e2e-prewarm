@@ -9,10 +9,19 @@
 //
 // This job pays that cost OUT OF BAND: run it once against each
 // agent that will run gpf-docs-e2e, populating the agent-local
-// persistent `gpf-grr-cache` docker volume. Thereafter the build's
-// in-suite grr_cache_repo call is a fast warm validation, and the
-// `grr_cache_seeded` conftest guard passes. An unseeded agent fails
-// the build fast with a pointer back to this job.
+// persistent `gpf-grr-cache` docker volume. On success it writes a
+// sentinel file `.docs-e2e-prewarmed` into the volume; the build's
+// `grr_cache_seeded` conftest guard checks for that sentinel and
+// fails fast (with a pointer back to this job) on an unseeded agent.
+//
+// IMPORTANT: grr_cache_repo lives in gain-core and resolves `-i`
+// via gpf-core's GPFInstanceContextProvider plugin. Neither gpf-web
+// nor gpf-core is published on the iossifovlab conda channel — they
+// exist only as the gpf build's own `dist/conda/*.conda` artefacts.
+// So this job installs gpf-web the SAME way the docs-e2e build does:
+// copyArtifacts the conda packages from the upstream gpf build and
+// install from a local file:// channel. Mirrors conftest's
+// `conda_channel` + `gpf_env_prefix` fixtures.
 //
 // Expected Jenkins job setup:
 //   - Script path: docs_e2e/Jenkinsfile.docs-e2e-prewarm
@@ -28,18 +37,35 @@ pipeline {
     // Pin to the specific agent being seeded. The gpf-grr-cache
     // volume is node-local; a broad label would seed an arbitrary
     // agent, not the one you mean to onboard.
-    agent { label "${params.AGENT_LABEL}" }
+    // `?:` fallback covers a first run where params.AGENT_LABEL is
+    // not yet defined; pass AGENT_LABEL explicitly to seed a given
+    // agent (the seeded node must match gpf-docs-e2e's AGENT_LABEL).
+    agent { label "${params.AGENT_LABEL ?: 'eyoree'}" }
 
     parameters {
         string(
             name: 'AGENT_LABEL',
-            defaultValue: '!dory',
-            description: 'The specific agent to seed (e.g. ' +
-                '"eyoree"). The gpf-grr-cache volume is ' +
-                'node-local, so run this once per agent that ' +
-                'will run gpf-docs-e2e. The default "!dory" ' +
-                'picks an arbitrary non-dory agent — set a ' +
-                'concrete name to control which one.',
+            defaultValue: 'eyoree',
+            description: 'The specific agent to seed. Must match ' +
+                'the agent gpf-docs-e2e runs on (its AGENT_LABEL ' +
+                'default is also "eyoree") — the gpf-grr-cache ' +
+                'volume is node-local. Set a different concrete ' +
+                'name to seed another agent.',
+        )
+        string(
+            name: 'UPSTREAM_PROJECT',
+            defaultValue: 'iossifovlab/gpf/master',
+            description: 'Upstream Jenkins project the conda ' +
+                'artefacts (dist/conda/*.conda) are copied from. ' +
+                'Any gpf build works — the cached GRR resources ' +
+                'are version-independent.',
+        )
+        string(
+            name: 'UPSTREAM_BUILD',
+            defaultValue: '',
+            description: 'Upstream build number to copy conda ' +
+                'artefacts from. Empty = lastSuccessful() of ' +
+                'UPSTREAM_PROJECT.',
         )
         string(
             name: 'GETTING_STARTED_REF',
@@ -60,8 +86,9 @@ pipeline {
     environment {
         // Same node-local volume the gpf-docs-e2e build mounts.
         GRR_CACHE_VOLUME = "gpf-grr-cache"
-        // Pinned to match the docs-e2e driver image base.
-        MINIFORGE_IMAGE  = "condaforge/miniforge3:24.11.3-0"
+        // Reuse the docs-e2e driver image (carries conda-index in
+        // base + git) so the install path matches the build exactly.
+        DRIVER_IMAGE = "gpf-docs-e2e-prewarm-driver:${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -78,18 +105,79 @@ pipeline {
             }
         }
 
+        stage('Prepare workspace') {
+            steps {
+                sh '''
+                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
+                        rm -rf dist gs
+                    mkdir -p dist
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            // The cpsScm lightweight checkout only fetches the
+            // Jenkinsfile; we need docs_e2e/Dockerfile for the driver
+            // image, so do a real shallow checkout of master.
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: 'master']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/iossifovlab/gpf.git',
+                    ]],
+                    extensions: [[$class: 'CloneOption',
+                                  shallow: true,
+                                  noTags: true,
+                                  depth: 1]],
+                ])
+            }
+        }
+
+        stage('Copy conda artefacts') {
+            steps {
+                script {
+                    def selector = params.UPSTREAM_BUILD?.trim() ?
+                                   specific(params.UPSTREAM_BUILD) :
+                                   lastSuccessful()
+                    copyArtifacts(
+                        filter: 'dist/conda/*.conda',
+                        fingerprintArtifacts: true,
+                        projectName: params.UPSTREAM_PROJECT,
+                        selector: selector,
+                    )
+                }
+                sh '''
+                    ls -la dist/conda/
+                    test -n "$(ls dist/conda/gpf-web-*.conda 2>/dev/null)" \
+                        || { echo "ERROR: no gpf-web-*.conda in dist/conda/" >&2; exit 1; }
+                '''
+            }
+        }
+
+        stage('Build driver image') {
+            steps {
+                sh '''
+                    docker build \
+                        -f docs_e2e/Dockerfile \
+                        -t "$DRIVER_IMAGE" \
+                        docs_e2e/
+                '''
+            }
+        }
+
         stage('Seed GRR cache') {
             steps {
                 // Clone gpf-getting-started and append the same gnomAD
-                // + ClinVar annotation block the docs-e2e annotated_instance
-                // fixture adds — grr_cache_repo caches the ANNOTATION
-                // pipeline's resources, so the instance must carry the
-                // block or nothing is cached. Kept byte-for-byte in sync
-                // with conftest._ANNOTATION_BLOCK.
+                // + ClinVar annotation block the docs-e2e
+                // annotated_instance fixture adds — grr_cache_repo
+                // caches the ANNOTATION pipeline's resources, so the
+                // instance must carry the block or nothing is cached.
+                // Kept byte-for-byte in sync with
+                // conftest._ANNOTATION_BLOCK.
                 sh '''
                     set -eu
 
-                    rm -rf gs
                     git clone --depth 1 \
                         --branch "$GETTING_STARTED_REF" \
                         https://github.com/iossifovlab/gpf-getting-started.git \
@@ -104,13 +192,24 @@ annotation:
 YAML
 
                     docker run --rm \
-                        -v "$PWD/gs:/gs" \
+                        -v "$PWD:/workspace" \
                         -v "$GRR_CACHE_VOLUME:/grr-cache" \
-                        -w /gs \
-                        "$MINIFORGE_IMAGE" \
+                        -w /workspace \
+                        "$DRIVER_IMAGE" \
                         bash -lc '
                             set -eu
+                            # Mirror conftest.conda_channel: build an
+                            # indexed local channel from the copied
+                            # .conda artefacts.
+                            rm -rf /tmp/channel
+                            mkdir -p /tmp/channel/noarch
+                            cp /workspace/dist/conda/*.conda /tmp/channel/noarch/
+                            /opt/conda/bin/python -m conda_index /tmp/channel
+                            # Mirror conftest.gpf_env_prefix: install
+                            # gpf-web (pulls gain-core + gpf-core, which
+                            # provide grr_cache_repo and its -i provider).
                             mamba create -y -n prewarm \
+                                -c file:///tmp/channel \
                                 -c iossifovlab -c bioconda -c conda-forge \
                                 gpf-web
                             cat > /root/.grr_definition.yaml <<YAML
@@ -119,8 +218,14 @@ type: "url"
 url: "https://grr.iossifovlab.com"
 cache_dir: "/grr-cache"
 YAML
+                            cd /workspace/gs
                             mamba run -n prewarm grr_cache_repo -i \
                                 minimal_instance/gpf_instance.yaml
+                            # Sentinel: only a SUCCESSFUL full cache
+                            # write reaches here. The build guard checks
+                            # for this, so a partial cache cannot
+                            # false-pass.
+                            touch /grr-cache/.docs-e2e-prewarmed
                         '
                 '''
             }
@@ -129,7 +234,10 @@ YAML
 
     post {
         always {
-            sh 'rm -rf gs || true'
+            sh '''
+                docker rmi "$DRIVER_IMAGE" || true
+                docker run --rm -v "$PWD:/wd" -w /wd alpine rm -rf gs || true
+            '''
         }
         success {
             zulipSend(
