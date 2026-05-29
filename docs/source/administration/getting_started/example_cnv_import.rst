@@ -93,7 +93,7 @@ content:
     The resulting ``ssc_cnv.tsv`` file is available in the
     `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
     repository under the subdirectory
-    ``example_imports/denovo_and_cnv_import/input_data``.
+    ``example_imports/denovo_and_cnv_import``.
 
 
 Data Import of ``ssc_cnv``
