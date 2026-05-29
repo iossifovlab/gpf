@@ -7,8 +7,8 @@ import { Page, expect } from '@playwright/test';
 // (the SPA and the API are the same origin from the SPA's POV).
 // Mail goes through the mailpit service `mail` on its UI port 8025.
 // Local-dev URLs are kept commented below for reference.
-// export const frontendUrl = 'http://frontend';
-// export const backendUrl = frontendUrl;
+export const frontendUrl = 'http://frontend';
+export const backendUrl = frontendUrl;
 export const mailpitUrl = process.env['CI'] === '1' ? 'http://mail:8025' : 'http://localhost:8025';
 
 
@@ -18,8 +18,8 @@ export const mailpitUrl = process.env['CI'] === '1' ? 'http://mail:8025' : 'http
 // export const mailpitUrl = 'http://localhost:8025';
 
 // for data-hg19-startup dev:
-export const backendUrl = 'http://localhost:8000';
-export const frontendUrl = 'http://localhost:4200';
+// export const backendUrl = 'http://localhost:8000';
+// export const frontendUrl = 'http://localhost:4200';
 // export const mailpitUrl = 'http://localhost:8025';
 
 // tb-nxl: the `username` / `password` exports that lived here used to
