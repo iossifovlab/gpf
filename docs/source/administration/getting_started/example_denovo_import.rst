@@ -217,14 +217,24 @@ The ``cache_dir`` parameter specifies the directory where the GRR resources
 will be cached. The cache directory should be specified as an absolute path.
 For example,  ``/tmp/grr_cache`` or ``/Users/lubo/grrCache``.
 
-With the cache configured, the GRR resources the instance annotation needs
-are fetched on demand and stored under ``cache_dir`` the first time they are
-used — during the import below and whenever the GPF server starts — so later
-runs reuse the cached resources instead of re-downloading them.
+To download all the resources needed for our ``minimal_instance`` annotation,
+run the following command from the ``gpf-getting-started`` directory:
+
+.. code-block:: bash
+
+    grr_cache_repo -i minimal_instance/gpf_instance.yaml
 
 .. note::
 
-    For the ``gpf-getting-started`` instance the cached resources are:
+    The ``grr_cache_repo`` command will download all the resources needed for
+    the GPF instance. This may take a while, depending on your internet
+    connection and the number of resources your configuration requires.
+
+    The resources will be downloaded to the directory specified in the
+    ``cache_dir`` parameter in the ``.grr_definition.yaml`` file.
+
+    For the ``gpf-getting-started`` repository, the resources that will be
+    downloaded are:
 
     * ``hg38/genomes/GRCh38-hg38``
 
@@ -233,6 +243,8 @@ runs reuse the cached resources instead of re-downloading them.
     * ``hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL``
 
     * ``hg38/scores/ClinVar_20240730``
+
+    The total size of the downloaded resources is about 15 GB.
 
 
 Data Import of ``ssc_denovo``

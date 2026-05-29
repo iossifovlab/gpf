@@ -218,7 +218,7 @@ pipeline {
                                 -w /workspace \\
                                 "\$DRIVER_IMAGE" \\
                                 mamba run -n driver \\
-                                    pytest -v ${pytest_k} \\
+                                    pytest -v -s ${pytest_k} \\
                                         --junitxml=/workspace/reports/docs_e2e/pytest.xml \\
                                         docs_e2e/
                         """

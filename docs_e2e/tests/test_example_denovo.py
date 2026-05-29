@@ -109,13 +109,35 @@ class TestPreprocessVariants:
         )
 
 
+class TestCachingGRR:
+    """RST lines 205-235: the "Caching GRR" step configures a local GRR
+    cache and pre-downloads the instance's annotation resources with
+    ``grr_cache_repo -i minimal_instance/gpf_instance.yaml``."""
+
+    def test_grr_cache_repo_command_succeeds(self, denovo_instance):
+        # RST line 225: grr_cache_repo -i minimal_instance/gpf_instance.yaml
+        # caches the instance annotation resources. The CLI ships in
+        # gain-core (a transitive dep of the gpf-web conda package), so it
+        # is on PATH after `mamba install gpf-web` — a drift here would be
+        # the #876 "command not found" regression resurfacing.
+        assert_command_succeeds(
+            denovo_instance.grr_cache,
+            rst_ref=f"{RST}:225",
+            expectation=(
+                "grr_cache_repo -i minimal_instance/gpf_instance.yaml "
+                "caches the instance annotation resources"
+            ),
+        )
+
+
 class TestSscDenovoImport:
     """RST lines 250-319: importing the ssc_denovo study and seeing it on
     the Home Page / querying it in the Genotype Browser."""
 
     def test_import_genotypes_command_succeeds(self, denovo_instance):
-        # RST line 279: time import_genotypes -v -j 10 .../ssc_denovo.yaml
-        # imports the 255K-variant study.
+        # RST line 279: time import_genotypes -v -j 10 .../ssc_denovo.yaml.
+        # The guide imports 255K variants; the suite caps the input to the
+        # first 50 (conftest, #876 carve-out) but runs this command verbatim.
         assert_command_succeeds(
             denovo_instance.ssc_denovo_import,
             rst_ref=f"{RST}:279",
@@ -161,8 +183,14 @@ class TestSscDenovoImport:
             "/api/v3/genotype_browser/query",
             json={"datasetId": "ssc_denovo"},
         )
+        # min_count=10: the import is capped to the guide's first 50
+        # variants (conftest, #876 carve-out), so requiring >=10 back
+        # proves the import substantively worked rather than one row
+        # squeaking through — without coupling to an exact post-import
+        # count (paging / per-allele fan-out).
         assert_query_returned_variants(
             resp,
+            min_count=10,
             rst_ref=f"{RST}:314",
             expectation=(
                 "the Genotype Browser of the ssc_denovo study returns the "

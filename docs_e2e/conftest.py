@@ -154,10 +154,56 @@ def grr_cache_dir():
     return path
 
 
+# The resource whose presence proves this agent's persistent GRR cache
+# has been seeded. The denovo guide's grr_cache_repo step
+# (example_denovo_import.rst "Caching GRR") bulk-downloads ~15 GB of
+# instance resources; the persistent gpf-grr-cache volume amortizes that
+# to a one-time per-agent cost paid OUT OF BAND by the gpf-docs-e2e-prewarm
+# job — never inside the wall-limited build. The cache lays files out as
+# <cache_dir>/<repo_id>/<resource_id>/... (GenomicResourceCachedRepo), so
+# we glob for the gnomAD resource tail rather than hard-coding the repo id.
+_SEED_MARKER_GLOB = "**/gnomAD_4.1.0/genomes/ALL/**/*"
+
+
 @pytest.fixture(scope="session")
-def gpf_env_prefix(tmp_path_factory, conda_channel):
+def grr_cache_seeded(grr_cache_dir):
+    """Fail fast if the agent's persistent GRR cache is not seeded.
+
+    Gates the expensive fixtures (conda solve, imports) so an unseeded
+    agent fails in seconds with an actionable message instead of letting
+    grr_cache_repo cold-pull ~15 GB and blow the build timeout. Run the
+    ``gpf-docs-e2e-prewarm`` job once per agent (see docs_e2e/README.md
+    § Onboarding an agent)."""
+    seeded = any(
+        p.is_file() and p.stat().st_size > 0
+        for p in grr_cache_dir.glob(_SEED_MARKER_GLOB)
+    )
+    if not seeded:
+        node = os.environ.get("NODE_NAME", "<this-agent>")
+        pytest.fail(
+            f"GRR cache at {grr_cache_dir} is not seeded (no "
+            f"gnomAD_4.1.0/genomes/ALL resource found). docs-e2e needs "
+            f"the ~15 GB instance resources pre-cached on this agent. "
+            f"Run the `gpf-docs-e2e-prewarm` Jenkins job against node "
+            f"'{node}' once, then re-trigger this build. See "
+            f"docs_e2e/README.md § Onboarding an agent.",
+            pytrace=False,
+        )
+    return grr_cache_dir
+
+
+@pytest.fixture(scope="session")
+def gpf_env_prefix(
+    tmp_path_factory,
+    conda_channel,
+    grr_cache_seeded,  # noqa: ARG001 — ordering dep: cold-cache guard
+):
     """Create a fresh gpf-web conda env from the local channel +
-    the upstream channels the guide tells users to add."""
+    the upstream channels the guide tells users to add.
+
+    Depends on ``grr_cache_seeded`` purely for its side effect: an
+    unseeded agent fails fast here, before this ~30 min conda solve,
+    rather than after a 15 GB cold GRR pull deeper in the chain."""
     # mamba create --prefix refuses to write into a directory that
     # already exists as a non-conda folder ("Non-conda folder
     # exists at prefix"). tmp_path_factory.mktemp() *creates* the
@@ -540,13 +586,25 @@ _DENOVO_COLUMNS_BLOCK = (
 )
 
 
-# example_denovo_import.rst imports a 255K-variant study and annotates it
-# against the GRR. Annotating 255K genome-wide variants demand-pulls a large
-# slice of the gnomAD genome-wide frequencies (GRR throughput ~6 MB/s), so a
-# COLD import (empty persistent cache) runs far beyond the default
-# _IMPORT_TIMEOUT. The persistent gpf-grr-cache volume amortizes this — warm
-# runs are CPU-bound and quick — but the cold cap must cover the one-time pull.
-_DENOVO_IMPORT_TIMEOUT = 5400  # 90 min: covers the cold gnomAD demand-pull
+# example_denovo_import.rst imports the ssc_denovo study and annotates it
+# against the instance's gnomAD + ClinVar pipeline. Two things keep this fast
+# and bounded under the build's 2400 s pytest-timeout:
+#
+#   1. The guide's grr_cache_repo step (run in denovo_instance below) caches
+#      the instance resources into the persistent gpf-grr-cache volume. That
+#      ~15 GB bulk download is paid OUT OF BAND by the gpf-docs-e2e-prewarm
+#      job (the grr_cache_seeded guard asserts it is already present), so the
+#      in-build call is a warm no-op validation — hence _GRR_CACHE_TIMEOUT.
+#
+#   2. STRICT-MODE EXCEPTION (#876): docs-e2e guards command accuracy, not
+#      255K-scale import. denovo_instance truncates the awk-produced
+#      ssc_denovo.tsv to the guide's first _DENOVO_VARIANT_CAP variants (all
+#      chr1) before import. import_genotypes still runs verbatim; only the row
+#      count differs, so the import completes in seconds against the warm
+#      cache. A 90 min cap would be meaningless under the pytest-timeout.
+_DENOVO_IMPORT_TIMEOUT = 600   # 10 min: warm cache + variant cap
+_GRR_CACHE_TIMEOUT = 600       # 10 min: warm-cache validation (prewarmed)
+_DENOVO_VARIANT_CAP = 50       # #876 carve-out — see note above
 
 
 @dataclass
@@ -564,6 +622,7 @@ class DenovoInstance:
     clone_path: Path
     ped_awk: subprocess.CompletedProcess
     tsv_awk: subprocess.CompletedProcess
+    grr_cache: subprocess.CompletedProcess
     ssc_denovo_import: subprocess.CompletedProcess
     study_config_path: Path
 
@@ -584,13 +643,16 @@ def denovo_instance(
        ``Supplementary_Data_1.tsv.gz`` and writes ``ssc_denovo.ped``.
     2. The variant awk (RST lines 170-178): reads
        ``Supplementary_Data_2.tsv.gz`` and writes ``ssc_denovo.tsv``.
-    3. Writes ``~/.grr_definition.yaml`` (RST lines 209-214) pointing the
-       GRR cache at the persistent ``grr_cache_dir`` volume — the guide's
-       "Caching GRR" step. The instance's annotation resources are then
-       demand-pulled into that cache during the import (warm on reuse). The
-       full ``grr_cache_repo`` pre-pull the guide once showed is an optional
-       optimization whose ~15 GB cold download exceeds the docs-e2e time
-       budget, so the suite relies on demand-pull instead (see #876).
+    3. Writes ``~/.grr_definition.yaml`` (the guide's "Caching GRR" step)
+       pointing the GRR cache at the persistent ``grr_cache_dir`` volume,
+       then runs ``grr_cache_repo -i minimal_instance/gpf_instance.yaml`` to
+       cache the instance's annotation resources. ``grr_cache_repo`` ships in
+       gain-core, a transitive dependency of the ``gpf-web`` conda package,
+       so it is on PATH after the guide's ``mamba install gpf-web`` (no
+       separate install step). Against the prewarmed persistent volume this
+       is a fast validation; the ~15 GB cold download is paid out of band by
+       the ``gpf-docs-e2e-prewarm`` job, asserted present by the
+       ``grr_cache_seeded`` guard (see #876).
     4. ``import_genotypes -v -j 10 .../ssc_denovo.yaml`` (RST line 279):
        imports + annotates the study using the instance annotation.
     5. Appends the genotype_browser column-group block (RST lines 340-356)
@@ -602,8 +664,9 @@ def denovo_instance(
     boots against the fully-prepared instance.
 
     Strict mode (#871): every step here is a CLI command or file edit the
-    guide tells the user to type; the only invisible infrastructure is the
-    persistent GRR cache (the same cache the rest of the suite uses).
+    guide tells the user to type. The only carve-out is the
+    ``_DENOVO_VARIANT_CAP`` truncation of the awk output (#876) — see the
+    constant's note; ``import_genotypes`` itself still runs verbatim.
     """
     clone = getting_started_clone
     instance_dir = preview_columns_instance.instance_dir
@@ -621,12 +684,26 @@ def denovo_instance(
         cwd=import_dir, env=env,
     )
 
+    # STRICT-MODE EXCEPTION (#876): cap the awk output to the guide's first
+    # _DENOVO_VARIANT_CAP variants (all chr1) so import_genotypes — still run
+    # verbatim below — completes in seconds against the warm cache. docs-e2e
+    # guards command accuracy, not 255K-scale import; only the row count
+    # differs. test_example_denovo asserts the awk command's success and that
+    # it produced ssc_denovo.tsv *before* this truncation mutates the file,
+    # so the awk claims stay honestly tested.
+    tsv_path = import_dir / "ssc_denovo.tsv"
+    if tsv_awk.returncode == 0 and tsv_path.exists():
+        rows = tsv_path.read_text().splitlines()
+        tsv_path.write_text(
+            "\n".join(rows[:_DENOVO_VARIANT_CAP + 1]) + "\n",
+        )
+
     # Step 3: the guide's "Caching GRR" step — write ~/.grr_definition.yaml
-    # pointing at the persistent cache volume so the import's demand-pulled
-    # resources land in (and reuse) the persistent cache. We deliberately do
-    # NOT run the guide's optional `grr_cache_repo` pre-pull: its full ~15 GB
-    # cold download exceeds the docs-e2e time budget, and the import below
-    # demand-pulls exactly the slices it needs into this same cache.
+    # pointing at the persistent cache volume, then run grr_cache_repo to
+    # cache the instance's annotation resources. The grr_cache_seeded guard
+    # already asserted the agent's persistent volume holds these (~15 GB,
+    # pre-pulled out of band by gpf-docs-e2e-prewarm), so this is a warm
+    # validation, not the cold download.
     grr_definition = Path.home() / ".grr_definition.yaml"
     grr_definition.write_text(
         'id: "seqpipe"\n'
@@ -634,8 +711,15 @@ def denovo_instance(
         'url: "https://grr.iossifovlab.com"\n'
         f'cache_dir: "{grr_cache_dir}"\n',
     )
+    grr_cache = _run(
+        [
+            "grr_cache_repo", "-i",
+            "minimal_instance/gpf_instance.yaml",
+        ],
+        cwd=clone, env=env, timeout=_GRR_CACHE_TIMEOUT,
+    )
 
-    # Step 4: import + annotate the 255K-variant study.
+    # Step 4: import + annotate the (capped) study.
     ssc_denovo_import = _run(
         [
             "import_genotypes", "-v", "-j", "10",
@@ -659,6 +743,7 @@ def denovo_instance(
         clone_path=clone,
         ped_awk=ped_awk,
         tsv_awk=tsv_awk,
+        grr_cache=grr_cache,
         ssc_denovo_import=ssc_denovo_import,
         study_config_path=study_config,
     )
