@@ -154,15 +154,19 @@ def grr_cache_dir():
     return path
 
 
-# The resource whose presence proves this agent's persistent GRR cache
-# has been seeded. The denovo guide's grr_cache_repo step
+# Sentinel file written into the persistent gpf-grr-cache volume by the
+# gpf-docs-e2e-prewarm job, and ONLY after its grr_cache_repo run fully
+# succeeds. The denovo guide's grr_cache_repo step
 # (example_denovo_import.rst "Caching GRR") bulk-downloads ~15 GB of
-# instance resources; the persistent gpf-grr-cache volume amortizes that
-# to a one-time per-agent cost paid OUT OF BAND by the gpf-docs-e2e-prewarm
-# job — never inside the wall-limited build. The cache lays files out as
-# <cache_dir>/<repo_id>/<resource_id>/... (GenomicResourceCachedRepo), so
-# we glob for the gnomAD resource tail rather than hard-coding the repo id.
-_SEED_MARKER_GLOB = "**/gnomAD_4.1.0/genomes/ALL/**/*"
+# instance resources; that cost is paid OUT OF BAND by the prewarm job,
+# never inside the wall-limited build. We key the guard on this sentinel
+# rather than on the presence of a cached resource file: a partial
+# demand-pull from an earlier build can leave a non-empty gnomAD file
+# behind (which would false-pass a glob check) while the cache is still
+# incomplete — exactly the case that made build #27's in-build
+# grr_cache_repo time out. The sentinel only exists when a full cache
+# write completed.
+_SEED_SENTINEL = ".docs-e2e-prewarmed"
 
 
 @pytest.fixture(scope="session")
@@ -174,19 +178,16 @@ def grr_cache_seeded(grr_cache_dir):
     grr_cache_repo cold-pull ~15 GB and blow the build timeout. Run the
     ``gpf-docs-e2e-prewarm`` job once per agent (see docs_e2e/README.md
     § Onboarding an agent)."""
-    seeded = any(
-        p.is_file() and p.stat().st_size > 0
-        for p in grr_cache_dir.glob(_SEED_MARKER_GLOB)
-    )
-    if not seeded:
+    sentinel = grr_cache_dir / _SEED_SENTINEL
+    if not sentinel.exists():
         node = os.environ.get("NODE_NAME", "<this-agent>")
         pytest.fail(
-            f"GRR cache at {grr_cache_dir} is not seeded (no "
-            f"gnomAD_4.1.0/genomes/ALL resource found). docs-e2e needs "
-            f"the ~15 GB instance resources pre-cached on this agent. "
-            f"Run the `gpf-docs-e2e-prewarm` Jenkins job against node "
-            f"'{node}' once, then re-trigger this build. See "
-            f"docs_e2e/README.md § Onboarding an agent.",
+            f"GRR cache at {grr_cache_dir} is not seeded (sentinel "
+            f"{_SEED_SENTINEL} absent). docs-e2e needs the ~15 GB "
+            f"instance resources pre-cached on this agent. Run the "
+            f"`gpf-docs-e2e-prewarm` Jenkins job against node '{node}' "
+            f"once (it writes the sentinel on success), then re-trigger "
+            f"this build. See docs_e2e/README.md § Onboarding an agent.",
             pytrace=False,
         )
     return grr_cache_dir
