@@ -1042,6 +1042,78 @@ def pheno_import_instance(cnv_instance, getting_started_clone, gpf_env):
     )
 
 
+# The gene_sets_db + gene_scores_db blocks getting_started_with_gene_sets.rst
+# tells the user to append to minimal_instance/gpf_instance.yaml (the
+# emphasized lines of the guide's two config code-blocks — RST lines 89-92
+# and 157-169). Kept byte-for-byte in sync with the guide; a drift here is
+# itself a guide-accuracy bug this suite is meant to catch.
+#
+# NOTE: the guide also listed `gene_properties/gene_sets/relevant`, but that
+# resource 404s in the public GRR (its config and its guide index.html link
+# are both gone) — guide drift fixed in the RST in the same PR (#879), so it
+# is absent here too. autism + GO are the surviving collections.
+_GENE_SETS_BLOCK = (
+    "\n"
+    "gene_sets_db:\n"
+    "  gene_set_collections:\n"
+    "  - gene_properties/gene_sets/autism\n"
+    "  - gene_properties/gene_sets/GO_2024-06-17_release\n"
+    "\n"
+    "gene_scores_db:\n"
+    "  gene_scores:\n"
+    "  - gene_properties/gene_scores/Satterstrom_Buxbaum_Cell_2020\n"
+    "  - gene_properties/gene_scores/Iossifov_Wigler_PNAS_2015\n"
+    "  - gene_properties/gene_scores/LGD\n"
+    "  - gene_properties/gene_scores/RVIS\n"
+    "  - gene_properties/gene_scores/LOEUF\n"
+)
+
+
+@dataclass
+class GeneSetsInstance:
+    """The instance after getting_started_with_gene_sets.rst: the
+    ``gene_sets_db`` (autism + GO collections) and ``gene_scores_db`` (five
+    gene scores) blocks added to gpf_instance.yaml."""
+
+    instance_dir: Path
+    clone_path: Path
+    config_path: Path
+
+
+@pytest.fixture(scope="session")
+def gene_sets_instance(pheno_import_instance):
+    """Apply getting_started_with_gene_sets.rst: append the
+    ``gene_sets_db`` + ``gene_scores_db`` blocks to
+    minimal_instance/gpf_instance.yaml (RST lines 89-92 + 157-169).
+
+    The de Novo gene sets the guide's first section describes need no
+    config — the GPF system generates them for any study with de Novo
+    variants (``ssc_denovo``), so they are exercised against the existing
+    instance with no edit here. This fixture only adds the two config
+    blocks the guide's later sections tell the user to type.
+
+    Chained after ``pheno_import_instance`` (the prior tail) to keep the
+    suite's single ``wgpf run`` ordering: ``wgpf_server`` depends on this
+    fixture, so the shared server boots with the gene set collections and
+    gene scores configured on top of everything else.
+
+    Strict mode (#871): the only thing done here is the yaml edit a real
+    user types. The configured collections/scores are GRR resources the
+    server demand-pulls on first access (gene_sets_db / gene_scores_db are
+    lazy ``@cached_property``); they are NOT in the prewarmed cache (the
+    prewarm runs against the base config), so the first request that
+    touches them pays a cold GRR pull — the gene-set/score tests allow for
+    that with a generous per-request timeout.
+    """
+    config_path = pheno_import_instance.instance_dir / "gpf_instance.yaml"
+    config_path.write_text(config_path.read_text() + _GENE_SETS_BLOCK)
+    return GeneSetsInstance(
+        instance_dir=pheno_import_instance.instance_dir,
+        clone_path=pheno_import_instance.clone_path,
+        config_path=config_path,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -1049,25 +1121,27 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(pheno_import_instance, gpf_env):
+def wgpf_server(gene_sets_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``pheno_import_instance`` — the last stage of the guide's
+    Depends on ``gene_sets_instance`` — the last stage of the guide's
     linear narrative (imports → annotation edit → pheno import + pheno
     attach → preview-column config → ssc_denovo import + study-column
-    config → ssc_cnv import → ssc_pheno import + ssc_denovo pheno-attach).
-    ``pheno_import_instance`` transitively pulls the whole prior chain, so
-    the single shared server starts after every config edit the guide
-    describes: it serves the annotated, pheno-enabled example_dataset with
-    its extended preview columns, the ssc_denovo study (now with the
-    ssc_pheno phenotype study attached), the ssc_cnv study, AND the
-    ssc_pheno phenotype study. Keeping the suite to one wgpf process per
-    session avoids two ``wgpf run``s racing on the same ``DAE_DB_DIR``
-    parquet during re-annotation. Every earlier claim (datasets visible,
-    annotation download columns, pheno browser) holds equally in this
-    final state, so sharing one server across all stages is sound.
+    config → ssc_cnv import → ssc_pheno import + ssc_denovo pheno-attach →
+    gene_sets_db + gene_scores_db config). ``gene_sets_instance``
+    transitively pulls the whole prior chain, so the single shared server
+    starts after every config edit the guide describes: it serves the
+    annotated, pheno-enabled example_dataset with its extended preview
+    columns, the ssc_denovo study (with the ssc_pheno phenotype study
+    attached), the ssc_cnv study, the ssc_pheno phenotype study, AND the
+    configured gene set collections + gene scores. Keeping the suite to one
+    wgpf process per session avoids two ``wgpf run``s racing on the same
+    ``DAE_DB_DIR`` parquet during re-annotation. Every earlier claim
+    (datasets visible, annotation download columns, pheno browser) holds
+    equally in this final state, so sharing one server across all stages is
+    sound.
 
     wgpf's combined stdout/stderr is redirected to a temp FILE rather
     than ``subprocess.PIPE``. This matters: the readiness poll below does
@@ -1086,7 +1160,7 @@ def wgpf_server(pheno_import_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(pheno_import_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(gene_sets_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -1112,7 +1186,7 @@ def wgpf_server(pheno_import_instance, gpf_env):
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=pheno_import_instance.instance_dir,
+        cwd=gene_sets_instance.instance_dir,
         env=env,
         stdout=log_fh,
         stderr=subprocess.STDOUT,

@@ -13,9 +13,12 @@ from docs_e2e.guide_assertions import (
     assert_command_succeeds,
     assert_dataset_description_flag,
     assert_dataset_visible,
+    assert_denovo_gene_sets_for_dataset,
     assert_download_has_columns,
     assert_download_trailing_columns,
     assert_file_created,
+    assert_gene_scores_available,
+    assert_gene_set_collections_available,
     assert_genomic_score_available,
     assert_image_response_ok,
     assert_pheno_instruments_available,
@@ -768,3 +771,137 @@ class TestAssertPreviewTableColumnGroup:
         message = str(exc_info.value)
         assert "404" in message
         assert "Triage" in message
+
+
+_GS_RST = "getting_started_with_gene_sets.rst"
+
+
+class TestAssertGeneSetCollectionsAvailable:
+    def test_passes_when_all_collections_present(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[
+                {"name": "autism"}, {"name": "denovo"}, {"name": "GO"},
+            ],
+        )
+        assert_gene_set_collections_available(
+            resp, ["autism", "GO"],
+            rst_ref=f"{_GS_RST}:95",
+            expectation="configured gene set collections are available",
+        )
+
+    def test_raises_when_collection_missing(self):
+        # Models the relevant-404 drift: a configured collection that did
+        # not load is absent from the list.
+        resp = _FakeResponse(
+            200,
+            json_body=[{"name": "autism"}, {"name": "GO"}],
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_set_collections_available(
+                resp, ["autism", "relevant", "GO"],
+                rst_ref=f"{_GS_RST}:95",
+                expectation="configured gene set collections are available",
+            )
+        message = str(exc_info.value)
+        assert f"{_GS_RST}:95" in message
+        assert "relevant" in message
+        # Lists what IS available so the operator can spot the gap.
+        assert "autism" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_set_collections_available(
+                resp, ["autism"],
+                rst_ref=f"{_GS_RST}:95",
+                expectation="configured gene set collections are available",
+            )
+        assert "500" in str(exc_info.value)
+
+
+class TestAssertGeneScoresAvailable:
+    def test_passes_when_all_scores_present(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[
+                {"score": "LGD_score"}, {"score": "RVIS score"},
+                {"score": "LOEUF"},
+            ],
+        )
+        assert_gene_scores_available(
+            resp, ["LGD_score", "LOEUF"],
+            rst_ref=f"{_GS_RST}:171",
+            expectation="configured gene scores are available",
+        )
+
+    def test_raises_when_score_missing(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[{"score": "LGD_score"}],
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_scores_available(
+                resp, ["LGD_score", "LOEUF"],
+                rst_ref=f"{_GS_RST}:171",
+                expectation="configured gene scores are available",
+            )
+        message = str(exc_info.value)
+        assert f"{_GS_RST}:171" in message
+        assert "LOEUF" in message
+        assert "LGD_score" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(503, text="Service Unavailable")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_scores_available(
+                resp, ["LOEUF"],
+                rst_ref=f"{_GS_RST}:171",
+                expectation="configured gene scores are available",
+            )
+        assert "503" in str(exc_info.value)
+
+
+class TestAssertDenovoGeneSetsForDataset:
+    def test_passes_when_dataset_present(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[
+                {"datasetId": "denovo_example"},
+                {"datasetId": "ssc_denovo"},
+            ],
+        )
+        assert_denovo_gene_sets_for_dataset(
+            resp, "ssc_denovo",
+            rst_ref=f"{_GS_RST}:37",
+            expectation="de Novo gene sets are generated for ssc_denovo",
+        )
+
+    def test_raises_when_dataset_missing(self):
+        resp = _FakeResponse(
+            200,
+            json_body=[{"datasetId": "denovo_example"}],
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_denovo_gene_sets_for_dataset(
+                resp, "ssc_denovo",
+                rst_ref=f"{_GS_RST}:37",
+                expectation="de Novo gene sets are generated for ssc_denovo",
+            )
+        message = str(exc_info.value)
+        assert f"{_GS_RST}:37" in message
+        assert "ssc_denovo" in message
+        assert "denovo_example" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_denovo_gene_sets_for_dataset(
+                resp, "ssc_denovo",
+                rst_ref=f"{_GS_RST}:37",
+                expectation="de Novo gene sets are generated for ssc_denovo",
+            )
+        assert "500" in str(exc_info.value)

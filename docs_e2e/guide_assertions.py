@@ -666,3 +666,145 @@ def assert_preview_table_column_group(
         "name", expected_column_names, actual_names,
         group_name=group_name, rst_ref=rst_ref, expectation=expectation,
     )
+
+
+def assert_gene_set_collections_available(
+        response, collections, *, rst_ref, expectation,
+):
+    """Assert each of ``collections`` is listed by the gene-sets collections
+    endpoint (``/api/v3/gene_sets/gene_sets_collections``).
+
+    Backs the gene-sets guide's claim that, after adding ``gene_sets_db`` to
+    the instance config, the configured gene set collections become
+    available. The response is a JSON list of collection dicts each carrying
+    a ``name`` (collection id) — note the id is the collection's configured
+    ``id``, which may differ from its GRR resource path (e.g. the
+    ``gene_properties/gene_sets/GO_2024-06-17_release`` resource has id
+    ``GO``). A non-200 status fails with HTTP-error triage; a missing
+    collection fails with a hint pointing at the config edit / GRR resource.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with gene set collections {collections} listed"
+            ),
+        ))
+    listed = [
+        c.get("name") for c in response.json() if isinstance(c, dict)
+    ]
+    missing = [c for c in collections if c not in listed]
+    if not missing:
+        return
+    available = ", ".join(repr(c) for c in listed) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected gene set collections: {', '.join(collections)}\n"
+        f"  missing:                       {', '.join(missing)}\n"
+        f"  available:                     [{available}]\n"
+        f"\n"
+        f"  Triage hint: The collections endpoint responded but an expected "
+        f"collection is absent. Most likely either (a) the gene_sets_db "
+        f"block was not added to gpf_instance.yaml (or the server did not "
+        f"pick it up — check the wgpf log dump), (b) the configured GRR "
+        f"resource is missing/renamed in the public GRR (a 404 there is "
+        f"skipped at load), or (c) the collection's configured id drifted "
+        f"from the guide. If the new id is correct, update the guide."
+    )
+    raise AssertionError(message)
+
+
+def assert_gene_scores_available(response, scores, *, rst_ref, expectation):
+    """Assert each of ``scores`` is listed by the gene-scores endpoint
+    (``/api/v3/gene_scores/``).
+
+    Backs the gene-sets guide's claim that, after adding ``gene_scores_db``
+    to the instance config, the configured gene scores become available. The
+    response is a JSON list of score dicts each carrying a ``score`` (score
+    id) — note a single ``gene_score`` GRR resource can expose several scored
+    columns, each with its own id (e.g. the ``LGD`` resource exposes
+    ``LGD_score`` + ``LGD_rank``), so the ids may differ from the resource
+    name. A non-200 status fails with HTTP-error triage; a missing score
+    fails with a hint pointing at the config edit / GRR resource.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with gene scores {scores} listed"
+            ),
+        ))
+    listed = [
+        s.get("score") for s in response.json() if isinstance(s, dict)
+    ]
+    missing = [s for s in scores if s not in listed]
+    if not missing:
+        return
+    available = ", ".join(repr(s) for s in listed) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected gene scores: {', '.join(scores)}\n"
+        f"  missing:              {', '.join(missing)}\n"
+        f"  available:            [{available}]\n"
+        f"\n"
+        f"  Triage hint: The gene-scores endpoint responded but an expected "
+        f"score is absent. Most likely either (a) the gene_scores_db block "
+        f"was not added to gpf_instance.yaml (or the server did not pick it "
+        f"up — check the wgpf log dump), (b) the configured GRR resource is "
+        f"missing/renamed, or (c) the score's id drifted from the guide. If "
+        f"the new id is correct, update the guide."
+    )
+    raise AssertionError(message)
+
+
+def assert_denovo_gene_sets_for_dataset(
+        response, dataset_id, *, rst_ref, expectation,
+):
+    """Assert ``dataset_id`` is listed by the de Novo gene sets types
+    endpoint (``/api/v3/gene_sets/denovo_gene_sets_types``).
+
+    Backs the gene-sets guide's claim that the GPF system generates a
+    collection of de Novo gene sets for each genotype study with de Novo
+    variants (e.g. ``ssc_denovo``). The response is a JSON list of dicts each
+    carrying a ``datasetId``; a study appearing there means its de Novo gene
+    sets were generated and are available in the Genotype Browser's
+    ``Genes > Gene Sets`` tab. A non-200 status fails with HTTP-error triage;
+    a missing dataset fails with a hint pointing at the study's de Novo data
+    / denovo_gene_sets config.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with dataset '{dataset_id}' among the de Novo "
+                f"gene set types"
+            ),
+        ))
+    listed = [
+        d.get("datasetId") for d in response.json() if isinstance(d, dict)
+    ]
+    if dataset_id in listed:
+        return
+    available = ", ".join(repr(d) for d in listed) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected dataset with de Novo gene sets: {dataset_id!r}\n"
+        f"  available datasets:                      [{available}]\n"
+        f"\n"
+        f"  Triage hint: The de Novo gene sets endpoint responded but "
+        f"{dataset_id!r} is not among the studies with generated de Novo "
+        f"gene sets. Most likely either (a) the study has no de Novo "
+        f"variants / its import did not load them (re-check the import), or "
+        f"(b) denovo_gene_sets is disabled in the study config. If the study "
+        f"id in the guide drifted, update the guide."
+    )
+    raise AssertionError(message)
