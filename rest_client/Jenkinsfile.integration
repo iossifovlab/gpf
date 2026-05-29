@@ -7,7 +7,7 @@
 // Stack: rest_client/docker-compose-integration.yaml brings up a wdae
 // backend container (entrypoint: scripts/backend/run_gpf.sh) seeded
 // with a t4c8 GPF instance and two OAuth client_credentials apps, a
-// MailHog container for outgoing-mail assertions, and a runner
+// Mailpit container for outgoing-mail assertions, and a runner
 // container that hits the backend with pytest --url.
 
 pipeline {

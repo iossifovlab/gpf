@@ -5,21 +5,22 @@ import { Page, expect } from '@playwright/test';
 // at root. The Apache config in web_ui/httpd.conf reverse-proxies
 // /api/ and /ws/ to backend:9001, so frontendUrl == backendUrl
 // (the SPA and the API are the same origin from the SPA's POV).
-// Mail goes through the mailhog service `mail` on its UI port 8025.
+// Mail goes through the mailpit service `mail` on its UI port 8025.
 // Local-dev URLs are kept commented below for reference.
-export const frontendUrl = 'http://frontend';
-export const backendUrl = frontendUrl;
-export const mailhogUrl = 'http://mail:8025';
+// export const frontendUrl = 'http://frontend';
+// export const backendUrl = frontendUrl;
+export const mailpitUrl = process.env['CI'] === '1' ? 'http://mail:8025' : 'http://localhost:8025';
+
 
 // for local dev with containers:
 // export const frontendUrl = 'http://localhost:8080/gpf';
 // export const backendUrl = frontendUrl;
-// export const mailhogUrl = 'http://localhost:8025';
+// export const mailpitUrl = 'http://localhost:8025';
 
 // for data-hg19-startup dev:
-// export const backendUrl = 'http://localhost:8000';
-// export const frontendUrl = 'http://localhost:4200';
-// export const mailhogUrl = 'http://localhost:8025';
+export const backendUrl = 'http://localhost:8000';
+export const frontendUrl = 'http://localhost:4200';
+// export const mailpitUrl = 'http://localhost:8025';
 
 // tb-nxl: the `username` / `password` exports that lived here used to
 // silently default `login(page)` to admin@iossifovlab.com — exactly the
@@ -169,6 +170,25 @@ export function readFile(name): Promise<unknown> {
 
 export function getRandomString(): string {
   return Math.random().toString(36).substring(2, 9);
+}
+
+export async function getLinkInEmail(page: Page, email: string): Promise<string> {
+  const query = encodeURIComponent(`to:${email}`);
+  let messageId = '';
+  await expect.poll(async() => {
+    const response = await page.request.get(`${mailpitUrl}/api/v1/search?query=${query}`);
+    const data = await response.json() as { messages: Array<{ ID: string }> };
+    messageId = data.messages?.[0]?.ID ?? '';
+    return messageId !== '';
+  }, { timeout: 10000, intervals: [1000, 2000, 3000, 4000] }).toBe(true);
+
+  const response = await page.request.get(`${mailpitUrl}/api/v1/message/${messageId}`);
+  const message = await response.json() as { Text: string };
+  const match = message.Text.match(/https?:\/\/\S+/);
+  if (!match) {
+    throw new Error('Link not found in email.');
+  }
+  return match[0];
 }
 
 // Create user without password

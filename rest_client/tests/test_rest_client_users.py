@@ -10,8 +10,8 @@ from rest_client.rest_client import (
     RESTError,
 )
 
-from .mailhog_client import (
-    MailhogClient,
+from .mailpit_client import (
+    MailpitClient,
 )
 
 
@@ -344,7 +344,7 @@ def test_initiate_forgotten_password(
 
 def test_initiate_password_reset_old(
     admin_client: RESTClient,
-    mail_client: MailhogClient,
+    mail_client: MailpitClient,
 ) -> None:
     """Test deprecated initiating password reset."""
     username = f"test_{uuid.uuid4()}@iossifovlab.com"
@@ -372,7 +372,7 @@ def test_initiate_forgotten_password_for_non_existing_user(
 
 def test_initiate_reset_password_old_for_non_existing_user(
     admin_client: RESTClient,
-    mail_client: MailhogClient,
+    mail_client: MailpitClient,
 ) -> None:
     """Test initiating password reset."""
     mail_client.delete_all_messages()
@@ -401,7 +401,7 @@ def test_initiate_forgotten_password_by_anonymous_user(
 def test_initiate_reset_password_old_by_anonymous_user(
     admin_client: RESTClient,
     anon_client: RESTClient,
-    mail_client: MailhogClient,
+    mail_client: MailpitClient,
 ) -> None:
     """Test initiating password reset."""
     username = f"test_{uuid.uuid4()}@iossifovlab.com"
@@ -448,7 +448,7 @@ def test_search_user(
 
 def test_create_and_reset_password(
     admin_client: RESTClient,
-    mail_client: MailhogClient,
+    mail_client: MailpitClient,
 ) -> None:
     """Test create user and password reset."""
     name = "Test User"
@@ -463,7 +463,7 @@ def test_create_and_reset_password(
 
 def test_create_update_and_reset_password(
     admin_client: RESTClient,
-    mail_client: MailhogClient,
+    mail_client: MailpitClient,
 ) -> None:
     """Test create user, update it and password reset."""
     name = "Test User"

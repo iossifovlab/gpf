@@ -75,7 +75,7 @@ services:
       start_period: 60s
 
   mail:
-    image: mailhog/mailhog
+    image: axllent/mailpit:latest
     hostname: mail
 
   # One-shot: runs `wdaemanage migrate`, imports the genotype +

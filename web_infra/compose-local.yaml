@@ -1,7 +1,7 @@
 # Local-dev overlay for the e2e compose stack. Adds host
 # port publishings on top of compose-jenkins.yaml so a real
 # browser on the host can reach the SPA, the backend API, and
-# Mailhog. CI doesn't use this file — only compose-jenkins.yaml.
+# Mailpit. CI doesn't use this file — only compose-jenkins.yaml.
 #
 # Use:
 #   export BACKEND_IMAGE=gpf-web-api-prod:local
@@ -22,7 +22,7 @@
 # Then browse:
 #   - SPA:     http://127.0.0.1:8080/
 #   - API:     http://127.0.0.1:9001/api/v3/instance/version
-#   - Mailhog: http://127.0.0.1:8025/
+#   - Mailpit: http://127.0.0.1:8025/
 #
 # Login note: the OAuth client's redirect_uris (registered by
 # import_data.sh) include http://localhost:8080/gpf/login and

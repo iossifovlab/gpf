@@ -81,7 +81,7 @@ If you're running the dev-server topology (`ng serve` on 4200 + `wdaemanage runs
 // web_e2e/tests/utils.ts — uncomment for ng-serve / runserver
 // export const frontendUrl = 'http://localhost:4200';
 // export const backendUrl  = 'http://localhost:8000';
-// export const mailhogUrl  = 'http://localhost:8025';
+// export const mailpitUrl  = 'http://localhost:8025';
 ```
 
 Don't commit that swap — leave the production `http://frontend` URLs as the default for CI. Then:
@@ -105,13 +105,13 @@ npx playwright test -g "should display \"GPF"
 PWDEBUG=1 npx playwright test tests/datasets.spec.ts
 ```
 
-### Mailhog (for the user-creation / forgotten-password specs)
+### Mailpit (for the user-creation / forgotten-password specs)
 
-The verification-email tests poll Mailhog for a message containing the freshly-created user's email and follow the link inside. For local dev:
+The verification-email tests poll Mailpit for a message containing the freshly-created user's email and follow the link inside. For local dev:
 
 ```bash
 # in another terminal
-docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog
+docker run --rm -p 1025:1025 -p 8025:8025 mailpit/mailpit
 ```
 
 Or use the `mail` service from `web_infra/compose-jenkins.yaml` if you're already running that stack. Either way, point Django at it via env:

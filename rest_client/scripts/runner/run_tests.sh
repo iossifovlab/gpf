@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Runner entrypoint for the rest_client integration test stack. Runs
-# pytest against the live backend (--url) and MailHog (--mailhog).
+# pytest against the live backend (--url) and Mailpit (--mailpit).
 # JUnit + coverage XMLs land in /reports, mounted by the Jenkins job.
 
 mkdir -p /reports
@@ -16,7 +16,7 @@ pytest -vv --log-level=DEBUG \
     --cov-report=xml:/reports/coverage.xml \
     tests/ \
     --url http://backend:21011 \
-    --mailhog http://mail:8025
+    --mailpit http://mail:8025
 pytest_exit=$?
 
 # Rewrite container-absolute paths so Jenkins recordCoverage can find sources.

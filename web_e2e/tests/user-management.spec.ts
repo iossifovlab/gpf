@@ -35,9 +35,7 @@ test.describe('Management tests for reset password in Users', () => {
     await page.locator(`[id="${email}-reset-password-button"] > button`).click();
     await page.locator('button:text("Reset")').click();
 
-    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText(email).click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
@@ -66,9 +64,7 @@ test.describe('Management tests for reset password in Users', () => {
     await page.locator('#id_email').fill(email);
     await page.getByText('Reset password').click();
 
-    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText(email).click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
@@ -776,9 +772,7 @@ test.describe('Admin surface (folded from app.spec.ts, tb-nxl)', () => {
     await page.locator('button:text("Reset")').click();
     await utils.logout(page);
 
-    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText(email).first().click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill('secret' + newUserPasswordSuffix);
     await page.locator('#id_new_password2').fill('secret' + newUserPasswordSuffix);
@@ -830,9 +824,7 @@ test.describe('Admin surface (folded from app.spec.ts, tb-nxl)', () => {
     await page.locator('button:text("Reset")').click();
     await utils.logout(page);
 
-    await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText(email).first().click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill('secret' + newUserPasswordSuffix);
     await page.locator('#id_new_password2').fill('secret' + newUserPasswordSuffix);
