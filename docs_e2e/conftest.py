@@ -22,6 +22,7 @@ import os
 import shutil
 import socket
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -859,6 +860,188 @@ def cnv_instance(denovo_instance, getting_started_clone, gpf_env):
     )
 
 
+# The Family-Data awk pipeline example_pheno_import.rst (RST lines 72-88)
+# tells the user to run to build ssc_pheno.ped from
+# Supplementary_Table_1.tsv.gz, keeping only the SSC-collection families.
+# Run from the clone root with the example_imports/pheno_import/ path
+# prefixes exactly as the guide writes them. Reproduced byte-for-byte; a
+# drift here is itself a guide-accuracy bug this suite is meant to catch.
+_PHENO_PED_AWK = r"""gunzip -c example_imports/pheno_import/Supplementary_Table_1.tsv.gz | cut -f 1-4 | awk '
+    BEGIN {
+        OFS="\t"
+        print "familyId", "personId", "dadId", "momId", "status", "sex"
+    }
+    $2 == "ssc" {
+        fid = $1
+        if( fid in families == 0) {
+            families[fid] = 1
+            print fid, fid".mo", "0", "0", "unaffected", "F"
+            print fid, fid".fa", "0", "0", "unaffected", "M"
+            print fid, fid".p1", fid".fa", fid".mo", "affected", $3
+            if ($4 != "") {
+                print fid, fid".s2", fid".fa", fid".mo", "unaffected", $4
+            }
+        }
+    }' > example_imports/pheno_import/ssc_pheno.ped"""
+
+
+# The phenotype-measures awk pipeline example_pheno_import.rst (RST lines
+# 146-153) tells the user to run to build proband_measures.csv from
+# Supplementary_Table_1.tsv.gz (columns 1 and 8-13). Reproduced
+# byte-for-byte from the guide — including the trailing ``$8`` print of a
+# field that does not exist after the ``cut`` (so each row carries a
+# trailing empty column, matching the guide's csv-table and the committed
+# proband_measures.csv).
+_PHENO_MEASURES_AWK = r"""gunzip -c example_imports/pheno_import/Supplementary_Table_1.tsv.gz | cut -f 1,8-13 | awk '
+    BEGIN {
+        OFS=","
+        print "individual", "motherRace", "fatherRace", "probandVIQ", "probandNVIQ", "motherAgeInMonthsAtBirthOfProband", "fatherAgeInMonthsAtBirthOfProband"
+    }
+    $1 != "familyId" {
+        print $1".p1", $2, $3, $4, $5, $6, $7, $8
+    }' > example_imports/pheno_import/proband_measures.csv"""
+
+
+# The single line example_pheno_import.rst (RST line 243, emphasized line
+# 18 of the config code-block) tells the user to add to the ssc_denovo
+# study config to attach the imported phenotype study. Kept byte-for-byte
+# in sync with the guide.
+_SSC_DENOVO_PHENOTYPE_LINE = "\nphenotype_data: ssc_pheno\n"
+
+# example_pheno_import.rst imports the SSC proband phenotype study via
+# import_phenotypes. STRICT-MODE EXCEPTION (#878, mirroring the #876
+# denovo / #877 cnv caps): docs-e2e guards command accuracy, not
+# full-scale data volume. ``wgpf run`` builds the phenotype browser
+# (per-measure distribution figures + regressions, in parallel via
+# joblib/loky) for each pheno study synchronously on its first startup;
+# that cost scales with the instrument's row count, and the full SSC table
+# is ~2.5K probands across 6 measures. We cap the awk-produced
+# proband_measures.csv to the guide's first _PHENO_PROBAND_CAP probands
+# before import so the shared server's first-boot browser build stays well
+# inside the build's wall-time budget. import_phenotypes still runs
+# verbatim; only the instrument row count differs, and the awk command's
+# success + output file are asserted by test_example_pheno before this
+# truncation mutates the file. The pedigree (ssc_pheno.ped) is left whole —
+# it is a cheap table import; only the measures drive the figure-build
+# cost. (The separate undrained-PIPE wgpf startup deadlock this work first
+# surfaced — verbose first-boot output filling the OS pipe buffer — is
+# fixed independently in the wgpf_server fixture, not by this cap.)
+_PHENO_IMPORT_TIMEOUT = 1200   # 20 min cap for import_phenotypes
+_PHENO_PROBAND_CAP = 50        # #878 carve-out — see note above
+
+
+@dataclass
+class PhenoImportInstance:
+    """The instance after example_pheno_import.rst: the ``ssc_pheno``
+    phenotype study imported into ``minimal_instance`` and the
+    ``ssc_denovo`` genotype study configured to use it.
+
+    Captures each setup step's subprocess result so per-test assertions
+    can feed them into ``after_command=`` / ``assert_command_succeeds``
+    for triage.
+    """
+
+    instance_dir: Path
+    clone_path: Path
+    pheno_ped_awk: subprocess.CompletedProcess
+    pheno_measures_awk: subprocess.CompletedProcess
+    pheno_import: subprocess.CompletedProcess
+    ssc_denovo_config_path: Path
+
+
+@pytest.fixture(scope="session")
+def pheno_import_instance(cnv_instance, getting_started_clone, gpf_env):
+    """Apply example_pheno_import.rst: import the real SSC proband
+    phenotype study ``ssc_pheno`` and attach it to ``ssc_denovo``.
+
+    Walks the guide's command path verbatim, run from the clone root with
+    the ``example_imports/pheno_import/`` path prefixes the guide uses:
+
+    1. The Family-Data awk (RST lines 72-88): reads
+       ``Supplementary_Table_1.tsv.gz`` and writes ``ssc_pheno.ped`` (the
+       SSC-collection families, mother/father/proband[/sibling] rows).
+    2. The phenotype-measures awk (RST lines 146-153): reads the same
+       table and writes ``proband_measures.csv`` (the six proband
+       measures).
+    3. ``import_phenotypes example_imports/pheno_import/ssc_pheno.yaml``
+       (RST line 196): imports the ``ssc_pheno`` study into the instance's
+       (default) phenotype storage.
+    4. Appends ``phenotype_data: ssc_pheno`` to the ``ssc_denovo`` study
+       config (RST line 243) — attaching the pheno study so ``ssc_denovo``
+       gains the Phenotype Browser + Phenotype Tool tabs.
+
+    Chained after ``cnv_instance`` (so after ``denovo_instance`` produced
+    the ``ssc_denovo`` study this step configures) to keep the suite's
+    single ``wgpf run`` ordering: ``wgpf_server`` depends on this fixture,
+    so the one shared server boots with ``ssc_pheno`` imported and
+    ``ssc_denovo`` pheno-attached on top of everything else.
+
+    Strict mode (#871): every step is a CLI command or one-line yaml edit
+    the guide tells the user to type. The one carve-out is the
+    ``_PHENO_PROBAND_CAP`` truncation of the awk-produced
+    proband_measures.csv (#878) — see the constant's note; the awk
+    pipelines and ``import_phenotypes`` themselves run verbatim. The
+    minimal_instance has no ``phenotype_storage:`` block;
+    ``import_phenotypes`` falls back to a default storage on its own, the
+    behaviour the guide relies on.
+    """
+    clone = getting_started_clone
+    instance_dir = cnv_instance.instance_dir
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(instance_dir)
+
+    # Steps 1-2: the two awk pipelines, run from the clone root.
+    pheno_ped_awk = _run(
+        ["bash", "-c", _PHENO_PED_AWK], cwd=clone, env=env,
+    )
+    pheno_measures_awk = _run(
+        ["bash", "-c", _PHENO_MEASURES_AWK], cwd=clone, env=env,
+    )
+
+    # STRICT-MODE EXCEPTION (#878): cap the awk-produced instrument file to
+    # the guide's first _PHENO_PROBAND_CAP probands before import_phenotypes
+    # — which still runs verbatim below — so wgpf's on-startup phenotype-
+    # browser build (per-measure figures + regressions) stays inside the
+    # shared server's readiness window. Mirrors the #876 / #877 caps. The
+    # awk command's success and output file are asserted by test_example_pheno
+    # before this truncation mutates the file.
+    measures_path = (
+        clone / "example_imports" / "pheno_import" / "proband_measures.csv"
+    )
+    if pheno_measures_awk.returncode == 0 and measures_path.exists():
+        rows = measures_path.read_text().splitlines()
+        measures_path.write_text(
+            "\n".join(rows[:_PHENO_PROBAND_CAP + 1]) + "\n",
+        )
+
+    # Step 3: import the ssc_pheno phenotype study.
+    pheno_import = _run(
+        [
+            "import_phenotypes",
+            "example_imports/pheno_import/ssc_pheno.yaml",
+        ],
+        cwd=clone, env=env, timeout=_PHENO_IMPORT_TIMEOUT,
+    )
+
+    # Step 4: append `phenotype_data: ssc_pheno` to the ssc_denovo study
+    # config the denovo import produced (studies/<id>/<id>.yaml).
+    ssc_denovo_config = (
+        instance_dir / "studies" / "ssc_denovo" / "ssc_denovo.yaml"
+    )
+    if ssc_denovo_config.exists():
+        ssc_denovo_config.write_text(
+            ssc_denovo_config.read_text() + _SSC_DENOVO_PHENOTYPE_LINE)
+
+    return PhenoImportInstance(
+        instance_dir=instance_dir,
+        clone_path=clone,
+        pheno_ped_awk=pheno_ped_awk,
+        pheno_measures_awk=pheno_measures_awk,
+        pheno_import=pheno_import,
+        ssc_denovo_config_path=ssc_denovo_config,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -866,40 +1049,72 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(cnv_instance, gpf_env):
+def wgpf_server(pheno_import_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``cnv_instance`` — the last stage of the guide's linear
-    narrative (imports → annotation edit → pheno import + pheno attach →
-    preview-column config → ssc_denovo import + study-column config →
-    ssc_cnv import). ``cnv_instance`` transitively pulls the whole prior
-    chain, so the single shared server starts after every config edit the
-    guide describes: it serves the annotated, pheno-enabled example_dataset
-    with its extended preview columns, the ssc_denovo study, AND the
-    ssc_cnv study. Keeping the suite to one wgpf process per session avoids
-    two ``wgpf run``s racing on the same ``DAE_DB_DIR`` parquet during
-    re-annotation. Every earlier claim (datasets visible, annotation
-    download columns, pheno browser) holds equally in this final state, so
-    sharing one server across all stages is sound.
+    Depends on ``pheno_import_instance`` — the last stage of the guide's
+    linear narrative (imports → annotation edit → pheno import + pheno
+    attach → preview-column config → ssc_denovo import + study-column
+    config → ssc_cnv import → ssc_pheno import + ssc_denovo pheno-attach).
+    ``pheno_import_instance`` transitively pulls the whole prior chain, so
+    the single shared server starts after every config edit the guide
+    describes: it serves the annotated, pheno-enabled example_dataset with
+    its extended preview columns, the ssc_denovo study (now with the
+    ssc_pheno phenotype study attached), the ssc_cnv study, AND the
+    ssc_pheno phenotype study. Keeping the suite to one wgpf process per
+    session avoids two ``wgpf run``s racing on the same ``DAE_DB_DIR``
+    parquet during re-annotation. Every earlier claim (datasets visible,
+    annotation download columns, pheno browser) holds equally in this
+    final state, so sharing one server across all stages is sound.
 
-    On teardown, terminates wgpf and dumps the last few hundred
-    lines of its combined stdout/stderr if any test in the
-    session failed."""
+    wgpf's combined stdout/stderr is redirected to a temp FILE rather
+    than ``subprocess.PIPE``. This matters: the readiness poll below does
+    not drain the child's output while waiting, so with a PIPE a verbose
+    startup would fill the ~64 KB OS pipe buffer and wgpf would BLOCK on
+    its next write — before binding the port — and never become ready
+    (manifesting as a bogus "did not become ready" timeout). The shared
+    server's single first-boot is exactly that verbose case: it
+    re-annotates every imported study and builds the phenotype browser
+    (figures + regressions, via joblib/loky) for both pheno studies, and
+    the loky resource-tracker warnings alone can exceed the buffer. A file
+    sink is never back-pressured, so wgpf starts unimpeded; the failure
+    branches and teardown read the file for the log dump. (See #878.)
+
+    On teardown, terminates wgpf and removes the temp log file."""
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(cnv_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(pheno_import_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
+    log_fd, log_name = tempfile.mkstemp(prefix="docs-e2e-wgpf-", suffix=".log")
+    os.close(log_fd)
+    log_path = Path(log_name)
+    log_fh = log_path.open("wb")
+
+    def _wgpf_log_tail(n_chars=4000):
+        """Read the wgpf log file and return its last ``n_chars``.
+
+        Flush the write handle first so the parent sees everything the
+        child has emitted; safe to call after terminate()/exit too."""
+        try:
+            log_fh.flush()
+        except ValueError:
+            pass  # already closed
+        try:
+            return log_path.read_text(errors="replace")[-n_chars:]
+        except OSError:
+            return ""
+
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=cnv_instance.instance_dir,
+        cwd=pheno_import_instance.instance_dir,
         env=env,
-        stdout=subprocess.PIPE,
+        stdout=log_fh,
         stderr=subprocess.STDOUT,
     )
     client = httpx.Client(base_url=base_url, timeout=60.0)
@@ -921,10 +1136,9 @@ def wgpf_server(cnv_instance, gpf_env):
     last_err = None
     while time.monotonic() < deadline:
         if proc.poll() is not None:
-            out = proc.stdout.read().decode(errors="replace") if proc.stdout else ""
             pytest.fail(
                 f"wgpf run exited early (returncode={proc.returncode}):\n"
-                f"{out[-4000:]}",
+                f"{_wgpf_log_tail()}",
                 pytrace=False,
             )
         try:
@@ -936,28 +1150,26 @@ def wgpf_server(cnv_instance, gpf_env):
             last_err = repr(exc)
         time.sleep(1)
     else:
-        # Readiness timeout. Capture the wgpf log for the failure
-        # message. communicate() reads AND closes stdout, so we must use
-        # its return value — a second proc.stdout.read() here raises
-        # "read of closed file" and masks the real reason wgpf never
-        # became ready.
+        # Readiness timeout. wgpf's output is in the log file (never a
+        # pipe — see the fixture docstring), so capture the tail before
+        # terminating.
+        tail = _wgpf_log_tail()
         proc.terminate()
         try:
-            out_b, _ = proc.communicate(timeout=10)
+            proc.communicate(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
-            out_b, _ = proc.communicate()
-        out = out_b.decode(errors="replace") if out_b else ""
+            proc.communicate()
         pytest.fail(
             f"wgpf run did not become ready within "
             f"{_WGPF_READY_TIMEOUT}s (last error: {last_err}):\n"
-            f"{out[-4000:]}",
+            f"{tail}",
             pytrace=False,
         )
 
     try:
         yield SimpleNamespace(
-            url=base_url, client=client, process=proc,
+            url=base_url, client=client, process=proc, log_path=log_path,
         )
     finally:
         client.close()
@@ -966,3 +1178,5 @@ def wgpf_server(cnv_instance, gpf_env):
             proc.communicate(timeout=_WGPF_SHUTDOWN_TIMEOUT)
         except subprocess.TimeoutExpired:
             proc.kill()
+        log_fh.close()
+        log_path.unlink(missing_ok=True)
