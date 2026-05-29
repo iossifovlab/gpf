@@ -23,12 +23,25 @@
 // docker volume so hg38 demand-pulls are reused across builds.
 
 pipeline {
-    // Excludes `dory`; matches the root Jenkinsfile and the
-    // web_e2e pipeline. Any other agent has docker + the
-    // standard tools.
-    agent { label '!dory' }
+    // Pinned to a specific agent via AGENT_LABEL (default below).
+    // The persistent gpf-grr-cache volume is node-local and ~15 GB,
+    // seeded out of band by gpf-docs-e2e-prewarm; pinning keeps the
+    // build on the agent that was actually seeded rather than any
+    // '!dory' node. Override AGENT_LABEL to move docs-e2e to a
+    // different (seeded) agent.
+    // `?:` fallback covers the first run after this param is added,
+    // before the jobDsl re-seed makes params.AGENT_LABEL exist.
+    agent { label "${params.AGENT_LABEL ?: 'eyoree'}" }
 
     parameters {
+        string(
+            name: 'AGENT_LABEL',
+            defaultValue: 'eyoree',
+            description: 'Agent to run on. Must be an agent seeded ' +
+                'by gpf-docs-e2e-prewarm (the gpf-grr-cache volume ' +
+                'is node-local). Auto-triggered builds inherit this ' +
+                'default.',
+        )
         string(
             name: 'BRANCH_NAME',
             defaultValue: 'master',

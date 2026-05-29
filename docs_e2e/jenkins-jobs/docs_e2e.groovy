@@ -13,6 +13,12 @@ pipelineJob('gpf-docs-e2e') {
 
     parameters {
         stringParam(
+            'AGENT_LABEL', 'eyoree',
+            'Agent to run on. Must be seeded by ' +
+            'gpf-docs-e2e-prewarm — the gpf-grr-cache volume is ' +
+            'node-local. Auto-triggered builds inherit this default.',
+        )
+        stringParam(
             'BRANCH_NAME', 'master',
             'Branch the upstream gpf build was triggered from. ' +
             'The pipeline checks out this branch unless ' +

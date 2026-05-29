@@ -37,18 +37,20 @@ pipeline {
     // Pin to the specific agent being seeded. The gpf-grr-cache
     // volume is node-local; a broad label would seed an arbitrary
     // agent, not the one you mean to onboard.
-    agent { label "${params.AGENT_LABEL}" }
+    // `?:` fallback covers a first run where params.AGENT_LABEL is
+    // not yet defined; pass AGENT_LABEL explicitly to seed a given
+    // agent (the seeded node must match gpf-docs-e2e's AGENT_LABEL).
+    agent { label "${params.AGENT_LABEL ?: 'eyoree'}" }
 
     parameters {
         string(
             name: 'AGENT_LABEL',
-            defaultValue: '!dory',
-            description: 'The specific agent to seed (e.g. ' +
-                '"eyoree"). The gpf-grr-cache volume is ' +
-                'node-local, so run this once per agent that ' +
-                'will run gpf-docs-e2e. The default "!dory" ' +
-                'picks an arbitrary non-dory agent — set a ' +
-                'concrete name to control which one.',
+            defaultValue: 'eyoree',
+            description: 'The specific agent to seed. Must match ' +
+                'the agent gpf-docs-e2e runs on (its AGENT_LABEL ' +
+                'default is also "eyoree") — the gpf-grr-cache ' +
+                'volume is node-local. Set a different concrete ' +
+                'name to seed another agent.',
         )
         string(
             name: 'UPSTREAM_PROJECT',
