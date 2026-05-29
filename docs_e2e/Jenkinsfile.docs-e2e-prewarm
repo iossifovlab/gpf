@@ -222,12 +222,13 @@ YAML
                             # -j 1: one download worker gets the full GRR
                             # link (~6 MB/s) instead of splitting it 4 ways
                             # (grr_cache_repo default -j 4), so large
-                            # gnomAD chunk reads finish well within
-                            # aiohttp's 300s timeout. gain hardcodes
+                            # gnomAD chunk reads finish well within the
+                            # aiohttp 300s default timeout. gain hardcodes
                             # HTTPFileSystem with no timeout override
                             # (fsspec_protocol.py), so -j 1 + less GRR
                             # server contention is the lever until the
-                            # durable gain timeout/retry fix lands.
+                            # durable gain timeout/retry fix lands (no
+                            # apostrophes here: this is inside bash -lc).
                             mamba run -n prewarm grr_cache_repo -i \
                                 minimal_instance/gpf_instance.yaml -j 1
                             # Sentinel: only a SUCCESSFUL full cache
