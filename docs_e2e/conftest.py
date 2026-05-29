@@ -750,6 +750,115 @@ def denovo_instance(
     )
 
 
+# The awk pipeline example_cnv_import.rst (RST lines 76-83) tells the user
+# to run to build ssc_cnv.tsv from Supplementary_Data_4.tsv.gz, keeping
+# only the SSC-collection rows. Reproduced byte-for-byte from the guide;
+# a drift here is itself a guide-accuracy bug this suite is meant to catch.
+_CNV_AWK = r"""gunzip -c Supplementary_Data_4.tsv.gz | cut -f 2,5-7 | awk '
+    BEGIN{
+        OFS="\t"
+        print "location", "variant", "person_id"
+    }
+    $1 == "SSC" {
+        print $3, $4, $2
+    }' > ssc_cnv.tsv"""
+
+# example_cnv_import.rst imports the ssc_cnv study. STRICT-MODE EXCEPTION
+# (#877, mirroring the #876 denovo cap): docs-e2e guards command accuracy,
+# not full-scale import, so cnv_instance truncates the awk-produced
+# ssc_cnv.tsv to the guide's first _CNV_VARIANT_CAP variants (all chr1)
+# before import. import_genotypes still runs verbatim; only the row count
+# differs, and the warm GRR cache keeps the annotation fast.
+_CNV_VARIANT_CAP = 20
+
+
+@dataclass
+class CnvInstance:
+    """The instance after example_cnv_import.rst: ssc_cnv imported into
+    minimal_instance.
+
+    Captures each setup step's subprocess result so per-test assertions
+    can feed them into ``after_command=`` / ``assert_command_succeeds``
+    for triage.
+    """
+
+    instance_dir: Path
+    clone_path: Path
+    cnv_awk: subprocess.CompletedProcess
+    ssc_cnv_import: subprocess.CompletedProcess
+    study_config_path: Path
+
+
+@pytest.fixture(scope="session")
+def cnv_instance(denovo_instance, getting_started_clone, gpf_env):
+    """Apply example_cnv_import.rst: import the ``ssc_cnv`` study (SSC CNV
+    variants) into the same ``minimal_instance``.
+
+    Walks the guide's command path verbatim:
+
+    1. The SSC-filter awk (RST lines 76-83): reads
+       ``Supplementary_Data_4.tsv.gz`` and writes ``ssc_cnv.tsv``. The
+       pedigree ``ssc_denovo.ped`` is reused from the denovo guide
+       (created by ``denovo_instance``'s ped awk) — exactly as the guide
+       says ("we already discussed how to transform the list of children
+       into a pedigree file").
+    2. ``import_genotypes -v -j 1 .../ssc_cnv.yaml`` (RST line 125):
+       imports + annotates the CNV study using the instance annotation.
+
+    Chained after ``denovo_instance`` to keep the suite's single ``wgpf
+    run`` ordering: ``wgpf_server`` depends on this fixture, so the shared
+    server boots with ``ssc_cnv`` added alongside everything else.
+
+    Strict mode (#871): every step here is a CLI command the guide tells
+    the user to type. The only carve-out is the ``_CNV_VARIANT_CAP``
+    truncation of the awk output (#877) — see the constant's note;
+    ``import_genotypes`` itself still runs verbatim.
+    """
+    clone = getting_started_clone
+    instance_dir = denovo_instance.instance_dir
+    import_dir = clone / "example_imports" / "denovo_and_cnv_import"
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(instance_dir)
+
+    # Step 1: the SSC-filter awk, run from the import dir.
+    cnv_awk = _run(["bash", "-c", _CNV_AWK], cwd=import_dir, env=env)
+
+    # STRICT-MODE EXCEPTION (#877): cap the awk output to the guide's first
+    # _CNV_VARIANT_CAP SSC variants (all chr1) before import_genotypes —
+    # which still runs verbatim below. Mirrors the #876 denovo cap. The awk
+    # command's success and output file are asserted by test_example_cnv
+    # before this truncation mutates the file.
+    cnv_path = import_dir / "ssc_cnv.tsv"
+    if cnv_awk.returncode == 0 and cnv_path.exists():
+        rows = cnv_path.read_text().splitlines()
+        cnv_path.write_text(
+            "\n".join(rows[:_CNV_VARIANT_CAP + 1]) + "\n",
+        )
+
+    # Step 2: import + annotate the (capped) CNV study.
+    ssc_cnv_import = _run(
+        [
+            "import_genotypes", "-v", "-j", "1",
+            "example_imports/denovo_and_cnv_import/ssc_cnv.yaml",
+        ],
+        cwd=clone, env=env, timeout=_IMPORT_TIMEOUT,
+    )
+
+    # The study id is `ssc_cnv`, so the config lands under
+    # studies/<id>/<id>.yaml. The CNV guide makes no further config edit.
+    study_config = (
+        instance_dir / "studies" / "ssc_cnv" / "ssc_cnv.yaml"
+    )
+
+    return CnvInstance(
+        instance_dir=instance_dir,
+        clone_path=clone,
+        cnv_awk=cnv_awk,
+        ssc_cnv_import=ssc_cnv_import,
+        study_config_path=study_config,
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -757,23 +866,23 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(denovo_instance, gpf_env):
+def wgpf_server(cnv_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``denovo_instance`` — the last stage of the guide's linear
+    Depends on ``cnv_instance`` — the last stage of the guide's linear
     narrative (imports → annotation edit → pheno import + pheno attach →
-    preview-column config → ssc_denovo import + study-column config).
-    ``denovo_instance`` transitively pulls the whole prior chain, so the
-    single shared server starts after every config edit the guide
-    describes: it serves the annotated, pheno-enabled example_dataset with
-    its extended preview columns AND the 255K-variant ssc_denovo study.
-    Keeping the suite to one wgpf process per session avoids two ``wgpf
-    run``s racing on the same ``DAE_DB_DIR`` parquet during re-annotation.
-    Every earlier claim (datasets visible, annotation download columns,
-    pheno browser) holds equally in this final state, so sharing one
-    server across all stages is sound.
+    preview-column config → ssc_denovo import + study-column config →
+    ssc_cnv import). ``cnv_instance`` transitively pulls the whole prior
+    chain, so the single shared server starts after every config edit the
+    guide describes: it serves the annotated, pheno-enabled example_dataset
+    with its extended preview columns, the ssc_denovo study, AND the
+    ssc_cnv study. Keeping the suite to one wgpf process per session avoids
+    two ``wgpf run``s racing on the same ``DAE_DB_DIR`` parquet during
+    re-annotation. Every earlier claim (datasets visible, annotation
+    download columns, pheno browser) holds equally in this final state, so
+    sharing one server across all stages is sound.
 
     On teardown, terminates wgpf and dumps the last few hundred
     lines of its combined stdout/stderr if any test in the
@@ -781,14 +890,14 @@ def wgpf_server(denovo_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(denovo_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(cnv_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=denovo_instance.instance_dir,
+        cwd=cnv_instance.instance_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -827,13 +936,18 @@ def wgpf_server(denovo_instance, gpf_env):
             last_err = repr(exc)
         time.sleep(1)
     else:
-        # Readiness timeout. Capture log for the failure message.
+        # Readiness timeout. Capture the wgpf log for the failure
+        # message. communicate() reads AND closes stdout, so we must use
+        # its return value — a second proc.stdout.read() here raises
+        # "read of closed file" and masks the real reason wgpf never
+        # became ready.
         proc.terminate()
         try:
-            proc.communicate(timeout=10)
+            out_b, _ = proc.communicate(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
-        out = proc.stdout.read().decode(errors="replace") if proc.stdout else ""
+            out_b, _ = proc.communicate()
+        out = out_b.decode(errors="replace") if out_b else ""
         pytest.fail(
             f"wgpf run did not become ready within "
             f"{_WGPF_READY_TIMEOUT}s (last error: {last_err}):\n"
