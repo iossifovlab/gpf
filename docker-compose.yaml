@@ -48,7 +48,7 @@ services:
       - ./core/tests/.test_grr:/usr/local/apache2/htdocs/
 
   mail:
-    image: mailhog/mailhog:latest
+    image: axllent/mailpit:latest
     hostname: mail
     expose:
       - "1025"

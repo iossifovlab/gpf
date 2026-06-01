@@ -4,7 +4,7 @@ name: gpf-rest-client-integration
 #   - backend: same uv-built image as the per-project CI image, runs
 #     the wdae server on :21011 with a seeded t4c8 instance + two
 #     OAuth applications (federation, federation2)
-#   - mail: MailHog so the user-flow tests can assert on outgoing email
+#   - mail: Mailpit so the user-flow tests can assert on outgoing email
 #   - runner: same image, runs pytest against backend + mail
 #
 # Driven by rest_client/Jenkinsfile.integration (downstream of the
@@ -13,7 +13,7 @@ name: gpf-rest-client-integration
 services:
 
   mail:
-    image: mailhog/mailhog:latest
+    image: axllent/mailpit:latest
     hostname: mail
 
   backend:

@@ -14,7 +14,7 @@ from rest_client.rest_client import (
     RESTClient,
 )
 
-from .mailhog_client import MailhogClient
+from .mailpit_client import MailpitClient
 
 
 def build_remote_config(base_url: str) -> dict[str, str]:
@@ -47,11 +47,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
     parser.addoption(
-        "--mailhog",
-        dest="mailhog",
+        "--mailpit",
+        dest="mailpit",
         action="store",
         default="http://localhost:8025",
-        help="Mailhog REST API URL",
+        help="Mailpit REST API URL",
     )
 
 
@@ -69,8 +69,8 @@ def base_url(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture
-def mailhog_url(request: pytest.FixtureRequest) -> str:
-    res = cast(str, request.config.getoption("--mailhog"))
+def mailpit_url(request: pytest.FixtureRequest) -> str:
+    res = cast(str, request.config.getoption("--mailpit"))
     parsed = urlparse(res)
     if not parsed.scheme:
         res = f"http://{res}"
@@ -162,9 +162,9 @@ def user_client(
 
 
 @pytest.fixture
-def mail_client(mailhog_url: str) -> MailhogClient:
+def mail_client(mailpit_url: str) -> MailpitClient:
     """REST client fixture."""
-    return MailhogClient(mailhog_url)
+    return MailpitClient(mailpit_url)
 
 
 @pytest.fixture

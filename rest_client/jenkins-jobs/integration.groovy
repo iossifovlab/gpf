@@ -15,7 +15,7 @@ pipelineJob('gpf-rest-client-integration') {
         'Integration tests for gpf-rest-client against a live ' +
         'gpf-web backend. Brings up a backend container with a ' +
         'seeded t4c8 GPF instance and two OAuth applications, ' +
-        'a MailHog container, and runs the rest_client pytest ' +
+        'a Mailpit container, and runs the rest_client pytest ' +
         'suite against them. Triggered downstream of ' +
         'iossifovlab/gpf/<branch> after Sub-projects; safe to ' +
         'run manually.')
