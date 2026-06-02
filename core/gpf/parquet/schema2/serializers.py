@@ -9,7 +9,7 @@ from itertools import starmap
 from typing import Any, cast
 
 import pyarrow as pa
-from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_config import AttributeInfo
 
 from gpf.variants.attributes import (
     Inheritance,

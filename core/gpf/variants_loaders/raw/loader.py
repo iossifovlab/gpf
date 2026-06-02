@@ -13,7 +13,7 @@ from typing import (
 )
 
 import numpy as np
-from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_config import AttributeInfo
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.utils.regions import Region
 

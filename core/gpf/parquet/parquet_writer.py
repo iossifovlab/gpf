@@ -6,7 +6,7 @@ import os
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_config import AttributeInfo
 from gain.utils import fs_utils
 
 from gpf.parquet import helpers as parquet_helpers
