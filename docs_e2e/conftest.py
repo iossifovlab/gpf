@@ -707,11 +707,26 @@ def denovo_instance(
     # pre-pulled out of band by gpf-docs-e2e-prewarm), so this is a warm
     # validation, not the cold download.
     grr_definition = Path.home() / ".grr_definition.yaml"
+    # Mirrors example_denovo_import.rst's "Caching GRR" block byte-for-byte:
+    # a `group` of the two public GRRs the GPF default uses —
+    # grr-gpf.iossifovlab.com (GPF-specific resources, e.g. the enrichment
+    # samocha_background the enrichment guide relies on) and
+    # grr.iossifovlab.com (the general annotation resources). A single-repo
+    # definition pointing only at grr.iossifovlab.com cannot resolve
+    # samocha_background. cache_dir is set on the group, so the whole group is
+    # wrapped in a cached repo (gain repository_factory: a group-level
+    # cache_dir wraps the GenomicResourceGroupRepo).
     grr_definition.write_text(
-        'id: "seqpipe"\n'
-        'type: "url"\n'
-        'url: "https://grr.iossifovlab.com"\n'
-        f'cache_dir: "{grr_cache_dir}"\n',
+        'id: "default_gpf_grr"\n'
+        'type: "group"\n'
+        f'cache_dir: "{grr_cache_dir}"\n'
+        "children:\n"
+        '  - id: "default_gpf"\n'
+        '    type: "http"\n'
+        '    url: "https://grr-gpf.iossifovlab.com"\n'
+        '  - id: "default"\n'
+        '    type: "http"\n'
+        '    url: "https://grr.iossifovlab.com"\n',
     )
     grr_cache = _run(
         [

@@ -808,3 +808,119 @@ def assert_denovo_gene_sets_for_dataset(
         f"id in the guide drifted, update the guide."
     )
     raise AssertionError(message)
+
+
+def assert_enrichment_models(
+        response, *, require_background_ids=None, rst_ref, expectation,
+):
+    """Assert the enrichment models endpoint reports a study's enrichment
+    configuration (``/api/v3/enrichment/models/<dataset_id>``).
+
+    Backs two enrichment-guide claims: (a) the GPF system enables the
+    Enrichment tool for every genotype study with de Novo variants, and (b) by
+    default only the ``enrichment/samocha_background`` background model is
+    configured. The response is a JSON object shaped ``{"background":
+    [{"id", "name", "type", ...}], "counting": [...], "defaultBackground":
+    <id>, "defaultCounting": <id>}`` — each background's ``id`` is its GRR
+    resource id (e.g. ``enrichment/samocha_background``).
+
+    With ``require_background_ids`` omitted, asserts the tool is enabled — a
+    non-empty ``background`` list. With it supplied, asserts the background-
+    model ids are exactly that set (the guide's "only one … is configured").
+    """
+    if response.status_code != 200:
+        if require_background_ids is None:
+            what = "HTTP 200 with a non-empty list of enrichment backgrounds"
+        else:
+            what = (
+                f"HTTP 200 with background models exactly "
+                f"{require_background_ids}"
+            )
+        raise AssertionError(_http_failure_message(
+            response, rst_ref=rst_ref, expectation=expectation,
+            what_was_expected=what,
+        ))
+    backgrounds = [
+        b.get("id") for b in response.json().get("background", [])
+        if isinstance(b, dict)
+    ]
+
+    if require_background_ids is None:
+        if backgrounds:
+            return
+        message = (
+            f'DRIFT at {rst_ref} — "{expectation}"\n'
+            f"\n"
+            f"  expected: at least one configured enrichment background "
+            f"(the Enrichment tool is enabled)\n"
+            f"  actual:   no background models reported\n"
+            f"\n"
+            f"  Triage hint: The models endpoint responded but the study has "
+            f"no enrichment backgrounds, i.e. the Enrichment tool is not "
+            f"enabled. Most likely either (a) the study has no de Novo "
+            f"variants / its import did not load them (the tool auto-enables "
+            f"only for de Novo studies — re-check the import), or (b) the "
+            f"study's enrichment_config was disabled. If the guide's claim no "
+            f"longer holds, update the guide."
+        )
+        raise AssertionError(message)
+
+    if set(backgrounds) == set(require_background_ids):
+        return
+    available = ", ".join(repr(b) for b in backgrounds) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected background models (exactly): "
+        f"{', '.join(require_background_ids)}\n"
+        f"  actual background models:             [{available}]\n"
+        f"\n"
+        f"  Triage hint: The default set of configured enrichment "
+        f"backgrounds drifted. The guide claims only "
+        f"{', '.join(require_background_ids)} is configured by default for a "
+        f"de Novo study. Either a background was added/removed in the study's "
+        f"default enrichment_config, or the resource id changed in the GRR. "
+        f"If the new default set is correct, update the guide."
+    )
+    raise AssertionError(message)
+
+
+def assert_enrichment_test_result(response, *, rst_ref, expectation):
+    """Assert a successful enrichment test returned results
+    (``POST /api/v3/enrichment/test``).
+
+    Backs the guide's claim that, on the Enrichment Tool page for a de Novo
+    study, the user can run enrichment tests. The response is a JSON object
+    shaped ``{"desc": ..., "result": [ ...per-person-set records... ]}``; a
+    non-empty ``result`` list means the test ran and produced enrichment
+    counts for the supplied gene set.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response, rst_ref=rst_ref, expectation=expectation,
+            what_was_expected="HTTP 200 with a non-empty enrichment result",
+        ))
+    data = response.json()
+    result = data.get("result") if isinstance(data, dict) else None
+    if isinstance(result, list) and result:
+        return
+    actual = (
+        "result is absent" if not isinstance(data, dict) or "result" not in data
+        else f"result = {result!r}"
+    )
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: a non-empty 'result' list from the enrichment test\n"
+        f"  actual:   {actual}\n"
+        f"\n"
+        f"  Triage hint: The enrichment endpoint returned 200 but no result. "
+        f"Most likely either (a) the request was missing required fields "
+        f"(datasetId, a background/counting model, and geneSymbols), or (b) "
+        f"the background model could not be resolved from the GRR (e.g. "
+        f"samocha_background lives in grr-gpf.iossifovlab.com — check the "
+        f"GRR definition lists both public repos), or (c) the enrichment "
+        f"builder changed its response shape. Check the wgpf log dump for the "
+        f"underlying exception."
+    )
+    raise AssertionError(message)

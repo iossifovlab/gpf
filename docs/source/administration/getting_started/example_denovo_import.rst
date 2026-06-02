@@ -208,14 +208,27 @@ content:
 
 .. code-block:: yaml
 
-    id: "seqpipe"
-    type: "url"
-    url: "https://grr.iossifovlab.com"
+    id: "default_gpf_grr"
+    type: "group"
     cache_dir: "<path_to_your_cache_dir>"
+    children:
+      - id: "default_gpf"
+        type: "http"
+        url: "https://grr-gpf.iossifovlab.com"
+      - id: "default"
+        type: "http"
+        url: "https://grr.iossifovlab.com"
 
-The ``cache_dir`` parameter specifies the directory where the GRR resources
-will be cached. The cache directory should be specified as an absolute path.
-For example,  ``/tmp/grr_cache`` or ``/Users/lubo/grrCache``.
+This definition mirrors the GPF system's built-in default: a ``group`` of two
+public GRRs — ``grr-gpf.iossifovlab.com`` (GPF-specific resources such as the
+enrichment backgrounds) and ``grr.iossifovlab.com`` (the general resources used
+for annotation). Both must be listed so that every resource the instance needs
+can be resolved.
+
+The ``cache_dir`` parameter, set on the ``group`` itself, specifies the
+directory where the GRR resources will be cached. The cache directory should be
+specified as an absolute path. For example,  ``/tmp/grr_cache`` or
+``/Users/lubo/grrCache``.
 
 To download all the resources needed for our ``minimal_instance`` annotation,
 run the following command from the ``gpf-getting-started`` directory:

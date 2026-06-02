@@ -16,6 +16,8 @@ from docs_e2e.guide_assertions import (
     assert_denovo_gene_sets_for_dataset,
     assert_download_has_columns,
     assert_download_trailing_columns,
+    assert_enrichment_models,
+    assert_enrichment_test_result,
     assert_file_created,
     assert_gene_scores_available,
     assert_gene_set_collections_available,
@@ -905,3 +907,139 @@ class TestAssertDenovoGeneSetsForDataset:
                 expectation="de Novo gene sets are generated for ssc_denovo",
             )
         assert "500" in str(exc_info.value)
+
+
+_EN_RST = "getting_started_with_enrichment.rst"
+
+# A realistic enrichment models payload for a de Novo study: the single
+# samocha background the guide says is configured by default, plus a counting
+# model and the defaults the SPA uses to seed the form.
+_ENRICHMENT_MODELS_BODY = {
+    "background": [
+        {
+            "id": "enrichment/samocha_background",
+            "name": "Samocha's enrichment background model",
+            "type": "samocha_enrichment_background",
+        },
+    ],
+    "counting": [
+        {"id": "enrichment_events_counting", "name": "Counting events"},
+    ],
+    "defaultBackground": "enrichment/samocha_background",
+    "defaultCounting": "enrichment_events_counting",
+}
+
+
+class TestAssertEnrichmentModels:
+    def test_passes_when_tool_enabled(self):
+        resp = _FakeResponse(200, json_body=_ENRICHMENT_MODELS_BODY)
+        assert_enrichment_models(
+            resp,
+            rst_ref=f"{_EN_RST}:4",
+            expectation="the Enrichment tool is enabled for ssc_denovo",
+        )
+
+    def test_raises_when_tool_not_enabled(self):
+        resp = _FakeResponse(
+            200,
+            json_body={"background": [], "counting": []},
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_models(
+                resp,
+                rst_ref=f"{_EN_RST}:4",
+                expectation="the Enrichment tool is enabled for ssc_denovo",
+            )
+        message = str(exc_info.value)
+        assert f"{_EN_RST}:4" in message
+        assert "Triage" in message
+
+    def test_passes_when_background_ids_match(self):
+        resp = _FakeResponse(200, json_body=_ENRICHMENT_MODELS_BODY)
+        assert_enrichment_models(
+            resp,
+            require_background_ids=["enrichment/samocha_background"],
+            rst_ref=f"{_EN_RST}:20",
+            expectation="only the samocha background is configured by default",
+        )
+
+    def test_raises_when_extra_background_present(self):
+        body = {
+            **_ENRICHMENT_MODELS_BODY,
+            "background": [
+                {"id": "enrichment/samocha_background"},
+                {"id": "enrichment/coding_len_background"},
+            ],
+        }
+        resp = _FakeResponse(200, json_body=body)
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_models(
+                resp,
+                require_background_ids=["enrichment/samocha_background"],
+                rst_ref=f"{_EN_RST}:20",
+                expectation=(
+                    "only the samocha background is configured by default"
+                ),
+            )
+        message = str(exc_info.value)
+        assert f"{_EN_RST}:20" in message
+        assert "enrichment/coding_len_background" in message
+        assert "Triage" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_models(
+                resp,
+                rst_ref=f"{_EN_RST}:4",
+                expectation="the Enrichment tool is enabled for ssc_denovo",
+            )
+        assert "500" in str(exc_info.value)
+
+
+class TestAssertEnrichmentTestResult:
+    def test_passes_when_result_present(self):
+        resp = _FakeResponse(
+            200,
+            json_body={
+                "desc": "CHD8",
+                "result": [{"selector": "autism", "datasetId": "ssc_denovo"}],
+            },
+        )
+        assert_enrichment_test_result(
+            resp,
+            rst_ref=f"{_EN_RST}:26",
+            expectation="the user can run enrichment tests and get results",
+        )
+
+    def test_raises_when_result_empty(self):
+        resp = _FakeResponse(200, json_body={"desc": "CHD8", "result": []})
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_test_result(
+                resp,
+                rst_ref=f"{_EN_RST}:26",
+                expectation="the user can run enrichment tests and get results",
+            )
+        message = str(exc_info.value)
+        assert f"{_EN_RST}:26" in message
+        assert "Triage" in message
+
+    def test_raises_when_result_absent(self):
+        resp = _FakeResponse(200, json_body={"desc": "CHD8"})
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_test_result(
+                resp,
+                rst_ref=f"{_EN_RST}:26",
+                expectation="the user can run enrichment tests and get results",
+            )
+        assert "absent" in str(exc_info.value)
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(400, text="Bad Request")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_test_result(
+                resp,
+                rst_ref=f"{_EN_RST}:26",
+                expectation="the user can run enrichment tests and get results",
+            )
+        assert "400" in str(exc_info.value)
