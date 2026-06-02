@@ -600,13 +600,20 @@ _DENOVO_COLUMNS_BLOCK = (
 #
 #   2. STRICT-MODE EXCEPTION (#876): docs-e2e guards command accuracy, not
 #      255K-scale import. denovo_instance truncates the awk-produced
-#      ssc_denovo.tsv to the guide's first _DENOVO_VARIANT_CAP variants (all
-#      chr1) before import. import_genotypes still runs verbatim; only the row
+#      ssc_denovo.tsv to the de-novos in _DENOVO_CHD8_REGION (CHD8 +/- 250 kb)
+#      before import. import_genotypes still runs verbatim; only the row
 #      count differs, so the import completes in seconds against the warm
 #      cache. A 90 min cap would be meaningless under the pytest-timeout.
 _DENOVO_IMPORT_TIMEOUT = 600   # 10 min: warm cache + variant cap
 _GRR_CACHE_TIMEOUT = 600       # 10 min: warm-cache validation (prewarmed)
-_DENOVO_VARIANT_CAP = 50       # #876 carve-out — see note above
+# #876 carve-out: instead of the first N rows — which are all chr1 in the
+# chromosome-sorted source and carry no CHD8 de-novos — keep the de-novos in
+# an enlarged window around CHD8 (chr14, GRCh38) so the capped ssc_denovo
+# holds the canonical CHD8 de-novo LGDs the enrichment sub-guide relies on
+# (getting_started_with_enrichment.rst, #871). The window is the CHD8 gene
+# body (chr14:21,385,194-21,456,123) +/- 250 kb, which yields 50 variants —
+# the same import budget as the old first-50 cap, so timing is unchanged.
+_DENOVO_CHD8_REGION = ("chr14", 21135194, 21706123)
 
 
 @dataclass
@@ -667,7 +674,7 @@ def denovo_instance(
 
     Strict mode (#871): every step here is a CLI command or file edit the
     guide tells the user to type. The only carve-out is the
-    ``_DENOVO_VARIANT_CAP`` truncation of the awk output (#876) — see the
+    ``_DENOVO_CHD8_REGION`` subset of the awk output (#876) — see the
     constant's note; ``import_genotypes`` itself still runs verbatim.
     """
     clone = getting_started_clone
@@ -686,19 +693,30 @@ def denovo_instance(
         cwd=import_dir, env=env,
     )
 
-    # STRICT-MODE EXCEPTION (#876): cap the awk output to the guide's first
-    # _DENOVO_VARIANT_CAP variants (all chr1) so import_genotypes — still run
-    # verbatim below — completes in seconds against the warm cache. docs-e2e
-    # guards command accuracy, not 255K-scale import; only the row count
-    # differs. test_example_denovo asserts the awk command's success and that
-    # it produced ssc_denovo.tsv *before* this truncation mutates the file,
-    # so the awk claims stay honestly tested.
+    # STRICT-MODE EXCEPTION (#876): subset the awk output to the de-novos in
+    # _DENOVO_CHD8_REGION (CHD8 +/- 250 kb on chr14) so import_genotypes —
+    # still run verbatim below — completes in seconds against the warm cache,
+    # AND the capped ssc_denovo carries the real CHD8 de-novo LGDs the
+    # enrichment sub-guide checks (#871). This is still a row-subset of the
+    # verbatim awk output (only the row set differs, not the command); docs-e2e
+    # guards command accuracy, not 255K-scale import. test_example_denovo
+    # asserts the awk command's success and that it produced ssc_denovo.tsv
+    # *before* this subset mutates the file, so the awk claims stay honestly
+    # tested.
     tsv_path = import_dir / "ssc_denovo.tsv"
     if tsv_awk.returncode == 0 and tsv_path.exists():
         rows = tsv_path.read_text().splitlines()
-        tsv_path.write_text(
-            "\n".join(rows[:_DENOVO_VARIANT_CAP + 1]) + "\n",
-        )
+        chrom, lo, hi = _DENOVO_CHD8_REGION
+        # rows[0] is the awk header: chrom, pos, ref, alt, person_id.
+        header, *data_rows = rows
+        kept = [header]
+        for row in data_rows:
+            cols = row.split("\t")
+            if len(cols) < 2 or not cols[1].isdigit():
+                continue
+            if cols[0] == chrom and lo <= int(cols[1]) <= hi:
+                kept.append(row)
+        tsv_path.write_text("\n".join(kept) + "\n")
 
     # Step 3: the guide's "Caching GRR" step — write ~/.grr_definition.yaml
     # pointing at the persistent cache volume, then run grr_cache_repo to
