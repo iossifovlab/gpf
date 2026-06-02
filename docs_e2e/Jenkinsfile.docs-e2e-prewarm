@@ -218,7 +218,7 @@ YAML
                                 -c file:///tmp/channel \
                                 -c iossifovlab -c bioconda -c conda-forge \
                                 gpf-web tqdm
-                            # Mirror conftest.denovo_instance's GRR block
+                            # Mirror the conftest.denovo_instance GRR block
                             # byte-for-byte: the GPF default is a `group` of
                             # grr-gpf.iossifovlab.com (GPF-specific resources,
                             # e.g. enrichment/samocha_background) and
