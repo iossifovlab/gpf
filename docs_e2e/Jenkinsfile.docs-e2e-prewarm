@@ -212,11 +212,26 @@ YAML
                                 -c file:///tmp/channel \
                                 -c iossifovlab -c bioconda -c conda-forge \
                                 gpf-web
+                            # Mirror conftest.denovo_instance's GRR block
+                            # byte-for-byte: the GPF default is a `group` of
+                            # grr-gpf.iossifovlab.com (GPF-specific resources,
+                            # e.g. enrichment/samocha_background) and
+                            # grr.iossifovlab.com (general annotation
+                            # resources). The cache keys on each child repo
+                            # id, so the prewarm MUST use the same ids the
+                            # suite uses (default_gpf / default) or the suite
+                            # cold-re-pulls under a mismatched path.
                             cat > /root/.grr_definition.yaml <<YAML
-id: "seqpipe"
-type: "url"
-url: "https://grr.iossifovlab.com"
+id: "default_gpf_grr"
+type: "group"
 cache_dir: "/grr-cache"
+children:
+  - id: "default_gpf"
+    type: "http"
+    url: "https://grr-gpf.iossifovlab.com"
+  - id: "default"
+    type: "http"
+    url: "https://grr.iossifovlab.com"
 YAML
                             cd /workspace/gs
                             # -j 1: one download worker gets the full GRR
