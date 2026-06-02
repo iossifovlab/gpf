@@ -183,11 +183,11 @@ class TestSscDenovoImport:
             "/api/v3/genotype_browser/query",
             json={"datasetId": "ssc_denovo"},
         )
-        # min_count=10: the import is capped to the guide's first 50
-        # variants (conftest, #876 carve-out), so requiring >=10 back
-        # proves the import substantively worked rather than one row
-        # squeaking through — without coupling to an exact post-import
-        # count (paging / per-allele fan-out).
+        # min_count=10: the import is capped to the CHD8 +/- 250 kb window
+        # (conftest _DENOVO_CHD8_REGION, #876 carve-out) = 50 chr14 variants,
+        # so requiring >=10 back proves the import substantively worked rather
+        # than one row squeaking through — without coupling to an exact
+        # post-import count (paging / per-allele fan-out).
         assert_query_returned_variants(
             resp,
             min_count=10,
