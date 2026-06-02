@@ -18,7 +18,7 @@ compute the expected number of de novo mutations within the given dataset.
 
     By default, for studies with de Novo variants, only one background model 
     is configured: `enrichment/samocha_background
-    <https://grr.iossifovlab.com/enrichment/samocha_background/index.html>`_
+    <https://grr-gpf.iossifovlab.com/enrichment/samocha_background/index.html>`_
 
     To use other background models, the user must edit the study configuration
     file.
