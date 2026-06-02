@@ -52,12 +52,19 @@ ENRICHMENT_DATASET = "ssc_denovo"
 # de Novo study (RST lines 19-21). The id is the GRR resource id.
 SAMOCHA_BACKGROUND = "enrichment/samocha_background"
 
-# A well-known autism gene used throughout the GPF guides; present in the
-# gene models so the samocha background resolves an expected mutation count
-# for it. The enrichment test computes expected-vs-observed regardless of
-# whether the (variant-capped) ssc_denovo carries variants in this gene, so
-# the result is non-empty for any valid gene symbol.
+# The autism gene used throughout the GPF guides. The denovo cap window
+# (_DENOVO_CHD8_REGION in conftest) is centred on CHD8, so the capped
+# ssc_denovo carries the canonical Iossifov-2014 CHD8 de-novo LGDs
+# (frame-shift + nonsense + splice-site, all in affected probands = 3). The
+# enrichment test asserts that real observed count, not just a non-empty
+# result.
 ENRICHMENT_GENE_SYMBOLS = ["CHD8"]
+
+# Canonical CHD8 de-novo LGD count in the capped ssc_denovo: 3 affected-proband
+# events (frame-shift chr14:21391016, nonsense chr14:21402010, splice-site
+# chr14:21403214). The 2 affected + 1 unaffected CHD8 introns are non-coding,
+# and there are no CHD8 missense de-novos, so LGD overlapped totals 3.
+EXPECTED_CHD8_LGD_OVERLAPPED = 3
 
 # Cold demand-pull budget: enrichment/samocha_background is not in the
 # prewarmed cache, so the first request that loads it pays a one-time GRR
@@ -140,6 +147,8 @@ class TestRunEnrichmentTest:
             rst_ref=f"{RST}:26",
             expectation=(
                 "on the Enrichment Tool page for ssc_denovo the user can run "
-                "enrichment tests and get results"
+                "enrichment tests and get a real observed CHD8 de-novo count"
             ),
+            require_observed=True,
+            expect_lgd_overlapped=EXPECTED_CHD8_LGD_OVERLAPPED,
         )
