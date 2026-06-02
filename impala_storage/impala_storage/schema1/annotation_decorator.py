@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from gain.annotation.annotation_pipeline import (
-    AnnotationPipeline,
-    AttributeInfo,
-)
+from gain.annotation.annotation_config import Attribute
+from gain.annotation.annotation_pipeline import AnnotationPipeline
 from gain.effect_annotation.effect import AlleleEffects
 
 from gpf.variants_loaders.raw.loader import (
@@ -38,7 +36,7 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
         )
 
     @property
-    def annotation_schema(self) -> list[AttributeInfo]:
+    def annotation_schema(self) -> list[Attribute]:
         return self.annotation_pipeline.get_attributes()
 
     def full_variants_iterator(

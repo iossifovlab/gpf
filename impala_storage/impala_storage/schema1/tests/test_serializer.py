@@ -3,7 +3,8 @@ from collections.abc import Callable
 from typing import cast
 
 import pytest
-from gain.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import Attribute
+from gain.annotation.annotation_pipeline import AttributeSpec
 
 from gpf.configuration.gpf_config_parser import FrozenBox
 from gpf.genotype_storage.genotype_storage_registry import (
@@ -87,13 +88,12 @@ def test_all_properties_in_blob(
 
     fv = next(iter(loader.full_variants_iterator()))[1][0]
     family = loader.families.get(fv.family_id)
-    schema: list[AttributeInfo] = []
+    schema: list[Attribute] = []
     print(schema)
-    schema.append(AttributeInfo(
+    schema.append(Attribute(
         "some_score", "test",
         internal=False,
-        parameters={},
-        _type="float"))
+        spec=AttributeSpec("test", "float", "")))
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
@@ -216,12 +216,11 @@ def test_build_allele_batch_dict(
     family = loader.families.get(fv.family_id)
     assert family, fv.family_id
 
-    schema: list[AttributeInfo] = []
-    schema.append(AttributeInfo(
+    schema: list[Attribute] = []
+    schema.append(Attribute(
         "some_score", "test",
         internal=False,
-        parameters={},
-        _type="float"))
+        spec=AttributeSpec("test", "float", "")))
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
