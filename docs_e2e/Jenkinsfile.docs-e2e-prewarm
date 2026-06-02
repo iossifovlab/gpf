@@ -208,10 +208,16 @@ YAML
                             # Mirror conftest.gpf_env_prefix: install
                             # gpf-web (pulls gain-core + gpf-core, which
                             # provide grr_cache_repo and its -i provider).
+                            # WORKAROUND (iossifovlab/gain#89): gain-core
+                            # imports tqdm in cached_repository.py without
+                            # declaring it, so a fresh gpf-web env lacks it and
+                            # grr_cache_repo dies with ModuleNotFoundError. Pull
+                            # tqdm explicitly until gain-core declares the dep.
+                            # Mirrors conftest.gpf_env_prefix.
                             mamba create -y -n prewarm \
                                 -c file:///tmp/channel \
                                 -c iossifovlab -c bioconda -c conda-forge \
-                                gpf-web
+                                gpf-web tqdm
                             # Mirror conftest.denovo_instance's GRR block
                             # byte-for-byte: the GPF default is a `group` of
                             # grr-gpf.iossifovlab.com (GPF-specific resources,

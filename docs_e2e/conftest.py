@@ -220,6 +220,12 @@ def gpf_env_prefix(
         "-c", "bioconda",
         "-c", "conda-forge",
         "gpf-web",
+        # WORKAROUND (iossifovlab/gain#89): gain-core imports tqdm in
+        # cached_repository.py but does not declare it as a dependency, so a
+        # fresh gpf-web env lacks it and every gain CLI (grr_cache_repo, wgpf,
+        # import_genotypes) dies with ModuleNotFoundError. Pull tqdm explicitly
+        # until gain-core declares it. Mirrors the prewarm Jenkinsfile.
+        "tqdm",
     ]
     result = _run(cmd, timeout=_INSTALL_TIMEOUT)
     if result.returncode != 0:
