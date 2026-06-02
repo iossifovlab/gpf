@@ -5,7 +5,8 @@ from typing import Any, ClassVar, cast
 
 import pandas as pd
 import pyarrow as pa
-from gain.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import Attribute
+from gain.annotation.annotation_pipeline import AttributeSpec
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.utils.regions import Region
 from impala.util import as_pandas
@@ -339,7 +340,7 @@ class ImpalaVariants(QueryVariants):
         "string": ("bytes", pa.string()),
     }
 
-    def _fetch_variant_schema(self) -> list[AttributeInfo] | None:
+    def _fetch_variant_schema(self) -> list[Attribute] | None:
         if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
@@ -352,14 +353,13 @@ class ImpalaVariants(QueryVariants):
             schema_desc = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-            schema: list[AttributeInfo] = []
+            schema: list[Attribute] = []
             for name, type_name in schema_desc.items():
                 py_type, _ = self.TYPE_MAP[type_name]
-                attr = AttributeInfo(
+                attr = Attribute(
                     name, "table schema",
                     internal=False,
-                    parameters={},
-                    _type=py_type)
+                    spec=AttributeSpec("table schema", py_type, ""))
                 schema.append(attr)
 
             return schema

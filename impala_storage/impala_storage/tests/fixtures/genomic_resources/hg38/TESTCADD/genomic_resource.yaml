@@ -31,10 +31,10 @@ scores:
 default_annotation:
   - source: cadd_raw
     name: cadd_raw
-    position_aggregator: max
-    nucleotide_aggregator: max
+    aggregator: max
+    aggregator: max
 
   - source: cadd_phred
     name: cadd_phred
-    position_aggregator: max
-    nucleotide_aggregator: max
+    aggregator: max
+    aggregator: max

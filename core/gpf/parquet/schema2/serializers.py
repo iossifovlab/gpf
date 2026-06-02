@@ -9,7 +9,7 @@ from itertools import starmap
 from typing import Any, cast
 
 import pyarrow as pa
-from gain.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import Attribute
 
 from gpf.variants.attributes import (
     Inheritance,
@@ -81,7 +81,7 @@ ENUM_PROPERTIES: dict[str, Any] = {
 
 
 def build_summary_schema(
-    annotation_schema: list[AttributeInfo],
+    annotation_schema: list[Attribute],
 ) -> pa.Schema:
     """Build the schema for the summary alleles."""
     fields = list(
@@ -119,7 +119,7 @@ class AlleleParquetSerializer(abc.ABC):
     """Base class for serializing alleles to parquet format."""
 
     def __init__(
-        self, annotation_schema: list[AttributeInfo],
+        self, annotation_schema: list[Attribute],
         extra_attributes: list[str] | None = None,
     ) -> None:
         self.annotation_schema = annotation_schema
@@ -180,14 +180,14 @@ class SummaryAlleleParquetSerializer(AlleleParquetSerializer):
 
     @classmethod
     def build_schema(
-        cls, annotation_schema: list[AttributeInfo],
+        cls, annotation_schema: list[Attribute],
     ) -> pa.Schema:
         """Build the schema for the summary alleles."""
         return build_summary_schema(annotation_schema)
 
     @classmethod
     def build_blob_schema(
-        cls, annotation_schema: list[AttributeInfo],
+        cls, annotation_schema: list[Attribute],
     ) -> dict[str, str]:
 
         schema_summary = cls.build_schema(annotation_schema)

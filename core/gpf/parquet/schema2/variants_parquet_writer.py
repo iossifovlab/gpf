@@ -13,9 +13,7 @@ from typing import cast
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-from gain.annotation.annotation_pipeline import (
-    AttributeInfo,
-)
+from gain.annotation.annotation_config import Attribute
 from gain.utils import fs_utils
 from gain.utils.processing_pipeline import Filter
 
@@ -142,7 +140,7 @@ class VariantsParquetWriter(AbstractContextManager):
     def __init__(
         self,
         out_dir: pathlib.Path | str,
-        annotation_schema: list[AttributeInfo],
+        annotation_schema: list[Attribute],
         partition_descriptor: PartitionDescriptor,
         *,
         blob_serializer: VariantsDataSerializer | None = None,

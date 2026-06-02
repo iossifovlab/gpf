@@ -3,13 +3,16 @@ import pathlib
 from typing import Any
 
 import pytest
+from gain.annotation.annotation_config import (
+    Attribute,
+    AttributeConfig,
+    AnnotatorInfo,
+)
+from gain.annotation.annotatable import Annotatable
 from gain.annotation.annotation_pipeline import (
-    Annotatable,
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeDesc,
-    AttributeInfo,
+    AttributeSpec,
 )
 from gain.annotation.effect_annotator import EffectAnnotatorAdapter
 from gain.genomic_resources.reference_genome import ReferenceGenome
@@ -255,17 +258,17 @@ def create_effect_annotator(
             "effect_annotator",
             annotator_id="A0",
             attributes=[
-                AttributeInfo.create(
-                    source="allele_effects",
+                AttributeConfig(
                     name="allele_effects",
+                    source="allele_effects",
                     internal=True,
                 ),
-                AttributeInfo.create("worst_effect"),
-                AttributeInfo.create("gene_effects"),
-                AttributeInfo.create("effect_details"),
-                AttributeInfo.create(
-                    "gene_list",
+                AttributeConfig(name="worst_effect", source="worst_effect"),
+                AttributeConfig(name="gene_effects", source="gene_effects"),
+                AttributeConfig(name="effect_details", source="effect_details"),
+                AttributeConfig(
                     name="gene_list",
+                    source="gene_list",
                     internal=True,
                 ),
             ],
@@ -296,33 +299,33 @@ class DummyAnnotator(Annotator):
     """A dummy annotator that does nothing."""
 
     def __init__(self) -> None:
-        attributes = [AttributeInfo(
-            "index", "index",
-            internal=False,
-            _type="int",
-            parameters={})]
         info = AnnotatorInfo(
             "dummy_annotator",
             annotator_id="dummy",
-            attributes=attributes,
+            attributes=[AttributeConfig(
+                name="index", source="index", internal=False)],
             parameters={},
         )
         super().__init__(None, info)
+        self._attributes = [Attribute("index", "index", internal=False)]
         self.index = 0
+
+    @property
+    def attributes(self) -> list[Attribute]:
+        return self._attributes
 
     def open(self) -> Annotator:
         """Reset the annotator state."""
         self.index = 0
         return self
 
-    def get_all_attribute_descriptions(self) -> dict[str, AttributeDesc]:
+    def get_attribute_specs(self) -> dict[str, AttributeSpec]:
         return {
-            "index": AttributeDesc(
+            "index": AttributeSpec(
                 source="index",
-                name="index",
-                type="int",
+                value_type="int",
                 description="dummy",
-                internal=False,
+                internal_default=False,
             ),
         }
 

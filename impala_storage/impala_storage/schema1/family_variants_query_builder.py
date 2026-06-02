@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable, Iterable
 from typing import Any
 
-from gain.annotation.annotation_pipeline import AttributeInfo
+from gain.annotation.annotation_config import Attribute
 from gain.genomic_resources.gene_models.gene_models import GeneModels
 from gain.utils.regions import Region
 
@@ -22,7 +22,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self, db: str,
         variants_table: str,
         pedigree_table: str, *,
-        variants_schema: list[AttributeInfo],
+        variants_schema: list[Attribute],
         table_properties: dict[str, Any],
         pedigree_schema: dict[str, str],
         families: FamiliesData,

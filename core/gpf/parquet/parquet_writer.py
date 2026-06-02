@@ -6,7 +6,7 @@ import os
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from gain.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import Attribute
 from gain.utils import fs_utils
 
 from gpf.parquet import helpers as parquet_helpers
@@ -181,7 +181,7 @@ def append_meta_to_parquet(
 
 
 def serialize_summary_schema(
-    annotation_attributes: list[AttributeInfo],
+    annotation_attributes: list[Attribute],
     partition_descriptor: PartitionDescriptor,
 ) -> str:
     """Serialize the summary schema."""

@@ -198,7 +198,7 @@ def test_build_attribute_help(
     assert annotator_info.type == "position_score"
 
     # Get the first attribute
-    attr_info = annotator_info.attributes[0]
+    attr_info = score_annotator.attributes[0]
     assert attr_info.name == "phastcons100"
 
     # Build the help text

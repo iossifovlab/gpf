@@ -6,7 +6,7 @@ from typing import Any
 import toml
 from box import Box
 from deprecation import deprecated
-from gain.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import Attribute
 from gain.genomic_resources.gene_models import GeneModels
 from gain.genomic_resources.reference_genome import ReferenceGenome
 
@@ -243,7 +243,7 @@ class VariantsDb:
         dae_config: Box,
         genome: ReferenceGenome,
         gene_models: GeneModels,
-        annotation: list[AttributeInfo],
+        annotation: list[Attribute],
         storage_registry: GenotypeStorageRegistry,
     ) -> None:
 
@@ -265,7 +265,7 @@ class VariantsDb:
 
     @staticmethod
     def _collect_annotation_columns(
-        annotation: list[AttributeInfo],
+        annotation: list[Attribute],
     ) -> list[dict[str, Any]]:
         """Collect annotation columns from the annotation config."""
         result = []

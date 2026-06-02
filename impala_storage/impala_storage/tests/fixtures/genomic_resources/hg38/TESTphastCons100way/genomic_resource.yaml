@@ -16,7 +16,7 @@ scores:
   - id: phastCons100way
     type: float
     desc: "phastCons100way"
-    position_aggregator: max
+    aggregator: max
     index: 3
     histogram:
       type: number
@@ -38,4 +38,4 @@ scores:
 default_annotation:
   - source: phastCons100way
     name: phastCons100way
-    position_aggregator: max
+    aggregator: max

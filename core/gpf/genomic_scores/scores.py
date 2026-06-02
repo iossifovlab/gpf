@@ -110,7 +110,7 @@ class GenomicScoresRegistry:
         resource = annotator_info.resources[0]
         score = build_score_from_resource(resource)
         result = {}
-        for attr in annotator_info.attributes:
+        for attr in annotator.attributes:
             if attr.internal:
                 continue
             score_def = score.score_definitions[attr.source]

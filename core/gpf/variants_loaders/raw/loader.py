@@ -13,7 +13,7 @@ from typing import (
 )
 
 import numpy as np
-from gain.annotation.annotation_config import AttributeInfo
+from gain.annotation.annotation_config import Attribute
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.utils.regions import Region
 
@@ -310,7 +310,7 @@ class VariantsLoader(CLILoader):
         pass
 
     @property
-    def annotation_schema(self) -> list[AttributeInfo] | None:
+    def annotation_schema(self) -> list[Attribute] | None:
         return None
 
     @classmethod
@@ -381,7 +381,7 @@ class VariantsLoaderDecorator(VariantsLoader):
         return getattr(self.variants_loader, attr, None)
 
     @property
-    def annotation_schema(self) -> list[AttributeInfo] | None:
+    def annotation_schema(self) -> list[Attribute] | None:
         return self.variants_loader.annotation_schema
 
     @classmethod

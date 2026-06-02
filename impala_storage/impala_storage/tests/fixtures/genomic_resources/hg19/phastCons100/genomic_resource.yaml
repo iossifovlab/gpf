@@ -31,4 +31,4 @@ scores:
 default_annotation:
   - source: phastCons100
     dest: phastCons100
-    position_aggregator: max
+    aggregator: max

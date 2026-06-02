@@ -22,9 +22,9 @@ scores:
     type: float
     desc: ""
     index: 3
-    position_aggregator: mean
+    aggregator: mean
 
 default_annotation:
   - source: test_score
     name: test_score
-    position_aggregator: mean
+    aggregator: mean

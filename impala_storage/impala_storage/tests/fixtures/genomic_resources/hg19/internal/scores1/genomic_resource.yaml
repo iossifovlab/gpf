@@ -32,12 +32,12 @@ scores:
 default_annotation:
   - source: score0
     name: score0
-    position_aggregator: max
+    aggregator: max
 
   - source: score2
     name: score2
-    position_aggregator: max
+    aggregator: max
 
   - source: score4
     name: score4
-    position_aggregator: max
+    aggregator: max
