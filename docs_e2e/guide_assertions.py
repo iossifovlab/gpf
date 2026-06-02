@@ -885,7 +885,38 @@ def assert_enrichment_models(
     raise AssertionError(message)
 
 
-def assert_enrichment_test_result(response, *, rst_ref, expectation):
+# Default enrichment effect groups (gpf enrichment config); each record in a
+# /enrichment/test response carries one block per effect type, and
+# record[effect_type]["all"]["overlapped"] is the count of de-novos in that
+# person-set whose effect on the queried gene set was of that type.
+_ENRICHMENT_EFFECT_TYPES = ("LGDs", "missense", "synonymous")
+
+
+def _sum_overlapped(result, effect_types):
+    """Sum ``[effect_type]["all"]["overlapped"]`` across every person-set
+    record for the given effect types. Robust to missing keys (returns the
+    partial sum); ignores non-dict records."""
+    total = 0
+    for record in result:
+        if not isinstance(record, dict):
+            continue
+        for effect_type in effect_types:
+            bucket = record.get(effect_type)
+            if not isinstance(bucket, dict):
+                continue
+            all_block = bucket.get("all")
+            if not isinstance(all_block, dict):
+                continue
+            overlapped = all_block.get("overlapped")
+            if isinstance(overlapped, int):
+                total += overlapped
+    return total
+
+
+def assert_enrichment_test_result(
+        response, *, rst_ref, expectation,
+        require_observed=False, expect_lgd_overlapped=None,
+):
     """Assert a successful enrichment test returned results
     (``POST /api/v3/enrichment/test``).
 
@@ -903,6 +934,42 @@ def assert_enrichment_test_result(response, *, rst_ref, expectation):
     data = response.json()
     result = data.get("result") if isinstance(data, dict) else None
     if isinstance(result, list) and result:
+        if require_observed:
+            observed = _sum_overlapped(result, _ENRICHMENT_EFFECT_TYPES)
+            if observed <= 0:
+                raise AssertionError(
+                    f'DRIFT at {rst_ref} — "{expectation}"\n'
+                    f"\n"
+                    f"  expected: a positive observed de-novo count for the "
+                    f"queried gene set (overlapped > 0)\n"
+                    f"  actual:   total overlapped = 0 across all person-set "
+                    f"records / effect types\n"
+                    f"\n"
+                    f"  Triage hint: The enrichment test ran (200, non-empty "
+                    f"result) but observed nothing on the queried gene set. "
+                    f"Most likely the capped ssc_denovo no longer carries "
+                    f"de-novos on the gene set — check the denovo_instance "
+                    f"cap window (_DENOVO_CHD8_REGION) still covers CHD8, and "
+                    f"that the import loaded the de-novos."
+                )
+        if expect_lgd_overlapped is not None:
+            lgd = _sum_overlapped(result, ("LGDs",))
+            if lgd != expect_lgd_overlapped:
+                raise AssertionError(
+                    f'DRIFT at {rst_ref} — "{expectation}"\n'
+                    f"\n"
+                    f"  expected LGD overlapped (total): "
+                    f"{expect_lgd_overlapped}\n"
+                    f"  actual LGD overlapped (total):   {lgd}\n"
+                    f"\n"
+                    f"  Triage hint: The canonical CHD8 de-novo LGD count for "
+                    f"the Iossifov-2014 ssc_denovo (frame-shift + nonsense + "
+                    f"splice-site, all in affected probands) drifted from "
+                    f"{expect_lgd_overlapped}. Either the cap window "
+                    f"(_DENOVO_CHD8_REGION) changed, the effect classification "
+                    f"changed, or the import/annotation changed. If the new "
+                    f"count is correct, update expect_lgd_overlapped."
+                )
         return
     actual = (
         "result is absent" if not isinstance(data, dict) or "result" not in data

@@ -997,6 +997,41 @@ class TestAssertEnrichmentModels:
         assert "500" in str(exc_info.value)
 
 
+# A realistic /enrichment/test response for a CHD8 query against ssc_denovo:
+# one record per person-set value. The affected/autism record carries the 3
+# de-novo LGDs that overlap CHD8 (frame-shift + nonsense + splice-site);
+# missense/synonymous overlap 0; the unaffected record overlaps nothing.
+_ENRICHMENT_TEST_BODY = {
+    "desc": "CHD8",
+    "result": [
+        {
+            "selector": "autism",
+            "peopleGroupId": "phenotype",
+            "peopleGroupValue": "autism",
+            "childrenStats": {"M": 100, "F": 20},
+            "LGDs": {"all": {"name": "all", "count": 8, "overlapped": 3,
+                             "expected": 0.5, "pvalue": 0.001}},
+            "missense": {"all": {"name": "all", "count": 12, "overlapped": 0,
+                                 "expected": 1.0, "pvalue": 1.0}},
+            "synonymous": {"all": {"name": "all", "count": 9, "overlapped": 0,
+                                   "expected": 1.0, "pvalue": 1.0}},
+        },
+        {
+            "selector": "unaffected",
+            "peopleGroupId": "phenotype",
+            "peopleGroupValue": "unaffected",
+            "childrenStats": {"M": 50, "F": 60},
+            "LGDs": {"all": {"name": "all", "count": 4, "overlapped": 0,
+                             "expected": 0.4, "pvalue": 1.0}},
+            "missense": {"all": {"name": "all", "count": 7, "overlapped": 0,
+                                 "expected": 0.9, "pvalue": 1.0}},
+            "synonymous": {"all": {"name": "all", "count": 6, "overlapped": 0,
+                                   "expected": 0.9, "pvalue": 1.0}},
+        },
+    ],
+}
+
+
 class TestAssertEnrichmentTestResult:
     def test_passes_when_result_present(self):
         resp = _FakeResponse(
@@ -1043,3 +1078,61 @@ class TestAssertEnrichmentTestResult:
                 expectation="the user can run enrichment tests and get results",
             )
         assert "400" in str(exc_info.value)
+
+    def test_passes_when_observed_positive(self):
+        resp = _FakeResponse(200, json_body=_ENRICHMENT_TEST_BODY)
+        assert_enrichment_test_result(
+            resp,
+            rst_ref=f"{_EN_RST}:26",
+            expectation="the user can run enrichment tests and get results",
+            require_observed=True,
+        )
+
+    def test_raises_when_observed_zero(self):
+        body = {
+            "desc": "CHD8",
+            "result": [
+                {
+                    "selector": "autism",
+                    "LGDs": {"all": {"overlapped": 0}},
+                    "missense": {"all": {"overlapped": 0}},
+                    "synonymous": {"all": {"overlapped": 0}},
+                },
+            ],
+        }
+        resp = _FakeResponse(200, json_body=body)
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_test_result(
+                resp,
+                rst_ref=f"{_EN_RST}:26",
+                expectation="the user can run enrichment tests",
+                require_observed=True,
+            )
+        message = str(exc_info.value)
+        assert f"{_EN_RST}:26" in message
+        assert "observed" in message.lower()
+        assert "Triage" in message
+
+    def test_passes_when_lgd_overlap_matches(self):
+        resp = _FakeResponse(200, json_body=_ENRICHMENT_TEST_BODY)
+        assert_enrichment_test_result(
+            resp,
+            rst_ref=f"{_EN_RST}:26",
+            expectation="CHD8 shows the canonical 3 de-novo LGDs",
+            require_observed=True,
+            expect_lgd_overlapped=3,
+        )
+
+    def test_raises_when_lgd_overlap_drifts(self):
+        resp = _FakeResponse(200, json_body=_ENRICHMENT_TEST_BODY)
+        with pytest.raises(AssertionError) as exc_info:
+            assert_enrichment_test_result(
+                resp,
+                rst_ref=f"{_EN_RST}:26",
+                expectation="CHD8 shows the canonical 3 de-novo LGDs",
+                expect_lgd_overlapped=5,
+            )
+        message = str(exc_info.value)
+        assert f"{_EN_RST}:26" in message
+        assert "3" in message and "5" in message
+        assert "Triage" in message
