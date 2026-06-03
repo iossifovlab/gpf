@@ -1153,6 +1153,136 @@ def gene_sets_instance(pheno_import_instance):
     )
 
 
+# getting_started_with_gene_profiles.rst tells the user to CREATE
+# minimal_instance/gene_profiles.yaml "with the following content" — the
+# guide's literalinclude of getting_started_files/gene_profiles.yaml (RST
+# lines 8-16). Rather than embed an inline copy that could silently drift
+# from the literalinclude target, the fixture writes the actual file the
+# guide renders, read from the gpf docs tree (a path relative to this
+# conftest). The file IS the guide's claim; reading it keeps the two in
+# lock-step automatically.
+_GPF_REPO_ROOT = Path(__file__).resolve().parent.parent
+_GENE_PROFILES_YAML_SRC = (
+    _GPF_REPO_ROOT
+    / "docs/source/administration/getting_started"
+    / "getting_started_files/gene_profiles.yaml"
+)
+
+# The two-line block getting_started_with_gene_profiles.rst (the emphasized
+# lines 28-29 of the gpf_instance.yaml config code-block — RST lines 98-99)
+# tells the user to add to gpf_instance.yaml to enable the Gene Profiles
+# tool. Kept byte-for-byte in sync with the guide.
+_GENE_PROFILES_CONFIG_BLOCK = (
+    "\n"
+    "gene_profiles_config:\n"
+    "  conf_file: gene_profiles.yaml\n"
+)
+
+# The guide's main body says to run bare ``generate_gene_profile``, which
+# builds profiles for all 19,285 MANE genes (~10 min — RST lines 101-113).
+# Its ``.. note::`` (RST lines 116-128) offers a ``--genes`` form to limit
+# generation to a short list "if you want to speed up the process". docs-e2e
+# runs that documented form: it is a command the guide itself tells the user
+# to type, for exactly the purpose of keeping the step fast, so the build
+# stays inside its wall-time budget. Reproduced byte-for-byte from the note;
+# CHD8 (the guide's single-gene screenshot, RST line 156) heads the list.
+_GENE_PROFILES_GENES = (
+    "CHD8,NCKAP1,DSCAM,ANK2,GRIN2B,SYNGAP1,ARID1B,MED13L,GIGYF1,WDFY3"
+)
+
+# 15 min: the --genes form over the capped ssc_denovo still builds the
+# GPFInstance (reference genome + gene models from the warm GRR cache) and
+# queries variant counts per gene, but for ten genes only.
+_GP_GENERATE_TIMEOUT = 900
+
+
+@dataclass
+class GeneProfilesInstance:
+    """The instance after getting_started_with_gene_profiles.rst: the
+    ``gene_profiles.yaml`` config created, the ``gene_profiles_config`` block
+    added to gpf_instance.yaml, and the gene profiles prebuilt into
+    ``gpdb.duckdb`` by ``generate_gene_profile``.
+
+    Captures the prebuild subprocess result so per-test assertions can feed
+    it into ``after_command=`` / ``assert_command_succeeds`` for triage.
+    """
+
+    instance_dir: Path
+    clone_path: Path
+    config_path: Path
+    gene_profiles_yaml_path: Path
+    generate: subprocess.CompletedProcess
+    gpdb_path: Path
+
+
+@pytest.fixture(scope="session")
+def gene_profiles_instance(gene_sets_instance, gpf_env):
+    """Apply getting_started_with_gene_profiles.rst: configure + prebuild the
+    Gene Profiles tool on the same ``minimal_instance`` the earlier guides
+    built.
+
+    Walks the guide's command path:
+
+    1. Create ``minimal_instance/gene_profiles.yaml`` with the guide's
+       literalinclude content (RST lines 8-16), read from the gpf docs tree.
+    2. Append the ``gene_profiles_config`` block to gpf_instance.yaml
+       (RST lines 98-99) to enable the tool.
+    3. Run ``generate_gene_profile --genes <list>`` (the guide's note, RST
+       lines 116-128) to prebuild the profiles into ``gpdb.duckdb`` in
+       ``DAE_DB_DIR``; the instance loads that file on the next ``wgpf run``.
+
+    Chained after ``gene_sets_instance`` (the prior tail) to keep the suite's
+    single ``wgpf run`` ordering: ``wgpf_server`` depends on this fixture, so
+    the shared server boots with the Gene Profiles tool configured and its
+    gpdb prebuilt on top of everything else. The configured gene scores +
+    gene set collections the gene_profiles.yaml references are exactly those
+    ``gene_sets_instance`` added, so chaining after it keeps them resolvable.
+
+    Strict mode (#871): the only things done here are the file create + yaml
+    edit + CLI prebuild the guide tells the user to type. The ``--genes`` form
+    is the guide's own documented fast path (RST lines 116-128), not a harness
+    carve-out — the command runs verbatim, only the gene list is the guide's
+    short one.
+    """
+    instance_dir = gene_sets_instance.instance_dir
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(instance_dir)
+
+    # Step 1: create minimal_instance/gene_profiles.yaml from the guide's
+    # literalinclude target. Fail loudly if the file the guide points at is
+    # gone — that is itself a guide-accuracy bug.
+    if not _GENE_PROFILES_YAML_SRC.is_file():
+        pytest.fail(
+            f"The guide's literalinclude target {_GENE_PROFILES_YAML_SRC} "
+            f"does not exist; getting_started_with_gene_profiles.rst points "
+            f"at it for the gene_profiles.yaml content.",
+            pytrace=False,
+        )
+    gene_profiles_yaml = instance_dir / "gene_profiles.yaml"
+    gene_profiles_yaml.write_text(_GENE_PROFILES_YAML_SRC.read_text())
+
+    # Step 2: enable the tool — append gene_profiles_config to gpf_instance.yaml.
+    config_path = instance_dir / "gpf_instance.yaml"
+    config_path.write_text(
+        config_path.read_text() + _GENE_PROFILES_CONFIG_BLOCK)
+
+    # Step 3: prebuild the profiles. generate_gene_profile reads DAE_DB_DIR for
+    # both the instance config and the gpdb.duckdb output path.
+    generate = _run(
+        ["generate_gene_profile", "--genes", _GENE_PROFILES_GENES],
+        cwd=instance_dir, env=env, timeout=_GP_GENERATE_TIMEOUT,
+    )
+
+    return GeneProfilesInstance(
+        instance_dir=instance_dir,
+        clone_path=gene_sets_instance.clone_path,
+        config_path=config_path,
+        gene_profiles_yaml_path=gene_profiles_yaml,
+        generate=generate,
+        gpdb_path=instance_dir / "gpdb.duckdb",
+    )
+
+
 def _pick_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -1160,22 +1290,23 @@ def _pick_free_port():
 
 
 @pytest.fixture(scope="session")
-def wgpf_server(gene_sets_instance, gpf_env):
+def wgpf_server(gene_profiles_instance, gpf_env):
     """Start ``wgpf run`` in a background subprocess against the
     prepared instance; yield a SimpleNamespace with the base URL,
     httpx client, and the underlying Popen for log access.
 
-    Depends on ``gene_sets_instance`` — the last stage of the guide's
+    Depends on ``gene_profiles_instance`` — the last stage of the guide's
     linear narrative (imports → annotation edit → pheno import + pheno
     attach → preview-column config → ssc_denovo import + study-column
     config → ssc_cnv import → ssc_pheno import + ssc_denovo pheno-attach →
-    gene_sets_db + gene_scores_db config). ``gene_sets_instance``
-    transitively pulls the whole prior chain, so the single shared server
-    starts after every config edit the guide describes: it serves the
-    annotated, pheno-enabled example_dataset with its extended preview
-    columns, the ssc_denovo study (with the ssc_pheno phenotype study
-    attached), the ssc_cnv study, the ssc_pheno phenotype study, AND the
-    configured gene set collections + gene scores. Keeping the suite to one
+    gene_sets_db + gene_scores_db config → gene_profiles config + prebuild).
+    ``gene_profiles_instance`` transitively pulls the whole prior chain, so
+    the single shared server starts after every config edit the guide
+    describes: it serves the annotated, pheno-enabled example_dataset with
+    its extended preview columns, the ssc_denovo study (with the ssc_pheno
+    phenotype study attached), the ssc_cnv study, the ssc_pheno phenotype
+    study, the configured gene set collections + gene scores, AND the
+    prebuilt Gene Profiles tool (gpdb.duckdb). Keeping the suite to one
     wgpf process per session avoids two ``wgpf run``s racing on the same
     ``DAE_DB_DIR`` parquet during re-annotation. Every earlier claim
     (datasets visible, annotation download columns, pheno browser) holds
@@ -1199,7 +1330,7 @@ def wgpf_server(gene_sets_instance, gpf_env):
     import httpx  # lazy — see top-of-file note.
 
     env = dict(gpf_env)
-    env["DAE_DB_DIR"] = str(gene_sets_instance.instance_dir)
+    env["DAE_DB_DIR"] = str(gene_profiles_instance.instance_dir)
 
     port = _pick_free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -1225,7 +1356,7 @@ def wgpf_server(gene_sets_instance, gpf_env):
 
     proc = subprocess.Popen(
         ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
-        cwd=gene_sets_instance.instance_dir,
+        cwd=gene_profiles_instance.instance_dir,
         env=env,
         stdout=log_fh,
         stderr=subprocess.STDOUT,

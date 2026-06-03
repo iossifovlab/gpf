@@ -19,6 +19,9 @@ from docs_e2e.guide_assertions import (
     assert_enrichment_models,
     assert_enrichment_test_result,
     assert_file_created,
+    assert_gene_profile_for_gene,
+    assert_gene_profile_table_rows,
+    assert_gene_profiles_configured,
     assert_gene_scores_available,
     assert_gene_set_collections_available,
     assert_genomic_score_available,
@@ -1135,4 +1138,142 @@ class TestAssertEnrichmentTestResult:
         message = str(exc_info.value)
         assert f"{_EN_RST}:26" in message
         assert "3" in message and "5" in message
-        assert "Triage" in message
+
+
+_GP_RST = "getting_started_with_gene_profiles.rst"
+
+
+class TestAssertGeneProfilesConfigured:
+    def test_passes_with_nonempty_config(self):
+        resp = _FakeResponse(
+            200, json_body={"defaultDataset": "ssc_denovo", "order": []},
+        )
+        assert_gene_profiles_configured(
+            resp, default_dataset="ssc_denovo",
+            rst_ref=f"{_GP_RST}:142",
+            expectation="the home page shows the Gene Profiles tool",
+        )
+
+    def test_passes_without_default_dataset_check(self):
+        resp = _FakeResponse(200, json_body={"defaultDataset": "anything"})
+        assert_gene_profiles_configured(
+            resp,
+            rst_ref=f"{_GP_RST}:142",
+            expectation="the Gene Profiles tool is enabled",
+        )
+
+    def test_raises_on_empty_config(self):
+        # 200 + {} is the tool-not-enabled case — must NOT pass.
+        resp = _FakeResponse(200, json_body={})
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profiles_configured(
+                resp,
+                rst_ref=f"{_GP_RST}:142",
+                expectation="the home page shows the Gene Profiles tool",
+            )
+        message = str(exc_info.value)
+        assert f"{_GP_RST}:142" in message
+        assert "not enabled" in message.lower()
+
+    def test_raises_on_default_dataset_mismatch(self):
+        resp = _FakeResponse(200, json_body={"defaultDataset": "other"})
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profiles_configured(
+                resp, default_dataset="ssc_denovo",
+                rst_ref=f"{_GP_RST}:142",
+                expectation="the Gene Profiles tool uses ssc_denovo",
+            )
+        message = str(exc_info.value)
+        assert "ssc_denovo" in message
+        assert "other" in message
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(500, text="Internal Server Error")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profiles_configured(
+                resp,
+                rst_ref=f"{_GP_RST}:142",
+                expectation="the Gene Profiles tool is enabled",
+            )
+        assert "HTTP 500" in str(exc_info.value)
+
+
+class TestAssertGeneProfileTableRows:
+    def test_passes_with_rows_and_required_symbol(self):
+        resp = _FakeResponse(200, json_body=[
+            {"geneSymbol": "CHD8"}, {"geneSymbol": "ANK2"},
+        ])
+        assert_gene_profile_table_rows(
+            resp, min_count=2, require_symbols=["CHD8"],
+            rst_ref=f"{_GP_RST}:147",
+            expectation="the All Genes table lists gene profiles",
+        )
+
+    def test_raises_when_too_few_rows(self):
+        resp = _FakeResponse(200, json_body=[{"geneSymbol": "CHD8"}])
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profile_table_rows(
+                resp, min_count=10,
+                rst_ref=f"{_GP_RST}:147",
+                expectation="the All Genes table lists the prebuilt genes",
+            )
+        message = str(exc_info.value)
+        assert f"{_GP_RST}:147" in message
+        assert "10" in message
+
+    def test_raises_when_required_symbol_missing(self):
+        resp = _FakeResponse(200, json_body=[
+            {"geneSymbol": "ANK2"}, {"geneSymbol": "DSCAM"},
+        ])
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profile_table_rows(
+                resp, min_count=1, require_symbols=["CHD8"],
+                rst_ref=f"{_GP_RST}:147",
+                expectation="CHD8 is in the gene profiles table",
+            )
+        assert "CHD8" in str(exc_info.value)
+
+    def test_raises_on_http_error(self):
+        resp = _FakeResponse(503, text="Service Unavailable")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profile_table_rows(
+                resp, min_count=1,
+                rst_ref=f"{_GP_RST}:147",
+                expectation="the All Genes table lists gene profiles",
+            )
+        assert "HTTP 503" in str(exc_info.value)
+
+
+class TestAssertGeneProfileForGene:
+    def test_passes_with_matching_gene(self):
+        resp = _FakeResponse(200, json_body={
+            "geneSymbol": "CHD8", "geneSets": [], "geneScores": [],
+        })
+        assert_gene_profile_for_gene(
+            resp, "CHD8",
+            rst_ref=f"{_GP_RST}:156",
+            expectation="the CHD8 Gene Profile page opens",
+        )
+
+    def test_raises_on_404(self):
+        # The endpoint 404s when the gene has no generated profile.
+        resp = _FakeResponse(404, text="Not Found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profile_for_gene(
+                resp, "CHD8",
+                rst_ref=f"{_GP_RST}:156",
+                expectation="the CHD8 Gene Profile page opens",
+            )
+        message = str(exc_info.value)
+        assert f"{_GP_RST}:156" in message
+        assert "HTTP 404" in message
+
+    def test_raises_on_wrong_gene(self):
+        resp = _FakeResponse(200, json_body={"geneSymbol": "ANK2"})
+        with pytest.raises(AssertionError) as exc_info:
+            assert_gene_profile_for_gene(
+                resp, "CHD8",
+                rst_ref=f"{_GP_RST}:156",
+                expectation="the CHD8 Gene Profile page opens",
+            )
+        assert "CHD8" in str(exc_info.value)

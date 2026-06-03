@@ -84,7 +84,6 @@ configuration:
     gene_sets_db:
       gene_set_collections:
       - gene_properties/gene_sets/autism
-      - gene_properties/gene_sets/relevant
       - gene_properties/gene_sets/GO_2024-06-17_release
 
     gene_scores_db:
