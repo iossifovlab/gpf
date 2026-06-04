@@ -57,7 +57,6 @@ GENE_SCORES = [
     "Satterstrom Buxbaum Cell 2020 qval",   # Satterstrom_Buxbaum_Cell_2020
     "Iossifov Wigler PNAS 2015 post noaut",  # Iossifov_Wigler_PNAS_2015
     "LGD_score",                             # LGD
-    "RVIS score",                            # RVIS
     "LOEUF",                                 # LOEUF
 ]
 

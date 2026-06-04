@@ -44,8 +44,6 @@ gene_scores:
 - category: protection_scores
   display_name: Protection Gene Scores
   scores:
-    - score_name: RVIS_rank
-      format: "%%s"
     - score_name: LGD_rank
       format: "%%s"
     - score_name: LOEUF_rank

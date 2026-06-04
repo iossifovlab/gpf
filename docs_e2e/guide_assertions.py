@@ -991,3 +991,158 @@ def assert_enrichment_test_result(
         f"underlying exception."
     )
     raise AssertionError(message)
+
+
+def assert_gene_profiles_configured(
+        response, *, default_dataset=None, rst_ref, expectation,
+):
+    """Assert the Gene Profiles tool is configured/enabled
+    (``GET /api/v3/gene_profiles/single-view/configuration``).
+
+    Backs the guide's claim that, after adding the ``gene_profiles_config``
+    block to gpf_instance.yaml and prebuilding the profiles with
+    ``generate_gene_profile``, the home page shows the Gene Profiles tool.
+
+    The configuration endpoint returns HTTP 200 with the (camelized) GP
+    configuration object when the tool is enabled, but ALSO returns 200 with
+    an EMPTY object ``{}`` when no GP config / no gpdb is present (the SPA
+    shows the Gene Profiles link only when the config is non-empty). So a 200
+    alone is not the signal — the config must be a non-empty object, and when
+    ``default_dataset`` is supplied its ``defaultDataset`` must match.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                "HTTP 200 with a non-empty Gene Profiles configuration"
+            ),
+        ))
+    config = response.json()
+    if not isinstance(config, dict) or not config:
+        message = (
+            f'DRIFT at {rst_ref} — "{expectation}"\n'
+            f"\n"
+            f"  expected: a non-empty Gene Profiles configuration object\n"
+            f"  actual:   {config!r}\n"
+            f"\n"
+            f"  Triage hint: The configuration endpoint returned 200 but an "
+            f"empty config, i.e. the Gene Profiles tool is NOT enabled — the "
+            f"SPA would not show its home-page link. Most likely either (a) "
+            f"the `gene_profiles_config` block was not added to "
+            f"gpf_instance.yaml (or the server did not pick it up — check the "
+            f"wgpf log dump), or (b) `generate_gene_profile` did not produce a "
+            f"gpdb.duckdb the instance could load. If the guide's claim no "
+            f"longer holds, update the guide."
+        )
+        raise AssertionError(message)
+    if default_dataset is not None and config.get("defaultDataset") != \
+            default_dataset:
+        message = (
+            f'DRIFT at {rst_ref} — "{expectation}"\n'
+            f"\n"
+            f"  expected: defaultDataset == {default_dataset!r}\n"
+            f"  actual:   defaultDataset == "
+            f"{config.get('defaultDataset')!r}\n"
+            f"\n"
+            f"  Triage hint: The Gene Profiles tool is configured but against "
+            f"a different default dataset than the guide describes. Either the "
+            f"gene_profiles.yaml `default_dataset` drifted from the guide, or "
+            f"the guide's dataset id changed. If the new id is correct, update "
+            f"the guide."
+        )
+        raise AssertionError(message)
+
+
+def assert_gene_profile_table_rows(
+        response, *, min_count=1, require_symbols=None, rst_ref, expectation,
+):
+    """Assert the Gene Profiles table returned profile rows
+    (``GET /api/v3/gene_profiles/table/rows``).
+
+    Backs the guide's claim that following the ``All Genes`` link opens the
+    Gene Profiles table with information about genes. The response is a JSON
+    list of profile-row objects each carrying a ``geneSymbol``. A non-200
+    status fails with HTTP-error triage; fewer than ``min_count`` rows — or a
+    required gene symbol missing — fails with a hint pointing at the
+    ``generate_gene_profile`` prebuild step.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with at least {min_count} gene profile row(s)"
+            ),
+        ))
+    rows = response.json()
+    count = len(rows)
+    symbols = [
+        r.get("geneSymbol") for r in rows if isinstance(r, dict)
+    ]
+    missing = [s for s in (require_symbols or []) if s not in symbols]
+    if count >= min_count and not missing:
+        return
+    detail = (
+        f"  expected: at least {min_count} row(s)"
+        + (f" including {require_symbols}" if require_symbols else "")
+        + "\n"
+        f"  actual:   {count} row(s)"
+        + (f", missing {missing}" if missing else "")
+        + "\n"
+    )
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"{detail}"
+        f"\n"
+        f"  Triage hint: The table endpoint responded but the rows are below "
+        f"expectation. Most likely either (a) `generate_gene_profile` did not "
+        f"populate the gpdb for the expected genes (re-check its exit code + "
+        f"the --genes list), or (b) the gpdb.duckdb the prebuild wrote is not "
+        f"the one the server loaded. If the guide's gene set legitimately "
+        f"changed, update the guide / the test's expected symbols."
+    )
+    raise AssertionError(message)
+
+
+def assert_gene_profile_for_gene(
+        response, gene_symbol, *, rst_ref, expectation,
+):
+    """Assert the single-gene Gene Profile page resolves for ``gene_symbol``
+    (``GET /api/v3/gene_profiles/single-view/gene/<gene_symbol>``).
+
+    Backs the guide's claim that selecting a gene from the table opens the
+    Gene Profile page for that gene (the guide's screenshot is CHD8). The
+    response is a JSON object carrying a ``geneSymbol`` matching the request.
+    The endpoint returns 404 when the gene has no generated profile, or when
+    the gene has no transcript models in the instance gene models — both are
+    treated as drift.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response,
+            rst_ref=rst_ref,
+            expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with a Gene Profile for {gene_symbol!r}"
+            ),
+        ))
+    data = response.json()
+    actual_symbol = data.get("geneSymbol") if isinstance(data, dict) else None
+    if actual_symbol == gene_symbol:
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: a Gene Profile with geneSymbol {gene_symbol!r}\n"
+        f"  actual:   geneSymbol == {actual_symbol!r}\n"
+        f"\n"
+        f"  Triage hint: The profile endpoint returned 200 but for a "
+        f"different gene than requested. Most likely the response shape "
+        f"changed (the geneSymbol key moved/renamed). If the new shape is "
+        f"correct, update the test."
+    )
+    raise AssertionError(message)

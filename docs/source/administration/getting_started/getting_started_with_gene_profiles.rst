@@ -39,7 +39,7 @@ There are several sections in this configuration file:
   of gene scores:
 
   - ``autism_scores`` - lines 36-42;
-  - ``protection_scores`` - lines 44-52.
+  - ``protection_scores`` - lines 44-50.
 
   Please note that all gene scores used in this configuration section should
   be defined in the GPF instance configuration file.
@@ -49,7 +49,7 @@ There are several sections in this configuration file:
   the defined gene sets. In our example, we are going to use one group of gene
   sets:
 
-  - ``autism_gene_sets`` - lines 54-67;
+  - ``autism_gene_sets`` - lines 52-65;
 
     Please note that all gene sets used in this configuration section should
     be defined in the GPF instance configuration file.
@@ -57,16 +57,16 @@ There are several sections in this configuration file:
 - ``gene_links``: This section defines links to internal and external tools
   that contain information about genes. In our example, we are defining three
   links:
-  - lines 70-71 - link to the GPF Gene Browser tools;
-  - lines 73-74 - link to the GeneCards site;
-  - lines 75-76 - link to the SFARI Gene site.
+  - lines 68-69 - link to the GPF Gene Browser tools;
+  - lines 71-72 - link to the GeneCards site;
+  - lines 73-74 - link to the SFARI Gene site.
 
 Once we have this configuration, we need to add it to the GPF instance
 configuration:
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 28-29
+    :emphasize-lines: 26-27
 
     instance_id: minimal_instance
 
@@ -84,7 +84,6 @@ configuration:
     gene_sets_db:
       gene_set_collections:
       - gene_properties/gene_sets/autism
-      - gene_properties/gene_sets/relevant
       - gene_properties/gene_sets/GO_2024-06-17_release
 
     gene_scores_db:
@@ -92,7 +91,6 @@ configuration:
       - gene_properties/gene_scores/Satterstrom_Buxbaum_Cell_2020
       - gene_properties/gene_scores/Iossifov_Wigler_PNAS_2015
       - gene_properties/gene_scores/LGD
-      - gene_properties/gene_scores/RVIS
       - gene_properties/gene_scores/LOEUF
 
     gene_profiles_config:
