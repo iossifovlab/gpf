@@ -1,0 +1,132 @@
+## Apache config for the combined gpf-web image — PREFIXED variant.
+##
+## Rendered by docker-entrypoint.sh to /etc/apache2/apache2.conf when
+## GPF_PREFIX is set: the token __GPF_PREFIX__ is replaced with the
+## prefix path segment (e.g. "gpf"), so the app is served under
+## /gpf/ instead of /. When GPF_PREFIX is empty the entrypoint does
+## NOT use this file — it leaves the shipped httpd-combined.conf
+## (root variant) in place, so root deployments are byte-for-byte
+## unchanged.
+##
+## Prefix model: Apache STRIPS the prefix when proxying to gunicorn
+## (so Django resolves urlpatterns at root, ^api/ etc.), and Django
+## carries the prefix back into generated URLs / redirects / the
+## password-reset form's {% url %} via FORCE_SCRIPT_NAME (set from
+## WDAE_PREFIX). STATIC_URL is made /__GPF_PREFIX__/static/ in
+## default_settings.py so server-rendered static resolves here too.
+##
+## KEEP THE SHARED BITS IN SYNC WITH httpd-combined.conf (root
+## variant): module loads, the pheno-images alias, the cache rules,
+## the compression list, and the gunicorn proxy targets. Only the
+## URL-path layout (the /__GPF_PREFIX__ segment, the SPA fallback,
+## and the bare-root redirect) differs between the two files.
+
+ServerRoot "/etc/apache2"
+ServerName localhost
+Listen 80
+User ${APACHE_RUN_USER}
+Group ${APACHE_RUN_GROUP}
+PidFile ${APACHE_PID_FILE}
+
+LoadModule mpm_event_module       /usr/lib/apache2/modules/mod_mpm_event.so
+LoadModule authz_core_module      /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule mime_module            /usr/lib/apache2/modules/mod_mime.so
+LoadModule dir_module             /usr/lib/apache2/modules/mod_dir.so
+LoadModule alias_module           /usr/lib/apache2/modules/mod_alias.so
+LoadModule headers_module         /usr/lib/apache2/modules/mod_headers.so
+LoadModule filter_module          /usr/lib/apache2/modules/mod_filter.so
+LoadModule deflate_module         /usr/lib/apache2/modules/mod_deflate.so
+LoadModule expires_module         /usr/lib/apache2/modules/mod_expires.so
+LoadModule rewrite_module         /usr/lib/apache2/modules/mod_rewrite.so
+LoadModule remoteip_module        /usr/lib/apache2/modules/mod_remoteip.so
+LoadModule proxy_module           /usr/lib/apache2/modules/mod_proxy.so
+LoadModule proxy_http_module      /usr/lib/apache2/modules/mod_proxy_http.so
+LoadModule proxy_wstunnel_module  /usr/lib/apache2/modules/mod_proxy_wstunnel.so
+LoadModule setenvif_module        /usr/lib/apache2/modules/mod_setenvif.so
+
+ErrorLog  /proc/self/fd/2
+CustomLog /proc/self/fd/1 common
+LogLevel  warn
+
+TypesConfig /etc/mime.types
+
+DocumentRoot "/var/www/html"
+
+# Bare root → the prefixed app.
+RedirectMatch ^/$ /__GPF_PREFIX__/
+
+# Reverse-proxy the dynamic paths to the in-container gunicorn,
+# STRIPPING the prefix (Django resolves at root; FORCE_SCRIPT_NAME
+# re-adds it to generated URLs). Declared before the Aliases below
+# so these win for the dynamic paths. /o/ + /accounts/ are the
+# OAuth login round-trip; /ws/ is websockets.
+ProxyPreserveHost On
+ProxyRequests Off
+RequestHeader set X-Forwarded-Proto "%{REQUEST_SCHEME}e"
+ProxyPass        /__GPF_PREFIX__/api/      http://127.0.0.1:9001/api/
+ProxyPassReverse /__GPF_PREFIX__/api/      http://127.0.0.1:9001/api/
+ProxyPass        /__GPF_PREFIX__/o/        http://127.0.0.1:9001/o/
+ProxyPassReverse /__GPF_PREFIX__/o/        http://127.0.0.1:9001/o/
+ProxyPass        /__GPF_PREFIX__/accounts/ http://127.0.0.1:9001/accounts/
+ProxyPassReverse /__GPF_PREFIX__/accounts/ http://127.0.0.1:9001/accounts/
+ProxyPass        /__GPF_PREFIX__/ws/ ws://127.0.0.1:9001/ws/
+ProxyPassReverse /__GPF_PREFIX__/ws/ ws://127.0.0.1:9001/ws/
+
+# Phenotype-browser images (parameterised container path; same as
+# the root variant). More specific than the /static/ alias, so it
+# is declared first.
+Alias /__GPF_PREFIX__/static/images/ "${PHENO_IMAGES_DIR}"
+<Directory "${PHENO_IMAGES_DIR}">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    <FilesMatch ".+">
+        ExpiresActive Off
+        Header unset Cache-Control
+        Header unset Expires
+    </FilesMatch>
+</Directory>
+
+# Django admin / DRF static + the SPA's own static assets, served
+# from the collected htdocs. STATIC_URL is /__GPF_PREFIX__/static/
+# (default_settings.py), so {% static %} in server-rendered pages
+# resolves here.
+Alias /__GPF_PREFIX__/static/ "/var/www/html/static/"
+<Directory "/var/www/html/static/">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    ExpiresActive On
+    ExpiresDefault "access plus 1 year"
+    Header set Cache-Control "public, immutable"
+</Directory>
+
+# The SPA, served under the prefix. The Alias maps /__GPF_PREFIX__
+# onto the document root; FallbackResource sends any path that
+# isn't a real file (i.e. client-side routes) to index.html. The
+# proxied + static paths above are handled in earlier phases, so
+# they never reach FallbackResource.
+Alias /__GPF_PREFIX__ "/var/www/html"
+<Directory "/var/www/html">
+    Options FollowSymLinks
+    AllowOverride None
+    Require all granted
+    DirectoryIndex index.html
+    FallbackResource /__GPF_PREFIX__/index.html
+</Directory>
+
+# Long cache on hashed Angular assets, no-cache on index.html so a
+# deploy is picked up immediately. Filename-based, prefix-agnostic.
+<Files "index.html">
+    Header set Cache-Control "no-store, no-cache, must-revalidate"
+</Files>
+<FilesMatch "\.(js|css|woff2?|svg|png|jpg|jpeg|gif|ico)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 year"
+    Header set Cache-Control "public, immutable"
+</FilesMatch>
+
+# Compression for text types.
+AddOutputFilterByType DEFLATE \
+    text/plain text/html text/css text/xml \
+    application/javascript application/json image/svg+xml

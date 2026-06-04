@@ -113,7 +113,16 @@ MEDIA_URL = ""
 
 STATIC_ROOT = ""
 
-STATIC_URL = "static/"
+# Server-rendered static (DRF, admin, and the password-reset /
+# set-password form's {% static %}). When serving under a URL
+# prefix, make STATIC_URL absolute + prefixed so it resolves at
+# /<prefix>/static/ — where the combined image's Apache aliases
+# it. Root keeps the relative "static/" it has always used.
+# WDAE_PREFIX is read above (next to LOGIN_URL/FORCE_SCRIPT_NAME).
+if WDAE_PREFIX:
+    STATIC_URL = f"/{WDAE_PREFIX}/static/"
+else:
+    STATIC_URL = "static/"
 
 APPEND_SLASH = False
 
