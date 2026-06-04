@@ -999,6 +999,27 @@ pipeline {
                             docker tag "$BUNDLE_REPO:$BUILD_NUMBER" \
                                        "$BUNDLE_REPO:$GIT_SHORT"
 
+                            # URL-prefix support smoke (gpf#903). The
+                            # entrypoint renders the prefixed Apache
+                            # vhost + repoints the SPA <base href> when
+                            # GPF_PREFIX is set, and Django derives
+                            # FORCE_SCRIPT_NAME/STATIC_URL from
+                            # WDAE_PREFIX. Verify the real image:
+                            #   - root Apache config parses,
+                            #   - prefixed Apache config parses,
+                            #   - the SPA base href is rewritten,
+                            #   - Django produces the prefixed settings.
+                            IMG="$BUNDLE_REPO:$BUILD_NUMBER"
+                            docker run --rm "$IMG" apache2ctl configtest
+                            docker run --rm -e GPF_PREFIX=gpf "$IMG" apache2ctl configtest
+                            docker run --rm -e GPF_PREFIX=gpf "$IMG" \
+                                grep -q '<base href="/gpf/"' /var/www/html/index.html
+                            docker run --rm -e WDAE_PREFIX=gpf "$IMG" python -c "\
+from django.conf import settings; \
+assert settings.FORCE_SCRIPT_NAME == '/gpf', settings.FORCE_SCRIPT_NAME; \
+assert settings.STATIC_URL == '/gpf/static/', settings.STATIC_URL; \
+print('gpf-web prefix settings OK')"
+
                             # Resolve and record the base-image digests
                             # this build used, so a future release
                             # pipeline can rebuild from a tagged commit

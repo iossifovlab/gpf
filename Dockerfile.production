@@ -62,9 +62,14 @@ COPY --from=backend /opt/gpf /opt/gpf
 # the document root in our config to that path.
 COPY --from=frontend /usr/local/apache2/htdocs/ /var/www/html/
 
-# Apache + supervisord configs.
+# Apache + supervisord configs. The .template is the prefixed
+# variant rendered by the entrypoint when GPF_PREFIX is set; the
+# plain .conf is the root variant used as-is when it's unset.
 COPY httpd-combined.conf /etc/apache2/apache2.conf
+COPY httpd-combined.conf.template /etc/apache2/httpd-combined.conf.template
 COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV PATH=/opt/gpf/bin:$PATH \
     PYTHONUNBUFFERED=1 \
@@ -73,7 +78,10 @@ ENV PATH=/opt/gpf/bin:$PATH \
 
 EXPOSE 80
 
-# supervisord runs as PID 1; it forks gunicorn (loopback
+# The entrypoint applies GPF_PREFIX (renders the prefixed Apache
+# vhost + repoints the SPA <base href>) when set, then exec's the
+# CMD. supervisord runs as PID 1; it forks gunicorn (loopback
 # :9001) and apache2 (:80) and forwards their stdio to the
 # container's stdio.
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
