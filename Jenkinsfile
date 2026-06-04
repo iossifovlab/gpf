@@ -229,6 +229,20 @@ pipeline {
                     // commits since last build) → DOCS_ONLY='false' →
                     // full CI. Conservative default — only short-circuit
                     // when we positively know it's docs-only.
+                    //
+                    // Getting-Started carve-out (#905): the prose under
+                    // docs/source/administration/getting_started/** is the
+                    // system-under-test of the gpf-docs-e2e build, which is
+                    // gated on `not DOCS_ONLY` AND installs gpf-web from
+                    // THIS build's fresh dist/conda artefacts (themselves
+                    // produced by the `Conda packages` stage, also gated on
+                    // `not DOCS_ONLY`). So a change touching the guide must
+                    // NOT count as docs-only — otherwise the Conda stage is
+                    // skipped, there are no artefacts for docs-e2e to copy,
+                    // and the guide-accuracy suite never runs on the very
+                    // change meant to exercise it. A guide edit therefore
+                    // runs full CI; guide edits are infrequent and a guide
+                    // change is exactly when that validation should run.
                     steps {
                         script {
                             def changedFiles = []
@@ -237,11 +251,18 @@ pipeline {
                                     changedFiles.addAll(item.affectedPaths)
                                 }
                             }
+                            String gettingStartedPrefix =
+                                'docs/source/administration/getting_started/'
+                            boolean touchesGuide = changedFiles.any {
+                                it.startsWith(gettingStartedPrefix)
+                            }
                             boolean isDocsOnly =
                                 !changedFiles.isEmpty() &&
-                                changedFiles.every { it.startsWith('docs/') }
+                                changedFiles.every { it.startsWith('docs/') } &&
+                                !touchesGuide
                             env.DOCS_ONLY = isDocsOnly ? 'true' : 'false'
                             echo "Changeset: ${changedFiles.size()} file(s); " +
+                                 "touchesGuide=${touchesGuide}; " +
                                  "DOCS_ONLY=${env.DOCS_ONLY}"
                         }
                     }
@@ -1278,13 +1299,14 @@ print('gpf-web prefix settings OK')"
                     // branch before gpf-seed has re-run) from
                     // becoming fatal — parent stays UNSTABLE.
                     //
-                    // v1 docs-only-gap (see #871 § Triggering):
-                    // A pure prose edit to
-                    // docs/source/administration/getting_started/**
-                    // sets DOCS_ONLY=true and so skips this
-                    // stage; the next code commit catches drift.
-                    // A path-aware carve-out is filed as a
-                    // follow-up; defer until v1 (#872) settles.
+                    // Getting-Started carve-out (#905): a pure prose
+                    // edit to docs/source/administration/getting_started/**
+                    // is treated as NOT docs-only by the `Detect change
+                    // scope` stage (DOCS_ONLY=false), so this stage runs
+                    // and the guide-accuracy suite fires on guide-only
+                    // changes — see that stage's comment for why a guide
+                    // edit must run full CI (docs-e2e needs this build's
+                    // fresh conda artefacts).
                     steps {
                         catchError(
                             buildResult: 'UNSTABLE',
