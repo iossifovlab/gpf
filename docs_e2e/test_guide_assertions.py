@@ -29,6 +29,7 @@ from docs_e2e.guide_assertions import (
     assert_pheno_instruments_available,
     assert_pheno_measures_present,
     assert_preview_table_column_group,
+    assert_python_snippet_output,
     assert_query_returned_variants,
 )
 
@@ -1277,3 +1278,82 @@ class TestAssertGeneProfileForGene:
                 expectation="the CHD8 Gene Profile page opens",
             )
         assert "CHD8" in str(exc_info.value)
+
+
+_PI_RST = "getting_started_with_python_interface.rst"
+
+
+class TestAssertPythonSnippetOutput:
+    def test_passes_on_matching_value(self):
+        # No exception when the captured value equals the documented one.
+        assert_python_snippet_output(
+            {"synonymous_count": 4}, "synonymous_count", 4,
+            rst_ref=f"{_PI_RST}:90",
+            expectation="synonymous query yields 4",
+        )
+
+    def test_passes_on_matching_list_and_dict(self):
+        values = {
+            "ids": ["a", "b", "c"],
+            "instruments": {"basic_medical": 4, "iq": 3},
+        }
+        assert_python_snippet_output(
+            values, "ids", ["a", "b", "c"],
+            rst_ref=f"{_PI_RST}:29", expectation="ids match",
+        )
+        # dict equality is order-independent (json round-trips can reorder).
+        assert_python_snippet_output(
+            values, "instruments", {"iq": 3, "basic_medical": 4},
+            rst_ref=f"{_PI_RST}:134", expectation="instruments match",
+        )
+
+    def test_raises_on_value_mismatch(self):
+        with pytest.raises(AssertionError) as exc_info:
+            assert_python_snippet_output(
+                {"synonymous_count": 5}, "synonymous_count", 4,
+                rst_ref=f"{_PI_RST}:90",
+                expectation="synonymous query yields 4",
+            )
+        message = str(exc_info.value)
+        assert f"{_PI_RST}:90" in message
+        assert "synonymous query yields 4" in message
+        # both the expected and the actual value are surfaced
+        assert "4" in message
+        assert "5" in message
+        # mismatch triage points at guide-output / API drift
+        assert "update the guide" in message
+
+    def test_raises_on_missing_key_when_driver_succeeded(self):
+        # Driver exited 0 but never emitted the key — the marker key drifted.
+        with pytest.raises(AssertionError) as exc_info:
+            assert_python_snippet_output(
+                {}, "synonymous_count", 4,
+                rst_ref=f"{_PI_RST}:90",
+                expectation="synonymous query yields 4",
+                after_command=_ok_result(),
+            )
+        message = str(exc_info.value)
+        assert "marker key" in message
+        assert "not produced" in message
+
+    def test_raises_on_missing_key_when_driver_failed(self):
+        # Driver exited non-zero — the snippet output was never produced; the
+        # message redirects to the driver failure and surfaces its stderr.
+        failed = SimpleNamespace(
+            returncode=1,
+            args=["python", "driver.py"],
+            stdout=b"",
+            stderr=b"ModuleNotFoundError: No module named 'dae'\n",
+        )
+        with pytest.raises(AssertionError) as exc_info:
+            assert_python_snippet_output(
+                {}, "genotype_data_ids", ["example_dataset"],
+                rst_ref=f"{_PI_RST}:29",
+                expectation="study ids listed",
+                after_command=failed,
+            )
+        message = str(exc_info.value)
+        assert "exit code 1" in message
+        # the driver's traceback tail is surfaced for triage
+        assert "No module named 'dae'" in message
+        assert "Fix that failure first" in message
