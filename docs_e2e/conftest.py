@@ -18,6 +18,7 @@ local-iteration command in docs_e2e/README.md):
 * ``DOCS_E2E_GRR_CACHE`` — directory persisted as the GRR cache.
 """
 
+import json
 import os
 import shutil
 import socket
@@ -1280,6 +1281,173 @@ def gene_profiles_instance(gene_sets_instance, gpf_env):
         generate=generate,
         gpdb_path=instance_dir / "gpdb.duckdb",
     )
+
+
+# getting_started_with_python_interface.rst drives the GPF Python API
+# directly (no REST, no wgpf): it is a REPL-style narrative that builds one
+# ``GPFInstance`` and runs a sequence of query snippets, each annotated with
+# the value it "will produce". docs-e2e runs those snippets faithfully — in a
+# single python process in the gpf-web conda env, against the fully-built
+# instance the earlier guides produced — and emits a JSON summary of each
+# snippet's result under a ``@@DOCS_E2E::<key>::<json>`` marker. The
+# per-claim tests then assert one captured value each via
+# ``assert_python_snippet_output``.
+#
+# The driver uses the SAME imports the guide tells the user to type
+# (``from gpf.gpf_instance.gpf_instance import GPFInstance`` /
+# ``from gpf.variants.attributes import Role``). A namespace drift in the
+# guide (e.g. the historical ``dae`` -> ``gpf`` rename) is caught separately
+# by test_python_interface's static RST-import check; here the driver must
+# run, so it uses the current namespace. Each emit() line cites the RST
+# lines of the snippet it backs.
+_PY_MARKER = "@@DOCS_E2E::"
+_PYTHON_INTERFACE_DRIVER = """\
+import json
+import sys
+
+from gpf.gpf_instance.gpf_instance import GPFInstance
+
+
+def emit(key, value):
+    line = "@@DOCS_E2E::" + key + "::" + json.dumps(value) + "\\n"
+    sys.stdout.write(line)
+
+
+def main():
+    # RST 7-10: import GPFInstance and build it from the startup instance.
+    gpf_instance = GPFInstance.build()
+
+    # RST 21-29: list all configured genotype-study ids.
+    emit("genotype_data_ids", sorted(gpf_instance.get_genotype_data_ids()))
+
+    # RST 33-75: query all variants of example_dataset; the guide prints each
+    # alt allele (str(aa) -> "chr14:21391016 A->AT f2"). Capture them all.
+    st = gpf_instance.get_genotype_data("example_dataset")
+    vs = list(st.query_variants())
+    emit(
+        "example_dataset_alt_alleles",
+        sorted(str(aa) for v in vs for aa in v.alt_alleles),
+    )
+
+    # RST 81-90: only "synonymous" variants.
+    st = gpf_instance.get_genotype_data("example_dataset")
+    vs = list(st.query_variants(effect_types=["synonymous"]))
+    emit("synonymous_count", len(vs))
+
+    # RST 95-103: "synonymous" variants only in people with the "prb" role.
+    vs = list(st.query_variants(effect_types=["synonymous"], roles="prb"))
+    emit("synonymous_prb_count", len(vs))
+
+    # RST 110-118: list all configured phenotype-data ids.
+    emit("phenotype_data_ids", sorted(gpf_instance.get_phenotype_data_ids()))
+
+    # RST 124-134: mini_pheno instruments and their measure counts
+    # ("Instrument(basic_medical, 4)" -> {"basic_medical": 4, "iq": 3}).
+    pd = gpf_instance.get_phenotype_data("mini_pheno")
+    emit(
+        "instruments",
+        {name: len(instr.measures) for name, instr in pd.instruments.items()},
+    )
+
+    # RST 137-149: mini_pheno measures (the measure ids).
+    emit("measures", sorted(pd.measures.keys()))
+
+    # RST 153-178: non-verbal IQ for the probands of families f1, f2, f3.
+    from gpf.variants.attributes import Role
+    rows = list(pd.get_people_measure_values(
+        ["iq.non-verbal-iq"],
+        roles=[Role.prb],
+        family_ids=["f1", "f2", "f3"],
+    ))
+    emit("people_measure_values", sorted(
+        (
+            {
+                "person_id": r["person_id"],
+                "iq.non-verbal-iq": r["iq.non-verbal-iq"],
+            }
+            for r in rows
+        ),
+        key=lambda d: d["person_id"],
+    ))
+
+
+if __name__ == "__main__":
+    main()
+"""
+
+# 10 min: building the GPFInstance loads the reference genome + gene models
+# from the warm GRR cache, then the snippets run small queries against the
+# demo example_dataset + mini_pheno. No re-import, no server.
+_PYTHON_INTERFACE_TIMEOUT = 600
+
+
+def _parse_py_markers(stdout):
+    """Parse ``@@DOCS_E2E::<key>::<json>`` marker lines from the driver's
+    stdout into a ``{key: value}`` dict. Non-marker output (logging the
+    GPFInstance build emits) is ignored; a malformed payload is skipped."""
+    if isinstance(stdout, bytes):
+        stdout = stdout.decode("utf-8", errors="replace")
+    values = {}
+    for line in stdout.splitlines():
+        if not line.startswith(_PY_MARKER):
+            continue
+        body = line[len(_PY_MARKER):]
+        key, sep, payload = body.partition("::")
+        if not sep:
+            continue
+        try:
+            values[key] = json.loads(payload)
+        except json.JSONDecodeError:
+            continue
+    return values
+
+
+@dataclass
+class PythonInterfaceSession:
+    """The result of running getting_started_with_python_interface.rst's
+    snippets in one python process against the built instance.
+
+    ``process`` is the driver subprocess result (so a per-test assertion can
+    feed it into ``assert_command_succeeds`` for the GPFInstance.build claim,
+    and ``assert_python_snippet_output`` can surface its stderr on failure).
+    ``values`` maps each snippet's marker key to its captured JSON value.
+    """
+
+    process: subprocess.CompletedProcess
+    values: dict
+
+
+@pytest.fixture(scope="session")
+def python_interface_session(gene_profiles_instance, gpf_env, tmp_path_factory):
+    """Apply getting_started_with_python_interface.rst: run the guide's
+    Python-API snippets against the fully-built instance.
+
+    Depends on ``gene_profiles_instance`` — the tail of the guide's linear
+    narrative — so the instance the driver builds is the same fully-prepared
+    one the rest of the suite uses (example_dataset + mini_pheno are the demo
+    data the guide queries; the full genotype/phenotype id lists the guide
+    documents need every imported study present). The driver runs in the
+    gpf-web conda env (``gpf_env`` puts it first on PATH) with ``DAE_DB_DIR``
+    pointed at the instance dir, exactly as ``GPFInstance.build()`` expects.
+
+    Strict mode (#871): the driver runs only the read-only query snippets the
+    guide tells the user to type — no imports, no config edits, no server. It
+    is pure GPF Python API against the already-built instance.
+    """
+    instance_dir = gene_profiles_instance.instance_dir
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(instance_dir)
+
+    script_dir = tmp_path_factory.mktemp("python-interface", numbered=False)
+    script_path = script_dir / "driver.py"
+    script_path.write_text(_PYTHON_INTERFACE_DRIVER)
+
+    result = _run(
+        ["python", str(script_path)],
+        cwd=instance_dir, env=env, timeout=_PYTHON_INTERFACE_TIMEOUT,
+    )
+    values = _parse_py_markers(result.stdout) if result.returncode == 0 else {}
+    return PythonInterfaceSession(process=result, values=values)
 
 
 def _pick_free_port():

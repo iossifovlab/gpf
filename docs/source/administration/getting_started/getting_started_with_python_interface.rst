@@ -6,7 +6,7 @@ The simplest way to start using GPF's Python API is to import the
 
 .. code-block:: python3
 
-    from dae.gpf_instance.gpf_instance import GPFInstance
+    from gpf.gpf_instance.gpf_instance import GPFInstance
     gpf_instance = GPFInstance.build()
 
 This ``gpf_instance`` object groups several interfaces, each dedicated
@@ -53,9 +53,9 @@ will produce the following output:
 
     chr14:21391016 A->AT f2
     chr14:21393484 TCTTC->T f2
-    chr14:21402010 G->A f1
     chr14:21403019 G->A f2
     chr14:21403214 T->C f1
+    chr14:21409849 A->G f1
     chr14:21431459 G->C f1
     chr14:21385738 C->T f1
     chr14:21385738 C->T f2
@@ -73,6 +73,8 @@ will produce the following output:
     chr14:21431306 G->A f1
     chr14:21431623 A->C f2
     chr14:21393540 GGAA->G f1
+    chr14:21431499 T->C f2
+    chr14:21402010 G->A f1
 
 The ``query_variants`` interface allows you to specify what kind of variants
 you are interested in. For example, if you only need "synonymous" variants, you
@@ -152,7 +154,7 @@ We can then get specific measure values for specific individuals:
 
 .. code-block:: python3
 
-    from dae.variants.attributes import Role
+    from gpf.variants.attributes import Role
 
     list(pd.get_people_measure_values(["iq.non-verbal-iq"], roles=[Role.prb], family_ids=["f1", "f2", "f3"]))
 

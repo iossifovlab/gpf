@@ -1146,3 +1146,83 @@ def assert_gene_profile_for_gene(
         f"correct, update the test."
     )
     raise AssertionError(message)
+
+
+# Sentinel for a snippet the driver script never emitted (typically because
+# the whole script failed before reaching it). Distinct from any JSON value a
+# snippet could legitimately produce.
+_SNIPPET_MISSING = object()
+
+
+def assert_python_snippet_output(
+        values, key, expected, *, rst_ref, expectation, after_command=None,
+):
+    """Assert a guide Python snippet produced the documented output.
+
+    The python-interface guide is a REPL-style narrative: a single
+    ``GPFInstance`` is built once and a sequence of snippets query it, each
+    annotated with the value it "will produce". The docs-e2e driver runs those
+    snippets in one process and captures a JSON summary of each one's result
+    under a marker ``key``; this helper compares one captured value against the
+    value the guide documents.
+
+    ``values`` is the parsed ``{key: captured_value}`` mapping the
+    ``python_interface_session`` fixture produces; ``key`` selects the snippet.
+    A key absent from ``values`` means the driver never emitted it — almost
+    always because the script failed earlier. ``after_command`` is the driver's
+    ``subprocess.CompletedProcess``; when supplied and failed, its stderr
+    shapes the triage hint, mirroring ``assert_file_created``.
+    """
+    actual = values.get(key, _SNIPPET_MISSING)
+    if actual is not _SNIPPET_MISSING and actual == expected:
+        return
+
+    prior_failed = (
+        after_command is not None and after_command.returncode != 0
+    )
+
+    if actual is _SNIPPET_MISSING and prior_failed:
+        triage = (
+            f"Triage hint: The driver script exited non-zero (exit code "
+            f"{after_command.returncode}), so this snippet's output was "
+            f"never produced. Fix that failure first — most likely the "
+            f"GPFInstance build snippet or an earlier snippet raised (a "
+            f"renamed import or API). The script's stderr tail is below."
+        )
+        prior_block = (
+            f"\n  driver stderr (last {_TAIL_LINES} lines):\n"
+            f"{_tail(after_command.stderr)}\n"
+        )
+        actual_repr = "(not produced — driver script failed)"
+    elif actual is _SNIPPET_MISSING:
+        triage = (
+            "Triage hint: The driver script succeeded but emitted no value "
+            f"for {key!r} — the snippet's marker key drifted from what the "
+            "test expects, or the snippet was dropped from the driver. "
+            "Re-check the driver script and the test's marker key."
+        )
+        prior_block = ""
+        actual_repr = "(not produced)"
+    else:
+        triage = (
+            "Triage hint: The snippet ran but produced a different value than "
+            "the guide documents. Most likely either (a) the guide's shown "
+            "output drifted from current GPF behavior / the demo data (update "
+            "the guide's expected output), or (b) the Python API the snippet "
+            "calls changed its return shape. If the new value is correct, "
+            "update the guide."
+        )
+        prior_block = ""
+        actual_repr = repr(actual)
+
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  snippet output: {key}\n"
+        f"  expected:       {expected!r}\n"
+        f"  actual:         {actual_repr}"
+        f"{prior_block}"
+        f"\n"
+        f"  {triage}"
+    )
+    raise AssertionError(message)
