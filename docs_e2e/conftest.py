@@ -1103,7 +1103,6 @@ _GENE_SETS_BLOCK = (
     "  - gene_properties/gene_scores/Satterstrom_Buxbaum_Cell_2020\n"
     "  - gene_properties/gene_scores/Iossifov_Wigler_PNAS_2015\n"
     "  - gene_properties/gene_scores/LGD\n"
-    "  - gene_properties/gene_scores/RVIS\n"
     "  - gene_properties/gene_scores/LOEUF\n"
 )
 
@@ -1111,7 +1110,7 @@ _GENE_SETS_BLOCK = (
 @dataclass
 class GeneSetsInstance:
     """The instance after getting_started_with_gene_sets.rst: the
-    ``gene_sets_db`` (autism + GO collections) and ``gene_scores_db`` (five
+    ``gene_sets_db`` (autism + GO collections) and ``gene_scores_db`` (four
     gene scores) blocks added to gpf_instance.yaml."""
 
     instance_dir: Path

@@ -120,21 +120,17 @@ public GRR:
   <https://grr.iossifovlab.com/gene_properties/gene_scores/LGD/index.html>`_
   Gene vulnerability/intolerance score based on the rare LGD variants
 
-- `gene_properties/gene_scores/RVIS
-  <https://grr.iossifovlab.com/gene_properties/gene_scores/RVIS/index.html>`_
-  Residual Variation Intolerance Score
-
 - `gene_properties/gene_scores/LOEUF
   <https://grr.iossifovlab.com/gene_properties/gene_scores/LOEUF/index.html>`_
   Degree of intolerance to predicted Loss-of-Function (pLoF) variation
 
 
-To do this, you need to add lines 19-25 to the GPF instance configuration file
+To do this, you need to add lines 19-24 to the GPF instance configuration file
 (``minimal_instance/gpf_instance.yaml``):
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 19-25
+    :emphasize-lines: 19-24
 
     instance_id: minimal_instance
 
@@ -159,7 +155,6 @@ To do this, you need to add lines 19-25 to the GPF instance configuration file
       - gene_properties/gene_scores/Satterstrom_Buxbaum_Cell_2020
       - gene_properties/gene_scores/Iossifov_Wigler_PNAS_2015
       - gene_properties/gene_scores/LGD
-      - gene_properties/gene_scores/RVIS
       - gene_properties/gene_scores/LOEUF
 
 When you restart the GPF instance, the configured gene scores will be

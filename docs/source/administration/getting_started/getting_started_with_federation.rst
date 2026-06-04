@@ -33,7 +33,7 @@ local GPF instance. You can do this by editing the
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 31-33
+    :emphasize-lines: 30-32
 
     instance_id: minimal_instance
 
@@ -59,7 +59,6 @@ local GPF instance. You can do this by editing the
       - gene_properties/gene_scores/Satterstrom_Buxbaum_Cell_2020
       - gene_properties/gene_scores/Iossifov_Wigler_PNAS_2015
       - gene_properties/gene_scores/LGD
-      - gene_properties/gene_scores/RVIS
       - gene_properties/gene_scores/LOEUF
 
     gene_profiles_config:
