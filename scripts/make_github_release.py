@@ -24,6 +24,17 @@ Auth: the token is read from the ``GH_TOKEN`` environment variable
 ``Contents: write`` on the target repo — that permission scope covers
 Releases.
 
+Two modes:
+  - default (``--tag``): upsert ONE release at tag time.
+  - ``--sync-existing``: reconcile the notes of EVERY existing release
+    against the current changes.rst. This backfills notes for releases
+    that were tagged before their changelog section was written (the
+    team's normal flow: tag first, write notes after). It rewrites only
+    the notes portion of each body — everything from the ``## Install``
+    heading down (the per-release artifact links + bundled gain) is
+    preserved — and PATCHes only when the notes actually changed. The
+    master CI runs this whenever changes.rst changes.
+
 Stdlib only (urllib/json/re) so it runs in the conda-builder container
 without extra deps. Use ``--dry-run`` to print the rendered body and
 the action it would take without calling the API (and without a token).
@@ -40,6 +51,10 @@ import urllib.error
 import urllib.request
 
 API_VERSION = "2022-11-28"
+# Stable delimiter between the curated notes and the generated artifact
+# links in a release body. --sync-existing rewrites everything before
+# it and preserves everything from it down.
+INSTALL_MARKER = "## Install"
 
 
 def extract_notes(changes_text: str, version: str) -> str:
@@ -181,10 +196,97 @@ def upsert_release(opts: argparse.Namespace, body: str, token: str) -> str:
     return result["html_url"]
 
 
+def _list_releases(repo: str, token: str) -> list[dict]:
+    """Return all releases for the repo (paginated)."""
+    releases: list[dict] = []
+    page = 1
+    while True:
+        url = (
+            f"https://api.github.com/repos/{repo}/releases"
+            f"?per_page=100&page={page}"
+        )
+        status, data = _api("GET", url, token)
+        if status != 200:
+            msg = data.get("message") if isinstance(data, dict) else data
+            raise SystemExit(
+                f"GitHub API error listing releases: HTTP {status} — {msg}",
+            )
+        releases.extend(data)
+        if len(data) < 100:
+            break
+        page += 1
+    return releases
+
+
+def reconcile_body(old_body: str, notes: str) -> str:
+    """Replace the notes portion of ``old_body`` with ``notes``.
+
+    Everything from the ``## Install`` heading down (the per-release
+    artifact links + bundled gain version, which sync cannot
+    regenerate) is preserved verbatim.
+    """
+    idx = old_body.find(INSTALL_MARKER)
+    install_part = old_body[idx:] if idx != -1 else ""
+    if install_part:
+        return (notes + "\n\n" + install_part).strip() + "\n"
+    return notes.strip() + "\n"
+
+
+def sync_existing(
+    opts: argparse.Namespace,
+    changes_text: str,
+    token: str,
+) -> int:
+    """Reconcile every existing release's notes against changes.rst.
+
+    Skips releases that have no changes.rst section yet (so a not-yet-
+    documented release is left untouched, not blanked). PATCHes only
+    when the body actually changed. Returns the count updated.
+    """
+    updated = 0
+    for rel in _list_releases(opts.repo, token):
+        tag = rel.get("tag_name", "")
+        notes = extract_notes(changes_text, tag)
+        if not notes:
+            continue
+        old_body = rel.get("body") or ""
+        new_body = reconcile_body(old_body, notes)
+        if new_body.strip() == old_body.strip():
+            continue
+        if opts.dry_run:
+            print(f"[dry-run] would update notes for {tag}")
+            updated += 1
+            continue
+        rid = rel["id"]
+        st, result = _api(
+            "PATCH",
+            f"https://api.github.com/repos/{opts.repo}/releases/{rid}",
+            token,
+            {"body": new_body},
+        )
+        if st != 200:
+            print(
+                f"WARNING: failed to sync {tag}: HTTP {st} — "
+                f"{result.get('message')}",
+                file=sys.stderr,
+            )
+            continue
+        print(f"Synced notes for {tag}: {result['html_url']}")
+        updated += 1
+    print(f"Sync complete: {updated} release(s) updated.")
+    return updated
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--tag", required=True, help="CalVer tag, e.g. 2026.6.0",
+        "--tag",
+        help="CalVer tag, e.g. 2026.6.0 (required unless --sync-existing)",
+    )
+    parser.add_argument(
+        "--sync-existing",
+        action="store_true",
+        help="Reconcile every existing release's notes from changes.rst.",
     )
     parser.add_argument("--repo", default="iossifovlab/gpf")
     parser.add_argument(
@@ -206,6 +308,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Print the rendered body + intended action; no API call.",
     )
     opts = parser.parse_args(argv)
+    if not opts.sync_existing and not opts.tag:
+        parser.error("--tag is required unless --sync-existing is given.")
 
     try:
         changes_text = pathlib.Path(opts.changes).read_text(encoding="utf-8")
@@ -215,6 +319,16 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         changes_text = ""
+
+    token = os.environ.get("GH_TOKEN")
+
+    if opts.sync_existing:
+        # Needs a token even with --dry-run: it must list the live
+        # releases to compute the diff (it just skips the PATCH).
+        if not token:
+            raise SystemExit("GH_TOKEN environment variable is required.")
+        sync_existing(opts, changes_text, token)
+        return 0
 
     notes = extract_notes(changes_text, opts.tag)
     if not notes:
@@ -230,7 +344,6 @@ def main(argv: list[str] | None = None) -> int:
         print(body)
         return 0
 
-    token = os.environ.get("GH_TOKEN")
     if not token:
         raise SystemExit("GH_TOKEN environment variable is required.")
     upsert_release(opts, body, token)
