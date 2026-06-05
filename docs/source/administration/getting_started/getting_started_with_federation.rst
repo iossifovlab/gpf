@@ -16,7 +16,7 @@ Configure federation on your local GPF instance
 +++++++++++++++++++++++++++++++++++++++++++++++
 
 To use the GPF federation, you need to install the additional
-``gpf_federation`` conda package in your local conda environment. You can do
+``gpf-federation`` conda package in your local conda environment. You can do
 this by running the following command:
 
 .. code-block:: bash
@@ -25,7 +25,7 @@ this by running the following command:
         -c conda-forge \
         -c bioconda \
         -c iossifovlab \
-        gpf_federation
+        gpf-federation
 
 Once the package is installed, you need to configure the federation on your
 local GPF instance. You can do this by editing the
@@ -33,7 +33,7 @@ local GPF instance. You can do this by editing the
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 30-32
+    :emphasize-lines: 29-31
 
     instance_id: minimal_instance
 
@@ -51,7 +51,6 @@ local GPF instance. You can do this by editing the
     gene_sets_db:
       gene_set_collections:
       - gene_properties/gene_sets/autism
-      - gene_properties/gene_sets/relevant
       - gene_properties/gene_sets/GO_2024-06-17_release
 
     gene_scores_db:

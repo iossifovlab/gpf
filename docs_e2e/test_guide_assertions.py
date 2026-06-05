@@ -12,6 +12,7 @@ import pytest
 from docs_e2e.guide_assertions import (
     assert_command_succeeds,
     assert_dataset_description_flag,
+    assert_dataset_not_visible,
     assert_dataset_visible,
     assert_denovo_gene_sets_for_dataset,
     assert_download_has_columns,
@@ -31,6 +32,7 @@ from docs_e2e.guide_assertions import (
     assert_preview_table_column_group,
     assert_python_snippet_output,
     assert_query_returned_variants,
+    assert_remote_dataset_resolves,
 )
 
 
@@ -1357,3 +1359,82 @@ class TestAssertPythonSnippetOutput:
         # the driver's traceback tail is surfaced for triage
         assert "No module named 'dae'" in message
         assert "Fix that failure first" in message
+
+
+_FED_RST = "getting_started_with_federation.rst"
+
+
+class TestAssertRemoteDatasetResolves:
+    def test_passes_when_data_resolves(self):
+        resp = _FakeResponse(200, json_body={
+            "data": {"id": "fed_remote_denovo_example", "name": "denovo"},
+        })
+        assert_remote_dataset_resolves(
+            resp, "fed_remote_denovo_example",
+            rst_ref=f"{_FED_RST}:106",
+            expectation="the remote study resolves through the client",
+        )
+
+    def test_raises_on_404(self):
+        # 404 means the client never registered/resolved the remote study.
+        resp = _FakeResponse(404, text="Not Found")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_remote_dataset_resolves(
+                resp, "fed_remote_denovo_example",
+                rst_ref=f"{_FED_RST}:106",
+                expectation="the remote study resolves through the client",
+            )
+        message = str(exc_info.value)
+        assert f"{_FED_RST}:106" in message
+        assert "HTTP 404" in message
+
+    def test_raises_on_empty_data(self):
+        resp = _FakeResponse(200, json_body={"data": {}})
+        with pytest.raises(AssertionError) as exc_info:
+            assert_remote_dataset_resolves(
+                resp, "fed_remote_denovo_example",
+                rst_ref=f"{_FED_RST}:106",
+                expectation="the remote study resolves through the client",
+            )
+        message = str(exc_info.value)
+        assert "fed_remote_denovo_example" in message
+        # federation-aware triage
+        assert "remote" in message.lower()
+
+
+class TestAssertDatasetNotVisible:
+    def test_passes_when_protected_absent(self):
+        # token-free client sees only the public study, not the protected one
+        resp = _FakeResponse(200, json_body=["fed_remote_denovo_example"])
+        assert_dataset_not_visible(
+            resp, "fed_remote_vcf_example",
+            rst_ref=f"{_FED_RST}:74",
+            expectation="the protected study stays hidden without a token",
+        )
+
+    def test_raises_when_protected_present(self):
+        # a protected study leaking to a token-free client = auth not enforced
+        resp = _FakeResponse(200, json_body=[
+            "fed_remote_denovo_example", "fed_remote_vcf_example",
+        ])
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_not_visible(
+                resp, "fed_remote_vcf_example",
+                rst_ref=f"{_FED_RST}:74",
+                expectation="the protected study stays hidden without a token",
+            )
+        message = str(exc_info.value)
+        assert f"{_FED_RST}:74" in message
+        assert "fed_remote_vcf_example" in message
+        # triage names the auth-enforcement failure mode
+        assert "DISABLE_PERMISSIONS" in message
+
+    def test_raises_on_non_200(self):
+        resp = _FakeResponse(500, text="boom")
+        with pytest.raises(AssertionError) as exc_info:
+            assert_dataset_not_visible(
+                resp, "fed_remote_vcf_example",
+                rst_ref=f"{_FED_RST}:74",
+                expectation="the protected study stays hidden without a token",
+            )
+        assert "HTTP 500" in str(exc_info.value)

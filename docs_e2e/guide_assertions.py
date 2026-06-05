@@ -1226,3 +1226,91 @@ def assert_python_snippet_output(
         f"  {triage}"
     )
     raise AssertionError(message)
+
+
+def assert_remote_dataset_resolves(
+        response, dataset_id, *, rst_ref, expectation,
+):
+    """Assert a federated (remote) dataset's details resolve through the
+    client (``GET /api/v3/datasets/<dataset_id>`` → HTTP 200 with a non-empty
+    ``data`` object).
+
+    Backs the federation guide's claim that studies from the remote instance
+    are usable through the local instance. Resolving a remote study's
+    description requires the client to proxy the request to the remote over
+    REST, so a 200 here proves the federation link works end-to-end — not just
+    that the remote id was listed. The single-dataset endpoint is shaped
+    ``{"data": {...}}``; a 404 means the client did not register/resolve the
+    remote study.
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response, rst_ref=rst_ref, expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 resolving remote dataset '{dataset_id}'"
+            ),
+        ))
+    body = response.json()
+    data = body.get("data") if isinstance(body, dict) else None
+    if data:
+        return
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: a resolved description for remote dataset "
+        f"{dataset_id!r}\n"
+        f"  actual:   data = {data!r}\n"
+        f"\n"
+        f"  Triage hint: the dataset endpoint returned 200 but no description "
+        f"for the remote study. Most likely the federation extension listed "
+        f"the remote id but could not resolve its config from the remote "
+        f"(the stand-in remote server may have stopped, or the remote study "
+        f"id drifted). Check the federation client's wgpf log dump for a REST "
+        f"error against the remote."
+    )
+    raise AssertionError(message)
+
+
+def assert_dataset_not_visible(response, dataset_id, *, rst_ref, expectation):
+    """Assert ``dataset_id`` is ABSENT from ``/api/v3/datasets/visible``.
+
+    The negative counterpart of ``assert_dataset_visible``: backs the
+    federation guide's claim that a token-free client can access ONLY the
+    publicly available remote resources, so a PROTECTED remote study must NOT
+    appear. A non-200 status, or the id being present, raises AssertionError —
+    presence specifically means the remote leaked a protected study to an
+    unauthenticated federation session (auth not enforced).
+    """
+    if response.status_code != 200:
+        raise AssertionError(_http_failure_message(
+            response, rst_ref=rst_ref, expectation=expectation,
+            what_was_expected=(
+                f"HTTP 200 with dataset '{dataset_id}' ABSENT from the "
+                f"visible list"
+            ),
+        ))
+    data = response.json()
+    visible_ids = [
+        item if isinstance(item, str)
+        else item.get("id") if isinstance(item, dict)
+        else None
+        for item in data
+    ]
+    if dataset_id not in visible_ids:
+        return
+    visible_list = ", ".join(repr(i) for i in visible_ids) or "(none)"
+    message = (
+        f'DRIFT at {rst_ref} — "{expectation}"\n'
+        f"\n"
+        f"  expected: dataset id {dataset_id!r} ABSENT from the visible list\n"
+        f"  actual:   it is present; visible ids = [{visible_list}]\n"
+        f"\n"
+        f"  Triage hint: a protected remote study is visible to a token-free "
+        f"federation client — the remote is NOT enforcing authentication. Most "
+        f"likely the remote is running with permissions disabled (e.g. `wgpf "
+        f"run`, which sets DISABLE_PERMISSIONS=True) instead of an auth-"
+        f"enforcing server, or the study was inadvertently granted the "
+        f"`any_user` (public) group. A token-free client must see only public "
+        f"studies."
+    )
+    raise AssertionError(message)

@@ -1591,3 +1591,387 @@ def wgpf_server(gene_profiles_instance, gpf_env):
             proc.kill()
         log_fh.close()
         log_path.unlink(missing_ok=True)
+
+
+# --- federation (getting_started_with_federation.rst, #882) --------------
+#
+# Federation needs a SECOND, remote GPF instance. The guide points the local
+# instance's `remotes:` block at the external SFARI instance; docs-e2e can't
+# depend on that, so we stand up a hermetic LOCAL stand-in remote and
+# federate local clients with it over HTTP.
+#
+# The remote runs as `wdaemanage runserver`, NOT `wgpf run`: wgpf forces
+# `settings.DISABLE_PERMISSIONS = True` (wgpf.py), bypassing ALL auth — a
+# federation test built on it would never exercise authentication. wdaemanage
+# uses `gpf_web.settings` (DISABLE_PERMISSIONS=False), so the remote ENFORCES
+# permissions, like SFARI. We set it up like the existing federation
+# integration backend (federation/scripts/backend/run_gpf.sh): migrate, a
+# federation user, and a client-credentials OAuth app — the CLI equivalent of
+# the guide's "create a federation token" UI step.
+#
+# The remote serves TWO demo studies so the test proves auth BOTH ways:
+#   - denovo_example -> PUBLIC (granted `any_user`): a token-free client can
+#     see it (the guide's public-access path, RST 67-76).
+#   - vcf_example -> PROTECTED (default `any_dataset`, not any_user): a
+#     token-free client must NOT see it, but a token client (configured with
+#     the OAuth client_id/secret) CAN (the Federation-tokens path, RST
+#     134-178).
+#
+# Carve-outs (documented): the remotes.url is local (vs SFARI), and the token
+# is created via `wdaemanage createapplication` rather than the SFARI UI —
+# both invisible infrastructure we substitute. Out of scope (non-hermetic,
+# like the screenshots): the literal token-panel UI steps.
+#
+# The clients stay on `wgpf run` (auth-disabled): gatekeeping happens on the
+# REMOTE; a client just displays what the remote returned for its
+# credentials, and disabling the client's own permissions lets the test's
+# plain httpx read the federated view without itself needing a token. This
+# subtree is INDEPENDENT of the main imports/annotation/gene-profiles chain.
+
+# A minimal GPF instance config: reference genome + gene models. The remote
+# adds studies; a client adds a `remotes:` block.
+_FEDERATION_BASE_CONFIG = (
+    "instance_id: {instance_id}\n"
+    "\n"
+    "reference_genome:\n"
+    '  resource_id: "hg38/genomes/GRCh38-hg38"\n'
+    "\n"
+    "gene_models:\n"
+    '  resource_id: "hg38/gene_models/MANE/1.3"\n'
+)
+
+# The remote-config id used in each client's `remotes:` block; the federation
+# extension prefixes remote study ids with it (<id>_<study>).
+_FEDERATION_REMOTE_ID = "fed_remote"
+
+# The OAuth client-credentials app created on the remote — the stand-in for a
+# SFARI federation token. The token client puts these in its `remotes:` block;
+# the secret is the plaintext the client authenticates with.
+_FEDERATION_CLIENT_ID = "docs_e2e_federation"
+_FEDERATION_CLIENT_SECRET = "docs-e2e-federation-secret"  # noqa: S105
+
+# The two demo studies the remote serves: one public, one protected.
+_FEDERATION_PUBLIC_STUDY = "denovo_example"
+_FEDERATION_PROTECTED_STUDY = "vcf_example"
+
+# Cap for each wdaemanage setup command (migrate/user_create/etc.).
+_FEDERATION_SETUP_TIMEOUT = 600
+
+
+def _wgpf_cmd(port):
+    return ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"]
+
+
+def _wdaemanage_runserver_cmd(port):
+    # `wdaemanage runserver` uses gpf_web.settings → DISABLE_PERMISSIONS=False,
+    # so the served instance ENFORCES dataset permissions (unlike `wgpf run`).
+    return [
+        "wdaemanage", "runserver", "--noreload", "--skip-checks",
+        f"127.0.0.1:{port}",
+    ]
+
+
+def _serve_instance(make_cmd, instance_dir, env, *,
+                    ready_timeout=_WGPF_READY_TIMEOUT):
+    """Start a GPF web server against ``instance_dir`` on a free port, poll for
+    readiness, and yield a handle; tear it down on generator close.
+    ``make_cmd(port)`` returns the argv to launch (``wgpf run`` for clients,
+    ``wdaemanage runserver`` for the authenticated remote).
+
+    Same robust shape as the shared ``wgpf_server`` fixture: combined
+    stdout/stderr go to a temp FILE (never a PIPE — an undrained pipe would
+    deadlock a verbose first boot before the port binds), readiness is a
+    ``== 200`` poll on ``/api/v3/datasets/`` (Django answering is not enough;
+    we wait for the instance to finish building — anonymous still gets 200 with
+    only the public datasets), and a failed boot ``pytest.fail``s with the
+    server log tail.
+    """
+    import httpx  # lazy — see top-of-file note.
+
+    port = _pick_free_port()
+    base_url = f"http://127.0.0.1:{port}"
+
+    log_fd, log_name = tempfile.mkstemp(prefix="docs-e2e-fed-", suffix=".log")
+    os.close(log_fd)
+    log_path = Path(log_name)
+    log_fh = log_path.open("wb")
+
+    def _log_tail(n_chars=4000):
+        try:
+            log_fh.flush()
+        except ValueError:
+            pass
+        try:
+            return log_path.read_text(errors="replace")[-n_chars:]
+        except OSError:
+            return ""
+
+    proc = subprocess.Popen(
+        make_cmd(port),
+        cwd=instance_dir, env=env, stdout=log_fh, stderr=subprocess.STDOUT,
+    )
+    client = httpx.Client(base_url=base_url, timeout=60.0)
+
+    deadline = time.monotonic() + ready_timeout
+    last_err = None
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            pytest.fail(
+                f"federation server exited early "
+                f"(returncode={proc.returncode}):\n{_log_tail()}",
+                pytrace=False,
+            )
+        try:
+            r = client.get("/api/v3/datasets/")
+            if r.status_code == 200:
+                break
+            last_err = f"HTTP {r.status_code}"
+        except httpx.RequestError as exc:
+            last_err = repr(exc)
+        time.sleep(1)
+    else:
+        tail = _log_tail()
+        proc.terminate()
+        try:
+            proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+        pytest.fail(
+            f"federation server did not become ready within {ready_timeout}s "
+            f"(last error: {last_err}):\n{tail}",
+            pytrace=False,
+        )
+
+    try:
+        yield SimpleNamespace(
+            url=base_url, client=client, process=proc, log_path=log_path,
+        )
+    finally:
+        client.close()
+        proc.terminate()
+        try:
+            proc.communicate(timeout=_WGPF_SHUTDOWN_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        log_fh.close()
+        log_path.unlink(missing_ok=True)
+
+
+@dataclass
+class FederationInstall:
+    """The result of the guide's ``mamba install gpf-federation`` step."""
+
+    install: subprocess.CompletedProcess
+
+
+@pytest.fixture(scope="session")
+def federation_install(gpf_env_prefix, conda_channel):
+    """Apply getting_started_with_federation.rst's install step: install the
+    separate ``gpf-federation`` conda package into the gpf-web env.
+
+    The guide tells the user to ``mamba install gpf_federation`` as a step
+    distinct from the main ``gpf-web`` install; gpf-federation ships its own
+    conda artefact (built by the same Conda stage) and registers the
+    federation extension into WGPFInstance via an entry point. We install it
+    from the same local channel + upstream channels the conda_channel fixture
+    indexes. Installing it into the shared env is safe for the non-federation
+    tests: with no ``remotes:`` configured, the extension no-ops.
+
+    Captures the subprocess result so test_federation can feed it into
+    ``assert_command_succeeds`` for the install claim.
+    """
+    cmd = [
+        "mamba", "install", "-y",
+        "--prefix", str(gpf_env_prefix),
+        "-c", f"file://{conda_channel}",
+        "-c", "iossifovlab",
+        "-c", "bioconda",
+        "-c", "conda-forge",
+        "gpf-federation",
+    ]
+    result = _run(cmd, timeout=_INSTALL_TIMEOUT)
+    return FederationInstall(install=result)
+
+
+def _fed_step(cmd, *, env, what, cwd=None, timeout=_FEDERATION_SETUP_TIMEOUT):
+    """Run one remote-setup subprocess step; ``pytest.fail`` with output on a
+    non-zero exit. Returns the CompletedProcess."""
+    result = _run(cmd, cwd=cwd, env=env, timeout=timeout)
+    if result.returncode != 0:
+        pytest.fail(
+            f"federation remote setup — {what} failed "
+            f"(exit {result.returncode}):\n"
+            f"  cmd: {' '.join(str(a) for a in cmd)}\n"
+            f"  stdout: {result.stdout.decode(errors='replace')[-2000:]}\n"
+            f"  stderr: {result.stderr.decode(errors='replace')[-2000:]}",
+            pytrace=False,
+        )
+    return result
+
+
+@dataclass
+class FederationRemoteInstance:
+    """The authenticated stand-in remote: a minimal GPF instance with two demo
+    studies (one public, one protected), a wdae DB, a federation user, and a
+    client-credentials OAuth app — the local stand-in for SFARI."""
+
+    instance_dir: Path
+    client_id: str
+    client_secret: str
+
+
+@pytest.fixture(scope="session")
+def federation_remote_instance(
+        getting_started_clone, gpf_env, tmp_path_factory,
+        grr_cache_seeded,  # noqa: ARG001 — ordering dep: cold-cache guard
+):
+    """Build the authenticated stand-in remote, mirroring the federation
+    integration backend (federation/scripts/backend/run_gpf.sh) on the
+    getting-started demo data:
+
+    1. minimal instance config + import the two demo studies
+       (``denovo_example`` + ``vcf_example``);
+    2. ``wdaemanage migrate`` — create the wdae sqlite DB
+       (DEFAULT_WDAE_DIR = <DAE_DB_DIR>/wdae, gpf_web.settings);
+    3. ``wdaemanage user_create`` — a federation user in the ``any_dataset``
+       group (so a token authenticated as it sees the protected study);
+    4. ``wdaemanage createapplication confidential client-credentials`` — the
+       OAuth app the token client authenticates with (the CLI stand-in for the
+       guide's UI-created federation token);
+    5. grant the ``any_user`` group to ``denovo_example`` — making it PUBLIC (a
+       token-free client can see it); ``vcf_example`` keeps its default
+       ``any_dataset`` grant and stays PROTECTED.
+
+    wdaemanage uses gpf_web.settings (DISABLE_PERMISSIONS=False), so the served
+    remote ENFORCES these permissions — what makes the auth test meaningful
+    (``wgpf run`` would bypass all of it).
+    """
+    remote_dir = tmp_path_factory.mktemp("fed-remote", numbered=False)
+    (remote_dir / "gpf_instance.yaml").write_text(
+        _FEDERATION_BASE_CONFIG.format(instance_id="fed_remote_instance"))
+
+    # Copy ONLY the input files (not the dir) so each import's work_dir
+    # `.task-progress` cache is isolated from the shared clone — see the #882
+    # note: a shared base dir makes re-importing an already-imported study a
+    # silent no-op (the main chain imports both demo studies from the clone).
+    clone = getting_started_clone
+    remote_inputs = remote_dir / "input_genotype_data"
+    remote_inputs.mkdir()
+    src_inputs = clone / "input_genotype_data"
+    for fname in (
+        f"{_FEDERATION_PUBLIC_STUDY}.yaml",
+        f"{_FEDERATION_PROTECTED_STUDY}.yaml",
+        "example.ped", "example.tsv", "example.vcf",
+    ):
+        shutil.copy2(src_inputs / fname, remote_inputs / fname)
+
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(remote_dir)
+
+    for study in (_FEDERATION_PUBLIC_STUDY, _FEDERATION_PROTECTED_STUDY):
+        _fed_step(
+            ["import_genotypes", f"input_genotype_data/{study}.yaml"],
+            cwd=remote_dir, env=env, what=f"import {study}",
+            timeout=_IMPORT_TIMEOUT,
+        )
+
+    _fed_step(["wdaemanage", "migrate", "--noinput"],
+              cwd=remote_dir, env=env, what="migrate")
+    _fed_step(
+        ["wdaemanage", "user_create", "fed@docs-e2e.test",
+         "-p", _FEDERATION_CLIENT_SECRET, "-g", "any_dataset"],
+        cwd=remote_dir, env=env, what="user_create",
+    )
+    _fed_step(
+        ["wdaemanage", "createapplication",
+         "confidential", "client-credentials",
+         "--user", "1",
+         "--name", "docs-e2e federation app",
+         "--client-id", _FEDERATION_CLIENT_ID,
+         "--client-secret", _FEDERATION_CLIENT_SECRET],
+        cwd=remote_dir, env=env, what="createapplication",
+    )
+    # Make the public study public by granting `any_user`. The grant
+    # get_or_creates the Dataset row; recreate_dataset_perm (run on the
+    # server's instance build) is additive, so the any_user grant survives.
+    grant_code = (
+        "from datasets_api.permissions import add_group_perm_to_dataset; "
+        f"add_group_perm_to_dataset('any_user', '{_FEDERATION_PUBLIC_STUDY}')"
+    )
+    _fed_step(
+        ["wdaemanage", "shell", "-c", grant_code],
+        cwd=remote_dir, env=env, what="grant any_user to public study",
+    )
+
+    return FederationRemoteInstance(
+        instance_dir=remote_dir,
+        client_id=_FEDERATION_CLIENT_ID,
+        client_secret=_FEDERATION_CLIENT_SECRET,
+    )
+
+
+@pytest.fixture(scope="session")
+def federation_remote_server(federation_remote_instance, gpf_env):
+    """Start ``wdaemanage runserver`` (permissions ENFORCED) on the
+    authenticated stand-in remote. It exposes ``/api/v3/datasets/federation``
+    etc.; an anonymous client fetches only the public study, an OAuth client
+    (client-credentials) fetches the protected one too."""
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(federation_remote_instance.instance_dir)
+    yield from _serve_instance(
+        _wdaemanage_runserver_cmd, federation_remote_instance.instance_dir, env)
+
+
+def _write_federation_client(client_dir, remote_url, *, creds=None):
+    """Write a federation client's gpf_instance.yaml with a ``remotes:`` block
+    pointing at ``remote_url``. With ``creds=(client_id, client_secret)`` the
+    block carries the token fields (the guide's authenticated path); without
+    them it is the token-free public path."""
+    parts = [
+        _FEDERATION_BASE_CONFIG.format(instance_id="fed_client_instance"),
+        "\nremotes:\n",
+        f'  - id: "{_FEDERATION_REMOTE_ID}"\n',
+        f'    url: "{remote_url}"\n',
+    ]
+    if creds is not None:
+        client_id, client_secret = creds
+        parts.extend([
+            f'    client_id: "{client_id}"\n',
+            f'    client_secret: "{client_secret}"\n',
+        ])
+    (client_dir / "gpf_instance.yaml").write_text("".join(parts))
+
+
+@pytest.fixture(scope="session")
+def federation_anon_client_server(
+        federation_remote_server, gpf_env, tmp_path_factory,
+        federation_install,  # noqa: ARG001 — ordering dep: env needs federation
+):
+    """Token-free federation client: a ``remotes:`` block with NO
+    client_id/secret. The federation extension uses an anonymous REST session,
+    so the authenticated remote returns only its PUBLIC study — the guide's
+    public-access path (RST 67-76)."""
+    client_dir = tmp_path_factory.mktemp("fed-anon-client", numbered=False)
+    _write_federation_client(client_dir, federation_remote_server.url)
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(client_dir)
+    yield from _serve_instance(_wgpf_cmd, client_dir, env)
+
+
+@pytest.fixture(scope="session")
+def federation_auth_client_server(
+        federation_remote_server, gpf_env, tmp_path_factory,
+        federation_install,  # noqa: ARG001 — ordering dep: env needs federation
+):
+    """Token federation client: a ``remotes:`` block WITH the OAuth
+    client_id/secret. The federation extension authenticates via OAuth
+    client-credentials, so the remote returns the PROTECTED study too — the
+    guide's Federation-tokens path (RST 134-178)."""
+    client_dir = tmp_path_factory.mktemp("fed-auth-client", numbered=False)
+    _write_federation_client(
+        client_dir, federation_remote_server.url,
+        creds=(_FEDERATION_CLIENT_ID, _FEDERATION_CLIENT_SECRET))
+    env = dict(gpf_env)
+    env["DAE_DB_DIR"] = str(client_dir)
+    yield from _serve_instance(_wgpf_cmd, client_dir, env)
