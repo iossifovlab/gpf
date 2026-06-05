@@ -497,8 +497,13 @@ pipeline {
                         returnStdout: true,
                     ).trim()
                     // gain_core-<version>-py3-none-any.whl
-                    def m = gainWheel =~
-                        /gain_core-(.+?)-py3-none-any\.whl$/
+                    // NB: the slashy-string regex MUST stay on the same
+                    // line as `=~`. On a continuation line Groovy lexes
+                    // the leading `/` as division ("unexpected char:
+                    // '/'") and the whole pipeline fails to compile —
+                    // latent since this block was added (never released,
+                    // gpf-release has one green build that predates it).
+                    def m = gainWheel =~ /gain_core-(.+?)-py3-none-any\.whl$/
                     if (m) {
                         env.GAIN_BUNDLED_VERSION = m[0][1]
                     } else {
