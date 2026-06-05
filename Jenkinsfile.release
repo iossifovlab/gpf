@@ -1,6 +1,6 @@
 // Jenkins pipeline for the gpf monorepo's tag-driven release.
 //
-// Mirrors gain/Jenkinsfile.release with four gpf-specific deltas:
+// Mirrors gain/Jenkinsfile.release with five gpf-specific deltas:
 //   1. `Fetch upstream artefacts` copies BOTH dist/base-images.lock
 //      AND dist/gain/*.whl from the upstream gpf master CI build —
 //      the gain wheel is the one gpf-master tested against.
@@ -14,6 +14,18 @@
 //      publish re-pointing :stable).
 //   4. Zulip topic is `gpf-releases` (per-product; gain uses
 //      `releases`).
+//   5. The gpf-web BUNDLE image is additionally published to
+//      Docker Hub (docker.io/iossifovlab/gpf-web) as a PUBLIC
+//      artifact for external users running GPF standalone —
+//      tagged :${TAG_NAME} + :latest, amd64-only (v1). gain has
+//      no Docker Hub mirror. Bundle only: the split api/ui images
+//      stay registry-private. Operator prerequisites (one-time):
+//      (a) create the iossifovlab/gpf-web repo as PUBLIC on Docker
+//      Hub — a push auto-creates it private, which 404s external
+//      pulls; (b) create a Read/Write personal access token on the
+//      iossifovlab Docker Hub account; (c) add it as two Secret
+//      text Jenkins credentials user.dockerhub.iossifovlab (value
+//      'iossifovlab') + passwd.dockerhub.iossifovlab (the PAT).
 //
 // Triggered by:
 //   - The root Jenkinsfile's `Dispatch release` stage when a CalVer
@@ -31,7 +43,9 @@
 // conda packages to anaconda.org/iossifovlab (gpf-core, gpf-web,
 // gpf-federation, gpf-rest-client), and Docker images to
 // registry.seqpipe.org (gpf-web-api, gpf-web-ui, gpf-web) tagged
-// :${TAG_NAME} + :stable.
+// :${TAG_NAME} + :stable. The gpf-web bundle is additionally
+// published to Docker Hub (docker.io/iossifovlab/gpf-web) tagged
+// :${TAG_NAME} + :latest as a public artifact (see delta #5).
 
 import com.cloudbees.groovy.cps.NonCPS
 
@@ -125,6 +139,20 @@ pipeline {
         BUNDLE_REPO     = "${env.REGISTRY}/gpf-web"
         REGISTRY_USER   = credentials('user.registry.seqpipe.org')
         REGISTRY_PASS   = credentials('passwd.registry.seqpipe.org')
+        // Docker Hub public-mirror target (delta #5 below). Only the
+        // gpf-web BUNDLE is mirrored here — the self-contained
+        // single-container artifact external users `docker run`. The
+        // split api/ui images stay private (registry-only). docker.io
+        // is a distinct registry host from registry.seqpipe.org, so it
+        // needs its own `docker login`. iossifovlab is a Docker Hub
+        // *personal* account, so DOCKERHUB_USER is the account name and
+        // DOCKERHUB_PASS is a personal access token (account-wide
+        // Read/Write scope — per-repo scoping is org/OAT-only). Both
+        // are Secret text credentials, mirroring the seqpipe pair above.
+        DOCKERHUB_REGISTRY = 'docker.io'
+        DOCKERHUB_REPO     = 'iossifovlab/gpf-web'
+        DOCKERHUB_USER     = credentials('user.dockerhub.iossifovlab')
+        DOCKERHUB_PASS     = credentials('passwd.dockerhub.iossifovlab')
         ANACONDA_TOKEN  = credentials('anaconda-token-iossifovlab')
         WHEELS_HOST     = 'wheels.seqpipe.org'
         // Stated explicitly so we don't rely on each Jenkins
@@ -395,6 +423,17 @@ pipeline {
                     printf '%s' "$REGISTRY_PASS" | docker login \
                         -u "$REGISTRY_USER" \
                         --password-stdin "$REGISTRY"
+                    # Validate the Docker Hub PAT here too — a missing
+                    # or expired token fails cheap in this preflight
+                    # rather than several stages later in Publish. This
+                    # is also where the "operator never provisioned the
+                    # credential" prerequisite surfaces most usefully.
+                    # Same isolated DOCKER_CONFIG, so the docker.io auth
+                    # is torn down with the dir on EXIT (no shared-state
+                    # mutation; cf. #855).
+                    printf '%s' "$DOCKERHUB_PASS" | docker login \
+                        -u "$DOCKERHUB_USER" \
+                        --password-stdin "$DOCKERHUB_REGISTRY"
                 '''
             }
         }
@@ -809,13 +848,38 @@ EOF
                     printf '%s' "$REGISTRY_PASS" | docker login \
                         -u "$REGISTRY_USER" \
                         --password-stdin "$REGISTRY"
-                    trap 'docker logout "$REGISTRY" || true; rm -rf "$DOCKER_CONFIG"' EXIT
+                    printf '%s' "$DOCKERHUB_PASS" | docker login \
+                        -u "$DOCKERHUB_USER" \
+                        --password-stdin "$DOCKERHUB_REGISTRY"
+                    trap 'docker logout "$REGISTRY" || true; docker logout "$DOCKERHUB_REGISTRY" || true; rm -rf "$DOCKER_CONFIG"' EXIT
 
                     for repo in "$BACKEND_REPO" "$FRONTEND_REPO" "$BUNDLE_REPO"; do
                         docker push "$repo:$TAG_NAME"
                         docker tag "$repo:$TAG_NAME" "$repo:stable"
                         docker push "$repo:stable"
                     done
+
+                    # 4) Docker Hub public mirror — the gpf-web BUNDLE
+                    # only, for external users running GPF standalone.
+                    # Tagged :${TAG_NAME} (immutable CalVer) + :latest
+                    # (Docker convention so a bare `docker pull
+                    # iossifovlab/gpf-web` resolves). Done LAST and
+                    # FATAL: the deploy-critical registry.seqpipe.org
+                    # pushes above already succeeded, so a Docker Hub
+                    # outage never costs us those — but a failure here
+                    # still reds the release (loud, idempotent re-push
+                    # makes a re-run clean). A *silent* public-mirror
+                    # gap is the one thing this feature exists to
+                    # prevent. amd64-only for v1 (arm64 multi-arch is a
+                    # documented follow-up). The repo must already exist
+                    # and be PUBLIC on Docker Hub — push auto-creates as
+                    # private, which would 404 external pulls; operator
+                    # pre-creates it (see header).
+                    HUB_REPO="${DOCKERHUB_REGISTRY}/${DOCKERHUB_REPO}"
+                    docker tag "$BUNDLE_REPO:$TAG_NAME" "$HUB_REPO:$TAG_NAME"
+                    docker tag "$BUNDLE_REPO:$TAG_NAME" "$HUB_REPO:latest"
+                    docker push "$HUB_REPO:$TAG_NAME"
+                    docker push "$HUB_REPO:latest"
                 '''
             }
         }
@@ -840,7 +904,10 @@ EOF
                                 "${env.TAG_NAME} + " +
                             "${env.BUNDLE_REPO}:" +
                                 "${env.TAG_NAME} " +
-                            "(all also tagged :stable)",
+                            "(all also tagged :stable), " +
+                            "docker hub: ${env.DOCKERHUB_REGISTRY}/" +
+                                "${env.DOCKERHUB_REPO}:" +
+                                "${env.TAG_NAME} (also :latest)",
                     )
                 }
             }
@@ -904,6 +971,15 @@ EOF
                             docker rmi "$repo:$tag" 2>/dev/null || true
                         done
                     done
+                    # Docker Hub mirror tags (bundle only). Guarded on
+                    # both vars being set so a pipeline-init failure
+                    # before the environment{} block no-ops harmlessly.
+                    if [ -n "${DOCKERHUB_REGISTRY:-}" ] && [ -n "${DOCKERHUB_REPO:-}" ]; then
+                        for tag in "${TAG_NAME:-}" latest; do
+                            [ -z "$tag" ] && continue
+                            docker rmi "${DOCKERHUB_REGISTRY}/${DOCKERHUB_REPO}:$tag" 2>/dev/null || true
+                        done
+                    fi
                 '''
             }
         }
