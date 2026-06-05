@@ -1,6 +1,6 @@
 // Jenkins pipeline for the gpf monorepo's tag-driven release.
 //
-// Mirrors gain/Jenkinsfile.release with five gpf-specific deltas:
+// Mirrors gain/Jenkinsfile.release with six gpf-specific deltas:
 //   1. `Fetch upstream artefacts` copies BOTH dist/base-images.lock
 //      AND dist/gain/*.whl from the upstream gpf master CI build —
 //      the gain wheel is the one gpf-master tested against.
@@ -26,6 +26,15 @@
 //      iossifovlab Docker Hub account; (c) add it as two Secret
 //      text Jenkins credentials user.dockerhub.iossifovlab (value
 //      'iossifovlab') + passwd.dockerhub.iossifovlab (the PAT).
+//   6. A `Publish GitHub release` stage creates/updates a GitHub
+//      Release for the tag (notes pulled from changes.rst, body
+//      linking to the published artifacts) via
+//      scripts/make_github_release.py. NON-FATAL (UNSTABLE on
+//      failure) — the release is already published; the GitHub page
+//      is a discovery surface. gain has no equivalent. Operator
+//      prerequisite: a Secret-text credential `github-token-
+//      iossifovlab` = a fine-grained PAT scoped to iossifovlab/gpf
+//      with Contents: Read and write.
 //
 // Triggered by:
 //   - The root Jenkinsfile's `Dispatch release` stage when a CalVer
@@ -45,7 +54,8 @@
 // registry.seqpipe.org (gpf-web-api, gpf-web-ui, gpf-web) tagged
 // :${TAG_NAME} + :stable. The gpf-web bundle is additionally
 // published to Docker Hub (docker.io/iossifovlab/gpf-web) tagged
-// :${TAG_NAME} + :latest as a public artifact (see delta #5).
+// :${TAG_NAME} + :latest as a public artifact (see delta #5). A
+// GitHub Release is created for the tag (see delta #6).
 
 import com.cloudbees.groovy.cps.NonCPS
 
@@ -884,12 +894,81 @@ EOF
             }
         }
 
+        stage('Publish GitHub release') {
+            // Human-facing landing page for the release — runs AFTER
+            // Publish so its body links to artifacts that already
+            // exist. NON-FATAL: by this point wheels + conda + registry
+            // + Docker Hub have all published, so the release itself is
+            // done; a GitHub API blip (or an unprovisioned token) should
+            // mark the build UNSTABLE and notify, not red an otherwise
+            // perfect release (a GitHub Release is trivially creatable
+            // by hand afterwards). Contrast the Docker Hub push, which
+            // is fatal because it is an artefact users pull.
+            //
+            // The helper upserts (PATCH if the release exists, else
+            // POST) so a manual gpf-release re-run is idempotent, and
+            // falls back to a minimal body if changes.rst has no section
+            // for the tag. Run in the conda-builder image (has python +
+            // network); the token is stage-scoped via withCredentials so
+            // a missing credential is caught here, not at pipeline init.
+            //
+            // Operator prerequisite (one-time): a Jenkins Secret-text
+            // credential `github-token-iossifovlab` holding a
+            // fine-grained PAT scoped to iossifovlab/gpf with
+            // `Contents: Read and write` (that scope covers Releases).
+            steps {
+                catchError(
+                    buildResult: 'UNSTABLE',
+                    stageResult: 'UNSTABLE',
+                    message:
+                        'GitHub release creation failed; the release ' +
+                        'itself published fine — create it by hand or ' +
+                        're-run gpf-release (the upsert is idempotent).',
+                ) {
+                    withCredentials([string(
+                        credentialsId: 'github-token-iossifovlab',
+                        variable: 'GH_TOKEN',
+                    )]) {
+                        sh '''
+                            DOCKER_USER="$(id -u):$(id -g)"
+                            docker run --rm \
+                                --user "$DOCKER_USER" \
+                                -e HOME=/tmp \
+                                -e GH_TOKEN \
+                                -v "$PWD:/workspace" \
+                                -w /workspace \
+                                "${CONDA_BUILDER}" \
+                                python scripts/make_github_release.py \
+                                    --tag "${TAG_NAME}" \
+                                    --repo iossifovlab/gpf \
+                                    --gain-version "${GAIN_BUNDLED_VERSION}" \
+                                    --dockerhub-image "${DOCKERHUB_REPO}"
+                        '''
+                    }
+                    // Deterministic release URL (github.com/<repo>/
+                    // releases/tag/<tag>) — only set after the upsert
+                    // succeeds, so Notify includes it only when the
+                    // release is really there.
+                    script {
+                        env.GH_RELEASE_URL =
+                            'https://github.com/iossifovlab/gpf' +
+                            "/releases/tag/${env.TAG_NAME}"
+                    }
+                }
+            }
+        }
+
         stage('Notify') {
             steps {
                 script {
                     def gainNote = params.GAIN_PIN_VERSION ?
                         "gain pinned to ${env.GAIN_BUNDLED_VERSION}" :
                         "gain ${env.GAIN_BUNDLED_VERSION} (auto)"
+                    // Empty when the GitHub release stage failed (it's
+                    // non-fatal), so the announcement only points at a
+                    // release page that actually exists.
+                    def releaseNote = env.GH_RELEASE_URL ?
+                        ", github release: ${env.GH_RELEASE_URL}" : ""
                     zulipSend(
                         topic: 'gpf-releases',
                         message:
@@ -907,7 +986,8 @@ EOF
                             "(all also tagged :stable), " +
                             "docker hub: ${env.DOCKERHUB_REGISTRY}/" +
                                 "${env.DOCKERHUB_REPO}:" +
-                                "${env.TAG_NAME} (also :latest)",
+                                "${env.TAG_NAME} (also :latest)" +
+                            releaseNote,
                     )
                 }
             }
