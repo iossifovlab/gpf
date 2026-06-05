@@ -908,9 +908,13 @@ EOF
             // The helper upserts (PATCH if the release exists, else
             // POST) so a manual gpf-release re-run is idempotent, and
             // falls back to a minimal body if changes.rst has no section
-            // for the tag. Run in the conda-builder image (has python +
-            // network); the token is stage-scoped via withCredentials so
-            // a missing credential is caught here, not at pipeline init.
+            // for the tag. That fallback is EXPECTED in the normal flow
+            // (tag first, write notes after): the master Jenkinsfile's
+            // `Sync GitHub release notes` stage backfills the real notes
+            // when changes.rst is later updated. Run in the conda-
+            // builder image (has python + network); the token is stage-
+            // scoped via withCredentials so a missing credential is
+            // caught here, not at pipeline init.
             //
             // Operator prerequisite (one-time): a Jenkins Secret-text
             // credential `github-token-iossifovlab` holding a

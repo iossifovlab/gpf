@@ -855,6 +855,60 @@ pipeline {
                     }
                 }
 
+                stage('Sync GitHub release notes') {
+                    when {
+                        allOf {
+                            branch 'master'
+                            changeset 'docs/source/development/changes.rst'
+                        }
+                    }
+                    // When the curated changelog changes on master,
+                    // reconcile every existing GitHub Release's body
+                    // against it — backfilling notes for releases that
+                    // were tagged BEFORE their changes.rst section was
+                    // written (the normal flow: tag first, write notes
+                    // after). The release-pipeline stage that creates a
+                    // release at tag time gets the minimal body; this is
+                    // what fills in the real notes later.
+                    //
+                    // Non-fatal (UNSTABLE on failure) and idempotent
+                    // (the helper PATCHes only when a body actually
+                    // changed), so it is safe on every changes.rst
+                    // commit. Runs the stdlib-only helper in a throwaway
+                    // python:3.12-slim because it must run on docs-only
+                    // commits too, where the conda-builder image is not
+                    // built. Token is stage-scoped via withCredentials —
+                    // same `github-token-iossifovlab` credential the
+                    // release pipeline uses; a missing credential just
+                    // marks the build UNSTABLE.
+                    steps {
+                        catchError(
+                            buildResult: 'UNSTABLE',
+                            stageResult: 'UNSTABLE',
+                            message:
+                                'GitHub release-notes sync failed ' +
+                                '(non-fatal).',
+                        ) {
+                            withCredentials([string(
+                                credentialsId: 'github-token-iossifovlab',
+                                variable: 'GH_TOKEN',
+                            )]) {
+                                sh '''
+                                    docker run --rm \
+                                        -e HOME=/tmp \
+                                        -e GH_TOKEN \
+                                        -v "$PWD:/workspace" \
+                                        -w /workspace \
+                                        python:3.12-slim \
+                                        python \
+                                          scripts/make_github_release.py \
+                                          --sync-existing
+                                '''
+                            }
+                        }
+                    }
+                }
+
                 stage('Conda packages') {
                     when { not { environment name: 'DOCS_ONLY', value: 'true' } }
                     steps {
