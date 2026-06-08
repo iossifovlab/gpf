@@ -1,6 +1,9 @@
 Release Notes
 =============
  
+* 2026.6.1
+    * Removed the gpfjs version from the home page.
+
 * 2026.6.0
     * Bundled the Angular SPA into the gpf-web conda package so a conda
       install serves the live web interface.
