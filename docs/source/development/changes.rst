@@ -1,6 +1,46 @@
 Release Notes
 =============
  
+* 2026.6.0
+    * Bundled the Angular SPA into the gpf-web conda package so a conda
+      install serves the live web interface.
+    * Published the gpf-web image bundle to Docker Hub.
+    * Migrated to the refactored gain annotation configuration (AttributeInfo
+      now imported from gain.annotation).
+    * Removed the grr_cache_repo and to_gpf_gene_models_format CLI tools,
+      which moved to gain-core.
+    * GPF instance context plugin now honors the --grr option passed via CLI
+      kwargs.
+    * Genomic scores user interface keeps only the dropdown view for
+      categorical histograms.
+    * Replaced MailHog with MailPit in the development and test stack.
+    * Parameterized the Apache alias for phenotype images and covered it in
+      web_e2e tests.
+    * Fixed a pheno_import task-log race under parallel test runs.
+    * Added a documentation-accuracy (docs-e2e) test suite validating the
+      getting-started guides — annotation, enrichment, gene sets, phenotype
+      data, denovo/CNV/phenotype import, preview columns, gene profiles,
+      federation and the Python interface.
+    * Updated genomic scores, gene set (GO, MSigDB 7.5) and genotype browser
+      end-to-end tests and fixtures.
+
+* 2026.5.0
+    * Consume gain-core as a pre-built wheel instead of cloning the gain
+      repository at build time; gpf now uses gain's S3 test server helper.
+    * Renamed the web/ directory to web_api/ for layout parity with gain.
+    * Imported the GPF user documentation from the gpf_documentation
+      repository into the GPF repository.
+    * Promoted uv to the primary development workflow; slimmed the conda
+      documentation and fixed storage-backend install paths.
+    * Added a verify_parquet tool for file-level parquet integrity checks.
+    * Converted dataset identifier columns from TextField to CharField(255)
+      in datasets_api.
+    * Cancel-aware guards in GPFjs QueryService stream handling.
+    * Added a tag-driven CalVer release pipeline (gpf-release).
+    * web_e2e STACK_MODE choice to test against split or combined images.
+    * Gated documentation build and deploy on documentation changes in CI.
+    * Cleared numerous dependabot and npm security alerts.
+
 * 2026.4.5
     * Fixed handling of histograms in gene score info page.
 
