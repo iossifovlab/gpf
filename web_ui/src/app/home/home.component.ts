@@ -10,7 +10,6 @@ import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.servi
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
 import { InstanceService } from 'app/instance.service';
-import { environment } from 'environments/environment';
 import { Subject, Subscription, combineLatest, debounceTime, distinctUntilChanged, of, switchMap, take } from 'rxjs';
 
 @Component({
@@ -23,7 +22,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   private subscription: Subscription = new Subscription();
 
   public gpfVersion = '';
-  public gpfjsVersion = environment?.version;
 
   public allStudies = new Set();
   public visibleDatasets: string[];
