@@ -1,6 +1,12 @@
 Release Notes
 =============
  
+* 2026.6.2
+    * Added optional Google Analytics to the gpf-web image: set
+      GPF_GA_MEASUREMENT_ID to inject a gtag.js tag into the web interface;
+      leave it unset to serve untracked.
+    * Bumped aiohttp to 3.14.1 (Dependabot security fix).
+
 * 2026.6.1
     * Removed the gpfjs version from the home page.
 
@@ -8,6 +14,9 @@ Release Notes
     * Bundled the Angular SPA into the gpf-web conda package so a conda
       install serves the live web interface.
     * Published the gpf-web image bundle to Docker Hub.
+    * Added runtime URL-prefix support to the gpf-web image: set GPF_PREFIX
+      (with WDAE_PREFIX) to serve the app under /<prefix>/ instead of the
+      document root.
     * Migrated to the refactored gain annotation configuration (AttributeInfo
       now imported from gain.annotation).
     * Removed the grr_cache_repo and to_gpf_gene_models_format CLI tools,
