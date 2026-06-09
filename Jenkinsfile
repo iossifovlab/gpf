@@ -1055,8 +1055,9 @@ print('gpf-web prefix settings OK')"
                             docker run --rm "$IMG" \
                                 sh -c '! grep -q "gpf-ga start" /var/www/html/index.html'
                             docker run --rm -e GPF_PREFIX=gpf -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 "$IMG" \
-                                sh -c 'grep -q "<base href=\"/gpf/\"" /var/www/html/index.html \
-                                    && grep -q "id=G-SMOKE123" /var/www/html/index.html'
+                                grep -q '<base href="/gpf/"' /var/www/html/index.html
+                            docker run --rm -e GPF_PREFIX=gpf -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 "$IMG" \
+                                grep -q 'id=G-SMOKE123' /var/www/html/index.html
                             docker run --rm -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 \
                                 --entrypoint bash "$IMG" -c \
                                 '/usr/local/bin/docker-entrypoint.sh true \
