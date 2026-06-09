@@ -56,8 +56,11 @@ fi
 # one block, and clearing the var removes it. The snippet is single-line
 # so the rewrite stays sed-portable and correct whether the built
 # index.html is minified or pretty-printed (same reasoning as the
-# <base href> substring rewrite above). Written via a temp file rather
-# than `sed -i` for an atomic, portable replace.
+# <base href> substring rewrite above). The sed output is written back
+# into the existing file (`cat tmp > index`) rather than `mv`'d over it,
+# so index.html keeps its original mode/owner — Apache runs as www-data
+# and a mktemp-then-mv would leave the file root-only (0600) and serve
+# 403. No atomicity concern: this runs before supervisord starts apache.
 ga_id="${GPF_GA_MEASUREMENT_ID:-}"
 if [[ -f "$SPA_INDEX" ]]; then
     strip='s#<!-- gpf-ga start -->.*<!-- gpf-ga end -->##g'
@@ -66,12 +69,12 @@ if [[ -f "$SPA_INDEX" ]]; then
         echo "gpf-web entrypoint: injecting Google Analytics tag (${ga_id})"
         snippet="<!-- gpf-ga start --><script async src=\"https://www.googletagmanager.com/gtag/js?id=${ga_id}\"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga_id}');</script><!-- gpf-ga end -->"
         sed -e "$strip" -e "s#</head>#${snippet}</head>#" \
-            "$SPA_INDEX" > "$ga_tmp" && mv "$ga_tmp" "$SPA_INDEX"
+            "$SPA_INDEX" > "$ga_tmp" && cat "$ga_tmp" > "$SPA_INDEX"
     elif grep -q '<!-- gpf-ga start -->' "$SPA_INDEX"; then
         # No ID, but a block lingers from a previous tagged run: drop it.
         # When there's neither an ID nor a stale block we touch nothing,
         # so the GA-free root/e2e/compose index stays byte-for-byte intact.
-        sed -e "$strip" "$SPA_INDEX" > "$ga_tmp" && mv "$ga_tmp" "$SPA_INDEX"
+        sed -e "$strip" "$SPA_INDEX" > "$ga_tmp" && cat "$ga_tmp" > "$SPA_INDEX"
     fi
     rm -f "$ga_tmp"
 fi
