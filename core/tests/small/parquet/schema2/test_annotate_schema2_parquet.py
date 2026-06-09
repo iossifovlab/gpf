@@ -587,7 +587,11 @@ def test_autodetection_reannotate(
         "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
     ])
 
-    assert spy.call_count == 1
+    # Reannotation is autodetected from the dataset's embedded annotation.
+    # ReannotationPipeline is constructed twice: once for the always-on plan
+    # (_print_annotation_plan) and again by the in-process worker
+    # (process_parquet, observable here because -j 1 runs it in-process).
+    assert spy.call_count == 2
 
 
 def test_reannotate_in_place(
@@ -867,6 +871,152 @@ def test_full_reannotation_flag(
     # from previous annotations properly
     assert "score_A" in attrs
     assert "score_two" not in attrs
+
+
+def test_dry_run_prints_reannotation_plan(
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation_2.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    # --dry-run is mutually exclusive with -o/--output; the tool must not
+    # write any output dataset regardless of the work dir.
+    cli([
+        t4c8_study_nonpartitioned, annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--dry-run",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    captured = capsys.readouterr()
+    plan = captured.err
+    assert "Reannotation plan (vs embedded annotation):" in plan
+    assert "COPIED" in plan
+    assert "ADDED" in plan
+    assert "COMPUTED" in plan
+    assert "DELETED" in plan
+
+    # nothing is written on a dry-run
+    assert not pathlib.Path(work_dir).exists()
+
+
+def test_dry_run_reannotation_plan_has_copied(
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    # The study is annotated with resource "one" (score_A) + "two".
+    # new_annotation_2.yaml swaps "one" -> "three" (still score_A) but
+    # keeps "two" unchanged, so the "two" annotator must land under COPIED.
+    annotation_file_new = str(root_path / "new_annotation_2.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    cli([
+        t4c8_study_nonpartitioned, annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--dry-run",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    plan = capsys.readouterr().err
+    copied_line = next(
+        line for line in plan.splitlines() if "COPIED" in line)
+    # the unchanged "two" annotator -> score_two must be COPIED
+    assert "score_two" in copied_line
+
+
+def test_dry_run_full_reannotation_tag(
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation_2.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    cli([
+        t4c8_study_nonpartitioned, annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--dry-run",
+        "--full-reannotation",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    plan = capsys.readouterr().err
+    assert "[full reannotation]" in plan
+    assert not pathlib.Path(work_dir).exists()
+
+
+def test_dry_run_prints_plain_plan_for_unannotated(
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_annotationless_study: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    cli([
+        t4c8_annotationless_study, annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--dry-run",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    plan = capsys.readouterr().err
+    assert "Annotation plan:" in plan
+    assert "Reannotation plan" not in plan
+    assert not pathlib.Path(work_dir).exists()
+
+
+def test_reannotation_run_prints_plan_and_writes(
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation_2.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = tmp_path / "out"
+    work_dir = str(tmp_path / "work")
+
+    cli([
+        t4c8_study_nonpartitioned, annotation_file_new,
+        "-o", str(output_dir),
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    plan = capsys.readouterr().err
+    # always-on plan is printed for a real reannotation run
+    assert "Reannotation plan (vs embedded annotation):" in plan
+
+    # and the output dataset is still produced
+    loader_result = ParquetLoader.load_from_dir(str(output_dir))
+    assert len(list(loader_result.fetch_summary_variants())) == 6
 
 
 @pytest.mark.parametrize(
