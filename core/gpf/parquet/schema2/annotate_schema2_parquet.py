@@ -29,6 +29,7 @@ from gain.annotation.annotation_factory import (
 from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
+    print_annotation_plan,
 )
 from gain.genomic_resources.cli import VerbosityConfiguration
 from gain.genomic_resources.genomic_context import (
@@ -492,6 +493,36 @@ def _add_tasks_to_graph(  # pylint:disable=too-many-positional-arguments
     )
 
 
+def _print_annotation_plan(
+    args: dict[str, Any],
+    pipeline: AnnotationPipeline,
+    grr: GenomicResourceRepo,
+    loader: ParquetLoader,
+) -> None:
+    """Print the (re)annotation plan to stderr.
+
+    When the dataset already carries an embedded annotation, the previous
+    pipeline is loaded from its meta and a :class:`ReannotationPipeline` plan
+    is rendered; otherwise the plain all-ADDED annotation plan is rendered.
+    """
+    if not loader.has_annotation:
+        print_annotation_plan(pipeline)
+        return
+
+    pipeline_previous = load_pipeline_from_yaml(
+        loader.meta["annotation_pipeline"], grr)
+    try:
+        reannotation = ReannotationPipeline(
+            pipeline, pipeline_previous,
+            full_reannotation=args["full_reannotation"])
+        reannotation.print_plan(reference="embedded annotation")
+    finally:
+        # The ReannotationPipeline wrapper shares the live new-pipeline
+        # annotators, so close only the previous pipeline here, not the
+        # wrapper.
+        pipeline_previous.close()
+
+
 def cli(raw_args: list[str] | None = None) -> None:
     """Entry method for running the Schema2 Parquet annotation tool."""
     if not raw_args:
@@ -510,8 +541,10 @@ def cli(raw_args: list[str] | None = None) -> None:
     grr = get_grr_from_context(context)
     assert grr.definition is not None
 
+    loader = ParquetLoader.load_from_dir(input_dir)
+    if args["dry_run"] or loader.has_annotation:
+        _print_annotation_plan(args, pipeline, grr, loader)
     if args["dry_run"]:
-        pipeline.print()
         return
 
     if not os.path.exists(args["work_dir"]):
