@@ -1041,6 +1041,29 @@ assert settings.FORCE_SCRIPT_NAME == '/gpf', settings.FORCE_SCRIPT_NAME; \
 assert settings.STATIC_URL == '/gpf/static/', settings.STATIC_URL; \
 print('gpf-web prefix settings OK')"
 
+                            # Google Analytics injection smoke (gpf#910).
+                            # The entrypoint splices a marker-guarded
+                            # gtag.js block into the SPA index when
+                            # GPF_GA_MEASUREMENT_ID is set, and leaves it
+                            # GA-free otherwise. Verify on the real image:
+                            #   - injected (with the ID) when set,
+                            #   - absent when unset,
+                            #   - present alongside GPF_PREFIX,
+                            #   - idempotent across a re-run (one block).
+                            docker run --rm -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 "$IMG" \
+                                grep -q 'id=G-SMOKE123' /var/www/html/index.html
+                            docker run --rm "$IMG" \
+                                sh -c '! grep -q "gpf-ga start" /var/www/html/index.html'
+                            docker run --rm -e GPF_PREFIX=gpf -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 "$IMG" \
+                                sh -c 'grep -q "<base href=\"/gpf/\"" /var/www/html/index.html \
+                                    && grep -q "id=G-SMOKE123" /var/www/html/index.html'
+                            docker run --rm -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 \
+                                --entrypoint bash "$IMG" -c \
+                                '/usr/local/bin/docker-entrypoint.sh true \
+                                 && /usr/local/bin/docker-entrypoint.sh true \
+                                 && [ "$(grep -o "gpf-ga start" /var/www/html/index.html | wc -l)" -eq 1 ]'
+                            echo "gpf-web GA injection smoke OK"
+
                             # Resolve and record the base-image digests
                             # this build used, so a future release
                             # pipeline can rebuild from a tagged commit
