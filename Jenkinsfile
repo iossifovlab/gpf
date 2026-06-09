@@ -1049,7 +1049,9 @@ print('gpf-web prefix settings OK')"
                             #   - injected (with the ID) when set,
                             #   - absent when unset,
                             #   - present alongside GPF_PREFIX,
-                            #   - idempotent across a re-run (one block).
+                            #   - idempotent across a re-run (one block),
+                            #   - index.html keeps its mode so Apache
+                            #     (www-data) can still serve it (else 403).
                             docker run --rm -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 "$IMG" \
                                 grep -q 'id=G-SMOKE123' /var/www/html/index.html
                             docker run --rm "$IMG" \
@@ -1063,6 +1065,13 @@ print('gpf-web prefix settings OK')"
                                 '/usr/local/bin/docker-entrypoint.sh true \
                                  && /usr/local/bin/docker-entrypoint.sh true \
                                  && [ "$(grep -o "gpf-ga start" /var/www/html/index.html | wc -l)" -eq 1 ]'
+                            docker run --rm -e GPF_GA_MEASUREMENT_ID=G-SMOKE123 \
+                                --entrypoint bash "$IMG" -c \
+                                'm0=$(stat -c %a /var/www/html/index.html) \
+                                 && /usr/local/bin/docker-entrypoint.sh true \
+                                 && m1=$(stat -c %a /var/www/html/index.html) \
+                                 && echo "index.html mode $m0 -> $m1" \
+                                 && [ "$m0" = "$m1" ]'
                             echo "gpf-web GA injection smoke OK"
 
                             # Resolve and record the base-image digests
