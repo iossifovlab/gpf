@@ -72,6 +72,20 @@ pipeline {
                 'lastSuccessful() of UPSTREAM_PROJECT.',
         )
         string(
+            name: 'GAIN_PROJECT',
+            defaultValue: '',
+            description: 'Jenkins project the gain-core conda ' +
+                'is copied from. Empty = fall back to ' +
+                'iossifovlab/gain/master lastSuccessful().',
+        )
+        string(
+            name: 'GAIN_BUILD',
+            defaultValue: '',
+            description: 'gain build number to copy gain-core ' +
+                'from. Empty = use lastSuccessful() of ' +
+                'GAIN_PROJECT.',
+        )
+        string(
             name: 'STAGE_FILTER',
             defaultValue: '',
             description: 'Optional pytest -k expression to ' +
@@ -160,7 +174,12 @@ pipeline {
             // Pull the freshly-built dist/conda/*.conda from the
             // upstream gpf build. (β)-mode install path per #871:
             // the suite tests THIS build's conda, not whatever is
-            // published on the iossifovlab channel.
+            // published on the iossifovlab channel. gain-core is a
+            // first-party dep of gpf-web that gpf does NOT build, so it
+            // is copied separately from gain master's last build
+            // (gpf#916) -- the iossifovlab channel is dropped at install
+            // time, so the local channel must carry every first-party
+            // package the solve needs.
             steps {
                 script {
                     String project = params.UPSTREAM_PROJECT?.trim() ?:
@@ -174,17 +193,35 @@ pipeline {
                         projectName: project,
                         selector: selector,
                     )
+                    // gain-core from gain master's last build, into the same
+                    // local channel. Mirrors how gpf's own CI fetches the gain
+                    // wheel from gain/master lastSuccessful; here we take the
+                    // conda artefact gain master archives (dist/conda/*.conda).
+                    String gainProject = params.GAIN_PROJECT?.trim() ?:
+                                         'iossifovlab/gain/master'
+                    def gainSelector = params.GAIN_BUILD?.trim() ?
+                                       specific(params.GAIN_BUILD) :
+                                       lastSuccessful()
+                    copyArtifacts(
+                        filter: 'dist/conda/gain-core-*.conda',
+                        fingerprintArtifacts: true,
+                        projectName: gainProject,
+                        selector: gainSelector,
+                    )
                 }
                 sh '''
                     ls -la dist/conda/
-                    # The conda package name is `gpf-web` (dash; per
-                    # web_api/conda-recipe/recipe.yaml). The Python
-                    # module is `gpf_web` (underscore). Conda
-                    # normalizes between the two for `mamba install`,
-                    # but the on-disk filename is always the dashed
-                    # form.
+                    # On-disk conda filenames use the dashed package name
+                    # (gpf-web, gain-core) regardless of the underscored
+                    # python module. With the iossifovlab channel dropped at
+                    # install time there is no published fallback, so fail
+                    # loud here if either first-party artefact is missing --
+                    # otherwise it surfaces as an opaque mamba "nothing
+                    # provides gain-core" mid-solve.
                     test -n "$(ls dist/conda/gpf-web-*.conda 2>/dev/null)" \
                         || { echo "ERROR: no gpf-web-*.conda in dist/conda/" >&2; exit 1; }
+                    test -n "$(ls dist/conda/gain-core-*.conda 2>/dev/null)" \
+                        || { echo "ERROR: no gain-core-*.conda in dist/conda/" >&2; exit 1; }
                 '''
             }
         }

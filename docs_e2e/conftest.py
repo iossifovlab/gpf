@@ -216,17 +216,21 @@ def gpf_env_prefix(
     cmd = [
         "mamba", "create", "-y",
         "--prefix", str(prefix),
+        # First-party packages (gpf-web, gpf-core, gain-core) come ONLY from
+        # the build's local channel; the `iossifovlab` release channel is
+        # deliberately NOT listed, so a stale *published* gain-core/gpf-core
+        # can never leak into the suite (gpf#916 -- this is exactly how
+        # gpf-docs-e2e #87 broke: published gain-core 2026.6.4 predated the
+        # `print_annotation_plan` symbol gpf master imports). The docs-e2e
+        # Jenkinsfile copies gain-core from gain master's last build into this
+        # channel alongside the gpf-* artefacts. All third-party deps resolve
+        # from conda-forge/bioconda.
         "-c", f"file://{conda_channel}",
-        "-c", "iossifovlab",
         "-c", "bioconda",
         "-c", "conda-forge",
         "gpf-web",
-        # WORKAROUND (iossifovlab/gain#89): gain-core imports tqdm in
-        # cached_repository.py but does not declare it as a dependency, so a
-        # fresh gpf-web env lacks it and every gain CLI (grr_cache_repo, wgpf,
-        # import_genotypes) dies with ModuleNotFoundError. Pull tqdm explicitly
-        # until gain-core declares it. Mirrors the prewarm Jenkinsfile.
-        "tqdm",
+        # (gain#89: gain-core's recipe now declares `tqdm`, so the old
+        # explicit-tqdm workaround is gone -- it arrives as a transitive dep.)
     ]
     result = _run(cmd, timeout=_INSTALL_TIMEOUT)
     if result.returncode != 0:

@@ -68,6 +68,20 @@ pipeline {
                 'UPSTREAM_PROJECT.',
         )
         string(
+            name: 'GAIN_PROJECT',
+            defaultValue: 'iossifovlab/gain/master',
+            description: 'Jenkins project the gain-core conda ' +
+                'is copied from. Must match what gpf-docs-e2e ' +
+                'uses, or the prewarm seeds against a different ' +
+                'gain.',
+        )
+        string(
+            name: 'GAIN_BUILD',
+            defaultValue: '',
+            description: 'gain build number to copy gain-core ' +
+                'from. Empty = lastSuccessful() of GAIN_PROJECT.',
+        )
+        string(
             name: 'GETTING_STARTED_REF',
             defaultValue: 'master',
             description: 'Branch/tag of iossifovlab/' +
@@ -146,11 +160,27 @@ pipeline {
                         projectName: params.UPSTREAM_PROJECT,
                         selector: selector,
                     )
+                    // gain-core from gain master's last build (gpf#916):
+                    // the install drops the iossifovlab channel, so the
+                    // local channel must carry gain-core. Keep this in sync
+                    // with the gpf-docs-e2e build or the prewarm seeds the
+                    // GRR cache against a different gain.
+                    def gainSelector = params.GAIN_BUILD?.trim() ?
+                                       specific(params.GAIN_BUILD) :
+                                       lastSuccessful()
+                    copyArtifacts(
+                        filter: 'dist/conda/gain-core-*.conda',
+                        fingerprintArtifacts: true,
+                        projectName: params.GAIN_PROJECT,
+                        selector: gainSelector,
+                    )
                 }
                 sh '''
                     ls -la dist/conda/
                     test -n "$(ls dist/conda/gpf-web-*.conda 2>/dev/null)" \
                         || { echo "ERROR: no gpf-web-*.conda in dist/conda/" >&2; exit 1; }
+                    test -n "$(ls dist/conda/gain-core-*.conda 2>/dev/null)" \
+                        || { echo "ERROR: no gain-core-*.conda in dist/conda/" >&2; exit 1; }
                 '''
             }
         }
@@ -208,16 +238,18 @@ YAML
                             # Mirror conftest.gpf_env_prefix: install
                             # gpf-web (pulls gain-core + gpf-core, which
                             # provide grr_cache_repo and its -i provider).
-                            # WORKAROUND (iossifovlab/gain#89): gain-core
-                            # imports tqdm in cached_repository.py without
-                            # declaring it, so a fresh gpf-web env lacks it and
-                            # grr_cache_repo dies with ModuleNotFoundError. Pull
-                            # tqdm explicitly until gain-core declares the dep.
-                            # Mirrors conftest.gpf_env_prefix.
+                            # First-party packages come ONLY from the local
+                            # channel (gpf-* from the gpf build, gain-core from
+                            # the gain build copied above); the iossifovlab
+                            # release channel is deliberately dropped so a stale
+                            # published gain-core/gpf-core cannot leak in
+                            # (gpf#916). gain-core's recipe now declares tqdm,
+                            # so the old gain#89 explicit-tqdm workaround is
+                            # gone. Mirrors conftest.gpf_env_prefix.
                             mamba create -y -n prewarm \
                                 -c file:///tmp/channel \
-                                -c iossifovlab -c bioconda -c conda-forge \
-                                gpf-web tqdm
+                                -c bioconda -c conda-forge \
+                                gpf-web
                             # Mirror the conftest.denovo_instance GRR block
                             # byte-for-byte: the GPF default is a `group` of
                             # grr-gpf.iossifovlab.com (GPF-specific resources,
