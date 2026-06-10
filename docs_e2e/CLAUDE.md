@@ -18,8 +18,9 @@ build #35: a stray `denovo_instance` in `wgpf_server` → 63 passed, 33
 errors). Only actually running the suite catches it.
 
 Emulate the Jenkins run in the driver container (needs docker,
-`dist/conda/gpf-web-*.conda` artefacts, and a populated `gpf-grr-cache`
-volume — see README § Local iteration):
+`dist/conda/gpf-web-*.conda` **and** `dist/conda/gain-core-*.conda`
+artefacts, and a populated `gpf-grr-cache` volume — see README § Local
+iteration):
 
 ```bash
 # from the gpf checkout, with dist/conda populated:
@@ -33,6 +34,12 @@ docker run --rm -v "$PWD:/workspace" -v gpf-grr-cache:/grr-cache \
 - No local `dist/conda`? Reuse a sibling worktree's
   `dist/conda/*.conda` (any recent gpf build works — the GRR resources
   are version-independent), or pull from a gpf build.
+- The install drops the `iossifovlab` channel (gpf#916), so the local
+  `dist/conda` must **also** hold a `gain-core-*.conda` — the gpf build
+  only produces `gpf-*`. In CI the `gpf-docs-e2e` Jenkinsfile copies it
+  from gain master's last build; locally, drop a `gain-core-*.conda`
+  (from a gain build, or `uv build`/`rattler-build` of `../gain`) into
+  `dist/conda/` or the solve fails with `nothing provides gain-core`.
 - Local `gpf-grr-cache` populated but missing the `.docs-e2e-prewarmed`
   sentinel? `touch` it once:
   `docker run --rm -v gpf-grr-cache:/grr-cache alpine touch /grr-cache/.docs-e2e-prewarmed`
