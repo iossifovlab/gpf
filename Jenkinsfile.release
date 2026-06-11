@@ -917,8 +917,44 @@ EOF
                     HUB_REPO="${DOCKERHUB_REGISTRY}/${DOCKERHUB_REPO}"
                     docker tag "$BUNDLE_REPO:$TAG_NAME" "$HUB_REPO:$TAG_NAME"
                     docker tag "$BUNDLE_REPO:$TAG_NAME" "$HUB_REPO:latest"
-                    docker push "$HUB_REPO:$TAG_NAME"
-                    docker push "$HUB_REPO:latest"
+
+                    # Docker Hub manifest finalisation has hung
+                    # indefinitely (build #13: every layer reported
+                    # "Pushed"/"Layer already exists", but docker.io never
+                    # returned the final "<tag>: digest: sha256… size:"
+                    # line, so `docker push` blocked until the 1h pipeline
+                    # timeout — silently holding the gpf-release-publish
+                    # lock the whole time). Wrap each push in a per-attempt
+                    # `timeout` + bounded retry so a sticky manifest push
+                    # self-recovers in minutes instead of hanging the
+                    # build. Retries are cheap: the first attempt uploads
+                    # the layers, so a retry is "Layer already exists" plus
+                    # the manifest. `timeout -k 30 300` kills a wedged push
+                    # at 5 min (SIGTERM, then SIGKILL 30s later) rather
+                    # than waiting on a daemon that will never answer. This
+                    # is the public mirror only; the registry.seqpipe.org
+                    # pushes above are our own registry and have not
+                    # exhibited this hang.
+                    push_with_retry() {
+                        target="$1"
+                        attempt=1
+                        while [ "$attempt" -le 3 ]; do
+                            echo "Pushing $target (attempt $attempt/3)…"
+                            if timeout -k 30 300 docker push "$target"; then
+                                return 0
+                            fi
+                            echo "WARN: push of $target attempt" \
+                                 "$attempt failed or timed out;" \
+                                 "retrying in 15s…" >&2
+                            attempt=$((attempt + 1))
+                            sleep 15
+                        done
+                        echo "ERROR: docker push $target failed after" \
+                             "3 attempts." >&2
+                        return 1
+                    }
+                    push_with_retry "$HUB_REPO:$TAG_NAME"
+                    push_with_retry "$HUB_REPO:latest"
                 '''
             }
         }
