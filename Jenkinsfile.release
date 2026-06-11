@@ -116,6 +116,24 @@ pipeline {
                 'settable via manual Jenkins UI trigger; the ' +
                 'tag-push dispatcher always leaves it empty.',
         )
+        booleanParam(
+            name: 'FORCE_REPUBLISH',
+            defaultValue: false,
+            description: 'OPTIONAL — bypass the gpf-core wheel + ' +
+                'Anaconda.org artefact checks in the Pre-flight: ' +
+                'tag freshness stage so the SAME ${TAG_NAME} can be ' +
+                're-released. The recovery path for a transient ' +
+                'publish failure (e.g. an Anaconda.org 503) that ' +
+                'already pushed SOME artefacts: the Publish stage is ' +
+                'idempotent (rsync overwrite, rattler-build --force, ' +
+                'docker push same-digest no-op), so re-running ' +
+                'completes the half-published release. The ' +
+                'GAIN_PIN_VERSION existence probe is NEVER bypassed — ' +
+                'it asserts a required input, not a tag-mutation ' +
+                'guard. Only settable via manual Jenkins UI trigger; ' +
+                'the tag-push dispatcher always leaves it false. ' +
+                'Leave false for normal forward releases.',
+        )
     }
 
     options {
@@ -174,6 +192,7 @@ pipeline {
         // pipeline blocks.
         TAG_NAME         = "${params.TAG_NAME}"
         GAIN_PIN_VERSION = "${params.GAIN_PIN_VERSION}"
+        FORCE_REPUBLISH  = "${params.FORCE_REPUBLISH}"
     }
 
     stages {
@@ -330,35 +349,55 @@ pipeline {
             // `Fetch upstream artefacts` curl fail downstream.
             steps {
                 sh '''
-                    # HEAD on the wheels index — 200 means already
-                    # published. Anything else (404, 5xx, network)
-                    # is treated as "not there yet, proceed" so a
-                    # flaky index doesn't block releases.
-                    code=$(curl -sS -o /dev/null \
-                        -w '%{http_code}' \
-                        "https://${WHEELS_HOST}/gpf/gpf_core-${TAG_NAME}-py3-none-any.whl")
-                    echo "Wheel index probe: HTTP $code"
-                    if [ "$code" = "200" ]; then
-                        echo "ERROR: gpf-core ${TAG_NAME} already" \
-                             "at https://${WHEELS_HOST}/gpf/"
-                        echo "Tag mutation is rejected." \
-                             "Cut a new tag instead."
-                        exit 1
-                    fi
+                    # FORCE_REPUBLISH bypasses the two tag-mutation
+                    # guards below (wheel index + Anaconda.org). It is
+                    # the recovery path for a transient publish failure
+                    # that already pushed some artefacts for ${TAG_NAME}:
+                    # the Publish stage is idempotent, so re-running with
+                    # this flag finishes the half-published release
+                    # without forcing a version bump. The GAIN_PIN_VERSION
+                    # probe further down is NOT gated — it asserts a
+                    # required input, not a re-release guard.
+                    if [ "${FORCE_REPUBLISH}" = "true" ]; then
+                        echo "FORCE_REPUBLISH=true — skipping the" \
+                             "gpf-core wheel + Anaconda.org freshness" \
+                             "checks for ${TAG_NAME}. Publish is" \
+                             "idempotent; re-pushing artefacts."
+                    else
+                        # HEAD on the wheels index — 200 means already
+                        # published. Anything else (404, 5xx, network)
+                        # is treated as "not there yet, proceed" so a
+                        # flaky index doesn't block releases.
+                        code=$(curl -sS -o /dev/null \
+                            -w '%{http_code}' \
+                            "https://${WHEELS_HOST}/gpf/gpf_core-${TAG_NAME}-py3-none-any.whl")
+                        echo "Wheel index probe: HTTP $code"
+                        if [ "$code" = "200" ]; then
+                            echo "ERROR: gpf-core ${TAG_NAME} already" \
+                                 "at https://${WHEELS_HOST}/gpf/"
+                            echo "Tag mutation is rejected." \
+                                 "Cut a new tag instead, or re-run" \
+                                 "with FORCE_REPUBLISH=true to finish" \
+                                 "a half-published release."
+                            exit 1
+                        fi
 
-                    # Anaconda check: exit 0 means the package
-                    # exists; non-zero (1, 2, network) is treated
-                    # as "not there yet". Use --no-progress + 2>&1
-                    # to keep the build log readable.
-                    if docker run --rm "${CONDA_BUILDER}" \
-                        anaconda show \
-                            "${ANACONDA_USER}/gpf-core/${TAG_NAME}" \
-                            >/dev/null 2>&1; then
-                        echo "ERROR: gpf-core ${TAG_NAME} already" \
-                             "on Anaconda.org/${ANACONDA_USER}"
-                        echo "Tag mutation is rejected." \
-                             "Cut a new tag instead."
-                        exit 1
+                        # Anaconda check: exit 0 means the package
+                        # exists; non-zero (1, 2, network) is treated
+                        # as "not there yet". Use --no-progress + 2>&1
+                        # to keep the build log readable.
+                        if docker run --rm "${CONDA_BUILDER}" \
+                            anaconda show \
+                                "${ANACONDA_USER}/gpf-core/${TAG_NAME}" \
+                                >/dev/null 2>&1; then
+                            echo "ERROR: gpf-core ${TAG_NAME} already" \
+                                 "on Anaconda.org/${ANACONDA_USER}"
+                            echo "Tag mutation is rejected." \
+                                 "Cut a new tag instead, or re-run" \
+                                 "with FORCE_REPUBLISH=true to finish" \
+                                 "a half-published release."
+                            exit 1
+                        fi
                     fi
 
                     # GAIN_PIN_VERSION existence probe (only when
