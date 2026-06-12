@@ -11,7 +11,10 @@ import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
 from gain.utils.verbosity_configuration import VerbosityConfiguration
-from gpf_instance.gpf_instance import WGPFInstance
+from gpf_instance.gpf_instance import (
+    WGPFInstance,
+    ensure_dataset_hierarchy,
+)
 
 from gpf import __version__  # pylint: disable=C0412
 from gpf.pheno.build_pheno_browser import main as build_pheno_browser
@@ -151,6 +154,15 @@ def _run_run_command(
         [],
         gpf_instance=wgpf_instance,
     )
+
+    # Build the dataset-permission hierarchy before serving (gpf#925).
+    # The WDAEConfig.ready() boot rebuild is gated on sys.argv containing
+    # "runserver"/"gunicorn", but `wgpf run` keeps sys.argv as
+    # ["wgpf", "run", ...] and invokes runserver only as a Django
+    # sub-command argv -- so ready() never fires on this path. Without this
+    # explicit, idempotent (emptiness-guarded) call the server would serve
+    # against an empty hierarchy and deny every user.
+    ensure_dataset_hierarchy(wgpf_instance)
 
     execute_from_command_line([
         "wgpf", "runserver", f"{host}:{port}",
