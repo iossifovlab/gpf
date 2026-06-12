@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 from typing import cast
+from unittest.mock import patch
 
 import pytest
 from box import Box
@@ -11,6 +12,7 @@ from studies.study_wrapper import WDAEStudy
 
 from datasets_api.models import Dataset
 from datasets_api.permissions import (
+    IsDatasetAllowed,
     add_group_perm_to_dataset,
     add_group_perm_to_user,
     get_dataset_groups,
@@ -41,6 +43,17 @@ def na_user(
     )
     user.save()
     return cast(User, user)
+
+
+def _reload_user(user: User) -> User:
+    """Re-fetch a user from the DB as a fresh instance.
+
+    Simulates a new request: ``request.user`` is built fresh per request, so
+    the request-scoped ``permitted_datasets`` memo never survives a permission
+    mutation in production. Tests that mutate permissions and re-check on the
+    same Python object must reload to model that boundary.
+    """
+    return cast(User, get_user_model().objects.get(pk=user.pk))
 
 
 def test_parents(custom_wgpf: WGPFInstance) -> None:
@@ -75,6 +88,7 @@ def test_basic_rights(user: User, omni_dataset: GenotypeData) -> None:
     assert not user_has_permission(
         "t4c8_instance", user, omni_dataset.study_id)
     add_group_perm_to_user(omni_dataset.study_id, user)
+    user = _reload_user(user)  # new request: fresh memo
     assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
 
@@ -230,6 +244,125 @@ def test_any_user_with_anonymous(omni_dataset: GenotypeData) -> None:
                                omni_dataset.study_id)
 
 
+def test_permitted_datasets_cte_runs_once_per_user(
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    """Within one request (same user instance) the CTE runs once.
+
+    Tracer bullet for gpf#926: a request-scoped memo on the user object
+    means two calls to ``permitted_datasets`` for the same user+instance
+    execute the expensive recursive CTE only once.
+    """
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "dataset_1")
+
+    with patch.object(
+        IsDatasetAllowed,
+        "prepare_allowed_datasets_query",
+        wraps=IsDatasetAllowed.prepare_allowed_datasets_query,
+    ) as spy:
+        first = set(IsDatasetAllowed.permitted_datasets(user, "t4c8_instance"))
+        second = set(IsDatasetAllowed.permitted_datasets(user, "t4c8_instance"))
+
+    assert spy.call_count == 1
+    assert first == second
+    assert "dataset_1" in first
+
+
+def test_permitted_datasets_memo_is_correct(
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    """The memoized result equals a freshly-computed permitted set."""
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "dataset_1")
+
+    fresh = set(IsDatasetAllowed.permitted_datasets(user, "t4c8_instance"))
+    cached = set(IsDatasetAllowed.permitted_datasets(user, "t4c8_instance"))
+    assert cached == fresh
+    # all real permitted-via-hierarchy datasets present
+    assert {"dataset_1", "omni_dataset",
+            "t4c8_study_1"}.issubset(cached)
+    assert "t4c8_study_2" not in cached
+
+
+def test_permitted_datasets_no_cross_request_leak(
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    db: None,  # noqa: ARG001
+) -> None:
+    """A different user object (new request) recomputes independently.
+
+    Guards against accidental process-global caching: the memo must live
+    on the per-request ``request.user`` instance, not be shared across
+    requests/users.
+    """
+    user_model = get_user_model()
+    user_a = cast(User, user_model.objects.create(
+        email="a@example.com", name="A",
+        is_staff=False, is_active=True, is_superuser=False,
+    ))
+    user_a.save()
+    add_group_perm_to_user("test_group", user_a)
+    add_group_perm_to_dataset("test_group", "dataset_1")
+
+    user_b = cast(User, user_model.objects.create(
+        email="b@example.com", name="B",
+        is_staff=False, is_active=True, is_superuser=False,
+    ))
+    user_b.save()
+    # user_b has no permissions
+
+    a_sets = set(IsDatasetAllowed.permitted_datasets(user_a, "t4c8_instance"))
+    assert "dataset_1" in a_sets
+
+    # Re-fetch user_a from the DB -> a brand new instance, like a new
+    # request. Its memo must be empty and recompute independently.
+    user_a_reloaded = cast(User, user_model.objects.get(email="a@example.com"))
+    with patch.object(
+        IsDatasetAllowed,
+        "prepare_allowed_datasets_query",
+        wraps=IsDatasetAllowed.prepare_allowed_datasets_query,
+    ) as spy:
+        reloaded_sets = set(
+            IsDatasetAllowed.permitted_datasets(
+                user_a_reloaded, "t4c8_instance"))
+    assert spy.call_count == 1
+    assert reloaded_sets == a_sets
+
+    # A different user must not read user_a's cached value.
+    b_sets = set(IsDatasetAllowed.permitted_datasets(user_b, "t4c8_instance"))
+    assert "dataset_1" not in b_sets
+
+
+def test_permitted_datasets_memo_keyed_per_instance(
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    """The per-user memo is keyed by ``instance_id`` and does not collide.
+
+    The same user object querying two different instance IDs must get
+    independent results -- a hit for one instance must not be returned for
+    another. ``t4c8_instance`` has permitted datasets; an unknown instance
+    has none.
+    """
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "dataset_1")
+
+    real = set(IsDatasetAllowed.permitted_datasets(user, "t4c8_instance"))
+    assert "dataset_1" in real
+
+    # A second instance_id on the same (now-populated) user object must not
+    # collide with the cached entry for "t4c8_instance".
+    other = set(IsDatasetAllowed.permitted_datasets(user, "other_instance"))
+    assert other == set()
+
+    # And the first instance's cached value is unchanged.
+    real_again = set(
+        IsDatasetAllowed.permitted_datasets(user, "t4c8_instance"))
+    assert real_again == real
+
+
 def test_user_group_permissions(
     user: User,
     omni_dataset: GenotypeData,
@@ -240,11 +373,13 @@ def test_user_group_permissions(
     add_group_perm_to_dataset(
         user.email, omni_dataset.study_id)
 
+    user = _reload_user(user)  # new request: fresh memo
     assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
     remove_group_perm_from_dataset(
         user.email, omni_dataset.study_id,
     )
 
+    user = _reload_user(user)  # new request: fresh memo
     assert not user_has_permission(
         "t4c8_instance", user, omni_dataset.study_id)

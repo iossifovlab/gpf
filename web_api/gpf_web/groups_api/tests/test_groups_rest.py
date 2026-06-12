@@ -5,6 +5,7 @@ from typing import cast
 import pytest
 from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, User
 from django.test.client import Client
 from rest_framework import status
@@ -216,6 +217,18 @@ def test_group_has_all_datasets(
     assert data["datasets"][0]["broken"] is False
 
 
+def _reload_user(user: User) -> User:
+    """Re-fetch the user as a fresh instance, modeling a new request.
+
+    ``permitted_datasets`` memoizes its result on the per-request
+    ``request.user`` (gpf#926). A test that mutates permissions and then
+    re-checks on the same Python object must reload to cross that request
+    boundary -- in production the mutation and the next check are separate
+    requests with distinct ``request.user`` instances.
+    """
+    return cast(User, get_user_model().objects.get(pk=user.pk))
+
+
 def test_grant_permission_for_group(
     admin_client: Client, group_with_user: tuple[Group, WdaeUser],
     dataset: Dataset,
@@ -232,6 +245,7 @@ def test_grant_permission_for_group(
     )
 
     assert response.status_code == status.HTTP_200_OK
+    user = _reload_user(user)  # new request: fresh permitted-datasets memo
     assert user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
 
@@ -331,6 +345,7 @@ def test_revoke_permission_for_group(
     )
 
     assert response.status_code == status.HTTP_200_OK
+    user = _reload_user(user)  # new request: fresh permitted-datasets memo
     assert not user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
 

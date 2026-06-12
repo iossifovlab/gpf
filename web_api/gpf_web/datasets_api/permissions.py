@@ -260,6 +260,21 @@ class IsDatasetAllowed(permissions.BasePermission):
         ):
             return dataset_ids
 
+        # Request-scoped memo: ``user`` is ``request.user``, created fresh
+        # per request by Django auth and living exactly as long as the
+        # request. Memoizing the computed permitted set on the user object
+        # (keyed by ``instance_id``) makes the expensive recursive CTE run
+        # once per request; a new request gets a new user object with an empty
+        # memo, so no cross-request staleness is possible. This avoids the
+        # unsafe alternative of a ``permission_timestamp``-keyed global cache,
+        # which the group-permission mutators do not bump and which would thus
+        # serve stale sets across requests.
+        cache: dict[str, set[str]] | None = getattr(
+            user, "_permitted_datasets_cache", None,
+        )
+        if cache is not None and instance_id in cache:
+            return cache[instance_id]
+
         query = IsDatasetAllowed.prepare_allowed_datasets_query()
 
         with connection.cursor() as cursor:
@@ -267,7 +282,14 @@ class IsDatasetAllowed(permissions.BasePermission):
 
             allowed_datasets_ids = {row[1] for row in cursor.fetchall()}
 
-        return dataset_ids.intersection(allowed_datasets_ids)
+        result = dataset_ids.intersection(allowed_datasets_ids)
+
+        if cache is None:
+            cache = {}
+            user._permitted_datasets_cache = cache  # type: ignore[attr-defined]  # noqa: SLF001
+        cache[instance_id] = result
+
+        return result
 
 
 def get_wdae_dataset(
