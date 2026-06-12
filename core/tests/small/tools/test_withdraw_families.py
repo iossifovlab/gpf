@@ -254,7 +254,9 @@ def test_remove_from_pheno_leaf_removes_persons(
     conn.close()
     assert count == 3
 
-    _remove_from_pheno_leaf(pheno_study, {"fam1"}, dry_run=False)
+    _remove_from_pheno_leaf(
+        pheno_study, {"fam1"}, dry_run=False, keep_original=False,
+    )
 
     conn = duckdb.connect(pheno_study.db.dbfile, read_only=True)
     count = conn.execute(
@@ -267,7 +269,9 @@ def test_remove_from_pheno_leaf_removes_persons(
 def test_remove_from_pheno_leaf_removes_family_record(
     pheno_study: PhenotypeStudy,
 ) -> None:
-    _remove_from_pheno_leaf(pheno_study, {"fam1"}, dry_run=False)
+    _remove_from_pheno_leaf(
+        pheno_study, {"fam1"}, dry_run=False, keep_original=False,
+    )
 
     conn = duckdb.connect(pheno_study.db.dbfile, read_only=True)
     count = conn.execute(
@@ -280,7 +284,9 @@ def test_remove_from_pheno_leaf_removes_family_record(
 def test_remove_from_pheno_leaf_preserves_other_family(
     pheno_study: PhenotypeStudy,
 ) -> None:
-    _remove_from_pheno_leaf(pheno_study, {"fam1"}, dry_run=False)
+    _remove_from_pheno_leaf(
+        pheno_study, {"fam1"}, dry_run=False, keep_original=False,
+    )
 
     conn = duckdb.connect(pheno_study.db.dbfile, read_only=True)
     count = conn.execute(
@@ -297,9 +303,38 @@ def test_remove_from_pheno_leaf_dry_run_no_changes(
     before = conn.execute("SELECT COUNT(*) FROM person").fetchone()[0]  # type: ignore[index]
     conn.close()
 
-    _remove_from_pheno_leaf(pheno_study, {"fam1"}, dry_run=True)
+    _remove_from_pheno_leaf(
+        pheno_study, {"fam1"}, dry_run=True, keep_original=False,
+    )
 
     conn = duckdb.connect(pheno_study.db.dbfile, read_only=True)
     after = conn.execute("SELECT COUNT(*) FROM person").fetchone()[0]  # type: ignore[index]
     conn.close()
     assert after == before
+
+
+def test_remove_from_pheno_leaf_keep_original(
+    pheno_study: PhenotypeStudy,
+) -> None:
+    dbfile = pathlib.Path(pheno_study.db.dbfile)
+
+    _remove_from_pheno_leaf(
+        pheno_study, {"fam1"}, dry_run=False, keep_original=True,
+    )
+
+    orig = dbfile.with_suffix(".db.orig")
+    assert orig.exists()
+
+    conn = duckdb.connect(str(orig), read_only=True)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM person WHERE family_id = 'fam1'",
+    ).fetchone()[0]  # type: ignore[index]
+    conn.close()
+    assert count == 3
+
+    conn = duckdb.connect(pheno_study.db.dbfile, read_only=True)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM person WHERE family_id = 'fam1'",
+    ).fetchone()[0]  # type: ignore[index]
+    conn.close()
+    assert count == 0
