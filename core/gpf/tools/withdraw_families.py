@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import shutil
 import sys
 from pathlib import Path
 from typing import cast
@@ -155,6 +156,7 @@ def _remove_from_pheno_leaf(
     family_ids: set[str],
     *,
     dry_run: bool,
+    keep_original: bool,
 ) -> None:
     """Remove *family_ids* from a single leaf phenotype study."""
     dbfile = study.db.dbfile
@@ -193,6 +195,10 @@ def _remove_from_pheno_leaf(
         return
 
     study.db.connection.close()
+    if keep_original:
+        orig = Path(dbfile).with_suffix(".db.orig")
+        shutil.copy2(dbfile, orig)
+        logger.info("[%s] original DB saved as %s", study.pheno_id, orig)
     conn = duckdb.connect(dbfile, read_only=False)
     try:
         person_ids = [
@@ -244,6 +250,7 @@ def _remove_pheno(
     family_ids: set[str],
     *,
     dry_run: bool,
+    keep_original: bool,
 ) -> None:
     pheno = gpf_instance.get_phenotype_data(study_id)
     if isinstance(pheno, PhenotypeGroup):
@@ -258,7 +265,9 @@ def _remove_pheno(
             type(pheno).__name__, study_id,
         )
         sys.exit(1)
-    _remove_from_pheno_leaf(pheno, family_ids, dry_run=dry_run)
+    _remove_from_pheno_leaf(
+        pheno, family_ids, dry_run=dry_run, keep_original=keep_original,
+    )
 
 
 def main(
@@ -342,7 +351,8 @@ def main(
         )
     elif study_id in pheno_ids:
         _remove_pheno(
-            study_id, gpf_instance, family_ids, dry_run=args.dry_run,
+            study_id, gpf_instance, family_ids,
+            dry_run=args.dry_run, keep_original=args.keep_original,
         )
     else:
         logger.error(
