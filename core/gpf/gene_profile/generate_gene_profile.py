@@ -60,6 +60,13 @@ def generate_gp(
         for score in category["scores"]:
             gene_score_name = score["score_name"]
             score_desc = gene_scores_db.get_score_desc(gene_score_name)
+            if score_desc is None:
+                raise ValueError(
+                    f"gene profile config references gene score "
+                    f"{gene_score_name!r}, which is not available in the "
+                    f"instance gene_scores_db; check the score id and the "
+                    f"gene_scores_db configuration",
+                )
             gene_score = gene_scores_db.get_gene_score(score_desc.resource_id)
             value = gene_score.get_gene_value(gene_score_name, gene_symbol)
             scores[category_name][gene_score_name] = value
