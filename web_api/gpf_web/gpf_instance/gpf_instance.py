@@ -28,7 +28,6 @@ __all__ = ["get_wgpf_instance"]
 
 _GPF_INSTANCE: WGPFInstance | None = None
 _GPF_INSTANCE_LOCK = Lock()
-_GPF_RECREATED_DATASET_PERM = False
 
 
 _INSTANCE_TIMESTAMP: float = 0
@@ -476,20 +475,30 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
             )
 
 
-def recreated_dataset_perm(gpf_instance: WGPFInstance) -> None:
-    """Recreate dataset permisions for a GPF instance."""
-    # pylint: disable=global-statement
-    global _GPF_RECREATED_DATASET_PERM
-    if gpf_instance is None:
-        logger.warning("GPF instance is not loaded")
-        return
+def ensure_dataset_hierarchy(gpf_instance: WGPFInstance) -> bool:
+    """Build the dataset-permission hierarchy once if it is missing.
 
-    if _GPF_RECREATED_DATASET_PERM:
-        return
+    Boot-time safety net (iossifovlab/gpf#925): with the lazy first-request
+    rebuild removed from ``QueryBaseView``, a serving worker that boots before
+    the out-of-band ``datasets_reload`` step would otherwise serve against an
+    empty ``DatasetHierarchy`` -- ``permitted_datasets`` returns nothing and
+    every user is denied.  Called from ``WDAEConfig.ready`` on the serving
+    path, off the request hot path.
 
-    with _GPF_INSTANCE_LOCK:
-        # assert _GPF_INSTANCE is not None
+    The emptiness guard means only the first worker pays the rebuild.
+    ``reload_datasets`` performs the destructive swap atomically (#922/#924),
+    so a race between concurrently-booting workers is safe.
 
-        if not _GPF_RECREATED_DATASET_PERM:
-            reload_datasets(gpf_instance)
-            _GPF_RECREATED_DATASET_PERM = True
+    Returns ``True`` if the hierarchy was (re)built, ``False`` if it was
+    already present and the rebuild was skipped.
+    """
+    # pylint: disable=import-outside-toplevel
+    from datasets_api.models import DatasetHierarchy
+
+    if DatasetHierarchy.objects.filter(
+        instance_id=gpf_instance.instance_id,
+    ).exists():
+        return False
+
+    reload_datasets(gpf_instance)
+    return True
