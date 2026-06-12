@@ -54,8 +54,8 @@ GENE_SET_COLLECTIONS = ["autism", "GO"]
 # several scored columns (e.g. LGD -> LGD_score + LGD_rank); we assert one
 # representative id per resource.
 GENE_SCORES = [
-    "Satterstrom Buxbaum Cell 2020 qval",   # Satterstrom_Buxbaum_Cell_2020
-    "Iossifov Wigler PNAS 2015 post noaut",  # Iossifov_Wigler_PNAS_2015
+    "Satterstrom_Buxbaum_Cell_2020_qval",    # Satterstrom_Buxbaum_Cell_2020
+    "Iossifov_Wigler_PNAS_2015_post_noaut",  # Iossifov_Wigler_PNAS_2015
     "LGD_score",                             # LGD
     "LOEUF",                                 # LOEUF
 ]

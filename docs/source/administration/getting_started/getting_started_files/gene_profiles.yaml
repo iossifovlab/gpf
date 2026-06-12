@@ -36,9 +36,9 @@ gene_scores:
 - category: autism_scores
   display_name: Autism Gene Scores
   scores:
-  - score_name: Satterstrom Buxbaum Cell 2020 qval
+  - score_name: Satterstrom_Buxbaum_Cell_2020_qval
     format: "%%.2f"
-  - score_name: Iossifov Wigler PNAS 2015 post noaut
+  - score_name: Iossifov_Wigler_PNAS_2015_post_noaut
     format: "%%.2f"
 
 - category: protection_scores
