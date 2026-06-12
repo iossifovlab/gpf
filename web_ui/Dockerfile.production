@@ -81,3 +81,9 @@ COPY web_ui/httpd.conf /usr/local/apache2/conf/httpd.conf
 # same path. Trailing slash required — see httpd.conf for the
 # concatenation gotcha.
 ENV PHENO_IMAGES_DIR=/data-phenodb/pheno/images/
+
+# Default proxy timeout (seconds) consumed by httpd.conf's
+# `ProxyTimeout ${GPF_PROXY_TIMEOUT}`. 300 = 5 min; override at deploy
+# with `-e GPF_PROXY_TIMEOUT=…`. httpd-foreground inherits the
+# container env, so no entrypoint rendering is needed here.
+ENV GPF_PROXY_TIMEOUT=300

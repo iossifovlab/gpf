@@ -62,6 +62,12 @@ RedirectMatch ^/$ /__GPF_PREFIX__/
 # OAuth login round-trip; /ws/ is websockets.
 ProxyPreserveHost On
 ProxyRequests Off
+# Seconds Apache waits on the proxied gunicorn before giving up.
+# Defaults to 300 (5 min) via the GPF_PROXY_TIMEOUT env (Dockerfile
+# ENV), overridable at deploy. Matches the host-native Apache layer so
+# both proxy hops share one ceiling; gunicorn's --timeout is the outer
+# bound.
+ProxyTimeout ${GPF_PROXY_TIMEOUT}
 RequestHeader set X-Forwarded-Proto "%{REQUEST_SCHEME}e"
 ProxyPass        /__GPF_PREFIX__/api/      http://127.0.0.1:9001/api/
 ProxyPassReverse /__GPF_PREFIX__/api/      http://127.0.0.1:9001/api/

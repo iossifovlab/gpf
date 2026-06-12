@@ -74,7 +74,8 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENV PATH=/opt/gpf/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=gpf_web.production_settings \
-    PHENO_IMAGES_DIR=/data-phenodb/pheno/images/
+    PHENO_IMAGES_DIR=/data-phenodb/pheno/images/ \
+    GPF_PROXY_TIMEOUT=300
 
 EXPOSE 80
 
