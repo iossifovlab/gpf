@@ -395,9 +395,34 @@ def get_wgpf_instance(
 
 
 def reload_datasets(gpf_instance: WGPFInstance) -> None:
-    """Recreate datasets permissions."""
+    """Recreate datasets permissions.
+
+    The slow part of the rebuild -- recreating dataset-permission rows and
+    loading every wdae wrapper to compute the hierarchy relations -- runs
+    *outside* any transaction.  Only the destructive swap of the hierarchy
+    (``DatasetHierarchy.clear`` followed by re-inserting the precomputed
+    relations) is wrapped in ``transaction.atomic`` (iossifovlab/gpf#922).
+    Keeping the wrapper loads out of the atomic block keeps the InnoDB locks
+    taken by ``clear``'s DELETE held for as short a time as possible.
+
+    Wrapping just the swap gives two distinct guarantees:
+
+    (a) *Failure rolls back.*  If an insert fails mid-rebuild the whole swap
+        is rolled back to the previously-loaded hierarchy instead of leaving
+        it empty/partial.  This holds on any backend purely from atomicity.
+
+    (b) *A concurrent reader never observes the partial intermediate state.*
+        This is **not** guaranteed by ``transaction.atomic`` alone -- it
+        relies on InnoDB MVCC: production MySQL runs at the REPEATABLE READ
+        isolation level, and the permitted-datasets CTE used by a permission
+        check is a single autocommit statement, so it reads a consistent MVCC
+        snapshot taken before this writer's uncommitted DELETE/INSERT became
+        visible.  On a backend without MVCC snapshots this property would not
+        hold.
+    """
     # pylint: disable=import-outside-toplevel
     from datasets_api.models import Dataset, DatasetHierarchy
+    from django.db import transaction
 
     valid_dataset_ids = set()
 
@@ -421,21 +446,32 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
                 continue
             Dataset.recreate_dataset_perm(study_id)
 
-    DatasetHierarchy.clear(gpf_instance.instance_id)
-
+    # Precompute every relation tuple (ancestor=data_id, descendant=study_id,
+    # direct) -- including each dataset's self-relation -- using the slow
+    # wrapper loads *before* opening the transaction, so the atomic swap below
+    # touches only the database.
+    relations: list[tuple[str, str, bool]] = []
     for data_id in valid_dataset_ids:
         wdae_study = gpf_instance.get_wdae_wrapper(data_id)
-        DatasetHierarchy.add_relation(
-            gpf_instance.instance_id, data_id, data_id,
-        )
         assert wdae_study is not None
+        relations.append((data_id, data_id, False))
         direct_descendants = wdae_study.get_studies_ids(leaves=False)
         for study_id in wdae_study.get_studies_ids():
             if study_id == data_id:
                 continue
             is_direct = study_id in direct_descendants
+            relations.append((data_id, study_id, is_direct))
+
+    # Atomic swap only: clear + re-insert the precomputed relations.  The
+    # per-row ``add_relation`` loop is kept (rather than a single
+    # ``bulk_create``) because ``add_relation`` resolves each dataset via
+    # ``Dataset.objects.get`` -- preserving its exact insert semantics and
+    # validation -- and the relation count is small.
+    with transaction.atomic():
+        DatasetHierarchy.clear(gpf_instance.instance_id)
+        for ancestor_id, descendant_id, is_direct in relations:
             DatasetHierarchy.add_relation(
-                gpf_instance.instance_id, data_id, study_id,
+                gpf_instance.instance_id, ancestor_id, descendant_id,
                 direct=is_direct,
             )
 
