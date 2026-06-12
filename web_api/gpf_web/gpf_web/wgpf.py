@@ -151,6 +151,7 @@ def _run_run_command(
         [],
         gpf_instance=wgpf_instance,
     )
+
     execute_from_command_line([
         "wgpf", "runserver", f"{host}:{port}",
         "--noreload",

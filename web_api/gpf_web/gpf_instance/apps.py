@@ -5,7 +5,10 @@ import sys
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import get_wgpf_instance
+from gpf_instance.gpf_instance import (
+    ensure_dataset_hierarchy,
+    get_wgpf_instance,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,19 @@ class WDAEConfig(AppConfig):
         if gpf_instance is None:
             logger.warning("GPF instance is not loaded")
             return
+
+        # Boot-time safety net for the dataset-permission hierarchy
+        # (iossifovlab/gpf#925): with the lazy first-request rebuild removed
+        # from QueryBaseView, build the hierarchy once here if it is missing
+        # so a worker never serves against an empty DatasetHierarchy (which
+        # would deny every user).  This is a correctness requirement, NOT a
+        # perf optimization -- it must run even when STUDIES_EAGER_LOADING is
+        # off, so it is placed before that early-return.  It is off the
+        # request hot path and self-healing; the emptiness guard means only
+        # the first worker pays the rebuild.  The migrate/runserver gating
+        # above guarantees the tables already exist.
+        if ensure_dataset_hierarchy(gpf_instance):
+            logger.info("dataset-permission hierarchy built at boot")
 
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
