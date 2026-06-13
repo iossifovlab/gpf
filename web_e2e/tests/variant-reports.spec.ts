@@ -398,10 +398,10 @@ test.describe('Variant reports Iossifov count tests', () => {
   });
 
   [
-    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['393, 0.157(365, 15%)183, 0.096(172, 9%)']},
-    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['394, 0.157(360, 14%)', '251, 0.131(232, 12%)']},
-    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['1690, 0.674(1190, 47%)', '1151, 0.603(843, 44%)']},
-    {rowIndex: 12, effectType: 'Intron', expectedCounts: ['1004, 0.4(794, 32%)', '688, 0.36(567, 30%)']}
+    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['68, 0.027(68, 3%)25, 0.013(24, 1%)']},
+    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['62, 0.025(62, 2%)', '43, 0.023(43, 2%)']},
+    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['274, 0.109(240, 10%)', '189, 0.099(179, 9%)']},
+    {rowIndex: 10, effectType: 'Intron', expectedCounts: ['141, 0.056(136, 5%)', '99, 0.052(96, 5%)']}
   ].forEach(data => {
     test('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" role table', async({ page }) => {
@@ -415,10 +415,10 @@ test.describe('Variant reports Iossifov count tests', () => {
   });
 
   [
-    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['393, 0.157(365, 15%)183, 0.096(172, 9%)']},
-    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['394, 0.157(360, 14%)', '251, 0.131(232, 12%)']},
-    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['1690, 0.674(1190, 47%)', '1151, 0.603(843, 44%)']},
-    {rowIndex: 12, effectType: 'Intron', expectedCounts: ['1004, 0.4(794, 32%)', '688, 0.36(567, 30%)']}
+    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['68, 0.027(68, 3%)25, 0.013(24, 1%)']},
+    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['62, 0.025(62, 2%)', '43, 0.023(43, 2%)']},
+    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['274, 0.109(240, 10%)', '189, 0.099(179, 9%)']},
+    {rowIndex: 10, effectType: 'Intron', expectedCounts: ['141, 0.056(136, 5%)', '99, 0.052(96, 5%)']}
   ].forEach(data => {
     test('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" status table', async({ page }) => {

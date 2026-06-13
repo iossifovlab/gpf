@@ -329,7 +329,7 @@ test.describe('Pheno tool download tests', () => {
       id: '15',
       genotype: 'iossifov_2014_liftover',
       affectedStatus: 'unaffected',
-      set: 'LGDs.Recurrent (3): LGDs.Recurrent '+
+      set: 'LGDs.Recurrent (1): LGDs.Recurrent '+
         '(vcf_helloworld:status:affected;iossifov_2014_liftover:status:unaffected)',
       measure: 'instrument_1.iq'
     }
