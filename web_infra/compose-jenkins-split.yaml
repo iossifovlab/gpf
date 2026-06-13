@@ -22,6 +22,40 @@ services:
     # one origin. Backend keeps a literal `backend` hostname
     # because httpd.conf's ProxyPass uses that name.
     hostname: backend
+    # gpf#931: CI-only gthread gunicorn for the e2e backend.
+    # The prod image (web_api/Dockerfile.production) bakes a *sync*
+    # gunicorn (--workers 4) as its ENTRYPOINT. Sync workers hold a
+    # whole process open for the duration of each SSE variant-query
+    # StreamingHttpResponse, so N concurrent streams saturate all 4
+    # workers and queue every other request — the "Loading
+    # variants..." Mode A timeouts that forced the earlier 16->4
+    # Playwright rollback (tb-iuv-fix). gthread serves each stream on
+    # a thread instead, giving --workers x --threads = 16-way
+    # concurrency at the RAM cost of only 4 eager-loaded processes
+    # (STUDIES_EAGER_LOADING loads all studies per *process*). This
+    # unblocks the Playwright worker bump in gpf#933.
+    #
+    # Scoped to CI: we override `entrypoint` here rather than editing
+    # the prod image, so dory/production keep the sync model until
+    # gthread is adopted there deliberately + load-tested (gpf#932).
+    # entrypoint (not command) because the Dockerfile uses ENTRYPOINT
+    # with no CMD — a compose `command` would only append args.
+    # The duckdb backend is thread-safe under this: every query runs
+    # through connection.cursor() (core/gpf/duckdb_storage/
+    # duckdb2_variants.py), DuckDB's per-thread-cursor pattern.
+    entrypoint:
+      - gunicorn
+      - gpf_web.wsgi:application
+      - --bind
+      - 0.0.0.0:9001
+      - --worker-class
+      - gthread
+      - --workers
+      - "4"
+      - --threads
+      - "4"
+      - --timeout
+      - "1200"
     depends_on:
       instance-import:
         condition: service_completed_successfully
