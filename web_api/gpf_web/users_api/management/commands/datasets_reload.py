@@ -8,6 +8,7 @@ of paying the rebuild cost on the first request a fresh worker serves.
 """
 from typing import Any
 
+from datasets_api.models import DatasetHierarchy
 from django.core.management.base import BaseCommand, CommandError
 from gpf_instance.gpf_instance import (
     WGPFInstance,
@@ -40,3 +41,25 @@ class Command(BaseCommand):
                 )
                 raise CommandError(str(exc)) from exc
         reload_datasets(self.gpf_instance)
+
+        available = self.gpf_instance.get_available_data_ids()
+        relation_count = DatasetHierarchy.objects.filter(
+            instance_id=self.gpf_instance.instance_id,
+        ).count()
+        if available and relation_count == 0:
+            # An instance that *has* datasets must yield a non-empty
+            # hierarchy. An empty one here means auth is broken (every user
+            # denied); fail loudly so the deploy step is actionable
+            # (iossifovlab/gpf#929). An instance with no datasets
+            # legitimately yields an empty hierarchy -- do not false-fail.
+            self.stderr.write(
+                "dataset-permission hierarchy is EMPTY after rebuild, "
+                f"but {len(available)} dataset(s) are available",
+            )
+            raise CommandError(
+                "dataset-permission hierarchy rebuild produced no relations",
+            )
+        self.stdout.write(
+            f"dataset-permission hierarchy rebuilt: {relation_count} "
+            f"relation(s) for {len(available)} dataset(s)",
+        )
