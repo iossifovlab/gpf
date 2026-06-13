@@ -69,6 +69,30 @@ pipeline {
                 'both modes; the difference is what compose ' +
                 'overlay is loaded on top of compose-jenkins.yaml.',
         )
+        string(
+            name: 'E2E_WORKER_COUNT',
+            defaultValue: '8',
+            description: 'Playwright worker count, also the size ' +
+                'of import_data.sh\'s per-worker user pool (one ' +
+                'source of truth). Default 8 (#933), enabled by ' +
+                'the #931 gthread backend. Lower it for a ' +
+                'one-click rollback if a bump reintroduces the ' +
+                'Mode A "Loading variants..." SSE timeouts.',
+        )
+        string(
+            name: 'E2E_GUNICORN_WORKERS',
+            defaultValue: '4',
+            description: 'gthread gunicorn process count for the ' +
+                'split-mode backend (#931/#933). workers x ' +
+                'threads is the backend request concurrency; keep ' +
+                'E2E_WORKER_COUNT comfortably below it.',
+        )
+        string(
+            name: 'E2E_GUNICORN_THREADS',
+            defaultValue: '4',
+            description: 'gthread gunicorn threads-per-worker for ' +
+                'the split-mode backend (#931/#933).',
+        )
     }
 
     options {
@@ -97,6 +121,13 @@ pipeline {
             "gpf-web-e2e-${env.BUILD_NUMBER}"
         COMPOSE_NETWORK =
             "gpf-web-e2e-${env.BUILD_NUMBER}_default"
+        // #933: re-export the worker/gunicorn knobs so the
+        // sh-heredoc `docker compose` calls inherit them and the
+        // ${VAR:-default} substitutions in compose-jenkins.yaml /
+        // compose-jenkins-split.yaml resolve to the build params.
+        E2E_WORKER_COUNT     = "${params.E2E_WORKER_COUNT}"
+        E2E_GUNICORN_WORKERS = "${params.E2E_GUNICORN_WORKERS}"
+        E2E_GUNICORN_THREADS = "${params.E2E_GUNICORN_THREADS}"
     }
 
     stages {

@@ -43,6 +43,11 @@ services:
     # The duckdb backend is thread-safe under this: every query runs
     # through connection.cursor() (core/gpf/duckdb_storage/
     # duckdb2_variants.py), DuckDB's per-thread-cursor pattern.
+    #
+    # gpf#933: workers/threads are env-overridable (defaults 4x4 =
+    # 16-way) so the gunicorn concurrency can be retuned alongside the
+    # Playwright worker count from the gpf-web-e2e build parameters —
+    # one-click rollback if a bump reintroduces SSE saturation.
     entrypoint:
       - gunicorn
       - gpf_web.wsgi:application
@@ -51,9 +56,9 @@ services:
       - --worker-class
       - gthread
       - --workers
-      - "4"
+      - "${E2E_GUNICORN_WORKERS:-4}"
       - --threads
-      - "4"
+      - "${E2E_GUNICORN_THREADS:-4}"
       - --timeout
       - "1200"
     depends_on:
