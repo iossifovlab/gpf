@@ -82,8 +82,25 @@ generate_gene_profile \
     --genes CHD8,GRIN2B,SHANK2,FLG,CMIP,TBCD,RAPGEF4,RAPGEFL1,RAPGEF1,RAPGEF2,SENP2,SENP3,SENP1,SENP6,SENP8,SENP3-EIF4A1
 
 # generate common reports
-generate_common_report
-generate_denovo_gene_sets
+#
+# iossifovlab/gpf#936: both generators are cache-aware and skip
+# when a report/cache already exists (study.build_and_save and
+# DenovoGeneSetHelpers.build_collection both no-op without force).
+# The cleanup above removes genotype_storage/ but NOT the
+# gitignored studies/*/common_report.json or the denovo gene set
+# caches, so on a reused workspace a stale full-data report survives
+# the re-import of subset data and the variant-reports / pheno-tool
+# count specs silently assert pre-strip numbers.
+#
+# Regenerating in-place with --force is the fix (not a workspace
+# wipe at checkout): this script runs inside the import container as
+# root and writes OUTPUT/ + studies/ artefacts owned by root into the
+# bind-mounted workspace, which the Jenkins agent user cannot delete
+# (WipeWorkspace fails with EPERM on OUTPUT/import_annotation/* -- see
+# build #287). --force rebuilds from the data just imported, in the
+# same container, so the reports always track the fixture.
+generate_common_report --force
+generate_denovo_gene_sets --force
 
 # create dev users for the e2e suite (idempotent: || true so reruns
 # don't fail once the users already exist)
