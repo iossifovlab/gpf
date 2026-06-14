@@ -116,22 +116,26 @@ EXPOSE 9001
 # browser:gunicorn ratio. 16-way eager loading also dropped 4×
 # the RAM footprint of the prod pod under STUDIES_EAGER_LOADING.
 #
-# #932: switch from the default *sync* worker class to gthread
-# (--workers 4 --threads 4). A variant-query response is an SSE
-# StreamingHttpResponse that holds a worker for the whole stream;
-# with sync workers a handful of concurrent streams saturate all 4
-# processes and queue every other request. gthread serves each
-# stream on a thread, giving --workers × --threads = 16-way request
-# concurrency while keeping only 4 eager-loaded processes — so the
-# STUDIES_EAGER_LOADING RAM footprint is unchanged from the 4-sync
-# config above. Same shape proven in CI (#931 split overlay) and in
-# web_api/gpf_web/run_gunicorn.sh. Thread-safe on the variant path:
-# the duckdb backend opens a per-query cursor (core/gpf/
-# duckdb_storage/duckdb2_variants.py), DuckDB's per-thread pattern.
+# #932: switch from the default *sync* worker class to gthread. A
+# variant-query response is an SSE StreamingHttpResponse that holds a
+# worker for the whole stream; with sync workers a handful of
+# concurrent streams saturate every process and queue all other
+# requests. gthread serves each stream on a thread instead.
+#
+# Shape: --workers 2 --threads 16 (32-way request concurrency). Under
+# STUDIES_EAGER_LOADING each *process* eager-loads all studies, so RAM
+# scales with workers, not threads — 2 workers halves the eager-loading
+# footprint vs the prior 4-sync (and the initial 4×4 gthread) config,
+# while 16 threads/process carry the concurrency. The variant path is
+# I/O-bound (DuckDB releases the GIL in C++ + SSE streaming), so threads
+# give real concurrency there; 2 processes keep worker-level redundancy
+# and 2-core parallelism for the CPU-bound paths. Thread-safe: the
+# duckdb backend opens a per-query cursor (core/gpf/duckdb_storage/
+# duckdb2_variants.py), DuckDB's per-thread pattern.
 ENTRYPOINT ["gunicorn", \
             "gpf_web.wsgi:application", \
             "--bind", "0.0.0.0:9001", \
             "--worker-class", "gthread", \
-            "--workers", "4", \
-            "--threads", "4", \
+            "--workers", "2", \
+            "--threads", "16", \
             "--timeout", "1200"]
