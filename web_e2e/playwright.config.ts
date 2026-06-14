@@ -54,11 +54,17 @@ export default defineConfig({
    * acceptable trade for stability.
    * tb-nxl: read E2E_WORKER_COUNT (single source of truth shared with
    * import_data.sh's per-worker user pool — see web_e2e/tests/utils.ts
-   * loginWorkerUser). CI default 4, local default 4 (matches the
-   * provisioning default; bigger local CPUs can override via the env
-   * var to keep parallelIndex bounded by the provisioned pool). */
+   * loginWorkerUser). Bigger local CPUs can override via the env var
+   * to keep parallelIndex bounded by the provisioned pool.
+   * #933: default 4 → 8. The 4:4 ratio that tb-iuv-fix restored existed
+   * only because the backend ran *sync* gunicorn. #931 switched the
+   * split-mode e2e backend to gthread (--workers 4 --threads 4 =
+   * 16-way concurrency), so SSE variant streams no longer pin a whole
+   * process — 8 browsers stay at half the backend's request capacity,
+   * generous headroom against the Mode A pile-ups, and a deliberately
+   * smaller jump than the 16 that regressed before. */
   workers: parseInt(
-    process.env.E2E_WORKER_COUNT ?? '4',
+    process.env.E2E_WORKER_COUNT ?? '8',
     10,
   ),
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
