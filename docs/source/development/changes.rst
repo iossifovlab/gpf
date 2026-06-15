@@ -1,6 +1,56 @@
 Release Notes
 =============
  
+* 2026.6.5
+    * Production images now run gunicorn with the gthread worker class
+      (2 workers x 16 threads) instead of sync workers. A variant query
+      is an SSE streaming response that holds a worker for the whole
+      stream, so with sync workers a few concurrent streams saturated
+      all processes and queued everything else; gthread serves each
+      stream on a thread, giving 32-way request concurrency while
+      keeping the eager-loading RAM footprint of 2 processes.
+    * Added a configurable in-container Apache ProxyTimeout
+      (GPF_PROXY_TIMEOUT, default 300s) to the production images. The
+      in-container Apache previously used the 60s default and cut off
+      long requests even though gunicorn allowed 1200s.
+    * Build the dataset-permission hierarchy once at serving boot (and
+      on the wgpf run path) instead of lazily on the first request,
+      eliminating the first-request 502s. A wdaemanage datasets_reload
+      management command is the canonical deploy pre-start step and
+      fails loudly when a non-empty instance rebuilds to an empty
+      hierarchy.
+    * Made the dataset-permission hierarchy rebuild atomic: the
+      destructive clear-and-reinsert is now wrapped in a transaction,
+      so a concurrent permission check can no longer observe a partial
+      hierarchy and return spurious "0 variants".
+    * Memoized the permitted-datasets query per request, so the
+      recursive permission CTE runs once instead of twice per
+      genotype-query request.
+    * gene_profile now uses the underscore-form GRR gene-score ids
+      (Satterstrom_Buxbaum_Cell_2020, Iossifov_Wigler_PNAS_2015) to
+      match the renamed resources, and generate_gene_profile raises a
+      clear error naming a missing score instead of an opaque
+      AttributeError.
+    * The gpf-release pipeline now creates a GitHub Release for each
+      CalVer tag (backfilling notes from changes.rst), retries the
+      Docker Hub mirror push on timeout, and adds a FORCE_REPUBLISH
+      option to recover a half-published release.
+
+* 2026.6.4
+    * annotate_schema2_parquet now prints a real reannotation plan
+      classifying each attribute as COPIED, ADDED, COMPUTED or DELETED
+      — on --dry-run (which exits without writing) and as an always-on
+      stderr summary on a reannotation run, replacing the previous
+      reannotation-unaware attribute list.
+    * docs-e2e resolves gain-core from gain master instead of the
+      iossifovlab conda channel.
+
+* 2026.6.3
+    * Fixed a 403 on the gpf-web SPA introduced by the Google Analytics
+      injection: rewriting index.html via a tempfile left it with a
+      root-only mode that Apache (running as www-data) could not read.
+      The file's original mode and owner are now preserved.
+
 * 2026.6.2
     * Added optional Google Analytics to the gpf-web image: set
       GPF_GA_MEASUREMENT_ID to inject a gtag.js tag into the web interface;
