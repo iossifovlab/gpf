@@ -1,5 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import threading
+from typing import Any
+
 import pytest
+from datasets_api import permissions
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
@@ -59,6 +63,86 @@ def test_get_genomic_scores_memo_hit(
     assert second.status_code == status.HTTP_200_OK, repr(second.content)
     assert first.content == second.content
     assert render_calls == 1
+
+
+def test_get_genomic_scores_reload_invalidates(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bumping the instance timestamp re-renders and changes the ETag."""
+    url = "/api/v3/genomic_scores"
+
+    render_calls = 0
+    original_render = cached_response.JSONRenderer.render
+
+    def counting_render(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        nonlocal render_calls
+        render_calls += 1
+        return original_render(self, *args, **kwargs)
+
+    monkeypatch.setattr(
+        cached_response.JSONRenderer, "render", counting_render,
+    )
+
+    first = user_client.get(url)
+    assert first.status_code == status.HTTP_200_OK, repr(first.content)
+    assert render_calls == 1
+
+    # Simulate an instance reload by advancing the load timestamp.  Both
+    # the cache key (in cached_response) and the ETag (computed by
+    # datasets_api.permissions.get_instance_timestamp_etag) read this
+    # timestamp, so both must observe the bump in lockstep.
+    original_timestamp = cached_response.get_instance_timestamp
+
+    def bumped_timestamp(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return original_timestamp(*args, **kwargs) + 1000.0
+
+    monkeypatch.setattr(
+        cached_response, "get_instance_timestamp", bumped_timestamp,
+    )
+    monkeypatch.setattr(
+        permissions, "get_instance_timestamp", bumped_timestamp,
+    )
+
+    second = user_client.get(url)
+    assert second.status_code == status.HTTP_200_OK, repr(second.content)
+    assert render_calls == 2
+    assert first.content == second.content
+    assert first.headers["ETag"] != second.headers["ETag"]
+
+
+def test_cached_json_response_concurrent_cold_cache(
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    """Concurrent cold-cache callers all get the byte-identical render."""
+    payload = [{"score": "score_one", "value": list(range(100))}]
+
+    def build() -> list[dict[str, Any]]:
+        return payload
+
+    reference = cached_response.JSONRenderer().render(payload)
+
+    barrier = threading.Barrier(8)
+    results: list[bytes] = []
+    results_lock = threading.Lock()
+
+    def worker() -> None:
+        barrier.wait()
+        response = cached_response.cached_json_response(
+            "concurrent_instance", build,
+        )
+        with results_lock:
+            results.append(response.content)
+
+    threads = [threading.Thread(target=worker) for _ in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert len(results) == 8
+    assert all(body == reference for body in results)
 
 
 def test_get_genomic_scores_if_none_match_304(

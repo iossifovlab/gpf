@@ -24,7 +24,13 @@ from rest_framework.renderers import JSONRenderer
 
 CACHE_CONTROL = "public, max-age=3600"
 
-_MAX_ENTRIES = 2
+# The cache is shared across views (the "all" entries plus one entry per
+# distinct ``score_descs/<score_id>`` request).  A small cap of 2 would let
+# the per-score_id keys evict the two hot "all" entries and cause re-render
+# thrash, so the bound is generous; each entry is a tiny ``bytes`` blob, so
+# 16 entries is negligible memory.  Eviction is insertion-order (FIFO):
+# evict the oldest-inserted key when the cap is exceeded.
+_MAX_ENTRIES = 16
 _CACHE: dict[tuple[Any, ...], bytes] = {}
 _CACHE_LOCK = Lock()
 
@@ -47,6 +53,10 @@ def _get_or_render(
         if cached is not None:
             return cached
 
+    # Render outside the lock so an expensive serialization never blocks
+    # concurrent requests.  Deliberate trade-off: concurrent cold misses on
+    # the same key may each render once (the last writer wins on insert);
+    # the rendered bytes are byte-identical, so callers are unaffected.
     body: bytes = JSONRenderer().render(build())
 
     with _CACHE_LOCK:
