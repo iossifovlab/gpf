@@ -167,6 +167,7 @@ class GPFInstance:
         self._variants_db  # noqa: B018
         self.denovo_gene_sets_db  # noqa: B018
         self.genomic_scores  # noqa: B018
+        self.gene_scores_db  # noqa: B018
         self.genotype_storages  # noqa: B018
         return self
 
@@ -424,7 +425,9 @@ class GPFInstance:
 
     @cached_property
     def denovo_gene_sets_db(self) -> DenovoGeneSetsDb:
-        return DenovoGeneSetsDb(self)
+        db = DenovoGeneSetsDb(self)
+        db.has_gene_sets()
+        return db
 
     def get_genotype_data_ids(self) -> list[str]:
         # pylint: disable=unused-argument
