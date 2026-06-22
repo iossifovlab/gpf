@@ -676,6 +676,19 @@ pipeline {
         }
         cleanup {
             sh '''
+                # Backstop teardown of the whole compose project
+                # (db + volumes + network). The Run-e2e stage's own
+                # `down -v` only fires when the pipeline reaches that
+                # stage; a failure or abort earlier — most commonly
+                # instance-import dying during the mysql cold-init
+                # healthcheck window (#845/#316) — skips straight to
+                # post and would otherwise orphan the `db` container
+                # forever (#952). Keyed on $COMPOSE_PROJECT with no
+                # `-f` files so `down` resolves the project by label
+                # and still works even if checkout never ran.
+                docker compose -p "$COMPOSE_PROJECT" \
+                    down -v --remove-orphans 2>/dev/null || true
+
                 # $COMBINED_IMAGE is always defined in the env
                 # block, but only built/pulled when STACK_MODE
                 # = combined. `2>/dev/null || true` makes the
