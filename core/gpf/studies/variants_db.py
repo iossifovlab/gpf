@@ -280,7 +280,9 @@ class VariantsDb:
                 "name": attribute.name,
                 "source": attribute.name,
             }
-            if attribute.get_value_type() == "float":
+            # Raw declared (spec) type, matching the storage schema
+            # (serializers.py) rather than the post-aggregation type.
+            if attribute.get_value_type(aggregated=False) == "float":
                 column["format"] = "%.5f"
             result.append(column)
         return result

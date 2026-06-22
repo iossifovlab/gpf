@@ -59,7 +59,13 @@ class AnnotationPipelineVariantsFilterMixin:
             if key in self._annotation_internal_attributes:
                 continue
             ainfo = self.annotation_pipeline.get_attribute_info(key)
-            if ainfo and ainfo.get_value_type() == "str" \
+            # Raw declared (spec) type, NOT the post-aggregation type:
+            # a str score's default `list` aggregator reports
+            # get_value_type()=="list", so the aggregated list value would
+            # not be stringified and would clash with the pa.string()
+            # column build_summary_schema stores it in. Keep in lockstep
+            # with serializers.py; do NOT change to aggregated=True.
+            if ainfo and ainfo.get_value_type(aggregated=False) == "str" \
                     and value is not None and not isinstance(value, str):
                 value = stringify(value)
             public_attributes[key] = value
