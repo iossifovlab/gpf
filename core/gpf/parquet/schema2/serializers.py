@@ -98,11 +98,11 @@ def build_summary_schema(
         for attr in annotation_schema:
             if attr.internal:
                 continue
-            if attr.value_type in annotation_type_to_pa_type:
+            if attr.get_value_type() in annotation_type_to_pa_type:
                 fields.append(
                     pa.field(
                         attr.name,
-                        annotation_type_to_pa_type[attr.value_type],
+                        annotation_type_to_pa_type[attr.get_value_type()],
                     ),
                 )
     return pa.schema(fields)
