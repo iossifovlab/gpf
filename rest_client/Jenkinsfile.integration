@@ -207,6 +207,24 @@ pipeline {
                             exit $TEST_RC
                         '''
                     } finally {
+                        // Capture backend + mail container logs before
+                        // teardown (gpf#944). `docker compose run` only
+                        // streams the runner, so a backend boot crash
+                        // (run_gpf.sh: instance seed → migrate → user/app
+                        // creation → runserver) otherwise surfaces as just
+                        // "dependency failed to start ... exited (1)" with
+                        // no traceback. Best-effort (|| true); MUST run
+                        // before `down -v` removes the containers.
+                        sh '''
+                            docker compose \
+                                -p "$COMPOSE_PROJECT" \
+                                -f rest_client/docker-compose-integration.yaml \
+                                logs --no-color backend mail \
+                                > reports/integration/compose-backend.log \
+                                2>&1 || true
+                            cat reports/integration/compose-backend.log \
+                                || true
+                        '''
                         sh '''
                             docker compose \
                                 -p "$COMPOSE_PROJECT" \
@@ -238,7 +256,8 @@ pipeline {
                         failOnError: false,
                     )
                     archiveArtifacts(
-                        artifacts: 'reports/integration/*.xml',
+                        artifacts: 'reports/integration/*.xml, ' +
+                            'reports/integration/*.log',
                         allowEmptyArchive: true,
                         fingerprint: false,
                     )
