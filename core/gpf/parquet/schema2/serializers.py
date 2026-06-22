@@ -98,11 +98,19 @@ def build_summary_schema(
         for attr in annotation_schema:
             if attr.internal:
                 continue
-            if attr.get_value_type() in annotation_type_to_pa_type:
+            # Use the raw declared (spec) value type, NOT the
+            # post-aggregation type. A str score's default `list`
+            # aggregator reports get_value_type()=="list", which isn't a
+            # scalar parquet type and would drop the column (e.g. CLNSIG)
+            # so score filters later fail with a duckdb Binder error. The
+            # aggregated value is stringified into this column (see
+            # processing_pipeline.py). Do NOT change to aggregated=True.
+            value_type = attr.get_value_type(aggregated=False)
+            if value_type in annotation_type_to_pa_type:
                 fields.append(
                     pa.field(
                         attr.name,
-                        annotation_type_to_pa_type[attr.get_value_type()],
+                        annotation_type_to_pa_type[value_type],
                     ),
                 )
     return pa.schema(fields)
