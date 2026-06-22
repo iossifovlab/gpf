@@ -120,6 +120,14 @@ pipeline {
             //     sources via uv sync, so dist/core / dist/web_api
             //     would be dead weight here.
             steps {
+                // Stale-artifact guard: this agent's workspace persists
+                // across builds and copyArtifacts only *adds* files, so
+                // dist/gain/ otherwise accumulates every past gain wheel.
+                // uv's --find-links then resolves gain-core to the
+                // highest *version* present, which silently picks a stale
+                // wheel if gain master is ever rolled back. Wipe the copy
+                // targets so only this build's fetched wheel is present.
+                sh 'rm -rf dist/core dist/web_api dist/gain'
                 script {
                     if (params.UPSTREAM_PROJECT?.trim()) {
                         copyArtifacts(
