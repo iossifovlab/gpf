@@ -39,40 +39,71 @@ services:
     command: echo "MySQL data only container"
 
   db:
-    # MariaDB rather than mysql:5.7: same wire protocol, the
-    # production image already has libmariadb3 for the client
-    # side, and the upstream MySQL 5.7 image is EOL.
-    image: mariadb:10.11
+    # mysql:8.0.33 — engine + tag parity with production (gpf#845).
+    # Every prod host (SFARI sparkgpf-prod, gpf-infra dory) pins
+    # mysql:8.0.33 via gpf-infra group_vars (mysql_version_tag). CI
+    # previously ran MariaDB 10.11, which silently accepts schema
+    # operations MySQL 8 rejects — e.g. AlterField(TextField(
+    # unique=True)) -> "ERROR 1170 BLOB/TEXT column used in key
+    # specification without a key length", the #836 bug (PR #843)
+    # that broke a real deploy because no CI job exercised the
+    # migration on the production engine. This service mirrors
+    # gpf-infra/templates/compose.yaml.j2's db so an ORM migration
+    # that breaks on MySQL fails here instead of on deploy.
+    image: mysql:8.0.33
     restart: always
     volumes_from:
       - mysql-data
     environment:
-      MARIADB_DATABASE: gpf
-      MARIADB_USER: seqpipe
-      MARIADB_PASSWORD: secret
-      MARIADB_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: gpf
+      MYSQL_USER: seqpipe
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
     command:
       - --character-set-server=utf8
       - --collation-server=utf8_bin
+      # MySQL 8 defaults to caching_sha2_password; force
+      # mysql_native_password so the libmariadb client baked into
+      # the gpf-web image authenticates. Matches prod.
+      - --default-authentication-plugin=mysql_native_password
     healthcheck:
+      # MySQL ships no healthcheck.sh (that's a MariaDB-image extra);
+      # use mysqladmin ping — but over TCP (-h 127.0.0.1), NOT the
+      # default unix socket (-h localhost, the probe gpf-infra prod
+      # uses). On a cold data dir the MySQL entrypoint runs a
+      # *temporary* init server with --skip-networking to seed users:
+      # a socket ping succeeds against it and flips the container
+      # "healthy" while TCP 3306 is still closed. instance-import is
+      # gated on `service_healthy` and connects to db:3306 over TCP,
+      # so the socket probe let it start too early and it died with
+      # (2002, "Can't connect to server on 'db' (115)") — gpf-web-e2e
+      # #316. A TCP ping stays unhealthy through the skip-networking
+      # phase and only flips once the real networked server listens,
+      # which is exactly what the dependents need. Prod uses the
+      # socket probe safely because its volume persists, so it never
+      # does the cold-init temp-server dance on a normal boot.
       test:
         - CMD
-        - healthcheck.sh
-        - --connect
-        - --innodb_initialized
+        - mysqladmin
+        - ping
+        - -h
+        - 127.0.0.1
+        - -u
+        - root
+        - -psecret
       interval: 10s
       timeout: 5s
-      retries: 5
       # Cold init every build: mysql-data declares no volume, so the
-      # data dir is ephemeral and MariaDB does a full first-boot
-      # bootstrap each run. Under concurrent e2e builds on one agent
-      # that can blow past retries*interval (~50s) and get marked
-      # unhealthy with no DB fault — gpf-web-e2e #109 failed here on
-      # the same SHA that #108 ran green. start_period stops failing
-      # checks from counting until init has had time to finish; a
-      # fast cold init still flips healthy at once, so the grace is
-      # effectively free.
-      start_period: 60s
+      # data dir is ephemeral and MySQL does a full first-boot
+      # bootstrap each run — much slower than MariaDB was (observed
+      # 4+ min on a slow agent). A success during start_period flips
+      # healthy immediately, so a long grace is effectively free; it
+      # only delays the *unhealthy* verdict for a genuinely broken
+      # db. Sized generously (start_period 300s + retries 12*10s) to
+      # tolerate slow cold init on the slowest agents without a
+      # premature unhealthy verdict.
+      retries: 12
+      start_period: 300s
 
   mail:
     image: axllent/mailpit:latest
