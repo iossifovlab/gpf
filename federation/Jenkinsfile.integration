@@ -57,10 +57,24 @@ pipeline {
     stages {
         stage('Start') {
             steps {
-                zulipSend(
-                    message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
-                    topic: "${env.JOB_NAME}",
-                )
+                script {
+                    // Replace the default '#42' with '#42 <branch>'
+                    // (plus '@<short-sha>' on manual COMMIT_SHA pins) so
+                    // the build list shows which branch a build is for —
+                    // mirrors web_e2e/Jenkinsfile.e2e. Set before any
+                    // stage that can fail so it survives early aborts;
+                    // Checkout refines it with the resolved commit.
+                    String label = params.BRANCH_NAME
+                    if (params.COMMIT_SHA?.trim()) {
+                        label += " @ ${params.COMMIT_SHA.take(7)}"
+                    }
+                    currentBuild.displayName =
+                        "#${env.BUILD_NUMBER} ${label}"
+                    zulipSend(
+                        message: "Started build #${env.BUILD_NUMBER} [${label}] of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                        topic: "${env.JOB_NAME}",
+                    )
+                }
             }
         }
 
@@ -80,7 +94,7 @@ pipeline {
                 script {
                     String ref = params.COMMIT_SHA?.trim() ?: \
                                  params.BRANCH_NAME
-                    checkout([
+                    def scmVars = checkout([
                         $class: 'GitSCM',
                         branches: [[name: ref]],
                         userRemoteConfigs: [[
@@ -91,6 +105,12 @@ pipeline {
                                       noTags: true,
                                       depth: 1]],
                     ])
+                    // Refine the build label with the actually-resolved
+                    // commit — nightly triggers pass BRANCH_NAME only,
+                    // no COMMIT_SHA, so this is where the sha appears.
+                    currentBuild.displayName =
+                        "#${env.BUILD_NUMBER} ${params.BRANCH_NAME}" +
+                        " @ ${scmVars.GIT_COMMIT.take(7)}"
                 }
             }
         }
