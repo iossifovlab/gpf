@@ -202,7 +202,12 @@ pipeline {
         // pipeline blocks.
         TAG_NAME         = "${params.TAG_NAME}"
         GAIN_PIN_VERSION = "${params.GAIN_PIN_VERSION}"
-        FORCE_REPUBLISH  = "${params.FORCE_REPUBLISH}"
+        // `?: false` so a stale parameter registration that drops
+        // FORCE_REPUBLISH from the form (gpf#918) resolves to a
+        // concrete "false" instead of an empty string — the freshness
+        // guard below then logs the value it actually saw rather than
+        // silently failing as if the operator never asked.
+        FORCE_REPUBLISH  = "${params.FORCE_REPUBLISH ?: false}"
     }
 
     stages {
@@ -368,6 +373,13 @@ pipeline {
                     # without forcing a version bump. The GAIN_PIN_VERSION
                     # probe further down is NOT gated — it asserts a
                     # required input, not a re-release guard.
+                    #
+                    # Echo the resolved value first (gpf#918): if a
+                    # stale parameter registration dropped the checkbox,
+                    # this prints "FORCE_REPUBLISH override = false" so
+                    # the dropped param is visible in the console instead
+                    # of looking like a deliberate guard rejection.
+                    echo "FORCE_REPUBLISH override = ${FORCE_REPUBLISH}"
                     if [ "${FORCE_REPUBLISH}" = "true" ]; then
                         echo "FORCE_REPUBLISH=true — skipping the" \
                              "gpf-core wheel + Anaconda.org freshness" \
