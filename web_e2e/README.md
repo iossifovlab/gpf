@@ -226,7 +226,7 @@ docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVER
     down -v --remove-orphans
 ```
 
-`-v` removes the named MariaDB volume; on next start `instance-import` re-runs from a clean DB.
+`-v` removes the named MySQL volume; on next start `instance-import` re-runs from a clean DB.
 
 ### What's special about the compose stack
 

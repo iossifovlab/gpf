@@ -554,7 +554,7 @@ pipeline {
                             # re-created (its container was created
                             # for an earlier `up` cycle) and re-runs
                             # the whole import. Two imports against
-                            # the same MariaDB volume produce duplicate
+                            # the same MySQL volume produce duplicate
                             # rows in datasets_api_dataset, which then
                             # trip MultipleObjectsReturned in
                             # gpf_instance.reload_datasets and 500 on
