@@ -59,8 +59,8 @@ class AnnotationPipelineVariantsFilterMixin:
             if key in self._annotation_internal_attributes:
                 continue
             ainfo = self.annotation_pipeline.get_attribute_info(key)
-            if ainfo and ainfo.value_type == "str" and value is not None and \
-                    not isinstance(value, str):
+            if ainfo and ainfo.get_value_type() == "str" \
+                    and value is not None and not isinstance(value, str):
                 value = stringify(value)
             public_attributes[key] = value
         summary_allele.update_attributes(public_attributes)
