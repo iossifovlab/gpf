@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { PhenoToolResult } from '../pheno-tool/pheno-tool-results';
+import * as d3 from 'd3';
 
 @Component({
   selector: '[gpf-pheno-tool-results-chart-per-result]',

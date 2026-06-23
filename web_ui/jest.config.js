@@ -4,7 +4,7 @@ module.exports = {
   preset: 'jest-preset-angular',
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
   modulePaths: ['<rootDir>/src'],
-  transformIgnorePatterns: [`node_modules/(?!${esModules}|.*.mjs$)`],
+  transformIgnorePatterns: [`node_modules/(?!${esModules}|ngx-markdown|marked|.*.mjs$)`],
   coverageReporters: ['html', 'text', 'text-summary', 'cobertura'],
   reporters: [
     'default',
