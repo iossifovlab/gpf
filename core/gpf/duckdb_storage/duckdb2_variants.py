@@ -256,7 +256,7 @@ class DuckDb2Variants(QueryVariantsBase):
 
     def _deserialize_family_variant(
         self, record: list[bytes],
-    ) -> FamilyVariant:
+    ) -> FamilyVariant | None:
         return self.deserialize_family_variant(
             record[4], record[5],
         )

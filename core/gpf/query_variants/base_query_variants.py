@@ -153,6 +153,10 @@ class QueryVariantsBase(QueryVariants):
 
         self.serializer: VariantsDataSerializer = \
             VariantsDataSerializer.build_serializer()
+        # family_ids encountered in variant rows but absent from the
+        # pedigree-derived families (e.g. families withdrawn from the
+        # pedigree). Tracked so we warn at most once per family.
+        self._missing_family_warned: set[str] = set()
 
     def has_affected_status_queries(self) -> bool:
         """Schema2 do support affected status queries."""
@@ -169,10 +173,29 @@ class QueryVariantsBase(QueryVariants):
 
     def deserialize_family_variant(
         self, sv_data: bytes, fv_data: bytes,
-    ) -> FamilyVariant:
-        """Deserialize a family variant from a summary and family blobs."""
-        sv_record = self.serializer.deserialize_summary_record(sv_data)
+    ) -> FamilyVariant | None:
+        """Deserialize a family variant from a summary and family blobs.
+
+        Returns ``None`` when the variant's family is not present in the
+        pedigree-derived families. This makes a family that has been
+        withdrawn from the study pedigree simply inaccessible at query
+        time, rather than raising. The family-variant Parquet rows for
+        such families are left in place but never surface.
+        """
         fv_record = self.serializer.deserialize_family_record(fv_data)
+        family_id = fv_record["family_id"]
+        family = self.families.get(family_id)
+        if family is None:
+            if family_id not in self._missing_family_warned:
+                self._missing_family_warned.add(family_id)
+                logger.warning(
+                    "family %r referenced by a family-variant row is not "
+                    "present in the pedigree; skipping its variants",
+                    family_id,
+                )
+            return None
+
+        sv_record = self.serializer.deserialize_summary_record(sv_data)
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()
@@ -182,8 +205,8 @@ class QueryVariantsBase(QueryVariants):
             SummaryVariantFactory.summary_variant_from_records(
                 sv_record,
             ),
-            self.families[fv_record["family_id"]],
-            family_id=fv_record["family_id"],
+            family,
+            family_id=family_id,
             member_ids=fv_record.get("member_ids"),
             genotype=np.array(fv_record["genotype"]),
             best_state=np.array(fv_record["best_state"]),
