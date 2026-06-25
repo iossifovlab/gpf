@@ -159,6 +159,44 @@ def test_genotype_query_after_withdrawal_is_inaccessible(
     assert len(f1_warnings) == 1, "expected exactly one warn-once for f1"
 
 
+def test_genotype_resolves_pedigree_from_config_not_hardcoded(
+    two_family_gpf: GPFInstance,
+) -> None:
+    # Pins the config-driven pedigree resolution (iossifovlab/gpf#956):
+    # the tool must resolve the pedigree via the study config's
+    # genotype_storage.tables.pedigree, NOT the hardcoded
+    # base_dir/<study_id>/pedigree/pedigree.parquet location.
+    #
+    # We move the real pedigree to a non-default location and point the
+    # study config at it. The default-location file is removed, so a tool
+    # that still used the hardcoded path would fail to find any pedigree
+    # and exit(1) instead of rewriting the custom file. This test therefore
+    # FAILS against the old hardcoded resolution and PASSES against the fix.
+    default_ped = _ped_path(two_family_gpf)
+    custom_ped = (
+        _storage_base(two_family_gpf) / "two_fam_study" / "custom"
+        / "ped.parquet"
+    )
+    custom_ped.parent.mkdir(parents=True, exist_ok=True)
+    default_ped.replace(custom_ped)
+    assert not default_ped.exists()
+
+    # get_genotype_data returns the same cached study object on every call,
+    # so mutating its config here is what main() will resolve against.
+    study = two_family_gpf.get_genotype_data("two_fam_study")
+    study.config["genotype_storage"]["tables"]["pedigree"] = (
+        "parquet_scan('two_fam_study/custom/ped.parquet')"
+    )
+
+    main(["two_fam_study", "f1"], gpf_instance=two_family_gpf)
+
+    # The custom-location pedigree was rewritten (f1 dropped) ...
+    custom_after = pq.read_table(custom_ped)
+    assert set(custom_after.column("family_id").to_pylist()) == {"f2"}
+    # ... and nothing was recreated at the hardcoded default location.
+    assert not default_ped.exists()
+
+
 def test_genotype_dry_run_writes_nothing(
     two_family_gpf: GPFInstance,
 ) -> None:

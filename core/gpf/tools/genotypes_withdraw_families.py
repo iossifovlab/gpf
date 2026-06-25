@@ -29,6 +29,7 @@ import duckdb
 from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.duckdb_storage.duckdb_genotype_storage import DuckDbParquetStorage
+from gpf.duckdb_storage.duckdb_storage_helpers import parquet_scan_path
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeDataStudy
 from gpf.tools.withdraw_families_common import (
@@ -134,22 +135,31 @@ def _remove_from_genotype_leaf(
         )
         sys.exit(1)
 
-    study_data_dir = storage.config.base_dir / study.study_id
+    try:
+        layout = storage.build_study_layout(study.config)
+        ped_path = Path(parquet_scan_path(layout.pedigree))
+    except (KeyError, TypeError, ValueError) as exc:
+        # Operator-facing message only; a traceback here is noise. The
+        # exception carries the real cause whether build_study_layout
+        # raised (e.g. tables is None) or parquet_scan_path rejected the
+        # value (its ValueError embeds the offending expression).
+        logger.error(  # noqa: TRY400
+            "[%s] could not resolve pedigree path from study config: %s",
+            study.study_id, exc,
+        )
+        sys.exit(1)
+
     dry_tag = " [dry-run]" if dry_run else ""
+
+    if not ped_path.exists():
+        logger.error(
+            "[%s] pedigree not found: %s", study.study_id, ped_path,
+        )
+        sys.exit(1)
 
     with duckdb.connect() as conn:
         conn.execute("SET memory_limit = '4G';")
         conn.execute("SET threads = 1;")
-        conn.execute(
-            f"SET temp_directory = '{study_data_dir}.withdraw.tmp';",
-        )
-
-        ped_path = study_data_dir / "pedigree" / "pedigree.parquet"
-        if not ped_path.exists():
-            logger.error(
-                "[%s] pedigree not found: %s", study.study_id, ped_path,
-            )
-            sys.exit(1)
 
         before, after = _rewrite_parquet(
             conn, ped_path, family_ids,

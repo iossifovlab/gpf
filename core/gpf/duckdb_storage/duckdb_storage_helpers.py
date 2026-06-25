@@ -166,6 +166,15 @@ def create_duckdb_tables(
     return tables_layout
 
 
+def parquet_scan_path(scan: str) -> str:
+    """Return the file path from a ``parquet_scan('<path>')`` expression."""
+    match = PARQUET_SCAN.fullmatch(scan)
+    if not match:
+        raise ValueError(
+            f"not a parquet_scan('<path>') expression: {scan!r}")
+    return match.groupdict()["parquet_path"]
+
+
 def join_base_url_and_parquet_scan(
     base_url: str,
     parquet_scan: str | None,
