@@ -32,7 +32,7 @@ from gpf.duckdb_storage.duckdb_genotype_storage import DuckDbParquetStorage
 from gpf.duckdb_storage.duckdb_storage_helpers import parquet_scan_path
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeDataStudy
-from gpf.tools.withdraw_families_common import (
+from gpf.tools.families_withdrawal_common import (
     backup_path,
     build_arg_parser,
     make_run_stamp,

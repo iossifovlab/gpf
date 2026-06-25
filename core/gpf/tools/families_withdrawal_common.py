@@ -1,10 +1,11 @@
-"""Shared helpers for the withdraw-families CLI tools.
+"""Shared helpers for the families-withdrawal CLI tools.
 
 Two purpose-specific tools build on this module:
 
-- ``genotypes_withdraw_families`` rewrites the pedigree and family-variant
-  Parquet files of a ``duckdb_parquet`` genotype study via DuckDB.
-- ``phenotypes_withdraw_families`` removes families from a phenotype study
+- ``families_withdrawal_genotypes`` rewrites the pedigree Parquet file of a
+  ``duckdb_parquet`` genotype study via DuckDB (the family-variant files are
+  left untouched; withdrawn families become inaccessible at query time).
+- ``families_withdrawal_phenotypes`` removes families from a phenotype study
   via SQL ``DELETE``.
 
 Both back up every file they modify by default. A backup is an in-place
@@ -35,8 +36,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _OTHER_TOOL = {
-    "genotypes": "phenotypes_withdraw_families",
-    "phenotypes": "genotypes_withdraw_families",
+    "genotypes": "families_withdrawal_phenotypes",
+    "phenotypes": "families_withdrawal_genotypes",
 }
 
 
@@ -94,7 +95,7 @@ def backup_path(path: Path, stamp: str) -> Path:
 
 
 def build_arg_parser(description: str) -> argparse.ArgumentParser:
-    """Build the argument parser shared by both withdraw-families tools."""
+    """Build the argument parser shared by both families-withdrawal tools."""
     parser = argparse.ArgumentParser(description=description)
     VerbosityConfiguration.set_arguments(parser)
     parser.add_argument(

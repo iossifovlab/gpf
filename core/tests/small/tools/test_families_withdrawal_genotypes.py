@@ -12,8 +12,8 @@ from gpf.genotype_storage.genotype_storage_registry import (
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.testing.foobar_import import foobar_gpf
 from gpf.testing.import_helpers import vcf_study
-from gpf.tools import genotypes_withdraw_families
-from gpf.tools.genotypes_withdraw_families import main
+from gpf.tools import families_withdrawal_genotypes
+from gpf.tools.families_withdrawal_genotypes import main
 
 
 def _build_two_family(
@@ -241,7 +241,7 @@ def test_genotype_two_runs_non_clashing_backups(
     # pedigree .bak files. Inject the stamp to be deterministic.
     stamps = iter(["20260625T100000Z", "20260625T100001Z"])
     monkeypatch.setattr(
-        genotypes_withdraw_families, "make_run_stamp",
+        families_withdrawal_genotypes, "make_run_stamp",
         lambda: next(stamps),
     )
 
