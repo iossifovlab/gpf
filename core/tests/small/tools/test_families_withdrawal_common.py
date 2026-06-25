@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from gpf.tools.withdraw_families_common import (
+from gpf.tools.families_withdrawal_common import (
     backup_path,
     make_run_stamp,
     require_study_kind,

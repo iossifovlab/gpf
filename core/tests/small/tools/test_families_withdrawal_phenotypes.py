@@ -9,8 +9,8 @@ from gain.genomic_resources.testing import setup_pedigree
 from gpf.pheno.common import DestinationConfig, PhenoImportConfig
 from gpf.pheno.pheno_data import PhenotypeStudy
 from gpf.pheno.pheno_import import import_pheno_data
-from gpf.tools import phenotypes_withdraw_families
-from gpf.tools.phenotypes_withdraw_families import (
+from gpf.tools import families_withdrawal_phenotypes
+from gpf.tools.families_withdrawal_phenotypes import (
     _remove_from_pheno_leaf,
     main,
 )
@@ -185,7 +185,7 @@ def test_pheno_main_happy_path_removes_and_backs_up(
 ) -> None:
     dbfile = pathlib.Path(pheno_study.db.dbfile)
     monkeypatch.setattr(
-        phenotypes_withdraw_families, "make_run_stamp",
+        families_withdrawal_phenotypes, "make_run_stamp",
         lambda: "20260625T143000Z",
     )
 
@@ -221,7 +221,7 @@ def test_pheno_main_two_runs_non_clashing_backups(
     dbfile = pathlib.Path(pheno_study.db.dbfile)
     stamps = iter(["20260625T100000Z", "20260625T100001Z"])
     monkeypatch.setattr(
-        phenotypes_withdraw_families, "make_run_stamp",
+        families_withdrawal_phenotypes, "make_run_stamp",
         lambda: next(stamps),
     )
 

@@ -7,7 +7,27 @@ import pytest_mock
 
 from gpf.duckdb_storage.duckdb_storage_helpers import (
     create_s3_secret_clause,
+    parquet_scan_path,
 )
+
+
+def test_parquet_scan_path_unwraps_valid_expression() -> None:
+    assert parquet_scan_path("parquet_scan('/abs/x.parquet')") \
+        == "/abs/x.parquet"
+
+
+@pytest.mark.parametrize(
+    "scan",
+    [
+        "x.parquet",
+        "read_parquet('x')",
+        "parquet_scan(x.parquet)",
+        "",
+    ],
+)
+def test_parquet_scan_path_rejects_non_matching(scan: str) -> None:
+    with pytest.raises(ValueError, match="parquet_scan"):
+        parquet_scan_path(scan)
 
 
 @pytest.mark.parametrize(

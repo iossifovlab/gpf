@@ -23,7 +23,7 @@ from gain.utils.verbosity_configuration import VerbosityConfiguration
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.pheno.pheno_data import PhenotypeGroup, PhenotypeStudy
-from gpf.tools.withdraw_families_common import (
+from gpf.tools.families_withdrawal_common import (
     backup_path,
     build_arg_parser,
     make_run_stamp,
