@@ -486,7 +486,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.currentTabGeneSet.clear();
     tab.split(',').map(t => this.currentTabGeneSet.add(t));
     this.currentTabString = tab;
-    this.location.replaceState('gene-profiles/' + this.currentTabString);
+    this.location.replaceState('/gene-profiles/' + this.currentTabString);
   }
 
   public closeTab(tab: string): void {
@@ -499,7 +499,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
   public backToTable(): void {
     this.hideTable = false;
     this.currentTabString = 'all genes';
-    this.location.replaceState('gene-profiles');
+    this.location.replaceState('/gene-profiles');
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
