@@ -27,7 +27,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   standalone: false
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
-  private readonly configService = inject(ConfigService);
+  public readonly configService = inject(ConfigService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private queryService = inject(QueryService);
