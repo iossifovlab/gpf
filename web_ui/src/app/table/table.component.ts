@@ -53,7 +53,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     }
   }
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   public onWindowScroll(): void {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
 
@@ -73,7 +73,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     this.tableData = this.getVisibleData();
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   public onWindowResize(): void {
     this.tableWidth = `${this.calculateTableWidthFloat()}px`;
   }

@@ -66,7 +66,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public errorModal = false;
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   public handleScroll(): void {
     if (this.isInGeneCompare) {
       if (window.pageYOffset >= this.headerBottomYPosition) {

@@ -15,7 +15,7 @@ export class GpfTableHeaderComponent {
   @Output() public sortingInfoChange = new EventEmitter();
   @Input() public sortingInfo: SortInfo;
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   public onWindowResize(): void {
     this.cdr.detectChanges();
   }

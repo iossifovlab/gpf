@@ -138,7 +138,7 @@ export class UserManagementComponent implements OnInit {
     return re.test(String(name).toLowerCase());
   }
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   public updateTableOnScroll(): void {
     if (this.getPageSubscription.closed && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
       this.updateCurrentTable();

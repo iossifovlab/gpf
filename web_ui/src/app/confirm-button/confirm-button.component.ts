@@ -19,7 +19,7 @@ export class ConfirmButtonComponent {
   @Input() public iconStyle: {name: string; class: string} = {name: '', class: ''};
   @Output() public clicked = new EventEmitter(true);
 
-  public onClick(event: ConfirmCancelEvent): void {
+  public onClick(event: unknown): void {
     this.clicked.next(event);
   }
 }

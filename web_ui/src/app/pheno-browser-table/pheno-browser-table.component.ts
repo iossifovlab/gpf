@@ -106,7 +106,7 @@ export class PhenoBrowserTableComponent implements OnInit {
     }
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   public onResize(): void {
     const screenWidth = window.innerWidth;
     const padding = 60;
