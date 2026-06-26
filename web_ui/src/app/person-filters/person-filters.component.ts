@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import {
   CategoricalFilterState,
@@ -10,7 +10,8 @@ import { PersonAndFamilyFilters, selectPersonFilters } from './person-filters.st
 import { Equals } from 'class-validator';
 import { ComponentValidator } from 'app/common/component-validator';
 import { cloneDeep } from 'lodash';
-import { take } from 'rxjs';
+import { take, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-person-filters',
@@ -18,11 +19,12 @@ import { take } from 'rxjs';
   styleUrls: ['./person-filters.component.css'],
   standalone: false
 })
-export class PersonFiltersComponent extends ComponentValidator implements OnInit {
+export class PersonFiltersComponent implements OnInit, OnDestroy {
   protected store: Store;
+  private destroy$ = new Subject<void>();
 
   @Input() public dataset: Dataset;
-  @Input() public isFamilyFilters: boolean;
+  @Input() public isFamilyFilters = false;
 
   public selectedDatasetId: string;
   public categoricalFilters: PersonFilterState[] = [];
@@ -32,29 +34,34 @@ export class PersonFiltersComponent extends ComponentValidator implements OnInit
   public areFiltersSelected = false;
 
   public constructor() {
-    const store = inject(Store) as Store<object>;
-
-    super(store, 'personFilters', selectPersonFilters);
-    this.store = store;
+    this.store = inject(Store) as Store<object>;
   }
 
   public ngOnInit(): void {
     this.selectedDatasetId = this.dataset.id;
-    this.store.select(selectPersonFilters).subscribe((state: PersonAndFamilyFilters) => {
-      if (this.isFamilyFilters) {
-        this.areFiltersSelected = Boolean(state.familyFilters?.filter(f => f.sourceType === 'continuous').length);
-      } else {
-        this.areFiltersSelected = Boolean(state.personFilters?.filter(f => f.sourceType === 'continuous').length);
-      }
-    });
 
+    // Initialize filters from state once during component initialization
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state: PersonAndFamilyFilters) => {
       const clonedState = cloneDeep(state);
       this.setDefaultFilters();
       this.setFiltersFromState(clonedState);
     });
 
-    super.ngOnInit();
+    // Listen for store changes to update areFiltersSelected
+    this.store.select(selectPersonFilters).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((state: PersonAndFamilyFilters) => {
+      if (this.isFamilyFilters) {
+        this.areFiltersSelected = Boolean(state.familyFilters?.filter(f => f.sourceType === 'continuous').length);
+      } else {
+        this.areFiltersSelected = Boolean(state.personFilters?.filter(f => f.sourceType === 'continuous').length);
+      }
+    });
+  }
+
+  public ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private setDefaultFilters(): void {

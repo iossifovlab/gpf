@@ -275,7 +275,9 @@ export class GeneSetsComponent implements OnInit, OnDestroy {
 
   public onSelect(event: GeneSet): void {
     this.isDropdownOpen = false;
-    (this.searchBox.nativeElement as HTMLElement).blur();
+    if (this.searchBox?.nativeElement) {
+      (this.searchBox.nativeElement as HTMLElement).blur();
+    }
     this.selectedGeneSet = event;
     if (event === null) {
       this.onSearch();

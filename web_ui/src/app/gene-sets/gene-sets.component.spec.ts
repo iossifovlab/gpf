@@ -1,5 +1,5 @@
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
@@ -18,17 +18,21 @@ import {
   SelectedPersonSetCollections } from './gene-sets';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { geneSetsReducer } from './gene-sets.state';
 import {
   MatAutocompleteOrigin,
   MatAutocomplete,
   MatAutocompleteTrigger,
+  MatAutocompleteModule,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
 import { StoreModule, Store } from '@ngrx/store';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetHierarchy, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { FormsModule } from '@angular/forms';
+import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
+import { BoldMatchingPipe } from 'app/utils/bold-matching.pipe';
 
 const denovoGeneSetsMock = [
   new GeneSetType(
@@ -187,13 +191,16 @@ describe('GeneSetsComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent],
+      declarations: [GeneSetsComponent, ErrorsAlertComponent, BoldMatchingPipe],
       imports: [
         StoreModule.forRoot({geneSets: geneSetsReducer}),
         RouterTestingModule,
         NgbAccordionModule, NgbNavModule,
         CommonModule,
         BrowserModule,
+        FormsModule,
+        MatAutocompleteModule,
+        MatInputModule,
         MatAutocompleteOrigin,
         MatAutocomplete,
         MatAutocompleteTrigger
@@ -206,7 +213,7 @@ describe('GeneSetsComponent', () => {
         { provide: DatasetsService, useValue: datasetsServiceMock },
         { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: '' },
         provideHttpClientTesting()
-      ], schemas: [NO_ERRORS_SCHEMA]
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneSetsComponent);
@@ -218,6 +225,10 @@ describe('GeneSetsComponent', () => {
     jest.spyOn(store, 'dispatch').mockReturnValue(null);
 
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('should create', () => {
@@ -505,8 +516,6 @@ describe('GeneSetsComponent', () => {
 
     component.selectedGeneSetsCollection = geneSetsCollectionMock1;
     const spy = jest.spyOn(component, 'onSearch');
-
-    fixture.detectChanges();
 
     component.onSelect(new GeneSet('name1', 2, 'desc3', 'download4'));
     expect(component.selectedGeneSet).toStrictEqual(new GeneSet('name1', 2, 'desc3', 'download4'));

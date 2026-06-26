@@ -4,7 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { Store, StoreModule } from '@ngrx/store';
 import { GeneProfiles } from './gene-profiles-table.state';
@@ -12,7 +12,7 @@ import { TruncatePipe } from 'app/utils/truncate.pipe';
 import { Location } from '@angular/common';
 import { UserInfo } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
-import { SimpleChanges } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, SimpleChanges } from '@angular/core';
 
 const column1 = {
   clickable: 'createTab',
@@ -290,7 +290,8 @@ describe('GeneProfilesTableComponent', () => {
         { provide: UsersService, useValue: usersServiceMock }
 
       ],
-      imports: [StoreModule.forRoot({})]
+      imports: [StoreModule.forRoot({})],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneProfilesTableComponent);
@@ -310,6 +311,12 @@ describe('GeneProfilesTableComponent', () => {
       headerLeaves: []
     } as GeneProfiles));
     fixture.detectChanges();
+    component.searchBox = {
+      nativeElement: {
+        value: '',
+        focus: jest.fn()
+      }
+    };
   });
 
   it('should create', () => {
@@ -519,7 +526,7 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.sortBy).toBe('column1');
   });
 
-  it('should reset table state', () => {
+  it('should reset table state', fakeAsync(() => {
     component.tabs = new Set(['POGZ']);
     component.searchValue$.next('chd');
     component.highlightedGenes = new Set(['CHD8']);
@@ -528,16 +535,15 @@ describe('GeneProfilesTableComponent', () => {
 
     component.hideTable = false;
     component.config = cloneDeep(configMock);
-    fixture.detectChanges();
-
 
     component.resetState();
+
     expect(component.tabs).toStrictEqual(new Set());
     expect(component.searchValue$.value).toBe('');
     expect(component.highlightedGenes).toStrictEqual(new Set());
     expect(component.orderBy).toBe('desc');
     expect(component.sortBy).toBe('column1');
-  });
+  }));
 
   it('should reset table header state', () => {
     component.leavesIds = [

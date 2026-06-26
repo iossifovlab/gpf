@@ -534,7 +534,9 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.highlightedGenes = new Set<string>();
     this.orderBy = 'desc';
     this.searchValue$.next('');
-    (this.searchBox.nativeElement as HTMLInputElement).value = '';
+    if (this.searchBox?.nativeElement) {
+      (this.searchBox.nativeElement as HTMLInputElement).value = '';
+    }
 
     this.resetConfig.emit();
 

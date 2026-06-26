@@ -18,6 +18,7 @@ import { familyIdsReducer, resetFamilyIds } from 'app/family-ids/family-ids.stat
 import { familyTagsReducer, resetFamilyTags } from 'app/family-tags/family-tags.state';
 import { personFiltersReducer, resetFamilyFilterStates } from 'app/person-filters/person-filters.state';
 import { PersonFilterState, CategoricalSelection } from 'app/person-filters/person-filters';
+import { familyMeasureHistogramsReducer } from 'app/person-filters-selector/measure-histogram.state';
 
 const pedigreeCounters: PedigreeCounter[] = [
   new PedigreeCounter(1, 'groupName',
@@ -268,7 +269,8 @@ describe('FamilyFiltersBlockComponent', () => {
           datasetId: datasetIdReducer,
           familyIds: familyIdsReducer,
           familyTags: familyTagsReducer,
-          personFilters: personFiltersReducer
+          personFilters: personFiltersReducer,
+          familyMeasureHistograms: familyMeasureHistogramsReducer
         })
       ],
       providers: [
@@ -291,14 +293,15 @@ describe('FamilyFiltersBlockComponent', () => {
     // eslint-disable-next-line @stylistic/max-len
     const datasetMock = new Dataset('datasetId', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, false, true, true);
     component.dataset = datasetMock;
-
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '');
-    jest.spyOn(global, 'setTimeout').mockImplementationOnce((fn) => {
-      fn();
-      return timer;
-    });
   }));
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -311,6 +314,8 @@ describe('FamilyFiltersBlockComponent', () => {
   });
 
   it('should get family tags and invoke on resize method', () => {
+    component.tags = [];
+    component.orderedTagList = [];
     const onResizeSpy = jest.spyOn(component, 'onResize');
     const setFamiliesCountSpy = jest.spyOn(component, 'setFamiliesCount');
     component.ngOnInit();
@@ -385,7 +390,6 @@ describe('FamilyFiltersBlockComponent', () => {
 
     expect(component.hasContent).toBe(true);
     expect(selectNavSpy).toHaveBeenCalledWith('familyIds');
-    jest.useRealTimers();
   });
 
   it('should get family tags from state and open Family tags tab', () => {
@@ -411,7 +415,6 @@ describe('FamilyFiltersBlockComponent', () => {
 
     expect(component.hasContent).toBe(true);
     expect(selectNavSpy).toHaveBeenCalledWith('familyTags');
-    jest.useRealTimers();
   });
 
   it('should get person filters from state and open Advanced tab', () => {
@@ -454,7 +457,6 @@ describe('FamilyFiltersBlockComponent', () => {
 
     expect(component.hasContent).toBe(true);
     expect(selectNavSpy).toHaveBeenCalledWith('advanced');
-    jest.useRealTimers();
   });
 
   it('should clear all states when switching tab', () => {
@@ -508,7 +510,8 @@ describe('FamilyFiltersBlockComponent', () => {
   });
 
   it('should not set families count when there are no family counters', () => {
-    jest.clearAllMocks();
+    fixture.detectChanges();
+    component.selectedFamiliesCount = undefined;
     component.familiesCounters = undefined;
     component.setFamiliesCount();
     expect(component.selectedFamiliesCount).toBeUndefined();
