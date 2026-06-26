@@ -32,6 +32,7 @@ class DenovoGeneSetsDb:
     def reload(self) -> None:
         self._gene_set_collections_cache = {}
         self._gene_set_configs_cache = {}
+        self.get_genotype_data_ids.cache_clear()
 
     @property
     def _denovo_gene_set_collections(
