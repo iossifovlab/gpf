@@ -1,16 +1,24 @@
+import { TestBed } from '@angular/core/testing';
 import { EnrichmentTestResult } from 'app/enrichment-query/enrichment-result';
 import { BrowserQueryFilter, PersonSetCollection } from 'app/genotype-browser/genotype-browser';
 import { BackgroundColorEnrichmentPipe } from './background-color-enrichment.pipe';
 import { PValueIntensityPipe } from './p-value-intensity.pipe';
 
 describe('BackgroundColorEnrichmentPipe', () => {
+  let pipe: BackgroundColorEnrichmentPipe;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [BackgroundColorEnrichmentPipe, PValueIntensityPipe]
+    });
+    pipe = TestBed.inject(BackgroundColorEnrichmentPipe);
+  });
+
   it('should create an instance', () => {
-    const pipe = new BackgroundColorEnrichmentPipe(new PValueIntensityPipe());
     expect(pipe).toBeTruthy();
   });
 
   it('should get rgba background color', () => {
-    const pipe = new BackgroundColorEnrichmentPipe(new PValueIntensityPipe());
     expect(pipe.transform(new EnrichmentTestResult('name1', 2, 3, 4, 5,
       new BrowserQueryFilter(
         'name6', ['gene7', 'gene8'], ['effectType9', 'effectType10'],
