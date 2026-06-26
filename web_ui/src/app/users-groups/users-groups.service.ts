@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { UserGroup } from './users-groups';
 import { ConfigService } from '../config/config.service';
@@ -7,15 +7,13 @@ import { Observable } from 'rxjs';
 
 @Injectable()
 export class UsersGroupsService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly groupsUrl = 'groups';
   private readonly groupGrantPermissionUrl = 'groups/grant-permission';
   private readonly groupRevokePermissionUrl = 'groups/revoke-permission';
   private readonly pageSize = 25;
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-  ) {}
 
   public getAllGroups(): Observable<UserGroup[]> {
     const options = { withCredentials: true };

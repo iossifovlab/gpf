@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { UserSavedQuery } from '../user-profile/user-profile.component';
 import { QueryService } from '../query/query.service';
 
@@ -9,11 +9,9 @@ import { QueryService } from '../query/query.service';
   standalone: false
 })
 export class SavedQueriesTableComponent {
-  @Input() public queries: Array<UserSavedQuery>;
+  private queryService = inject(QueryService);
 
-  public constructor(
-    private queryService: QueryService
-  ) {}
+  @Input() public queries: Array<UserSavedQuery>;
 
   public deleteQuery(uuid: string): void {
     this.queries = this.queries.filter(query => query.uuid !== uuid);

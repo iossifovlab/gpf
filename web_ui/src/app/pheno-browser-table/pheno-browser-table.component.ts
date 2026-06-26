@@ -1,11 +1,4 @@
-import {
-  OnInit,
-  Component,
-  HostListener,
-  Input,
-  ViewChildren,
-  ChangeDetectionStrategy
-} from '@angular/core';
+import { OnInit, Component, HostListener, Input, ViewChildren, ChangeDetectionStrategy, inject } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
   PhenoBrowserModalContentComponent
@@ -22,6 +15,8 @@ import { isNumber, isString } from 'lodash';
   standalone: false
 })
 export class PhenoBrowserTableComponent implements OnInit {
+  private modalService = inject(NgbModal);
+
   @Input() public measures: PhenoMeasures;
   @Input() public measuresChangeTick: number;
   @Input() public measuresLoading: boolean;
@@ -32,10 +27,6 @@ export class PhenoBrowserTableComponent implements OnInit {
   public columnsCount = 4;
   public sortBy: string;
   public orderBy = 'desc';
-
-  public constructor(
-    private modalService: NgbModal
-  ) { }
 
   public ngOnInit(): void {
     this.columnsCount += 2*Object.keys(this.measures.regressionNames).length;

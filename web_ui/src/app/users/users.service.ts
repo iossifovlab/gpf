@@ -1,5 +1,5 @@
 import { Observable, Subject } from 'rxjs';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
@@ -15,6 +15,12 @@ import { LocationStrategy } from '@angular/common';
 
 @Injectable()
 export class UsersService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+  private cookieService = inject(CookieService);
+  private authService = inject(AuthService);
+  private locationStrategy = inject(LocationStrategy);
+
   private readonly logoutUrl = 'users/logout';
   private readonly userInfoUrl = 'users/get_user_info';
   private readonly resetPasswordUrl = 'users/forgotten_password';
@@ -28,14 +34,6 @@ export class UsersService {
   /* This is used to indicate that the app is in the middle of logging out.
      Currently used by the AuthInterceptor to avoid interrupting the logout process. */
   public isLoggingOut = false;
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-    private cookieService: CookieService,
-    private authService: AuthService,
-    private locationStrategy: LocationStrategy
-  ) { }
 
   public logout(): Observable<object> {
     const csrfToken = this.cookieService.get('csrftoken');

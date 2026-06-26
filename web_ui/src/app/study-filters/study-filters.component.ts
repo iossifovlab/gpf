@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, OnDestroy, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Dataset } from '../datasets/datasets';
 import { resetStudyFilters, selectStudyFilters, setStudyFilters } from './study-filters.state';
@@ -19,6 +19,10 @@ import { take } from 'rxjs';
   standalone: false
 })
 export class StudyFiltersComponent extends ComponentValidator implements OnInit, OnDestroy {
+  protected store: Store;
+  datasets = inject(DatasetsService);
+  private datasetsTreeService = inject(DatasetsTreeService);
+
   @Input() public dataset: Dataset;
 
   @Validate(SetNotEmpty, {message: 'Select at least one.'})
@@ -28,10 +32,12 @@ export class StudyFiltersComponent extends ComponentValidator implements OnInit,
 
   @ViewChild('nav') public ngbNav: NgbNav;
 
-  public constructor(
-    protected store: Store, public datasets: DatasetsService, private datasetsTreeService: DatasetsTreeService
-  ) {
+  public constructor() {
+    const store = inject(Store);
+
     super(store, 'studyFilters', selectStudyFilters);
+  
+    this.store = store;
   }
 
   public showStudyFilters = false;

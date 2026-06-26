@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CategoricalFilterState, CategoricalSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -22,18 +22,16 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class CategoricalFilterComponent implements OnInit {
+  private datasetsService = inject(DatasetsService);
+  private phenoBrowserService = inject(PhenoBrowserService);
+  private store = inject(Store);
+
   @Input() public categoricalFilter: PersonFilterState;
   @Input() public isFamilyFilters: boolean;
   public categoricalFilterState: CategoricalFilterState;
   public sourceDescription$: Observable<object>;
   public valuesDomain: any = [];
   public imgPathPrefix = environment.imgPathPrefix;
-
-  public constructor(
-    private datasetsService: DatasetsService,
-    private phenoBrowserService: PhenoBrowserService,
-    private store: Store
-  ) {}
 
   public ngOnInit(): void {
     this.store.select(selectPersonFilters).pipe(

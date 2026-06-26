@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectInheritanceTypes, setInheritanceTypes } from './inheritancetypes.state';
 import { take } from 'rxjs';
@@ -11,12 +11,14 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class InheritancetypesComponent implements OnInit {
+  protected store = inject(Store);
+
   @Input() public inheritanceTypes: Set<string>;
   @Input() public selectedValues: Set<string> = new Set();
   public inheritanceTypeDisplayNames: Map<string, string>;
   public errors: string[] = [];
 
-  public constructor(protected store: Store) {
+  public constructor() {
     this.inheritanceTypeDisplayNames = new Map();
     this.inheritanceTypeDisplayNames.set('reference', 'Reference');
     this.inheritanceTypeDisplayNames.set('mendelian', 'Mendelian');

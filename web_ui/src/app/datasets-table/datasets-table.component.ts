@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DatasetsService } from '../datasets/datasets.service';
 import { DatasetPermissions } from './datasets-table';
@@ -15,12 +15,10 @@ import { Item } from 'app/item-add-menu/item-add-menu';
   standalone: false
 })
 export class DatasetsTableComponent {
-  @Input() public datasets: DatasetPermissions[];
+  private usersGroupsService = inject(UsersGroupsService);
+  private datasetsService = inject(DatasetsService);
 
-  public constructor(
-    private usersGroupsService: UsersGroupsService,
-    private datasetsService: DatasetsService
-  ) { }
+  @Input() public datasets: DatasetPermissions[];
 
   public isDefaultGroup(dataset: DatasetPermissions, group: string): boolean {
     return dataset.getDefaultGroups().indexOf(group) !== -1;

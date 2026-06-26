@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, QueryList, ViewChildren, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, QueryList, ViewChildren, ViewChild, inject } from '@angular/core';
 import { combineLatest, of, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
@@ -25,6 +25,10 @@ interface Regression {
   standalone: false
 })
 export class PhenoToolMeasureComponent implements OnInit {
+  protected store = inject(Store);
+  private measuresService = inject(MeasuresService);
+  private datasetsService = inject(DatasetsService);
+
   @ViewChildren('checkboxes') public inputs: QueryList<ElementRef>;
 
   public selectedMeasure: ContinuousMeasure = null;
@@ -38,12 +42,6 @@ export class PhenoToolMeasureComponent implements OnInit {
 
   public dataset: Dataset;
   public errors: string[] = [];
-
-  public constructor(
-    protected store: Store,
-    private measuresService: MeasuresService,
-    private datasetsService: DatasetsService
-  ) { }
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(

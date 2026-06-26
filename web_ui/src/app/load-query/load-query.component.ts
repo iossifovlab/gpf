@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
 import { take } from 'rxjs/operators';
@@ -43,12 +43,11 @@ const PAGE_TYPE_TO_NAVIGATE = {
   standalone: false
 })
 export class LoadQueryComponent implements OnInit {
-  public constructor(
-    private store: Store,
-    private queryService: QueryService,
-    private route: ActivatedRoute,
-    private router: Router
-  ) { }
+  private store = inject(Store);
+  private queryService = inject(QueryService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
 
   public ngOnInit(): void {
     const uuid: string = this.route.snapshot.params.uuid as string;

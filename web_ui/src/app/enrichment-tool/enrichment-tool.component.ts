@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { combineLatest, Observable, of, Subscription, switchMap } from 'rxjs';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
@@ -20,6 +20,11 @@ import { Dataset } from 'app/datasets/datasets';
   standalone: false
 })
 export class EnrichmentToolComponent implements OnInit, OnDestroy {
+  private enrichmentQueryService = inject(EnrichmentQueryService);
+  private datasetsService = inject(DatasetsService);
+  private loadingService = inject(FullscreenLoadingService);
+  private store = inject(Store);
+
   public enrichmentResults: EnrichmentResults;
   public selectedDataset: Dataset;
   public disableQueryButtons = false;
@@ -27,13 +32,6 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public enrichmentState: Observable<object[]>;
   public enrichmentQuerySubscription: Subscription = null;
   private enrichmentToolState = {};
-
-  public constructor(
-    private enrichmentQueryService: EnrichmentQueryService,
-    private datasetsService: DatasetsService,
-    private loadingService: FullscreenLoadingService,
-    private store: Store
-  ) { }
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(

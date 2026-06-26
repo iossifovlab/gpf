@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
@@ -12,14 +12,12 @@ import { Location } from '@angular/common';
   standalone: false
 })
 export class GeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
+  private geneProfilesService = inject(GeneProfilesService);
+  private route = inject(ActivatedRoute);
+  private location = inject(Location);
+
   public $geneProfilesConfig: Observable<GeneProfilesSingleViewConfig>;
   @Input() public geneSymbols = new Set<string>();
-
-  public constructor(
-    private geneProfilesService: GeneProfilesService,
-    private route: ActivatedRoute,
-    private location: Location
-  ) { }
 
   public ngOnInit(): void {
     this.$geneProfilesConfig = this.geneProfilesService.getConfig();

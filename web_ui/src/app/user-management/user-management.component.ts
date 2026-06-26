@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UserGroup } from 'app/users-groups/users-groups';
@@ -18,6 +18,10 @@ type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
   standalone: false
 })
 export class UserManagementComponent implements OnInit {
+  private usersService = inject(UsersService);
+  private usersGroupsService = inject(UsersGroupsService);
+  private datasetsService = inject(DatasetsService);
+
   public users: User[] = [];
   public groups: UserGroup[] = [];
   public datasets: DatasetPermissions[] = [];
@@ -35,12 +39,6 @@ export class UserManagementComponent implements OnInit {
   private pageCount = 0;
   private tableName: TableName = 'USERS';
   private allPagesLoaded = false;
-
-  public constructor(
-    private usersService: UsersService,
-    private usersGroupsService: UsersGroupsService,
-    private datasetsService: DatasetsService
-  ) { }
 
   public ngOnInit(): void {
     this.focusSearchBox();

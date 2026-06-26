@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Partitions, PartitionsJson } from './gene-scores';
@@ -8,13 +8,11 @@ import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 
 @Injectable()
 export class GeneScoresService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly geneScoresUrl = 'gene_scores';
   private readonly geneScoresPartitionsUrl = 'gene_scores/partitions';
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
 
   public getGeneScores(geneScoresIds?: string): Observable<GenomicScore[]> {
     let url = this.config.baseUrl + this.geneScoresUrl + '/histograms';

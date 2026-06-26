@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 import { Subscription, combineLatest, of, switchMap, take } from 'rxjs';
@@ -18,6 +18,11 @@ import { reset } from 'app/users/state-actions';
   standalone: false
 })
 export class DatasetsComponent extends ComponentValidator implements OnInit, OnDestroy {
+  private datasetsService = inject(DatasetsService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  protected store: Store;
+
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];
@@ -28,13 +33,11 @@ export class DatasetsComponent extends ComponentValidator implements OnInit, OnD
 
   public selectedTool: string;
 
-  public constructor(
-    private datasetsService: DatasetsService,
-    private route: ActivatedRoute,
-    private router: Router,
-    protected store: Store,
-  ) {
+  public constructor() {
+    const store = inject(Store) as Store<object>;
+
     super(store, 'dataset', selectDatasetId);
+    this.store = store;
   }
 
   public ngOnInit(): void {

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { resetZygosityFilter, selectZygosityFilter, setZygosityFilter } from './zygosity-filter.state';
 import { Store } from '@ngrx/store';
 import { take } from 'rxjs';
@@ -11,11 +11,11 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   standalone: false
 })
 export class ZygosityFilterComponent implements OnInit {
+  private store = inject(Store);
+
   @Input() public parentComponent: string;
   public zygosityTypes: string[] = [];
   public selectedZygosityTypes: Set<string> = new Set<string>();
-
-  public constructor(private store: Store) {}
 
   public ngOnInit(): void {
     this.zygosityTypes = ['homozygous', 'heterozygous'];

@@ -1,4 +1,4 @@
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit, inject } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
@@ -14,14 +14,14 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class VariantTypesComponent implements OnInit {
+  protected store = inject(Store);
+
   @Input() public variantTypes: Set<string> = new Set<string>([]);
 
   @Input()
   @Validate(SetNotEmpty, {message: 'Select at least one.'})
   public selectedVariantTypes: Set<string> = new Set();
   public errors: string[] = [];
-
-  public constructor(protected store: Store) {}
 
   public ngOnInit(): void {
     this.store.select(selectVariantTypes).pipe(take(1)).subscribe(variantTypesState => {

@@ -1,5 +1,5 @@
 import { APP_BASE_HREF } from '@angular/common';
-import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { DatasetHierarchy } from 'app/datasets/datasets';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
@@ -19,6 +19,14 @@ import { Subject, Subscription, combineLatest, debounceTime, distinctUntilChange
   standalone: false
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  private instanceService = inject(InstanceService);
+  private datasetsService = inject(DatasetsService);
+  private datasetsTreeService = inject(DatasetsTreeService);
+  private geneProfilesService = inject(GeneProfilesService);
+  private geneProfilesTableService = inject(GeneProfilesTableService);
+  private geneService = inject(GeneService);
+  private baseHref = inject(APP_BASE_HREF);
+
   private subscription: Subscription = new Subscription();
 
   public gpfVersion = '';
@@ -40,16 +48,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   public searchBoxInput$: Subject<string> = new Subject();
   private keystrokeSubscription: Subscription;
   public showError = false;
-
-  public constructor(
-    private instanceService: InstanceService,
-    private datasetsService: DatasetsService,
-    private datasetsTreeService: DatasetsTreeService,
-    private geneProfilesService: GeneProfilesService,
-    private geneProfilesTableService: GeneProfilesTableService,
-    private geneService: GeneService,
-    @Inject(APP_BASE_HREF) private baseHref: string,
-  ) {}
 
   public ngOnInit(): void {
     this.subscription.add(combineLatest({

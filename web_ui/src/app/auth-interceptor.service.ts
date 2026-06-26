@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   HttpInterceptor,
   HttpRequest,
@@ -15,14 +15,12 @@ import { UsersService } from './users/users.service';
   providedIn: 'root'
 })
 export class AuthInterceptorService implements HttpInterceptor {
+  private authService = inject(AuthService);
+  private usersService = inject(UsersService);
+
   private refreshTokenInProgress = false;
   private tokenRefreshedSource = new Subject<boolean>();
   private tokenRefreshed$ = this.tokenRefreshedSource.asObservable();
-
-  public constructor(
-    private authService: AuthService,
-    private usersService: UsersService,
-  ) { }
 
   public intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const request = this.addAuthHeader(req);

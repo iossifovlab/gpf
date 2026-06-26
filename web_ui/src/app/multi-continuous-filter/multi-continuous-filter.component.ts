@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, inject } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection} from '../person-filters/person-filters';
 import { Store } from '@ngrx/store';
@@ -21,6 +21,8 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class MultiContinuousFilterComponent extends ComponentValidator implements OnInit {
+  protected store: Store;
+
   @Input() public datasetId: string;
   @Input() public continuousFilter: ContinuousFilterState;
   @Input() public isFamilyFilters: boolean;
@@ -31,8 +33,12 @@ export class MultiContinuousFilterComponent extends ComponentValidator implement
   public measures: Array<ContinuousMeasure>;
   public internalSelectedMeasure: ContinuousMeasure;
 
-  public constructor(protected store: Store) {
+  public constructor() {
+    const store = inject(Store);
+
     super(store, 'personFilters', selectPersonFilters);
+  
+    this.store = store;
   }
 
   public ngOnInit(): void {

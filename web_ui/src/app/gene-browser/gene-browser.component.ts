@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
@@ -27,6 +27,17 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   standalone: false
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
+  private readonly configService = inject(ConfigService);
+  private route = inject(ActivatedRoute);
+  private location = inject(Location);
+  private queryService = inject(QueryService);
+  private geneService = inject(GeneService);
+  private loadingService = inject(FullscreenLoadingService);
+  private router = inject(Router);
+  private datasetsTreeService = inject(DatasetsTreeService);
+  private store = inject(Store);
+  private datasetsService = inject(DatasetsService);
+
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ViewChild('geneBrowserSearchTrigger') private geneBrowserSearchTrigger: MatAutocompleteTrigger;
   @ViewChild('filters', { static: false }) public set filters(element: HTMLElement) {
@@ -63,20 +74,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private selectedDatasetId: string;
   private variantUpdate$: Subject<void> = new Subject();
   private interruptSummaryVariants$ = new Subject();
-
-  public constructor(
-    public readonly configService: ConfigService,
-    private route: ActivatedRoute,
-    private location: Location,
-    private queryService: QueryService,
-    private geneService: GeneService,
-    private loadingService: FullscreenLoadingService,
-    private router: Router,
-    private datasetsTreeService: DatasetsTreeService,
-    private store: Store,
-    private datasetsService: DatasetsService
-  ) {
-  }
 
   public variantsCountDisplay: string;
   public familyVariantsCount: string;

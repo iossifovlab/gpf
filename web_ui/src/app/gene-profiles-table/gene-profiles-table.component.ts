@@ -1,7 +1,4 @@
-import {
-  Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
-  OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewChildren
-} from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewChildren, inject } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -34,6 +31,12 @@ import { sprintf } from 'sprintf-js';
   standalone: false
 })
 export class GeneProfilesTableComponent extends ComponentValidator implements OnInit, OnChanges, OnDestroy {
+  private geneProfilesTableService = inject(GeneProfilesTableService);
+  private location = inject(Location);
+  private route = inject(ActivatedRoute);
+  protected store: Store;
+  private usersService = inject(UsersService);
+
   private subscription: Subscription = new Subscription();
 
   @Input() public config: GeneProfilesTableConfig;
@@ -81,14 +84,12 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
 
   public stateFinishedLoading = false;
 
-  public constructor(
-    private geneProfilesTableService: GeneProfilesTableService,
-    private location: Location,
-    private route: ActivatedRoute,
-    protected store: Store,
-    private usersService: UsersService
-  ) {
+  public constructor() {
+    const store = inject(Store);
+
     super(store, 'geneProfiles', selectGeneProfiles);
+  
+    this.store = store;
   }
 
   public ngOnInit(): void {

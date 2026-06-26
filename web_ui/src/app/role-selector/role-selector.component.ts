@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { MeasuresService } from 'app/measures/measures.service';
@@ -11,6 +11,9 @@ import { distinctUntilChanged, Subject, switchMap, take } from 'rxjs';
   standalone: false
 })
 export class RoleSelectorComponent implements OnInit {
+  private measuresService = inject(MeasuresService);
+  private store = inject(Store);
+
   @Input() public initialState: string[] = [];
   @Output() public updateSelectedRoles = new EventEmitter<string[]>();
   public roleSuggestions = [];
@@ -18,8 +21,6 @@ export class RoleSelectorComponent implements OnInit {
   public searchBoxInput$: Subject<string> = new Subject();
   public roles: string[] = [];
   public selectedRoles: string[] = [];
-
-  public constructor(private measuresService: MeasuresService, private store: Store) {}
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(

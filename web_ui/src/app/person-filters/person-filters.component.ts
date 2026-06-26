@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import {
   CategoricalFilterState,
@@ -19,6 +19,8 @@ import { take } from 'rxjs';
   standalone: false
 })
 export class PersonFiltersComponent extends ComponentValidator implements OnInit {
+  protected store: Store;
+
   @Input() public dataset: Dataset;
   @Input() public isFamilyFilters: boolean;
 
@@ -29,8 +31,11 @@ export class PersonFiltersComponent extends ComponentValidator implements OnInit
   @Equals(true, {message: 'Select at least one continuous filter.'})
   public areFiltersSelected = false;
 
-  public constructor(protected store: Store) {
+  public constructor() {
+    const store = inject(Store) as Store<object>;
+
     super(store, 'personFilters', selectPersonFilters);
+    this.store = store;
   }
 
   public ngOnInit(): void {

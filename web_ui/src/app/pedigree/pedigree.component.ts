@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, ViewChild, inject } from '@angular/core';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { ConfigService } from 'app/config/config.service';
@@ -14,6 +14,11 @@ import { switchMap, take } from 'rxjs';
   standalone: false
 })
 export class PedigreeComponent {
+  modalService = inject(NgbModal);
+  private variantReportsService = inject(VariantReportsService);
+  configService = inject(ConfigService);
+  private store = inject(Store);
+
   @Input() public family: PedigreeData[];
   @Input() public groupName: string;
   @Input() public counterId: number;
@@ -27,13 +32,6 @@ export class PedigreeComponent {
   public familyIdsList: string[];
   public pedigreeScale = 2.5;
   public selectedDatasetId = '';
-
-  public constructor(
-    public modalService: NgbModal,
-    private variantReportsService: VariantReportsService,
-    public configService: ConfigService,
-    private store: Store
-  ) { }
 
   public loadFamilyListData(): void {
     if (this.familyIdsList !== undefined) {

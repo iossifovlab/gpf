@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { UsersService } from '../users/users.service';
@@ -11,12 +11,10 @@ import { UserInfo } from 'app/users/users';
   standalone: false
 })
 export class ManagementComponent implements OnInit {
-  public showTemplate = false;
+  private router = inject(Router);
+  private usersService = inject(UsersService);
 
-  public constructor(
-    private router: Router,
-    private usersService: UsersService
-  ) { }
+  public showTemplate = false;
 
   public ngOnInit(): void {
     const user: UserInfo = this.usersService.cachedUserInfo();

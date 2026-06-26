@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef, inject } from '@angular/core';
 import { QueryService } from '../query/query.service';
 import { NgbDropdown, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
@@ -14,6 +14,11 @@ import { UserInfo } from 'app/users/users';
   standalone: false
 })
 export class SaveQueryComponent implements OnInit {
+  private store = inject(Store);
+  private queryService = inject(QueryService);
+  private usersService = inject(UsersService);
+  private changeDetectorRef = inject(ChangeDetectorRef);
+
   @Input() public queryType: string;
   @Input() public disabled: boolean;
 
@@ -30,13 +35,6 @@ export class SaveQueryComponent implements OnInit {
   private savedTimeoutHandle: NodeJS.Timeout;
   public imgPathPrefix = environment.imgPathPrefix;
   public saveButtonText = 'Save';
-
-  public constructor(
-    private store: Store,
-    private queryService: QueryService,
-    private usersService: UsersService,
-    private changeDetectorRef: ChangeDetectorRef
-  ) { }
 
   public ngOnInit(): void {
     this.userInfo = this.usersService.cachedUserInfo();

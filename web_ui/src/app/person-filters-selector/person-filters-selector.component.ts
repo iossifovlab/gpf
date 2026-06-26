@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
@@ -26,6 +26,9 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   standalone: false
 })
 export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
+  protected store = inject(Store);
+  private measuresService = inject(MeasuresService);
+
   @Input() public dataset: Dataset;
   public selectedMeasureHistograms: {measureHistogram: MeasureHistogram, state: MeasureHistogramState}[] = [];
   @Input() public isFamilyFilters: boolean;
@@ -36,8 +39,6 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   public areFiltersSelected = false;
 
   public selectMeasureHistogramsSubscription = new Subscription();
-
-  public constructor(protected store: Store, private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
     this.selectedDatasetId = this.dataset.id;

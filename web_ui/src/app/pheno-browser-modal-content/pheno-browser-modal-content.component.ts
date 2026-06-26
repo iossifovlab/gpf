@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -8,7 +8,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   standalone: false
 })
 export class PhenoBrowserModalContentComponent {
-  @Input() public imageUrl;
+  public activeModal = inject(NgbActiveModal);
 
-  public constructor(public activeModal: NgbActiveModal) {}
+  @Input() public imageUrl;
 }

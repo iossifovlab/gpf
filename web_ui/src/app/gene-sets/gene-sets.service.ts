@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
@@ -13,14 +13,12 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class GeneSetsService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly geneSetsCollectionsUrl = 'gene_sets/gene_sets_collections';
   private readonly denovoGeneSetsUrl = 'gene_sets/denovo_gene_sets_types';
   private readonly geneSetsSearchUrl = 'gene_sets/gene_sets';
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-  ) {}
 
   public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
     // eslint-disable-next-line @typescript-eslint/naming-convention

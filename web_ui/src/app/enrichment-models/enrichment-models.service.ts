@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 // eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
@@ -16,12 +16,10 @@ export interface EnrichmentModels {
 
 @Injectable()
 export class EnrichmentModelsService {
-  private readonly enrichmentModelsUrl = 'enrichment/models';
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
 
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
+  private readonly enrichmentModelsUrl = 'enrichment/models';
 
   public getBackgroundModels(datasetId: string): Observable<EnrichmentModels> {
     const url = `${this.config.baseUrl}${this.enrichmentModelsUrl}/${datasetId}`;

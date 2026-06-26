@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/core';
+import { Component, AfterViewInit, Input, ViewChild, OnInit, inject } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
@@ -17,12 +17,12 @@ import {
   standalone: false
 })
 export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
+  private store = inject(Store);
+
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
   public showPhenoMeasuresButton: boolean;
-
-  public constructor(private store: Store) { }
 
   public ngOnInit(): void {
     this.showAdvancedButton = this.dataset.genotypeBrowserConfig.personFilters.length !== 0;

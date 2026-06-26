@@ -1,13 +1,12 @@
-import { ErrorHandler, Injectable, Injector } from '@angular/core';
+import { ErrorHandler, Injectable, Injector, inject } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { GlobalErrorDisplayComponent } from 'app/global-error-display/global-error-display.component';
 import { environment } from '../../environments/environment';
 
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
-  public constructor(
-    private injector: Injector,
-  ) { }
+  private injector = inject(Injector);
+
 
   private modalService: NgbModal;
 

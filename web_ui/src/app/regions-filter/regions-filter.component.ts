@@ -1,5 +1,5 @@
 import { RegionsFilter } from './regions-filter';
-import { Component, ElementRef, Input, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild, OnDestroy, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectRegionsFilters, setRegionsFilters } from './regions-filter.state';
 import { take } from 'rxjs';
@@ -12,15 +12,13 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   standalone: false
 })
 export class RegionsFilterComponent implements OnInit, OnDestroy {
+  protected store = inject(Store);
+
   @Input() public genome: string;
   public regionsFilter = new RegionsFilter();
   public errors: string[] = [];
 
   @ViewChild('textArea') private textArea: ElementRef;
-
-  public constructor(
-    protected store: Store,
-  ) {}
 
   public ngOnInit(): void {
     this.store.select(selectRegionsFilters).pipe(take(1))

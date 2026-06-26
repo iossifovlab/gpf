@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { Store} from '@ngrx/store';
 import {
@@ -22,14 +22,12 @@ import { GenomicScore } from './genomic-scores-block';
   standalone: false
 })
 export class GenomicScoresBlockComponent implements OnInit {
+  protected store = inject(Store);
+  private genomicScoresBlockService = inject(GenomicScoresBlockService);
+
   public selectedGenomicScores: {score: GenomicScore, state: GenomicScoreState}[] = [];
   public unusedGenomicScores: GenomicScore[];
   public allGenomicScores: GenomicScore[];
-
-  public constructor(
-    protected store: Store,
-    private genomicScoresBlockService: GenomicScoresBlockService,
-  ) { }
 
   public ngOnInit(): void {
     this.genomicScoresBlockService.getGenomicScores().pipe(

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, inject } from '@angular/core';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 @Component({
@@ -8,6 +8,8 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
   standalone: false
 })
 export class StudyFiltersTreeComponent implements OnInit, OnChanges {
+  private datasetsTreeService = inject(DatasetsTreeService);
+
   @Output() public checkboxChangeEvent = new EventEmitter<string>();
 
   @Input()
@@ -15,8 +17,6 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
 
   @Input()
   public selectedStudies: Set<string>;
-
-  public constructor(private datasetsTreeService: DatasetsTreeService) {}
 
   public ngOnInit(): void {
     this.selectedStudies?.clear();

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { environment } from 'environments/environment';
 import { ReplaySubject} from 'rxjs';
 
@@ -18,6 +18,8 @@ import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types
   standalone: false
 })
 export class GenomicScoresComponent implements OnInit {
+  protected store = inject(Store);
+
   @Input() public selectedGenomicScore: GenomicScore;
   @Input() public initialState: GenomicScoreState;
   public localState: GenomicScoreState;
@@ -29,10 +31,6 @@ export class GenomicScoresComponent implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
   public imgPathPrefix = environment.imgPathPrefix;
-
-  public constructor(
-    protected store: Store
-  ) { }
 
   public ngOnInit(): void {
     this.localState = cloneDeep(this.initialState);

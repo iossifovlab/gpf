@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, Subject, of } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
@@ -9,6 +9,11 @@ import { AuthService } from 'app/auth.service';
 
 @Injectable()
 export class PhenoBrowserService {
+  private http = inject(HttpClient);
+  private cookieService = inject(CookieService);
+  private config = inject(ConfigService);
+  private authService = inject(AuthService);
+
   private readonly instrumentsUrl = 'pheno_browser/instruments';
   private readonly measuresUrl = 'pheno_browser/measures';
   private readonly measuresInfoUrl = 'pheno_browser/measures_info';
@@ -17,13 +22,6 @@ export class PhenoBrowserService {
   private oboeInstance = null;
 
   public measuresStreamingFinishedSubject = new Subject();
-
-  public constructor(
-    private http: HttpClient,
-    private cookieService: CookieService,
-    private config: ConfigService,
-    private authService: AuthService
-  ) {}
 
   public cancelStreamPost(): void {
     if (this.oboeInstance) {

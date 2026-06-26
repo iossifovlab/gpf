@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectPresentInChild, setPresentInChild } from './present-in-child.state';
 import { take } from 'rxjs';
@@ -12,6 +12,8 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class PresentInChildComponent implements OnInit {
+  protected store = inject(Store);
+
   @Input() public hasZygosity: boolean;
   public presentInChildValues: Set<string> = new Set([
     'proband only', 'sibling only', 'proband and sibling', 'neither'
@@ -19,8 +21,6 @@ export class PresentInChildComponent implements OnInit {
 
   public selectedValues = new Set<string>();
   public errors: string[] = [];
-
-  public constructor(protected store: Store) {}
 
   public ngOnInit(): void {
     this.store.select(selectPresentInChild).pipe(take(1)).subscribe(presentInChildState => {

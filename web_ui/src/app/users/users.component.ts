@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { UsersService } from './users.service';
 import { ConfigService } from '../config/config.service';
 import { AuthService } from 'app/auth.service';
@@ -13,15 +13,13 @@ import { UserInfo } from './users';
   standalone: false
 })
 export class UsersComponent implements OnInit {
-  public userInfo: UserInfo = null;
+  private usersService = inject(UsersService);
+  private config = inject(ConfigService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private baseHref = inject(APP_BASE_HREF);
 
-  public constructor(
-    private usersService: UsersService,
-    private config: ConfigService,
-    private authService: AuthService,
-    private router: Router,
-    @Inject(APP_BASE_HREF) private baseHref: string
-  ) { }
+  public userInfo: UserInfo = null;
 
   public ngOnInit(): void {
     this.userInfo = this.usersService.cachedUserInfo();

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
@@ -8,15 +8,13 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class VariantReportsService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly variantsUrl = 'common_reports/studies/';
   private readonly downloadUrl = 'common_reports/families_data/';
   private readonly familiesUrl = 'common_reports/family_counters';
   private readonly tagsUrl = 'families/tags';
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-  ) { }
 
   public getVariantReport(datasetId: string): Observable<VariantReport> {
     const options = { withCredentials: true };

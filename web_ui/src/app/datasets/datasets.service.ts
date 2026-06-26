@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, ReplaySubject, of } from 'rxjs';
 
@@ -9,6 +9,9 @@ import { DatasetPermissions, DatasetPermissionsJson } from 'app/datasets-table/d
 
 @Injectable()
 export class DatasetsService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly datasetUrl = 'datasets';
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
   private readonly visibleDatasetsUrl = 'datasets/visible';
@@ -20,10 +23,7 @@ export class DatasetsService {
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   public datasetsLoading = false;
 
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {
+  public constructor() {
     this.reloadAllDatasets();
   }
 

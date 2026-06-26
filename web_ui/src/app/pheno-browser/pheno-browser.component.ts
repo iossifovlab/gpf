@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of, zip, Subscription } from 'rxjs';
@@ -19,6 +19,14 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   standalone: false
 })
 export class PhenoBrowserComponent implements OnInit, OnDestroy {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private phenoBrowserService = inject(PhenoBrowserService);
+  private location = inject(Location);
+  configService = inject(ConfigService);
+  private store = inject(Store);
+  private datasetsService = inject(DatasetsService);
+
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   public searchTermObs$: Observable<string>;
   public measuresToShow: PhenoMeasures;
@@ -35,16 +43,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public imgPathPrefix = environment.imgPathPrefix;
 
   private getPageSubscription: Subscription = new Subscription();
-
-  public constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private phenoBrowserService: PhenoBrowserService,
-    private location: Location,
-    public configService: ConfigService,
-    private store: Store,
-    private datasetsService: DatasetsService
-  ) { }
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Validate } from 'class-validator';
 import { PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { SetNotEmpty } from '../utils/set.validators';
@@ -15,6 +15,8 @@ import { take } from 'rxjs';
   standalone: false
 })
 export class PedigreeSelectorComponent extends ComponentValidator implements OnInit {
+  protected store: Store;
+
   @Input() public collections: PersonSetCollection[];
   @Input() public hasZygosity: boolean;
   public selectedCollection: PersonSetCollection = null;
@@ -24,8 +26,11 @@ export class PedigreeSelectorComponent extends ComponentValidator implements OnI
   })
   public selectedValues: Set<string> = new Set();
 
-  public constructor(protected store: Store) {
+  public constructor() {
+    const store = inject(Store) as Store<object>;
+
     super(store, 'pedigreeSelector', selectPedigreeSelector);
+    this.store = store;
   }
 
   public ngOnInit(): void {

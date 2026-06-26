@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectPresentInParent, setPresentInParent } from './present-in-parent.state';
 import { take } from 'rxjs';
@@ -13,6 +13,8 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   standalone: false
 })
 export class PresentInParentComponent implements OnInit {
+  protected store = inject(Store);
+
   public rarityIntervalStart = 0;
 
   public rarityIntervalEnd = 1;
@@ -30,8 +32,6 @@ export class PresentInParentComponent implements OnInit {
   @Input() public hasDenovo = false;
   @Input() public hasZygosity: boolean;
   public errors: string[] = [];
-
-  public constructor(protected store: Store) {}
 
   public ngOnInit(): void {
     this.store.select(selectPresentInParent).pipe(take(1)).subscribe(state => {

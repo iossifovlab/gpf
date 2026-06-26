@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
@@ -7,13 +7,13 @@ import { DatasetHierarchy } from './datasets';
 
 @Injectable()
 export class DatasetsTreeService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly datasetHierarchyUrl = 'datasets/hierarchy';
   private datasetTreeNodes$: BehaviorSubject<object> = new BehaviorSubject<object>(null);
 
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {
+  public constructor() {
     const options = { withCredentials: true };
     this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`, options).subscribe(
       data => {
