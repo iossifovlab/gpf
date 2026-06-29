@@ -33,33 +33,36 @@ describe('GenesBlockComponent', () => {
     jest.spyOn(store, 'select').mockReturnValue(of([]));
     jest.spyOn(store, 'dispatch').mockImplementation();
 
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '');
-    jest.spyOn(global, 'setTimeout').mockImplementationOnce((fn) => {
-      fn();
-      return timer;
-    });
-
     fixture.detectChanges();
+
+    // Mock ngbNav ViewChild
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component.ngbNav = {
+      activeId: undefined,
+      select: jest.fn()
+    } as any;
   }));
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
   it('should open gene symbols tab when loading gene symbols from state', () => {
+    jest.useFakeTimers();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(['value1', 'value2']));
 
-    const selectNavSpy = jest.spyOn(component.ngbNav, 'select');
-
     component.ngAfterViewInit();
-    jest.runAllTimers();
+    jest.advanceTimersByTime(100);
 
-    expect(selectNavSpy).toHaveBeenCalledWith('geneSymbols');
-    jest.useRealTimers();
+    expect(component.ngbNav.select).toHaveBeenCalledWith('geneSymbols');
   });
 
   it('should open gene sets tab when loading gene sets from state', () => {
+    jest.useFakeTimers();
     const geneSetsMock = {
       geneSetsTypes: [],
       geneSetsCollection: new GeneSetsCollection('collection1', 'desc', []),
@@ -77,17 +80,15 @@ describe('GenesBlockComponent', () => {
 
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([[], geneSetsMock, initialGeneScores]));
-    const selectNavSpy = jest.spyOn(component.ngbNav, 'select');
-
 
     component.ngAfterViewInit();
-    jest.runAllTimers();
+    jest.advanceTimersByTime(100);
 
-    expect(selectNavSpy).toHaveBeenCalledWith('geneSets');
-    jest.useRealTimers();
+    expect(component.ngbNav.select).toHaveBeenCalledWith('geneSets');
   });
 
   it('should open gene scores tab when loading gene scores from state', () => {
+    jest.useFakeTimers();
     const initialGeneSets = {
       geneSetsTypes: null,
       geneSetsCollection: null,
@@ -105,14 +106,11 @@ describe('GenesBlockComponent', () => {
 
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([[], initialGeneSets, geneScoresMock]));
-    const selectNavSpy = jest.spyOn(component.ngbNav, 'select');
-
 
     component.ngAfterViewInit();
-    jest.runAllTimers();
+    jest.advanceTimersByTime(100);
 
-    expect(selectNavSpy).toHaveBeenCalledWith('geneScores');
-    jest.useRealTimers();
+    expect(component.ngbNav.select).toHaveBeenCalledWith('geneScores');
   });
 
   it('should reset all values when switching tabs', () => {

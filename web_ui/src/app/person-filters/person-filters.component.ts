@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, inject, OnDestroy } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import {
   CategoricalFilterState,
@@ -19,12 +19,12 @@ import { takeUntil } from 'rxjs/operators';
   styleUrls: ['./person-filters.component.css'],
   standalone: false
 })
-export class PersonFiltersComponent implements OnInit, OnDestroy {
+export class PersonFiltersComponent extends ComponentValidator implements OnInit, OnDestroy {
   protected store: Store;
   private destroy$ = new Subject<void>();
 
   @Input() public dataset: Dataset;
-  @Input() public isFamilyFilters = false;
+  @Input() public isFamilyFilters: boolean;
 
   public selectedDatasetId: string;
   public categoricalFilters: PersonFilterState[] = [];
@@ -34,7 +34,10 @@ export class PersonFiltersComponent implements OnInit, OnDestroy {
   public areFiltersSelected = false;
 
   public constructor() {
-    this.store = inject(Store) as Store<object>;
+    const store = inject(Store) as Store<object>;
+
+    super(store, 'personFilters', selectPersonFilters);
+    this.store = store;
   }
 
   public ngOnInit(): void {
@@ -47,7 +50,6 @@ export class PersonFiltersComponent implements OnInit, OnDestroy {
       this.setFiltersFromState(clonedState);
     });
 
-    // Listen for store changes to update areFiltersSelected
     this.store.select(selectPersonFilters).pipe(
       takeUntil(this.destroy$)
     ).subscribe((state: PersonAndFamilyFilters) => {
@@ -57,6 +59,8 @@ export class PersonFiltersComponent implements OnInit, OnDestroy {
         this.areFiltersSelected = Boolean(state.personFilters?.filter(f => f.sourceType === 'continuous').length);
       }
     });
+
+    super.ngOnInit();
   }
 
   public ngOnDestroy(): void {

@@ -14,3 +14,13 @@ getTestBed().initTestEnvironment(
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting()
 );
+
+/**
+ * Mock window.open() which is not implemented in jsdom
+ */
+if (typeof window !== 'undefined' && typeof window.open === 'undefined') {
+  window.open = (() => ({
+    focus: () => {},
+    close: () => {},
+  })) as unknown as typeof window.open;
+}

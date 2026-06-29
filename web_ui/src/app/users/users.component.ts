@@ -25,13 +25,21 @@ export class UsersComponent implements OnInit {
     this.userInfo = this.usersService.cachedUserInfo();
   }
 
+  public navigateTo(url: string): void {
+    window.location.href = url;
+  };
+
   public login(): void {
+    this.navigateTo(this.buildAuthUrl());
+  }
+
+  private buildAuthUrl(): string {
     const codeChallenge = this.authService.generatePKCE();
     const state = {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       came_from: this.router.url
     };
-    window.location.href = `${this.config.rootUrl}${this.baseHref}`
+    return `${this.config.rootUrl}${this.baseHref}`
       + 'o/authorize/?response_type=code'
       + '&code_challenge_method=S256'
       + `&code_challenge=${codeChallenge}`

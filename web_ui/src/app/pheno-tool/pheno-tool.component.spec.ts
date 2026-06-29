@@ -28,6 +28,7 @@ import { phenoToolMeasureReducer, PhenoToolMeasureState } from 'app/pheno-tool-m
 import {
   PresentInParent,
   presentInParentReducer,
+  resetPresentInParent,
   setPresentInParent
 } from 'app/present-in-parent/present-in-parent.state';
 import { effectTypesReducer, setEffectTypes } from 'app/effect-types/effect-types.state';
@@ -118,6 +119,10 @@ describe('PhenoToolComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
   }));
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -283,6 +288,7 @@ describe('PhenoToolComponent', () => {
 
 
   it('should set default present in parent values when study has denovo', () => {
+    store.dispatch(resetPresentInParent());
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     const values = ['neither'];
 
@@ -302,6 +308,7 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should set default present in parent values when study doesn\'t have denovo', () => {
+    store.dispatch(resetPresentInParent());
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     const values = [
       'mother only', 'father only', 'mother and father', 'neither'

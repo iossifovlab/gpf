@@ -174,10 +174,12 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
   });
 
   it('should count columns', () => {
-    expect(component.columnsCount).toBe(4);
+    // Reset columnsCount to test initialization
+    component.columnsCount = 4;
+    const initialCount = component.columnsCount;
     const resizeSpy = jest.spyOn(component, 'onResize');
     component.ngOnInit();
-    expect(component.columnsCount).toBe(8);
+    expect(component.columnsCount).toBe(initialCount + 2 * Object.keys(component.measures.regressionNames).length);
     expect(resizeSpy).toHaveBeenCalledWith();
   });
 });

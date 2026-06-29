@@ -39,17 +39,21 @@ describe('RegionsBlockComponent', () => {
     fixture = TestBed.createComponent(RegionsBlockComponent);
     component = fixture.componentInstance;
 
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '');
-    jest.spyOn(global, 'setTimeout').mockImplementationOnce((fn) => {
-      fn();
-      return timer;
-    });
-
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     fixture.detectChanges();
+
+    // Mock ngbNav ViewChild
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component.ngbNav = {
+      activeId: undefined,
+      select: jest.fn()
+    } as any;
   }));
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -61,14 +65,13 @@ describe('RegionsBlockComponent', () => {
   });
 
   it('should open regions tab if there is saved state', () => {
-    const navSpy = jest.spyOn(component.ngbNav, 'select');
+    jest.useFakeTimers();
     jest.spyOn(store, 'select').mockReturnValue(of(['region1', 'region2']));
 
     component.ngAfterViewInit();
-    jest.runAllTimers();
+    jest.advanceTimersByTime(100);
 
-    expect(navSpy).toHaveBeenCalledWith('regionsFilter');
-    jest.useRealTimers();
+    expect(component.ngbNav.select).toHaveBeenCalledWith('regionsFilter');
   });
 
   it('should reset typed regions when tab changes', () => {
