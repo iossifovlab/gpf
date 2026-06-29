@@ -23,23 +23,25 @@
       >
     </div>
 
-    <div class="measures-dropdown" *ngIf="showDropdown">
-      <div class="status-info" *ngIf="filteredMeasures.length === 0">{{
-        loadingMeasures || loadingDropdown ? 'Loading...' : 'Nothing found'
-      }}</div>
-      <cdk-virtual-scroll-viewport itemSize="30" style="height: 240px; overflow-x: hidden">
-        <div
-          *cdkVirtualFor="let measure of filteredMeasures; let index = index"
-          class="dropdown-item"
-          [ngClass]="{ 'dropdown-selected': selectedIdx === index }"
-          type="button"
-          (mousedown)="selectMeasure(measure)"
-          (onSelectionChange)="selectMeasure(measure)"
-          (mousemove)="selectedIdx = index"
-          [title]="measure.name">
-          <span [innerHTML]="measure.name | boldMatching : searchString"></span>
-        </div>
-      </cdk-virtual-scroll-viewport>
-    </div>
+    @if (showDropdown) {
+      <div class="measures-dropdown">
+        @if (filteredMeasures.length === 0) {
+          <div class="status-info">{{ loadingMeasures || loadingDropdown ? 'Loading...' : 'Nothing found' }}</div>
+        }
+        <cdk-virtual-scroll-viewport itemSize="30" style="height: 240px; overflow-x: hidden">
+          <div
+            *cdkVirtualFor="let measure of filteredMeasures; let index = index"
+            class="dropdown-item"
+            [ngClass]="{ 'dropdown-selected': selectedIdx === index }"
+            type="button"
+            (mousedown)="selectMeasure(measure)"
+            (onSelectionChange)="selectMeasure(measure)"
+            (mousemove)="selectedIdx = index"
+            [title]="measure.name">
+            <span [innerHTML]="measure.name | boldMatching: searchString"></span>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
+    }
   </div>
 </div>

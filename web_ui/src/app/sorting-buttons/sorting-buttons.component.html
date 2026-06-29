@@ -1,5 +1,11 @@
 <div class="clickable" (click)="emitSort()" class="sorting-button">
-  <span *ngIf="sortState === 0" id="bg" class="material-symbols-outlined">unfold_more</span>
-  <span *ngIf="sortState === -1" id="asc" class="material-symbols-outlined">expand_less</span>
-  <span *ngIf="sortState === 1" id="desc" class="material-symbols-outlined">expand_more</span>
+  @if (sortState === 0) {
+    <span id="bg" class="material-symbols-outlined">unfold_more</span>
+  }
+  @if (sortState === -1) {
+    <span id="asc" class="material-symbols-outlined">expand_less</span>
+  }
+  @if (sortState === 1) {
+    <span id="desc" class="material-symbols-outlined">expand_more</span>
+  }
 </div>

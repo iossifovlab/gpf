@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
   /* loadedUserInfo is used to determine if the user has
      been successfully logged in. Only after a successful
      login will the application render, as the app template uses
-     an *ngIf directive to test loadedUserInfo has been set. */
+     an @if block to test loadedUserInfo has been set. */
   public loadedUserInfo = null;
 
   @HostListener('window:keydown.home')

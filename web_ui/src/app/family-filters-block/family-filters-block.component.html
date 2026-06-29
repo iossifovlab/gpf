@@ -20,7 +20,9 @@
       <li [ngbNavItem]="'familyTags'" id="family-tags">
         <a ngbNavLink (click)="hasContent = true">Family Tags</a>
         <ng-template ngbNavContent>
-          <span *ngIf="showSelectedFamilies" id="families-count">Selected families: {{ selectedFamiliesCount }}</span>
+          @if (showSelectedFamilies) {
+            <span id="families-count">Selected families: {{ selectedFamiliesCount }}</span>
+          }
           <gpf-family-tags
             [numOfCols]="numOfCols"
             [tags]="orderedTagList"
@@ -28,22 +30,26 @@
             (chooseMode)="updateMode($event)"></gpf-family-tags>
         </ng-template>
       </li>
-      <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
-        <a ngbNavLink (click)="hasContent = true">Advanced</a>
-        <ng-template ngbNavContent>
-          <div id="filters">
-            <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters>
-          </div>
-        </ng-template>
-      </li>
-      <li [ngbNavItem]="'phenoMeasures'" *ngIf="showPhenoMeasuresButton" id="phenoMeasures">
-        <a ngbNavLink (click)="hasContent = true">Pheno Measures</a>
-        <ng-template ngbNavContent>
-          <div id="filters">
-            <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters-selector>
-          </div>
-        </ng-template>
-      </li>
+      @if (showAdvancedButton) {
+        <li [ngbNavItem]="'advanced'" id="advanced">
+          <a ngbNavLink (click)="hasContent = true">Advanced</a>
+          <ng-template ngbNavContent>
+            <div id="filters">
+              <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters>
+            </div>
+          </ng-template>
+        </li>
+      }
+      @if (showPhenoMeasuresButton) {
+        <li [ngbNavItem]="'phenoMeasures'" id="phenoMeasures">
+          <a ngbNavLink (click)="hasContent = true">Pheno Measures</a>
+          <ng-template ngbNavContent>
+            <div id="filters">
+              <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters-selector>
+            </div>
+          </ng-template>
+        </li>
+      }
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>

@@ -26,13 +26,14 @@
           (effectTypeEvent)="onEffectTypeChange($event)">
         </gpf-effect-types-column>
 
-        <gpf-effect-types-column
-          *ngIf="variantTypes && variantTypes.has('CNV')"
-          [columnName]="'CNV'"
-          [effectTypesLabels]="cnvColumn"
-          [effectTypes]="selectedEffectTypes"
-          (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effect-types-column>
+        @if (variantTypes && variantTypes.has('CNV')) {
+          <gpf-effect-types-column
+            [columnName]="'CNV'"
+            [effectTypesLabels]="cnvColumn"
+            [effectTypes]="selectedEffectTypes"
+            (effectTypeEvent)="onEffectTypeChange($event)">
+          </gpf-effect-types-column>
+        }
       </div>
     </div>
   </div>

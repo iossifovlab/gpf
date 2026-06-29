@@ -1,46 +1,50 @@
 <div class="row">
   <div class="col-12 mt-3">
-    <div class="grid-container" *ngIf="datasets">
-      <div class="grid-header">Dataset</div>
-      <div class="grid-header">Groups</div>
-      <div class="grid-header">Users</div>
-      <ng-container *ngFor="let dataset of datasets">
-        <div class="grid-cell" [attr.id]="dataset.name + '-dataset-cell'">
-          <span>{{ dataset.name }}</span>
-        </div>
-
-        <div class="grid-cell list-cell" [attr.id]="dataset.name + '-groups-cell'">
-          <div class="item-list" [attr.id]="dataset.name + '-groups-list'">
-            <div class="item-wrapper" *ngFor="let group of dataset.groups" [attr.id]="group + '-list-item'">
-              <span class="item" [title]="group">{{ group }}</span>
-              <gpf-confirm-button
-                *ngIf="!isDefaultGroup(dataset, group)"
-                (clicked)="removeGroup(dataset, group)"
-                class="remove-group-button"
-                confirmText="Remove"
-                title="Remove group"
-                message="Remove group?"
-                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
-              </gpf-confirm-button>
+    @if (datasets) {
+      <div class="grid-container">
+        <div class="grid-header">Dataset</div>
+        <div class="grid-header">Groups</div>
+        <div class="grid-header">Users</div>
+        @for (dataset of datasets; track dataset) {
+          <div class="grid-cell" [attr.id]="dataset.name + '-dataset-cell'">
+            <span>{{ dataset.name }}</span>
+          </div>
+          <div class="grid-cell list-cell" [attr.id]="dataset.name + '-groups-cell'">
+            <div class="item-list" [attr.id]="dataset.name + '-groups-list'">
+              @for (group of dataset.groups; track group) {
+                <div class="item-wrapper" [attr.id]="group + '-list-item'">
+                  <span class="item" [title]="group">{{ group }}</span>
+                  @if (!isDefaultGroup(dataset, group)) {
+                    <gpf-confirm-button
+                      (clicked)="removeGroup(dataset, group)"
+                      class="remove-group-button"
+                      confirmText="Remove"
+                      title="Remove group"
+                      message="Remove group?"
+                      [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
+                    </gpf-confirm-button>
+                  }
+                </div>
+              }
+            </div>
+            <gpf-item-add-menu
+              [getItems]="getGroupNamesFunction(dataset)"
+              (addedItem)="addGroup(dataset, $event)"></gpf-item-add-menu>
+          </div>
+          <div class="grid-cell list-cell" [attr.id]="dataset.name + '-users-cell'">
+            <div class="item-list" [attr.id]="dataset.name + '-users-list-cell'">
+              @for (user of dataset.users; track user) {
+                <div
+                  class="item"
+                  [title]="user.name ? user.name + ' ' + user.email : user.email"
+                  [attr.id]="user.email + '-list-item'"
+                  >{{ user.name ? user.name + ' ' + user.email : user.email }}</div
+                >
+              }
             </div>
           </div>
-          <gpf-item-add-menu
-            [getItems]="getGroupNamesFunction(dataset)"
-            (addedItem)="addGroup(dataset, $event)"></gpf-item-add-menu>
-        </div>
-
-        <div class="grid-cell list-cell" [attr.id]="dataset.name + '-users-cell'">
-          <div class="item-list" [attr.id]="dataset.name + '-users-list-cell'">
-            <div
-              class="item"
-              [title]="user.name ? user.name + ' ' + user.email : user.email"
-              *ngFor="let user of dataset.users"
-              [attr.id]="user.email + '-list-item'"
-              >{{ user.name ? user.name + ' ' + user.email : user.email }}</div
-            >
-          </div>
-        </div>
-      </ng-container>
-    </div>
+        }
+      </div>
+    }
   </div>
 </div>

@@ -1,11 +1,15 @@
-<div id="legend" *ngIf="isExpanded">
-  <div id="legend-items-wrapper">
-    <div *ngFor="let item of legendItems" class="legend-item">
-      <span class="pedigree-icon" [style.background-color]="item.color"></span>
-      <span>{{ item.name }}</span>
+@if (isExpanded) {
+  <div id="legend">
+    <div id="legend-items-wrapper">
+      @for (item of legendItems; track item) {
+        <div class="legend-item">
+          <span class="pedigree-icon" [style.background-color]="item.color"></span>
+          <span>{{ item.name }}</span>
+        </div>
+      }
     </div>
   </div>
-</div>
+}
 
 <div id="expand-legend-button-wrapper">
   <button id="expand-legend-button" title="Legend" class="btn btn-default" (click)="isExpanded = !isExpanded">

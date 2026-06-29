@@ -4,34 +4,33 @@
   [style.max-width.px]="maxWidth ? maxWidth : width * scale"
   [style.max-height.px]="maxHeight">
   <svg [attr.viewBox]="getViewBox()">
-    <svg:line
-      *ngFor="let straightLine of straightLines"
-      [attr.x1]="straightLine.startX"
-      [attr.y1]="straightLine.startY"
-      [attr.x2]="straightLine.endX"
-      [attr.y2]="straightLine.endY"
-      stroke="black"
-      stroke-width="1" />
+    @for (straightLine of straightLines; track straightLine) {
+      <svg:line
+        [attr.x1]="straightLine.startX"
+        [attr.y1]="straightLine.startY"
+        [attr.x2]="straightLine.endX"
+        [attr.y2]="straightLine.endY"
+        stroke="black"
+        stroke-width="1" />
+    }
 
-    <svg:path
-      *ngFor="let curveLine of curveLines"
-      [attr.d]="curveLine.path"
-      fill="none"
-      stroke="black"
-      stroke-width="1" />
+    @for (curveLine of curveLines; track curveLine) {
+      <svg:path [attr.d]="curveLine.path" fill="none" stroke="black" stroke-width="1" />
+    }
 
-    <svg:g
-      gpf-pedigree-chart-member
-      *ngFor="let pedigree of pedigreeDataWithLayout"
-      [attr.transform]="
-        'translate(' +
-        pedigree.xUpperLeftCorner +
-        ' ' +
-        pedigree.yUpperLeftCorner +
-        ') scale(' +
-        pedigree.scaleFactor +
-        ')'
-      "
-      [pedigreeData]="pedigree.individual.pedigreeData" />
+    @for (pedigree of pedigreeDataWithLayout; track pedigree) {
+      <svg:g
+        gpf-pedigree-chart-member
+        [attr.transform]="
+          'translate(' +
+          pedigree.xUpperLeftCorner +
+          ' ' +
+          pedigree.yUpperLeftCorner +
+          ') scale(' +
+          pedigree.scaleFactor +
+          ')'
+        "
+        [pedigreeData]="pedigree.individual.pedigreeData" />
+    }
   </svg>
 </div>

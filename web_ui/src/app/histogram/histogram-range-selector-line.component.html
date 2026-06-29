@@ -19,7 +19,11 @@
     stroke="black"
     fill="green" />
   <!-- prettier-ignore -->
-  <svg:text *ngIf="!textOnRight" x="-10" y="15" dy=".35em" class="partitions-text" text-anchor="end">{{ text }}</svg:text>
+  @if (!textOnRight) {
+    <svg:text x="-10" y="15" dy=".35em" class="partitions-text" text-anchor="end">{{ text }}</svg:text>
+    }
   <!-- prettier-ignore -->
-  <svg:text *ngIf="textOnRight" [attr.x]="width + 10" y="15" dy=".35em" class="partitions-text" text-anchor="start">{{ text }}</svg:text>
+  @if (textOnRight) {
+      <svg:text [attr.x]="width + 10" y="15" dy=".35em" class="partitions-text" text-anchor="start">{{ text }}</svg:text>
+      }
 </svg:g>

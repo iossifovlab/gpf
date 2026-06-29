@@ -1,10 +1,11 @@
-<gpf-histogram
-  *ngIf="histogramData && measureName"
-  [width]="650"
-  [height]="145"
-  [bins]="histogramData.bins"
-  [bars]="histogramData.bars"
-  [rangesCounts]="rangesCounts"
-  [(rangeStart)]="rangeStart"
-  [(rangeEnd)]="rangeEnd">
-</gpf-histogram>
+@if (histogramData && measureName) {
+  <gpf-histogram
+    [width]="650"
+    [height]="145"
+    [bins]="histogramData.bins"
+    [bars]="histogramData.bars"
+    [rangesCounts]="rangesCounts"
+    [(rangeStart)]="rangeStart"
+    [(rangeEnd)]="rangeEnd">
+  </gpf-histogram>
+}

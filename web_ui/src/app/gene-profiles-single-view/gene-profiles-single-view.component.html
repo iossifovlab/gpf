@@ -1,214 +1,226 @@
-<div *ngIf="!errorModal">
-  <div
-    *ngIf="gene$ | async as gene"
-    [ngClass]="{ 'compare-div': isInGeneCompare }"
-    [style.height]="showTemplate ? '100%' : '100vh'">
-    <ng-container *ngIf="isInGeneCompare">
-      <div
-        style="position: relative; width: 30px; display: flex; flex-direction: column"
-        [style.width]="showTemplate ? 'unset' : '30px'">
-        <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
-          <button class="minimize-button"><span class="material-symbols-outlined">remove</span></button>
-          <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
-        </div>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="showTemplate">
-      <div style="padding-left: 8px" class="page-wrapper">
-        <div
-          #stickySpan
-          [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
-          [ngStyle]="{ width: isInGeneCompare ? '100%' : '1455px' }"
-          style="padding-bottom: 12px; padding-top: 4px">
-          <h2 style="padding-left: 0">{{ geneSymbol }}</h2>
-        </div>
-        <div *ngIf="gene.geneLinks" class="wrapper" [ngClass]="{ compact: compactView }">
-          <table id="links-table">
-            <tr>
-              <td style="padding-left: 2px; padding-bottom: 8px">Internal links: </td>
-              <ng-container *ngFor="let links of gene.geneLinks">
-                <a
-                  *ngIf="links.name === 'Gene Browser'"
-                  style="padding-right: 20px"
-                  [attr.href]="links.url + '?preview=true'"
-                  [id]="links.name + '-link'"
-                  target="_blank"
-                  >{{ links.name }}</a
-                >
-              </ng-container>
-            </tr>
-            <tr>
-              <td style="padding-left: 2px">External links: </td>
-              <ng-container *ngFor="let links of gene.geneLinks">
-                <a
-                  *ngIf="links.name !== 'Gene Browser'"
-                  style="padding-right: 20px"
-                  [attr.href]="links.url"
-                  [id]="links.name + '-link'"
-                  target="_blank"
-                  >{{ links.name }}</a
-                >
-              </ng-container>
-            </tr>
-          </table>
-        </div>
-
-        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
-          <table
-            *ngFor="let geneScoreCategory of config.geneScores"
-            [attr.id]="geneScoreCategory.category"
-            class="gpf-basic-table gene-scores-table">
-            <th [attr.colspan]="2">{{ geneScoreCategory.displayName }}</th>
-            <tr
-              *ngFor="let score of geneScoreCategory.scores"
-              class="card-block"
-              style="border-bottom: 1px solid #dee2e6">
-              <ng-container *ngIf="geneScores.length === gene.geneScores.length">
-                <td style="display: flex; flex-direction: column; align-items: center; border: 0; position: relative">
-                  <gpf-helper-modal
-                    style="scale: 85%; position: absolute; right: 2px; top: 2px"
-                    [style.visibility]="
-                      getGeneScoreByKey(geneScoreCategory.category, score.scoreName).help ? 'visible' : 'hidden'
-                    "
-                    [modalContent]="getGeneScoreByKey(geneScoreCategory.category, score.scoreName).help"
-                    [isMarkdown]="true"></gpf-helper-modal>
-
-                  <ng-container
-                    *ngIf="geneScores && getGeneScoreByKey(geneScoreCategory.category, score.scoreName) as geneScore">
-                    <gpf-histogram
-                      *ngIf="isNumberHistogram(geneScore.histogram)"
-                      [style.width]="histogramOptions.width"
-                      [style.height]="histogramOptions.height"
-                      [width]="histogramOptions.width"
-                      [height]="histogramOptions.height"
-                      [bins]="geneScore.histogram.bins"
-                      [bars]="geneScore.histogram.bars"
-                      [logScaleX]="geneScore.histogram.logScaleX"
-                      [logScaleY]="geneScore.histogram.logScaleY"
-                      [showMinMaxInput]="false"
-                      [isInteractive]="false"
-                      [singleScoreValue]="
-                        getSingleScoreValue(gene.geneScores, geneScoreCategory.category, score.scoreName)
-                      "
-                      [marginLeft]="histogramOptions.marginLeft"
-                      [marginTop]="histogramOptions.marginTop"
-                      [smallValuesDesc]="geneScore.histogram.smallValuesDesc"
-                      [largeValuesDesc]="geneScore.histogram.largeValuesDesc">
-                    </gpf-histogram>
-                    <gpf-categorical-histogram
-                      *ngIf="isCategoricalHistogram(geneScore.histogram)"
-                      [width]="histogramOptions.width"
-                      [height]="histogramOptions.height"
-                      [marginLeft]="histogramOptions.marginLeft"
-                      [marginTop]="histogramOptions.marginTop"
-                      [histogram]="geneScore.histogram"
-                      [isInteractive]="false"
-                      [singleScoreValue]="
-                        convertScoreValueToString(
-                          getSingleScoreValue(gene.geneScores, geneScoreCategory.category, score.scoreName)
-                        )
-                      ">
-                    </gpf-categorical-histogram>
-                  </ng-container>
-
-                  <span>{{ score.scoreName }}</span>
-                </td>
-              </ng-container>
-            </tr>
-          </table>
-        </div>
-
-        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
-          <table
-            *ngFor="let geneSetCategory of config.geneSets"
-            [attr.id]="geneSetCategory.category"
-            class="gpf-basic-table gene-sets-table">
-            <th [attr.colspan]="2">{{ geneSetCategory.displayName }}</th>
-            <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
-              <td
-                style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
-                [attr.title]="set.setId"
-                >{{ set.setId }}</td
-              >
-              <td style="text-align: center; width: 55px">
-                <span
-                  style="font-size: 20px"
-                  class="material-symbols-outlined"
-                  *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1"
-                  >check</span
-                >
-              </td>
-            </tr>
-          </table>
-        </div>
-
-        <div
-          style="max-width: 1252px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch"
-          [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }"
-          class="wrapper">
-          <ng-container *ngFor="let dataset of config.datasets">
-            <table class="gpf-basic-table datasets-table">
-              <thead>
-                <tr class="card-block">
-                  <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
-                    <span style="all: unset">{{ dataset.displayName }}</span>
-                  </th>
-                </tr>
-                <tr class="card-block">
-                  <th style="border-bottom: none">Variant Statistics</th>
-                  <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
-                    <span [attr.title]="'children with this phenotype: ' + personSet.childrenCount"
-                      >{{ personSet.displayName }} ({{ personSet.childrenCount }})</span
-                    >
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <ng-container *ngFor="let statistic of dataset.statistics">
-                  <tr class="card-block" [attr.id]="statistic.id">
-                    <td>{{ statistic.description ? statistic.description : statistic.displayName }}</td>
-                    <td style="text-align: center" *ngFor="let personSet of dataset.personSets">
-                      <ng-container
-                        *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
-                        <ng-container *ngIf="effectType.value.count !== 0">
-                          <a
-                            class="link-genotype-browser"
-                            (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
-                            (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
-                            <span style="white-space: nowrap"
-                              >{{ effectType.value.count }} ({{ effectType.value.rate | number : '1.0-3' }})</span
-                            >
-                          </a>
-                        </ng-container>
-                        <ng-container *ngIf="effectType.value.count === 0"
-                          ><span class="material-symbols-outlined sm">remove</span></ng-container
+@if (!errorModal) {
+  <div>
+    @if (gene$ | async; as gene) {
+      <div [ngClass]="{ 'compare-div': isInGeneCompare }" [style.height]="showTemplate ? '100%' : '100vh'">
+        @if (isInGeneCompare) {
+          <div
+            style="position: relative; width: 30px; display: flex; flex-direction: column"
+            [style.width]="showTemplate ? 'unset' : '30px'">
+            <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
+              <button class="minimize-button"><span class="material-symbols-outlined">remove</span></button>
+              @if (!showTemplate) {
+                <span class="minimize-gene-symbol">{{ geneSymbol }}</span>
+              }
+            </div>
+          </div>
+        }
+        @if (showTemplate) {
+          <div style="padding-left: 8px" class="page-wrapper">
+            <div
+              #stickySpan
+              [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
+              [ngStyle]="{ width: isInGeneCompare ? '100%' : '1455px' }"
+              style="padding-bottom: 12px; padding-top: 4px">
+              <h2 style="padding-left: 0">{{ geneSymbol }}</h2>
+            </div>
+            @if (gene.geneLinks) {
+              <div class="wrapper" [ngClass]="{ compact: compactView }">
+                <table id="links-table">
+                  <tr>
+                    <td style="padding-left: 2px; padding-bottom: 8px">Internal links: </td>
+                    @for (links of gene.geneLinks; track links) {
+                      @if (links.name === 'Gene Browser') {
+                        <a
+                          style="padding-right: 20px"
+                          [attr.href]="links.url + '?preview=true'"
+                          [id]="links.name + '-link'"
+                          target="_blank"
+                          >{{ links.name }}</a
                         >
-                      </ng-container>
-                    </td>
+                      }
+                    }
                   </tr>
-                </ng-container>
-              </tbody>
-            </table>
-          </ng-container>
-        </div>
+                  <tr>
+                    <td style="padding-left: 2px">External links: </td>
+                    @for (links of gene.geneLinks; track links) {
+                      @if (links.name !== 'Gene Browser') {
+                        <a
+                          style="padding-right: 20px"
+                          [attr.href]="links.url"
+                          [id]="links.name + '-link'"
+                          target="_blank"
+                          >{{ links.name }}</a
+                        >
+                      }
+                    }
+                  </tr>
+                </table>
+              </div>
+            }
+            <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
+              @for (geneScoreCategory of config.geneScores; track geneScoreCategory) {
+                <table [attr.id]="geneScoreCategory.category" class="gpf-basic-table gene-scores-table">
+                  <th [attr.colspan]="2">{{ geneScoreCategory.displayName }}</th>
+                  @for (score of geneScoreCategory.scores; track score) {
+                    <tr class="card-block" style="border-bottom: 1px solid #dee2e6">
+                      @if (geneScores.length === gene.geneScores.length) {
+                        <td
+                          style="
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            border: 0;
+                            position: relative;
+                          ">
+                          <gpf-helper-modal
+                            style="scale: 85%; position: absolute; right: 2px; top: 2px"
+                            [style.visibility]="
+                              getGeneScoreByKey(geneScoreCategory.category, score.scoreName).help ? 'visible' : 'hidden'
+                            "
+                            [modalContent]="getGeneScoreByKey(geneScoreCategory.category, score.scoreName).help"
+                            [isMarkdown]="true"></gpf-helper-modal>
+                          @if (
+                            geneScores && getGeneScoreByKey(geneScoreCategory.category, score.scoreName);
+                            as geneScore
+                          ) {
+                            @if (isNumberHistogram(geneScore.histogram)) {
+                              <gpf-histogram
+                                [style.width]="histogramOptions.width"
+                                [style.height]="histogramOptions.height"
+                                [width]="histogramOptions.width"
+                                [height]="histogramOptions.height"
+                                [bins]="geneScore.histogram.bins"
+                                [bars]="geneScore.histogram.bars"
+                                [logScaleX]="geneScore.histogram.logScaleX"
+                                [logScaleY]="geneScore.histogram.logScaleY"
+                                [showMinMaxInput]="false"
+                                [isInteractive]="false"
+                                [singleScoreValue]="
+                                  getSingleScoreValue(gene.geneScores, geneScoreCategory.category, score.scoreName)
+                                "
+                                [marginLeft]="histogramOptions.marginLeft"
+                                [marginTop]="histogramOptions.marginTop"
+                                [smallValuesDesc]="geneScore.histogram.smallValuesDesc"
+                                [largeValuesDesc]="geneScore.histogram.largeValuesDesc">
+                              </gpf-histogram>
+                            }
+                            @if (isCategoricalHistogram(geneScore.histogram)) {
+                              <gpf-categorical-histogram
+                                [width]="histogramOptions.width"
+                                [height]="histogramOptions.height"
+                                [marginLeft]="histogramOptions.marginLeft"
+                                [marginTop]="histogramOptions.marginTop"
+                                [histogram]="geneScore.histogram"
+                                [isInteractive]="false"
+                                [singleScoreValue]="
+                                  convertScoreValueToString(
+                                    getSingleScoreValue(gene.geneScores, geneScoreCategory.category, score.scoreName)
+                                  )
+                                ">
+                              </gpf-categorical-histogram>
+                            }
+                          }
+                          <span>{{ score.scoreName }}</span>
+                        </td>
+                      }
+                    </tr>
+                  }
+                </table>
+              }
+            </div>
+            <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
+              @for (geneSetCategory of config.geneSets; track geneSetCategory) {
+                <table [attr.id]="geneSetCategory.category" class="gpf-basic-table gene-sets-table">
+                  <th [attr.colspan]="2">{{ geneSetCategory.displayName }}</th>
+                  @for (set of geneSetCategory.sets; track set) {
+                    <tr class="card-block">
+                      <td
+                        style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
+                        [attr.title]="set.setId"
+                        >{{ set.setId }}</td
+                      >
+                      <td style="text-align: center; width: 55px">
+                        @if (gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1) {
+                          <span style="font-size: 20px" class="material-symbols-outlined">check</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </table>
+              }
+            </div>
+            <div
+              style="max-width: 1252px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch"
+              [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }"
+              class="wrapper">
+              @for (dataset of config.datasets; track dataset) {
+                <table class="gpf-basic-table datasets-table">
+                  <thead>
+                    <tr class="card-block">
+                      <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
+                        <span style="all: unset">{{ dataset.displayName }}</span>
+                      </th>
+                    </tr>
+                    <tr class="card-block">
+                      <th style="border-bottom: none">Variant Statistics</th>
+                      @for (personSet of dataset.personSets; track personSet) {
+                        <th style="text-align: center; border-bottom: none">
+                          <span [attr.title]="'children with this phenotype: ' + personSet.childrenCount"
+                            >{{ personSet.displayName }} ({{ personSet.childrenCount }})</span
+                          >
+                        </th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (statistic of dataset.statistics; track statistic) {
+                      <tr class="card-block" [attr.id]="statistic.id">
+                        <td>{{ statistic.description ? statistic.description : statistic.displayName }}</td>
+                        @for (personSet of dataset.personSets; track personSet) {
+                          <td style="text-align: center">
+                            @if (getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id); as effectType) {
+                              @if (effectType.value.count !== 0) {
+                                <a
+                                  class="link-genotype-browser"
+                                  (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
+                                  (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
+                                  <span style="white-space: nowrap"
+                                    >{{ effectType.value.count }} ({{ effectType.value.rate | number: '1.0-3' }})</span
+                                  >
+                                </a>
+                              }
+                              @if (effectType.value.count === 0) {
+                                <span class="material-symbols-outlined sm">remove</span>
+                              }
+                            }
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          </div>
+        }
       </div>
-    </ng-container>
+    }
   </div>
-</div>
-<div *ngIf="errorModal">
-  <div style="display: flex; align-items: center" class="modal" role="dialog" aria-hidden="true">
-    <div class="modal-dialog error-modal">
-      <div class="modal-content">
-        <div class="modal-header" style="border-bottom: 0">
-          <h5 class="modal-title">Error</h5>
-        </div>
-        <div class="modal-body">"{{ geneSymbol }}" is not found in the gene profiles database!</div>
-        <div class="modal-footer" style="border-top: 0">
-          <button type="button" class="btn btn-secondary" (click)="errorModalBack()">Back</button>
+}
+@if (errorModal) {
+  <div>
+    <div style="display: flex; align-items: center" class="modal" role="dialog" aria-hidden="true">
+      <div class="modal-dialog error-modal">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom: 0">
+            <h5 class="modal-title">Error</h5>
+          </div>
+          <div class="modal-body">"{{ geneSymbol }}" is not found in the gene profiles database!</div>
+          <div class="modal-footer" style="border-top: 0">
+            <button type="button" class="btn btn-secondary" (click)="errorModalBack()">Back</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+}

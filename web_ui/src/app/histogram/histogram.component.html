@@ -9,88 +9,96 @@
         <g
           #histogramContainer
           [ngStyle]="isInteractive ? { transform: 'translate(0px, 50px)' } : { transform: 'translate(0px, 0px)' }"></g>
-        <g *ngIf="isInteractive">
-          <g
-            gpf-histogram-range-selector-line
-            [width]="2"
-            [(x)]="startX"
-            [textOnRight]="false"
-            [text]="beforeRangeText"></g>
-          <g
-            gpf-histogram-range-selector-line
-            [width]="2"
-            [(x)]="endX"
-            [textOnRight]="true"
-            [text]="afterRangeText"></g>
-          <!-- prettier-ignore -->
-          <text
-            id="sumOfBarsLabel"
-            [attr.x]="(startX + endX) / 2"
-            [attr.y]="0"
-            dy=".35em"
-            text-anchor="middle"
+        @if (isInteractive) {
+          <g>
+            <g
+              gpf-histogram-range-selector-line
+              [width]="2"
+              [(x)]="startX"
+              [textOnRight]="false"
+              [text]="beforeRangeText"></g>
+            <g
+              gpf-histogram-range-selector-line
+              [width]="2"
+              [(x)]="endX"
+              [textOnRight]="true"
+              [text]="afterRangeText"></g>
+            <!-- prettier-ignore -->
+            <text
+              id="sumOfBarsLabel"
+              [attr.x]="(startX + endX) / 2"
+              [attr.y]="0"
+              dy=".35em"
+              text-anchor="middle"
             class="partitions-text">{{ insideRangeText }}</text>
-        </g>
-        <g *ngIf="!isInteractive && singleScoreValueIsValid()">
-          <!-- prettier-ignore -->
-          <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
-          <line
-            class="single-score-marker"
-            style="stroke: rgb(255, 0, 0); stroke-width: 2"
-            [attr.x1]="scaleXAxis(singleScoreValue)"
-            [attr.y1]="scaleYAxis(1)"
-            [attr.x2]="scaleXAxis(singleScoreValue)"
-            [attr.y2]="-5" />
-        </g>
+          </g>
+        }
+        @if (!isInteractive && singleScoreValueIsValid()) {
+          <g>
+            <!-- prettier-ignore -->
+            <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
+            <line
+              class="single-score-marker"
+              style="stroke: rgb(255, 0, 0); stroke-width: 2"
+              [attr.x1]="scaleXAxis(singleScoreValue)"
+              [attr.y1]="scaleYAxis(1)"
+              [attr.x2]="scaleXAxis(singleScoreValue)"
+              [attr.y2]="-5" />
+          </g>
+        }
       </g>
     </svg>
 
-    <div *ngIf="smallValuesDesc && largeValuesDesc" id="values-description">
-      <span>{{ smallValuesDesc }}</span>
-      <span>{{ largeValuesDesc }}</span>
-    </div>
+    @if (smallValuesDesc && largeValuesDesc) {
+      <div id="values-description">
+        <span>{{ smallValuesDesc }}</span>
+        <span>{{ largeValuesDesc }}</span>
+      </div>
+    }
   </div>
 
-  <div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue" style="justify-content: space-between">
-    <div class="histogram-from">
-      <label for="from-input-field">From (Min: {{ minValue }})</label>
-      <div class="stepper">
-        <input
-          #rangeStartInput
-          id="from-input-field"
-          class="steps form-control no-arrows"
-          required
-          type="number"
-          (keyup)="setRangeStartFromInput(rangeStartInput.value)"
-          [ngModel]="rangeStartDisplay"
-          placeholder="start" />
-        <button type="button" class="step up" (click)="startStepUp()"
-          ><span class="material-symbols-outlined md">arrow_drop_up</span></button
-        >
-        <button type="button" class="step down" (click)="startStepDown()"
-          ><span class="material-symbols-outlined md">arrow_drop_down</span></button
-        >
+  @if (showMinMaxInputWithDefaultValue) {
+    <div class="histogram-controls" style="justify-content: space-between">
+      <div class="histogram-from">
+        <label for="from-input-field">From (Min: {{ minValue }})</label>
+        <div class="stepper">
+          <input
+            #rangeStartInput
+            id="from-input-field"
+            class="steps form-control no-arrows"
+            required
+            type="number"
+            (keyup)="setRangeStartFromInput(rangeStartInput.value)"
+            [ngModel]="rangeStartDisplay"
+            placeholder="start" />
+          <button type="button" class="step up" (click)="startStepUp()"
+            ><span class="material-symbols-outlined md">arrow_drop_up</span></button
+          >
+          <button type="button" class="step down" (click)="startStepDown()"
+            ><span class="material-symbols-outlined md">arrow_drop_down</span></button
+          >
+        </div>
+      </div>
+      <div class="histogram-to">
+        <label for="to-input-field">To (Max: {{ maxValue }})</label>
+        <div class="stepper">
+          <input
+            #rangeEndInput
+            id="to-input-field"
+            class="steps form-control no-arrows"
+            required
+            type="number"
+            (keyup)="setRangeEndFromInput(rangeEndInput.value)"
+            [ngModel]="rangeEndDisplay"
+            placeholder="end" />
+          <button type="button" class="step up" (click)="endStepUp()"
+            ><span class="material-symbols-outlined md">arrow_drop_up</span></button
+          >
+          <button type="button" class="step down" (click)="endStepDown()"
+            ><span class="material-symbols-outlined md">arrow_drop_down</span></button
+          >
+        </div>
       </div>
     </div>
-    <div class="histogram-to">
-      <label for="to-input-field">To (Max: {{ maxValue }})</label>
-      <div class="stepper">
-        <input
-          #rangeEndInput
-          id="to-input-field"
-          class="steps form-control no-arrows"
-          required
-          type="number"
-          (keyup)="setRangeEndFromInput(rangeEndInput.value)"
-          [ngModel]="rangeEndDisplay"
-          placeholder="end" />
-        <button type="button" class="step up" (click)="endStepUp()"
-          ><span class="material-symbols-outlined md">arrow_drop_up</span></button
-        >
-        <button type="button" class="step down" (click)="endStepDown()"
-          ><span class="material-symbols-outlined md">arrow_drop_down</span></button
-        >
-      </div>
-    </div>
-  </div>
+  }
 </div>

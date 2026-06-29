@@ -1,7 +1,13 @@
-<div id="measures-counter" *ngIf="measures?.measures">
-  <span *ngIf="measures.measures.length < 1001">Measures count: {{ measures.measures.length }}</span>
-  <span *ngIf="measures.measures.length > 1000">More than 1000 measures selected (1000 shown)</span>
-</div>
+@if (measures?.measures) {
+  <div id="measures-counter">
+    @if (measures.measures.length < 1001) {
+      <span>Measures count: {{ measures.measures.length }}</span>
+    }
+    @if (measures.measures.length > 1000) {
+      <span>More than 1000 measures selected (1000 shown)</span>
+    }
+  </div>
+}
 
 <div
   id="pheno-browser-table"
@@ -51,7 +57,7 @@
     <div id="values-domain">Values Domain</div>
   </div>
 
-  <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
+  @for (regressionId of measures.regressionNames | getRegressionIds; track regressionId) {
     <div class="grid-header-cell"
       >Regression by
       {{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }}</div
@@ -73,7 +79,6 @@
           [sortState]="regressionId + '.pvalueRegressionMale' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
         </gpf-sorting-buttons>
       </div>
-
       <div
         class="subheader-sorting-button"
         (click)="
@@ -90,106 +95,97 @@
         </gpf-sorting-buttons>
       </div>
     </div>
-  </ng-container>
+  }
 
-  <div
-    *ngIf="!measuresLoading && !measures.measures.length"
-    id="nothing-found-row"
-    [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
-    >Nothing found</div
-  >
+  @if (!measuresLoading && !measures.measures.length) {
+    <div id="nothing-found-row" [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }">Nothing found</div>
+  }
 
-  <div *ngIf="measuresLoading" id="loading-row" [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
-    >Loading...</div
-  >
+  @if (measuresLoading) {
+    <div id="loading-row" [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }">Loading...</div>
+  }
 
-  <ng-container *ngFor="let measure of measures.measures">
+  @for (measure of measures.measures; track measure) {
     <div class="grid-cell instrument-cell"
       >{{ measure.instrumentName }}
-      <button
-        *ngIf="measure.instrumentDescription"
-        [id]="measure.instrumentName + '-description-button'"
-        class="description-tooltip"
-        [ngbTooltip]="instrumentDescriptionContent"
-        [autoClose]="'outside'"
-        triggers="manual"
-        #instrumentDescription="ngbTooltip"
-        (click)="instrumentDescription.open()">
-        <span class="material-symbols-outlined info-icon" [id]="measure.instrumentName + '-description-icon'"
-          >info</span
-        >
-      </button>
+      @if (measure.instrumentDescription) {
+        <button
+          [id]="measure.instrumentName + '-description-button'"
+          class="description-tooltip"
+          [ngbTooltip]="instrumentDescriptionContent"
+          [autoClose]="'outside'"
+          triggers="manual"
+          #instrumentDescription="ngbTooltip"
+          (click)="instrumentDescription.open()">
+          <span class="material-symbols-outlined info-icon" [id]="measure.instrumentName + '-description-icon'"
+            >info</span
+          >
+        </button>
+      }
     </div>
-
     <ng-template #instrumentDescriptionContent>
       <markdown>{{ measure.instrumentDescription }}</markdown>
     </ng-template>
-
     <div class="grid-cell measure-name-cell"
       >{{ measure.measureName }}
-      <button
-        *ngIf="measure.description"
-        [id]="measure.measureName + '-description-button'"
-        class="description-tooltip"
-        [ngbTooltip]="measureDescriptionContent"
-        [autoClose]="'outside'"
-        triggers="manual"
-        #measureDescription="ngbTooltip"
-        (click)="measureDescription.open()">
-        <span class="material-symbols-outlined info-icon" [id]="measure.measureName + '-description-icon'">info</span>
-      </button>
+      @if (measure.description) {
+        <button
+          [id]="measure.measureName + '-description-button'"
+          class="description-tooltip"
+          [ngbTooltip]="measureDescriptionContent"
+          [autoClose]="'outside'"
+          triggers="manual"
+          #measureDescription="ngbTooltip"
+          (click)="measureDescription.open()">
+          <span class="material-symbols-outlined info-icon" [id]="measure.measureName + '-description-icon'">info</span>
+        </button>
+      }
     </div>
-
     <ng-template #measureDescriptionContent>
       <markdown>{{ measure.description }}</markdown>
     </ng-template>
-
     <div class="grid-cell figure-distribution-cell">
       <a [class.clickable]="!!measure.figureDistribution" (click)="openModal(measure.figureDistribution)">
-        <img
-          *ngIf="measure.figureDistributionSmall"
-          class="table-chart"
-          [src]="measure.figureDistributionSmall"
-          loading="lazy" />
+        @if (measure.figureDistributionSmall) {
+          <img class="table-chart" [src]="measure.figureDistributionSmall" loading="lazy" />
+        }
       </a>
     </div>
-
     <div class="grid-cell measure-type-cell">
       <div>
         <div>{{ measure.measureType }}</div>
-        <ng-container *ngIf="measure.measureType === 'continuous'">
+        @if (measure.measureType === 'continuous') {
           <div>
             <span
-              >{{ measure.valuesDomain.slice(0, measure.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},
+              >{{ measure.valuesDomain.slice(0, measure.valuesDomain.indexOf(',')) | numberWithExp: '1.3-3' }},
             </span>
             <span>{{
               measure.valuesDomain.slice(measure.valuesDomain.indexOf(',') + 1, measure.valuesDomain.length)
-                | numberWithExp : '1.3-3'
+                | numberWithExp: '1.3-3'
             }}</span>
           </div>
-        </ng-container>
-        <ng-container *ngIf="measure.measureType === 'ordinal'">
+        }
+        @if (measure.measureType === 'ordinal') {
           <span title="{{ measure.valuesDomain }}">{{ measure.valuesDomain.replace(', ', ' - ') }}</span>
-        </ng-container>
-        <ng-container *ngIf="measure.measureType === 'categorical' || measure.measureType === 'raw'">
+        }
+        @if (measure.measureType === 'categorical' || measure.measureType === 'raw') {
           <span title="{{ measure.valuesDomain }}">{{ measure.valuesDomain }}</span>
-        </ng-container>
+        }
       </div>
     </div>
-
-    <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
+    @for (regressionId of measures.regressionNames | getRegressionIds; track regressionId) {
       <div class="grid-cell" [ngClass]="regressionId + '.img'">
         <a
           [class.clickable]="!!measure.regressions.getReg(regressionId).figureRegression"
           (click)="openModal(measure.regressions.getReg(regressionId).figureRegression)">
-          <img
-            *ngIf="measure.regressions.getReg(regressionId).figureRegressionSmall"
-            class="table-chart"
-            [src]="measure.regressions.getReg(regressionId).figureRegressionSmall"
-            loading="lazy" />
+          @if (measure.regressions.getReg(regressionId).figureRegressionSmall) {
+            <img
+              class="table-chart"
+              [src]="measure.regressions.getReg(regressionId).figureRegressionSmall"
+              loading="lazy" />
+          }
         </a>
       </div>
-
       <div class="grid-cell" [ngClass]="regressionId">
         <div>
           <div
@@ -198,21 +194,20 @@
               measure.regressions.getReg(regressionId).pvalueRegressionMale?.toString() | getBackgroundColor
             "
             [style.width]="'100%'"
-            [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
-            >{{ measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</div
+            [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp: '1.2-4'"
+            >{{ measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp: '1.2-4' }}</div
           >
-
           <div
             [ngClass]="regressionId + '.pvalueRegressionFemale'"
             [style.background-color]="
               measure.regressions.getReg(regressionId).pvalueRegressionFemale?.toString() | getBackgroundColor
             "
             [style.width]="'100%'"
-            [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
-            >{{ measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</div
+            [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp: '1.2-4'"
+            >{{ measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp: '1.2-4' }}</div
           >
         </div>
       </div>
-    </ng-container>
-  </ng-container>
+    }
+  }
 </div>

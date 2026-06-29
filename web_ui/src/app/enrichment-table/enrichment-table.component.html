@@ -1,78 +1,82 @@
 <div id="enrichment-tool-results">
   <div style="word-break: break-word" class="description">{{ enrichmentResults?.description }}</div>
 
-  <table *ngIf="enrichmentResults" class="enrichment-table">
-    <tr>
-      <th></th>
-      <th></th>
-      <th colspan="4" title="All">All</th>
-      <th colspan="4" title="Male">Male</th>
-      <th colspan="4" title="Female">Female</th>
-    </tr>
-    <tr>
-      <th class="selector-cell"></th>
-      <th></th>
-      <th class="value-cell" title="Total number of events">N</th>
-      <th class="value-cell" title="Observed number of events">O</th>
-      <th class="value-cell" title="Expected number of events">E</th>
-      <th class="value-cell" title="p-value">pV</th>
-
-      <th class="value-cell" title="Total number of events">N</th>
-      <th class="value-cell" title="Observed number of events">O</th>
-      <th class="value-cell" title="Expected number of events">E</th>
-      <th class="value-cell" title="p-value">pV</th>
-
-      <th class="value-cell" title="Total number of events">N</th>
-      <th class="value-cell" title="Observed number of events">O</th>
-      <th class="value-cell" title="Expected number of events">E</th>
-      <th class="value-cell" title="p-value">pV</th>
-    </tr>
-    <ng-container *ngFor="let enrichmentResult of enrichmentResults.results">
+  @if (enrichmentResults) {
+    <table class="enrichment-table">
       <tr>
-        <td rowspan="4" class="selector-cell">
-          <div [attr.title]="enrichmentResult.selector">{{ enrichmentResult.selector }}</div>
-          <div class="children-stats">
-            <span
-              [attr.title]="
-                enrichmentResult?.childrenStats?.female !== undefined
-                  ? 'Female: ' + enrichmentResult?.childrenStats?.female
-                  : 'Female: -'
-              "
-              >F: {{ enrichmentResult?.childrenStats?.female }}</span
-            >
-            <span *ngIf="enrichmentResult?.childrenStats?.female === undefined" title="Female: -">-</span>
-            <br />
-
-            <span
-              [attr.title]="
-                enrichmentResult?.childrenStats?.male !== undefined
-                  ? 'Male: ' + enrichmentResult?.childrenStats?.male
-                  : 'Male: -'
-              "
-              >M: {{ enrichmentResult?.childrenStats?.male }}</span
-            >
-            <span *ngIf="enrichmentResult?.childrenStats?.male === undefined" title="Male: -">-</span>
-            <br />
-
-            <span
-              [attr.title]="
-                enrichmentResult?.childrenStats?.unspecified !== undefined
-                  ? 'Unspecified: ' + enrichmentResult?.childrenStats?.unspecified
-                  : 'Unspecified: -'
-              "
-              >U: {{ enrichmentResult?.childrenStats?.unspecified }}</span
-            >
-            <span *ngIf="enrichmentResult?.childrenStats?.unspecified === undefined" title="Unspecified: -">-</span>
-          </div>
-        </td>
+        <th></th>
+        <th></th>
+        <th colspan="4" title="All">All</th>
+        <th colspan="4" title="Male">Male</th>
+        <th colspan="4" title="Female">Female</th>
       </tr>
-      <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs" title="LGDs"></tr>
-      <tr gpf-enrichment-table-row label="Missense" [effectResult]="enrichmentResult.missense" title="Missense"></tr>
-      <tr
-        gpf-enrichment-table-row
-        label="Synonymous"
-        [effectResult]="enrichmentResult.synonymous"
-        title="Synonymous"></tr>
-    </ng-container>
-  </table>
+      <tr>
+        <th class="selector-cell"></th>
+        <th></th>
+        <th class="value-cell" title="Total number of events">N</th>
+        <th class="value-cell" title="Observed number of events">O</th>
+        <th class="value-cell" title="Expected number of events">E</th>
+        <th class="value-cell" title="p-value">pV</th>
+        <th class="value-cell" title="Total number of events">N</th>
+        <th class="value-cell" title="Observed number of events">O</th>
+        <th class="value-cell" title="Expected number of events">E</th>
+        <th class="value-cell" title="p-value">pV</th>
+        <th class="value-cell" title="Total number of events">N</th>
+        <th class="value-cell" title="Observed number of events">O</th>
+        <th class="value-cell" title="Expected number of events">E</th>
+        <th class="value-cell" title="p-value">pV</th>
+      </tr>
+      @for (enrichmentResult of enrichmentResults.results; track enrichmentResult) {
+        <tr>
+          <td rowspan="4" class="selector-cell">
+            <div [attr.title]="enrichmentResult.selector">{{ enrichmentResult.selector }}</div>
+            <div class="children-stats">
+              <span
+                [attr.title]="
+                  enrichmentResult?.childrenStats?.female !== undefined
+                    ? 'Female: ' + enrichmentResult?.childrenStats?.female
+                    : 'Female: -'
+                "
+                >F: {{ enrichmentResult?.childrenStats?.female }}</span
+              >
+              @if (enrichmentResult?.childrenStats?.female === undefined) {
+                <span title="Female: -">-</span>
+              }
+              <br />
+              <span
+                [attr.title]="
+                  enrichmentResult?.childrenStats?.male !== undefined
+                    ? 'Male: ' + enrichmentResult?.childrenStats?.male
+                    : 'Male: -'
+                "
+                >M: {{ enrichmentResult?.childrenStats?.male }}</span
+              >
+              @if (enrichmentResult?.childrenStats?.male === undefined) {
+                <span title="Male: -">-</span>
+              }
+              <br />
+              <span
+                [attr.title]="
+                  enrichmentResult?.childrenStats?.unspecified !== undefined
+                    ? 'Unspecified: ' + enrichmentResult?.childrenStats?.unspecified
+                    : 'Unspecified: -'
+                "
+                >U: {{ enrichmentResult?.childrenStats?.unspecified }}</span
+              >
+              @if (enrichmentResult?.childrenStats?.unspecified === undefined) {
+                <span title="Unspecified: -">-</span>
+              }
+            </div>
+          </td>
+        </tr>
+        <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs" title="LGDs"></tr>
+        <tr gpf-enrichment-table-row label="Missense" [effectResult]="enrichmentResult.missense" title="Missense"></tr>
+        <tr
+          gpf-enrichment-table-row
+          label="Synonymous"
+          [effectResult]="enrichmentResult.synonymous"
+          title="Synonymous"></tr>
+      }
+    </table>
+  }
 </div>

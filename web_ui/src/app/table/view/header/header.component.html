@@ -1,13 +1,16 @@
-<div *ngFor="let i of subheadersCount" style="display: table-row">
-  <gpf-table-view-header-cell
-    #cell
-    *ngFor="let column of columns"
-    [columnInfo]="column.headerChildren.toArray()[i]"
-    [sortingInfo]="sortingInfo"
-    [style.width]="column.columnWidth || null"
-    [style.min-width]="column.columnWidth || null"
-    [style.max-width]="column.columnWidth || null"
-    (sortingInfoChange)="sortingInfoChange.emit($event)"
-    style="vertical-align: middle">
-  </gpf-table-view-header-cell>
-</div>
+@for (i of subheadersCount; track i) {
+  <div style="display: table-row">
+    @for (column of columns; track column) {
+      <gpf-table-view-header-cell
+        #cell
+        [columnInfo]="column.headerChildren.toArray()[i]"
+        [sortingInfo]="sortingInfo"
+        [style.width]="column.columnWidth || null"
+        [style.min-width]="column.columnWidth || null"
+        [style.max-width]="column.columnWidth || null"
+        (sortingInfoChange)="sortingInfoChange.emit($event)"
+        style="vertical-align: middle">
+      </gpf-table-view-header-cell>
+    }
+  </div>
+}

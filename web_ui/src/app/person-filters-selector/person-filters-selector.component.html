@@ -7,21 +7,22 @@
     </gpf-pheno-measure-selector-beta>
   </div>
 
-  <div *ngFor="let histogram of selectedMeasureHistograms" class="filters-container">
-    <gpf-person-filter
-      [selectedMeasure]="histogram.measureHistogram"
-      [initialState]="histogram.state"
-      (updateState)="addToState($event)"
-      (updateHistogram)="loadHistogram($event)"
-      [isFamilyFilters]="isFamilyFilters"></gpf-person-filter>
-
-    <div>
-      <gpf-remove-button
-        [id]="histogram.measureHistogram.measure + '-remove-button'"
-        [field]="histogram.measureHistogram.measure"
-        (removeFilter)="removeFromState($event)"></gpf-remove-button>
+  @for (histogram of selectedMeasureHistograms; track histogram) {
+    <div class="filters-container">
+      <gpf-person-filter
+        [selectedMeasure]="histogram.measureHistogram"
+        [initialState]="histogram.state"
+        (updateState)="addToState($event)"
+        (updateHistogram)="loadHistogram($event)"
+        [isFamilyFilters]="isFamilyFilters"></gpf-person-filter>
+      <div>
+        <gpf-remove-button
+          [id]="histogram.measureHistogram.measure + '-remove-button'"
+          [field]="histogram.measureHistogram.measure"
+          (removeFilter)="removeFromState($event)"></gpf-remove-button>
+      </div>
     </div>
-  </div>
+  }
   <div style="margin: 10px 55px">
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>

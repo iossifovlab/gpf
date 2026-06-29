@@ -27,7 +27,7 @@
             >
           </div>
 
-          <ng-container *ngIf="createMode">
+          @if (createMode) {
             <div class="create-container">
               <div>
                 <label>Name:</label>
@@ -54,9 +54,11 @@
                   required
                   spellcheck="false" />
               </div>
-              <div *ngIf="creationError" class="creation-error alert alert-danger">
-                {{ creationError }}
-              </div>
+              @if (creationError) {
+                <div class="creation-error alert alert-danger">
+                  {{ creationError }}
+                </div>
+              }
               <div class="creation-buttons">
                 <button
                   id="create-user-button"
@@ -69,7 +71,7 @@
                 >
               </div>
             </div>
-          </ng-container>
+          }
 
           <gpf-users-table [users]="users" [currentUserEmail]="currentUserEmail"></gpf-users-table>
         </ng-template>
@@ -99,7 +101,7 @@
               >Create group</button
             >
           </div>
-          <ng-container *ngIf="createMode">
+          @if (createMode) {
             <div class="create-container">
               <div>
                 <label>Group name:</label>
@@ -113,9 +115,11 @@
                   required
                   spellcheck="false" />
               </div>
-              <div *ngIf="creationError" class="creation-error alert alert-danger">
-                {{ creationError }}
-              </div>
+              @if (creationError) {
+                <div class="creation-error alert alert-danger">
+                  {{ creationError }}
+                </div>
+              }
               <div class="creation-buttons">
                 <button id="create-group-button" class="btn btn-primary" (click)="createGroup(groupNameBox.value)"
                   >Create</button
@@ -125,7 +129,7 @@
                 >
               </div>
             </div>
-          </ng-container>
+          }
 
           <gpf-groups-table [groups]="groups" [currentUserEmail]="currentUserEmail"></gpf-groups-table>
         </ng-template>

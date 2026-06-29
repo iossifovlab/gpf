@@ -7,40 +7,49 @@
         <g
           #histogramContainer
           [ngStyle]="isInteractive ? { transform: 'translate(0px, 50px)' } : { transform: 'translate(0px, 0px)' }"></g>
-        <g *ngIf="isInteractive">
-          <text
-            id="valuesSelectedCount"
-            [attr.x]="(startX + endX) / 2"
-            [attr.y]="0"
-            dy=".35em"
-            text-anchor="middle"
-            class="values-count-text">
-            {{ initialSelectedValueNames.length + ' values' }}
-          </text>
-          <ng-container *ngIf="interactType === 'range selector'">
-            <g gpf-histogram-range-selector-line [width]="2" [(x)]="startX"></g>
-            <g gpf-histogram-range-selector-line [width]="2" [(x)]="endX"></g>
-          </ng-container>
-        </g>
+        @if (isInteractive) {
+          <g>
+            <text
+              id="valuesSelectedCount"
+              [attr.x]="(startX + endX) / 2"
+              [attr.y]="0"
+              dy=".35em"
+              text-anchor="middle"
+              class="values-count-text">
+              {{ initialSelectedValueNames.length + ' values' }}
+            </text>
+            @if (interactType === 'range selector') {
+              <ng-container>
+                <g gpf-histogram-range-selector-line [width]="2" [(x)]="startX"></g>
+                <g gpf-histogram-range-selector-line [width]="2" [(x)]="endX"></g>
+              </ng-container>
+            }
+          </g>
+        }
 
-        <g *ngIf="!isInteractive && singleScoreValueIsValid()">
-          <!-- eslint-disable-next-line prettier/prettier -->
-          <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
-          <line
-            *ngIf="!isInteractive && singleScoreValueIsValid()"
-            class="single-score-marker"
-            style="stroke: rgb(255, 0, 0); stroke-width: 2"
-            [attr.x1]="scaleXAxis(singleScoreValue)"
-            [attr.y1]="scaleYAxis(1)"
-            [attr.x2]="scaleXAxis(singleScoreValue)"
-            [attr.y2]="-5" />
-        </g>
+        @if (!isInteractive && singleScoreValueIsValid()) {
+          <g>
+            <!-- eslint-disable-next-line prettier/prettier -->
+            <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
+            @if (!isInteractive && singleScoreValueIsValid()) {
+              <line
+                class="single-score-marker"
+                style="stroke: rgb(255, 0, 0); stroke-width: 2"
+                [attr.x1]="scaleXAxis(singleScoreValue)"
+                [attr.y1]="scaleYAxis(1)"
+                [attr.x2]="scaleXAxis(singleScoreValue)"
+                [attr.y2]="-5" />
+            }
+          </g>
+        }
       </g>
     </svg>
 
-    <div *ngIf="histogram.smallValuesDesc && histogram.largeValuesDesc" id="values-description">
-      <span>{{ histogram.smallValuesDesc }}</span>
-      <span>{{ histogram.largeValuesDesc }}</span>
-    </div>
+    @if (histogram.smallValuesDesc && histogram.largeValuesDesc) {
+      <div id="values-description">
+        <span>{{ histogram.smallValuesDesc }}</span>
+        <span>{{ histogram.largeValuesDesc }}</span>
+      </div>
+    }
   </div>
 </div>

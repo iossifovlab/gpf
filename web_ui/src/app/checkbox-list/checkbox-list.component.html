@@ -1,18 +1,20 @@
 <div class="card">
-  <span *ngIf="title" class="card-header card-title">{{ title }}</span>
+  @if (title) {
+    <span class="card-header card-title">{{ title }}</span>
+  }
   <div class="card-block">
     <div class="btn-group btn-group-sm">
       <button (click)="selectAll()" class="btn btn-default">All</button>
       <button (click)="selectNone()" class="btn btn-default">None</button>
     </div>
 
-    <ng-container *ngFor="let item of items">
+    @for (item of items; track item) {
       <div class="checkbox">
         <label>
           <input type="checkbox" [checked]="selectedItems.has(item)" (change)="toggleItem(item)" />
-          <span id="item" style="margin-left: 5px">{{ item | displayName : displayNames }}</span>
+          <span id="item" style="margin-left: 5px">{{ item | displayName: displayNames }}</span>
         </label>
       </div>
-    </ng-container>
+    }
   </div>
 </div>
