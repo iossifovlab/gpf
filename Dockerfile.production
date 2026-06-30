@@ -43,10 +43,17 @@ FROM ${PYTHON_IMAGE} AS runtime
 # libmagic1 + libmariadb3 + curl: same runtime deps as the
 # backend image (the venv we copy in expects them). apache2
 # + supervisor are the new pieces specific to this image.
+# default-mysql-client (mariadb-client) adds the `mysql` CLI
+# so `wdaemanage dbshell` works in the deployed container: the
+# Python driver only links libmariadb3, but Django's dbshell
+# shells out to the `mysql` binary. It also gives operators
+# mysqldump/mysqladmin against the configured DB from inside
+# the running app container.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         apache2 \
         curl \
+        default-mysql-client \
         libmagic1 \
         libmariadb3 \
         supervisor \
