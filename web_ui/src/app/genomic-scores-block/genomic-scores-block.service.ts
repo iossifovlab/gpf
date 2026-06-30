@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 // eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
@@ -9,12 +9,10 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class GenomicScoresBlockService {
-  private readonly genomicScoresUrl = 'genomic_scores';
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
 
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
+  private readonly genomicScoresUrl = 'genomic_scores';
 
   public getGenomicScores(): Observable<GenomicScore[]> {
     return this.http

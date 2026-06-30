@@ -1,46 +1,52 @@
 <div class="dataset-container">
-  <span
-    #collapseIcon
-    *ngIf="datasetNode.children.length"
-    class="collapse-dataset-icon material-icons material-symbols-outlined"
-    [ngClass]="{ rotate: isExpanded }"
-    (click)="toggleDatasetCollapse(datasetNode.dataset.id)"
-    >expand_more</span
-  ><a
-    class="dataset-dropdown-item dropdown-item"
-    *ngIf="selectedDatasetId"
-    [class.active]="selectedDatasetId === datasetNode.dataset.id"
-    [ngStyle]="{ 'padding-left': datasetNode.children.length ? 0 : 24 }"
-    (click)="select()"
-    (middleclick)="select(true)">
-    <span [title]="datasetNode.dataset.name" class="dataset-name">{{ datasetNode.dataset.name }}</span>
-
-    <div *ngIf="datasetNode.dataset.hasDenovo" style="display: inline-flex" title="denovo">
-      <span class="denovo-icon material-symbols-outlined sm">genetics</span>
-      <span class="star-icon material-symbols-outlined">kid_star</span>
-    </div>
-
+  @if (datasetNode.children.length) {
     <span
-      *ngIf="datasetNode.dataset.hasTransmitted"
-      class="transmitted-icon material-symbols-outlined sm"
-      title="transmitted"
-      [ngStyle]="{ color: datasetNode.dataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
-      >family_history</span
+      #collapseIcon
+      class="collapse-dataset-icon material-icons material-symbols-outlined"
+      [ngClass]="{ rotate: isExpanded }"
+      (click)="toggleDatasetCollapse(datasetNode.dataset.id)"
+      >expand_more</span
     >
-    <span
-      *ngIf="datasetNode.dataset.phenotypeData"
-      class="phenotype-icon material-symbols-outlined md"
-      title="phenotype"
-      [ngStyle]="{ color: datasetNode.dataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
-      >how_to_reg</span
-    >
-  </a>
+  }
+  @if (selectedDatasetId) {
+    <a
+      class="dataset-dropdown-item dropdown-item"
+      [class.active]="selectedDatasetId === datasetNode.dataset.id"
+      [ngStyle]="{ 'padding-left': datasetNode.children.length ? 0 : 24 }"
+      (click)="select()"
+      (middleclick)="select(true)">
+      <span [title]="datasetNode.dataset.name" class="dataset-name">{{ datasetNode.dataset.name }}</span>
+      @if (datasetNode.dataset.hasDenovo) {
+        <div style="display: inline-flex" title="denovo">
+          <span class="denovo-icon material-symbols-outlined sm">genetics</span>
+          <span class="star-icon material-symbols-outlined">kid_star</span>
+        </div>
+      }
+      @if (datasetNode.dataset.hasTransmitted) {
+        <span
+          class="transmitted-icon material-symbols-outlined sm"
+          title="transmitted"
+          [ngStyle]="{ color: datasetNode.dataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
+          >family_history</span
+        >
+      }
+      @if (datasetNode.dataset.phenotypeData) {
+        <span
+          class="phenotype-icon material-symbols-outlined md"
+          title="phenotype"
+          [ngStyle]="{ color: datasetNode.dataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
+          >how_to_reg</span
+        >
+      }
+    </a>
+  }
 </div>
 
 <div [hidden]="!isExpanded" class="children-container">
-  <gpf-dataset-node
-    *ngFor="let child of datasetNode.children"
-    [datasetNode]="child"
-    (setExpandabilityEvent)="setIsExpanded()"
-    [closeObservable]="closeChildrenSubject.asObservable()"></gpf-dataset-node>
+  @for (child of datasetNode.children; track child) {
+    <gpf-dataset-node
+      [datasetNode]="child"
+      (setExpandabilityEvent)="setIsExpanded()"
+      [closeObservable]="closeChildrenSubject.asObservable()"></gpf-dataset-node>
+  }
 </div>

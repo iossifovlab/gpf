@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, ViewChild, OnInit, HostListener } from '@angular/core';
+import { Component, AfterViewInit, Input, ViewChild, OnInit, HostListener, inject } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
@@ -22,6 +22,9 @@ import {
   standalone: false
 })
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
+  private store = inject(Store);
+  private variantReportsService = inject(VariantReportsService);
+
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
@@ -37,11 +40,6 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public familiesCounters: FamilyCounter[];
   public selectedFamiliesCount: number;
   public showSelectedFamilies = true;
-
-  public constructor(
-    private store: Store,
-    private variantReportsService: VariantReportsService,
-  ) { }
 
   public ngOnInit(): void {
     this.showAdvancedButton =

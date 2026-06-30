@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ConfigService } from './config/config.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -7,13 +7,12 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   providedIn: 'root'
 })
 export class InstanceService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly instanceUrl = 'instance';
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService) { }
 
   public getGpfVersion(): Observable<string> {
     return this.http.get<{version: string}>(`${this.config.baseUrl}${this.instanceUrl}/version`).pipe(

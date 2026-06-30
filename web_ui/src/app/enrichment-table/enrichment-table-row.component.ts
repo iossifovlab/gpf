@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
@@ -18,13 +18,11 @@ import { setStudyTypes } from 'app/study-types/study-types.state';
   standalone: false
 })
 export class EnrichmentTableRowComponent {
+  private queryService = inject(QueryService);
+  private store = inject(Store);
+
   @Input() public label: string;
   @Input() public effectResult: EnrichmentEffectResult;
-
-  public constructor(
-    private queryService: QueryService,
-    private store: Store,
-  ) {}
 
   public goToQuery(browserQueryFilter: BrowserQueryFilter, skipGenes = false): void {
     // Create new window now because we are in a 'click' event callback, update

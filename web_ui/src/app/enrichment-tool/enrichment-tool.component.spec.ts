@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { EnrichmentToolComponent } from './enrichment-tool.component';
 import { EnrichmentQueryService } from 'app/enrichment-query/enrichment-query.service';
@@ -135,6 +135,7 @@ describe('EnrichmentToolComponent', () => {
   const enrichmentQueryServiceMock = new EnrichmentQueryServiceMock();
 
   beforeEach(() => {
+    jest.useRealTimers();
     TestBed.configureTestingModule({
       declarations: [EnrichmentToolComponent],
       providers: [
@@ -163,6 +164,10 @@ describe('EnrichmentToolComponent', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('should create', () => {
@@ -297,26 +302,19 @@ describe('EnrichmentToolComponent', () => {
     });
   });
 
-  it('should disable buttons if validation of components fail', () => {
+  it('should disable buttons if validation of components fail', fakeAsync(() => {
     jest.spyOn(store, 'select').mockReturnValue(of([
       {
         componentId: 'gene sets',
         errors: ['Select gene set']
       }
     ]));
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '');
-    jest.spyOn(global, 'setTimeout').mockImplementationOnce((fn) => {
-      fn();
-      return timer;
-    });
     component.disableQueryButtons = false;
     component.ngOnInit();
-    jest.runAllTimers();
+    flush();
 
     expect(component.disableQueryButtons).toBe(true);
-    jest.useRealTimers();
-  });
+  }));
 
   it('should interrupt loading', () => {
     const setLoadingStopSpy = jest.spyOn(loadingService, 'setLoadingStop');

@@ -1,6 +1,7 @@
-<gpf-gene-profiles-table
-  *ngIf="geneProfilesTableConfig"
-  (goToQueryEvent)="goToQueryEventHandler($event)"
-  (resetConfig)="resetConf()"
-  [config]="geneProfilesTableConfig">
-</gpf-gene-profiles-table>
+@if (geneProfilesTableConfig) {
+  <gpf-gene-profiles-table
+    (goToQueryEvent)="goToQueryEventHandler($event)"
+    (resetConfig)="resetConf()"
+    [config]="geneProfilesTableConfig">
+  </gpf-gene-profiles-table>
+}

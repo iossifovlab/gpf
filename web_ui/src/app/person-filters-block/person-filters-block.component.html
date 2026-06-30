@@ -11,20 +11,24 @@
           <gpf-person-ids></gpf-person-ids>
         </ng-template>
       </li>
-      <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
-        <a ngbNavLink>Advanced</a>
-        <ng-template ngbNavContent>
-          <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters>
-        </ng-template>
-      </li>
-      <li [ngbNavItem]="'phenoMeasures'" *ngIf="showPhenoMeasuresButton" id="phenoMeasures">
-        <a ngbNavLink>Pheno Measures</a>
-        <ng-template ngbNavContent>
-          <div id="filters">
-            <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters-selector>
-          </div>
-        </ng-template>
-      </li>
+      @if (showAdvancedButton) {
+        <li [ngbNavItem]="'advanced'" id="advanced">
+          <a ngbNavLink>Advanced</a>
+          <ng-template ngbNavContent>
+            <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters>
+          </ng-template>
+        </li>
+      }
+      @if (showPhenoMeasuresButton) {
+        <li [ngbNavItem]="'phenoMeasures'" id="phenoMeasures">
+          <a ngbNavLink>Pheno Measures</a>
+          <ng-template ngbNavContent>
+            <div id="filters">
+              <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters-selector>
+            </div>
+          </ng-template>
+        </li>
+      }
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>

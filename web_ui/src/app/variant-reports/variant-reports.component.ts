@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, Pipe, PipeTransform, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, Pipe, PipeTransform, ViewChild, ElementRef, inject } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -33,6 +33,13 @@ export class PeopleCounterRowPipe implements PipeTransform {
   standalone: false
 })
 export class VariantReportsComponent implements OnInit {
+  public modalService = inject(NgbModal);
+  public config = inject(ConfigService);
+  private variantReportsService = inject(VariantReportsService);
+  private datasetsService = inject(DatasetsService);
+  protected store = inject(Store);
+  private router = inject(Router);
+
   public accessRights: boolean;
   public tags: Array<string> = new Array<string>();
 
@@ -65,14 +72,7 @@ export class VariantReportsComponent implements OnInit {
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
 
-  public constructor(
-    public modalService: NgbModal,
-    public config: ConfigService,
-    private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService,
-    protected store: Store,
-    private router: Router,
-  ) {
+  public constructor() {
     this.router.events.subscribe(() => {
       this.store.dispatch(
         resetFamilyTags()

@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MarkdownModule } from 'ngx-markdown';
@@ -120,7 +120,7 @@ describe('GenomicScoresBlockComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should add genomic score and default state for number histogram', () => {
+  it('should add genomic score and default state for number histogram', fakeAsync(() => {
     const addToStateSpy = jest.spyOn(component, 'addToState');
     const score = new GenomicScore(
       'desc',
@@ -139,6 +139,7 @@ describe('GenomicScoresBlockComponent', () => {
     };
 
     component.addFilter(score, 2);
+    tick();
 
     expect(component.selectedGenomicScores).toStrictEqual([{ score: score, state: state}]);
     expect(component.unusedGenomicScores).toStrictEqual([
@@ -189,9 +190,9 @@ describe('GenomicScoresBlockComponent', () => {
     ]);
 
     expect(addToStateSpy).toHaveBeenCalledWith(state);
-  });
+  }));
 
-  it('should add genomic score and default state for categorical histogram', () => {
+  it('should add genomic score and default state for categorical histogram', fakeAsync(() => {
     const addToStateSpy = jest.spyOn(component, 'addToState');
     const score = new GenomicScore(
       'desc',
@@ -223,6 +224,7 @@ describe('GenomicScoresBlockComponent', () => {
     };
 
     component.addFilter(score, 3);
+    tick();
 
     expect(component.selectedGenomicScores).toStrictEqual([{ score: score, state: state}]);
     expect(component.unusedGenomicScores).toStrictEqual([
@@ -260,7 +262,7 @@ describe('GenomicScoresBlockComponent', () => {
     ]);
 
     expect(addToStateSpy).toHaveBeenCalledWith(state);
-  });
+  }));
 
   it('should remove genomic score', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');

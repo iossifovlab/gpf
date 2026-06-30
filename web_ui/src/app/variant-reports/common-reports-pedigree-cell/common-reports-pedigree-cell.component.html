@@ -1,11 +1,13 @@
-<div *ngIf="pedigree" class="pedigree-cell" (click)="openModal()">
-  <gpf-pedigree
-    [modalSimpleView]="modalSimpleView"
-    [family]="pedigree.data"
-    [groupName]="pedigree.groupName"
-    [counterId]="pedigree.counterId"
-    [pedigreeMaxWidth]="pedigreeMaxWidth"
-    [count]="pedigree.count">
-  </gpf-pedigree>
-  <span class="pedigree-count">{{ pedigree.count }}</span>
-</div>
+@if (pedigree) {
+  <div class="pedigree-cell" (click)="openModal()">
+    <gpf-pedigree
+      [modalSimpleView]="modalSimpleView"
+      [family]="pedigree.data"
+      [groupName]="pedigree.groupName"
+      [counterId]="pedigree.counterId"
+      [pedigreeMaxWidth]="pedigreeMaxWidth"
+      [count]="pedigree.count">
+    </gpf-pedigree>
+    <span class="pedigree-count">{{ pedigree.count }}</span>
+  </div>
+}

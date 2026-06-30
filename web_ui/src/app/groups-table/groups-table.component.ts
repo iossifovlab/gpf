@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Item } from 'app/item-add-menu/item-add-menu';
@@ -17,14 +17,12 @@ import { UserGroup } from '../users-groups/users-groups';
   standalone: false
 })
 export class GroupsTableComponent {
+  private usersService = inject(UsersService);
+  private usersGroupsService = inject(UsersGroupsService);
+  private datasetsService = inject(DatasetsService);
+
   @Input() public groups: UserGroup[];
   @Input() public currentUserEmail: string;
-
-  public constructor(
-    private usersService: UsersService,
-    private usersGroupsService: UsersGroupsService,
-    private datasetsService: DatasetsService
-  ) { }
 
   public removeUser(group: UserGroup, userEmail: string): void {
     this.usersGroupsService.removeUser(userEmail, group.name).pipe(

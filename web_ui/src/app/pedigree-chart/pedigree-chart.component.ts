@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { difference } from '../utils/sets-helper';
 import { IntervalForVertex } from '../utils/interval-sandwich';
@@ -17,6 +17,8 @@ type OrderedIndividuals = Array<Individual>;
   standalone: false
 })
 export class PedigreeChartComponent implements OnInit {
+  private perfectlyDrawablePedigreeService = inject(PerfectlyDrawablePedigreeService);
+
   public pedigreeDataWithLayout: IndividualWithPosition[];
   public lines: Line[];
 
@@ -39,10 +41,6 @@ export class PedigreeChartComponent implements OnInit {
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   public levels$: Observable<Array<OrderedIndividuals>>;
-
-  public constructor(
-    private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService
-  ) { }
 
   public ngOnInit(): void {
     this.pedigreeDataWithLayout = [];

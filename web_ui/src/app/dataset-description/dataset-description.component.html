@@ -1,42 +1,45 @@
-<ng-container *ngIf="descriptionHierarchy">
+@if (descriptionHierarchy) {
   <gpf-markdown-editor
     [initialMarkdown]="descriptionHierarchy.description"
     [editable]="editable"
     (writeEvent)="writeDataset(descriptionHierarchy.id, $event)"></gpf-markdown-editor>
-
-  <span
-    *ngIf="!descriptionHierarchy.description && !isUserAdmin"
-    style="display: block; font-style: italic; opacity: 75%; text-align: center; padding-top: 15px"
-    >No dataset description available</span
-  >
-
-  <div
-    *ngIf="areChildrenVisible(descriptionHierarchy.children)"
-    class="container"
-    style="display: block; padding: 20px 0; width: auto">
-    <p>This dataset includes:</p>
-    <ul class="container">
-      <ng-container
-        *ngFor="let child of descriptionHierarchy.children"
-        [ngTemplateOutlet]="Recursion"
-        [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
-    </ul>
-  </div>
-</ng-container>
+  @if (!descriptionHierarchy.description && !isUserAdmin) {
+    <span style="display: block; font-style: italic; opacity: 75%; text-align: center; padding-top: 15px"
+      >No dataset description available</span
+    >
+  }
+  @if (areChildrenVisible(descriptionHierarchy.children)) {
+    <div class="container" style="display: block; padding: 20px 0; width: auto">
+      <p>This dataset includes:</p>
+      <ul class="container">
+        @for (child of descriptionHierarchy.children; track child) {
+          <ng-container [ngTemplateOutlet]="Recursion" [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
+        }
+      </ul>
+    </div>
+  }
+}
 
 <ng-template #Recursion let-data>
-  <li *ngIf="data.visibility">
-    <p>
-      <a [id]="'description-link-' + data.id" [href]="'datasets/' + data.id">{{ data.name }}</a>
-      <markdown *ngIf="data.description">
-        {{ getFirstParagraph(data.description) }}
-      </markdown>
-    </p>
-    <ul *ngIf="data.children.length > 0">
-      <ng-container
-        *ngFor="let child of data.children"
-        [ngTemplateOutlet]="Recursion"
-        [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
-    </ul>
-  </li>
+  @if (data.visibility) {
+    <li>
+      <p>
+        <a [id]="'description-link-' + data.id" [href]="'datasets/' + data.id">{{ data.name }}</a>
+        @if (data.description) {
+          <markdown>
+            {{ getFirstParagraph(data.description) }}
+          </markdown>
+        }
+      </p>
+      @if (data.children.length > 0) {
+        <ul>
+          @for (child of data.children; track child) {
+            <ng-container
+              [ngTemplateOutlet]="Recursion"
+              [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
+          }
+        </ul>
+      }
+    </li>
+  }
 </ng-template>

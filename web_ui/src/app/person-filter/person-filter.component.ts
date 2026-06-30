@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 import { MeasureHistogram } from 'app/measures/measures';
@@ -15,6 +15,8 @@ import { ReplaySubject } from 'rxjs';
   standalone: false
 })
 export class PersonFilterComponent implements OnInit, OnDestroy {
+  protected store = inject(Store);
+
   @Input() public selectedMeasure: MeasureHistogram;
   @Input() public initialState: MeasureHistogramState;
   @Input() public isFamilyFilters: boolean;
@@ -28,10 +30,6 @@ export class PersonFilterComponent implements OnInit, OnDestroy {
   // Refactor needed, not removal.
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   public imgPathPrefix = environment.imgPathPrefix;
-
-  public constructor(
-      protected store: Store
-  ) { }
 
   public ngOnInit(): void {
     this.localState = cloneDeep(this.initialState);

@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync, fakeAsync, flush } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { StudyFiltersComponent } from './study-filters.component';
 import { NgbNavModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -18,7 +18,7 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { Store, StoreModule } from '@ngrx/store';
 import { studyTypesReducer } from 'app/study-types/study-types.state';
 import { Dataset, GeneBrowser, PersonSet, PersonSetCollection, PersonSetCollections } from 'app/datasets/datasets';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { resetStudyFilters, setStudyFilters } from './study-filters.state';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,11 +138,10 @@ describe('StudyFiltersComponent', () => {
         StoreModule.forRoot({studyFilters: studyTypesReducer}),
         RouterModule.forRoot([])
       ],
-      schemas: [NO_ERRORS_SCHEMA],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     jest.clearAllMocks();
-    jest.clearAllTimers();
 
     fixture = TestBed.createComponent(StudyFiltersComponent);
     component = fixture.componentInstance;
@@ -153,8 +152,14 @@ describe('StudyFiltersComponent', () => {
     jest.spyOn(store, 'dispatch').mockImplementation();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    component.dataset = datasetConfigMock;
+    component.dataset = datasetMock;
     fixture.detectChanges();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component.ngbNav = {
+      activeId: undefined,
+      select: jest.fn()
+    } as any;
   }));
 
   it('should create', () => {
@@ -169,22 +174,18 @@ describe('StudyFiltersComponent', () => {
     ));
   });
 
-  it('should get study filters from state', () => {
+  it('should get study filters from state', fakeAsync(() => {
     const updateStateSpy = jest.spyOn(component, 'updateState');
 
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '', 10);
-    jest.spyOn(global, 'setTimeout').mockImplementation((fn) => {
-      fn();
-      return timer;
-    });
+    // Ensure dataset is set before ngOnInit
+    component.dataset = datasetMock;
 
     component.ngOnInit();
-    jest.runAllTimers();
+    flush();
 
     expect(component.showStudyFilters).toBe(true);
     expect(updateStateSpy).toHaveBeenCalledWith(new Set(['studyFilter1', 'studyFilter2']));
-  });
+  }));
 
   it('should update state', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');

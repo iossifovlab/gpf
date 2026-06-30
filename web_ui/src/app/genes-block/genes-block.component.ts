@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, Input, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { resetGeneSymbols, selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
@@ -13,10 +13,10 @@ import { combineLatest, take } from 'rxjs';
   standalone: false
 })
 export class GenesBlockComponent implements AfterViewInit {
+  private store = inject(Store);
+
   @Input() public showAllTab = true;
   @ViewChild('nav') public ngbNav: NgbNav;
-
-  public constructor(private store: Store) { }
 
   public ngAfterViewInit(): void {
     combineLatest([

@@ -1,3 +1,5 @@
-<div *ngIf="showTemplate" class="management-container">
-  <router-outlet></router-outlet>
-</div>
+@if (showTemplate) {
+  <div class="management-container">
+    <router-outlet></router-outlet>
+  </div>
+}

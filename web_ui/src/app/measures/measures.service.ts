@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
@@ -8,6 +8,9 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class MeasuresService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly measuresListUrl = 'measures/list';
   private readonly measureRolesUrl = 'measures/role-list';
   private readonly continuousMeasuresUrl = 'measures/type/continuous';
@@ -15,11 +18,6 @@ export class MeasuresService {
   private readonly measureHistogramUrlBeta = 'measures/histogram-beta';
   private readonly measurePartitionsUrl = 'measures/partitions';
   private readonly regressionsUrl = 'measures/regressions';
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
 
   public getMeasureRoles(datasetId: string): Observable<string[]> {
     return this.http

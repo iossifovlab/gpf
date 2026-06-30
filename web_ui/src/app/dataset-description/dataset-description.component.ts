@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
@@ -14,15 +14,13 @@ import { UsersService } from 'app/users/users.service';
   standalone: false
 })
 export class DatasetDescriptionComponent implements OnInit {
+  private datasetsService = inject(DatasetsService);
+  private store = inject(Store);
+  private usersService = inject(UsersService);
+
   public descriptionHierarchy: DatasetHierarchy;
   public editable: boolean;
   public isUserAdmin = false;
-
-  public constructor(
-    private datasetsService: DatasetsService,
-    private store: Store,
-    private usersService: UsersService,
-  ) { }
 
   public ngOnInit(): void {
     this.isUserAdmin = this.usersService.cachedUserInfo().isAdministrator;

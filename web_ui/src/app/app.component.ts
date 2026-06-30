@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { environment } from '../environments/environment';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
@@ -32,6 +32,14 @@ function extractAuthParamsFromURL(): [string, string] {
   standalone: false
 })
 export class AppComponent implements OnInit {
+  private geneProfilesService = inject(GeneProfilesService);
+  private bnIdle = inject(BnNgIdleService);
+  private usersService = inject(UsersService);
+  private ngbConfig = inject(NgbConfig);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  protected store = inject(Store);
+
   public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
   public selectedDatasetId: string;
@@ -41,7 +49,7 @@ export class AppComponent implements OnInit {
   /* loadedUserInfo is used to determine if the user has
      been successfully logged in. Only after a successful
      login will the application render, as the app template uses
-     an *ngIf directive to test loadedUserInfo has been set. */
+     an @if block to test loadedUserInfo has been set. */
   public loadedUserInfo = null;
 
   @HostListener('window:keydown.home')
@@ -52,17 +60,6 @@ export class AppComponent implements OnInit {
   @HostListener('window:keydown.end')
   public scrollToBottom(): void {
     window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
-  }
-
-  public constructor(
-    private geneProfilesService: GeneProfilesService,
-    private bnIdle: BnNgIdleService,
-    private usersService: UsersService,
-    private ngbConfig: NgbConfig,
-    private authService: AuthService,
-    private router: Router,
-    protected store: Store,
-  ) {
   }
 
   public ngOnInit(): void {

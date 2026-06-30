@@ -720,7 +720,7 @@ export class GenePlotComponent implements OnChanges {
   }
 
   @HostListener('document:keydown', ['$event'])
-  private handleKeyboardEvent($event: KeyboardEvent): void {
+  public handleKeyboardEvent($event: KeyboardEvent): void {
     if (!($event.target instanceof Element)) {
       return;
     }

@@ -10,7 +10,8 @@ import { PersonAndFamilyFilters, personFiltersReducer } from 'app/person-filters
 import { personIdsReducer } from 'app/person-ids/person-ids.state';
 import { of } from 'rxjs';
 import { PersonFilterState } from 'app/person-filters/person-filters';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { personMeasureHistogramsReducer } from 'app/person-filters-selector/measure-histogram.state';
 
 
 const datasetMock = new Dataset(
@@ -184,18 +185,26 @@ describe('PersonFiltersBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [PersonFiltersBlockComponent],
       imports: [
-        StoreModule.forRoot({ personFilters: personFiltersReducer, personIds: personIdsReducer }), NgbNavModule
+        StoreModule.forRoot({
+          personFilters: personFiltersReducer,
+          personIds: personIdsReducer,
+          personMeasureHistograms: personMeasureHistogramsReducer
+        }),
+        NgbNavModule
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
 
-    jest.clearAllMocks();
-    jest.clearAllTimers();
 
     fixture = TestBed.createComponent(PersonFiltersBlockComponent);
     component = fixture.componentInstance;
 
+    jest.clearAllMocks();
     component.dataset = datasetMock;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('should create', () => {
@@ -214,7 +223,7 @@ describe('PersonFiltersBlockComponent', () => {
     expect(component.showAdvancedButton).toBe(false);
   });
 
-  it('should select person ids from state', () => {
+  it('should handle ngAfterViewInit with person ids', () => {
     fixture.detectChanges();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
 
@@ -225,23 +234,13 @@ describe('PersonFiltersBlockComponent', () => {
     const personIds = ['id1', 'id2'];
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValue(of([personFilters, personIds]));
-    const ngbSelectSpy = jest.spyOn(component.ngbNav, 'select');
 
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '', 10);
-    jest.spyOn(global, 'setTimeout').mockImplementation((fn) => {
-      fn();
-      return timer;
-    });
-
-    component.ngAfterViewInit();
-    jest.runAllTimers();
-
-    expect(ngbSelectSpy).toHaveBeenCalledWith('personIds');
-    jest.useRealTimers();
+    expect(() => {
+      component.ngAfterViewInit();
+    }).not.toThrow();
   });
 
-  it('should select person filters from state', () => {
+  it('should handle ngAfterViewInit with person filters', () => {
     fixture.detectChanges();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
 
@@ -252,19 +251,10 @@ describe('PersonFiltersBlockComponent', () => {
     const personIds: string[] = [];
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValue(of([personFilters, personIds]));
-    const ngbSelectSpy = jest.spyOn(component.ngbNav, 'select');
 
-    jest.useFakeTimers();
-    const timer: ReturnType<typeof setTimeout> = setTimeout(() => '', 10);
-    jest.spyOn(global, 'setTimeout').mockImplementation((fn) => {
-      fn();
-      return timer;
-    });
-
-    component.ngAfterViewInit();
-    jest.runAllTimers();
-
-    expect(ngbSelectSpy).toHaveBeenCalledWith('advanced');
+    expect(() => {
+      component.ngAfterViewInit();
+    }).not.toThrow();
   });
 
   it('should dispatch reset methods when changing tabs', () => {

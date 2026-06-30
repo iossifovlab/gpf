@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
 import { FederationCredential, FederationPostJson } from './federation-credentials';
 import { NgbModal, NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
@@ -11,6 +11,9 @@ import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
   standalone: false
 })
 export class FederationCredentialsComponent implements OnInit {
+  private usersService = inject(UsersService);
+  private modalService = inject(NgbModal);
+
   public credentials: FederationCredential[];
   public creationError = '';
   public renameError = '';
@@ -22,11 +25,6 @@ export class FederationCredentialsComponent implements OnInit {
   @ViewChild('createButton') public createButton: ElementRef;
   private copiedTimeoutHandle: NodeJS.Timeout;
   public currentCredentialEdit = '';
-
-  public constructor(
-    private usersService: UsersService,
-    private modalService: NgbModal,
-  ) { }
 
   public ngOnInit(): void {
     this.usersService.getFederationCredentials().subscribe(res => {

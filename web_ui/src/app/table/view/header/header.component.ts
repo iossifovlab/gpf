@@ -1,7 +1,4 @@
-import {
-  Component, Input, Output, EventEmitter,
-  ChangeDetectionStrategy, HostListener, ChangeDetectorRef
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, ChangeDetectorRef, inject } from '@angular/core';
 import { SortInfo } from '../../table.component';
 
 @Component({
@@ -12,13 +9,13 @@ import { SortInfo } from '../../table.component';
   standalone: false
 })
 export class GpfTableHeaderComponent {
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() public columns: any;
   @Output() public sortingInfoChange = new EventEmitter();
   @Input() public sortingInfo: SortInfo;
 
-  public constructor(private cdr: ChangeDetectorRef) {}
-
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   public onWindowResize(): void {
     this.cdr.detectChanges();
   }

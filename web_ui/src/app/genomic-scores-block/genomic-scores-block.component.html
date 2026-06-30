@@ -3,36 +3,44 @@
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Genomic scores</div>
       <li ngbNavItem>
-        <a *ngIf="allGenomicScores?.length > 0">
-          <mat-form-field>
-            <mat-select disableRipple [placeholder]="'Select genomic score'">
-              <mat-option
-                *ngFor="let genomicScore of unusedGenomicScores; let i = index"
-                [title]="genomicScore.desc"
-                (click)="addFilter(genomicScore, i)"
-                >{{ genomicScore.desc }}</mat-option
-              >
-            </mat-select>
-          </mat-form-field>
-        </a>
-        <span *ngIf="allGenomicScores?.length === 0" style="opacity: 75%"><i>No genomic scores available</i></span>
+        @if (allGenomicScores?.length > 0) {
+          <a>
+            <mat-form-field>
+              <mat-select disableRipple [placeholder]="'Select genomic score'">
+                @for (genomicScore of unusedGenomicScores; track genomicScore; let i = $index) {
+                  <mat-option [title]="genomicScore.desc" (click)="addFilter(genomicScore, i)">{{
+                    genomicScore.desc
+                  }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </a>
+        }
+        @if (allGenomicScores?.length === 0) {
+          <span style="opacity: 75%"><i>No genomic scores available</i></span>
+        }
       </li>
     </ul>
-    <div *ngIf="allGenomicScores?.length > 0" class="card-block">
-      <div *ngFor="let selectedScore of selectedGenomicScores; let i = index">
-        <span style="display: block; position: relative; overflow: hidden; border-top: 1px solid rgba(0, 0, 0, 0.17)">
-          <div style="position: absolute; right: 0px; top: 18px; height: 30px">
-            <gpf-remove-button
-              [field]="selectedScore"
-              (removeFilter)="removeFromState($event.state)"></gpf-remove-button>
+    @if (allGenomicScores?.length > 0) {
+      <div class="card-block">
+        @for (selectedScore of selectedGenomicScores; track selectedScore; let i = $index) {
+          <div>
+            <span
+              style="display: block; position: relative; overflow: hidden; border-top: 1px solid rgba(0, 0, 0, 0.17)">
+              <div style="position: absolute; right: 0px; top: 18px; height: 30px">
+                <gpf-remove-button
+                  [field]="selectedScore"
+                  (removeFilter)="removeFromState($event.state)"></gpf-remove-button>
+              </div>
+              <gpf-genomic-scores
+                [selectedGenomicScore]="selectedScore.score"
+                [initialState]="selectedScore.state"
+                (updateState)="addToState($event)">
+              </gpf-genomic-scores>
+            </span>
           </div>
-          <gpf-genomic-scores
-            [selectedGenomicScore]="selectedScore.score"
-            [initialState]="selectedScore.state"
-            (updateState)="addToState($event)">
-          </gpf-genomic-scores>
-        </span>
+        }
       </div>
-    </div>
+    }
   </div>
 </div>

@@ -97,7 +97,6 @@ describe('FederationCredentialsComponent', () => {
     ]);
 
     component.createCredential('name4');
-    fixture.detectChanges();
     expect(component.credentials).toStrictEqual([
       new FederationCredential('name1'),
       new FederationCredential('name2'),

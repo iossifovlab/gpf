@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { EnrichmentTestResult } from '../enrichment-query/enrichment-result';
 import { PValueIntensityPipe } from './p-value-intensity.pipe';
 
@@ -7,7 +7,8 @@ import { PValueIntensityPipe } from './p-value-intensity.pipe';
   standalone: false
 })
 export class BackgroundColorEnrichmentPipe implements PipeTransform {
-  public constructor(private pValueIntensityPipe: PValueIntensityPipe) { }
+  private pValueIntensityPipe = inject(PValueIntensityPipe);
+
   public transform(enrichmentResult: EnrichmentTestResult): string {
     const intensity = this.pValueIntensityPipe.transform(enrichmentResult.pvalue) as string;
     if (enrichmentResult.overlapped > enrichmentResult.expected) {

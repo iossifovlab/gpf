@@ -1,7 +1,4 @@
-import {
-  Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
-  OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewChildren
-} from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewChildren, inject } from '@angular/core';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
@@ -34,6 +31,12 @@ import { sprintf } from 'sprintf-js';
   standalone: false
 })
 export class GeneProfilesTableComponent extends ComponentValidator implements OnInit, OnChanges, OnDestroy {
+  private geneProfilesTableService = inject(GeneProfilesTableService);
+  private location = inject(Location);
+  private route = inject(ActivatedRoute);
+  protected store: Store;
+  private usersService = inject(UsersService);
+
   private subscription: Subscription = new Subscription();
 
   @Input() public config: GeneProfilesTableConfig;
@@ -81,14 +84,12 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
 
   public stateFinishedLoading = false;
 
-  public constructor(
-    private geneProfilesTableService: GeneProfilesTableService,
-    private location: Location,
-    private route: ActivatedRoute,
-    protected store: Store,
-    private usersService: UsersService
-  ) {
+  public constructor() {
+    const store = inject(Store);
+
     super(store, 'geneProfiles', selectGeneProfiles);
+  
+    this.store = store;
   }
 
   public ngOnInit(): void {
@@ -485,7 +486,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.currentTabGeneSet.clear();
     tab.split(',').map(t => this.currentTabGeneSet.add(t));
     this.currentTabString = tab;
-    this.location.replaceState('gene-profiles/' + this.currentTabString);
+    this.location.replaceState('/gene-profiles/' + this.currentTabString);
   }
 
   public closeTab(tab: string): void {
@@ -498,7 +499,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
   public backToTable(): void {
     this.hideTable = false;
     this.currentTabString = 'all genes';
-    this.location.replaceState('gene-profiles');
+    this.location.replaceState('/gene-profiles');
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
@@ -533,7 +534,9 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.highlightedGenes = new Set<string>();
     this.orderBy = 'desc';
     this.searchValue$.next('');
-    (this.searchBox.nativeElement as HTMLInputElement).value = '';
+    if (this.searchBox?.nativeElement) {
+      (this.searchBox.nativeElement as HTMLInputElement).value = '';
+    }
 
     this.resetConfig.emit();
 

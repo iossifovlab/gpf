@@ -1,12 +1,16 @@
-<div *ngIf="!userInfo.email" class="row justify-content-end">
-  <div style="display: flex; justify-content: flex-end">
-    <button (click)="login()" class="btn btn-secondary" id="log-in-button" type="button">
-      <span>Log In</span>
-    </button>
+@if (!userInfo.email) {
+  <div class="row justify-content-end">
+    <div style="display: flex; justify-content: flex-end">
+      <button (click)="login()" class="btn btn-secondary" id="log-in-button" type="button">
+        <span>Log In</span>
+      </button>
+    </div>
   </div>
-</div>
+}
 
-<div *ngIf="userInfo.email as email" style="display: flex; justify-content: flex-end">
-  <span id="username-field" style="align-self: center">{{ email }}</span>
-  <button class="btn btn-sm" id="log-out-button" (click)="logout()">Log Out</button>
-</div>
+@if (userInfo.email; as email) {
+  <div style="display: flex; justify-content: flex-end">
+    <span id="username-field" style="align-self: center">{{ email }}</span>
+    <button class="btn btn-sm" id="log-out-button" (click)="logout()">Log Out</button>
+  </div>
+}

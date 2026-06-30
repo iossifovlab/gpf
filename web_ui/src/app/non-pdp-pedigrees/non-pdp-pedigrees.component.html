@@ -1,8 +1,10 @@
 <div class="row">
-  <div class="col-2" *ngFor="let familyName of familyKeys">
-    <div class="row mt-3 justify-content-center">
-      <h4>{{ familyName }}</h4>
+  @for (familyName of familyKeys; track familyName) {
+    <div class="col-2">
+      <div class="row mt-3 justify-content-center">
+        <h4>{{ familyName }}</h4>
+      </div>
+      <gpf-pedigree-chart [family]="families[familyName]"></gpf-pedigree-chart>
     </div>
-    <gpf-pedigree-chart [family]="families[familyName]"></gpf-pedigree-chart>
-  </div>
+  }
 </div>

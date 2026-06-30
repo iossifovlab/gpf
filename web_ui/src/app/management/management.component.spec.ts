@@ -1,4 +1,7 @@
+import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { ManagementComponent } from './management.component';
+import { UsersService } from '../users/users.service';
 
 
 describe('ManagementComponent', () => {
@@ -11,7 +14,14 @@ describe('ManagementComponent', () => {
   };
 
   beforeEach(() => {
-    component = new ManagementComponent(routerMock as any, usersService as any);
+    TestBed.configureTestingModule({
+      declarations: [ManagementComponent],
+      providers: [
+        { provide: Router, useValue: routerMock },
+        { provide: UsersService, useValue: usersService }
+      ]
+    });
+    component = TestBed.createComponent(ManagementComponent).componentInstance;
   });
 
   it('should create', () => {

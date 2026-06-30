@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   GeneProfilesDataset,
   GeneProfilesGeneSetsCategory,
@@ -20,15 +20,13 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class GeneProfilesBlockComponent implements OnInit {
+  private geneProfilesService = inject(GeneProfilesService);
+  private queryService = inject(QueryService);
+  private store = inject(Store);
+
   public geneProfilesTableConfig: GeneProfilesTableConfig;
   public geneProfilesSingleViewConfig: GeneProfilesSingleViewConfig;
   private geneProfilesTableConfigOriginal: GeneProfilesTableConfig;
-
-  public constructor(
-    private geneProfilesService: GeneProfilesService,
-    private queryService: QueryService,
-    private store: Store,
-  ) { }
 
   public ngOnInit(): void {
     this.getConfig();

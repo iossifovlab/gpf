@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, inject } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
@@ -16,6 +16,9 @@ import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app
   standalone: false
 })
 export class ContinuousFilterComponent extends ComponentValidator implements OnInit, OnChanges {
+  private measuresService = inject(MeasuresService);
+  protected store: Store;
+
   private rangeChanges = new Subject<[string, string, number, number]>();
   private partitions: Observable<Partitions>;
 
@@ -29,11 +32,11 @@ export class ContinuousFilterComponent extends ComponentValidator implements OnI
 
   public rangesCounts: Array<number>;
 
-  public constructor(
-    private measuresService: MeasuresService,
-    protected store: Store,
-  ) {
+  public constructor() {
+    const store = inject(Store) as Store<object>;
+
     super(store, 'personFilters', selectPersonFilters);
+    this.store = store;
   }
 
   public ngOnInit(): void {

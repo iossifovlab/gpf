@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync, fakeAsync, flush } from '@angular/core/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { PersonFiltersComponent } from './person-filters.component';
 import { personFiltersReducer } from './person-filters.state';
@@ -172,13 +172,15 @@ describe('PersonFiltersComponent', () => {
   }));
 
   it('should create', () => {
-    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with default family filters', () => {
+  it('should initialize with default family filters', fakeAsync(() => {
+    component.categoricalFilters = [];
+    component.continuousFilters = [];
     component.isFamilyFilters = true;
-    fixture.detectChanges();
+    component.ngOnInit();
+    flush();
 
     expect(component.areFiltersSelected).toBeFalsy();
     expect(component.categoricalFilters).toStrictEqual([
@@ -209,11 +211,14 @@ describe('PersonFiltersComponent', () => {
         new ContinuousSelection(null, null, null, null),
       ),
     ]);
-  });
+  }));
 
-  it('should initialize with default person filters', () => {
+  it('should initialize with default person filters', fakeAsync(() => {
+    component.categoricalFilters = [];
+    component.continuousFilters = [];
     component.isFamilyFilters = false;
-    fixture.detectChanges();
+    component.ngOnInit();
+    flush();
 
     expect(component.areFiltersSelected).toBeFalsy();
     expect(component.categoricalFilters).toStrictEqual([
@@ -236,12 +241,15 @@ describe('PersonFiltersComponent', () => {
         new ContinuousSelection(null, null, null, null),
       )
     ]);
-  });
+  }));
 
-  it('should initialize with state person filters', () => {
+  it('should initialize with state person filters', fakeAsync(() => {
+    component.categoricalFilters = [];
+    component.continuousFilters = [];
     component.isFamilyFilters = false;
     jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep(mockPersonAndFamilyFiltersState)));
-    fixture.detectChanges();
+    component.ngOnInit();
+    flush();
 
     expect(component.areFiltersSelected).toBeTruthy();
     expect(component.categoricalFilters).toStrictEqual([
@@ -288,12 +296,15 @@ describe('PersonFiltersComponent', () => {
         new ContinuousSelection(5, 6, 7, 8),
       )
     ]);
-  });
+  }));
 
-  it('should initialize with state family filters', () => {
+  it('should initialize with state family filters', fakeAsync(() => {
+    component.categoricalFilters = [];
+    component.continuousFilters = [];
     component.isFamilyFilters = true;
     jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep(mockPersonAndFamilyFiltersState)));
-    fixture.detectChanges();
+    component.ngOnInit();
+    flush();
 
     expect(component.areFiltersSelected).toBeTruthy();
     expect(component.categoricalFilters).toStrictEqual([
@@ -340,9 +351,11 @@ describe('PersonFiltersComponent', () => {
         new ContinuousSelection(1, 2, 3, 4),
       ),
     ]);
-  });
+  }));
 
-  it('should console error when trying to add filter from state with unknown type', () => {
+  it('should console error when trying to add filter from state with unknown type', fakeAsync(() => {
+    component.categoricalFilters = [];
+    component.continuousFilters = [];
     component.isFamilyFilters = true;
     jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep({
       familyFilters: [
@@ -366,7 +379,8 @@ describe('PersonFiltersComponent', () => {
         )
       ]
     })));
-    fixture.detectChanges();
+    component.ngOnInit();
+    flush();
 
     expect(component.categoricalFilters).toStrictEqual([
       new CategoricalFilterState(
@@ -396,5 +410,5 @@ describe('PersonFiltersComponent', () => {
         new ContinuousSelection(null, null, null, null),
       ),
     ]);
-  });
+  }));
 });

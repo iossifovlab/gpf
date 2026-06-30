@@ -1,4 +1,4 @@
-import { Component, Input, TemplateRef } from '@angular/core';
+import { Component, Input, TemplateRef, inject } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PopupComponent } from 'app/popup/popup.component';
 
@@ -9,13 +9,11 @@ import { PopupComponent } from 'app/popup/popup.component';
   standalone: false
 })
 export class HelperModalComponent {
+  private modalService = inject(NgbModal);
+
   @Input() public modalContent: TemplateRef<unknown> | string;
   @Input() public isMarkdown = false;
   @Input() public buttonText = '';
-
-  public constructor(
-    private modalService: NgbModal
-  ) {}
 
   public showHelp(): void {
     if (this.isMarkdown && typeof this.modalContent === 'string') {

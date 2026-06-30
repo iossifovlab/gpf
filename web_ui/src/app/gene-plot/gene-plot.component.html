@@ -55,22 +55,24 @@
         </span>
       </span>
 
-      <div *ngIf="selectedGene">
-        <button
-          class="btn btn-md btn-primary btn-right"
-          [disabled]="!variantsArray?.totalSummaryAllelesCount"
-          id="download-summary-variants-button"
-          (click)="onDownload()"
-          title="Download summary variants">
-          <span class="material-symbols-outlined">download</span>
-        </button>
-      </div>
+      @if (selectedGene) {
+        <div>
+          <button
+            class="btn btn-md btn-primary btn-right"
+            [disabled]="!variantsArray?.totalSummaryAllelesCount"
+            id="download-summary-variants-button"
+            (click)="onDownload()"
+            title="Download summary variants">
+            <span class="material-symbols-outlined">download</span>
+          </button>
+        </div>
+      }
     </span>
   </div>
-  <div
-    class="card-header card-title too-many-variants-warning"
-    *ngIf="variantsArray.summaryAlleles.length > constants.maxDrawnVariants"
-    >Too many variants to render. Only {{ constants.maxDrawnVariants }} will be rendered.</div
-  >
+  @if (variantsArray.summaryAlleles.length > constants.maxDrawnVariants) {
+    <div class="card-header card-title too-many-variants-warning"
+      >Too many variants to render. Only {{ constants.maxDrawnVariants }} will be rendered.</div
+    >
+  }
   <div id="svg-container"></div>
 </div>

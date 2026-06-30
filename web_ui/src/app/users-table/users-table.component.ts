@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, inject } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { map, mergeMap, take } from 'rxjs/operators';
@@ -14,16 +14,14 @@ import { Observable } from 'rxjs';
   standalone: false
 })
 export class UsersTableComponent {
+  private usersService = inject(UsersService);
+  private usersGroupsService = inject(UsersGroupsService);
+
   @Input() public users: User[];
   @Input() public currentUserEmail: string;
 
   @ViewChild('newNameBox') private nameBox: ElementRef;
   public currentUserEdit = -1;
-
-  public constructor(
-    private usersService: UsersService,
-    private usersGroupsService: UsersGroupsService
-  ) { }
 
   public isDefaultGroup(user: User, group: string): boolean {
     return user.getDefaultGroups().indexOf(group) !== -1;

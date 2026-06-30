@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { ConfigService } from 'app/config/config.service';
 import { Observable, of } from 'rxjs';
 import { map, take } from 'rxjs/operators';
@@ -11,18 +11,17 @@ import { GeneProfiles, selectGeneProfiles } from './gene-profiles-table.state';
   providedIn: 'root'
 })
 export class GeneProfilesTableService implements OnDestroy {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+  private store = inject(Store);
+  private user = inject(UsersService);
+
   private readonly genesUrl = 'gene_profiles/table/rows';
   private readonly geneSymbolsUrl = 'gene_profiles/table/gene_symbols/';
   private readonly usersUrl = 'users/user_gp_state';
   private saveStateDebouncer: ReturnType<typeof setTimeout> = null;
 
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-    private store: Store,
-    private user: UsersService
-
-  ) {
+  public constructor() {
     window.addEventListener('pagehide', this.flushPendingSaveOnUnload);
   }
 

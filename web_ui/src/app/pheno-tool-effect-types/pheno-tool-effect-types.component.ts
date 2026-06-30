@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import {
   PHENO_TOOL_ALL, PHENO_TOOL_OTHERS,
@@ -22,6 +22,8 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class PhenoToolEffectTypesComponent implements OnInit {
+  protected store = inject(Store);
+
   public phenoToolOthers: Set<string> = PHENO_TOOL_OTHERS;
   public phenoToolCNV: Set<string> = PHENO_TOOL_CNV;
   public phenoToolLGDs: Set<string> = PHENO_TOOL_LGDS;
@@ -31,8 +33,6 @@ export class PhenoToolEffectTypesComponent implements OnInit {
   public errors: string[] = [];
   public selectedEffectTypes: Set<string> = new Set();
   @Input() public variantTypes: Set<string> = new Set();
-
-  public constructor(protected store: Store) {}
 
   public ngOnInit(): void {
     this.effectTypesButtons = new Map<string, Set<string>>();

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { PhenoToolService } from './pheno-tool.service';
@@ -38,6 +38,12 @@ import { selectGenomicScores } from 'app/genomic-scores-block/genomic-scores-blo
   standalone: false
 })
 export class PhenoToolComponent implements OnInit, OnDestroy {
+  private loadingService = inject(FullscreenLoadingService);
+  private phenoToolService = inject(PhenoToolService);
+  readonly configService = inject(ConfigService);
+  private store = inject(Store);
+  private datasetsService = inject(DatasetsService);
+
   public selectedDataset: Dataset;
   public variantTypesSet: Set<string>;
 
@@ -47,14 +53,6 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   public disableQueryButtons = false;
 
   private phenoToolSubscription: Subscription = null;
-
-  public constructor(
-    private loadingService: FullscreenLoadingService,
-    private phenoToolService: PhenoToolService,
-    public readonly configService: ConfigService,
-    private store: Store,
-    private datasetsService: DatasetsService
-  ) { }
 
 
   @HostListener('keydown', ['$event'])

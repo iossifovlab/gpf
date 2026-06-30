@@ -5,24 +5,29 @@
   "></ng-container>
 
 <ng-template #datasetNodeTemplate let-nodes="children" let-depth="depth">
-  <div *ngFor="let node of nodes">
-    <div class="dropdown" style="width: 15px">
-      <button
-        class="{{ hide.value !== 'true' ? 'dropdown-toggle dropdown dropdown-toggle-after' : 'dropdown-toggle' }}"
-        #hide
-        [hidden]="node.children.length === 0"
-        (click)="hide.value === 'true' ? (hide.value = 'false') : (hide.value = 'true')"></button>
+  @for (node of nodes; track node) {
+    <div>
+      <div class="dropdown" style="width: 15px">
+        <button
+          class="{{ hide.value !== 'true' ? 'dropdown-toggle dropdown dropdown-toggle-after' : 'dropdown-toggle' }}"
+          #hide
+          [hidden]="node.children.length === 0"
+          (click)="hide.value === 'true' ? (hide.value = 'false') : (hide.value = 'true')"></button>
+      </div>
+      <input
+        [ngModel]="selectedStudies.has(node.dataset.id)"
+        class="form-check-input"
+        id="{{ node.dataset.id }}"
+        (click)="updateFilters($event)"
+        type="checkbox" />
+      <label for="{{ node.dataset.id }}">{{ node.dataset.name }}</label>
+      <div class="children" [hidden]="hide.value === 'true'">
+        <ng-container
+          *ngTemplateOutlet="
+            datasetNodeTemplate;
+            context: { children: node.children, depth: depth + 1 }
+          "></ng-container>
+      </div>
     </div>
-    <input
-      [ngModel]="selectedStudies.has(node.dataset.id)"
-      class="form-check-input"
-      id="{{ node.dataset.id }}"
-      (click)="updateFilters($event)"
-      type="checkbox" />
-    <label for="{{ node.dataset.id }}">{{ node.dataset.name }}</label>
-    <div class="children" [hidden]="hide.value === 'true'">
-      <ng-container
-        *ngTemplateOutlet="datasetNodeTemplate; context: { children: node.children, depth: depth + 1 }"></ng-container>
-    </div>
-  </div>
+  }
 </ng-template>

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -8,14 +8,12 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class EnrichmentQueryService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly genotypePreviewUrl = 'enrichment/test';
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
 
   public getEnrichmentTest(filter: object): Observable<EnrichmentResults> {
     const options = { headers: this.headers, withCredentials: true };

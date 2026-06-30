@@ -1,53 +1,51 @@
-<div
-  class="panel"
-  style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
-  *ngIf="selectedGenomicScore && localState">
-  <div class="genomic-score-container">
-    <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
-
-    <gpf-helper-modal
-      style="height: 32px; margin-left: 4px; align-self: flex-end"
-      [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
-      [modalContent]="selectedGenomicScore.help"
-      [isMarkdown]="true"></gpf-helper-modal>
-  </div>
-
-  <div
-    *ngIf="
+@if (selectedGenomicScore && localState) {
+  <div class="panel" style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0">
+    <div class="genomic-score-container">
+      <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
+      <gpf-helper-modal
+        style="height: 32px; margin-left: 4px; align-self: flex-end"
+        [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
+        [modalContent]="selectedGenomicScore.help"
+        [isMarkdown]="true"></gpf-helper-modal>
+    </div>
+    @if (
       selectedGenomicScore &&
       isCategoricalHistogram(selectedGenomicScore.histogram) &&
       localState.categoricalView === 'dropdown selector'
-    "
-    style="width: 100%">
-    <gpf-categorical-values-dropdown
-      [initialState]="localState.values"
-      [histogram]="selectedGenomicScore.histogram"
-      (updateSelectedValues)="replaceCategoricalValues($event)"
-      (emitValidationErrors)="setHistogramValidationErrors($event)"></gpf-categorical-values-dropdown>
+    ) {
+      <div style="width: 100%">
+        <gpf-categorical-values-dropdown
+          [initialState]="localState.values"
+          [histogram]="selectedGenomicScore.histogram"
+          (updateSelectedValues)="replaceCategoricalValues($event)"
+          (emitValidationErrors)="setHistogramValidationErrors($event)"></gpf-categorical-values-dropdown>
+      </div>
+    }
+    @if (localState.categoricalView !== 'dropdown selector') {
+      <div class="col-sm-11">
+        @if (selectedGenomicScore && isNumberHistogram(selectedGenomicScore.histogram)) {
+          <gpf-histogram
+            [width]="800"
+            [height]="145"
+            [marginLeft]="180"
+            [bins]="selectedGenomicScore.histogram.bins"
+            [bars]="selectedGenomicScore.histogram.bars"
+            [logScaleX]="selectedGenomicScore.histogram.logScaleX"
+            [logScaleY]="selectedGenomicScore.histogram.logScaleY"
+            [smallValuesDesc]="selectedGenomicScore.histogram.smallValuesDesc"
+            [largeValuesDesc]="selectedGenomicScore.histogram.largeValuesDesc"
+            [rangeStart]="localState.rangeStart"
+            (rangeStartChange)="updateRangeStart($event)"
+            [rangeEnd]="localState.rangeEnd"
+            (rangeEndChange)="updateRangeEnd($event)"
+            (emitValidationErrors)="setHistogramValidationErrors($event)"
+            style="display: block; margin-top: 17px">
+          </gpf-histogram>
+        }
+      </div>
+    }
+    <div class="col-sm-11">
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
   </div>
-
-  <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
-    <gpf-histogram
-      *ngIf="selectedGenomicScore && isNumberHistogram(selectedGenomicScore.histogram)"
-      [width]="800"
-      [height]="145"
-      [marginLeft]="180"
-      [bins]="selectedGenomicScore.histogram.bins"
-      [bars]="selectedGenomicScore.histogram.bars"
-      [logScaleX]="selectedGenomicScore.histogram.logScaleX"
-      [logScaleY]="selectedGenomicScore.histogram.logScaleY"
-      [smallValuesDesc]="selectedGenomicScore.histogram.smallValuesDesc"
-      [largeValuesDesc]="selectedGenomicScore.histogram.largeValuesDesc"
-      [rangeStart]="localState.rangeStart"
-      (rangeStartChange)="updateRangeStart($event)"
-      [rangeEnd]="localState.rangeEnd"
-      (rangeEndChange)="updateRangeEnd($event)"
-      (emitValidationErrors)="setHistogramValidationErrors($event)"
-      style="display: block; margin-top: 17px">
-    </gpf-histogram>
-  </div>
-
-  <div class="col-sm-11">
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
-  </div>
-</div>
+}

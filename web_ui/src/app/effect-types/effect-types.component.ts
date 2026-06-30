@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import {
   CODING, NONCODING, CNV, ALL, LGDS,
   NONSYNONYMOUS, UTRS
@@ -16,6 +16,8 @@ import { setErrors, resetErrors } from 'app/common/errors.state';
   standalone: false
 })
 export class EffectTypesComponent implements OnInit {
+  protected store = inject(Store);
+
   @Input() public variantTypes: Set<string> = new Set();
 
   public codingColumn: Set<string> = CODING;
@@ -27,7 +29,7 @@ export class EffectTypesComponent implements OnInit {
   public effectTypesButtons: Map<string, Set<string>>;
   public errors: string[] = [];
 
-  public constructor(protected store: Store) {
+  public constructor() {
     this.initButtonGroups();
   }
 

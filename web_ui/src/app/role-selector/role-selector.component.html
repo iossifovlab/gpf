@@ -1,41 +1,44 @@
-<div *ngIf="roles.length" id="roles-container">
-  <div>
-    <input
-      matAutocompleteOrigin
-      #roleSearch="matAutocompleteOrigin"
-      #roleSearchTrigger="matAutocompleteTrigger"
-      matInput
-      [matAutocomplete]="rolesDropdown"
-      [matAutocompleteConnectedTo]="roleSearch"
-      #searchBox
-      id="search-box"
-      placeholder="Select role"
-      autocomplete="off"
-      [(ngModel)]="searchValue"
-      (keyup)="searchBoxInput$.next(searchValue)"
-      spellcheck="false"
-      (focus)="roleSearchTrigger.openPanel()"
-      (keydown.enter)="addToSelected(searchValue); roleSearchTrigger.closePanel()" />
-
-    <mat-autocomplete #rolesDropdown="matAutocomplete" class="role-suggestions-dropdown" autoActiveFirstOption>
-      <mat-option
-        *ngFor="let suggestion of roleSuggestions"
-        class="dropdown-item"
-        type="button"
-        (onSelectionChange)="addToSelected(suggestion)"
-        [title]="suggestion"
-        [disabled]="isSelected(suggestion)">
-        <span>{{ suggestion }}</span>
-      </mat-option>
-    </mat-autocomplete>
-  </div>
-
-  <div id="roles-list">
-    <div *ngFor="let selectedRole of initialState" class="role-wrapper">
-      <button (click)="removeFromSelected(selectedRole)" class="remove-role">
-        <span [id]="'remove-' + selectedRole" class="material-symbols-outlined">close</span>
-      </button>
-      {{ selectedRole }}
+@if (roles.length) {
+  <div id="roles-container">
+    <div>
+      <input
+        matAutocompleteOrigin
+        #roleSearch="matAutocompleteOrigin"
+        #roleSearchTrigger="matAutocompleteTrigger"
+        matInput
+        [matAutocomplete]="rolesDropdown"
+        [matAutocompleteConnectedTo]="roleSearch"
+        #searchBox
+        id="search-box"
+        placeholder="Select role"
+        autocomplete="off"
+        [(ngModel)]="searchValue"
+        (keyup)="searchBoxInput$.next(searchValue)"
+        spellcheck="false"
+        (focus)="roleSearchTrigger.openPanel()"
+        (keydown.enter)="addToSelected(searchValue); roleSearchTrigger.closePanel()" />
+      <mat-autocomplete #rolesDropdown="matAutocomplete" class="role-suggestions-dropdown" autoActiveFirstOption>
+        @for (suggestion of roleSuggestions; track suggestion) {
+          <mat-option
+            class="dropdown-item"
+            type="button"
+            (onSelectionChange)="addToSelected(suggestion)"
+            [title]="suggestion"
+            [disabled]="isSelected(suggestion)">
+            <span>{{ suggestion }}</span>
+          </mat-option>
+        }
+      </mat-autocomplete>
+    </div>
+    <div id="roles-list">
+      @for (selectedRole of initialState; track selectedRole) {
+        <div class="role-wrapper">
+          <button (click)="removeFromSelected(selectedRole)" class="remove-role">
+            <span [id]="'remove-' + selectedRole" class="material-symbols-outlined">close</span>
+          </button>
+          {{ selectedRole }}
+        </div>
+      }
     </div>
   </div>
-</div>
+}

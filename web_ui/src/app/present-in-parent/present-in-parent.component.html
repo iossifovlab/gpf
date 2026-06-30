@@ -6,86 +6,91 @@
     (itemsUpdateEvent)="updatePresentInParent($event)">
   </gpf-checkbox-list>
 
-  <gpf-errors-alert *ngIf="!selectedValues.size" [errors]="errors"></gpf-errors-alert>
+  @if (!selectedValues.size) {
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  }
 
   <div>
-    <gpf-zygosity-filter
-      *ngIf="hasZygosity"
-      [parentComponent]="'presentInParent'"
-      style="width: 30%"></gpf-zygosity-filter>
+    @if (hasZygosity) {
+      <gpf-zygosity-filter [parentComponent]="'presentInParent'" style="width: 30%"></gpf-zygosity-filter>
+    }
 
-    <div
-      *ngIf="
-        selectedValues.has('mother only') ||
-        selectedValues.has('father only') ||
-        selectedValues.has('mother and father')
-      ">
-      <em id="rarity-label">Rarity:</em>
+    @if (
+      selectedValues.has('mother only') || selectedValues.has('father only') || selectedValues.has('mother and father')
+    ) {
       <div>
-        <ng-container *ngFor="let rarityType of rarityTypes">
-          <label id="rarity-options">
-            <input
-              type="radio"
-              (change)="updateRarityType(rarityType)"
-              value="rarityType"
-              [checked]="selectedRarityType === rarityType" />
-            <span style="margin-left: 5px">{{ rarityType }}</span>
-          </label>
-        </ng-container>
-      </div>
-      <div *ngIf="selectedRarityType === 'rare' || selectedRarityType === 'interval'" class="row">
-        <div *ngIf="selectedRarityType === 'interval'" id="interval-fields">
-          <div class="field-wrapper">
-            <div class="label-field-wrapper">
-              <sup>From:</sup>
+        <em id="rarity-label">Rarity:</em>
+        <div>
+          @for (rarityType of rarityTypes; track rarityType) {
+            <label id="rarity-options">
               <input
-                type="number"
-                step="0.01"
-                class="fields"
-                [min]="0"
-                [max]="rarityIntervalEnd"
-                [ngModel]="rarityIntervalStart"
-                (ngModelChange)="updateRarityIntervalStart($event)" />
-            </div>
-            <span class="percent">%</span>
-          </div>
-          <span id="range-dash" class="material-symbols-outlined sm" *ngIf="selectedRarityType === 'interval'"
-            >maximize</span
-          >
-          <div class="field-wrapper">
-            <div class="label-field-wrapper">
-              <sup>To:</sup>
-              <input
-                type="number"
-                step="0.01"
-                class="fields"
-                [min]="rarityIntervalStart"
-                [max]="100"
-                [ngModel]="rarityIntervalEnd"
-                (ngModelChange)="updateRarityIntervalEnd($event)" />
-            </div>
-            <span class="percent">%</span>
-          </div>
+                type="radio"
+                (change)="updateRarityType(rarityType)"
+                value="rarityType"
+                [checked]="selectedRarityType === rarityType" />
+              <span style="margin-left: 5px">{{ rarityType }}</span>
+            </label>
+          }
         </div>
-
-        <div *ngIf="selectedRarityType === 'rare'" id="max-field">
-          <div class="field-wrapper">
-            <div class="label-field-wrapper">
-              <sup style="margin-right: 5px">Max:</sup>
-              <input
-                type="number"
-                step="0.01"
-                class="fields"
-                [min]="rarityIntervalStart"
-                [max]="100"
-                [ngModel]="rarityIntervalEnd"
-                (ngModelChange)="updateRarityIntervalEnd($event)" />
-            </div>
-            <span class="percent">%</span>
+        @if (selectedRarityType === 'rare' || selectedRarityType === 'interval') {
+          <div class="row">
+            @if (selectedRarityType === 'interval') {
+              <div id="interval-fields">
+                <div class="field-wrapper">
+                  <div class="label-field-wrapper">
+                    <sup>From:</sup>
+                    <input
+                      type="number"
+                      step="0.01"
+                      class="fields"
+                      [min]="0"
+                      [max]="rarityIntervalEnd"
+                      [ngModel]="rarityIntervalStart"
+                      (ngModelChange)="updateRarityIntervalStart($event)" />
+                  </div>
+                  <span class="percent">%</span>
+                </div>
+                @if (selectedRarityType === 'interval') {
+                  <span id="range-dash" class="material-symbols-outlined sm">maximize</span>
+                }
+                <div class="field-wrapper">
+                  <div class="label-field-wrapper">
+                    <sup>To:</sup>
+                    <input
+                      type="number"
+                      step="0.01"
+                      class="fields"
+                      [min]="rarityIntervalStart"
+                      [max]="100"
+                      [ngModel]="rarityIntervalEnd"
+                      (ngModelChange)="updateRarityIntervalEnd($event)" />
+                  </div>
+                  <span class="percent">%</span>
+                </div>
+              </div>
+            }
+            @if (selectedRarityType === 'rare') {
+              <div id="max-field">
+                <div class="field-wrapper">
+                  <div class="label-field-wrapper">
+                    <sup style="margin-right: 5px">Max:</sup>
+                    <input
+                      type="number"
+                      step="0.01"
+                      class="fields"
+                      [min]="rarityIntervalStart"
+                      [max]="100"
+                      [ngModel]="rarityIntervalEnd"
+                      (ngModelChange)="updateRarityIntervalEnd($event)" />
+                  </div>
+                  <span class="percent">%</span>
+                </div>
+              </div>
+            }
           </div>
-        </div>
+        }
+        <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
       </div>
-      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
-    </div>
+    }
   </div>
 </div>

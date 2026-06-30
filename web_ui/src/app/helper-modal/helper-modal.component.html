@@ -1,3 +1,7 @@
-<span *ngIf="!buttonText" class="material-symbols-outlined" id="help-icon" (click)="showHelp()">info</span>
+@if (!buttonText) {
+  <span class="material-symbols-outlined" id="help-icon" (click)="showHelp()">info</span>
+}
 
-<button *ngIf="buttonText" id="help-button" (click)="showHelp()">{{ buttonText }}</button>
+@if (buttonText) {
+  <button id="help-button" (click)="showHelp()">{{ buttonText }}</button>
+}

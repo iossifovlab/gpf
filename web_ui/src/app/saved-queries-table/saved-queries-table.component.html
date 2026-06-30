@@ -1,26 +1,28 @@
-<div class="grid-container" *ngIf="queries?.length !== 0">
-  <div class="grid-header">Query name</div>
-  <div class="grid-header">Query description</div>
-  <div class="grid-header">Actions</div>
-  <ng-container *ngFor="let query of queries">
-    <div class="grid-cell" [attr.id]="'query-' + query.name + '-name-cell'">{{ query.name }}</div>
+@if (queries?.length !== 0) {
+  <div class="grid-container">
+    <div class="grid-header">Query name</div>
+    <div class="grid-header">Query description</div>
+    <div class="grid-header">Actions</div>
+    @for (query of queries; track query) {
+      <div class="grid-cell" [attr.id]="'query-' + query.name + '-name-cell'">{{ query.name }}</div>
+      <div class="grid-cell" [attr.id]="'query-' + query.name + '-description-cell'">{{ query.description }}</div>
+      <div class="grid-cell actions-cell" [attr.id]="'query-' + query.name + '-actions-cell'">
+        <a href="{{ query.url }}" title="Load" id="load-button" class="action-button">
+          <span class="material-symbols-outlined">open_in_new</span>
+        </a>
+        <button [cdkCopyToClipboard]="query.url" title="Copy link" id="copy-link-button" class="action-button">
+          <span class="material-symbols-outlined">link</span>
+        </button>
+        <button (click)="deleteQuery(query.uuid)" title="Delete" id="delete-button" class="action-button">
+          <span class="material-symbols-outlined bold">close</span>
+        </button>
+      </div>
+    }
+  </div>
+}
 
-    <div class="grid-cell" [attr.id]="'query-' + query.name + '-description-cell'">{{ query.description }}</div>
-
-    <div class="grid-cell actions-cell" [attr.id]="'query-' + query.name + '-actions-cell'">
-      <a href="{{ query.url }}" title="Load" id="load-button" class="action-button">
-        <span class="material-symbols-outlined">open_in_new</span>
-      </a>
-      <button [cdkCopyToClipboard]="query.url" title="Copy link" id="copy-link-button" class="action-button">
-        <span class="material-symbols-outlined">link</span>
-      </button>
-      <button (click)="deleteQuery(query.uuid)" title="Delete" id="delete-button" class="action-button">
-        <span class="material-symbols-outlined bold">close</span>
-      </button>
-    </div>
-  </ng-container>
-</div>
-
-<div id="nothing-found" *ngIf="queries?.length === 0">
-  <span id="nothing-found-message">Nothing found.</span>
-</div>
+@if (queries?.length === 0) {
+  <div id="nothing-found">
+    <span id="nothing-found-message">Nothing found.</span>
+  </div>
+}

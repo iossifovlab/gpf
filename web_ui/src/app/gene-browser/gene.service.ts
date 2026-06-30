@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { Gene } from './gene';
@@ -9,14 +9,12 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class GeneService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly geneVisualizationUrl = 'genome/gene_models/default/';
   private readonly geneSymbolSearchUrl = 'genome/gene_models/search/';
   private readonly geneSymbolsValidateUrl = 'genome/gene_models/validate/';
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-  ) {}
 
   public getGene(geneSymbol: string): Observable<Gene> {
     return this.http

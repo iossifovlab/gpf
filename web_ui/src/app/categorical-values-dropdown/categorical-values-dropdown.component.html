@@ -18,25 +18,28 @@
       (keydown.enter)="categoricalValuesSearchTrigger.closePanel()" />
 
     <mat-autocomplete #categoricalValuesDropdown="matAutocomplete" class="values-suggestions-dropdown">
-      <mat-option
-        *ngFor="let suggestion of valueSuggestions"
-        class="dropdown-item"
-        type="button"
-        (click)="addToSelected(suggestion)"
-        (onSelectionChange)="addToSelected(suggestion)"
-        [title]="suggestion.name + ' (' + suggestion.value + ')'"
-        [disabled]="isSelected(suggestion)">
-        <span>{{ suggestion.name + ' (' + suggestion.value + ')' }}</span>
-      </mat-option>
+      @for (suggestion of valueSuggestions; track suggestion) {
+        <mat-option
+          class="dropdown-item"
+          type="button"
+          (click)="addToSelected(suggestion)"
+          (onSelectionChange)="addToSelected(suggestion)"
+          [title]="suggestion.name + ' (' + suggestion.value + ')'"
+          [disabled]="isSelected(suggestion)">
+          <span>{{ suggestion.name + ' (' + suggestion.value + ')' }}</span>
+        </mat-option>
+      }
     </mat-autocomplete>
   </div>
 
   <div id="values-list">
-    <div *ngFor="let selectedValue of selectedValues" class="value-wrapper">
-      <button (click)="removeFromSelected(selectedValue.name)" class="remove-value">
-        <span [id]="'remove-' + selectedValue" class="material-symbols-outlined">close</span>
-      </button>
-      {{ selectedValue.name + ' (' + selectedValue.value + ')' }}
-    </div>
+    @for (selectedValue of selectedValues; track selectedValue) {
+      <div class="value-wrapper">
+        <button (click)="removeFromSelected(selectedValue.name)" class="remove-value">
+          <span [id]="'remove-' + selectedValue" class="material-symbols-outlined">close</span>
+        </button>
+        {{ selectedValue.name + ' (' + selectedValue.value + ')' }}
+      </div>
+    }
   </div>
 </div>

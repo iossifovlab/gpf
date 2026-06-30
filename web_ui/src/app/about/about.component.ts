@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { InstanceService } from 'app/instance.service';
 import { switchMap, take } from 'rxjs';
 
@@ -8,11 +8,9 @@ import { switchMap, take } from 'rxjs';
   standalone: false
 })
 export class AboutComponent implements OnInit {
-  public aboutDescription: string;
+  private instanceService = inject(InstanceService);
 
-  public constructor(
-    private instanceService: InstanceService,
-  ) {}
+  public aboutDescription: string;
 
   public ngOnInit(): void {
     this.instanceService.getAboutDescription().subscribe((res: {content: string}) => {

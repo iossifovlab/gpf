@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectPersonIds, setPersonIds } from './person-ids.state';
 import { take } from 'rxjs';
@@ -12,11 +12,11 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class PersonIdsComponent implements OnInit, OnDestroy {
+  protected store = inject(Store);
+
   public personIds = '';
   public errors: string[] = [];
   @ViewChild('textArea') private textArea: ElementRef;
-
-  public constructor(protected store: Store) { }
 
   public ngOnInit(): void {
     this.focusTextInputArea();

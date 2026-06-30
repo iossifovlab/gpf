@@ -19,7 +19,7 @@ import { UsersComponent } from './users/users.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
-import { StoreModule, Store } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from './datasets/datasets.state';
 import { UserInfo } from './users/users';
 import { Observable, of } from 'rxjs';
@@ -52,28 +52,22 @@ class UsersServiceMock {
 }
 
 class GeneProfilesServiceMock {
-  public getGeneProfiles() {
+  public getGeneProfiles(): Observable<object> {
     return of({});
   }
 }
 
 class BnNgIdleServiceMock {
-  public startWatching() {}
-  public stopWatching() {}
+  public startWatching(): void {}
+  public stopWatching(): void {}
 }
 
 class AuthServiceMock {
-  public isLoggedIn() {
+  public isLoggedIn(): boolean {
     return true;
   }
 
-  public requestAccessToken() {
-    return of({});
-  }
-}
-
-class StoreMock {
-  select() {
+  public requestAccessToken(): Observable<object> {
     return of({});
   }
 }

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   GeneProfilesSingleViewConfig,
   GeneProfilesGene
@@ -13,13 +13,11 @@ import { catchError, map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class GeneProfilesService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+
   private readonly configUrl = 'gene_profiles/single-view/configuration';
   private readonly genesUrl = 'gene_profiles/single-view/gene/';
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
 
   public getConfig(): Observable<GeneProfilesSingleViewConfig> {
     return this.http

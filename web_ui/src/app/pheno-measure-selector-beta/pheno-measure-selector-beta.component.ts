@@ -1,8 +1,14 @@
 import {
-  Component, OnChanges, Input, Output,
-  EventEmitter, ElementRef, ViewChild,
+  Component,
+  OnChanges,
+  Input,
+  Output,
+  EventEmitter,
+  ElementRef,
+  ViewChild,
   HostListener,
-  OnInit
+  OnInit,
+  inject
 } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { Measure } from '../measures/measures';
@@ -23,6 +29,9 @@ import {
   standalone: false
 })
 export class PhenoMeasureSelectorBetaComponent implements OnChanges, OnInit {
+  private measuresService = inject(MeasuresService);
+  private store = inject(Store);
+
   @Input() public datasetId: string;
   @Input() public isFamilyFilters: boolean;
   @Output() public selectedMeasureChange = new EventEmitter(true);
@@ -43,11 +52,6 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges, OnInit {
   public topVisibleIdx = 0;
   public selectedIdx = -1;
   public idxSubscription: Subscription = null;
-
-  public constructor(
-    private measuresService: MeasuresService,
-    private store: Store
-  ) { }
 
   public ngOnInit(): void {
     if (this.isFamilyFilters) {

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, inject } from '@angular/core';
 import { EditorOption } from 'angular-markdown-editor';
 import { UsersService } from 'app/users/users.service';
 import { MarkdownService } from 'ngx-markdown';
@@ -10,6 +10,9 @@ import { MarkdownService } from 'ngx-markdown';
   standalone: false
 })
 export class MarkdownEditorComponent implements OnInit, OnChanges {
+  private markdownService = inject(MarkdownService);
+  private usersService = inject(UsersService);
+
   @Input() public initialMarkdown: string;
   @Input() public editable = true;
 
@@ -30,11 +33,6 @@ export class MarkdownEditorComponent implements OnInit, OnChanges {
       return this.markdownService.parse(val.trim()) as string;
     }
   };
-
-  public constructor(
-    private markdownService: MarkdownService,
-    private usersService: UsersService,
-  ) { }
 
   @HostListener('keydown', ['$event']) public onKeyDown($event: KeyboardEvent): void {
     if ($event.ctrlKey && $event.code === 'Enter') {

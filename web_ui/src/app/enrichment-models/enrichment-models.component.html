@@ -1,57 +1,67 @@
-<div *ngIf="!modelsLoaded">
-  <div class="form-block" style="display: contents">
-    <ul ngbNav #nav="ngbNav" class="bg-light nav-pills" style="justify-content: center">
-      <li ngbNavItem>
-        <span style="opacity: 75%"><i>Loading models...</i></span>
-      </li>
-    </ul>
-  </div>
-</div>
-<div *ngIf="backgrounds || countings" id="background-models-container">
-  <div *ngIf="backgrounds" id="background-models">
-    <span>Background Models:</span>
-    <div class="select-wrapper">
-      <select
-        id="background-models-menu"
-        class="form-control"
-        title="{{ background.name }}"
-        [ngModel]="background"
-        (ngModelChange)="changeBackground($event)">
-        <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.name }}</option>
-      </select>
-      <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+@if (!modelsLoaded) {
+  <div>
+    <div class="form-block" style="display: contents">
+      <ul ngbNav #nav="ngbNav" class="bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>Loading models...</i></span>
+        </li>
+      </ul>
     </div>
   </div>
-
-  <button
-    *ngIf="background.description"
-    [id]="background.name + '-description-button'"
-    class="description-tooltip"
-    [ngbTooltip]="backgroundDescriptionContent"
-    [autoClose]="'outside'"
-    triggers="manual"
-    #instrumentDescription="ngbTooltip"
-    (click)="instrumentDescription.open()">
-    <span class="material-symbols-outlined info-icon" [id]="background.name + '-description-icon'">info</span>
-  </button>
-  <ng-template #backgroundDescriptionContent>
-    <markdown>{{ background.description }}</markdown>
-  </ng-template>
-
-  <div *ngIf="countings" id="counting-models">
-    <span>Counting Models:</span>
-    <div class="select-wrapper">
-      <select
-        id="counting-models-menu"
-        class="form-control"
-        title="{{ counting.description }}"
-        [ngModel]="counting"
-        (ngModelChange)="changeCounting($event)">
-        <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.name }}</option>
-      </select>
-      <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
-    </div>
+}
+@if (backgrounds || countings) {
+  <div id="background-models-container">
+    @if (backgrounds) {
+      <div id="background-models">
+        <span>Background Models:</span>
+        <div class="select-wrapper">
+          <select
+            id="background-models-menu"
+            class="form-control"
+            title="{{ background.name }}"
+            [ngModel]="background"
+            (ngModelChange)="changeBackground($event)">
+            @for (background of backgrounds; track background) {
+              <option [ngValue]="background">{{ background.name }}</option>
+            }
+          </select>
+          <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+        </div>
+      </div>
+    }
+    @if (background.description) {
+      <button
+        [id]="background.name + '-description-button'"
+        class="description-tooltip"
+        [ngbTooltip]="backgroundDescriptionContent"
+        [autoClose]="'outside'"
+        triggers="manual"
+        #instrumentDescription="ngbTooltip"
+        (click)="instrumentDescription.open()">
+        <span class="material-symbols-outlined info-icon" [id]="background.name + '-description-icon'">info</span>
+      </button>
+    }
+    <ng-template #backgroundDescriptionContent>
+      <markdown>{{ background.description }}</markdown>
+    </ng-template>
+    @if (countings) {
+      <div id="counting-models">
+        <span>Counting Models:</span>
+        <div class="select-wrapper">
+          <select
+            id="counting-models-menu"
+            class="form-control"
+            title="{{ counting.description }}"
+            [ngModel]="counting"
+            (ngModelChange)="changeCounting($event)">
+            @for (counting of countings; track counting) {
+              <option [ngValue]="counting">{{ counting.name }}</option>
+            }
+          </select>
+          <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+        </div>
+      </div>
+    }
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>
-
-  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
-</div>
+}

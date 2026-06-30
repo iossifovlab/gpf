@@ -19,23 +19,26 @@
         (ngModelChange)="filterItems($event)"
         autocomplete="off"
         spellcheck="false" />
-      <span
-        class="material-symbols-outlined search-clear-icon"
-        *ngIf="searchInput.value !== ''"
-        (click)="searchInput.value = ''; searchText = ''; filterItems('')"
-        >close</span
-      >
+      @if (searchInput.value !== '') {
+        <span
+          class="material-symbols-outlined search-clear-icon"
+          (click)="searchInput.value = ''; searchText = ''; filterItems('')"
+          >close</span
+        >
+      }
     </div>
   </div>
 
   <table cdkDropList (cdkDropListDropped)="drop($event)">
-    <tr *ngFor="let column of filteredColumns" style="height: 30px">
-      <td>
-        <label cdkDrag style="width: 100%; padding-top: 4px; padding-bottom: 4px; padding-left: 6px">
-          <input type="checkbox" [checked]="column.visibility" (change)="toggleItem(column, $event)" />
-          <span style="padding-left: 10px">{{ column.displayName }}</span>
-        </label>
-      </td>
-    </tr>
+    @for (column of filteredColumns; track column) {
+      <tr style="height: 30px">
+        <td>
+          <label cdkDrag style="width: 100%; padding-top: 4px; padding-bottom: 4px; padding-left: 6px">
+            <input type="checkbox" [checked]="column.visibility" (change)="toggleItem(column, $event)" />
+            <span style="padding-left: 10px">{{ column.displayName }}</span>
+          </label>
+        </td>
+      </tr>
+    }
   </table>
 </div>

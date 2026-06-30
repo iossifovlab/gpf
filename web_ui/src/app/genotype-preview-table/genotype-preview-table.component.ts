@@ -16,7 +16,7 @@ export class GenotypePreviewTableComponent implements OnInit {
   public singleColumnWidth: string;
   public legendItems: Array<LegendItem> = [];
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   public onResize(): void {
     const screenWidth = window.innerWidth;
     const columnsCount = this.columns.length;

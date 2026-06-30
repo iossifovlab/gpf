@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
+import { Component, ViewChild, AfterViewInit, OnInit, inject } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { InstanceService } from 'app/instance.service';
@@ -12,13 +12,11 @@ import { take } from 'rxjs';
   standalone: false
 })
 export class RegionsBlockComponent implements OnInit, AfterViewInit {
+  private store = inject(Store);
+  private instanceService = inject(InstanceService);
+
   @ViewChild('nav') public ngbNav: NgbNav;
   public genome: string;
-
-  public constructor(
-    private store: Store,
-    private instanceService: InstanceService,
-  ) { }
 
   public ngOnInit(): void {
     this.instanceService.getGenome().pipe(take(1)).subscribe(res => {

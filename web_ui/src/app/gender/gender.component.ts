@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { addGender, removeGender, selectGenders } from './gender.state';
 import { take } from 'rxjs';
@@ -12,12 +12,12 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class GenderComponent implements OnInit {
+  protected store = inject(Store);
+
   public selectedGenders: string[] = [];
   public supportedGenders = ['male', 'female', 'unspecified'];
   @Input() public hasZygosity: boolean;
   public errors: string[] = [];
-
-  public constructor(protected store: Store) {}
 
   public ngOnInit(): void {
     this.store.select(selectGenders).pipe(take(1)).subscribe(gendersState => {

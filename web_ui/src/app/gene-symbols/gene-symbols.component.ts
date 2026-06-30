@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
 import { Subscription, take } from 'rxjs';
@@ -12,14 +12,15 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class GeneSymbolsComponent implements OnInit, OnDestroy {
+  protected store = inject(Store);
+  private geneService = inject(GeneService);
+
   public geneSymbols: string = '';
   public invalidGenes: string;
   public errors: string[] = [];
   private validationSubscription = new Subscription();
 
   @ViewChild('textArea') private textArea: ElementRef;
-
-  public constructor(protected store: Store, private geneService: GeneService) { }
 
   public ngOnInit(): void {
     this.focusGeneTextArea();

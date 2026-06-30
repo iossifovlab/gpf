@@ -8,12 +8,13 @@
     <text x="0" y="90">without hit</text>
 
     <g #innerGroup transform="translate(30, 110)">
-      <g
-        *ngFor="let result of phenoToolResults.results; let i = index"
-        gpf-pheno-tool-results-chart-per-effect
-        [attr.transform]="'translate(' + (i * 250 + 100) + ',0)'"
-        [effectResults]="result"
-        [yScale]="yScale"></g>
+      @for (result of phenoToolResults.results; track result; let i = $index) {
+        <g
+          gpf-pheno-tool-results-chart-per-effect
+          [attr.transform]="'translate(' + (i * 250 + 100) + ',0)'"
+          [effectResults]="result"
+          [yScale]="yScale"></g>
+      }
     </g>
 
     <g [attr.transform]="'translate(' + columnCount * 220 + ', 600)'">

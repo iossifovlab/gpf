@@ -1,4 +1,4 @@
-import { Input, Component, ViewContainerRef, AfterViewInit } from '@angular/core';
+import { Input, Component, ViewContainerRef, AfterViewInit, inject } from '@angular/core';
 import { GpfTableColumnComponent } from '../component/column.component';
 import { ResizeService } from '../resize.service';
 
@@ -8,15 +8,17 @@ import { ResizeService } from '../resize.service';
   standalone: false
 })
 export class GpfTableEmptyCellComponent implements AfterViewInit {
+  private viewContainer = inject(ViewContainerRef);
+  private resizeService = inject(ResizeService);
+
   @Input() public columnInfo: GpfTableColumnComponent;
   private nativeElement: any;
   private firstRecalc = true;
   private isCustomWidth = false;
 
-  public constructor(
-    private viewContainer: ViewContainerRef,
-    private resizeService: ResizeService
-  ) {
+  public constructor() {
+    const viewContainer = this.viewContainer;
+
     this.nativeElement = viewContainer.element.nativeElement;
   }
 

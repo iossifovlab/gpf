@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -8,11 +8,9 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   standalone: false
 })
 export class PopupComponent {
-  @Input() public data;
+  activeModal = inject(NgbActiveModal);
 
-  public constructor(
-    public activeModal: NgbActiveModal
-  ) {}
+  @Input() public data;
 
   public closeModal(): void {
     this.activeModal.close();

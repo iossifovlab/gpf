@@ -1,7 +1,13 @@
 import {
-  Component, OnChanges, Input, Output,
-  EventEmitter, ElementRef, ViewChild,
-  HostListener
+  Component,
+  OnChanges,
+  Input,
+  Output,
+  EventEmitter,
+  ElementRef,
+  ViewChild,
+  HostListener,
+  inject
 } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
@@ -16,6 +22,8 @@ import { Subscription } from 'rxjs';
   standalone: false
 })
 export class PhenoMeasureSelectorComponent implements OnChanges {
+  private measuresService = inject(MeasuresService);
+
   @Input() public datasetId: string;
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
@@ -34,10 +42,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public topVisibleIdx = 0;
   public selectedIdx = -1;
   public idxSubscription: Subscription = null;
-
-  public constructor(
-    private measuresService: MeasuresService,
-  ) { }
 
   public ngOnChanges(): void {
     if (this.datasetId && this.measures.length === 0) {

@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/naming-convention: 0 */
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
 import { Observable, take, tap, catchError } from 'rxjs';
@@ -11,17 +11,15 @@ import pkceChallenge from 'pkce-challenge';
   providedIn: 'root'
 })
 export class AuthService {
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+  private cookieService = inject(CookieService);
+  private baseHref = inject(APP_BASE_HREF);
+
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
   private readonly options = { headers: this.headers };
 
   private authToken: string = null;
-
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService,
-    private cookieService: CookieService,
-    @Inject(APP_BASE_HREF) private baseHref: string,
-  ) { }
 
   public get accessToken(): string {
     return this.authToken || '';

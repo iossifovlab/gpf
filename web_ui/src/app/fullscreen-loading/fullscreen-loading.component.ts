@@ -1,6 +1,6 @@
 // Loosely based on https://github.com/oxycoder/ng2-loading-animate
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FullscreenLoadingService } from './fullscreen-loading.service';
 
 @Component({
@@ -10,11 +10,13 @@ import { FullscreenLoadingService } from './fullscreen-loading.service';
   standalone: false
 })
 export class FullscreenLoadingComponent {
+  private fullscreenLoadingService = inject(FullscreenLoadingService);
+
   public showLoading = false;
 
-  public constructor(
-    private fullscreenLoadingService: FullscreenLoadingService
-  ) {
+  public constructor() {
+    const fullscreenLoadingService = this.fullscreenLoadingService;
+
     fullscreenLoadingService.loadingStateChange.subscribe((state: boolean) => {
       this.showLoading = state;
     });

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
@@ -7,12 +7,10 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class PhenoToolService {
-  private readonly phenoToolUrl = 'pheno_tool';
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
 
-  public constructor(
-    private http: HttpClient,
-    private config: ConfigService
-  ) {}
+  private readonly phenoToolUrl = 'pheno_tool';
 
   public getPhenoToolResults(filter: object): Observable<PhenoToolResults> {
     const headers = { 'Content-Type': 'application/json' };

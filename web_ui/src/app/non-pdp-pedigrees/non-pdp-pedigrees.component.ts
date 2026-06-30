@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { PedigreeMockService } from '../perfectly-drawable-pedigree/pedigree-mock.service';
 import { PerfectlyDrawablePedigreeService } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 
@@ -9,12 +9,10 @@ import { PerfectlyDrawablePedigreeService } from '../perfectly-drawable-pedigree
   standalone: false
 })
 export class NonPdpPedigreesComponent implements OnInit {
+  private pedigreeMockService = inject(PedigreeMockService);
+
   public families: object;
   public familyKeys: string[];
-
-  public constructor(
-    private pedigreeMockService: PedigreeMockService,
-  ) { }
 
   public ngOnInit(): void {
     this.families = this.pedigreeMockService.getMockFamily();

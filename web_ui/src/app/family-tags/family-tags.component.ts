@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { initialState, selectFamilyTags, setFamilyTags } from './family-tags.state';
 import { Store } from '@ngrx/store';
 import { take } from 'rxjs';
@@ -12,6 +12,8 @@ import { FamilyTags } from './family-tags';
   standalone: false
 })
 export class FamilyTagsComponent implements OnInit {
+  protected store = inject(Store);
+
   @Input() public numOfCols: number;
   @Input() public tags = [];
   @Output() public chooseMode = new EventEmitter<boolean>();
@@ -22,8 +24,6 @@ export class FamilyTagsComponent implements OnInit {
   public filtersButtonsState: Record<string, number> = {};
   public tagIntersection = true; // mode "And"
   public familyTags: FamilyTags = cloneDeep(initialState);
-
-  public constructor(protected store: Store) { }
 
   public ngOnInit(): void {
     this.tags.forEach((tag: string) => {

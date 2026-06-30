@@ -1,5 +1,5 @@
 <!-- eslint-disable prettier/prettier -->
-<ng-container *ngIf="loadedUserInfo !== null">
+@if (loadedUserInfo !== null) {
   <gpf-fullscreen-loading></gpf-fullscreen-loading>
   <div>
     <div class="container-fluid" id="header">
@@ -13,52 +13,55 @@
             title="Home"
             id="home"
             >Home</a
-          >
-          <a
-            *ngIf="geneProfilesConfig"
-            [routerLink]="'/gene-profiles'"
-            routerLinkActive="highlighted-route"
-            title="Gene Profiles"
-            id="gene-profiles"
-            >Gene Profiles</a
-          >
-          <a
-          [routerLink]="'/datasets/' + selectedDatasetId"
-          routerLinkActive="highlighted-route"
-          title="Datasets"
-          id="datasets">Datasets</a
-          >
-          <a
-            [routerLink]="'/about'"
-            routerLinkActive="highlighted-route"
-            title="About"
-            id="about">About</a
-          >
-          <a
-            *ngIf="loadedUserInfo.isAdministrator"
-            [routerLink]="'/management'"
-            routerLinkActive="highlighted-route"
-            title="Management"
-            id="management"
-            >Management</a
-          >
-          <a
-            *ngIf="loadedUserInfo.loggedIn"
-            [routerLink]="'/user-profile'"
-            routerLinkActive="highlighted-route"
-            title="User Profile"
-            id="user-profile"
-            >User Profile</a
-          >
-        </div>
-        <div class="col-2" style="padding-right: 0">
-          <gpf-users></gpf-users>
-        </div>
-      </div>
-    </div>
-    <div id="separator"></div>
-    <div class="sidenav-container">
-      <router-outlet style="display: flex; flex-direction: row"></router-outlet>
-    </div>
-  </div>
-</ng-container>
+            >
+            @if (geneProfilesConfig) {
+              <a
+                [routerLink]="'/gene-profiles'"
+                routerLinkActive="highlighted-route"
+                title="Gene Profiles"
+                id="gene-profiles"
+                >Gene Profiles</a
+                >
+              }
+              <a
+                [routerLink]="'/datasets/' + selectedDatasetId"
+                routerLinkActive="highlighted-route"
+                title="Datasets"
+                id="datasets">Datasets</a
+                >
+                <a
+                  [routerLink]="'/about'"
+                  routerLinkActive="highlighted-route"
+                  title="About"
+                  id="about">About</a
+                  >
+                  @if (loadedUserInfo.isAdministrator) {
+                    <a
+                      [routerLink]="'/management'"
+                      routerLinkActive="highlighted-route"
+                      title="Management"
+                      id="management"
+                      >Management</a
+                      >
+                    }
+                    @if (loadedUserInfo.loggedIn) {
+                      <a
+                        [routerLink]="'/user-profile'"
+                        routerLinkActive="highlighted-route"
+                        title="User Profile"
+                        id="user-profile"
+                        >User Profile</a
+                        >
+                      }
+                    </div>
+                    <div class="col-2" style="padding-right: 0">
+                      <gpf-users></gpf-users>
+                    </div>
+                  </div>
+                </div>
+                <div id="separator"></div>
+                <div class="sidenav-container">
+                  <router-outlet style="display: flex; flex-direction: row"></router-outlet>
+                </div>
+              </div>
+            }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import {
   GeneSetsCollection,
@@ -28,6 +28,12 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
   standalone: false
 })
 export class GeneSetsComponent implements OnInit, OnDestroy {
+  protected store = inject(Store);
+  private geneSetsService = inject(GeneSetsService);
+  modalService = inject(NgbModal);
+  private datasetsTreeService = inject(DatasetsTreeService);
+  private datasetsService = inject(DatasetsService);
+
   public geneSetsCollections: Array<GeneSetsCollection>;
   public geneSets: Array<GeneSet>;
   public searchQuery: string;
@@ -59,14 +65,6 @@ export class GeneSetsComponent implements OnInit, OnDestroy {
 
   // The template needs local component reference to use Object static methods
   public object = Object;
-
-  public constructor(
-    protected store: Store,
-    private geneSetsService: GeneSetsService,
-    public modalService: NgbModal,
-    private datasetsTreeService: DatasetsTreeService,
-    private datasetsService: DatasetsService
-  ) {}
 
   public ngOnInit(): void {
     this.geneSetsLoaded = null;
@@ -277,7 +275,9 @@ export class GeneSetsComponent implements OnInit, OnDestroy {
 
   public onSelect(event: GeneSet): void {
     this.isDropdownOpen = false;
-    (this.searchBox.nativeElement as HTMLElement).blur();
+    if (this.searchBox?.nativeElement) {
+      (this.searchBox.nativeElement as HTMLElement).blur();
+    }
     this.selectedGeneSet = event;
     if (event === null) {
       this.onSearch();

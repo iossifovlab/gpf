@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, ViewChild, inject } from '@angular/core';
 import {
   GeneProfilesDatasetPersonSet, GeneProfilesDatasetStatistic, GeneProfilesGene,
   GeneProfilesGeneScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
@@ -34,6 +34,13 @@ import { sprintf } from 'sprintf-js';
   standalone: false
 })
 export class GeneProfileSingleViewComponent implements OnInit {
+  private geneProfilesService = inject(GeneProfilesService);
+  private geneScoresService = inject(GeneScoresService);
+  private queryService = inject(QueryService);
+  private store = inject(Store);
+  private geneProfilesTableService = inject(GeneProfilesTableService);
+  private router = inject(Router);
+
   @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;
 
   @Input() public readonly geneSymbol: string;
@@ -57,18 +64,9 @@ export class GeneProfileSingleViewComponent implements OnInit {
   private headerBottomYPosition = 116;
   public isHeaderSticky: boolean;
 
-  public constructor(
-    private geneProfilesService: GeneProfilesService,
-    private geneScoresService: GeneScoresService,
-    private queryService: QueryService,
-    private store: Store,
-    private geneProfilesTableService: GeneProfilesTableService,
-    private router: Router
-  ) { }
-
   public errorModal = false;
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   public handleScroll(): void {
     if (this.isInGeneCompare) {
       if (window.pageYOffset >= this.headerBottomYPosition) {

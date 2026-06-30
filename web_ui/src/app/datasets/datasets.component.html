@@ -1,98 +1,106 @@
-<div *ngIf="selectedDataset" class="content">
-  <div *ngIf="registerAlertVisible" id="register-alert">
-    <span
-      >To gain full access of the data and tools in GPF please consider registering. Visit the
-      <a routerLink="/about">About</a> page for more information.</span
-    >
-  </div>
-
-  <nav class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <div class="btn-group">
-          <div ngbDropdown>
-            <button
-              ngbDropdownToggle
-              class="dataset-selector btn btn-outline-secondary navbar-brand"
-              type="button"
-              id="datasets-dropdown-menu-button"
-              aria-haspopup="true"
-              aria-expanded="false">
-              <span *ngIf="datasetsLoading">Loading datasets...</span>
+@if (selectedDataset) {
+  <div class="content">
+    @if (registerAlertVisible) {
+      <div id="register-alert">
+        <span
+          >To gain full access of the data and tools in GPF please consider registering. Visit the
+          <a routerLink="/about">About</a> page for more information.</span
+        >
+      </div>
+    }
+    <nav class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <div class="btn-group">
+            <div ngbDropdown>
+              <button
+                ngbDropdownToggle
+                class="dataset-selector btn btn-outline-secondary navbar-brand"
+                type="button"
+                id="datasets-dropdown-menu-button"
+                aria-haspopup="true"
+                aria-expanded="false">
+                @if (datasetsLoading) {
+                  <span>Loading datasets...</span>
+                }
+                @if (!datasetsLoading) {
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 6px">
+                    <span [title]="selectedDataset.name" id="selected-dataset-name">{{ selectedDataset.name }}</span>
+                    @if (selectedDataset.hasDenovo) {
+                      <div style="display: inline-flex" title="denovo">
+                        <span class="denovo-icon material-symbols-outlined sm">genetics</span>
+                        <span class="star-icon material-symbols-outlined">kid_star</span>
+                      </div>
+                    }
+                    @if (selectedDataset.hasTransmitted) {
+                      <span
+                        class="transmitted-icon material-symbols-outlined sm"
+                        title="transmitted"
+                        [ngStyle]="{ color: selectedDataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
+                        >family_history</span
+                      >
+                    }
+                    @if (selectedDataset.phenotypeData) {
+                      <span
+                        class="phenotype-icon material-symbols-outlined md"
+                        title="phenotype"
+                        [ngStyle]="{ color: selectedDataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
+                        >how_to_reg</span
+                      >
+                    }
+                  </div>
+                }
+              </button>
               <div
-                *ngIf="!datasetsLoading"
-                style="display: flex; align-items: center; justify-content: center; gap: 6px">
-                <span [title]="selectedDataset.name" id="selected-dataset-name">{{ selectedDataset.name }}</span>
-
-                <div *ngIf="selectedDataset.hasDenovo" style="display: inline-flex" title="denovo">
-                  <span class="denovo-icon material-symbols-outlined sm">genetics</span>
-                  <span class="star-icon material-symbols-outlined">kid_star</span>
-                </div>
-
-                <span
-                  *ngIf="selectedDataset.hasTransmitted"
-                  class="transmitted-icon material-symbols-outlined sm"
-                  title="transmitted"
-                  [ngStyle]="{ color: selectedDataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
-                  >family_history</span
-                >
-                <span
-                  *ngIf="selectedDataset.phenotypeData"
-                  class="phenotype-icon material-symbols-outlined md"
-                  title="phenotype"
-                  [ngStyle]="{ color: selectedDataset.accessRights ? '#7e7e7e' : '#dcdcdc' }"
-                  >how_to_reg</span
-                >
+                ngbDropdownMenu
+                class="dataset-selector"
+                aria-labelledby="datasets-dropdown-menu-button"
+                style="z-index: 199">
+                @if (!datasetsLoading) {
+                  @for (tree of datasetTrees; track tree) {
+                    <gpf-dataset-node [datasetNode]="tree"></gpf-dataset-node>
+                  }
+                }
               </div>
-            </button>
-            <div
-              ngbDropdownMenu
-              class="dataset-selector"
-              aria-labelledby="datasets-dropdown-menu-button"
-              style="z-index: 199">
-              <ng-container *ngIf="!datasetsLoading">
-                <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
-              </ng-container>
             </div>
           </div>
-        </div>
-      </li>
-      <li [class.disabled-tool]="!selectedDataset.geneBrowser.enabled" class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.geneBrowser }}" routerLinkActive="active">Gene Browser</a>
-      </li>
-      <li [class.disabled-tool]="!(selectedDataset.genotypeBrowser && selectedDataset.accessRights)" class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.genotypeBrowser }}" routerLinkActive="active"
-          >Genotype Browser</a
-        >
-      </li>
-      <li [class.disabled-tool]="!selectedDataset.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeBrowser }}" routerLinkActive="active"
-          >Phenotype Browser</a
-        >
-      </li>
-      <li [class.disabled-tool]="!selectedDataset.enrichmentTool" class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.enrichmentTool }}" routerLinkActive="active"
-          >Enrichment Tool</a
-        >
-      </li>
-      <li [class.disabled-tool]="!selectedDataset.phenotypeTool" class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeTool }}" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.datasetDescription }}" routerLinkActive="active"
-          >Dataset Description</a
-        >
-      </li>
-      <li [class.disabled-tool]="!selectedDataset.commonReport.enabled" class="nav-item">
-        <a class="nav-link" routerLink="{{ toolPageLinks.datasetStatistics }}" routerLinkActive="active"
-          >Dataset Statistics</a
-        >
-      </li>
-    </ul>
-  </nav>
-
-  <router-outlet
-    *ngIf="
+        </li>
+        <li [class.disabled-tool]="!selectedDataset.geneBrowser.enabled" class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.geneBrowser }}" routerLinkActive="active">Gene Browser</a>
+        </li>
+        <li [class.disabled-tool]="!(selectedDataset.genotypeBrowser && selectedDataset.accessRights)" class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.genotypeBrowser }}" routerLinkActive="active"
+            >Genotype Browser</a
+          >
+        </li>
+        <li [class.disabled-tool]="!selectedDataset.phenotypeBrowser" class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeBrowser }}" routerLinkActive="active"
+            >Phenotype Browser</a
+          >
+        </li>
+        <li [class.disabled-tool]="!selectedDataset.enrichmentTool" class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.enrichmentTool }}" routerLinkActive="active"
+            >Enrichment Tool</a
+          >
+        </li>
+        <li [class.disabled-tool]="!selectedDataset.phenotypeTool" class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeTool }}" routerLinkActive="active"
+            >Phenotype Tool</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.datasetDescription }}" routerLinkActive="active"
+            >Dataset Description</a
+          >
+        </li>
+        <li [class.disabled-tool]="!selectedDataset.commonReport.enabled" class="nav-item">
+          <a class="nav-link" routerLink="{{ toolPageLinks.datasetStatistics }}" routerLinkActive="active"
+            >Dataset Statistics</a
+          >
+        </li>
+      </ul>
+    </nav>
+    @if (
       selectedDataset.accessRights ||
       selectedTool === toolPageLinks.datasetDescription ||
       selectedTool === toolPageLinks.phenotypeBrowser ||
@@ -100,15 +108,17 @@
       selectedTool === toolPageLinks.geneBrowser ||
       selectedTool === toolPageLinks.enrichmentTool ||
       selectedTool === toolPageLinks.phenotypeTool
-    "
-    (activate)="routeChange()"
-    class="content"></router-outlet>
-</div>
+    ) {
+      <router-outlet (activate)="routeChange()" class="content"></router-outlet>
+    }
+  </div>
+}
 
-<div
-  *ngIf="selectedDataset === undefined"
-  class="alert alert-danger"
-  role="alert"
-  style="display: inline-block; margin: 14px; margin-top: 0px; width: 400px">
-  <span>No such dataset found!</span>
-</div>
+@if (selectedDataset === undefined) {
+  <div
+    class="alert alert-danger"
+    role="alert"
+    style="display: inline-block; margin: 14px; margin-top: 0px; width: 400px">
+    <span>No such dataset found!</span>
+  </div>
+}

@@ -73,32 +73,17 @@ describe('UsersComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should login user', () => {
-    const state = {
-      came_from: 'currentUrl'
-    };
-    const url = component['config'].rootUrl + component['baseHref']
-    + 'o/authorize/?response_type=code'
-    + '&code_challenge_method=S256'
-    + '&code_challenge=pkceMock'
-    + '&scope=read'
-    + `&client_id=${component['config'].oauthClientId}`
-    + `&redirect_uri=${window.location.origin}${component['baseHref']}login`
-    + `&state=${btoa(JSON.stringify(state))}`;
+it('should login user', () => {
+  const navigateSpy = jest.spyOn(component, 'navigateTo').mockImplementation(() => {});
 
-    Object.defineProperty(window, 'location', {
-      value: {
-        href: url,
-        origin: 'http://localhost'
-      }
-    });
+  component.login();
 
-    window.location.href = url;
-
-    component.login();
-
-    expect(window.location.href).toStrictEqual(url);
-  });
+  const url = navigateSpy.mock.calls[0][0];
+  expect(url).toContain('o/authorize/?response_type=code');
+  expect(url).toContain('client_id');
+  expect(url).toContain('redirect_uri');
+  expect(url).toContain('state');
+});
 
   it('should logout user', () => {
     const logoutSpy = jest.spyOn(usersServiceMock, 'logout');

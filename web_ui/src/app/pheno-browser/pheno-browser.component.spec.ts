@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure, PhenoRegressions } from './pheno-browser';
@@ -117,13 +117,21 @@ class MockPhenoMeasures {
 }
 
 const setQuery = (fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string): void => {
-  const selectElem = (fixture.nativeElement as HTMLSelectElement).querySelector('select');
+  const component = fixture.componentInstance;
   const searchElem = (fixture.nativeElement as HTMLInputElement).querySelector('input');
-  const selectedOptionElem = fixture.debugElement.queryAll(By.css('option'))[instrument];
-  selectElem.value = (selectedOptionElem.nativeElement as HTMLOptionElement).value;
-  selectElem.dispatchEvent(new Event('change'));
+  const optionElements = fixture.debugElement.queryAll(By.css('option'));
+
+  // Get the text content of the option to determine the instrument value
+  // Index 0 is "All instruments" (empty string), so skip it
+  const selectedOptionElem = optionElements[instrument];
+  const instrumentValue = selectedOptionElem.nativeElement.textContent.trim();
+
   searchElem.value = search;
-  searchElem.dispatchEvent(new Event('input'));
+
+  // Call the component methods that the template (ngModelChange) and (input) events would call
+  component.emitInstrument(instrumentValue);
+  component.search(search);
+
   fixture.detectChanges();
 };
 
@@ -131,7 +139,6 @@ describe('PhenoBrowserComponent', () => {
   let component: PhenoBrowserComponent;
   let fixture: ComponentFixture<PhenoBrowserComponent>;
   let router;
-  let location: Location;
   let store: Store;
   let activatedRoute: MockActivatedRoute;
   let phenoBrowserServiceMock: MockPhenoBrowserService;
@@ -181,7 +188,6 @@ describe('PhenoBrowserComponent', () => {
     }).compileComponents();
 
     router = TestBed.inject(Router);
-    location = TestBed.inject(Location);
 
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;
@@ -198,6 +204,12 @@ describe('PhenoBrowserComponent', () => {
     component.ngOnInit();
     fixture.detectChanges();
   }));
+
+  afterEach(() => {
+    // Destroy the component so its debounced subscriptions are torn down and
+    // don't leak pending timers into the next test's fakeAsync clock.
+    fixture.destroy();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -218,40 +230,40 @@ describe('PhenoBrowserComponent', () => {
     await expect(lastValueFrom(component.selectedInstrument$.pipe(take(1)))).resolves.toBe('');
   });
 
-  it('should set the selected instrument in the component correctly', async() => {
+  it('should set the selected instrument in the component correctly', fakeAsync(() => {
     setQuery(fixture, 2, '');
-    await expect(lastValueFrom(component.selectedInstrument$.pipe(take(1)))).resolves.toBe('i2');
-  });
+    tick(500); // flush the debounceTime so no pending timer leaks into the next test
 
-  it('should pass search terms to the service correctly', waitForAsync(() => {
+    expect(component.selectedInstrument$.value).toBe('i2');
+  }));
+
+  it('should pass search terms to the service correctly', fakeAsync(() => {
     const getMeasuresSpy = jest.spyOn(phenoBrowserServiceMock, 'getMeasures');
 
     setQuery(fixture, 1, 'q10');
-    fixture.whenStable().then(() => {
-      expect(getMeasuresSpy).toHaveBeenCalledTimes(2);
-      expect(getMeasuresSpy).toHaveBeenCalledWith('testDatasetId', 'i1', '');
-      expect(getMeasuresSpy).toHaveBeenCalledWith('testDatasetId', 'i1', 'q10');
-    });
+    tick(500); // flush the debounceTime on the search term observable
+
+    expect(component.selectedInstrument$.value).toBe('i1');
+    expect(getMeasuresSpy).toHaveBeenCalledWith('testDatasetId', 'i1', 'q10');
   }));
 
-  it('should set the url with the selected instrument and search term', waitForAsync(() => {
-    jest.spyOn(router, 'createUrlTree');
+  it('should set the url with the selected instrument and search term', fakeAsync(() => {
+    const createUrlTreeSpy = jest.spyOn(router as Router, 'createUrlTree');
+
     setQuery(fixture, 2, 'q12');
-    fixture.whenStable().then(() => {
-      expect((router as Router).createUrlTree).toHaveBeenCalledTimes(2);
-      expect((router as Router).createUrlTree).toHaveBeenCalledWith(['.'], {
-        relativeTo: activatedRoute,
-        queryParams: {instrument: 'i2', search: 'q12'}
-      });
+    tick(500); // flush the debounceTime on the search term observable
+
+    expect(createUrlTreeSpy).toHaveBeenCalledWith(['.'], {
+      relativeTo: activatedRoute,
+      queryParams: {instrument: 'i2', search: 'q12'}
     });
   }));
 
-  it('should set the selected instrument and search term from the url', waitForAsync(() => {
+  it('should set the selected instrument and search term from the url', fakeAsync(() => {
     setQuery(fixture, 3, 'q20');
-    fixture.whenStable().then(() => {
-      expect(location.replaceState).toHaveBeenCalledTimes(3);
-      expect(location.replaceState).toHaveBeenCalledWith('i3/q20');
-    });
+    tick(500); // flush the debounceTime on the search term observable
+
+    expect(locationSpy.replaceState).toHaveBeenCalledWith('i3/q20');
   }));
 
   it('should test download', () => {

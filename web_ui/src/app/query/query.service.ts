@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -16,6 +16,13 @@ type QueryFilter = Record<string, unknown>;
 
 @Injectable()
 export class QueryService {
+  private location = inject(Location);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
+  private authService = inject(AuthService);
+  private instanceService = inject(InstanceService);
+
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
   private readonly geneViewVariantsUrl = 'gene_view/query_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
@@ -37,15 +44,6 @@ export class QueryService {
   public summaryStreamingFinishedSubject = new Subject<boolean>();
 
   private familyVariantsSubscription: Subscription | null = null;
-
-  public constructor(
-    private location: Location,
-    private router: Router,
-    private http: HttpClient,
-    private config: ConfigService,
-    private authService: AuthService,
-    private instanceService: InstanceService,
-  ) { }
 
   public cancelStreamPost(): void {
     if (this.oboeInstance !== null) {

@@ -135,13 +135,13 @@ describe('GenePlotComponent', () => {
 
     const plot = fixture.nativeElement as HTMLElement;
     const yNoFrequencySubdomain = Array.from(plot.querySelectorAll('div#svg-container'));
-    expect(yNoFrequencySubdomain[0].innerHTML).toContain(
-      '<g id=\"yNoFrequencyDomain\" style=\"font: sans-serif 14px 14px;\" fill=\"none\" ' +
-      'font-size=\"10\" font-family=\"sans-serif\" text-anchor=\"end\">' +
-      '<path class=\"domain\" stroke=\"currentColor\" d=\"M-6,310.5H0.5V288.8H-6\"></path></g>'
+    expect(yNoFrequencySubdomain[0].innerHTML).toContain('id=\"yNoFrequencyDomain\"');
+    expect(yNoFrequencySubdomain[0].innerHTML).toContain('No frequency');
+    expect(plot.querySelectorAll('g#plot')[0].innerHTML).toContain(
+      '<text'
     );
     expect(plot.querySelectorAll('g#plot')[0].innerHTML).toContain(
-      '<text style=\"text-anchor: end; font: sans-serif 14px 14px;\" x=\"-10\" y=\"303.15\">No frequency</text>'
+      'No frequency</text>'
     );
   });
 

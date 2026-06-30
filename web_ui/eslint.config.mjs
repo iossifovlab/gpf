@@ -1,35 +1,62 @@
-{
-  "root": true,
-  "ignorePatterns": [
-    "projects/**/*"
-  ],
-  "plugins": [
-    "@stylistic",
-    "only-warn",
-    "jest"
-  ],
-  "overrides": [
-    {
-      "files": [
-        "*.ts"
-      ],
-      "parserOptions": {
-        "project": [
-          "tsconfig.json"
-        ],
-        "createDefaultProgram": true
-      },
-      "extends": [
+import { defineConfig, globalIgnores } from "eslint/config";
+import stylistic from "@stylistic/eslint-plugin";
+import onlyWarn from "eslint-plugin-only-warn";
+import jest from "eslint-plugin-jest";
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import parser from "@angular-eslint/template-parser";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import js from "@eslint/js";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const compat = new FlatCompat({
+    baseDirectory: __dirname,
+    recommendedConfig: js.configs.recommended,
+    allConfig: js.configs.all
+});
+
+export default defineConfig([
+  globalIgnores([
+    "projects/**/*",
+    "**/build/",
+    "**/node_modules/",
+    "**/coverage/",
+    "**/dist/",
+
+]), {
+    plugins: {
+        "@stylistic": stylistic,
+        "only-warn": onlyWarn,
+        jest,
+    },
+}, {
+    files: ["**/*.ts"],
+
+    extends: compat.extends(
         "plugin:@angular-eslint/template/process-inline-templates",
         "plugin:@angular-eslint/recommended",
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
-      ],
-      "plugins": [
-        "@typescript-eslint"
-       ],
-      "rules": {
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    ),
+
+    plugins: {
+        "@typescript-eslint": typescriptEslint,
+    },
+
+    languageOptions: {
+        ecmaVersion: 5,
+        sourceType: "script",
+
+        parserOptions: {
+            project: ["tsconfig.json"],
+            createDefaultProgram: true,
+        },
+    },
+
+    rules: {
         "@stylistic/no-trailing-spaces": "warn",
         "require-atomic-updates": "warn",
         "no-await-in-loop": "warn",
@@ -41,7 +68,7 @@
         "no-alert": "warn",
         "no-caller": "warn",
         "no-delete-var": "warn",
-        "eqeqeq": ["warn", "always"],
+        eqeqeq: ["warn", "always"],
         "@stylistic/no-extra-semi": "warn",
         "@stylistic/no-floating-decimal": "warn",
         "no-implicit-coercion": "warn",
@@ -57,7 +84,11 @@
         "no-octal": "warn",
         "no-octal-escape": "warn",
         "no-proto": "warn",
-        "no-console": ["warn", { "allow": ["warn", "error"] }],
+
+        "no-console": ["warn", {
+            allow: ["warn", "error"],
+        }],
+
         "no-return-assign": "warn",
         "no-return-await": "warn",
         "no-script-url": "warn",
@@ -77,106 +108,131 @@
         "prefer-spread": "warn",
         "quote-props": ["warn", "consistent-as-needed"],
         "@stylistic/quotes": ["error", "single"],
-        "radix": "warn",
+        radix: "warn",
         "array-bracket-spacing": ["warn", "never"],
-        "arrow-spacing": ["warn", { "before": true, "after": true }],
+
+        "arrow-spacing": ["warn", {
+            before: true,
+            after: true,
+        }],
+
         "block-spacing": ["warn", "always"],
         "brace-style": ["warn", "1tbs"],
-        "comma-spacing": ["warn", { "before": false, "after": true }],
+
+        "comma-spacing": ["warn", {
+            before: false,
+            after: true,
+        }],
+
         "comma-style": ["warn", "last"],
         "computed-property-spacing": ["warn", "never"],
         "func-call-spacing": ["warn", "never"],
-        "key-spacing": ["warn", { "beforeColon": false }],
-        "keyword-spacing": ["warn", { "before": true }],
+
+        "key-spacing": ["warn", {
+            beforeColon: false,
+        }],
+
+        "keyword-spacing": ["warn", {
+            before: true,
+        }],
+
         "@stylistic/no-multi-spaces": "warn",
         "@stylistic/no-tabs": ["warn"],
-        "curly": "warn",
+        curly: "warn",
         "padded-blocks": ["warn", "never"],
         "rest-spread-spacing": ["warn", "never"],
-        "semi-spacing": ["warn", {"before": false, "after": true}],
+
+        "semi-spacing": ["warn", {
+            before: false,
+            after: true,
+        }],
+
         "space-before-blocks": ["warn", "always"],
-        "@angular-eslint/component-selector": [
-          "warn",
-          {
-            "type": "element",
-            "prefix": "gpf",
-            "style": "kebab-case"
-          }
-        ],
-        "@angular-eslint/directive-selector": [
-          "warn",
-          {
-            "type": "attribute",
-            "prefix": "gpf",
-            "style": "camelCase"
-          }
-        ],
+
+        "@angular-eslint/component-selector": ["warn", {
+            type: "element",
+            prefix: "gpf",
+            style: "kebab-case",
+        }],
+
+        "@angular-eslint/directive-selector": ["warn", {
+            type: "attribute",
+            prefix: "gpf",
+            style: "camelCase",
+        }],
+
         "@typescript-eslint/await-thenable": "warn",
-        "@typescript-eslint/explicit-member-accessibility": [
-          "warn",
-          {
-            "accessibility": "explicit"
-          }
-        ],
+
+        "@typescript-eslint/explicit-member-accessibility": ["warn", {
+            accessibility: "explicit",
+        }],
+
         "@typescript-eslint/no-explicit-any": "warn",
         "@stylistic/dot-notation": "off",
         "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-function-return-type": "warn",
-        "@stylistic/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
+
+        "@stylistic/no-extra-parens": ["warn", "all", {
+            nestedBinaryExpressions: false,
+        }],
+
         "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/member-ordering": "off",
         "@stylistic/semi": "warn",
+
         "@typescript-eslint/no-unused-vars": ["warn", {
-          "argsIgnorePattern": "^_",
-          "varsIgnorePattern": "^_",
-          "caughtErrorsIgnorePattern": "^_"
+            argsIgnorePattern: "^_",
+            varsIgnorePattern: "^_",
+            caughtErrorsIgnorePattern: "^_",
         }],
-        "indent": ["warn", 2, {"SwitchCase": 1}],
-        "@stylistic/max-len": [
-          "warn",
-          {
-            "code": 120
-          }
-        ],
+
+        indent: ["warn", 2, {
+            SwitchCase: 1,
+        }],
+
+        "@stylistic/max-len": ["warn", {
+            code: 120,
+        }],
+
         "no-duplicate-case": "warn",
         "no-invalid-this": "warn",
         "@stylistic/no-multiple-empty-lines": "warn",
         "no-shadow": "warn",
         "no-template-curly-in-string": "warn",
         "no-unused-expressions": "warn",
-        "@stylistic/space-before-function-paren": [
-          "warn",
-          "never"
-        ],
-        "@stylistic/space-in-parens": [
-          "warn",
-          "never"
-        ],
+        "@stylistic/space-before-function-paren": ["warn", "never"],
+        "@stylistic/space-in-parens": ["warn", "never"],
         "valid-typeof": "warn",
-        "yoda": "warn",
+        yoda: "warn",
         "object-shorthand": ["warn", "never"],
         "@typescript-eslint/unbound-method": "off",
-        "@angular-eslint/prefer-standalone": "off"
-      }
+        "@angular-eslint/prefer-standalone": "off",
     },
-    {
-      "files": ["*.html"],
-      "parser": "@angular-eslint/template-parser",
-      "extends": ["plugin:@angular-eslint/template/recommended"],
-      "rules": {}
+}, {
+    files: ["**/*.html"],
+    extends: compat.extends("plugin:@angular-eslint/template/recommended"),
+
+    languageOptions: {
+        parser: parser,
     },
-    {
-      "files": ["*.html"],
-      "extends": ["plugin:prettier/recommended"],
-      "rules": {
-        "prettier/prettier": "warn"
-      }
+
+    rules: {},
+}, {
+    files: ["**/*.html"],
+    extends: compat.extends("plugin:prettier/recommended"),
+
+    rules: {
+        "prettier/prettier": "warn",
     },
-    {
-      "files": ["*.spec.ts"],
-      "plugins": ["jest"],
-      "extends": ["plugin:jest/recommended"],
-      "rules": {
+}, {
+    files: ["**/*.spec.ts"],
+    extends: compat.extends("plugin:jest/recommended"),
+
+    plugins: {
+        jest,
+    },
+
+    rules: {
         "jest/consistent-test-it": 1,
         "jest/expect-expect": 1,
         "jest/max-nested-describe": 2,
@@ -212,8 +268,6 @@
         "jest/valid-expect": 1,
         "jest/valid-expect-in-promise": 1,
         "jest/valid-title": 1,
-        "jest/no-disabled-tests": 0
-      }
-    }
-  ]
-}
+        "jest/no-disabled-tests": 0,
+    },
+}]);

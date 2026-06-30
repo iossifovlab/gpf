@@ -1,51 +1,59 @@
 <div style="padding: 25px; padding-top: 0">
-  <div *ngIf="config" class="table-container">
-    <div id="table-top">
-      <ng-container *ngTemplateOutlet="aboveTableBar"></ng-container>
-      <div [hidden]="hideTable" id="table-header" class="table-row">
-        <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
+  @if (config) {
+    <div class="table-container">
+      <div id="table-top">
+        <ng-container *ngTemplateOutlet="aboveTableBar"></ng-container>
+        <div [hidden]="hideTable" id="table-header" class="table-row">
+          <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
+        </div>
       </div>
-    </div>
-    <div [hidden]="hideTable" id="table-body">
-      <div
-        *ngFor="let row of genes; let i = index"
-        class="table-row table-body-row"
-        [ngClass]="{ 'row-highlight': highlightedGenes.has(row[geneSymbolColumnId]) }">
-        <ng-container *ngIf="shownRows.indexOf(i) !== -1">
+      <div [hidden]="hideTable" id="table-body">
+        @for (row of genes; track row; let i = $index) {
           <div
-            *ngFor="let column of leaves"
-            class="cell row-cell"
-            [attr.title]="
-              row[column.id] === '✓' || row[column.id] === null || row[column.id] === row.geneSymbol
-                ? row.geneSymbol
-                : row[column.id] + '\n' + row.geneSymbol
-            "
-            (click)="handleCellClick($event, row, column)"
-            (middleclick)="handleCellClick($event, row, column)">
-            <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span
-            ><span *ngIf="row[column.id] === '✓'" class="material-symbols-outlined check">check_small</span
-            >{{ row[column.id] !== '✓' && column.clickable === null ? row[column.id] : '' }}</div
-          >
-        </ng-container>
-      </div>
-
-      <div
-        id="nothing-found"
-        [style.grid-template-columns.px]="nothingFoundWidth"
-        class="table-row table-body-row"
-        [hidden]="!showNothingFound">
-        <span>Nothing found</span>
-      </div>
-
-      <div id="loading" *ngIf="showInitialLoading">
-        <span>Loading...</span>
+            class="table-row table-body-row"
+            [ngClass]="{ 'row-highlight': highlightedGenes.has(row[geneSymbolColumnId]) }">
+            @if (shownRows.indexOf(i) !== -1) {
+              @for (column of leaves; track column) {
+                <div
+                  class="cell row-cell"
+                  [attr.title]="
+                    row[column.id] === '✓' || row[column.id] === null || row[column.id] === row.geneSymbol
+                      ? row.geneSymbol
+                      : row[column.id] + '\n' + row.geneSymbol
+                  "
+                  (click)="handleCellClick($event, row, column)"
+                  (middleclick)="handleCellClick($event, row, column)">
+                  @if (column.clickable !== null && row[column.id]) {
+                    <span class="clickable">{{ row[column.id] }}</span>
+                  } @else if (row[column.id] === '✓') {
+                    <span class="material-symbols-outlined check">check_small</span>
+                  } @else if (column.clickable === null) {
+                    {{ row[column.id] }}
+                  }</div
+                >
+              }
+            }
+          </div>
+        }
+        <div
+          id="nothing-found"
+          [style.grid-template-columns.px]="nothingFoundWidth"
+          class="table-row table-body-row"
+          [hidden]="!showNothingFound">
+          <span>Nothing found</span>
+        </div>
+        @if (showInitialLoading) {
+          <div id="loading">
+            <span>Loading...</span>
+          </div>
+        }
       </div>
     </div>
-  </div>
+  }
 
   <ng-template #tableHeaderTemplate let-columns="columns">
-    <ng-container *ngFor="let column of columns">
-      <ng-container *ngIf="column.visibility">
+    @for (column of columns; track column) {
+      @if (column.visibility) {
         <div
           class="cell header-cell {{ 'column-depth-' + column.depth }}"
           [ngClass]="{ 'active-sort-header': column.id === sortBy }"
@@ -60,48 +68,50 @@
                 column.meta
                   ? column.displayName + '\n' + column.meta
                   : column.gridRow === '2 / 3'
-                  ? column.displayName +
-                    '\nchildren with this phenotype: ' +
-                    column.displayName.substring(
-                      column.displayName.lastIndexOf('(') + 1,
-                      column.displayName.lastIndexOf(')')
-                    )
-                  : column.gridRow === '3'
-                  ? column.displayName +
-                    '\nnumber of events in children (rate of events per 1000 children as a percentage)'
-                  : column.displayName
+                    ? column.displayName +
+                      '\nchildren with this phenotype: ' +
+                      column.displayName.substring(
+                        column.displayName.lastIndexOf('(') + 1,
+                        column.displayName.lastIndexOf(')')
+                      )
+                    : column.gridRow === '3'
+                      ? column.displayName +
+                        '\nnumber of events in children (rate of events per 1000 children as a percentage)'
+                      : column.displayName
               "
               [ngClass]="{
                 'vertical-text': column.displayVertical,
                 'header-gene-symbol-span': column.id === geneSymbolColumnId,
                 'grid-row-2-3': column.gridRow === '2 / 3'
               }"
-              >{{ column.displayName | truncate : 48 }}</span
+              >{{ column.displayName | truncate: 48 }}</span
             >
-            <gpf-sorting-buttons
-              *ngIf="column.sortable"
-              [id]="column.id"
-              class="header-button sorting-button"
-              [sortState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
-            </gpf-sorting-buttons>
+            @if (column.sortable) {
+              <gpf-sorting-buttons
+                [id]="column.id"
+                class="header-button sorting-button"
+                [sortState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+              </gpf-sorting-buttons>
+            }
             <!-- prettier-ignore -->
-            <button
-              *ngIf="column.columns.length"
-              #columnFilteringButton
-              [attr.id]="column.id + '-column-filtering-button'"
-              class="header-button column-filtering-button"
-              (click)="openDropdown(column, $event)"
-              title="Filter columns"><span class="menu-button material-symbols-outlined">menu</span></button>
+            @if (column.columns.length) {
+                        <button
+                          #columnFilteringButton
+                          [attr.id]="column.id + '-column-filtering-button'"
+                          class="header-button column-filtering-button"
+                          (click)="openDropdown(column, $event)"
+                          title="Filter columns"><span class="menu-button material-symbols-outlined">menu</span></button>
+                        }
           </div>
         </div>
         <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: column.columns }"></ng-container>
-      </ng-container>
-    </ng-container>
+      }
+    }
   </ng-template>
 
-  <gpf-gene-profiles-single-view-wrapper
-    *ngIf="hideTable"
-    [geneSymbols]="currentTabGeneSet"></gpf-gene-profiles-single-view-wrapper>
+  @if (hideTable) {
+    <gpf-gene-profiles-single-view-wrapper [geneSymbols]="currentTabGeneSet"></gpf-gene-profiles-single-view-wrapper>
+  }
 
   <ng-template #aboveTableBar>
     <div id="search-tabs-wrapper">
@@ -109,77 +119,81 @@
         <button (click)="backToTable()" class="tab" [ngClass]="{ 'active-tab': currentTabString === 'all genes' }"
           >All genes</button
         >
-        <div class="tab" *ngFor="let tab of tabs">
-          <button class="tab" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTabString === tab }"
-            >{{ tab }}
-            <button class="close-tab-button" (click)="closeTab(tab)">
-              <span class="material-symbols-outlined md" title="Close">close</span>
+        @for (tab of tabs; track tab) {
+          <div class="tab">
+            <button class="tab" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTabString === tab }"
+              >{{ tab }}
+              <button class="close-tab-button" (click)="closeTab(tab)">
+                <span class="material-symbols-outlined md" title="Close">close</span>
+              </button>
             </button>
-          </button>
-          <div class="separator" [ngClass]="{ 'active-separator': currentTabString === tab }"></div>
-        </div>
+            <div class="separator" [ngClass]="{ 'active-separator': currentTabString === tab }"></div>
+          </div>
+        }
       </div>
 
-      <div *ngIf="!hideTable" id="above-table-bar">
-        <div style="width: 270px">
-          <div class="search-input-wrapper">
-            <label id="gene-search-label" for="gene-search-input">
-              <span class="material-symbols-outlined search-icon">search</span>
-            </label>
-            <input
-              #searchBox
-              (keyup)="searchValue$.next(searchBox.value)"
-              id="gene-search-input"
-              class="search-input form-control"
-              autocomplete="off"
-              autofocus="false"
-              placeholder="Search gene"
-              type="text"
-              spellcheck="false"
-              [value]="searchValue$ | async" />
-            <span
-              *ngIf="searchBox.value !== '' && !showSearchLoading"
-              class="material-symbols-outlined search-clear-icon"
-              (click)="searchBox.value = ''; searchValue$.next(searchBox.value); showSearchLoading = true"
-              >close</span
-            >
-            <span *ngIf="showSearchLoading" class="material-symbols-outlined search-loading-icon"
-              >progress_activity
-            </span>
+      @if (!hideTable) {
+        <div id="above-table-bar">
+          <div style="width: 270px">
+            <div class="search-input-wrapper">
+              <label id="gene-search-label" for="gene-search-input">
+                <span class="material-symbols-outlined search-icon">search</span>
+              </label>
+              <input
+                #searchBox
+                (keyup)="searchValue$.next(searchBox.value)"
+                id="gene-search-input"
+                class="search-input form-control"
+                autocomplete="off"
+                autofocus="false"
+                placeholder="Search gene"
+                type="text"
+                spellcheck="false"
+                [value]="searchValue$ | async" />
+              @if (searchBox.value !== '' && !showSearchLoading) {
+                <span
+                  class="material-symbols-outlined search-clear-icon"
+                  (click)="searchBox.value = ''; searchValue$.next(searchBox.value); showSearchLoading = true"
+                  >close</span
+                >
+              }
+              @if (showSearchLoading) {
+                <span class="material-symbols-outlined search-loading-icon">progress_activity </span>
+              }
+            </div>
+          </div>
+          <div class="vertical-line"></div>
+          <div class="above-table-bar-item">
+            <button
+              #columnFilteringButton
+              id="category-filtering-button"
+              class="btn btn-default"
+              (click)="openCategoryFilterDropdown($event)"
+              title="Filter categories"
+              ><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
+            </button>
+          </div>
+          <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
+            <span>?</span>
+          </div>
+          @if (showKeybinds) {
+            <div class="keybinds-tooltip">
+              <span class="keybinds-tooltip-command">Highlight row</span>
+              <span class="keybinds-tooltip-key">Middleclick</span> or
+              <span class="keybinds-tooltip-key">CTRL / ⌘</span>+<span class="keybinds-tooltip-key">Click</span><br />
+              <span class="keybinds-tooltip-command">Clear highlights</span
+              ><span class="keybinds-tooltip-key">Escape</span><br />
+              <span class="keybinds-tooltip-command">Compare highlights</span><span class="keybinds-tooltip-key">C</span
+              ><br />
+            </div>
+          }
+          <div>
+            @if (stateFinishedLoading) {
+              <button id="reset-button" (click)="resetState()">Reset table</button>
+            }
           </div>
         </div>
-
-        <div class="vertical-line"></div>
-
-        <div class="above-table-bar-item">
-          <button
-            #columnFilteringButton
-            id="category-filtering-button"
-            class="btn btn-default"
-            (click)="openCategoryFilterDropdown($event)"
-            title="Filter categories"
-            ><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
-          </button>
-        </div>
-
-        <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
-          <span>?</span>
-        </div>
-
-        <div *ngIf="showKeybinds" class="keybinds-tooltip">
-          <span class="keybinds-tooltip-command">Highlight row</span>
-          <span class="keybinds-tooltip-key">Middleclick</span> or
-          <span class="keybinds-tooltip-key">CTRL / ⌘</span>+<span class="keybinds-tooltip-key">Click</span><br />
-          <span class="keybinds-tooltip-command">Clear highlights</span><span class="keybinds-tooltip-key">Escape</span
-          ><br />
-          <span class="keybinds-tooltip-command">Compare highlights</span><span class="keybinds-tooltip-key">C</span
-          ><br />
-        </div>
-
-        <div>
-          <button *ngIf="stateFinishedLoading" id="reset-button" (click)="resetState()">Reset table</button>
-        </div>
-      </div>
+      }
     </div>
   </ng-template>
 
@@ -198,34 +212,32 @@
     </gpf-multiple-select-menu>
   </span>
 
-  <div id="compare-genes-modal" *ngIf="!hideTable && highlightedGenes.size >= 1">
-    <div
-      *ngFor="let gene of highlightedGenes"
-      class="btn-group"
-      style="margin: 4px; background-color: none"
-      role="group">
-      <button class="compare-gene-item" [attr.title]="gene" type="button">
-        <span
-          class="compare-genes-gene-name clickable"
-          (click)="loadSingleView(gene)"
-          (middleclick)="loadSingleView(gene, true)"
-          >{{ gene }}</span
-        >
-        <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">
-          <span class="material-symbols-outlined sm search-clear-icon">close</span>
-        </button>
+  @if (!hideTable && highlightedGenes.size >= 1) {
+    <div id="compare-genes-modal">
+      @for (gene of highlightedGenes; track gene) {
+        <div class="btn-group" style="margin: 4px; background-color: none" role="group">
+          <button class="compare-gene-item" [attr.title]="gene" type="button">
+            <span
+              class="compare-genes-gene-name clickable"
+              (click)="loadSingleView(gene)"
+              (middleclick)="loadSingleView(gene, true)"
+              >{{ gene }}</span
+            >
+            <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">
+              <span class="material-symbols-outlined sm search-clear-icon">close</span>
+            </button>
+          </button>
+        </div>
+      }
+      <br />
+      <button
+        id="compare-genes-compare-button"
+        class="btn btn-default"
+        (click)="loadSingleView(highlightedGenes)"
+        (middleclick)="loadSingleView(highlightedGenes, true)"
+        title="Compare highlighted genes">
+        Compare
       </button>
     </div>
-
-    <br />
-
-    <button
-      id="compare-genes-compare-button"
-      class="btn btn-default"
-      (click)="loadSingleView(highlightedGenes)"
-      (middleclick)="loadSingleView(highlightedGenes, true)"
-      title="Compare highlighted genes">
-      Compare
-    </button>
-  </div>
+  }
 </div>

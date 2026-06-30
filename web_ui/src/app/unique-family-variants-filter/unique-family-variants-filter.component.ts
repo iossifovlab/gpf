@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnInit } from '@angular/core';
+import { Component, OnChanges, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectUniqueFamilyVariantsFilter, setUniqueFamilyVariantsFilter } from './unique-family-variants-filter.state';
 import { Validate, IsDefined } from 'class-validator';
@@ -14,16 +14,13 @@ import { take } from 'rxjs';
   standalone: false
 })
 export class UniqueFamilyVariantsFilterComponent implements OnChanges, OnInit {
+  protected store = inject(Store);
+  datasetService = inject(DatasetsService);
+  private datasetsTreeService = inject(DatasetsTreeService);
+
   @Validate(IsDefined, {message: 'Must have a boolean value.'})
   private enabled = false;
   public isVisible = false;
-
-  public constructor(
-    protected store: Store,
-    public datasetService: DatasetsService,
-    private datasetsTreeService: DatasetsTreeService
-  ) {
-  }
 
   public ngOnChanges(): void {
     this.store.select(selectUniqueFamilyVariantsFilter).pipe(take(1)).subscribe(uniqueFamilyVariantsFilter => {

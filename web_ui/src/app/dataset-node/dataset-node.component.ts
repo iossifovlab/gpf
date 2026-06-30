@@ -1,4 +1,13 @@
-import { AfterContentChecked, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  AfterContentChecked,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subject, Subscription, take } from 'rxjs';
 import { DatasetNode } from './dataset-node';
@@ -15,6 +24,10 @@ import { cloneDeep } from 'lodash';
   standalone: false
 })
 export class DatasetNodeComponent extends ComponentValidator implements OnInit, AfterContentChecked {
+  private router = inject(Router);
+  private changeDetector = inject(ChangeDetectorRef);
+  protected store: Store;
+
   @Input() public datasetNode: DatasetNode;
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDatasetId: string;
@@ -23,12 +36,11 @@ export class DatasetNodeComponent extends ComponentValidator implements OnInit, 
   @Input() public closeObservable: Observable<void> = new Observable<void>();
   public closeChildrenSubscription: Subscription;
 
-  public constructor(
-    private router: Router,
-    private changeDetector: ChangeDetectorRef,
-    protected store: Store
-  ) {
+  public constructor() {
+    const store = inject(Store) as Store<object>;
+
     super(store, 'datasetNode', selectExpandedDatasets);
+    this.store = store;
   }
 
   public ngOnInit(): void {

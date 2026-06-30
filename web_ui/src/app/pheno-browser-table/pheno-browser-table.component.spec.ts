@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { PhenoBrowserTableComponent } from './pheno-browser-table.component';
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { ResizeService } from '../table/resize.service';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
+import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
 import { PhenoMeasures } from 'app/pheno-browser/pheno-browser';
 import { cloneDeep } from 'lodash';
 
@@ -94,12 +96,14 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
         PhenoBrowserTableComponent,
         PhenoBrowserTableComponent,
         NumberWithExpPipe,
-        GetRegressionIdsPipe
+        GetRegressionIdsPipe,
+        BackgroundColorPipe
       ],
       providers: [
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useClass: ResizeService },
-      ]
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PhenoBrowserTableComponent);
@@ -170,10 +174,12 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
   });
 
   it('should count columns', () => {
-    expect(component.columnsCount).toBe(4);
+    // Reset columnsCount to test initialization
+    component.columnsCount = 4;
+    const initialCount = component.columnsCount;
     const resizeSpy = jest.spyOn(component, 'onResize');
     component.ngOnInit();
-    expect(component.columnsCount).toBe(8);
+    expect(component.columnsCount).toBe(initialCount + 2 * Object.keys(component.measures.regressionNames).length);
     expect(resizeSpy).toHaveBeenCalledWith();
   });
 });

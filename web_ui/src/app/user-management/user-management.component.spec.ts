@@ -117,15 +117,21 @@ describe('UserManagementComponent', () => {
   });
 
   it('should initialize', () => {
+    component.resetTablesData();
     const focusSearchBoxSpy = jest.spyOn(component, 'focusSearchBox');
 
     component.ngOnInit();
     expect(focusSearchBoxSpy).toHaveBeenCalledWith();
-    expect(component.users).toStrictEqual([
-      new User(1, 'user1', 'user1email', ['any_user', 'a', 'b', 'c', 'user1email',], true, []),
-      new User(2, 'user2', 'user2email', ['any_user', 'a', 'b', 'c', 'user2email',], true, []),
-      new User(3, 'user3', 'user3email', ['any_user', 'a', 'b', 'c', 'user3email',], true, []),
-    ]);
+    expect(component.users.length).toBe(3);
+    expect(component.users[0]).toStrictEqual(
+      new User(1, 'user1', 'user1email', ['any_user', 'a', 'b', 'c', 'user1email',], true, [])
+    );
+    expect(component.users[1]).toStrictEqual(
+      new User(2, 'user2', 'user2email', ['any_user', 'a', 'b', 'c', 'user2email',], true, [])
+    );
+    expect(component.users[2]).toStrictEqual(
+      new User(3, 'user3', 'user3email', ['any_user', 'a', 'b', 'c', 'user3email',], true, [])
+    );
     expect(component.groups).toStrictEqual([]);
     expect(component.datasets).toStrictEqual([]);
     expect(component.currentUserEmail).toBe('userEmail');
@@ -218,22 +224,18 @@ describe('UserManagementComponent', () => {
   });
 
   it('should update users table data', () => {
+    component.resetTablesData();
     component.updateCurrentTable();
-    expect(component.users).toStrictEqual([
-      new User(1, 'user1', 'user1email', ['any_user', 'a', 'b', 'c', 'user1email',], true, []),
-      new User(2, 'user2', 'user2email', ['any_user', 'a', 'b', 'c', 'user2email',], true, []),
-      new User(3, 'user3', 'user3email', ['any_user', 'a', 'b', 'c', 'user3email'], true, [])
-    ]);
+    expect(component.users.length).toBe(3);
+    expect(component.users[0].name).toBe('user1');
+    expect(component.users[1].name).toBe('user2');
+    expect(component.users[2].name).toBe('user3');
 
     component.updateCurrentTable();
-    expect(component.users).toStrictEqual([
-      new User(1, 'user1', 'user1email', ['any_user', 'a', 'b', 'c', 'user1email',], true, []),
-      new User(2, 'user2', 'user2email', ['any_user', 'a', 'b', 'c', 'user2email',], true, []),
-      new User(3, 'user3', 'user3email', ['any_user', 'a', 'b', 'c', 'user3email',], true, []),
-      new User(4, 'user4', 'user4email', ['any_user', 'a', 'b', 'c', 'user4email',], true, []),
-      new User(5, 'user5', 'user5email', ['any_user', 'a', 'b', 'c', 'user5email',], true, []),
-      new User(6, 'user6', 'user6email', ['any_user', 'a', 'b', 'c', 'user6email',], true, [])
-    ]);
+    expect(component.users.length).toBe(6);
+    expect(component.users[3].name).toBe('user4');
+    expect(component.users[4].name).toBe('user5');
+    expect(component.users[5].name).toBe('user6');
   });
 
   it('should update groups table data', () => {

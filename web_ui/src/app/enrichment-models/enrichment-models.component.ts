@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { IdDescriptionName } from './iddescription';
 import { combineLatest, of } from 'rxjs';
@@ -16,6 +16,9 @@ import { ComponentValidator } from 'app/common/component-validator';
   standalone: false
 })
 export class EnrichmentModelsComponent extends ComponentValidator implements OnInit {
+  protected store: Store;
+  private enrichmentModelsService = inject(EnrichmentModelsService);
+
   @Input() private selectedDatasetId: string;
 
   @Allow() public background: IdDescriptionName;
@@ -27,11 +30,11 @@ export class EnrichmentModelsComponent extends ComponentValidator implements OnI
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  public constructor(
-    protected store: Store,
-    private enrichmentModelsService: EnrichmentModelsService
-  ) {
+  public constructor() {
+    const store = inject(Store) as Store<object>;
+
     super(store, 'enrichmentModels', selectEnrichmentModels);
+    this.store = store;
   }
 
   public ngOnInit(): void {

@@ -2,33 +2,37 @@
   <div class="row">
     <div class="col-lg-6">
       <span>Pheno Measure</span>
-      <ng-container *ngIf="dataset">
+      @if (dataset) {
         <gpf-pheno-measure-selector
           [datasetId]="dataset.id"
           (selectedMeasureChange)="setMeasure($event); clearCheckbox()"
           (measuresChange)="measuresUpdate($event)">
         </gpf-pheno-measure-selector>
-      </ng-container>
+      }
 
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
-    <div *ngIf="regressionNames.length" class="col-lg-6" id="normalize-checkboxes-container">
-      <span>Normalized by:</span>
-      <div *ngFor="let regressionName of regressionNames">
-        <label style="padding-bottom: 2px; padding-top: 2px">
-          <input
-            #checkboxes
-            type="checkbox"
-            [checked]="isNormalizedBy(regressions[regressionName].measure_name)"
-            (change)="onNormalizeByChange(regressions[regressionName], $event)"
-            [disabled]="
-              selectedMeasure === null ||
-              regressions[regressionName].instrument_name + '.' + regressions[regressionName].measure_name ===
-                selectedMeasure.name
-            " />
-          <span style="margin-left: 5px">{{ regressions[regressionName].display_name }}</span>
-        </label>
+    @if (regressionNames.length) {
+      <div class="col-lg-6" id="normalize-checkboxes-container">
+        <span>Normalized by:</span>
+        @for (regressionName of regressionNames; track regressionName) {
+          <div>
+            <label style="padding-bottom: 2px; padding-top: 2px">
+              <input
+                #checkboxes
+                type="checkbox"
+                [checked]="isNormalizedBy(regressions[regressionName].measure_name)"
+                (change)="onNormalizeByChange(regressions[regressionName], $event)"
+                [disabled]="
+                  selectedMeasure === null ||
+                  regressions[regressionName].instrument_name + '.' + regressions[regressionName].measure_name ===
+                    selectedMeasure.name
+                " />
+              <span style="margin-left: 5px">{{ regressions[regressionName].display_name }}</span>
+            </label>
+          </div>
+        }
       </div>
-    </div>
+    }
   </div>
 </div>

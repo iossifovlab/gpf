@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
 import { UsersService } from '../users/users.service';
@@ -21,16 +21,14 @@ export class UserSavedQuery {
   standalone: false
 })
 export class UserProfileComponent implements OnInit {
+  private router = inject(Router);
+  private queryService = inject(QueryService);
+  private usersService = inject(UsersService);
+
   public genotypeQueries: Array<UserSavedQuery>;
   public phenotoolQueries: Array<UserSavedQuery>;
   public enrichmentQueries: Array<UserSavedQuery>;
   public showTemplate = false;
-
-  public constructor(
-    private router: Router,
-    private queryService: QueryService,
-    private usersService: UsersService,
-  ) {}
 
   public ngOnInit(): void {
     const userInfo = this.usersService.cachedUserInfo();

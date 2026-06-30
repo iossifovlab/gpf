@@ -1,5 +1,9 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
-import { ConfirmCancelEvent } from 'angular-confirmation-popover/lib/confirmation-popover.directive';
+
+interface ConfirmCancelEvent {
+  confirm?: EventEmitter<unknown>;
+  cancel?: EventEmitter<unknown>;
+}
 
 @Component({
   selector: 'gpf-confirm-button',
@@ -15,7 +19,7 @@ export class ConfirmButtonComponent {
   @Input() public iconStyle: {name: string; class: string} = {name: '', class: ''};
   @Output() public clicked = new EventEmitter(true);
 
-  public onClick(event: ConfirmCancelEvent): void {
+  public onClick(event: unknown): void {
     this.clicked.next(event);
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -8,7 +8,8 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   standalone: false
 })
 export class GlobalErrorDisplayComponent {
-  public constructor(private activeModal: NgbActiveModal) { }
+  private activeModal = inject(NgbActiveModal);
+
 
   public closeModal(): void {
     this.activeModal.close();

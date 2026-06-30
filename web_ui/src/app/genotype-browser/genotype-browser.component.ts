@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -48,6 +48,14 @@ import { GENOTYPE_BROWSER_INITIAL_VALUES } from 'app/effect-types/effect-types';
   standalone: false
 })
 export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
+  private queryService = inject(QueryService);
+  readonly configService = inject(ConfigService);
+  private loadingService = inject(FullscreenLoadingService);
+  private router = inject(Router);
+  private datasetsService = inject(DatasetsService);
+  private store = inject(Store);
+  private route = inject(ActivatedRoute);
+
   public genotypePreviewVariantsArray: GenotypePreviewVariantsArray = null;
   public showTable = false;
   public legend: Array<PersonSet>;
@@ -65,15 +73,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
 
   private autoPreview: boolean = false;
 
-  public constructor(
-    private queryService: QueryService,
-    public readonly configService: ConfigService,
-    private loadingService: FullscreenLoadingService,
-    private router: Router,
-    private datasetsService: DatasetsService,
-    private store: Store,
-    private route: ActivatedRoute,
-  ) {
+  public constructor() {
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
     ).subscribe(() => {
