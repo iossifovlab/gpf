@@ -88,8 +88,14 @@ export class GenomicScoresBlockComponent implements OnInit {
       score: score,
       state: defaultState,
     });
-    this.unusedGenomicScores.splice(index, 1);
     this.addToState(cloneDeep(defaultState));
+    // Defer removing the just-selected option so the mat-select can finish
+    // closing its overlay before the clicked <mat-option> is destroyed. On
+    // Angular Material 21, removing it synchronously during the click leaves
+    // the overlay backdrop open, which then blocks all further clicks.
+    setTimeout(() => {
+      this.unusedGenomicScores.splice(index, 1);
+    });
   }
 
   public removeFromState(state: GenomicScoreState): void {
