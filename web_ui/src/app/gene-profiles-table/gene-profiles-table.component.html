@@ -25,11 +25,11 @@
                   (middleclick)="handleCellClick($event, row, column)">
                   @if (column.clickable !== null && row[column.id]) {
                     <span class="clickable">{{ row[column.id] }}</span>
-                  }
-                  @if (row[column.id] === '✓') {
+                  } @else if (row[column.id] === '✓') {
                     <span class="material-symbols-outlined check">check_small</span>
-                  }
-                  {{ row[column.id] !== '✓' && column.clickable === null ? row[column.id] : '' }}</div
+                  } @else if (column.clickable === null) {
+                    {{ row[column.id] }}
+                  }</div
                 >
               }
             }
