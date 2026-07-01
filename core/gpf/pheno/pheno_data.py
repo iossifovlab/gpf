@@ -30,6 +30,7 @@ from gain.utils.helpers import isnan
 from gpf.common_reports.common_report import CommonReport
 from gpf.common_reports.family_report import FamiliesReport
 from gpf.common_reports.people_counter import PeopleReport
+from gpf.configuration.gpf_instance_config import build_gpf_config
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Person
 from gpf.pedigrees.loader import FamiliesLoader
@@ -50,18 +51,14 @@ logger = logging.getLogger(__name__)
 def _discover_dae_config() -> dict | None:
     """Discover and load the GPF instance config, or None if unavailable.
 
-    Runs ``GPFInstance``'s own discovery ladder (``GPF_CONF_DIR``,
+    Runs the instance-config discovery ladder (``GPF_CONF_DIR``,
     ``DAE_DB_DIR``, then a parent-directory walk). Returns ``None`` when no
     instance can be located, so callers can fall back to a filesystem-free
     default instead of failing (these helpers run at Django-settings import
     time, where an instance may not yet be materialized).
     """
-    # Imported lazily: gpf.gpf_instance.gpf_instance imports get_pheno_db_dir
-    # at module load, so a top-level import here would create a cycle.
-    # pylint: disable=import-outside-toplevel
-    from gpf.gpf_instance.gpf_instance import GPFInstance
     try:
-        dae_config, _, _ = GPFInstance.build_gpf_config()
+        dae_config, _, _ = build_gpf_config()
     except ValueError:
         return None
     return dae_config
