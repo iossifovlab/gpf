@@ -114,5 +114,13 @@
     "undici": "7.28.0",
     "@babel/core": "7.29.7",
     "esbuild": "0.28.1"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.5.6": true,
+    "core-js@3.27.1": true,
+    "esbuild@0.28.1": true,
+    "lmdb@3.5.1": true,
+    "msgpackr-extract@3.0.4": true,
+    "unrs-resolver@1.12.2": true
   }
 }
