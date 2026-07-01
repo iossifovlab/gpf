@@ -49,17 +49,24 @@ logger = logging.getLogger(__name__)
 
 def get_pheno_db_dir(dae_config: dict | None) -> str:
     """Return the directory where phenotype data configurations are located."""
-    if dae_config is not None:
-        if (
-            dae_config.get("phenotype_data") is None
-            or dae_config["phenotype_data"]["dir"] is None
-        ):
-            pheno_data_dir = os.path.join(dae_config["conf_dir"], "pheno")
-        else:
-            pheno_data_dir = dae_config["phenotype_data"]["dir"]
+    if dae_config is None:
+        instance_config = os.path.join(
+            os.environ.get("DAE_DB_DIR", ""), "gpf_instance.yaml")
+        # pylint: disable=import-outside-toplevel
+        from gpf.gpf_instance.gpf_instance import GPFInstance
+        dae_config, _, _ = GPFInstance.build_gpf_config(instance_config)
+    if dae_config is None:
+        raise ValueError(
+            "DAE config is None. "
+            "Please check your DAE_DB_DIR environment variable.",
+        )
+    if (
+        dae_config.get("phenotype_data") is None
+        or dae_config["phenotype_data"]["dir"] is None
+    ):
+        pheno_data_dir = os.path.join(dae_config["conf_dir"], "pheno")
     else:
-        pheno_data_dir = os.path.join(
-            os.environ.get("DAE_DB_DIR", ""), "pheno")
+        pheno_data_dir = dae_config["phenotype_data"]["dir"]
 
     return pheno_data_dir
 

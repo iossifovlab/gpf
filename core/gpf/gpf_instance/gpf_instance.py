@@ -73,9 +73,10 @@ class GPFInstance:
 
     # pylint: disable=too-many-public-methods
     @staticmethod
-    def _build_gpf_config(
+    def build_gpf_config(
         config_filename: str | Path | None = None,
     ) -> tuple[Box, Path, Path]:
+        """Build GPF config from a config file or environment variable."""
         dae_dir: Path | None
         if config_filename is not None:
             config_filename = Path(config_filename)
@@ -114,7 +115,7 @@ class GPFInstance:
         and its parents. If found use it as a configuration file.
         """
         dae_config, dae_dir, dae_config_path = \
-            GPFInstance._build_gpf_config(config_filename)
+            GPFInstance.build_gpf_config(config_filename)
         return GPFInstance(
             dae_config, dae_dir, dae_config_path, **kwargs,
         )

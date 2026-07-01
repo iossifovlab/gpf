@@ -136,8 +136,9 @@ class WGPFInstance(GPFInstance):
         config_filename: str | pathlib.Path | None = None,
         **kwargs: Any,
     ) -> WGPFInstance:
+        """Build a WGPFInstance from a config file or environment variable."""
         dae_config, dae_dir, dae_config_path = \
-            GPFInstance._build_gpf_config(  # noqa: SLF001
+            GPFInstance.build_gpf_config(
                 config_filename)
         return WGPFInstance(dae_config, dae_dir, dae_config_path, **kwargs)
 
