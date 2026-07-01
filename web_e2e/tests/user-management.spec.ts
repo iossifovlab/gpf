@@ -1171,6 +1171,11 @@ test.describe('Dataset description access rights '
        'whether the newly created description exists and that it cannot be edited', async({ page }) => {
     await page.locator('a:text("Management")').click();
 
+    // gpf#962: under CI load the Users table renders only a prefix of the
+    // user list, so the last-sorted rows (this user) can be absent for
+    // >20s and the Add-button click times out. Filter the table down to
+    // the target user first so its row is guaranteed to be present.
+    await searchInTable(page, 'user_iossifov_2014@iossifovlab.com');
     await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]')
       .getByRole('button', { name: 'Add' }).click();
     await page.waitForSelector('.add-item-button');
@@ -1225,6 +1230,9 @@ test.describe('Dataset description access rights '
     ]);
 
     await page.locator('a:text("Management")').click();
+    // gpf#962: filter to the target user (see the grant step above) so the
+    // row is present under CI load before interacting with its groups-cell.
+    await searchInTable(page, 'user_iossifov_2014@iossifovlab.com');
     await page.locator(
       '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014_liftover-list-item gpf-confirm-button'
     ).click();
