@@ -247,7 +247,13 @@ def test_autogenerate_common_report(
     study = t4c8_wgpf_instance.get_genotype_data("t4c8_study_1")
     assert study is not None
     report_filename = study.config.common_report.file_path
-    os.remove(report_filename)
+    # The report is generated lazily on first API access, not at instance
+    # setup, so it may or may not exist yet depending on test ordering
+    # (under `pytest -n`, xdist may schedule this test before any other
+    # common-reports test in this worker). Ensure it is absent, then assert
+    # the endpoint autogenerates it.
+    if os.path.exists(report_filename):
+        os.remove(report_filename)
     assert not os.path.exists(report_filename)
 
     url = "/api/v3/common_reports/studies/t4c8_study_1"
