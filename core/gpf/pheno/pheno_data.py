@@ -30,6 +30,7 @@ from gain.utils.helpers import isnan
 from gpf.common_reports.common_report import CommonReport
 from gpf.common_reports.family_report import FamiliesReport
 from gpf.common_reports.people_counter import PeopleReport
+from gpf.configuration.gpf_instance_config import build_gpf_config
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.family import Person
 from gpf.pedigrees.loader import FamiliesLoader
@@ -47,19 +48,35 @@ from gpf.variants.attributes import Role, Sex, Status
 logger = logging.getLogger(__name__)
 
 
+def _discover_dae_config() -> dict | None:
+    """Discover and load the GPF instance config, or None if unavailable.
+
+    Runs the instance-config discovery ladder (``GPF_CONF_DIR``,
+    ``DAE_DB_DIR``, then a parent-directory walk). Returns ``None`` when no
+    instance can be located, so callers can fall back to a filesystem-free
+    default instead of failing (these helpers run at Django-settings import
+    time, where an instance may not yet be materialized).
+    """
+    try:
+        dae_config, _, _ = build_gpf_config()
+    except ValueError:
+        return None
+    return dae_config
+
+
 def get_pheno_db_dir(dae_config: dict | None) -> str:
     """Return the directory where phenotype data configurations are located."""
-    if dae_config is not None:
-        if (
-            dae_config.get("phenotype_data") is None
-            or dae_config["phenotype_data"]["dir"] is None
-        ):
-            pheno_data_dir = os.path.join(dae_config["conf_dir"], "pheno")
-        else:
-            pheno_data_dir = dae_config["phenotype_data"]["dir"]
+    if dae_config is None:
+        dae_config = _discover_dae_config()
+    if dae_config is None:
+        return os.path.join(os.environ.get("DAE_DB_DIR", ""), "pheno")
+    if (
+        dae_config.get("phenotype_data") is None
+        or dae_config["phenotype_data"]["dir"] is None
+    ):
+        pheno_data_dir = os.path.join(dae_config["conf_dir"], "pheno")
     else:
-        pheno_data_dir = os.path.join(
-            os.environ.get("DAE_DB_DIR", ""), "pheno")
+        pheno_data_dir = dae_config["phenotype_data"]["dir"]
 
     return pheno_data_dir
 
@@ -67,8 +84,9 @@ def get_pheno_db_dir(dae_config: dict | None) -> str:
 def get_pheno_browser_images_dir(dae_config: dict | None = None) -> Path:
     """Get images directory for pheno DB."""
     if dae_config is None:
-        pheno_data_dir = get_pheno_db_dir(dae_config)
-        return Path(pheno_data_dir, "images")
+        dae_config = _discover_dae_config()
+    if dae_config is None:
+        return Path(os.environ.get("DAE_DB_DIR", ""), "pheno", "images")
     images_dir = dae_config.get("phenotype_images")
     if images_dir is not None:
         return Path(images_dir)

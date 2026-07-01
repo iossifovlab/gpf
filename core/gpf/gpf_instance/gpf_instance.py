@@ -25,10 +25,11 @@ from gain.genomic_resources.gene_models import (
 )
 from gain.genomic_resources.reference_genome import ReferenceGenome
 from gain.genomic_resources.repository import GenomicResourceRepo
-from gain.utils.fs_utils import find_directory_with_a_file
 
 from gpf.configuration.gpf_config_parser import GPFConfigParser
-from gpf.configuration.schemas.dae_conf import dae_conf_schema
+from gpf.configuration.gpf_instance_config import (
+    build_gpf_config as _build_gpf_config,
+)
 from gpf.configuration.schemas.gene_profile import gene_profiles_config
 from gpf.gene_profile.db import GeneProfileDB
 from gpf.gene_profile.statistic import GPStatistic
@@ -73,32 +74,11 @@ class GPFInstance:
 
     # pylint: disable=too-many-public-methods
     @staticmethod
-    def _build_gpf_config(
+    def build_gpf_config(
         config_filename: str | Path | None = None,
     ) -> tuple[Box, Path, Path]:
-        dae_dir: Path | None
-        if config_filename is not None:
-            config_filename = Path(config_filename)
-            dae_dir = config_filename.parent
-        else:
-            if os.environ.get("GPF_CONF_DIR"):
-                dae_dir = Path(os.environ["GPF_CONF_DIR"])
-                config_filename = Path(dae_dir) / "gpf_instance.yaml"
-            elif os.environ.get("DAE_DB_DIR"):
-                dae_dir = Path(os.environ["DAE_DB_DIR"])
-                config_filename = Path(dae_dir) / "gpf_instance.yaml"
-            else:
-                dae_dir = find_directory_with_a_file("gpf_instance.yaml")
-                if dae_dir is None:
-                    raise ValueError("unable to locate GPF instance directory")
-                config_filename = dae_dir / "gpf_instance.yaml"
-        assert config_filename is not None
-        if not config_filename.exists():
-            raise ValueError(
-                f"GPF instance config <{config_filename}> does not exists")
-        dae_config = GPFConfigParser.load_config(
-            str(config_filename), dae_conf_schema)
-        return dae_config, dae_dir, config_filename
+        """Build GPF config from a config file or environment variable."""
+        return _build_gpf_config(config_filename)
 
     @staticmethod
     def build(
@@ -114,7 +94,7 @@ class GPFInstance:
         and its parents. If found use it as a configuration file.
         """
         dae_config, dae_dir, dae_config_path = \
-            GPFInstance._build_gpf_config(config_filename)
+            GPFInstance.build_gpf_config(config_filename)
         return GPFInstance(
             dae_config, dae_dir, dae_config_path, **kwargs,
         )

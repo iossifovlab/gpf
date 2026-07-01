@@ -619,7 +619,11 @@ def test_get_query_with_dot_measure(
 def test_get_pheno_db_dir(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
-    mocker.patch.dict(os.environ, {"DAE_DB_DIR": "mock_dae_dir"})
+    # No instance is discoverable at mock_dae_dir, so the None-arg call
+    # falls back to <DAE_DB_DIR>/pheno. GPF_CONF_DIR is cleared so an
+    # ambient one in the environment can't be discovered instead.
+    mocker.patch.dict(
+        os.environ, {"DAE_DB_DIR": "mock_dae_dir", "GPF_CONF_DIR": ""})
     res = get_pheno_db_dir(None)
     assert res == "mock_dae_dir/pheno"
 
@@ -644,7 +648,10 @@ def test_get_pheno_db_dir(
 def test_get_pheno_browser_images_dir(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
-    mocker.patch.dict(os.environ, {"DAE_DB_DIR": "mock_dae_dir"})
+    # No instance is discoverable at mock_dae_dir, so the None-arg call
+    # falls back to <DAE_DB_DIR>/pheno/images.
+    mocker.patch.dict(
+        os.environ, {"DAE_DB_DIR": "mock_dae_dir", "GPF_CONF_DIR": ""})
     res = get_pheno_browser_images_dir()
     assert res == Path("mock_dae_dir", "pheno", "images")
 
@@ -664,6 +671,46 @@ def test_get_pheno_browser_images_dir(
         "cache_path": "mock/cache",
     })
     assert res == Path("mock", "cache", "images")
+
+
+def test_get_pheno_db_dir_resolves_from_discovered_instance(
+    tmp_path: Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # When called with None and an instance IS discoverable, the configured
+    # phenotype_data.dir is resolved from it (not the hard-coded fallback).
+    (tmp_path / "gpf_instance.yaml").write_text(
+        "instance_id: test_instance\n"
+        "phenotype_data:\n"
+        "  dir: pheno_custom\n",
+    )
+    mocker.patch.dict(
+        os.environ, {"DAE_DB_DIR": str(tmp_path), "GPF_CONF_DIR": ""})
+
+    expected = str(tmp_path / "pheno_custom")
+    assert get_pheno_db_dir(None) == expected
+    # The None-arg path must agree with passing the same config explicitly.
+    assert get_pheno_db_dir(None) == get_pheno_db_dir({
+        "conf_dir": str(tmp_path),
+        "phenotype_data": {"dir": expected},
+    })
+
+
+def test_get_pheno_browser_images_dir_honors_config_when_none(
+    tmp_path: Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # The None-arg path must honor phenotype_images from the discovered
+    # instance, matching the explicit-config branch (regression: it used to
+    # ignore phenotype_images and only append "images" to the pheno dir).
+    (tmp_path / "gpf_instance.yaml").write_text(
+        "instance_id: test_instance\n"
+        "phenotype_images: images_custom\n",
+    )
+    mocker.patch.dict(
+        os.environ, {"DAE_DB_DIR": str(tmp_path), "GPF_CONF_DIR": ""})
+
+    assert get_pheno_browser_images_dir() == Path(tmp_path, "images_custom")
 
 
 def test_pheno_common_report(fake_phenotype_data: PhenotypeStudy) -> None:
