@@ -7,6 +7,7 @@ from datasets_api.permissions import (
 from django.http.response import HttpResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
+from gpf_instance.feature_flags import FeatureFlagMixin
 from gpf_instance.gpf_instance import WGPFInstance
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
@@ -177,7 +178,8 @@ class PhenoMeasuresView(QueryBaseView):
         return Response(res)
 
 
-class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
+class PhenoMeasuresDownload(FeatureFlagMixin, QueryBaseView, DatasetAccessRightsView):
+    feature_flag = "pheno_browser_download"
     """Phenotype measure downloads view."""
 
     @method_decorator(etag(get_instance_timestamp_etag))

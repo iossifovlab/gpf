@@ -16,6 +16,10 @@ SECRET_KEY = os.environ.get(
 
 STUDIES_EAGER_LOADING = False
 
+FEATURE_FLAGS: dict[str, bool] = {
+    "pheno_browser_download": True,
+}
+
 OPEN_REGISTRATION = False
 
 DISABLE_PERMISSIONS = False
