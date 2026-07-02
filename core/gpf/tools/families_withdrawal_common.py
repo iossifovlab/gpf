@@ -94,6 +94,32 @@ def backup_path(path: Path, stamp: str) -> Path:
     return path.with_name(f"{stem}.{stamp}.{ext}.bak")
 
 
+def resolve_family_ids(args: argparse.Namespace) -> set[str]:
+    """Resolve family IDs from positional args and/or ``--families-file``.
+
+    Exits with code 1 if neither source supplies any IDs.
+    """
+    family_ids: set[str] = set(args.families)
+    if args.families_file is not None:
+        path = Path(args.families_file)
+        try:
+            lines = path.read_text().splitlines()
+        except OSError as exc:
+            logger.error("cannot read --families-file %s: %s", path, exc)
+            sys.exit(1)
+        for line in lines:
+            stripped = line.strip()
+            if stripped:
+                family_ids.add(stripped)
+    if not family_ids:
+        logger.error(
+            "no family IDs supplied; pass at least one positional family_id "
+            "or use --families-file",
+        )
+        sys.exit(1)
+    return family_ids
+
+
 def build_arg_parser(description: str) -> argparse.ArgumentParser:
     """Build the argument parser shared by both families-withdrawal tools."""
     parser = argparse.ArgumentParser(description=description)
@@ -118,9 +144,22 @@ def build_arg_parser(description: str) -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "families",
-        nargs="+",
+        nargs="*",
         metavar="family_id",
-        help="One or more family IDs to remove.",
+        help=(
+            "One or more family IDs to remove. "
+            "May be combined with --families-file."
+        ),
+    )
+    parser.add_argument(
+        "--families-file",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Path to a text file listing family IDs to remove, one per line. "
+            "Blank lines are ignored. "
+            "May be combined with positional family IDs."
+        ),
     )
     parser.add_argument(
         "--dry-run",
