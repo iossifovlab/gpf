@@ -12,10 +12,17 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from gpf import __version__ as VERSION
+from gpf_instance.feature_flags import get_feature_flags
 from gpf_instance.gpf_instance import (
     calc_and_set_cacheable_hash,
     get_cacheable_hash,
 )
+
+
+@api_view(["GET"])
+def features(_request: Request) -> Response:
+    """Return all feature flags and their enabled state."""
+    return Response(get_feature_flags().get_all(), status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
