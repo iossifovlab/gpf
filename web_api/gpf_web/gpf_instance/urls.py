@@ -4,6 +4,11 @@ from gpf_instance import views as instance_views
 
 urlpatterns = [
     re_path(
+        r"^/features/?$",
+        instance_views.features,
+        name="features",
+    ),
+    re_path(
         r"^/version/?$",
         instance_views.version,
         name="version",
