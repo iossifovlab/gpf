@@ -49,7 +49,8 @@ class FeatureFlagMixin:
         if self.feature_flag and not get_feature_flags().is_enabled(
                 self.feature_flag):
             return HttpResponseNotFound()
-        return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
+        return super().dispatch(  # type: ignore[misc,no-any-return]
+            request, *args, **kwargs)
 
 
 def get_feature_flags() -> FeatureFlags:
