@@ -251,6 +251,68 @@ class _FakeInstance:
         return ["pheno_study"]
 
 
+def test_pheno_accumulating_withdrawals_file(
+    pheno_study: PhenotypeStudy,
+    tmp_path: pathlib.Path,
+) -> None:
+    # Primary use case: a persistent file of withdrawn families that grows
+    # over time. Each re-run must succeed even though families from prior
+    # runs are no longer in the database.
+    families_file = tmp_path / "withdrawn.txt"
+
+    families_file.write_text("fam1\n")
+    main(
+        ["--no-backup", "--families-file", str(families_file), "test_pheno"],
+        gpf_instance=_RealPhenoInstance(pheno_study),  # type: ignore[arg-type]
+    )
+    assert _count(
+        pheno_study.db.dbfile,
+        "SELECT COUNT(*) FROM person WHERE family_id = 'fam1'",
+    ) == 0
+    assert _count(
+        pheno_study.db.dbfile,
+        "SELECT COUNT(*) FROM person WHERE family_id = 'fam2'",
+    ) == 3
+
+    # Add fam2; fam1 is already gone but must not cause a failure.
+    families_file.write_text("fam1\nfam2\n")
+    main(
+        ["--no-backup", "--families-file", str(families_file), "test_pheno"],
+        gpf_instance=_RealPhenoInstance(pheno_study),  # type: ignore[arg-type]
+    )
+    assert _count(
+        pheno_study.db.dbfile, "SELECT COUNT(*) FROM person",
+    ) == 0
+
+
+def test_pheno_families_file_mode(
+    pheno_study: PhenotypeStudy,
+    tmp_path: pathlib.Path,
+) -> None:
+    families_file = tmp_path / "families.txt"
+    families_file.write_text("fam1\n\n")
+
+    main(
+        ["--families-file", str(families_file), "test_pheno"],
+        gpf_instance=_RealPhenoInstance(pheno_study),  # type: ignore[arg-type]
+    )
+
+    assert _count(
+        pheno_study.db.dbfile,
+        "SELECT COUNT(*) FROM person WHERE family_id = 'fam1'",
+    ) == 0
+    assert _count(
+        pheno_study.db.dbfile,
+        "SELECT COUNT(*) FROM person WHERE family_id = 'fam2'",
+    ) == 3
+
+
+def test_pheno_no_families_exits() -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["pheno_study"], gpf_instance=_FakeInstance())  # type: ignore[arg-type]
+    assert exc.value.code == 1
+
+
 def test_pheno_main_wrong_type_redirect_exits() -> None:
     # Handing a genotype study to the phenotype tool exits 1.
     with pytest.raises(SystemExit) as exc:

@@ -282,6 +282,55 @@ class _FakeInstance:
         return ["pheno_study"]
 
 
+def test_genotype_accumulating_withdrawals_file(
+    two_family_gpf: GPFInstance,
+    tmp_path: pathlib.Path,
+) -> None:
+    # Primary use case: a persistent file of withdrawn families that grows
+    # over time. Each re-run must succeed even though families from prior
+    # runs are no longer in the pedigree.
+    families_file = tmp_path / "withdrawn.txt"
+    ped_path = _ped_path(two_family_gpf)
+
+    families_file.write_text("f1\n")
+    main(
+        ["--no-backup", "--families-file", str(families_file), "two_fam_study"],
+        gpf_instance=two_family_gpf,
+    )
+    assert set(pq.read_table(ped_path).column("family_id").to_pylist()) == {"f2"}
+
+    # Add f2; f1 is already gone but must not cause a failure.
+    families_file.write_text("f1\nf2\n")
+    main(
+        ["--no-backup", "--families-file", str(families_file), "two_fam_study"],
+        gpf_instance=two_family_gpf,
+    )
+    assert pq.read_table(ped_path).num_rows == 0
+
+
+def test_genotype_families_file_mode(
+    two_family_gpf: GPFInstance,
+    tmp_path: pathlib.Path,
+) -> None:
+    families_file = tmp_path / "families.txt"
+    families_file.write_text("f1\n\n")
+    ped_path = _ped_path(two_family_gpf)
+
+    main(
+        ["--families-file", str(families_file), "two_fam_study"],
+        gpf_instance=two_family_gpf,
+    )
+
+    ped_after = pq.read_table(ped_path)
+    assert set(ped_after.column("family_id").to_pylist()) == {"f2"}
+
+
+def test_genotype_no_families_exits() -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["two_fam_study"], gpf_instance=_FakeInstance())  # type: ignore[arg-type]
+    assert exc.value.code == 1
+
+
 def test_genotype_wrong_type_redirect_exits() -> None:
     # Handing a phenotype study to the genotype tool exits 1.
     with pytest.raises(SystemExit) as exc:

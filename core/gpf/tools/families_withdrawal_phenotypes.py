@@ -28,6 +28,7 @@ from gpf.tools.families_withdrawal_common import (
     build_arg_parser,
     make_run_stamp,
     require_study_kind,
+    resolve_family_ids,
 )
 
 logger = logging.getLogger(__name__)
@@ -165,7 +166,7 @@ def main(
     VerbosityConfiguration.set(args)
 
     study_id: str = args.study
-    family_ids: set[str] = set(args.families)
+    family_ids: set[str] = resolve_family_ids(args)
     logger.info(
         "removing %d family/families from phenotype study %r: %s%s",
         len(family_ids), study_id, sorted(family_ids),
