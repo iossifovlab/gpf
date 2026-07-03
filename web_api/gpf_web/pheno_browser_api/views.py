@@ -179,8 +179,9 @@ class PhenoMeasuresView(QueryBaseView):
 
 
 class PhenoMeasuresDownload(FeatureFlagMixin, QueryBaseView, DatasetAccessRightsView):
-    feature_flag = "pheno_browser_download"
     """Phenotype measure downloads view."""
+
+    feature_flag = "pheno_browser_download"
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
