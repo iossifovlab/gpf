@@ -5,7 +5,8 @@ from typing import Any, cast
 
 import pytest
 from django.http import StreamingHttpResponse
-from django.test import Client
+from django.test import Client, override_settings
+from gpf_instance.feature_flags import reset_feature_flags
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from users_api.models import User
@@ -268,6 +269,62 @@ def test_download_all_instruments_specific_measures(
         "i1.m5",
         "person_id",
     }
+
+
+@pytest.fixture
+def reset_flags() -> Iterator[None]:
+    """Drop the cached feature-flags singleton around a test."""
+    reset_feature_flags()
+    yield
+    reset_feature_flags()
+
+
+@override_settings(FEATURE_FLAGS={"pheno_browser_download": False})
+def test_download_disabled_returns_404(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    reset_flags: None,  # noqa: ARG001
+) -> None:
+    data = {
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
+    }
+    response = admin_client.get(DOWNLOAD_URL, data)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@override_settings(FEATURE_FLAGS={"pheno_browser_download": False})
+def test_download_head_disabled_returns_404(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    reset_flags: None,  # noqa: ARG001
+) -> None:
+    data = {
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
+    }
+    response = admin_client.head(DOWNLOAD_URL, data)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@override_settings(FEATURE_FLAGS={})
+def test_download_enabled_when_override_omits_flag(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    reset_flags: None,  # noqa: ARG001
+) -> None:
+    """An override that omits the flag leaves the download enabled."""
+    data = {
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
+    }
+    response = cast(StreamingHttpResponse, admin_client.get(
+        DOWNLOAD_URL, data,
+    ))
+
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_measure_details(

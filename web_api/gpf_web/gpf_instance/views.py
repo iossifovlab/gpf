@@ -20,6 +20,7 @@ from gpf_instance.gpf_instance import (
 
 
 @api_view(["GET"])
+@etag(get_instance_timestamp_etag)
 def features(_request: Request) -> Response:
     """Return all feature flags and their enabled state."""
     return Response(get_feature_flags().get_all(), status=status.HTTP_200_OK)

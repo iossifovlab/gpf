@@ -16,9 +16,10 @@ SECRET_KEY = os.environ.get(
 
 STUDIES_EAGER_LOADING = False
 
-FEATURE_FLAGS: dict[str, bool] = {
-    "pheno_browser_download": True,
-}
+# Per-deployment overrides of web-API feature flags. Merged over the
+# canonical defaults in gpf_instance.feature_flags.DEFAULT_FEATURE_FLAGS,
+# so only the flags a deployment wants to change need to be listed here.
+FEATURE_FLAGS: dict[str, bool] = {}
 
 OPEN_REGISTRATION = False
 
