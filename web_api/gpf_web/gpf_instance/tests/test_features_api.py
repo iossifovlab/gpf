@@ -1,20 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from collections.abc import Iterator
-
-import pytest
 from django.test import Client, override_settings
 from rest_framework import status
 
-from gpf_instance.feature_flags import reset_feature_flags
 from gpf_instance.gpf_instance import WGPFInstance
-
-
-@pytest.fixture
-def reset_flags() -> Iterator[None]:
-    """Drop the cached feature-flags singleton around a test."""
-    reset_feature_flags()
-    yield
-    reset_feature_flags()
 
 
 def test_features_endpoint_returns_flags(

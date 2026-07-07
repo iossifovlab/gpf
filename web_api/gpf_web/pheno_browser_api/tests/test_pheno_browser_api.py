@@ -6,7 +6,6 @@ from typing import Any, cast
 import pytest
 from django.http import StreamingHttpResponse
 from django.test import Client, override_settings
-from gpf_instance.feature_flags import reset_feature_flags
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from users_api.models import User
@@ -269,14 +268,6 @@ def test_download_all_instruments_specific_measures(
         "i1.m5",
         "person_id",
     }
-
-
-@pytest.fixture
-def reset_flags() -> Iterator[None]:
-    """Drop the cached feature-flags singleton around a test."""
-    reset_feature_flags()
-    yield
-    reset_feature_flags()
 
 
 @override_settings(FEATURE_FLAGS={"pheno_browser_download": False})

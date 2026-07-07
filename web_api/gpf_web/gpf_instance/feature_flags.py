@@ -26,7 +26,9 @@ class FeatureFlags:
     """Singleton registry of web-API feature flags."""
 
     def __init__(self, flags: dict[str, bool]) -> None:
-        self._flags = dict(flags)
+        # Coerce to bool so a mistyped settings value (e.g. the string
+        # "false") can't leak a non-bool through is_enabled().
+        self._flags = {name: bool(value) for name, value in flags.items()}
 
     def is_enabled(self, name: str) -> bool:
         """Return True if the named feature is enabled."""
@@ -70,7 +72,18 @@ def get_feature_flags() -> FeatureFlags:
             if _FEATURE_FLAGS is None:
                 overrides: dict[str, bool] = getattr(
                     settings, "FEATURE_FLAGS", {})
-                flags = {**DEFAULT_FEATURE_FLAGS, **overrides}
+                unknown = set(overrides) - set(DEFAULT_FEATURE_FLAGS)
+                if unknown:
+                    logger.warning(
+                        "ignoring unknown feature flag override(s): %s; "
+                        "known flags: %s",
+                        sorted(unknown), sorted(DEFAULT_FEATURE_FLAGS),
+                    )
+                flags = {
+                    **DEFAULT_FEATURE_FLAGS,
+                    **{name: value for name, value in overrides.items()
+                       if name in DEFAULT_FEATURE_FLAGS},
+                }
                 logger.info("initializing feature flags: %s", flags)
                 _FEATURE_FLAGS = FeatureFlags(flags)
 
