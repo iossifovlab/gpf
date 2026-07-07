@@ -3,7 +3,7 @@
 
 import logging
 import pathlib
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from datetime import timedelta
 from typing import cast
 
@@ -22,6 +22,7 @@ from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
 )
+from gpf_instance.feature_flags import reset_feature_flags
 from gpf_instance.gpf_instance import (
     WGPFInstance,
     get_wgpf_instance,
@@ -43,6 +44,18 @@ from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def reset_flags() -> Iterator[None]:
+    """Drop the cached feature-flags singleton around a test.
+
+    Reset before and after so ``override_settings(FEATURE_FLAGS=...)`` takes
+    effect and no toggled state leaks into other tests.
+    """
+    reset_feature_flags()
+    yield
+    reset_feature_flags()
 
 
 @pytest.fixture

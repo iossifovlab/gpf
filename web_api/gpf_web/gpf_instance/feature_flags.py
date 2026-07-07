@@ -5,10 +5,18 @@ import logging
 from threading import Lock
 from typing import Any
 
-from django.http import HttpResponse, HttpResponseNotFound
-from rest_framework.request import Request
+from django.conf import settings
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
 
 logger = logging.getLogger(__name__)
+
+# Canonical registry of known flags and their default state. A deployment
+# overrides individual flags via ``settings.FEATURE_FLAGS``; overrides are
+# merged over these defaults, so an override that omits a flag leaves it at
+# its default here rather than silently disabling it.
+DEFAULT_FEATURE_FLAGS: dict[str, bool] = {
+    "pheno_browser_download": True,
+}
 
 _FEATURE_FLAGS: FeatureFlags | None = None
 _FEATURE_FLAGS_LOCK = Lock()
@@ -18,7 +26,9 @@ class FeatureFlags:
     """Singleton registry of web-API feature flags."""
 
     def __init__(self, flags: dict[str, bool]) -> None:
-        self._flags = dict(flags)
+        # Coerce to bool so a mistyped settings value (e.g. the string
+        # "false") can't leak a non-bool through is_enabled().
+        self._flags = {name: bool(value) for name, value in flags.items()}
 
     def is_enabled(self, name: str) -> bool:
         """Return True if the named feature is enabled."""
@@ -44,7 +54,7 @@ class FeatureFlagMixin:
     feature_flag: str = ""
 
     def dispatch(
-        self, request: Request, *args: Any, **kwargs: Any,
+        self, request: HttpRequest, *args: Any, **kwargs: Any,
     ) -> HttpResponse:
         if self.feature_flag and not get_feature_flags().is_enabled(
                 self.feature_flag):
@@ -60,10 +70,34 @@ def get_feature_flags() -> FeatureFlags:
     if _FEATURE_FLAGS is None:
         with _FEATURE_FLAGS_LOCK:
             if _FEATURE_FLAGS is None:
-                from django.conf import settings  # pylint: disable=import-outside-toplevel
-                flags: dict[str, bool] = getattr(
+                overrides: dict[str, bool] = getattr(
                     settings, "FEATURE_FLAGS", {})
+                unknown = set(overrides) - set(DEFAULT_FEATURE_FLAGS)
+                if unknown:
+                    logger.warning(
+                        "ignoring unknown feature flag override(s): %s; "
+                        "known flags: %s",
+                        sorted(unknown), sorted(DEFAULT_FEATURE_FLAGS),
+                    )
+                flags = {
+                    **DEFAULT_FEATURE_FLAGS,
+                    **{name: value for name, value in overrides.items()
+                       if name in DEFAULT_FEATURE_FLAGS},
+                }
                 logger.info("initializing feature flags: %s", flags)
                 _FEATURE_FLAGS = FeatureFlags(flags)
 
     return _FEATURE_FLAGS
+
+
+def reset_feature_flags() -> None:
+    """Drop the cached singleton so the next access re-reads settings.
+
+    Feature flags are snapshotted once per process; call this after changing
+    ``settings.FEATURE_FLAGS`` (chiefly in tests via ``override_settings``) so
+    the change takes effect.
+    """
+    global _FEATURE_FLAGS  # pylint: disable=global-statement
+
+    with _FEATURE_FLAGS_LOCK:
+        _FEATURE_FLAGS = None
