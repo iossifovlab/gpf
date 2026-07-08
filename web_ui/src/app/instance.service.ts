@@ -59,4 +59,12 @@ export class InstanceService {
       options
     );
   }
+
+  public getFeatureFlags(): Observable<object> {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.get(
+      `${this.config.baseUrl}${this.instanceUrl}/features`,
+      options
+    );
+  }
 }

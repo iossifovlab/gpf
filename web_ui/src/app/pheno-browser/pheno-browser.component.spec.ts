@@ -26,6 +26,7 @@ import { BehaviorSubject, Observable, lastValueFrom, of, take } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
 import { ConfigService } from 'app/config/config.service';
+import { InstanceService } from 'app/instance.service';
 import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
@@ -201,6 +202,10 @@ describe('PhenoBrowserComponent', () => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
 
+    const instanceService = TestBed.inject(InstanceService);
+    jest.spyOn(instanceService, 'getFeatureFlags')
+      .mockReturnValue(of({ pheno_browser_download: true }));
+
     component.ngOnInit();
     fixture.detectChanges();
   }));
@@ -213,6 +218,33 @@ describe('PhenoBrowserComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  const reinitWithFlags = (flags: Record<string, boolean>): void => {
+    jest.spyOn(TestBed.inject(InstanceService), 'getFeatureFlags').mockReturnValue(of(flags));
+    component.ngOnInit();
+    fixture.detectChanges();
+  };
+
+  it('should show the download button when the pheno_browser_download flag is true', () => {
+    reinitWithFlags({ pheno_browser_download: true });
+
+    expect(component.downloadEnabled).toBe(true);
+    expect(fixture.debugElement.query(By.css('#download-wrapper'))).not.toBeNull();
+  });
+
+  it('should hide the download button when the pheno_browser_download flag is false', () => {
+    reinitWithFlags({ pheno_browser_download: false });
+
+    expect(component.downloadEnabled).toBe(false);
+    expect(fixture.debugElement.query(By.css('#download-wrapper'))).toBeNull();
+  });
+
+  it('should hide the download button when the pheno_browser_download flag is absent', () => {
+    reinitWithFlags({});
+
+    expect(component.downloadEnabled).toBe(false);
+    expect(fixture.debugElement.query(By.css('#download-wrapper'))).toBeNull();
   });
 
   it('should list all instruments', waitForAsync(() => {

@@ -8,6 +8,7 @@ import { Dataset } from 'app/datasets/datasets';
 import { debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
+import { InstanceService } from 'app/instance.service';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -24,6 +25,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   private phenoBrowserService = inject(PhenoBrowserService);
   private location = inject(Location);
   configService = inject(ConfigService);
+  private instanceService = inject(InstanceService);
   private store = inject(Store);
   private datasetsService = inject(DatasetsService);
 
@@ -31,6 +33,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public searchTermObs$: Observable<string>;
   public measuresToShow: PhenoMeasures;
   public measuresLoading = false;
+  public downloadEnabled = false;
   // To trigger child change detection with on push strategy.
   public measuresChangeTick = 0;
   public measuresSubscription = new Subscription();
@@ -45,6 +48,10 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   private getPageSubscription: Subscription = new Subscription();
 
   public ngOnInit(): void {
+    this.instanceService.getFeatureFlags().pipe(take(1)).subscribe((flags: Record<string, boolean>) => {
+      this.downloadEnabled = flags['pheno_browser_download'] === true;
+    });
+
     this.store.select(selectDatasetId).pipe(
       take(1),
       switchMap(selectedDatasetIdState => this.datasetsService.getDataset(selectedDatasetIdState))
