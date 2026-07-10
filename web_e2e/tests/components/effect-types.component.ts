@@ -6,10 +6,14 @@ import { Locator, Page } from '@playwright/test';
 export class EffectTypes {
   public readonly root: Locator;
   public readonly zygosityFilter: Locator;
+  public readonly checkboxes: Locator;
+  public readonly selectAtLeastOneError: Locator;
 
   public constructor(private readonly page: Page) {
     this.root = page.locator('gpf-effect-types');
     this.zygosityFilter = this.root.locator('gpf-zygosity-filter');
+    this.checkboxes = this.root.locator('input');
+    this.selectAtLeastOneError = page.getByText('Select at least one.');
   }
 
   public button(name: string): Locator {
@@ -17,7 +21,7 @@ export class EffectTypes {
   }
 
   public label(name: string): Locator {
-    return this.root.getByLabel(name);
+    return this.root.getByLabel(name, { exact: true });
   }
 
   public async clickButton(name: string): Promise<void> {

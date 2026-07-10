@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { RegionsBlock } from './components/regions-block.component';
 
 test.describe('Regions block tests', () => {
   test.beforeEach(async({ page }) => {
@@ -10,21 +11,23 @@ test.describe('Regions block tests', () => {
   });
 
   test('should display regions filter panel', async({ page }) => {
-    await expect(page.locator('#regions-filter-panel')).not.toBeVisible();
-    await page.locator('#regions-filter').click();
-    await expect(page.locator('#regions-filter-panel')).toBeVisible();
+    const regionsBlock = new RegionsBlock(page);
+    await expect(regionsBlock.filterPanel).not.toBeVisible();
+    await regionsBlock.regionsFilterToggle.click();
+    await expect(regionsBlock.filterPanel).toBeVisible();
   });
 
 
   test('should display error alert in regions panel when the textarea is empty', async({ page }) => {
-    await page.locator('#regions-filter').click();
-    await expect(page.getByText('Add at least one region filter.')).toBeVisible();
+    const regionsBlock = new RegionsBlock(page);
+    await regionsBlock.regionsFilterToggle.click();
+    await expect(regionsBlock.emptyError).toBeVisible();
 
-    await page.locator('gpf-regions-filter textarea').pressSequentially('14:21393485');
-    await expect(page.getByText('Invalid region: 14:21393485')).toBeVisible();
+    await regionsBlock.textarea.pressSequentially('14:21393485');
+    await expect(regionsBlock.invalidRegionError('14:21393485')).toBeVisible();
 
-    await page.locator('gpf-regions-filter textarea').clear();
-    await page.locator('gpf-regions-filter textarea').pressSequentially('chr14:21393485');
-    await expect(page.locator('gpf-regions-filter').locator('gpf-errors-alert')).not.toBeVisible();
+    await regionsBlock.textarea.clear();
+    await regionsBlock.textarea.pressSequentially('chr14:21393485');
+    await expect(regionsBlock.errorsAlert).not.toBeVisible();
   });
 });
