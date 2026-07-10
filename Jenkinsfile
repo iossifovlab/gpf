@@ -105,13 +105,14 @@ def publishReports(String name) {
     // surfaces as FAILURE.
     junit allowEmptyResults: true, testResults: "reports/${name}/pytest.xml"
 
-    recordCoverage(
-        tools: [[parser: 'COBERTURA', pattern: "reports/${name}/coverage.xml"]],
-        id: "${name}-coverage",
-        name: "${name} coverage",
-        skipPublishingChecks: true,
-        failOnError: false,
-    )
+    // Coverage is NOT recorded here. It's all recorded in the top-level
+    // post.always instead, so we control the ORDER in which the actions
+    // register: the multibranch "Coverage" column (Coverage plugin's
+    // CoverageMetricColumn) shows the *first-registered* CoverageBuildAction
+    // and has no id selector, so the combined report must register first to
+    // own the column. Recording per-project here (in parallel post blocks)
+    // would register them in stage-completion order and the column would show
+    // whichever finished first, not the combined number.
 
     // Static-analysis findings (ruff / mypy / pylint) — separate per-tool
     // record so each gets its own "Issues" tab and trend chart. Quality
@@ -636,6 +637,7 @@ pipeline {
                                                 JEST_JUNIT_OUTPUT_DIR=/reports \\
                                                 JEST_JUNIT_OUTPUT_NAME=jest.xml \\
                                                     npx jest --ci \\
+                                                        --coverage \\
                                                         --collectCoverageFrom=./src/** \\
                                                         --coverageDirectory=/reports/coverage
                                                 jest_exit=\$?
@@ -669,22 +671,17 @@ pipeline {
                                         // publishReports() is Python-specific
                                         // (pytest junit + ruff/mypy/pylint
                                         // recordIssues). For web_ui we publish
-                                        // jest's junit + the cobertura coverage
-                                        // here, and the lint findings via the
-                                        // separate recordIssues below.
+                                        // jest's junit here and the lint
+                                        // findings via the separate
+                                        // recordIssues below. Coverage is NOT
+                                        // recorded here — web_ui's cobertura
+                                        // (reports/web_ui/coverage.xml) is
+                                        // aggregated with the others in the
+                                        // top-level post.always, in a
+                                        // controlled order (see there).
                                         junit(
                                             allowEmptyResults: true,
                                             testResults: 'reports/web_ui/jest.xml',
-                                        )
-                                        recordCoverage(
-                                            tools: [[
-                                                parser: 'COBERTURA',
-                                                pattern: 'reports/web_ui/coverage.xml',
-                                            ]],
-                                            id: 'web_ui-coverage',
-                                            name: 'web_ui coverage',
-                                            skipPublishingChecks: true,
-                                            failOnError: false,
                                         )
                                         recordIssues(
                                             enabledForFailure: true,
@@ -1437,6 +1434,43 @@ print('gpf-web prefix settings OK')"
         always {
             script {
                 try {
+                    // All coverage is published here, in a controlled ORDER,
+                    // rather than in the per-project parallel post blocks. The
+                    // multibranch "Coverage" column shows the *first-registered*
+                    // CoverageBuildAction (Coverage plugin's
+                    // CoverageMetricColumn.getAction(); no id selector), and
+                    // parallel post blocks register in nondeterministic
+                    // stage-completion order — so per-project reports there made
+                    // the column show whichever stage finished first, not a
+                    // combined number.
+                    //
+                    // Register the COMBINED report first (owns the column), then
+                    // the per-project reports (drill-down + trend charts).
+                    // Order among the per-project ones is cosmetic (sidebar
+                    // listing). In post.always (not a stage) so coverage
+                    // publishes on red builds too; failOnError:false makes each
+                    // call a no-op on docs-only / tag builds where its file is
+                    // absent. Only core/web_api/web_ui produce coverage.xml
+                    // (federation/rest_client run skipPytest); the combined glob
+                    // matches exactly those top-level files, and the per-project
+                    // loop lists only them so we never create empty 0% actions.
+                    recordCoverage(
+                        tools: [[parser: 'COBERTURA', pattern: 'reports/*/coverage.xml']],
+                        id: 'coverage',
+                        name: 'Combined coverage',
+                        skipPublishingChecks: true,
+                        failOnError: false,
+                    )
+                    for (proj in ['core', 'web_api', 'web_ui']) {
+                        recordCoverage(
+                            tools: [[parser: 'COBERTURA',
+                                     pattern: "reports/${proj}/coverage.xml"]],
+                            id: "${proj}-coverage",
+                            name: "${proj} coverage",
+                            skipPublishingChecks: true,
+                            failOnError: false,
+                        )
+                    }
                     archiveArtifacts(
                         artifacts: 'reports/**/*.xml',
                         allowEmptyArchive: true,
