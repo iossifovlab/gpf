@@ -1,6 +1,7 @@
-import { test, expect, Page, Locator } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { scanCSV } from 'nodejs-polars';
+import { GeneBrowser } from './components/gene-browser.component';
 
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
@@ -10,13 +11,14 @@ test.describe('Gene browser basic display tests before query', () => {
   });
 
   test('should check if elements in Gene Symbol are shown before query', async({ page }) => {
-    await expect(page.getByText('Gene Symbol')).toBeVisible();
-    await expect(page.locator('gpf-gene-browser input#search-box')).toBeVisible();
-    await expect(page.locator('input#coding-only-checkbox')).toBeVisible();
-    await expect(page.locator('input[value=\'Go\']')).toBeVisible();
-    await expect(page.locator('#filters')).not.toBeVisible();
-    await expect(page.locator('gpf-gene-plot')).not.toBeVisible();
-    await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+    const geneBrowser = new GeneBrowser(page);
+    await expect(geneBrowser.geneSymbolLabel).toBeVisible();
+    await expect(geneBrowser.searchBox).toBeVisible();
+    await expect(geneBrowser.codingOnlyCheckbox).toBeVisible();
+    await expect(geneBrowser.goInput).toBeVisible();
+    await expect(geneBrowser.filters).not.toBeVisible();
+    await expect(geneBrowser.genePlot).not.toBeVisible();
+    await expect(geneBrowser.previewTable).not.toBeVisible();
   });
 });
 
@@ -25,39 +27,42 @@ test.describe('Gene browser basic display tests after query', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Gene browser');
-    await page.getByPlaceholder('Search gene').pressSequentially('chd8');
-    await page.getByRole('button', { name: 'Go' }).click();
-    await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.searchBox.pressSequentially('chd8');
+    await geneBrowser.goRoleButton.click();
+    await expect(geneBrowser.previewTable).toBeVisible();
   });
 
   test('should check if elements in Gene Symbol are shown after query', async({ page }) => {
-    await expect(page.locator('#filters')).toBeVisible();
-    await expect(page.locator('gpf-gene-plot')).toBeVisible();
-    await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
-    await expect(getAffectedStatusFilter(page, 'Affected only')).toBeVisible();
-    await expect(getAffectedStatusFilter(page, 'Unaffected only')).toBeVisible();
-    await expect(getAffectedStatusFilter(page, 'Affected and unaffected')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'LGDs')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'missense')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'synonymous')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'CNV+')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'CNV-')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'Other')).toBeVisible();
-    await expect(getInheritanceTypesFilter(page, 'Denovo')).toBeVisible();
-    await expect(getInheritanceTypesFilter(page, 'Transmitted')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'del')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'ins')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'del')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'CNV+')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'CNV-')).toBeVisible();
-    await expect(page.locator('span#family-variants-count')).toBeVisible();
-    await expect(page.locator('#download-family-variants-button')).toBeVisible();
+    const geneBrowser = new GeneBrowser(page);
+    await expect(geneBrowser.filters).toBeVisible();
+    await expect(geneBrowser.genePlot).toBeVisible();
+    await expect(geneBrowser.previewTable).toBeVisible();
+    await expect(geneBrowser.affectedStatusFilter('Affected only')).toBeVisible();
+    await expect(geneBrowser.affectedStatusFilter('Unaffected only')).toBeVisible();
+    await expect(geneBrowser.affectedStatusFilter('Affected and unaffected')).toBeVisible();
+    await expect(geneBrowser.effectTypesFilter('LGDs')).toBeVisible();
+    await expect(geneBrowser.effectTypesFilter('missense')).toBeVisible();
+    await expect(geneBrowser.effectTypesFilter('synonymous')).toBeVisible();
+    await expect(geneBrowser.effectTypesFilter('CNV+')).toBeVisible();
+    await expect(geneBrowser.effectTypesFilter('CNV-')).toBeVisible();
+    await expect(geneBrowser.effectTypesFilter('Other')).toBeVisible();
+    await expect(geneBrowser.inheritanceTypesFilter('Denovo')).toBeVisible();
+    await expect(geneBrowser.inheritanceTypesFilter('Transmitted')).toBeVisible();
+    await expect(geneBrowser.variantTypesFilter('del')).toBeVisible();
+    await expect(geneBrowser.variantTypesFilter('ins')).toBeVisible();
+    await expect(geneBrowser.variantTypesFilter('del')).toBeVisible();
+    await expect(geneBrowser.variantTypesFilter('CNV+')).toBeVisible();
+    await expect(geneBrowser.variantTypesFilter('CNV-')).toBeVisible();
+    await expect(geneBrowser.familyVariantsCountBadge).toBeVisible();
+    await expect(geneBrowser.downloadFamilyVariantsButton).toBeVisible();
   });
 
   test('should go to chd8 gene page, filter out Affected only ' +
   'family variants and check if download button is disabled', async({ page }) => {
-    await getAffectedStatusFilter(page, 'Affected only').click();
-    await expect(page.locator('#download-family-variants-button')).toBeDisabled();
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.affectedStatusFilter('Affected only').click();
+    await expect(geneBrowser.downloadFamilyVariantsButton).toBeDisabled();
   });
 });
 
@@ -66,9 +71,10 @@ test.describe('Gene browser family alleles count and table tests', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Gene browser');
-    await page.getByPlaceholder('Search gene').pressSequentially('chd8');
-    await page.getByRole('button', { name: 'Go' }).click();
-    await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.searchBox.pressSequentially('chd8');
+    await geneBrowser.goRoleButton.click();
+    await expect(geneBrowser.previewTable).toBeVisible();
   });
 
   [
@@ -92,40 +98,44 @@ test.describe('Gene browser family alleles count and table tests', () => {
     test('should display the correct value when filtering with the "'
           + testCase.checkbox + '" checkbox and ' + testCase.type, async({ page }
     ) => {
+      const geneBrowser = new GeneBrowser(page);
       await Promise.all([
         page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query'),
-        getAnyFilter(page, testCase.type, testCase.checkbox).click(),
+        geneBrowser.filter(testCase.type, testCase.checkbox).click(),
       ]);
-      await expect(page.locator('#family-variants-count span')).toHaveText(testCase.expectedFamilyAllelesCount);
+      await expect(geneBrowser.familyVariantsCountSpan).toHaveText(testCase.expectedFamilyAllelesCount);
     });
   });
 
   test('should check table rows count', async({ page }) => {
-    await expect(page.locator('#family-variants-count')).toHaveText('8 / 8');
-    await expect(page.locator('.table-row')).toHaveCount(8);
+    const geneBrowser = new GeneBrowser(page);
+    await expect(geneBrowser.familyVariantsCount).toHaveText('8 / 8');
+    await expect(geneBrowser.tableRows).toHaveCount(8);
   });
 
   test('should check table if nothing found is shown with filter Denovo', async({page }) => {
-    await getInheritanceTypesFilter(page, 'Denovo').click();
-    await expect(page.locator('#nothing-found-row')).toBeVisible();
-    await expect(page.locator('#family-variants-count')).toHaveText('0 / 8');
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.inheritanceTypesFilter('Denovo').click();
+    await expect(geneBrowser.nothingFoundRow).toBeVisible();
+    await expect(geneBrowser.familyVariantsCount).toHaveText('0 / 8');
 
-    await getInheritanceTypesFilter(page, 'Denovo').click();
+    await geneBrowser.inheritanceTypesFilter('Denovo').click();
 
     await page.waitForResponse(
       resp => resp.url().includes('/api/v3/genotype_browser/query') && resp.status() === 200
     );
 
-    await expect(page.locator('#nothing-found-row')).not.toBeVisible();
+    await expect(geneBrowser.nothingFoundRow).not.toBeVisible();
   });
 
   test('should check table rows when sub, ins and CNV+ are unchecked', async({ page }) => {
-    await getVariantTypesFilter(page, 'sub').click();
-    await getVariantTypesFilter(page, 'ins').click();
-    await getVariantTypesFilter(page, 'CNV+').click();
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.variantTypesFilter('sub').click();
+    await geneBrowser.variantTypesFilter('ins').click();
+    await geneBrowser.variantTypesFilter('CNV+').click();
 
-    await expect(page.locator('#family-variants-count')).toHaveText('4 / 8');
-    await expect(page.locator('.table-row')).toHaveCount(4);
+    await expect(geneBrowser.familyVariantsCount).toHaveText('4 / 8');
+    await expect(geneBrowser.tableRows).toHaveCount(4);
   });
 });
 test.describe('Gene browser download tests', () => {
@@ -152,20 +162,21 @@ test.describe('Gene browser download tests', () => {
     test('should go to ' + gene + ' gene page, filter out '
         + filtersToUncheck[0].filter + ', ' + filtersToUncheck[1].filter +
               ' family variants and compare the files to the reference data', async({ page }) => {
-      await page.locator('#search-box').pressSequentially(gene);
-      await page.locator('#search-box').press('Enter');
+      const geneBrowser = new GeneBrowser(page);
+      await geneBrowser.searchBox.pressSequentially(gene);
+      await geneBrowser.searchBox.press('Enter');
 
       await Promise.all([
         page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query'),
-        getAnyFilter(page, filtersToUncheck[0].field, filtersToUncheck[0].filter).click(),
+        geneBrowser.filter(filtersToUncheck[0].field, filtersToUncheck[0].filter).click(),
       ]);
       await Promise.all([
         page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query'),
-        getAnyFilter(page, filtersToUncheck[1].field, filtersToUncheck[1].filter).click(),
+        geneBrowser.filter(filtersToUncheck[1].field, filtersToUncheck[1].filter).click(),
       ]);
 
       const downloadPromise = page.waitForEvent('download');
-      await page.locator('#download-family-variants-button').click();
+      await geneBrowser.downloadFamilyVariantsButton.click();
       const downloadedFile = await downloadPromise;
 
       const fixtureData = scanCSV(await downloadedFile.path(), {sep: '\t'});
@@ -176,34 +187,3 @@ test.describe('Gene browser download tests', () => {
     });
   });
 });
-
-function getAffectedStatusFilter(page: Page, affectedStatusCheckbox: string): Locator {
-  return page.locator('#affected-status-filters').getByLabel(affectedStatusCheckbox).nth(0);
-}
-
-function getEffectTypesFilter(page: Page, effectTypesCheckbox: string): Locator {
-  return page.locator('#effect-types-filters').locator('span').getByText(effectTypesCheckbox).nth(0);
-}
-
-function getInheritanceTypesFilter(page: Page, inheritanceTypesCheckbox: string): Locator {
-  return page.locator('#inheritance-types-filters').locator('span').getByText(inheritanceTypesCheckbox).nth(0);
-}
-
-function getVariantTypesFilter(page: Page, variantTypeCheckbox: string): Locator {
-  return page.locator('#variant-types-filters').locator('span').getByText(variantTypeCheckbox).nth(0);
-}
-
-function getAnyFilter(page: Page, field: string, filterName: string): Locator {
-  switch (field) {
-    case 'variantTypes':
-      return getVariantTypesFilter(page, filterName);
-    case 'affectedStatus':
-      return getAffectedStatusFilter(page, filterName);
-    case 'inheritanceTypes':
-      return getInheritanceTypesFilter(page, filterName);
-    case 'effectTypes':
-      return getEffectTypesFilter(page, filterName);
-    default:
-      return null;
-  }
-}

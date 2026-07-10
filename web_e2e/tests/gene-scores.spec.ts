@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import * as path from 'path';
 import { scanCSV } from 'nodejs-polars';
+import { GenotypeBrowserPage } from './pages/genotype-browser.page';
 
 test.describe('Gene scores tests', () => {
   test.beforeEach(async({ page }) => {
@@ -12,31 +13,35 @@ test.describe('Gene scores tests', () => {
   });
 
   test('should display gene scores panel and dropdown and check default value', async({ page }) => {
-    await expect(page.locator('#gene-scores-panel')).not.toBeVisible();
-    await page.locator('#gene-scores').click();
-    await expect(page.locator('#gene-scores-panel')).toBeVisible();
-    await expect(page.locator('gpf-gene-scores select')).toContainText(
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await expect(genotypeBrowser.genes.geneScoresPanel).not.toBeVisible();
+    await genotypeBrowser.genes.openGeneScores();
+    await expect(genotypeBrowser.genes.geneScoresPanel).toBeVisible();
+    await expect(genotypeBrowser.genes.geneScores.select).toContainText(
       'SFARI gene score - Evidence strength supporting a gene\'s association with autism'
     );
   });
 
   test('should visibility of from/to inputs for two scores', async({ page }) => {
-    await page.locator('#gene-scores').click();
-    await expect(page.locator('input#from-input-field')).not.toBeVisible();
-    await expect(page.locator('input#to-input-field')).not.toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const geneScores = genotypeBrowser.genes.geneScores;
+    await genotypeBrowser.genes.openGeneScores();
+    await expect(geneScores.numberHistogram.fromInput).not.toBeVisible();
+    await expect(geneScores.numberHistogram.toInput).not.toBeVisible();
 
-    await page.locator('gpf-gene-scores select').selectOption('pLI - Probability of Loss-of-Function Intolerance');
-    await expect(page.locator('input#from-input-field')).toBeVisible();
-    await expect(page.locator('input#to-input-field')).toBeVisible();
+    await geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
+    await expect(geneScores.numberHistogram.fromInput).toBeVisible();
+    await expect(geneScores.numberHistogram.toInput).toBeVisible();
   });
 
   test('should have working from/to step up/down buttons in RVIS_rank', async({ page }) => {
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS_rank - Gene rank after sorting by RVIS intolerance score');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('RVIS_rank - Gene rank after sorting by RVIS intolerance score');
 
-    await expect(page.locator('input#from-input-field')).toHaveValue('1');
-    await expect(page.locator('input#to-input-field')).toHaveValue('16640');
+    await expect(numberHistogram.fromInput).toHaveValue('1');
+    await expect(numberHistogram.toInput).toHaveValue('16640');
 
     // Promise.all so waitForRequest registers BEFORE the click; otherwise
     // the 100ms partition-request debounce can fire before the click action
@@ -44,75 +49,78 @@ test.describe('Gene scores tests', () => {
     // times out.
     await Promise.all([
       page.waitForRequest(utils.backendUrl + '/api/v3/gene_scores/partitions'),
-      page.locator('.histogram-from .step.up').click(),
+      numberHistogram.stepFromUp.click(),
     ]);
     await Promise.all([
       page.waitForRequest(utils.backendUrl + '/api/v3/gene_scores/partitions'),
-      page.locator('.histogram-to .step.down').click(),
+      numberHistogram.stepToDown.click(),
     ]);
-    await expect(page.locator('input#from-input-field')).toHaveValue('111.927');
-    await expect(page.locator('input#to-input-field')).toHaveValue('16529.073');
+    await expect(numberHistogram.fromInput).toHaveValue('111.927');
+    await expect(numberHistogram.toInput).toHaveValue('16529.073');
 
-    await page.locator('.histogram-to .step.up').click();
-    await page.locator('.histogram-from .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('1');
-    await expect(page.locator('input#to-input-field')).toHaveValue('16640');
+    await numberHistogram.stepToUp.click();
+    await numberHistogram.stepFromDown.click();
+    await expect(numberHistogram.fromInput).toHaveValue('1');
+    await expect(numberHistogram.toInput).toHaveValue('16640');
 
-    await page.locator('.histogram-from .step.up').click();
-    await page.locator('.histogram-from .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('1');
-    await expect(page.locator('input#to-input-field')).toHaveValue('16640');
+    await numberHistogram.stepFromUp.click();
+    await numberHistogram.stepFromDown.click();
+    await expect(numberHistogram.fromInput).toHaveValue('1');
+    await expect(numberHistogram.toInput).toHaveValue('16640');
   });
 
   test('should have working from/to step up/down buttons in ExAC pLI', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select').selectOption('pLI - Probability of Loss-of-Function Intolerance');
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
 
-    await expect(page.locator('input#from-input-field')).toHaveValue('0');
-    await expect(page.locator('input#to-input-field')).toHaveValue('1');
+    await expect(numberHistogram.fromInput).toHaveValue('0');
+    await expect(numberHistogram.toInput).toHaveValue('1');
 
-    await page.locator('.histogram-from .step.up').click();
-    await page.locator('.histogram-to .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0.008');
-    await expect(page.locator('input#to-input-field')).toHaveValue('0.992');
+    await numberHistogram.stepFromUp.click();
+    await numberHistogram.stepToDown.click();
+    await expect(numberHistogram.fromInput).toHaveValue('0.008');
+    await expect(numberHistogram.toInput).toHaveValue('0.992');
 
-    await page.locator('.histogram-from .step.up').click();
-    await page.locator('.histogram-to .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0.016');
-    await expect(page.locator('input#to-input-field')).toHaveValue('0.984');
+    await numberHistogram.stepFromUp.click();
+    await numberHistogram.stepToDown.click();
+    await expect(numberHistogram.fromInput).toHaveValue('0.016');
+    await expect(numberHistogram.toInput).toHaveValue('0.984');
 
-    await page.locator('.histogram-to .step.up').click();
-    await page.locator('.histogram-from .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0.008');
-    await expect(page.locator('input#to-input-field')).toHaveValue('0.992');
+    await numberHistogram.stepToUp.click();
+    await numberHistogram.stepFromDown.click();
+    await expect(numberHistogram.fromInput).toHaveValue('0.008');
+    await expect(numberHistogram.toInput).toHaveValue('0.992');
 
-    await page.locator('.histogram-to .step.up').click();
-    await page.locator('.histogram-from .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0');
-    await expect(page.locator('input#to-input-field')).toHaveValue('1');
+    await numberHistogram.stepToUp.click();
+    await numberHistogram.stepFromDown.click();
+    await expect(numberHistogram.fromInput).toHaveValue('0');
+    await expect(numberHistogram.toInput).toHaveValue('1');
   });
 
   test('should filter variants when RVIS_rank gene score is selected', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
-    await page.click('#gene-scores');
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS_rank - Gene rank after sorting by RVIS intolerance score');
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('RVIS_rank - Gene rank after sorting by RVIS intolerance score');
 
-    await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
+    await expect(genotypeBrowser.genes.geneScores.numberHistogram.sumOfBarsLabel).not.toContainText('~');
 
-    await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
-    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await genotypeBrowser.effectTypes.clickButton('All');
+    await genotypeBrowser.runTablePreview();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('55 variants selected');
+    await expect(genotypeBrowser.variantsCount).toHaveText('55 variants selected');
   });
 
   test('should download RVIS score and compare the file to the reference data', async({ page }) => {
-    await page.click('#gene-scores');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.genes.openGeneScores();
 
-    await page.locator('gpf-gene-scores select').selectOption('RVIS - Intolerance of a gene to genetic variants');
+    await genotypeBrowser.genes.geneScores.selectScore('RVIS - Intolerance of a gene to genetic variants');
     const downloadPromise = page.waitForEvent('download');
-    await page.click('gpf-gene-scores .download-link');
+    await genotypeBrowser.genes.geneScores.downloadLink.click();
     const downloadedFile = await downloadPromise;
 
     const streamData = downloadedFile.createReadStream();
@@ -129,123 +137,130 @@ test.describe('Gene scores tests', () => {
   });
 
   test('should type invalid and valid range start and check error state', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS - Intolerance of a gene to genetic variants');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.geneScores.selectScore('RVIS - Intolerance of a gene to genetic variants');
 
-    await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').pressSequentially('-100');
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.fromInput.clear();
+    await numberHistogram.fromInput.pressSequentially('-100');
+    await expect(numberHistogram.rangeStartBelowMinError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
 
-    await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').pressSequentially('0');
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
-    await expect(page.locator('gpf-gene-scores').locator('gpf-errors-alert')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+    await numberHistogram.fromInput.clear();
+    await numberHistogram.fromInput.pressSequentially('0');
+    await expect(numberHistogram.rangeStartBelowMinError).not.toBeVisible();
+    await expect(genotypeBrowser.genes.geneScores.errorsAlert).not.toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeEnabled();
+    await expect(genotypeBrowser.downloadButton).toBeEnabled();
   });
 
   test('should reset invalid gene scores state when switching to All tab', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS - Intolerance of a gene to genetic variants');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.geneScores.selectScore('RVIS - Intolerance of a gene to genetic variants');
 
-    await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').pressSequentially('-500');
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.fromInput.clear();
+    await numberHistogram.fromInput.pressSequentially('-500');
+    await expect(numberHistogram.rangeStartBelowMinError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
 
-    await page.locator('gpf-genes-block').getByRole('tab', { name: 'All' }).click();
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+    await genotypeBrowser.genes.openAllTab();
+    await expect(numberHistogram.rangeStartBelowMinError).not.toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeEnabled();
+    await expect(genotypeBrowser.downloadButton).toBeEnabled();
   });
 
   test('should reset invalid gene scores state when switching to other tool', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
 
-    await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').pressSequentially('-1');
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.fromInput.clear();
+    await numberHistogram.fromInput.pressSequentially('-1');
+    await expect(numberHistogram.rangeStartBelowMinError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
 
-    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
-    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+    await genotypeBrowser.openToolLink('Gene Browser');
+    await genotypeBrowser.openToolLink('Genotype Browser');
 
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+    await expect(numberHistogram.rangeStartBelowMinError).not.toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeEnabled();
+    await expect(genotypeBrowser.downloadButton).toBeEnabled();
   });
 
   test('should type range start less than domain min of number histogram', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
 
-    await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').pressSequentially('-1');
-    await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.fromInput.clear();
+    await numberHistogram.fromInput.pressSequentially('-1');
+    await expect(numberHistogram.rangeStartBelowMinError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
   });
 
   test('should type range end more than domain max of number histogram', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
 
-    await page.locator('#to-input-field').clear();
-    await page.locator('#to-input-field').pressSequentially('10');
-    await expect(page.getByText('Range end should be less than or equal to domain max.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.toInput.clear();
+    await numberHistogram.toInput.pressSequentially('10');
+    await expect(numberHistogram.rangeEndAboveMaxError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
   });
 
   test('should type range end less than range start of number histogram', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
 
-    await page.locator('#to-input-field').clear();
-    await page.locator('#to-input-field').pressSequentially('-1');
-    await expect(page.getByText('Range start should be less than or equal to range end.')).toBeVisible();
-    await expect(page.getByText('Range end should be more than or equal to range start.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.toInput.clear();
+    await numberHistogram.toInput.pressSequentially('-1');
+    await expect(numberHistogram.rangeStartAfterEndError).toBeVisible();
+    await expect(numberHistogram.rangeEndBeforeStartError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
   });
 
   test('should type range start more than range end of number histogram', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Scores' }).click();
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('pLI - Probability of Loss-of-Function Intolerance');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const numberHistogram = genotypeBrowser.genes.geneScores.numberHistogram;
+    await genotypeBrowser.genes.openGeneScoresTab();
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore('pLI - Probability of Loss-of-Function Intolerance');
 
-    await page.locator('#from-input-field').clear();
-    await page.locator('#from-input-field').pressSequentially('2');
-    await expect(page.getByText('Range start should be less than or equal to range end.')).toBeVisible();
-    await expect(page.getByText('Range end should be more than or equal to range start.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await numberHistogram.fromInput.clear();
+    await numberHistogram.fromInput.pressSequentially('2');
+    await expect(numberHistogram.rangeStartAfterEndError).toBeVisible();
+    await expect(numberHistogram.rangeEndBeforeStartError).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
   });
 });
 test.describe('Gene scores categorical histogram tests', () => {
@@ -255,212 +270,218 @@ test.describe('Gene scores categorical histogram tests', () => {
     await utils.loginWorkerUser(page);
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore(
+      'SFARI Gene Score - Evidence strength supporting a gene\'s association with autism'
+    );
   });
 
   test('should switch historgam selection modes', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await expect(page.locator('.mat-mdc-menu-content').getByRole('menuitem')).toHaveCount(3);
-    await expect(page.getByRole('menuitem', {name: 'range selector'})).toBeVisible();
-    await expect(page.getByRole('menuitem', {name: 'click selector'})).toBeVisible();
-    await expect(page.getByRole('menuitem', {name: 'dropdown selector'})).toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.openMode();
+    await expect(categoricalHistogram.menuContent.getByRole('menuitem')).toHaveCount(3);
+    await expect(categoricalHistogram.modeMenuItem('range selector')).toBeVisible();
+    await expect(categoricalHistogram.modeMenuItem('click selector')).toBeVisible();
+    await expect(categoricalHistogram.modeMenuItem('dropdown selector')).toBeVisible();
 
-    await expect(page.getByRole('menuitem', {name: 'range selector'}))
-      .toHaveCSS('background-color', 'rgb(42, 99, 149)');
-    await expect(page.locator('[gpf-histogram-range-selector-line]')).toHaveCount(2);
+    await expect(categoricalHistogram.modeMenuItem('range selector')).toHaveCSS('background-color', 'rgb(42, 99, 149)');
+    await expect(categoricalHistogram.rangeSelectorLines).toHaveCount(2);
 
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await expect(page.locator('[gpf-histogram-range-selector-line]')).toHaveCount(0);
+    await categoricalHistogram.modeMenuItem('click selector').click();
+    await expect(categoricalHistogram.rangeSelectorLines).toHaveCount(0);
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await expect(page.getByRole('menuitem', {name: 'click selector'}))
-      .toHaveCSS('background-color', 'rgb(42, 99, 149)');
+    await categoricalHistogram.openMode();
+    await expect(categoricalHistogram.modeMenuItem('click selector')).toHaveCSS('background-color', 'rgb(42, 99, 149)');
 
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await expect(page.getByRole('menuitem', {name: 'dropdown selector'}))
+    await categoricalHistogram.modeMenuItem('dropdown selector').click();
+    await categoricalHistogram.openMode();
+    await expect(categoricalHistogram.modeMenuItem('dropdown selector'))
       .toHaveCSS('background-color', 'rgb(42, 99, 149)');
 
     await expect(page.locator('[gpf-categorical-histogram]')).not.toBeVisible();
   });
 
   test('should check switch selection mode button is not visible for other histograms', async({ page }) => {
-    await expect(page.locator('gpf-categorical-histogram')).toBeVisible();
-    await expect(page.getByRole('button', {name: 'Mode'})).toBeVisible();
-    await expect(page.locator('input#from-input-field')).not.toBeVisible();
-    await expect(page.locator('input#to-input-field')).not.toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const geneScores = genotypeBrowser.genes.geneScores;
+    await expect(geneScores.categorical.root).toBeVisible();
+    await expect(geneScores.categorical.modeButton).toBeVisible();
+    await expect(geneScores.numberHistogram.fromInput).not.toBeVisible();
+    await expect(geneScores.numberHistogram.toInput).not.toBeVisible();
 
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS - Intolerance of a gene to genetic variants');
-    await expect(page.getByRole('button', {name: 'Mode'})).not.toBeVisible();
-    await expect(page.locator('gpf-histogram')).toBeVisible();
+    await geneScores.selectScore('RVIS - Intolerance of a gene to genetic variants');
+    await expect(geneScores.categorical.modeButton).not.toBeVisible();
+    await expect(geneScores.numberHistogram.root).toBeVisible();
   });
 
   test('should check historgam colors change in range selector mode', async({ page }) => {
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(70, 130, 180)');
 
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(900, 400, {steps: 3});
     await page.mouse.up();
 
-    await page.locator('[gpf-histogram-range-selector-line]').nth(1).hover();
+    await categoricalHistogram.rangeSelectorLines.nth(1).hover();
     await page.mouse.down();
     await page.mouse.move(1000, 400, {steps: 3});
     await page.mouse.up();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
 
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(100, 400, {steps: 3});
     await page.mouse.up();
 
-    await page.locator('[gpf-histogram-range-selector-line]').nth(1).hover();
+    await categoricalHistogram.rangeSelectorLines.nth(1).hover();
     await page.mouse.down();
     await page.mouse.move(1200, 400, {steps: 3});
     await page.mouse.up();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(70, 130, 180)');
   });
 
   test('should check historgam colors change in click selector mode', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await expect(page.getByText('Please select at least one value.')).toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
+    await expect(categoricalHistogram.pleaseSelectValueHint).toBeVisible();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
-    await page.locator('rect[id="1"]').click();
-    await expect(page.getByText('Please select at least one value.')).not.toBeVisible();
-    await page.locator('rect[id="2"]').click();
+    await categoricalHistogram.bar('1').click();
+    await expect(categoricalHistogram.pleaseSelectValueHint).not.toBeVisible();
+    await categoricalHistogram.bar('2').click();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
-    await page.locator('rect[id="1"]').click();
-    await page.locator('rect[id="2"]').click();
+    await categoricalHistogram.bar('1').click();
+    await categoricalHistogram.bar('2').click();
 
-    await expect(page.getByText('Please select at least one value.')).toBeVisible();
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.pleaseSelectValueHint).toBeVisible();
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
   });
 
   test('should check if range selection is reset when switching to click selection', async({ page }) => {
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(900, 400, {steps: 3});
     await page.mouse.up();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await categoricalHistogram.selectMode('click selector');
+    await categoricalHistogram.selectMode('range selector');
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'range selector'}).click();
-
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(70, 130, 180)');
   });
 
   test('should check if click selection is reset when switching to range selection', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
 
-    await page.locator('rect[id="3"]').click();
-    await page.locator('rect[id="2"]').click();
+    await categoricalHistogram.bar('3').click();
+    await categoricalHistogram.bar('2').click();
 
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(70, 130, 180)');
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'range selector'}).click();
+    await categoricalHistogram.selectMode('range selector');
+    await categoricalHistogram.selectMode('click selector');
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
   });
 
   test('should check if range selection is reset when selecting other histogram', async({ page }) => {
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const geneScores = genotypeBrowser.genes.geneScores;
+    const categoricalHistogram = geneScores.categorical;
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(900, 400, {steps: 3});
     await page.mouse.up();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS - Intolerance of a gene to genetic variants');
-    await page.locator('gpf-gene-scores select')
-      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
+    await geneScores.selectScore('RVIS - Intolerance of a gene to genetic variants');
+    await geneScores.selectScore('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(70, 130, 180)');
   });
 
   test('should check if click selection is reset when selecting other histogram', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const geneScores = genotypeBrowser.genes.geneScores;
+    const categoricalHistogram = geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
 
-    await page.locator('rect[id="1"]').click();
+    await categoricalHistogram.bar('1').click();
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(70, 130, 180)');
 
-    await page.locator('gpf-gene-scores select')
-      .selectOption('RVIS - Intolerance of a gene to genetic variants');
-    await page.locator('gpf-gene-scores select')
-      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
+    await geneScores.selectScore('RVIS - Intolerance of a gene to genetic variants');
+    await geneScores.selectScore('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
 
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    await categoricalHistogram.selectMode('click selector');
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
   });
 
   test('should set ranges and share query', async({ page }) => {
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(900, 400, {steps: 3});
     await page.mouse.up();
 
-    await page.getByRole('button', {name: 'Share/save query'}).click();
-    await expect(page.locator('#save-query-dropdown')).toBeVisible();
-    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    const shareLinkUrl = await genotypeBrowser.getShareLink();
+    await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(70, 130, 180)');
   });
 
   test('should set ranges and download', async({ page }) => {
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(900, 400, {steps: 3});
     await page.mouse.up();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-    await page.getByRole('button', {name: 'Download'}).click();
+    await genotypeBrowser.downloadButton.click();
 
     const download = await downloadPromise;
     const fixtureData = scanCSV('fixtures/gene-scores/variants1.tsv', {sep: '\t'});
@@ -471,37 +492,40 @@ test.describe('Gene scores categorical histogram tests', () => {
   });
 
   test('should set ranges and check table results', async({ page }) => {
-    await page.locator('[gpf-histogram-range-selector-line]').nth(0).hover();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.rangeSelectorLines.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(900, 400, {steps: 3});
     await page.mouse.up();
 
-    await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('18 variants selected');
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCount).toHaveText('18 variants selected');
   });
 
   test('should click histogram bars and share query', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="2"]').click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
+    await categoricalHistogram.bar('2').click();
 
-    await page.getByRole('button', {name: 'Share/save query'}).click();
-    await expect(page.locator('#save-query-dropdown')).toBeVisible();
-    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    const shareLinkUrl = await genotypeBrowser.getShareLink();
+    await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
-    await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
-    await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('1')).toHaveCSS('fill', 'rgb(176, 196, 222)');
+    await expect(categoricalHistogram.bar('2')).toHaveCSS('fill', 'rgb(70, 130, 180)');
+    await expect(categoricalHistogram.bar('3')).toHaveCSS('fill', 'rgb(176, 196, 222)');
   });
 
   test('should click histogram bars and download', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="3"]').click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
+    await categoricalHistogram.bar('3').click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-    await page.getByRole('button', {name: 'Download'}).click();
+    await genotypeBrowser.downloadButton.click();
 
     const download = await downloadPromise;
     const fixtureData = scanCSV('fixtures/gene-scores/variants2.tsv', {sep: '\t'});
@@ -512,105 +536,110 @@ test.describe('Gene scores categorical histogram tests', () => {
   });
 
   test('should click histogram bars and check table results', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await page.locator('rect[id="3"]').click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
+    await categoricalHistogram.bar('3').click();
 
-    await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCount).toHaveText('0 variants selected');
   });
 
   test('should select values from dropdown and validate', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('dropdown selector');
 
-    await expect(page.getByText('Please select at least one value.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(categoricalHistogram.pleaseSelectValueHint).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
 
-    await page.locator('#search-box').click();
-    await page.locator('mat-option').getByText('2 (706)').click();
+    await categoricalHistogram.searchBox.click();
+    await categoricalHistogram.matOption('2 (706)').click();
 
-    await expect(page.getByText('Please select at least one value.')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(categoricalHistogram.pleaseSelectValueHint).not.toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
 
-    await expect(page.locator('.value-wrapper')).toBeVisible();
-    await expect(page.locator('.remove-value')).toBeVisible();
-    await expect(page.locator('.value-wrapper')).toContainText('2 (706)');
+    await expect(categoricalHistogram.valueWrapper).toBeVisible();
+    await expect(categoricalHistogram.removeValue).toBeVisible();
+    await expect(categoricalHistogram.valueWrapper).toContainText('2 (706)');
 
-    await page.locator('#search-box').click();
-    await expect(page.locator('mat-option:has-text("2 (706)")')).toBeDisabled();
+    await categoricalHistogram.searchBox.click();
+    await expect(categoricalHistogram.matOptionHasText('2 (706)')).toBeDisabled();
   });
 
   test('should remove selected value from list of values and validate', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('dropdown selector');
 
-    await page.locator('#search-box').focus();
+    await categoricalHistogram.searchBox.focus();
     await page.keyboard.type('3');
-    await expect(page.locator('mat-option').getByText('2 (706)')).not.toBeVisible();
-    await page.locator('mat-option').getByText('3 (143)').click();
+    await expect(categoricalHistogram.matOption('2 (706)')).not.toBeVisible();
+    await categoricalHistogram.matOption('3 (143)').click();
 
-    await page.locator('#search-box').click();
-    await page.locator('mat-option').getByText('1 (233)').click();
+    await categoricalHistogram.searchBox.click();
+    await categoricalHistogram.matOption('1 (233)').click();
 
-    await expect(page.locator('#values-list')).toContainText('3 (143)');
-    await expect(page.locator('#values-list')).toContainText('1 (233)');
-    await expect(page.locator('.remove-value')).toHaveCount(2);
+    await expect(categoricalHistogram.valuesList).toContainText('3 (143)');
+    await expect(categoricalHistogram.valuesList).toContainText('1 (233)');
+    await expect(categoricalHistogram.removeValue).toHaveCount(2);
 
-    await page.locator('.remove-value').nth(0).click();
-    await page.locator('.remove-value').nth(0).click();
+    await categoricalHistogram.removeValue.nth(0).click();
+    await categoricalHistogram.removeValue.nth(0).click();
 
-    await page.locator('#search-box').click();
-    await expect(page.locator('mat-option:has-text("1 (233)")')).toBeEnabled();
-    await expect(page.locator('mat-option:has-text("3 (143)")')).toBeEnabled();
+    await categoricalHistogram.searchBox.click();
+    await expect(categoricalHistogram.matOptionHasText('1 (233)')).toBeEnabled();
+    await expect(categoricalHistogram.matOptionHasText('3 (143)')).toBeEnabled();
 
-    await expect(page.getByText('Please select at least one value.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(categoricalHistogram.pleaseSelectValueHint).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
   });
 
   test('errors state reset when validation fails and switch tool', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'click selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('click selector');
 
-    await expect(page.locator('gpf-categorical-histogram')).toBeVisible();
-    await expect(page.getByText('Please select at least one value.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(categoricalHistogram.root).toBeVisible();
+    await expect(categoricalHistogram.pleaseSelectValueHint).toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
 
-    await page.locator('a').filter({ hasText: 'Gene browser'}).click();
+    await genotypeBrowser.openToolLink('Gene browser');
 
-    await page.locator('a').filter({ hasText: 'Genotype browser'}).click();
+    await genotypeBrowser.openToolLink('Genotype browser');
 
-    await expect(page.locator('gpf-categorical-histogram')).not.toBeVisible();
-    await expect(page.getByText('Please select at least one value.')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(categoricalHistogram.root).not.toBeVisible();
+    await expect(categoricalHistogram.pleaseSelectValueHint).not.toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
   });
 
   test('should check save/share query when using dropdown selector', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('dropdown selector');
 
-    await page.locator('#search-box').click();
-    await page.locator('mat-option').getByText('3 (143)').click();
+    await categoricalHistogram.searchBox.click();
+    await categoricalHistogram.matOption('3 (143)').click();
 
-    await page.getByRole('button', { name: 'Share/save query'}).click();
-    await expect(page.locator('#save-query-dropdown')).toBeVisible();
-    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    const shareLinkUrl = await genotypeBrowser.getShareLink();
+    await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('#search-box')).toBeEmpty();
-    await expect(page.locator('.value-wrapper')).toHaveCount(1);
-    await expect(page.locator('#values-list')).toContainText('3 (143)');
+    await expect(categoricalHistogram.searchBox).toBeEmpty();
+    await expect(categoricalHistogram.valueWrapper).toHaveCount(1);
+    await expect(categoricalHistogram.valuesList).toContainText('3 (143)');
   });
 
   test('should check downloading when using dropdown selector', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('dropdown selector');
 
-    await page.locator('#search-box').click();
-    await page.locator('mat-option').getByText('3 (143)').click();
+    await categoricalHistogram.searchBox.click();
+    await categoricalHistogram.matOption('3 (143)').click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-    await page.getByRole('button', {name: 'Download'}).click();
+    await genotypeBrowser.downloadButton.click();
 
     const download = await downloadPromise;
     const fixtureData = scanCSV('fixtures/gene-scores/variants3.tsv', {sep: '\t'});
@@ -621,14 +650,15 @@ test.describe('Gene scores categorical histogram tests', () => {
   });
 
   test('should check table preview when using dropdown selector', async({ page }) => {
-    await page.getByRole('button', {name: 'Mode'}).click();
-    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
+    await categoricalHistogram.selectMode('dropdown selector');
 
-    await page.locator('#search-box').click();
-    await page.locator('mat-option').getByText('3 (143)').click();
+    await categoricalHistogram.searchBox.click();
+    await categoricalHistogram.matOption('3 (143)').click();
 
-    await page.getByRole('button', { name: 'Table Preview'}).click();
+    await genotypeBrowser.runTablePreview();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
+    await expect(genotypeBrowser.variantsCount).toHaveText('0 variants selected');
   });
 });

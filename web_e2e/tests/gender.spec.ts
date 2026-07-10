@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { Gender } from './components/gender.component';
 
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
@@ -9,23 +10,25 @@ test.describe('Gene browser basic display tests before query', () => {
   });
 
   test('should display error alert when none of the checkboxes are selected', async({ page }) => {
-    await expect(page.locator('gpf-gender').getByText('Select at least one.')).not.toBeVisible();
-    await page.locator('gpf-gender').getByText('None').click();
-    await expect(page.locator('gpf-gender').getByText('Select at least one.')).toBeVisible();
+    const gender = new Gender(page);
+    await expect(gender.selectAtLeastOneError).not.toBeVisible();
+    await gender.noneButton.click();
+    await expect(gender.selectAtLeastOneError).toBeVisible();
 
-    await page.locator('gpf-gender').getByText('All').click();
-    await expect(page.locator('gpf-gender').getByText('Select at least one.')).not.toBeVisible();
+    await gender.allButton.click();
+    await expect(gender.selectAtLeastOneError).not.toBeVisible();
   });
 
   test('should check/uncheck child gender checkboxes using "All" and "None" buttons', async({ page }) => {
-    await page.locator('gpf-gender').getByText('None').click();
-    await expect(page.locator('gpf-gender').locator('.male')).not.toBeChecked();
-    await expect(page.locator('gpf-gender').locator('.female')).not.toBeChecked();
-    await expect(page.locator('gpf-gender').locator('.unspecified')).not.toBeChecked();
+    const gender = new Gender(page);
+    await gender.noneButton.click();
+    await expect(gender.checkbox('male')).not.toBeChecked();
+    await expect(gender.checkbox('female')).not.toBeChecked();
+    await expect(gender.checkbox('unspecified')).not.toBeChecked();
 
-    await page.locator('gpf-gender').getByText('All').click();
-    await expect(page.locator('gpf-gender').locator('.male')).toBeChecked();
-    await expect(page.locator('gpf-gender').locator('.female')).toBeChecked();
-    await expect(page.locator('gpf-gender').locator('.unspecified')).toBeChecked();
+    await gender.allButton.click();
+    await expect(gender.checkbox('male')).toBeChecked();
+    await expect(gender.checkbox('female')).toBeChecked();
+    await expect(gender.checkbox('unspecified')).toBeChecked();
   });
 });

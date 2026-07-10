@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { VariantTypes } from './components/variant-types.component';
 
 test.describe('Variant types tests', () => {
   test.beforeEach(async({ page }) => {
@@ -9,24 +10,26 @@ test.describe('Variant types tests', () => {
   });
 
   test('should display error alert when none of the checkboxes are selected', async({ page }) => {
-    await expect(page.getByText('Select at least one.')).not.toBeVisible();
+    const variantTypes = new VariantTypes(page);
+    await expect(variantTypes.selectAtLeastOneError).not.toBeVisible();
 
-    await page.locator('gpf-variant-types button').getByText('None').click();
-    await expect(page.getByText('Select at least one.')).toBeVisible();
+    await variantTypes.button('None').click();
+    await expect(variantTypes.selectAtLeastOneError).toBeVisible();
 
-    await page.locator('gpf-variant-types button').getByText('All').click();
-    await expect(page.getByText('Select at least one.')).not.toBeVisible();
+    await variantTypes.button('All').click();
+    await expect(variantTypes.selectAtLeastOneError).not.toBeVisible();
   });
 
   test('should check/uncheck variant types checkboxes using "All" and "None" buttons', async({ page }) => {
-    await page.locator('gpf-variant-types button').getByText('None').click();
-    await expect(page.getByLabel('sub', { exact: true })).not.toBeChecked();
-    await expect(page.getByLabel('ins', { exact: true })).not.toBeChecked();
-    await expect(page.getByLabel('del', { exact: true })).not.toBeChecked();
+    const variantTypes = new VariantTypes(page);
+    await variantTypes.button('None').click();
+    await expect(variantTypes.label('sub')).not.toBeChecked();
+    await expect(variantTypes.label('ins')).not.toBeChecked();
+    await expect(variantTypes.label('del')).not.toBeChecked();
 
-    await page.locator('gpf-variant-types button').getByText('All').click();
-    await expect(page.getByLabel('sub', { exact: true })).toBeChecked();
-    await expect(page.getByLabel('ins', { exact: true })).toBeChecked();
-    await expect(page.getByLabel('del', { exact: true })).toBeChecked();
+    await variantTypes.button('All').click();
+    await expect(variantTypes.label('sub')).toBeChecked();
+    await expect(variantTypes.label('ins')).toBeChecked();
+    await expect(variantTypes.label('del')).toBeChecked();
   });
 });

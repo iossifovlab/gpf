@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { Login } from './components/login.component';
 
 test.describe('Forgotten password tests', () => {
   test.beforeEach(async({ page }) => {
@@ -7,11 +8,12 @@ test.describe('Forgotten password tests', () => {
   });
 
   test('should open forgotten password window', async({ page }) => {
-    await page.getByRole('button', { name: 'Log In' }).click();
-    await expect(page.getByRole('link', {name: 'forgotten password'})).toBeVisible();
-    await page.getByText('forgotten password').click();
+    const loginComponent = new Login(page);
+    await loginComponent.logInButton.click();
+    await expect(loginComponent.forgottenPasswordLink).toBeVisible();
+    await loginComponent.forgottenPasswordLink.click();
 
-    await expect(page.locator('input#id_email')).toBeVisible();
-    await expect(page.getByRole('button', {name: 'Reset password'})).toBeVisible();
+    await expect(loginComponent.emailInput).toBeVisible();
+    await expect(loginComponent.resetPasswordButton).toBeVisible();
   });
 });

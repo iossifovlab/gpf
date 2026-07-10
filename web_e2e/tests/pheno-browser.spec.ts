@@ -3,6 +3,7 @@ import * as utils from './utils';
 import * as fs from 'fs';
 import * as path from 'path';
 import { scanCSV } from 'nodejs-polars';
+import { PhenoBrowser } from './components/pheno-browser.component';
 
 test.describe('Pheno browser tests', () => {
   test.beforeEach(async({ page }) => {
@@ -19,164 +20,103 @@ test.describe('Pheno browser tests', () => {
     {seachQuery: 'measure_5'}
   ].forEach(data => {
     test(`should filter the correct rows when typing "${data.seachQuery}" in the searchbox`, async({ page }) => {
-      await expect(page.locator('.instrument-cell')).toHaveCount(9);
+      const phenoBrowser = new PhenoBrowser(page);
+      await expect(phenoBrowser.instrumentCells).toHaveCount(9);
 
-      await page.locator('input.form-control').fill(data.seachQuery);
-      await expect(page.locator('.instrument-cell')).toHaveCount(1);
+      await phenoBrowser.searchInput.fill(data.seachQuery);
+      await expect(phenoBrowser.instrumentCells).toHaveCount(1);
     });
   });
 
   test('should filter the correct rows using the instruments dropdown', async({ page }) => {
-    await page.locator('select.form-control').selectOption('instrument_1');
-    await expect(page.locator('.instrument-cell')).toHaveCount(7);
+    const phenoBrowser = new PhenoBrowser(page);
+    await phenoBrowser.instrumentDropdown.selectOption('instrument_1');
+    await expect(phenoBrowser.instrumentCells).toHaveCount(7);
 
-    await page.locator('select.form-control').selectOption('All instruments');
-    await expect(page.locator('.instrument-cell')).toHaveCount(9);
+    await phenoBrowser.instrumentDropdown.selectOption('All instruments');
+    await expect(phenoBrowser.instrumentCells).toHaveCount(9);
   });
 
   test('should show nothing found when searching with invalid values', async({ page }) => {
-    await expect(page.locator('.instrument-cell')).toHaveCount(9);
+    const phenoBrowser = new PhenoBrowser(page);
+    await expect(phenoBrowser.instrumentCells).toHaveCount(9);
 
-    await page.locator('input.form-control').fill('the age');
-    await expect(page.locator('.instrument-cell')).toHaveCount(0);
-    await expect(page.getByText('Nothing found')).toBeVisible();
-    await expect(page.getByText('Measures count: 0')).toBeVisible();
+    await phenoBrowser.searchInput.fill('the age');
+    await expect(phenoBrowser.instrumentCells).toHaveCount(0);
+    await expect(phenoBrowser.nothingFound).toBeVisible();
+    await expect(phenoBrowser.measuresCount(0)).toBeVisible();
 
-    await page.locator('input.form-control').clear();
+    await phenoBrowser.searchInput.clear();
 
-    await page.locator('input.form-control').fill('continuous');
-    await expect(page.locator('.instrument-cell')).toHaveCount(0);
-    await expect(page.getByText('Nothing found')).toBeVisible();
-    await expect(page.getByText('Measures count: 0')).toBeVisible();
+    await phenoBrowser.searchInput.fill('continuous');
+    await expect(phenoBrowser.instrumentCells).toHaveCount(0);
+    await expect(phenoBrowser.nothingFound).toBeVisible();
+    await expect(phenoBrowser.measuresCount(0)).toBeVisible();
   });
 
   test('should check measure description', async({ page }) => {
-    await expect(page.locator('[id="measure_1-description-icon"]')).toBeVisible();
-    await page.locator('[id="measure_1-description-icon"]').click();
+    const phenoBrowser = new PhenoBrowser(page);
+    await expect(phenoBrowser.descriptionIcon('measure_1')).toBeVisible();
+    await phenoBrowser.descriptionIcon('measure_1').click();
 
-    await expect(page.locator('.tooltip-inner')).toBeVisible();
-    await expect(page.locator('.tooltip-inner'))
+    await expect(phenoBrowser.tooltipInner).toBeVisible();
+    await expect(phenoBrowser.tooltipInner)
       .toContainText('Measure 1, a normally distributed continuous measure with a mean of 80');
 
     await page.mouse.click(0, 0);
-    await expect(page.locator('.tooltip-inner')).not.toBeVisible();
+    await expect(phenoBrowser.tooltipInner).not.toBeVisible();
   });
 
   test('should have working table header sorting buttons', async({ page }) => {
-    await page.getByText('Instrument', { exact: true }).click();
-    await expect(page.locator('.instrument-cell').nth(0)).toHaveText('instrument_2');
+    const phenoBrowser = new PhenoBrowser(page);
+    await phenoBrowser.columnHeader('Instrument').click();
+    await expect(phenoBrowser.instrumentCells.nth(0)).toHaveText('instrument_2');
 
-    await page.getByText('Pheno Measure', { exact: true }).click();
-    await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('measure_7 info');
+    await phenoBrowser.columnHeader('Pheno Measure').click();
+    await expect(phenoBrowser.measureNameCells.nth(0)).toHaveText('measure_7 info');
 
-    await page.getByText('Pheno Measure', { exact: true }).click();
-    await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('age info');
+    await phenoBrowser.columnHeader('Pheno Measure').click();
+    await expect(phenoBrowser.measureNameCells.nth(0)).toHaveText('age info');
 
-    await page.getByText('Pheno Measure', { exact: true }).click();
-    await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('measure_7 info');
+    await phenoBrowser.columnHeader('Pheno Measure').click();
+    await expect(phenoBrowser.measureNameCells.nth(0)).toHaveText('measure_7 info');
 
-    await page.getByText('male', { exact: true }).first().click();
-    await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('0.8406');
-    await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('0.875');
+    await phenoBrowser.columnHeader('male').first().click();
+    await expect(phenoBrowser.regressionCell('age', 'Male').nth(0)).toHaveText('0.8406');
+    await expect(phenoBrowser.regressionCell('age', 'Female').nth(0)).toHaveText('0.875');
 
-    await page.getByText('male', { exact: true }).first().click();
-    await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('');
-    await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('');
+    await phenoBrowser.columnHeader('male').first().click();
+    await expect(phenoBrowser.regressionCell('age', 'Male').nth(0)).toHaveText('');
+    await expect(phenoBrowser.regressionCell('age', 'Female').nth(0)).toHaveText('');
   });
 
   test('should have the correct text values in all rows', async({ page }) => {
+    const phenoBrowser = new PhenoBrowser(page);
     const expectedFile = fs.readFileSync(path.join(__dirname + '/../fixtures/pheno-browser/row_values.txt'), 'utf-8');
     const rowValues = expectedFile.split(',\n');
 
-    const instrument1 = await page.locator('.instrument-cell').nth(0).textContent();
-    const measureName1 = await page.locator('.measure-name-cell').nth(0).textContent();
-    const measureType1 = await page.locator('.measure-type-cell ').nth(0).textContent();
-    const age1 = await page.locator('.age').nth(0).textContent();
-    const iq1 = await page.locator('.iq').nth(0).textContent();
+    /* eslint-disable no-await-in-loop */
+    for (let i = 0; i < 9; i++) {
+      const instrument = await phenoBrowser.instrumentCells.nth(i).textContent();
+      const measureName = await phenoBrowser.measureNameCells.nth(i).textContent();
+      const measureType = await phenoBrowser.measureTypeCells.nth(i).textContent();
+      const age = await phenoBrowser.ageCells.nth(i).textContent();
+      const iq = await phenoBrowser.iqCells.nth(i).textContent();
 
-    const row1 = instrument1 + measureName1 + measureType1 + age1 + iq1;
-    expect(row1).toBe(rowValues[0]);
-
-    const instrument2 = await page.locator('.instrument-cell').nth(1).textContent();
-    const measureName2 = await page.locator('.measure-name-cell').nth(1).textContent();
-    const measureType2 = await page.locator('.measure-type-cell ').nth(1).textContent();
-    const age2 = await page.locator('.age').nth(1).textContent();
-    const iq2 = await page.locator('.iq').nth(1).textContent();
-
-    const row2 = instrument2 + measureName2 + measureType2 + age2 + iq2;
-    expect(row2).toBe(rowValues[1]);
-
-    const instrument3 = await page.locator('.instrument-cell').nth(2).textContent();
-    const measureName3 = await page.locator('.measure-name-cell').nth(2).textContent();
-    const measureType3 = await page.locator('.measure-type-cell ').nth(2).textContent();
-    const age3 = await page.locator('.age').nth(2).textContent();
-    const iq3 = await page.locator('.iq').nth(2).textContent();
-
-    const row3 = instrument3 + measureName3 + measureType3 + age3 + iq3;
-    expect(row3).toBe(rowValues[2]);
-
-    const instrument4 = await page.locator('.instrument-cell').nth(3).textContent();
-    const measureName4 = await page.locator('.measure-name-cell').nth(3).textContent();
-    const measureType4 = await page.locator('.measure-type-cell ').nth(3).textContent();
-    const age4 = await page.locator('.age').nth(3).textContent();
-    const iq4 = await page.locator('.iq').nth(3).textContent();
-
-    const row4 = instrument4 + measureName4 + measureType4 + age4 + iq4;
-    expect(row4).toBe(rowValues[3]);
-
-    const instrument5 = await page.locator('.instrument-cell').nth(4).textContent();
-    const measureName5 = await page.locator('.measure-name-cell').nth(4).textContent();
-    const measureType5 = await page.locator('.measure-type-cell ').nth(4).textContent();
-    const age5 = await page.locator('.age').nth(4).textContent();
-    const iq5 = await page.locator('.iq').nth(4).textContent();
-
-    const row5 = instrument5 + measureName5 + measureType5 + age5 + iq5;
-    expect(row5).toBe(rowValues[4]);
-
-    const instrument6 = await page.locator('.instrument-cell').nth(5).textContent();
-    const measureName6 = await page.locator('.measure-name-cell').nth(5).textContent();
-    const measureType6 = await page.locator('.measure-type-cell ').nth(5).textContent();
-    const age6 = await page.locator('.age').nth(5).textContent();
-    const iq6 = await page.locator('.iq').nth(5).textContent();
-
-    const row6 = instrument6 + measureName6 + measureType6 + age6 + iq6;
-    expect(row6).toBe(rowValues[5]);
-
-    const instrument7 = await page.locator('.instrument-cell').nth(6).textContent();
-    const measureName7 = await page.locator('.measure-name-cell').nth(6).textContent();
-    const measureType7 = await page.locator('.measure-type-cell ').nth(6).textContent();
-    const age7 = await page.locator('.age').nth(6).textContent();
-    const iq7 = await page.locator('.iq').nth(6).textContent();
-
-    const row7 = instrument7 + measureName7 + measureType7 + age7 + iq7;
-    expect(row7).toBe(rowValues[6]);
-
-    const instrument8 = await page.locator('.instrument-cell').nth(7).textContent();
-    const measureName8 = await page.locator('.measure-name-cell').nth(7).textContent();
-    const measureType8 = await page.locator('.measure-type-cell ').nth(7).textContent();
-    const age8 = await page.locator('.age').nth(7).textContent();
-    const iq8 = await page.locator('.iq').nth(7).textContent();
-
-    const row8 = instrument8 + measureName8 + measureType8 + age8 + iq8;
-    expect(row8).toBe(rowValues[7]);
-
-    const instrument9 = await page.locator('.instrument-cell').nth(8).textContent();
-    const measureName9 = await page.locator('.measure-name-cell').nth(8).textContent();
-    const measureType9 = await page.locator('.measure-type-cell ').nth(8).textContent();
-    const age9 = await page.locator('.age').nth(8).textContent();
-    const iq9 = await page.locator('.iq').nth(8).textContent();
-
-    const row9 = instrument9 + measureName9 + measureType9 + age9 + iq9;
-    expect(row9).toBe(rowValues[8]);
+      const row = instrument + measureName + measureType + age + iq;
+      expect(row).toBe(rowValues[i]);
+    }
+    /* eslint-enable no-await-in-loop */
   });
 
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
-    await page.waitForSelector('gpf-pheno-browser-table');
+    const phenoBrowser = new PhenoBrowser(page);
+    await phenoBrowser.root.waitFor();
 
     let downloadPromise = page.waitForEvent('download');
     downloadPromise = page.waitForEvent('download');
 
-    await page.locator('#download-measures').click();
+    await phenoBrowser.downloadMeasures.click();
     const download = await downloadPromise;
 
     const downloadData = scanCSV(await download.path(), {sep: ',', nullValues: '-'});
@@ -199,7 +139,8 @@ test.describe('Pheno browser tests', () => {
     // breakage in the apache /static/images/ alias (PHENO_IMAGES_DIR
     // env var) on either deployment shape — without it, all thumbnails
     // 404 silently and the page looks fine to a quick visual scan.
-    const thumbnail = page.locator('img.table-chart').first();
+    const phenoBrowser = new PhenoBrowser(page);
+    const thumbnail = phenoBrowser.tableChart.first();
     await thumbnail.scrollIntoViewIfNeeded();
     await expect(thumbnail).toBeVisible();
 

@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { GeneBrowser } from './components/gene-browser.component';
+import { UniqueFamilyVariantsFilter } from './components/unique-family-variants-filter.component';
 
 test.describe('Unique family variants filter tests', () => {
   test.beforeEach(async({ page }) => {
@@ -8,48 +10,52 @@ test.describe('Unique family variants filter tests', () => {
   });
 
   test('should disable unique family variants filter on a study', async({ page }) => {
+    const geneBrowser = new GeneBrowser(page);
+    const uniqueFamilyVariants = new UniqueFamilyVariantsFilter(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype Browser');
-    await expect(page.locator('#unique-family-variants-block')).not.toBeVisible();
+    await expect(uniqueFamilyVariants.block).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Gene Browser');
-    await page.locator('gpf-gene-browser input#search-box').fill('CHD8');
-    await page.getByText('Go').click();
-    await expect(page.locator('gpf-gene-plot')).toBeVisible();
-    await expect(page.locator('#unique-family-variants-checkbox')).toBeDisabled();
+    await geneBrowser.searchGene('CHD8');
+    await expect(geneBrowser.genePlot).toBeVisible();
+    await expect(uniqueFamilyVariants.checkbox).toBeDisabled();
   });
 
   test('should disable unique family variants when no variants are loaded', async({ page }) => {
+    const geneBrowser = new GeneBrowser(page);
+    const uniqueFamilyVariants = new UniqueFamilyVariantsFilter(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Gene Browser');
-    await page.locator('gpf-gene-browser input#search-box').fill('CSDC2');
-    await page.getByText('Go').click();
-    await expect(page.locator('gpf-gene-plot')).toBeVisible();
-    await expect(page.locator('#unique-family-variants-checkbox')).toBeDisabled();
+    await geneBrowser.searchGene('CSDC2');
+    await expect(geneBrowser.genePlot).toBeVisible();
+    await expect(uniqueFamilyVariants.checkbox).toBeDisabled();
   });
 
   test('should enable the unique family variants filter on a dataset with at least 2 studies inside', async({
     page
   }) => {
+    const geneBrowser = new GeneBrowser(page);
+    const uniqueFamilyVariants = new UniqueFamilyVariantsFilter(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype Browser');
-    await expect(page.locator('#unique-family-variants-block')).toBeVisible();
+    await expect(uniqueFamilyVariants.block).toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Gene Browser');
-    await page.locator('gpf-gene-browser input#search-box').fill('CHD8');
-    await page.getByText('Go').click();
-    await expect(page.locator('gpf-gene-plot')).toBeVisible();
-    await expect(page.locator('#unique-family-variants-checkbox')).toBeEnabled();
+    await geneBrowser.searchGene('CHD8');
+    await expect(geneBrowser.genePlot).toBeVisible();
+    await expect(uniqueFamilyVariants.checkbox).toBeEnabled();
   });
 
   test('should use the unique family variants filter to hide variants', async({ page }) => {
+    const geneBrowser = new GeneBrowser(page);
+    const uniqueFamilyVariants = new UniqueFamilyVariantsFilter(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype Browser');
-    await expect(page.locator('#unique-family-variants-block')).toBeVisible();
+    await expect(uniqueFamilyVariants.block).toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Gene Browser');
-    await page.locator('gpf-gene-browser input#search-box').fill('CHD8');
-    await page.getByText('Go').click();
-    await expect(page.locator('gpf-gene-plot')).toBeVisible();
+    await geneBrowser.searchGene('CHD8');
+    await expect(geneBrowser.genePlot).toBeVisible();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('25 variants selected');
-    await page.locator('#unique-family-variants-checkbox').click();
-    await expect(page.locator('#variants-count-span')).toHaveText('22 variants selected');
+    await expect(uniqueFamilyVariants.variantsCountSpan).toHaveText('25 variants selected');
+    await uniqueFamilyVariants.checkbox.click();
+    await expect(uniqueFamilyVariants.variantsCountSpan).toHaveText('22 variants selected');
   });
 });

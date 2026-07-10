@@ -2,27 +2,30 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { scanCSV } from 'nodejs-polars';
 import { datasetIds } from './utils';
+import { GeneBrowser } from './components/gene-browser.component';
 
 test.describe('Gene plot tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Gene browser');
-    await page.locator('gpf-gene-browser input#search-box').pressSequentially('chd8');
-    await page.locator('input[value=\'Go\']').click();
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.searchBox.pressSequentially('chd8');
+    await geneBrowser.goInput.click();
   });
 
   test('should check gene plot header', async({ page }) => {
-    await expect(page.locator('#undo-button')).toBeVisible();
-    await expect(page.locator('#redo-button')).toBeVisible();
-    await expect(page.locator('#reset-button')).toBeVisible();
-    await expect(page.locator('#variants-count-span')).toBeVisible();
-    await expect(page.getByText('Hide transcripts')).toBeVisible();
-    await expect(page.getByText('Condense introns')).toBeVisible();
-    await expect(page.locator('#gene-title')).toBeVisible();
-    await expect(page.locator('#gene-title')).toHaveText('CHD8');
-    await expect(page.locator('#summary-alleles-count span')).toBeVisible();
-    await expect(page.locator('#download-summary-variants-button')).toBeVisible();
+    const geneBrowser = new GeneBrowser(page);
+    await expect(geneBrowser.undoButton).toBeVisible();
+    await expect(geneBrowser.redoButton).toBeVisible();
+    await expect(geneBrowser.resetButton).toBeVisible();
+    await expect(geneBrowser.variantsCountSpan).toBeVisible();
+    await expect(geneBrowser.hideTranscripts).toBeVisible();
+    await expect(geneBrowser.condenseIntrons).toBeVisible();
+    await expect(geneBrowser.geneTitle).toBeVisible();
+    await expect(geneBrowser.geneTitle).toHaveText('CHD8');
+    await expect(geneBrowser.summaryAllelesCountSpan).toBeVisible();
+    await expect(geneBrowser.downloadSummaryVariantsButton).toBeVisible();
   });
 
   [
@@ -34,14 +37,15 @@ test.describe('Gene plot tests', () => {
     }
   ].forEach(data => {
     test('should display the correct value when filtering with affected status ' + data.checkbox, async({ page }) => {
-      await expect(page.locator('#summary-alleles-count')).toHaveText('8 / 8');
-      await expect(page.locator('#variants-count-span')).toHaveText('8 variants selected');
+      const geneBrowser = new GeneBrowser(page);
+      await expect(geneBrowser.summaryAllelesCount).toHaveText('8 / 8');
+      await expect(geneBrowser.variantsCountSpan).toHaveText('8 variants selected');
 
-      await page.locator('#affected-status-filters').getByLabel(data.checkbox, {exact: true}).click();
-      await expect(page.locator('#summary-alleles-count')).toHaveText(data.expectedSummaryAllelesCount);
-      await expect(page.locator('#variants-count-span')).toHaveText(data.expectedVariantsCount);
+      await geneBrowser.affectedStatusFilterExact(data.checkbox).click();
+      await expect(geneBrowser.summaryAllelesCount).toHaveText(data.expectedSummaryAllelesCount);
+      await expect(geneBrowser.variantsCountSpan).toHaveText(data.expectedVariantsCount);
 
-      await page.locator('#affected-status-filters').getByLabel(data.checkbox, {exact: true}).click();
+      await geneBrowser.affectedStatusFilterExact(data.checkbox).click();
     });
   });
 
@@ -50,13 +54,14 @@ test.describe('Gene plot tests', () => {
     {checkbox: 'Other', expectedSummaryAllelesCount: '7 / 8'}
   ].forEach(data => {
     test('should display the correct value when filtering with effect type'+ data.checkbox, async({ page }) => {
-      await expect(page.locator('#summary-alleles-count')).toHaveText('8 / 8');
-      await expect(page.locator('#variants-count-span')).toHaveText('8 variants selected');
+      const geneBrowser = new GeneBrowser(page);
+      await expect(geneBrowser.summaryAllelesCount).toHaveText('8 / 8');
+      await expect(geneBrowser.variantsCountSpan).toHaveText('8 variants selected');
 
-      await page.locator('#effect-types-filters').getByText(data.checkbox, {exact: true}).click();
-      await expect(page.locator('#summary-alleles-count')).toHaveText(data.expectedSummaryAllelesCount);
+      await geneBrowser.effectTypesFilterExact(data.checkbox).click();
+      await expect(geneBrowser.summaryAllelesCount).toHaveText(data.expectedSummaryAllelesCount);
 
-      await page.locator('#effect-types-filters').getByText(data.checkbox, {exact: true}).click();
+      await geneBrowser.effectTypesFilterExact(data.checkbox).click();
     });
   });
 
@@ -65,13 +70,14 @@ test.describe('Gene plot tests', () => {
     {checkbox: 'Transmitted', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
     test('should display the correct value when filtering with inheritance type '+ data.checkbox, async({ page }) => {
-      await expect(page.locator('#summary-alleles-count')).toHaveText('8 / 8');
-      await expect(page.locator('#variants-count-span')).toHaveText('8 variants selected');
+      const geneBrowser = new GeneBrowser(page);
+      await expect(geneBrowser.summaryAllelesCount).toHaveText('8 / 8');
+      await expect(geneBrowser.variantsCountSpan).toHaveText('8 variants selected');
 
-      await page.locator('#inheritance-types-filters').getByText(data.checkbox, {exact: true}).click();
-      await expect(page.locator('#summary-alleles-count')).toHaveText(data.expectedSummaryAllelesCount);
+      await geneBrowser.inheritanceTypesFilterExact(data.checkbox).click();
+      await expect(geneBrowser.summaryAllelesCount).toHaveText(data.expectedSummaryAllelesCount);
 
-      await page.locator('#inheritance-types-filters').getByText(data.checkbox, {exact: true}).click();
+      await geneBrowser.inheritanceTypesFilterExact(data.checkbox).click();
     });
   });
 
@@ -82,13 +88,14 @@ test.describe('Gene plot tests', () => {
     {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'}
   ].forEach(data => {
     test('should display the correct value when filtering with varint type '+ data.checkbox, async({ page }) => {
-      await expect(page.locator('#summary-alleles-count')).toHaveText('8 / 8');
-      await expect(page.locator('#variants-count-span')).toHaveText('8 variants selected');
+      const geneBrowser = new GeneBrowser(page);
+      await expect(geneBrowser.summaryAllelesCount).toHaveText('8 / 8');
+      await expect(geneBrowser.variantsCountSpan).toHaveText('8 variants selected');
 
-      await page.locator('#variant-types-filters').getByLabel(data.checkbox, {exact: true}).click();
-      await expect(page.locator('#summary-alleles-count')).toHaveText(data.expectedSummaryAllelesCount);
+      await geneBrowser.variantTypesFilterExact(data.checkbox).click();
+      await expect(geneBrowser.summaryAllelesCount).toHaveText(data.expectedSummaryAllelesCount);
 
-      await page.locator('#variant-types-filters').getByLabel(data.checkbox, {exact: true}).click();
+      await geneBrowser.variantTypesFilterExact(data.checkbox).click();
     });
   });
 });
@@ -102,23 +109,24 @@ test.describe('Gene plot download tests', () => {
 
   test('should go to chd8 gene page, filter out Affected only ' +
         'summary variants and check if download button is disabled', async({ page }) => {
-    await page.locator('gpf-gene-browser input#search-box').pressSequentially('chd8');
-    await page.locator('input[value=\'Go\']').click();
-    await page.locator('#affected-status-filters').getByLabel('Affected only', {exact: true}).click();
-    await expect(page.getByTitle('Download summary variants')).toBeDisabled();
+    const geneBrowser = new GeneBrowser(page);
+    await geneBrowser.searchBox.pressSequentially('chd8');
+    await geneBrowser.goInput.click();
+    await geneBrowser.affectedStatusFilterExact('Affected only').click();
+    await expect(geneBrowser.downloadSummaryVariantsTitle).toBeDisabled();
   });
 
   const testCases = [
     {
       gene: 'chd8',
-      filtersToUncheck: [{ field: '#effect-types-filters', filter: 'Other'},
-        { field: '#variant-types-filters', filter: 'ins'}],
+      filtersToUncheck: [{ field: 'effectTypes', filter: 'Other'},
+        { field: 'variantTypes', filter: 'ins'}],
       expectedPath: 'summary_variants1.tsv'
     },
     {
       gene: 'pogz',
-      filtersToUncheck: [{ field: '#effect-types-filters', filter: 'missense'},
-        { field: '#effect-types-filters', filter: 'synonymous'}],
+      filtersToUncheck: [{ field: 'effectTypes', filter: 'missense'},
+        { field: 'effectTypes', filter: 'synonymous'}],
       expectedPath: 'summary_variants2.tsv'
     }
   ];
@@ -128,16 +136,17 @@ test.describe('Gene plot download tests', () => {
        + ', ' + testCase.filtersToUncheck[1].filter +
           'summary variants and compare the files to the reference data', async({ page }
     ) => {
-      await page.locator('gpf-gene-browser input#search-box').pressSequentially(testCase.gene);
-      await page.locator('input[value=\'Go\']').click();
+      const geneBrowser = new GeneBrowser(page);
+      await geneBrowser.searchBox.pressSequentially(testCase.gene);
+      await geneBrowser.goInput.click();
 
-      await page.locator(testCase.filtersToUncheck[0].field)
+      await geneBrowser.panel(testCase.filtersToUncheck[0].field)
         .getByText(testCase.filtersToUncheck[0].filter, {exact: true}).click();
-      await page.locator(testCase.filtersToUncheck[1].field)
+      await geneBrowser.panel(testCase.filtersToUncheck[1].field)
         .getByText(testCase.filtersToUncheck[1].filter, {exact: true}).click();
 
       const downloadedVariants = page.waitForEvent('download');
-      await page.getByTitle('Download summary variants').click();
+      await geneBrowser.downloadSummaryVariantsTitle.click();
 
       const download = await downloadedVariants;
       const fixtureData = scanCSV(await download.path(), {sep: '\t'});

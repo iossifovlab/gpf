@@ -1,6 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 import { loginLiteralAdmin, LITERAL_ADMIN_EMAIL } from './_literal_admin';
+import { UserManagementPage } from './pages/user-management.page';
+import { Login } from './components/login.component';
+import { Header } from './components/header.component';
+import { DescriptionEditor } from './components/description-editor.component';
+import { Datasets } from './components/datasets.component';
+import { PhenoBrowser } from './components/pheno-browser.component';
 
 // tb-nxl: this is the only spec file allowed to import _literal_admin.
 // Jenkinsfile.e2e enforces this with a CI grep step. All other specs
@@ -22,6 +28,8 @@ test.describe('Management tests for reset password in Users', () => {
   });
 
   test('should reset password', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const login = new Login(page);
     await loginLiteralAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
@@ -30,23 +38,24 @@ test.describe('Management tests for reset password in Users', () => {
     await navigateToManagement(page);
     await utils.createUser(page, email, username);
 
-    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
+    await expect(um.passwordCell(email)).toBeEmpty();
 
-    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
-    await page.locator('button:text("Reset")').click();
+    await um.resetPasswordButton(email).locator('button').click();
+    await um.resetConfirm.click();
 
     await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
-    await page.locator('#id_new_password1').fill(password);
-    await page.locator('#id_new_password2').fill(password);
-    await page.locator('.login-button').click();
+    await login.newPassword1.fill(password);
+    await login.newPassword2.fill(password);
+    await login.loginButton.click();
 
     await page.waitForSelector('gpf-home');
-    await expect(page.locator('#log-out-button')).toBeVisible();
-    await page.locator('#log-out-button').click();
+    await expect(login.logOutButton).toBeVisible();
+    await login.logOutButton.click();
   });
 
   test('should reset password when login', async({ page }) => {
+    const login = new Login(page);
     await loginLiteralAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
@@ -56,23 +65,23 @@ test.describe('Management tests for reset password in Users', () => {
     await utils.createUser(page, email, username);
 
     const logoutResponse = page.waitForResponse(resp => resp.url().includes('logout') && resp.status() === 204);
-    await page.locator('#log-out-button').click();
+    await login.logOutButton.click();
     await logoutResponse;
 
-    await page.locator('#log-in-button').click();
-    await page.locator('#forgotten-password').click();
-    await page.locator('#id_email').fill(email);
-    await page.getByText('Reset password').click();
+    await login.logInButton.click();
+    await login.forgottenPassword.click();
+    await login.emailInput.fill(email);
+    await login.resetPasswordText.click();
 
     await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
-    await page.locator('#id_new_password1').fill(password);
-    await page.locator('#id_new_password2').fill(password);
-    await page.getByText('Reset password').click();
+    await login.newPassword1.fill(password);
+    await login.newPassword2.fill(password);
+    await login.resetPasswordText.click();
     await utils.login(page, email, password);
 
-    await expect(page.locator('#log-out-button')).toBeVisible();
-    await page.locator('#log-out-button').click();
+    await expect(login.logOutButton).toBeVisible();
+    await login.logOutButton.click();
   });
 });
 
@@ -83,125 +92,134 @@ test.describe('Users management', () => {
     await navigateToManagement(page);
   });
   test('should not create user with already used email', async({ page }) => {
+    const um = new UserManagementPage(page);
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
-    await page.locator('#create-user-form-button').click();
+    await um.createUserFormButton.click();
 
-    await page.locator('.create-container').locator('#name-box').fill('used_name');
-    await page.locator('.create-container').locator('#email-box').fill('used_email@email.com');
-    await page.locator('#create-user-button').click();
+    await um.createContainer.locator('#name-box').fill('used_name');
+    await um.createContainer.locator('#email-box').fill('used_email@email.com');
+    await um.createUserButton.click();
 
     await expect(page.getByText(' Error: wdae user with this email already exists. ')).toBeVisible();
     await deleteUser(page, 'used_email@email.com');
   });
 
   test('should not create user with no email or name', async({ page }) => {
-    await page.locator('#create-user-form-button').click();
+    const um = new UserManagementPage(page);
+    await um.createUserFormButton.click();
 
-    await page.locator('.create-container').locator('#name-box').fill('no_username');
-    await page.locator('#create-user-button').click();
-    await expect(page.locator('#email-box')).toBeFocused();
+    await um.createContainer.locator('#name-box').fill('no_username');
+    await um.createUserButton.click();
+    await expect(um.emailBox).toBeFocused();
 
-    await page.locator('#name-box').clear();
-    await page.locator('.create-container').locator('#email-box').fill('no_username_email@email.com');
-    await page.locator('#create-user-button').click();
-    await expect(page.locator('#name-box')).toBeFocused();
+    await um.nameBox.clear();
+    await um.createContainer.locator('#email-box').fill('no_username_email@email.com');
+    await um.createUserButton.click();
+    await expect(um.nameBox).toBeFocused();
 
     await expect(page.getByText('div:id("no_username_email@email.com-user-cell")')).not.toBeVisible();
   });
 
   test('should not create user with invalid email or name', async({ page }) => {
-    await page.locator('#create-user-form-button').click();
+    const um = new UserManagementPage(page);
+    await um.createUserFormButton.click();
 
-    await page.locator('.create-container').locator('#name-box').fill('valid_test_name');
-    await page.locator('.create-container').locator('#email-box').fill('invalid_email@email.c');
-    await page.locator('#create-user-button').click();
-    await expect(page.locator('#email-box')).toBeFocused();
+    await um.createContainer.locator('#name-box').fill('valid_test_name');
+    await um.createContainer.locator('#email-box').fill('invalid_email@email.c');
+    await um.createUserButton.click();
+    await expect(um.emailBox).toBeFocused();
 
-    await page.locator('#email-box').clear();
-    await page.locator('.create-container').locator('#email-box').fill('invalid_email@');
-    await page.locator('#create-user-button').click();
-    await expect(page.locator('#email-box')).toBeFocused();
+    await um.emailBox.clear();
+    await um.createContainer.locator('#email-box').fill('invalid_email@');
+    await um.createUserButton.click();
+    await expect(um.emailBox).toBeFocused();
 
-    await page.locator('#email-box').clear();
-    await page.locator('.create-container').locator('#email-box').fill('invalid_email');
-    await page.locator('#create-user-button').click();
-    await expect(page.locator('#email-box')).toBeFocused();
+    await um.emailBox.clear();
+    await um.createContainer.locator('#email-box').fill('invalid_email');
+    await um.createUserButton.click();
+    await expect(um.emailBox).toBeFocused();
 
-    await page.locator('#name-box').clear();
-    await page.locator('.create-container').locator('#email-box').fill('invalid_email@email.com');
-    await page.locator('.create-container').locator('#name-box').fill('va');
-    await page.locator('#create-user-button').click();
-    await expect(page.locator('#name-box')).toBeFocused();
+    await um.nameBox.clear();
+    await um.createContainer.locator('#email-box').fill('invalid_email@email.com');
+    await um.createContainer.locator('#name-box').fill('va');
+    await um.createUserButton.click();
+    await expect(um.nameBox).toBeFocused();
   });
 
   test('should search and find user', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
-    await expect(page.locator(`[id="${email}-user-cell"]`)).toBeVisible();
+    await expect(um.userCell(email)).toBeVisible();
 
     await searchInTable(page, email);
-    await expect(page.locator(`[id="${email}-user-cell"]`)).toBeVisible();
+    await expect(um.userCell(email)).toBeVisible();
   });
 
   test('should search and not find user', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
     await searchInTable(page, username);
-    await expect(page.locator(`[id="${email}-user-cell"]`)).not.toBeVisible();
+    await expect(um.userCell(email)).not.toBeVisible();
 
     await searchInTable(page, email);
-    await expect(page.locator(`[id="${email}-user-cell"]`)).not.toBeVisible();
+    await expect(um.userCell(email)).not.toBeVisible();
   });
 
   test('should edit username', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
-    await page.locator(`[id="${email}-new-name-input"]`).focus();
+    await um.userCell(email).getByTitle('Edit').click();
+    await um.newNameInput(email).focus();
     await page.keyboard.type('123');
     await page.keyboard.press('Enter');
 
-    await expect(page.locator(`[id="${email}-user-cell"]`)).toContainText(username+'123');
+    await expect(um.userCell(email)).toContainText(username+'123');
   });
 
   test('should try to delete username', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
-    await page.locator(`[id="${email}-new-name-input"]`).clear();
+    await um.userCell(email).getByTitle('Edit').click();
+    await um.newNameInput(email).clear();
     await page.keyboard.press('Enter');
-    await expect(page.locator(`[id="${email}-new-name-input"]`)).toBeFocused();
-    await page.locator('#cancel-button').click();
+    await expect(um.newNameInput(email)).toBeFocused();
+    await um.cancelButton.click();
 
-    await expect(page.locator(`[id="${email}-user-cell"]`)).toContainText(username);
+    await expect(um.userCell(email)).toContainText(username);
   });
 
   test('should cancel the process of creating user', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('#create-user-form-button').click();
+    await um.createUserFormButton.click();
 
-    await page.locator('.create-container').locator('#name-box').fill(username);
-    await page.locator('.create-container').locator('#email-box').fill(email);
-    await page.locator('#cancel-user-creation-button').click();
+    await um.createContainer.locator('#name-box').fill(username);
+    await um.createContainer.locator('#email-box').fill(email);
+    await um.cancelUserCreationButton.click();
 
-    await expect(page.locator(`[id="${email}-user-cell"]`)).not.toBeVisible();
+    await expect(um.userCell(email)).not.toBeVisible();
   });
 
   test('should check admin', async({ page }) => {
+    const um = new UserManagementPage(page);
     await searchInTable(page, 'admin@iossifovlab.com');
     await expect(page.locator('#admin-list-item gpf-confirm-button')).not.toBeVisible();
-    await expect(page.locator('[id="admin@iossifovlab.com-datasets-cell"]'))
+    await expect(um.datasetsCell('admin@iossifovlab.com'))
       .toHaveText(
         'ALL Genotypes' +
         'COMP Genotypes' +
@@ -215,31 +233,32 @@ test.describe('Users management', () => {
         'pheno_helloworld' +
         'vcf_helloworld'
       );
-    await expect(page.locator('[id="admin@iossifovlab.com-reset-password-button"]')).toBeVisible();
+    await expect(um.resetPasswordButton('admin@iossifovlab.com')).toBeVisible();
     await expect(page.locator('[id="admin@iossifovlab.com-reset-delete-user-button"]')).not.toBeVisible();
   });
 
   test('should add and remove group', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(email)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, 'denovo_helloworld');
     await page.waitForSelector('button:text("denovo_helloworld")');
-    await page.getByRole('button', { name: 'denovo_helloworld' }).click();
+    await um.menuItem('denovo_helloworld').click();
 
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText(email);
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('any_user');
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('denovo_helloworld');
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText('denovo_helloworld');
+    await expect(um.groupsCell(email)).toContainText(email);
+    await expect(um.groupsCell(email)).toContainText('any_user');
+    await expect(um.groupsCell(email)).toContainText('denovo_helloworld');
+    await expect(um.datasetsCell(email)).toContainText('denovo_helloworld');
 
-    await page.locator(`[id="${email}-groups-cell"] #denovo_helloworld-list-item gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await um.listItemConfirm(um.groupsCell(email), 'denovo_helloworld').click();
+    await um.removeConfirm.click();
 
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText('denovo_helloworld');
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).not.toContainText('denovo_helloworld');
+    await expect(um.groupsCell(email)).not.toContainText('denovo_helloworld');
+    await expect(um.datasetsCell(email)).not.toContainText('denovo_helloworld');
   });
 });
 
@@ -247,10 +266,11 @@ test.describe('Groups management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
+    await new UserManagementPage(page).navLink('Management').click();
   });
 
   test('should create and delete group with user and dataset', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -260,7 +280,7 @@ test.describe('Groups management', () => {
 
     // add user
     await addUserToGroup(page, groupName, email);
-    await expect(page.locator(`[id="${groupName}-users-cell"]`)).toContainText(email);
+    await expect(um.usersCell(groupName)).toContainText(email);
     await expect(page.getByText('Empty groups with no users or datasets will be deleted!')).not.toBeVisible();
 
     // add dataset
@@ -268,16 +288,17 @@ test.describe('Groups management', () => {
 
     // check if the group is added
     await page.reload();
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).toBeVisible();
+    await expect(um.groupCell(groupName)).toBeVisible();
 
     await deleteGroup(page, groupName);
     await deleteUser(page, email);
   });
 
   test('should create and delete group with user only', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -287,86 +308,92 @@ test.describe('Groups management', () => {
 
     // add user
     await addUserToGroup(page, groupName, email);
-    await expect(page.locator(`[id="${groupName}-users-cell"]`)).toContainText(email);
+    await expect(um.usersCell(groupName)).toContainText(email);
     await expect(page.getByText('Empty groups with no users or datasets will be deleted!')).not.toBeVisible();
 
     // check if the group is added
     await page.reload();
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).toBeVisible();
+    await expect(um.groupCell(groupName)).toBeVisible();
 
     await deleteGroup(page, groupName);
     await deleteUser(page, email);
   });
 
   test('should create and delete group with dataset only', async({ page }) => {
+    const um = new UserManagementPage(page);
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
     await addDatasetToGroup(page, groupName, 'iossifov_2014_liftover');
-    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText('iossifov_2014_liftover');
+    await expect(um.datasetsCell(groupName)).toContainText('iossifov_2014_liftover');
 
     // check if the group is added
     await page.reload();
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).toBeVisible();
+    await expect(um.groupCell(groupName)).toBeVisible();
 
     await deleteGroup(page, groupName);
   });
 
   test('should not create with no users or datasets', async({ page }) => {
+    const um = new UserManagementPage(page);
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
     await page.reload();
-    await page.locator('a:text("Groups")').click();
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).not.toBeVisible();
+    await um.navLink('Groups').click();
+    await expect(um.groupCell(groupName)).not.toBeVisible();
   });
 
   test('should not create group with invalid name', async({ page }) => {
-    await page.locator('a:text("Groups")').click();
-    await page.locator('#create-group-form-button').click();
+    const um = new UserManagementPage(page);
+    await um.navLink('Groups').click();
+    await um.createGroupFormButton.click();
 
-    await page.locator('#group-name-box').fill('c');
-    await page.locator('#create-group-button').click();
-    await expect(page.locator('#group-name-box')).toBeFocused();
+    await um.groupNameBox.fill('c');
+    await um.createGroupButton.click();
+    await expect(um.groupNameBox).toBeFocused();
 
-    await page.locator('#group-name-box').clear();
-    await page.locator('#group-name-box').fill('cc');
-    await page.locator('#create-group-button').click();
-    await expect(page.locator('#group-name-box')).toBeFocused();
+    await um.groupNameBox.clear();
+    await um.groupNameBox.fill('cc');
+    await um.createGroupButton.click();
+    await expect(um.groupNameBox).toBeFocused();
 
-    await page.locator('#cancel-group-creation-button').click();
+    await um.cancelGroupCreationButton.click();
   });
 
   test('should cancel the process of creating group', async({ page }) => {
-    await page.locator('a:text("Groups")').click();
+    const um = new UserManagementPage(page);
+    await um.navLink('Groups').click();
 
-    await page.locator('#create-group-form-button').click();
-    await page.locator('#group-name-box').fill('cancel_creation_group');
-    await page.locator('#cancel-group-creation-button').click();
-    await expect(page.locator('[id="cancel_creation_group-group-cell"]')).not.toBeVisible();
+    await um.createGroupFormButton.click();
+    await um.groupNameBox.fill('cancel_creation_group');
+    await um.cancelGroupCreationButton.click();
+    await expect(um.groupCell('cancel_creation_group')).not.toBeVisible();
   });
 
   test('should fail to create group with already used name', async({ page }) => {
+    const um = new UserManagementPage(page);
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
     // add dataset to make the group valid
     await addDatasetToGroup(page, groupName, 'iossifov_2014_liftover');
-    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText('iossifov_2014_liftover');
+    await expect(um.datasetsCell(groupName)).toContainText('iossifov_2014_liftover');
 
-    await page.locator('#create-group-form-button').click();
-    await page.locator('#group-name-box').fill(groupName);
-    await page.locator('#create-group-button').click();
+    await um.createGroupFormButton.click();
+    await um.groupNameBox.fill(groupName);
+    await um.createGroupButton.click();
     await expect(page.getByText(` '${groupName}' already exists choose another name! `)).toBeVisible();
   });
 
   test('should add and remove user and dataset from Group', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -381,24 +408,25 @@ test.describe('Groups management', () => {
 
     // remove user
     await searchInTable(page, groupName);
-    await page.locator(`[id="${groupName}-users-cell"] [id="${email}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${groupName}-users-cell"]`)).not.toContainText(email);
+    await um.listItemConfirm(um.usersCell(groupName), email).click();
+    await um.removeConfirm.click();
+    await expect(um.usersCell(groupName)).not.toContainText(email);
 
     // remove dataset
-    await page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).not.toContainText(datasetName);
+    await um.listItemConfirm(um.datasetsCell(groupName), datasetName).click();
+    await um.removeConfirm.click();
+    await expect(um.datasetsCell(groupName)).not.toContainText(datasetName);
 
     await expect(page.getByText('Empty groups with no users or datasets will be deleted!')).toBeVisible();
     await page.reload();
-    await page.locator('a:text("Groups")').click();
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).not.toBeVisible();
+    await um.navLink('Groups').click();
+    await expect(um.groupCell(groupName)).not.toBeVisible();
 
     await deleteUser(page, email);
   });
 
   test('should add and remove users and groups from Users and Groups', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -415,40 +443,41 @@ test.describe('Groups management', () => {
     await addDatasetToGroup(page, groupName2, datasetName);
 
     // check if the user has the new group
-    await page.locator('a:text("Users")').click();
+    await um.navLink('Users').click();
     await page.waitForSelector('gpf-users-table');
     await searchInTable(page, email);
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText(groupName1);
+    await expect(um.groupsCell(email)).toContainText(groupName1);
 
     // add the second group to the user in Users
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(email)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName2);
     await page.waitForSelector(`button:text("${groupName2}")`);
-    await page.getByRole('button', { name: groupName2 }).click();
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText(groupName2);
+    await um.menuItem(groupName2).click();
+    await expect(um.groupsCell(email)).toContainText(groupName2);
 
     // go and check users list of the second group in Groups
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName2);
-    await expect(page.locator(`[id="${groupName2}-users-cell"]`)).toContainText(email);
+    await expect(um.usersCell(groupName2)).toContainText(email);
 
     // delete both groups
     await deleteGroup(page, groupName1);
     await deleteGroup(page, groupName2);
 
     // check groups list of the user
-    await page.locator('a:text("Users")').click();
+    await um.navLink('Users').click();
     await page.waitForSelector('gpf-users-table');
     await searchInTable(page, email);
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText(groupName1);
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText(groupName2);
+    await expect(um.groupsCell(email)).not.toContainText(groupName1);
+    await expect(um.groupsCell(email)).not.toContainText(groupName2);
 
     await deleteUser(page, email);
   });
 
   test('should check if new groups and any_user group when creating user', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username1 = utils.getRandomString();
     const email1 = `${username1}@mail.com`;
     await utils.createUser(page, email1, username1);
@@ -457,33 +486,34 @@ test.describe('Groups management', () => {
     const email2 = `${username2}@mail.com`;
     await utils.createUser(page, email2, username2);
 
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, email1);
-    await expect(page.locator(`[id="${email1}-group-cell"]`)).toBeVisible();
+    await expect(um.groupCell(email1)).toBeVisible();
     await searchInTable(page, email2);
-    await expect(page.locator(`[id="${email2}-group-cell"]`)).toBeVisible();
+    await expect(um.groupCell(email2)).toBeVisible();
 
     await searchInTable(page, 'any_user');
-    await expect(page.locator('[id="any_user-users-cell"]')).toContainText(email1);
-    await expect(page.locator('[id="any_user-users-cell"]')).toContainText(email2);
+    await expect(um.usersCell('any_user')).toContainText(email1);
+    await expect(um.usersCell('any_user')).toContainText(email2);
 
     await deleteUser(page, email1);
     await deleteUser(page, email2);
 
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, email1);
-    await expect(page.locator(`[id="${email1}-group-cell"]`)).not.toBeVisible();
+    await expect(um.groupCell(email1)).not.toBeVisible();
     await searchInTable(page, email2);
-    await expect(page.locator(`[id="${email2}-group-cell"]`)).not.toBeVisible();
+    await expect(um.groupCell(email2)).not.toBeVisible();
 
     await searchInTable(page, 'any_user');
-    await expect(page.locator('[id="any_user-users-cell"]')).not.toContainText(email1);
-    await expect(page.locator('[id="any_user-users-cell"]')).not.toContainText(email2);
+    await expect(um.usersCell('any_user')).not.toContainText(email1);
+    await expect(um.usersCell('any_user')).not.toContainText(email2);
   });
 
   test('should check if the new group is deleted after removing it in Users', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -492,22 +522,23 @@ test.describe('Groups management', () => {
     await createGroup(page, groupName);
     await addUserToGroup(page, groupName, email);
 
-    await page.locator('a:text("Users")').click();
+    await um.navLink('Users').click();
     await page.waitForSelector('gpf-users-table');
     await searchInTable(page, email);
-    await page.locator(`[id="${email}-groups-cell"] [id="${groupName}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${email}-groups-cell"] [id="${groupName}-list-item"]`)).not.toBeVisible();
+    await um.listItemConfirm(um.groupsCell(email), groupName).click();
+    await um.removeConfirm.click();
+    await expect(um.listItem(um.groupsCell(email), groupName)).not.toBeVisible();
 
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).not.toBeVisible();
+    await expect(um.groupCell(groupName)).not.toBeVisible();
 
     await deleteUser(page, email);
   });
 
   test('should check if the new group is deleted after deleting the user', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -518,10 +549,10 @@ test.describe('Groups management', () => {
 
     await deleteUser(page, email);
 
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await expect(page.locator(`[id="${groupName}-group-cell"]`)).not.toBeVisible();
+    await expect(um.groupCell(groupName)).not.toBeVisible();
   });
 });
 
@@ -533,6 +564,7 @@ test.describe('Datasets management', () => {
   });
 
   test('should add group to user and check data in Datasets', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -540,28 +572,29 @@ test.describe('Datasets management', () => {
     const groupName = 'vcf_helloworld';
 
     // add group to user
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(email)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName);
     await page.waitForSelector(`button:text("${groupName}")`);
-    await page.getByRole('button', { name: groupName }).click();
+    await um.menuItem(groupName).click();
 
     // check datasets of the user
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText(groupName);
+    await expect(um.datasetsCell(email)).toContainText(groupName);
 
     // check dataset in Datasets
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${groupName}-users-list-cell"]`)).toContainText(username);
-    await expect(page.locator(`[id="${groupName}-users-list-cell"]`)).toContainText(email);
+    await um.datasetsTab().click();
+    await expect(um.usersListCell(groupName)).toContainText(username);
+    await expect(um.usersListCell(groupName)).toContainText(email);
 
     await deleteUser(page, email);
 
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${groupName}-users-list-cell"]`)).not.toContainText(username);
-    await expect(page.locator(`[id="${groupName}-users-list-cell"]`)).not.toContainText(email);
+    await um.datasetsTab().click();
+    await expect(um.usersListCell(groupName)).not.toContainText(username);
+    await expect(um.usersListCell(groupName)).not.toContainText(email);
   });
 
   test('should create group, add datasets and check data in Datasets', async({ page }) => {
+    const um = new UserManagementPage(page);
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
@@ -570,24 +603,25 @@ test.describe('Datasets management', () => {
     await addDatasetToGroup(page, groupName, datasetName1);
     await addDatasetToGroup(page, groupName, datasetName2);
 
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${datasetName1}-groups-cell"]`)).toContainText('any_dataset');
-    await expect(page.locator(`[id="${datasetName1}-groups-cell"]`)).toContainText(datasetName1);
-    await expect(page.locator(`[id="${datasetName1}-groups-cell"]`)).toContainText(groupName);
-    await expect(page.locator(`[id="${datasetName2}-groups-cell"]`)).toContainText('any_dataset');
-    await expect(page.locator(`[id="${datasetName2}-groups-cell"]`)).toContainText(datasetName2);
-    await expect(page.locator(`[id="${datasetName2}-groups-cell"]`)).toContainText(groupName);
+    await um.datasetsTab().click();
+    await expect(um.groupsCell(datasetName1)).toContainText('any_dataset');
+    await expect(um.groupsCell(datasetName1)).toContainText(datasetName1);
+    await expect(um.groupsCell(datasetName1)).toContainText(groupName);
+    await expect(um.groupsCell(datasetName2)).toContainText('any_dataset');
+    await expect(um.groupsCell(datasetName2)).toContainText(datasetName2);
+    await expect(um.groupsCell(datasetName2)).toContainText(groupName);
 
     await deleteGroup(page, groupName);
 
     await expect(async() => {
-      await page.getByRole('tab', { name: 'Datasets' }).click();
-      await expect(page.locator(`[id="${datasetName1}-groups-cell"]`)).not.toContainText(groupName);
-      await expect(page.locator(`[id="${datasetName2}-groups-cell"]`)).not.toContainText(groupName);
+      await um.datasetsTab().click();
+      await expect(um.groupsCell(datasetName1)).not.toContainText(groupName);
+      await expect(um.groupsCell(datasetName2)).not.toContainText(groupName);
     }).toPass({intervals: [1000]});
   });
 
   test('should create group, add dataset and users and check data in Datasets', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -600,36 +634,37 @@ test.describe('Datasets management', () => {
     await addDatasetToGroup(page, groupName, datasetName);
 
     // check datasets of the user
-    await page.locator('a:text("Users")').click();
+    await um.navLink('Users').click();
     await page.waitForSelector('gpf-users-table');
     await searchInTable(page, email);
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText(datasetName);
+    await expect(um.datasetsCell(email)).toContainText(datasetName);
 
     // check dataset in Datasets
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).toContainText(username);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).toContainText(email);
-    await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).toContainText(groupName);
+    await um.datasetsTab().click();
+    await expect(um.usersCell(datasetName)).toContainText(username);
+    await expect(um.usersCell(datasetName)).toContainText(email);
+    await expect(um.groupsCell(datasetName)).toContainText(groupName);
 
     // remove dataset from the group
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"]`)).not.toBeVisible();
+    await um.listItemConfirm(um.datasetsCell(groupName), datasetName).click();
+    await um.removeConfirm.click();
+    await expect(um.listItem(um.datasetsCell(groupName), datasetName)).not.toBeVisible();
 
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).not.toContainText(groupName);
+    await um.datasetsTab().click();
+    await expect(um.groupsCell(datasetName)).not.toContainText(groupName);
 
     await deleteUser(page, email);
 
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(username);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(email);
+    await um.datasetsTab().click();
+    await expect(um.usersCell(datasetName)).not.toContainText(username);
+    await expect(um.usersCell(datasetName)).not.toContainText(email);
   });
 
   test('should add and remove groups in Datasets', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -641,35 +676,36 @@ test.describe('Datasets management', () => {
     await addUserToGroup(page, groupName, email);
 
     // add the group to dataset in Datasets
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await page.locator(`[id="${datasetName}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.datasetsTab().click();
+    await um.addButtonIn(um.groupsCell(datasetName)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName);
     await page.waitForSelector(`button:text("${groupName}")`);
-    await page.getByRole('button', { name: groupName }).click();
+    await um.menuItem(groupName).click();
 
     // check users list of dataset
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).toContainText(username);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).toContainText(email);
+    await expect(um.usersCell(datasetName)).toContainText(username);
+    await expect(um.usersCell(datasetName)).toContainText(email);
 
     // check group list of dataset
-    await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).toContainText(groupName);
+    await expect(um.groupsCell(datasetName)).toContainText(groupName);
 
     // remove the group from the dataset
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await page.locator(`[id="${datasetName}-groups-cell"] [id="${groupName}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await um.datasetsTab().click();
+    await um.listItemConfirm(um.groupsCell(datasetName), groupName).click();
+    await um.removeConfirm.click();
     // tb-pa6: drop the meaningless `${groupName}-datasets-cell` assertion
     // (only renders on the Groups tab; not.toBeVisible() against a
     // non-existent locator passes trivially). Lines below verify the
     // removal correctly via the `${datasetName}-groups-cell`
     // (Datasets-tab) locator.
-    await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).not.toContainText(groupName);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(email);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(username);
+    await expect(um.groupsCell(datasetName)).not.toContainText(groupName);
+    await expect(um.usersCell(datasetName)).not.toContainText(email);
+    await expect(um.usersCell(datasetName)).not.toContainText(username);
   });
 
   test('should add groups with user to dataset and delete the user', async({ page }) => {
+    const um = new UserManagementPage(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
@@ -681,39 +717,39 @@ test.describe('Datasets management', () => {
     await addUserToGroup(page, groupName, email);
 
     // add the group to dataset in Datasets
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await page.locator(`[id="${datasetName}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.datasetsTab().click();
+    await um.addButtonIn(um.groupsCell(datasetName)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, groupName);
     await page.waitForSelector(`button:text("${groupName}")`);
-    await page.getByRole('button', { name: groupName }).click();
+    await um.menuItem(groupName).click();
 
     // check users list of dataset
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).toContainText(username);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).toContainText(email);
+    await expect(um.usersCell(datasetName)).toContainText(username);
+    await expect(um.usersCell(datasetName)).toContainText(email);
 
     // check group list of dataset
-    await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).toContainText(groupName);
+    await expect(um.groupsCell(datasetName)).toContainText(groupName);
 
     // check dataset cell of the user in Users
-    await page.locator('a:text("Users")').click();
+    await um.navLink('Users').click();
     await page.waitForSelector('gpf-users-table');
     await searchInTable(page, email);
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText(datasetName);
+    await expect(um.datasetsCell(email)).toContainText(datasetName);
 
     await deleteUser(page, email);
 
     // check the group in Groups
-    await page.locator('a:text("Groups")').click();
+    await um.navLink('Groups').click();
     await page.waitForSelector('gpf-groups-table');
     await searchInTable(page, groupName);
-    await expect(page.locator(`[id="${groupName}-users-cell"]`)).not.toContainText(email);
-    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).not.toContainText(email);
+    await expect(um.usersCell(groupName)).not.toContainText(email);
+    await expect(um.datasetsCell(groupName)).not.toContainText(email);
 
-    await page.getByRole('tab', { name: 'Datasets' }).click();
-    await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).toContainText(groupName);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(email);
-    await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(username);
+    await um.datasetsTab().click();
+    await expect(um.groupsCell(datasetName)).toContainText(groupName);
+    await expect(um.usersCell(datasetName)).not.toContainText(email);
+    await expect(um.usersCell(datasetName)).not.toContainText(username);
   });
 });
 
@@ -728,11 +764,12 @@ test.describe('Admin surface (folded from app.spec.ts, tb-nxl)', () => {
   });
 
   test('should click on the "Management" button and navigate to "/management"', async({ page }) => {
+    const um = new UserManagementPage(page);
     const managementUrl = `${utils.frontendUrl}/management`;
 
     await loginLiteralAdmin(page);
 
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
 
     const currentUrl = page.url();
 
@@ -740,121 +777,124 @@ test.describe('Admin surface (folded from app.spec.ts, tb-nxl)', () => {
   });
 
   test(`should check navigation bar for the right elements for ${LITERAL_ADMIN_EMAIL} user`, async({ page }) => {
+    const header = new Header(page);
     await loginLiteralAdmin(page);
 
     const navigationTabs = ['Home', 'Datasets', 'Gene profiles', 'User profile', 'Management', 'About'];
-    await expect(page.locator('#header a')).toHaveCount(navigationTabs.length);
+    await expect(header.navLinks).toHaveCount(navigationTabs.length);
 
     for (const tab of navigationTabs) {
-      await expect(page.locator('#header a').getByText(tab)).toBeVisible();
+      await expect(header.navLinkByText(tab)).toBeVisible();
     }
   });
 
   test('should login admin and give user access rights for Hello World Genotypes, ' +
        'then login user and verify his rights', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const datasets = new Datasets(page);
+    const login = new Login(page);
     const newUserPasswordSuffix = '!!__3456';
     await loginLiteralAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     await utils.createUser(page, email, username);
 
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
-      'button', { name: 'Add' }
-    ).click();
-    await page.getByRole('textbox', { name: 'Search' }).focus();
+    await um.addButtonIn(um.groupsCell(email)).click();
+    await um.searchMenuTextbox.focus();
     await page.keyboard.type('helloworld_genotypes');
-    await page.locator('button.add-item-button').filter({ hasText: 'helloworld_genotypes' }).click();
-    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
+    await um.addItemButton.filter({ hasText: 'helloworld_genotypes' }).click();
+    await expect(um.passwordCell(email)).toBeEmpty();
 
-    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
-    await page.locator('button:text("Reset")').click();
+    await um.resetPasswordButton(email).locator('button').click();
+    await um.resetConfirm.click();
     await utils.logout(page);
 
     await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
-    await page.locator('#id_new_password1').fill('secret' + newUserPasswordSuffix);
-    await page.locator('#id_new_password2').fill('secret' + newUserPasswordSuffix);
-    await page.locator('input[value="Reset password"]').click();
+    await login.newPassword1.fill('secret' + newUserPasswordSuffix);
+    await login.newPassword2.fill('secret' + newUserPasswordSuffix);
+    await login.resetPasswordInput.click();
     await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
 
     await utils.login(page, email, 'secret' + newUserPasswordSuffix);
 
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    await expect(page.locator('#register-alert')).toBeVisible();
+    await expect(datasets.registerAlert).toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    await expect(page.locator('#register-alert')).toBeVisible();
+    await expect(datasets.registerAlert).toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
-    await expect(page.locator('#register-alert')).toBeVisible();
+    await expect(datasets.registerAlert).toBeVisible();
   });
 
   test('should login admin and give user access rights for ALL Genotypes, ' +
      'then login user and verify his rights', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const datasets = new Datasets(page);
+    const login = new Login(page);
     const newUserPasswordSuffix = '!!__3456';
     await loginLiteralAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     await utils.createUser(page, email, username);
 
-    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
-      'button', { name: 'Add' }
-    ).click();
-    await page.getByRole('textbox', { name: 'Search' }).fill('ALL_genotypes');
+    await um.addButtonIn(um.groupsCell(email)).click();
+    await um.searchMenuTextbox.fill('ALL_genotypes');
     await page.getByRole('button', { name: 'ALL_genotypes', exact: true }).click();
-    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
+    await expect(um.passwordCell(email)).toBeEmpty();
 
-    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
-    await page.locator('button:text("Reset")').click();
+    await um.resetPasswordButton(email).locator('button').click();
+    await um.resetConfirm.click();
     await utils.logout(page);
 
     await page.goto(await utils.getLinkInEmail(page, email), {waitUntil: 'load'});
 
-    await page.locator('#id_new_password1').fill('secret' + newUserPasswordSuffix);
-    await page.locator('#id_new_password2').fill('secret' + newUserPasswordSuffix);
-    await page.locator('input[value="Reset password"]').click();
+    await login.newPassword1.fill('secret' + newUserPasswordSuffix);
+    await login.newPassword2.fill('secret' + newUserPasswordSuffix);
+    await login.resetPasswordInput.click();
 
     await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
 
     await utils.login(page, email, 'secret' + newUserPasswordSuffix);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    await expect(page.locator('#register-alert')).not.toBeVisible();
+    await expect(datasets.registerAlert).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
-    await expect(page.locator('#register-alert')).toBeVisible();
+    await expect(datasets.registerAlert).toBeVisible();
   });
 });
 
@@ -879,180 +919,190 @@ test.describe('Datasets access rights via Management '
   });
 
   test('should give rights for vcf_helloworld to any_user', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const header = new Header(page);
     // check if Genotype browser is disabled when no user is logged in
     await utils.logout(page);
     const study = utils.datasetIds.vcfHelloWorld;
     const group = 'any_user';
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item disabled-tool');
 
     // add any_user group to study
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
-    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await um.navLink('Management').click();
+    await um.datasetsTab().click();
     await searchInTable(page, study);
 
-    await page.locator(`[id="${study}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(study)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, group);
     await page.waitForSelector(`button:text("${group}")`);
-    await page.getByRole('button', { name: group }).click();
+    await um.menuItem(group).click();
 
-    await expect(page.locator(`[id="${study}-groups-cell"]`)).toContainText(group);
+    await expect(um.groupsCell(study)).toContainText(group);
 
     // check if Genotype browser is enabled when no user is logged in
     await utils.logout(page);
 
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item');
 
     await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item');
 
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item');
 
     // remove any_user from list of groups of the study
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
-    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await um.navLink('Management').click();
+    await um.datasetsTab().click();
     await searchInTable(page, study);
-    await page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await um.listItemConfirm(um.groupsCell(study), group).click();
+    await um.removeConfirm.click();
     // tb-pa6: assert against the locator visible on the Datasets tab
     // (where this test sits). The previous assertion targeted
     // `${group}-datasets-cell` which only renders on the Groups tab —
     // .not.toBeVisible() against a never-rendered locator passes
     // trivially, leaving an actually-failed Remove click silent.
-    await expect(page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"]`)).not.toBeVisible();
+    await expect(um.listItem(um.groupsCell(study), group)).not.toBeVisible();
   });
 
   test('should give rights for vcf_helloworld to researcher', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const header = new Header(page);
     // check if Genotype browser is disabled when no user is logged in
     await utils.logout(page);
 
     const study = utils.datasetIds.vcfHelloWorld;
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item disabled-tool');
 
     // add group to reasearcher
     const researcher = 'research@iossifovlab.com';
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     await searchInTable(page, researcher);
 
-    await page.locator(`[id="${researcher}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(researcher)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, study);
     await page.waitForSelector(`button:text("${study}")`);
-    await page.getByRole('button', { name: study }).click();
+    await um.menuItem(study).click();
 
     await utils.logout(page);
     // check if Genotype browser is enabled when researcher is logged in
     await utils.login(page, researcher, 'secret');
 
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item');
 
     await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item');
 
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('li').filter({ hasText: 'Genotype Browser'})).toHaveClass('nav-item');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item');
 
     // remove group from groups list of research
     await utils.logout(page);
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     await searchInTable(page, researcher);
 
-    await page.locator(`[id="${researcher}-groups-cell"] [id="${study}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await um.listItemConfirm(um.groupsCell(researcher), study).click();
+    await um.removeConfirm.click();
 
-    await expect(page.locator(`[id="${researcher}-groups-cell"]`)).not.toContainText(study);
+    await expect(um.groupsCell(researcher)).not.toContainText(study);
   });
 
   test('should give rights for pheno_helloworld to any_user', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const datasets = new Datasets(page);
+    const phenoBrowser = new PhenoBrowser(page);
     const study = utils.datasetIds.phenoHelloWorld;
     const group = 'any_user';
 
     // check if Phenotype browser download is disabled when no user is logged in
     await utils.logout(page);
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
-    await expect(page.locator('#download-measures')).toContainClass('disabled-download');
+    await expect(datasets.phenoBrowser).toBeVisible();
+    await expect(phenoBrowser.downloadMeasures).toContainClass('disabled-download');
 
     // add any_user group to pheno study
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
-    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await um.navLink('Management').click();
+    await um.datasetsTab().click();
     await searchInTable(page, study);
 
-    await page.locator(`[id="${study}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(study)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, group);
     await page.waitForSelector(`button:text("${group}")`);
-    await page.getByRole('button', { name: group }).click();
+    await um.menuItem(group).click();
 
-    await expect(page.locator(`[id="${study}-groups-cell"]`)).toContainText(group);
+    await expect(um.groupsCell(study)).toContainText(group);
 
     // check if Phenotype browser is enabled when no user is logged in
     await utils.logout(page);
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
-    await expect(page.locator('#download-measures')).not.toContainClass('disabled-download');
+    await expect(datasets.phenoBrowser).toBeVisible();
+    await expect(phenoBrowser.downloadMeasures).not.toContainClass('disabled-download');
 
     // remove any_user from list of groups of the pheno study
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
-    await page.getByRole('tab', { name: 'Datasets' }).click();
+    await um.navLink('Management').click();
+    await um.datasetsTab().click();
     await searchInTable(page, study);
-    await page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await um.listItemConfirm(um.groupsCell(study), group).click();
+    await um.removeConfirm.click();
     // tb-pa6: assert against the Datasets-tab locator (see twin fix
     // ~85 lines above for vcf_helloworld → any_user).
-    await expect(page.locator(`[id="${study}-groups-cell"] [id="${group}-list-item"]`)).not.toBeVisible();
+    await expect(um.listItem(um.groupsCell(study), group)).not.toBeVisible();
   });
 
   test('should give rights for pheno_helloworld to researcher', async({ page }) => {
+    const um = new UserManagementPage(page);
+    const datasets = new Datasets(page);
+    const phenoBrowser = new PhenoBrowser(page);
     const study = utils.datasetIds.phenoHelloWorld;
     const researcher = 'research@iossifovlab.com';
 
     // check if Phenotype browser download is disabled when no user is logged in
     await utils.logout(page);
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
-    await expect(page.locator('#download-measures')).toContainClass('disabled-download');
+    await expect(datasets.phenoBrowser).toBeVisible();
+    await expect(phenoBrowser.downloadMeasures).toContainClass('disabled-download');
 
     // add pheno group to reasearcher
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     await searchInTable(page, researcher);
 
-    await page.locator(`[id="${researcher}-groups-cell"]`).getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell(researcher)).click();
     await page.waitForSelector('.add-item-button');
     await searchInMenu(page, study);
     await page.waitForSelector(`button:text("${study}")`);
-    await page.getByRole('button', { name: study }).click();
+    await um.menuItem(study).click();
 
     await utils.logout(page);
     // check if Phenotype browser download is enabled when researcher is logged in
     await utils.login(page, researcher, 'secret');
 
     await utils.navigateToDataset(page, study);
-    await expect(page.locator('gpf-pheno-browser')).toBeVisible();
-    await expect(page.locator('#download-measures')).not.toContainClass('disabled-download');
+    await expect(datasets.phenoBrowser).toBeVisible();
+    await expect(phenoBrowser.downloadMeasures).not.toContainClass('disabled-download');
 
     // remove pheno group from groups list of research
     await utils.logout(page);
     await loginLiteralAdmin(page);
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     await searchInTable(page, researcher);
 
-    await page.locator(`[id="${researcher}-groups-cell"] [id="${study}-list-item"] gpf-confirm-button`).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await um.listItemConfirm(um.groupsCell(researcher), study).click();
+    await um.removeConfirm.click();
 
-    await expect(page.locator(`[id="${researcher}-groups-cell"]`)).not.toContainText(study);
+    await expect(um.groupsCell(researcher)).not.toContainText(study);
   });
 });
 
@@ -1072,61 +1122,71 @@ test.describe('Dataset description (folded from datasets-description.spec.ts, '
   });
 
   test('should display dataset description window', async({ page }) => {
-    await expect(page.locator('gpf-dataset-description')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.datasetDescription).toBeVisible();
   });
 
   test('should display empty description placeholder text', async({ page }) => {
-    await expect(page.locator('#empty-description')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.emptyDescription).toBeVisible();
     await expect(
-      page.locator('#empty-description')
+      description.emptyDescription
     ).toHaveText('Empty description. Write a description using the pencil button to the right.');
   });
 
   test('should display edit icon', async({ page }) => {
-    await expect(page.locator('#edit-icon')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.editIcon).toBeVisible();
   });
 
   test('should display angular markdown editor after clicking the edit button', async({ page }) => {
-    await expect(page.locator('.editor')).not.toBeVisible();
-    await page.locator('#edit-icon').click();
-    await expect(page.locator('.editor')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.editor).not.toBeVisible();
+    await description.editIcon.click();
+    await expect(description.editor).toBeVisible();
   });
 
   test('should display preview button', async({ page }) => {
-    await expect(page.getByText('Preview')).not.toBeVisible();
-    await page.locator('#edit-icon').click();
-    await expect(page.getByText('Preview')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.previewButton).not.toBeVisible();
+    await description.editIcon.click();
+    await expect(description.previewButton).toBeVisible();
   });
 
   test('should display save button', async({ page }) => {
-    await expect(page.getByText('Save')).not.toBeVisible();
-    await page.locator('#edit-icon').click();
-    await expect(page.getByText('Save')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.saveButton).not.toBeVisible();
+    await description.editIcon.click();
+    await expect(description.saveButton).toBeVisible();
   });
 
   test('should display close button', async({ page }) => {
-    await expect(page.getByText('Close')).not.toBeVisible();
-    await page.locator('#edit-icon').click();
-    await expect(page.getByText('Close')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.closeButton).not.toBeVisible();
+    await description.editIcon.click();
+    await expect(description.closeButton).toBeVisible();
   });
 
   test('should display the editor header bar', async({ page }) => {
-    await expect(page.locator('.md-header')).not.toBeVisible();
-    await page.locator('#edit-icon').click();
-    await expect(page.locator('.md-header')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.mdHeader).not.toBeVisible();
+    await description.editIcon.click();
+    await expect(description.mdHeader).toBeVisible();
   });
 
   test('should hide the edit button after clicking it', async({ page }) => {
-    await expect(page.locator('#edit-icon')).toBeVisible();
-    await page.locator('#edit-icon').click();
-    await expect(page.locator('#edit-icon')).not.toBeVisible();
-    await page.getByText('Close').click();
-    await expect(page.locator('#edit-icon')).toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.editIcon).toBeVisible();
+    await description.editIcon.click();
+    await expect(description.editIcon).not.toBeVisible();
+    await description.closeButton.click();
+    await expect(description.editIcon).toBeVisible();
   });
 
   test('should save the markdown', async({ page }) => {
-    await expect(page.locator('#empty-description')).toBeVisible();
-    await expect(page.locator('markdown p')).not.toBeVisible();
+    const description = new DescriptionEditor(page);
+    await expect(description.emptyDescription).toBeVisible();
+    await expect(description.markdownParagraph).not.toBeVisible();
 
     // The SPA's markdown-editor save() does an optimistic UI update + a
     // fire-and-forget POST to /datasets/description/<id>. Without waiting
@@ -1135,22 +1195,22 @@ test.describe('Dataset description (folded from datasets-description.spec.ts, '
     const isDescriptionSave = (resp: import('@playwright/test').Response): boolean =>
       resp.url().includes('/api/v3/datasets/description/') && resp.request().method() === 'POST';
 
-    await page.locator('#edit-icon').click();
-    await page.locator('.editor textarea').type('TEST DESCRIPTION ASDF');
+    await description.editIcon.click();
+    await description.editorTextarea.type('TEST DESCRIPTION ASDF');
     await Promise.all([
       page.waitForResponse(isDescriptionSave),
-      page.getByText('Save').click(),
+      description.saveButton.click(),
     ]);
-    await expect(page.locator('markdown p')).toHaveText('TEST DESCRIPTION ASDF');
-    await expect(page.locator('#empty-description')).not.toBeVisible();
+    await expect(description.markdownParagraph).toHaveText('TEST DESCRIPTION ASDF');
+    await expect(description.emptyDescription).not.toBeVisible();
 
-    await page.locator('#edit-icon').click();
-    await page.locator('.editor textarea').fill('');
+    await description.editIcon.click();
+    await description.editorTextarea.fill('');
     await Promise.all([
       page.waitForResponse(isDescriptionSave),
-      page.getByText('Save').click(),
+      description.saveButton.click(),
     ]);
-    await expect(page.locator('#empty-description')).toBeVisible();
+    await expect(description.emptyDescription).toBeVisible();
   });
 });
 
@@ -1169,23 +1229,25 @@ test.describe('Dataset description access rights '
   test('should log admin, give researcher user access rights for iossifov_2014,' +
        'create dataset description for iossifov_2014, log researcher user and check ' +
        'whether the newly created description exists and that it cannot be edited', async({ page }) => {
-    await page.locator('a:text("Management")').click();
+    const um = new UserManagementPage(page);
+    const header = new Header(page);
+    const description = new DescriptionEditor(page);
+    await um.navLink('Management').click();
 
     // gpf#962: under CI load the Users table renders only a prefix of the
     // user list, so the last-sorted rows (this user) can be absent for
     // >20s and the Add-button click times out. Filter the table down to
     // the target user first so its row is guaranteed to be present.
     await searchInTable(page, 'user_iossifov_2014@iossifovlab.com');
-    await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]')
-      .getByRole('button', { name: 'Add' }).click();
+    await um.addButtonIn(um.groupsCell('user_iossifov_2014@iossifovlab.com')).click();
     await page.waitForSelector('.add-item-button');
-    await page.getByRole('textbox', { name: 'Search' }).focus();
+    await um.searchMenuTextbox.focus();
     await page.keyboard.type('iossifov_2014_liftover');
     await page.waitForSelector('button:text("iossifov_2014_liftover")');
-    await page.getByRole('button', { name: 'iossifov_2014_liftover' }).click();
+    await um.menuItem('iossifov_2014_liftover').click();
     await page.mouse.click(0, 0); // close the menu
 
-    await page.locator('#header a:text("Datasets")').click();
+    await header.navLink('Datasets').click();
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
 
     // tb-pa6: same fire-and-forget POST race as the in-file
@@ -1199,18 +1261,18 @@ test.describe('Dataset description access rights '
     const isDescriptionSave = (resp: import('@playwright/test').Response): boolean =>
       resp.url().includes('/api/v3/datasets/description/') && resp.request().method() === 'POST';
 
-    await page.locator('#edit-icon').click();
-    await page.locator('.editor textarea').fill('IOSSIFOV TEST DESCRIPTION');
+    await description.editIcon.click();
+    await description.editorTextarea.fill('IOSSIFOV TEST DESCRIPTION');
     await Promise.all([
       page.waitForResponse(isDescriptionSave),
-      page.getByText('Save').click(),
+      description.saveButton.click(),
     ]);
     await utils.logout(page);
 
     await utils.login(page, 'user_iossifov_2014@iossifovlab.com');
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
-    await expect(page.locator('markdown p')).toHaveText('IOSSIFOV TEST DESCRIPTION');
-    await expect(page.locator('#edit-icon')).not.toBeVisible();
+    await expect(description.markdownParagraph).toHaveText('IOSSIFOV TEST DESCRIPTION');
+    await expect(description.editIcon).not.toBeVisible();
     await utils.logout(page);
 
     await loginLiteralAdmin(page);
@@ -1221,24 +1283,24 @@ test.describe('Dataset description access rights '
     // subsequent fill('') + Save a no-op (markdown===initialMarkdown,
     // writeEvent never emitted, POST never fires, waitForResponse
     // times out).
-    await expect(page.locator('markdown p')).toHaveText('IOSSIFOV TEST DESCRIPTION');
-    await page.locator('#edit-icon').click();
-    await page.locator('.editor textarea').fill('');
+    await expect(description.markdownParagraph).toHaveText('IOSSIFOV TEST DESCRIPTION');
+    await description.editIcon.click();
+    await description.editorTextarea.fill('');
     await Promise.all([
       page.waitForResponse(isDescriptionSave),
-      page.getByText('Save').click(),
+      description.saveButton.click(),
     ]);
 
-    await page.locator('a:text("Management")').click();
+    await um.navLink('Management').click();
     // gpf#962: filter to the target user (see the grant step above) so the
     // row is present under CI load before interacting with its groups-cell.
     await searchInTable(page, 'user_iossifov_2014@iossifovlab.com');
-    await page.locator(
-      '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014_liftover-list-item gpf-confirm-button'
+    await um.listItemConfirm(
+      um.groupsCell('user_iossifov_2014@iossifovlab.com'), 'iossifov_2014_liftover'
     ).click();
-    await page.getByRole('button', { name: 'Remove', exact: true }).click();
-    await expect(page.locator(
-      '[id="user_iossifov_2014@iossifovlab.com-groups-cell"]')
+    await um.removeConfirm.click();
+    await expect(
+      um.groupsCell('user_iossifov_2014@iossifovlab.com')
     ).not.toContainText('iossifov_2014_liftover');
   });
 });
@@ -1257,118 +1319,128 @@ test.describe('Home page description '
   });
 
   test('should add description', async({ page }) => {
-    await page.locator('#edit-icon').click();
-    await expect(page.locator('.editor')).toBeVisible();
-    await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    await page.getByText('Save').click();
+    const description = new DescriptionEditor(page);
+    await description.editIcon.click();
+    await expect(description.editor).toBeVisible();
+    await description.markdownEditorTextarea.fill('Test description');
+    await description.saveButton.click();
 
-    await expect(page.locator('.editor')).not.toBeVisible();
+    await expect(description.editor).not.toBeVisible();
     await page.reload();
-    await expect(page.locator('#edit-container p')).toHaveText('Test description');
+    await expect(description.editContainerParagraph).toHaveText('Test description');
 
-    await page.locator('#edit-icon').click();
-    await page.locator('gpf-markdown-editor').locator('textarea').clear();
+    await description.editIcon.click();
+    await description.markdownEditorTextarea.clear();
 
-    await page.getByText('Save').click();
-    await expect(page.locator('#empty-description')).toBeVisible();
+    await description.saveButton.click();
+    await expect(description.emptyDescription).toBeVisible();
   });
 
   test('should check if editing description is disabled when no access rights', async({ page }) => {
-    await page.locator('#edit-icon').click();
-    await page.locator('gpf-markdown-editor').locator('textarea').fill('Test description');
-    await page.getByText('Save').click();
+    const description = new DescriptionEditor(page);
+    await description.editIcon.click();
+    await description.markdownEditorTextarea.fill('Test description');
+    await description.saveButton.click();
 
 
     await utils.logout(page);
     await page.waitForSelector('gpf-home');
-    await expect(page.locator('#edit-container p')).toHaveText('Test description');
-    await expect(page.locator('#edit-icon')).not.toBeVisible();
+    await expect(description.editContainerParagraph).toHaveText('Test description');
+    await expect(description.editIcon).not.toBeVisible();
 
     await loginLiteralAdmin(page);
     await page.waitForSelector('gpf-home');
 
-    await page.locator('#edit-icon').click();
-    await page.locator('gpf-markdown-editor').locator('textarea').clear();
+    await description.editIcon.click();
+    await description.markdownEditorTextarea.clear();
 
-    await page.getByText('Save').click();
-    await expect(page.locator('#empty-description')).toBeVisible();
+    await description.saveButton.click();
+    await expect(description.emptyDescription).toBeVisible();
 
     await utils.logout(page);
     await page.waitForSelector('gpf-home');
-    await expect(page.locator('gpf-markdown-editor')).not.toBeVisible();
+    await expect(description.markdownEditor).not.toBeVisible();
   });
 });
 
 async function createGroup(page: Page, name: string): Promise<void> {
-  await page.locator('a:text("Groups")').click();
-  await page.locator('#create-group-form-button').click();
-  await page.locator('#group-name-box').fill(name);
-  await page.locator('#create-group-button').click();
+  const um = new UserManagementPage(page);
+  await um.navLink('Groups').click();
+  await um.createGroupFormButton.click();
+  await um.groupNameBox.fill(name);
+  await um.createGroupButton.click();
   await expect(page.getByText(`${name}Empty groups with no users or datasets will be deleted!`)).toBeVisible();
 }
 
 async function deleteGroup(page: Page, name: string): Promise<void> {
-  await page.locator('a:text("Groups")').click();
+  const um = new UserManagementPage(page);
+  await um.navLink('Groups').click();
   await page.waitForSelector('gpf-groups-table');
   await searchInTable(page, name);
-  await page.locator(`[id="${name}-delete-group-button"]`).click();
+  await um.deleteGroupButton(name).click();
 
   const permissionResponse = page.waitForResponse(resp =>
     (resp.url().includes('revoke-permission') && resp.status() === 200)
     || (resp.url().includes('remove-user') && resp.status() === 204)
   );
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await um.deleteConfirm.click();
   await permissionResponse;
 
-  await expect(page.locator(`[id="${name}-group-cell"]`)).not.toBeVisible();
+  await expect(um.groupCell(name)).not.toBeVisible();
 }
 
 async function addUserToGroup(page: Page, groupName: string, email: string): Promise<void> {
-  await page.locator(`[id="${groupName}-users-cell"]`).getByRole('button', { name: 'Add' }).click();
+  const um = new UserManagementPage(page);
+  await um.addButtonIn(um.usersCell(groupName)).click();
   await page.waitForSelector('.add-item-button');
   await searchInMenu(page, email);
   await page.waitForSelector(`button:text("${email}")`);
-  await page.getByRole('button', { name: email }).click();
+  await um.menuItem(email).click();
   await page.mouse.click(0, 0); // close the menu
-  await expect(page.locator(`[id="${groupName}-users-cell"]`)).toContainText(email);
+  await expect(um.usersCell(groupName)).toContainText(email);
 }
 
 async function addDatasetToGroup(page: Page, groupName: string, datasetName: string): Promise<void> {
-  await page.locator(`[id="${groupName}-datasets-cell"]`).getByRole('button', { name: 'Add' }).click();
+  const um = new UserManagementPage(page);
+  await um.addButtonIn(um.datasetsCell(groupName)).click();
   await page.waitForSelector('.add-item-button');
   await searchInMenu(page, datasetName);
   await page.waitForSelector(`button:text("${datasetName}")`);
-  await page.getByRole('button', { name: datasetName }).click();
+  await um.menuItem(datasetName).click();
   await page.mouse.click(0, 0); // close the menu
-  await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText(datasetName);
+  await expect(um.datasetsCell(groupName)).toContainText(datasetName);
 }
 
 async function deleteUser(page: Page, email: string): Promise<void> {
-  await page.locator('a:text("Users")').click();
+  const um = new UserManagementPage(page);
+  await um.navLink('Users').click();
   await page.waitForSelector('gpf-users-table');
   await searchInTable(page, email);
-  await page.locator(`[id="${email}-delete-user-button"]`).click();
+  await um.deleteUserButton(email).click();
 
   const deleteResponse = page.waitForResponse(
     resp => resp.request().method() === 'DELETE' && resp.status() === 204
   );
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await um.deleteConfirm.click();
   await deleteResponse;
 }
 
 async function searchInTable(page: Page, name: string): Promise<void> {
-  await page.locator('#search-field').clear();
-  await page.locator('#search-field').focus();
+  const um = new UserManagementPage(page);
+  await um.searchField.clear();
+  await um.searchField.focus();
   await page.keyboard.type(name);
 }
 
 async function searchInMenu(page: Page, name: string): Promise<void> {
-  await page.getByRole('textbox', { name: 'Search' }).clear();
-  await page.getByRole('textbox', { name: 'Search' }).focus();
+  const um = new UserManagementPage(page);
+  await um.searchMenuTextbox.clear();
+  await um.searchMenuTextbox.focus();
   await page.keyboard.type(name);
 }
 
 async function navigateToManagement(page: Page): Promise<void> {
-  await page.locator('a:text("Management")').click();
+  const um = new UserManagementPage(page);
+  await um.navLink('Management').click();
   await page.waitForSelector('.grid-cell');
 }

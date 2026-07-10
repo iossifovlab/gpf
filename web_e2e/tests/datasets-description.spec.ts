@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { Datasets } from './components/datasets.component';
 
 // tb-nxl-fix: the 'Dataset description tests' describe that used to live
 // here (10 tests, all admin-only — #edit-icon, #empty-description
@@ -18,44 +19,46 @@ test.describe('Dataset description access rights tests', () => {
   });
 
   test('should always show the dataset description button if the user is admin', async({ page }) => {
+    const datasets = new Datasets(page);
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
     await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
     await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
     await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
     await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
     await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
     await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    await expect(page.getByText('Dataset Description')).toBeVisible();
+    await expect(datasets.datasetDescriptionButton).toBeVisible();
   });
   test('should NOT show the dataset description button for a regular user when no description is available', async({
     page
   }) => {
+    const datasets = new Datasets(page);
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
 
     await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
 
     await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
 
     await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
 
     await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
 
     await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
 
     await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
+    expect(await datasets.datasetDescriptionButton.getAttribute('pointer-events')).toBe(null);
   });
 
   // tb-nxl-fix: the admin-only "should log admin, give researcher user

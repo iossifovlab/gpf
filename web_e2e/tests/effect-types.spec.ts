@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { EffectTypes } from './components/effect-types.component';
 
 test.describe('Effect types tests', () => {
   test.beforeEach(async({ page }) => {
@@ -9,28 +10,31 @@ test.describe('Effect types tests', () => {
   });
 
   test('should display error alert when none of the checkboxes are selected', async({ page }) => {
-    await page.locator('gpf-effect-types').getByText('None').click();
-    await expect(page.getByText('Select at least one.')).toBeVisible();
+    const effectTypes = new EffectTypes(page);
+    await effectTypes.clickButton('None');
+    await expect(effectTypes.selectAtLeastOneError).toBeVisible();
 
-    await page.locator('gpf-effect-types').getByText('All').click();
-    await expect(page.getByText('Select at least one.')).not.toBeVisible();
+    await effectTypes.clickButton('All');
+    await expect(effectTypes.selectAtLeastOneError).not.toBeVisible();
   });
 
   test('should check/uncheck effect types checkboxes using "All" and "None" buttons', async({ page }) => {
-    const listOfCheckboxes = await page.locator('gpf-effect-types input').all();
+    const effectTypes = new EffectTypes(page);
+    const listOfCheckboxes = await effectTypes.checkboxes.all();
 
-    await page.locator('gpf-effect-types').getByText('None').click();
+    await effectTypes.clickButton('None');
     await Promise.all(listOfCheckboxes.map(async(el) => {
       await expect(el).not.toBeChecked();
     }));
 
-    await page.locator('gpf-effect-types').getByText('All').click();
+    await effectTypes.clickButton('All');
     await Promise.all(listOfCheckboxes.map(async(el) => {
       await expect(el).toBeChecked();
     }));
   });
 
   test('should test checkboxes using "UTRs" button', async({ page }) => {
+    const effectTypes = new EffectTypes(page);
     const uncheckedEffectTypes = [
       'nonsense',
       'frame-shift',
@@ -46,17 +50,18 @@ test.describe('Effect types tests', () => {
       'intergenic'
     ];
 
-    await page.locator('gpf-effect-types').getByText('UTRs').click();
+    await effectTypes.clickButton('UTRs');
 
-    await expect(page.getByLabel('3\'UTR', { exact: true })).toBeChecked();
-    await expect(page.getByLabel('5\'UTR', { exact: true })).toBeChecked();
+    await expect(effectTypes.label('3\'UTR')).toBeChecked();
+    await expect(effectTypes.label('5\'UTR')).toBeChecked();
 
     await Promise.all(uncheckedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).not.toBeChecked();
+      await expect(effectTypes.label(type)).not.toBeChecked();
     }));
   });
 
   test('should test checkboxes using "LGDs" button', async({ page }) => {
+    const effectTypes = new EffectTypes(page);
     const checkedEffectTypes = [
       'nonsense',
       'frame-shift',
@@ -77,17 +82,18 @@ test.describe('Effect types tests', () => {
       '5\'UTR'
     ];
 
-    await page.locator('gpf-effect-types').getByText('LGDs').click();
+    await effectTypes.clickButton('LGDs');
     await Promise.all(checkedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).toBeChecked();
+      await expect(effectTypes.label(type)).toBeChecked();
     }));
 
     await Promise.all(uncheckedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).not.toBeChecked();
+      await expect(effectTypes.label(type)).not.toBeChecked();
     }));
   });
 
   test('should test checkboxes using "Nonsynonymous" button', async({ page }) => {
+    const effectTypes = new EffectTypes(page);
     const checkedEffectTypes = [
       'nonsense',
       'frame-shift',
@@ -108,17 +114,18 @@ test.describe('Effect types tests', () => {
       '5\'UTR'
     ];
 
-    await page.locator('gpf-effect-types').getByText('Nonsynonymous').click();
+    await effectTypes.clickButton('Nonsynonymous');
     await Promise.all(checkedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).toBeChecked();
+      await expect(effectTypes.label(type)).toBeChecked();
     }));
 
     await Promise.all(uncheckedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).not.toBeChecked();
+      await expect(effectTypes.label(type)).not.toBeChecked();
     }));
   });
 
   test('should test checkboxes using "Coding" button', async({ page }) => {
+    const effectTypes = new EffectTypes(page);
     const checkedEffectTypes = [
       'nonsense',
       'frame-shift',
@@ -139,13 +146,13 @@ test.describe('Effect types tests', () => {
       '5\'UTR'
     ];
 
-    await page.locator('gpf-effect-types').getByRole('button', { name: 'Coding' }).click();
+    await effectTypes.clickButton('Coding');
     await Promise.all(checkedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).toBeChecked();
+      await expect(effectTypes.label(type)).toBeChecked();
     }));
 
     await Promise.all(uncheckedEffectTypes.map(async(type) => {
-      await expect(page.getByLabel(type, { exact: true })).not.toBeChecked();
+      await expect(effectTypes.label(type)).not.toBeChecked();
     }));
   });
 });

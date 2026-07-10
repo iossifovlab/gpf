@@ -1,6 +1,10 @@
 import { test, expect, Page, Response } from '@playwright/test';
 import * as utils from './utils';
 import { searchInGeneProfilesTable } from './utils';
+import { Header } from './components/header.component';
+import { GeneProfilesTable } from './components/gene-profiles-table.component';
+import { GenotypeBrowserPage } from './pages/genotype-browser.page';
+import { PedigreeSelector } from './components/pedigree-selector.component';
 
 interface GeneProfilesState {
   openedTabs: string[];
@@ -14,7 +18,8 @@ interface GeneProfilesState {
 test.describe('Gene profiles row data tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
   });
 
   [
@@ -45,10 +50,11 @@ test.describe('Gene profiles row data tests', () => {
     }
   ].forEach(data => {
     test(`should display correct gene data for ${data.geneSymbol}`, async({ page }) => {
+      const geneProfilesTable = new GeneProfilesTable(page);
       await searchInGeneProfilesTable(page, data.geneSymbol);
-      await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(1);
+      await expect(geneProfilesTable.dataRows).toHaveCount(1);
 
-      const cells = await page.locator('.table-body-row').locator('.row-cell').all();
+      const cells = await geneProfilesTable.rowCells.all();
       await Promise.all(cells.map(async(cell, i) => {
         await expect(cell).toHaveText(data.expectedRow[i]);
         i++;
@@ -60,98 +66,102 @@ test.describe('Gene profiles row data tests', () => {
 test.describe('Gene profiles table column filtering tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
   });
 
   test('should open autism gene sets dropdown after clicking on' +
   ' the autism gene sets columns filtering button', async({ page }) => {
-    await page.locator('#autism_gene_sets_rank-column-filtering-button').click();
-    await expect(page.locator('gpf-multiple-select-menu')).toBeVisible();
-    await expect(page.locator('gpf-multiple-select-menu #check-uncheck-all-button')).toBeVisible();
-    await expect(page.locator('gpf-multiple-select-menu input[name="search"]')).toBeVisible();
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.columnFilteringButton('autism_gene_sets_rank').click();
+    await expect(geneProfilesTable.multipleSelectMenu).toBeVisible();
+    await expect(geneProfilesTable.menuCheckUncheckAllButton).toBeVisible();
+    await expect(geneProfilesTable.menuSearchInput).toBeVisible();
   });
 
   test('should check/uncheck all gene sets column filtering options' +
   ' using the check/uncheck all button', async({ page }) => {
-    await page.locator('#autism_gene_sets_rank-column-filtering-button').click();
-    await expect(page.locator('gpf-multiple-select-menu')
-      .getByLabel('autism candidates from Iossifov PNAS 2015')).toBeChecked();
-    await expect(page.locator('gpf-multiple-select-menu')
-      .getByLabel('autism candidates from Sanders Neuron 2015')).toBeChecked();
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.columnFilteringButton('autism_gene_sets_rank').click();
+    await expect(geneProfilesTable.menuOption('autism candidates from Iossifov PNAS 2015')).toBeChecked();
+    await expect(geneProfilesTable.menuOption('autism candidates from Sanders Neuron 2015')).toBeChecked();
 
-    await page.locator('gpf-multiple-select-menu #check-uncheck-all-button').click();
-    await expect(page.locator('gpf-multiple-select-menu')
-      .getByLabel('autism candidates from Iossifov PNAS 2015')).not.toBeChecked();
-    await expect(page.locator('gpf-multiple-select-menu')
-      .getByLabel('autism candidates from Sanders Neuron 2015')).not.toBeChecked();
+    await geneProfilesTable.menuCheckUncheckAllButton.click();
+    await expect(geneProfilesTable.menuOption('autism candidates from Iossifov PNAS 2015')).not.toBeChecked();
+    await expect(geneProfilesTable.menuOption('autism candidates from Sanders Neuron 2015')).not.toBeChecked();
   });
 
   test('should change the check/uncheck button text', async({ page }) => {
-    await page.locator('#autism_gene_sets_rank-column-filtering-button').click();
-    await expect(page.locator('gpf-multiple-select-menu #check-uncheck-all-button')).toHaveText('Uncheck all');
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.columnFilteringButton('autism_gene_sets_rank').click();
+    await expect(geneProfilesTable.menuCheckUncheckAllButton).toHaveText('Uncheck all');
 
-    await page.locator('gpf-multiple-select-menu #check-uncheck-all-button').click();
-    await expect(page.locator('gpf-multiple-select-menu #check-uncheck-all-button')).toHaveText('Check all');
+    await geneProfilesTable.menuCheckUncheckAllButton.click();
+    await expect(geneProfilesTable.menuCheckUncheckAllButton).toHaveText('Check all');
 
-    await page.locator('gpf-multiple-select-menu #check-uncheck-all-button').click();
-    await expect(page.locator('gpf-multiple-select-menu #check-uncheck-all-button')).toHaveText('Uncheck all');
+    await geneProfilesTable.menuCheckUncheckAllButton.click();
+    await expect(geneProfilesTable.menuCheckUncheckAllButton).toHaveText('Uncheck all');
   });
 
   test('should hide columns using the check/uncheck button', async({ page }) => {
-    await page.locator('#autism_gene_sets_rank-column-filtering-button').click();
-    await page.locator('gpf-multiple-select-menu #check-uncheck-all-button').click();
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.columnFilteringButton('autism_gene_sets_rank').click();
+    await geneProfilesTable.menuCheckUncheckAllButton.click();
 
-    await expect(page.locator('.header-cell').filter({hasText: 'Autism Gene Sets'})).not.toBeVisible();
+    await expect(geneProfilesTable.headerCellByText('Autism Gene Sets')).not.toBeVisible();
     await expect(
-      page.locator('.header-cell').filter({hasText: 'autism candidates from Iossifov PNAS 2015'})
+      geneProfilesTable.headerCellByText('autism candidates from Iossifov PNAS 2015')
     ).not.toBeVisible();
 
     await expect(
-      page.locator('.header-cell').filter({hasText: 'autism candidates from Sanders Neuron 2015'})
+      geneProfilesTable.headerCellByText('autism candidates from Sanders Neuron 2015')
     ).not.toBeVisible();
 
     await page.mouse.click(0, 0);
-    await page.locator('#category-filtering-button').click();
-    await expect(page.locator('gpf-multiple-select-menu').getByLabel('Autism Gene Sets')).not.toBeChecked();
+    await geneProfilesTable.categoryFilteringButton.click();
+    await expect(geneProfilesTable.menuOption('Autism Gene Sets')).not.toBeChecked();
 
-    await page.locator('gpf-multiple-select-menu').getByLabel('Autism Gene Sets').click();
+    await geneProfilesTable.menuOption('Autism Gene Sets').click();
     await page.mouse.click(0, 0);
-    await expect(page.locator('.header-cell').filter({hasText: 'Autism Gene Sets'})).toBeVisible();
+    await expect(geneProfilesTable.headerCellByText('Autism Gene Sets')).toBeVisible();
     await expect(
-      page.locator('.header-cell').filter({hasText: 'autism candidates from Iossifov PNAS 2015'})
+      geneProfilesTable.headerCellByText('autism candidates from Iossifov PNAS 2015')
     ).toBeVisible();
 
     await expect(
-      page.locator('.header-cell').filter({hasText: 'autism candidates from Sanders Neuron 2015'})
+      geneProfilesTable.headerCellByText('autism candidates from Sanders Neuron 2015')
     ).toBeVisible();
   });
 
   test('should filter gene sets dropdown options using the search', async({ page }) => {
-    await page.locator('#autism_gene_sets_rank-column-filtering-button').click();
-    await expect(page.locator('gpf-multiple-select-menu label')).toHaveCount(2);
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.columnFilteringButton('autism_gene_sets_rank').click();
+    await expect(geneProfilesTable.menuLabels).toHaveCount(2);
 
-    await page.locator('gpf-multiple-select-menu input[name="search"]').fill('iossifov');
-    await expect(page.locator('gpf-multiple-select-menu label')).toHaveCount(1);
+    await geneProfilesTable.menuSearchInput.fill('iossifov');
+    await expect(geneProfilesTable.menuLabels).toHaveCount(1);
   });
 
   test('should uncheck gene set from autism gene sets dropdown and check table header', async({ page }) => {
-    await page.locator('#autism_gene_sets_rank-column-filtering-button').click();
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.columnFilteringButton('autism_gene_sets_rank').click();
 
-    await page.locator('gpf-multiple-select-menu label')
+    await geneProfilesTable.menuLabels
       .getByLabel('autism candidates from Sanders Neuron 2015').click();
 
     await expect(page.getByTitle('autism candidates from Sanders Neuron 2015')).not.toBeVisible();
 
-    await page.locator('gpf-multiple-select-menu label')
+    await geneProfilesTable.menuLabels
       .getByLabel('autism candidates from Sanders Neuron 2015').click();
 
     await expect(page.getByTitle('autism candidates from Sanders Neuron 2015')).toBeVisible();
   });
 
   test('should uncheck iossifov_2014 and check table header', async({ page }) => {
-    const headerCell = page.locator('.header-cell');
-    await page.locator('#category-filtering-button').click();
-    await page.locator('gpf-multiple-select-menu').getByLabel('iossifov_2014_liftover').click();
+    const geneProfilesTable = new GeneProfilesTable(page);
+    const headerCell = geneProfilesTable.headerCells;
+    await geneProfilesTable.categoryFilteringButton.click();
+    await geneProfilesTable.menuOption('iossifov_2014_liftover').click();
     await expect(headerCell.getByText('iossifov_2014_liftover', { exact: true})).not.toBeVisible();
     await expect(headerCell.getByText('affected (2507)', { exact: true})).not.toBeVisible();
     await expect(headerCell.getByText('unaffected (1910)', { exact: true})).not.toBeVisible();
@@ -163,7 +173,7 @@ test.describe('Gene profiles table column filtering tests', () => {
     await expect(headerCell.getByText('intron', { exact: true}).nth(1)).not.toBeVisible();
     await expect(headerCell).toHaveCount(16);
 
-    await page.locator('gpf-multiple-select-menu').getByLabel('iossifov_2014_liftover').click();
+    await geneProfilesTable.menuOption('iossifov_2014_liftover').click();
     await expect(headerCell.getByText('iossifov_2014_liftover', { exact: true})).toBeVisible();
     await expect(headerCell.getByText('affected (2507)', { exact: true})).toBeVisible();
     await expect(headerCell.getByText('unaffected (1910)', { exact: true})).toBeVisible();
@@ -177,20 +187,21 @@ test.describe('Gene profiles table column filtering tests', () => {
   });
 
   test('should drag and drop gene set and check table header', async({ page }) => {
-    await page.locator('#category-filtering-button').click();
-    const columnHeader = page.locator('.header-cell-content-span');
-    await expect(page.locator('gpf-multiple-select-menu label').nth(0)).toHaveText('Autism Gene Sets');
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await geneProfilesTable.categoryFilteringButton.click();
+    const columnHeader = geneProfilesTable.headerContentSpans;
+    await expect(geneProfilesTable.menuLabels.nth(0)).toHaveText('Autism Gene Sets');
     await expect(columnHeader.nth(1)).toHaveText('Autism Gene Sets');
     await expect(columnHeader.nth(2)).toHaveText('autism candidates from Iossifov PNAS 2015');
     await expect(columnHeader.nth(3)).toHaveText('autism candidates from Sanders Neuron 2015');
 
-    await page.locator('gpf-multiple-select-menu label').nth(0).hover();
+    await geneProfilesTable.menuLabels.nth(0).hover();
     await page.mouse.down();
     await page.mouse.move(530, 300, {steps: 2});
     await page.mouse.up();
 
-    await expect(page.locator('gpf-multiple-select-menu label').nth(0)).toHaveText('Relevant Gene Sets');
-    await expect(page.locator('gpf-multiple-select-menu label').nth(1)).toHaveText('Autism Gene Sets');
+    await expect(geneProfilesTable.menuLabels.nth(0)).toHaveText('Relevant Gene Sets');
+    await expect(geneProfilesTable.menuLabels.nth(1)).toHaveText('Autism Gene Sets');
 
     await expect(columnHeader.nth(1)).toHaveText('Relevant Gene Sets');
     await expect(columnHeader.nth(2)).toHaveText('CHD8 target genes');
@@ -209,17 +220,19 @@ test.describe('Gene profiles gene comparison tests', () => {
   const evenHighlightColor = 'rgb(255, 255, 214)';
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
   });
   test('should highlight a row using control+click and change it\'s background color', async({ page }) => {
-    const firstRow = page.locator('.table-body-row:not(#nothing-found)').nth(0);
+    const geneProfilesTable = new GeneProfilesTable(page);
+    const firstRow = geneProfilesTable.dataRows.nth(0);
     await expect(firstRow).not.toHaveClass(/row-highlight/);
 
     await page.keyboard.down('Control');
     await firstRow.click();
 
     // hover another row to check the background color
-    await page.locator('.table-body-row:not(#nothing-found)').nth(1).hover();
+    await geneProfilesTable.dataRows.nth(1).hover();
     await expect(firstRow).toHaveClass(/row-highlight/);
     await expect(firstRow).toHaveCSS('background-color', oddHighlightColor);
 
@@ -227,84 +240,84 @@ test.describe('Gene profiles gene comparison tests', () => {
     await firstRow.click();
 
     // hover another row to check the background color
-    await page.locator('.table-body-row:not(#nothing-found)').nth(1).hover();
+    await geneProfilesTable.dataRows.nth(1).hover();
     await expect(firstRow).not.toHaveClass(/row-highlight/);
     await expect(firstRow).not.toHaveCSS('background-color', oddHighlightColor);
   });
 
   test('should highlight a several rows and check whether ' +
     'background color is different for odd and even rows', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
     await page.keyboard.down('Control');
-    await row.nth(0).click();
-    await row.nth(1).click();
-    await row.nth(2).click();
-    await row.nth(3).click();
-    await row.nth(4).click();
+    await geneProfilesTable.dataRows.nth(0).click();
+    await geneProfilesTable.dataRows.nth(1).click();
+    await geneProfilesTable.dataRows.nth(2).click();
+    await geneProfilesTable.dataRows.nth(3).click();
+    await geneProfilesTable.dataRows.nth(4).click();
 
     // hover another row to check the background color
-    await row.nth(6).hover();
-    await expect(row.nth(0)).toHaveCSS('background-color', oddHighlightColor);
-    await expect(row.nth(1)).toHaveCSS('background-color', evenHighlightColor);
-    await expect(row.nth(2)).toHaveCSS('background-color', oddHighlightColor);
-    await expect(row.nth(3)).toHaveCSS('background-color', evenHighlightColor);
-    await expect(row.nth(4)).toHaveCSS('background-color', oddHighlightColor);
+    await geneProfilesTable.dataRows.nth(6).hover();
+    await expect(geneProfilesTable.dataRows.nth(0)).toHaveCSS('background-color', oddHighlightColor);
+    await expect(geneProfilesTable.dataRows.nth(1)).toHaveCSS('background-color', evenHighlightColor);
+    await expect(geneProfilesTable.dataRows.nth(2)).toHaveCSS('background-color', oddHighlightColor);
+    await expect(geneProfilesTable.dataRows.nth(3)).toHaveCSS('background-color', evenHighlightColor);
+    await expect(geneProfilesTable.dataRows.nth(4)).toHaveCSS('background-color', oddHighlightColor);
   });
 
   test('should highlight the first 3 rows and then press escape to remove all highlights', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
     await page.keyboard.down('Control');
-    await row.nth(0).click();
-    await row.nth(1).click();
-    await row.nth(2).click();
+    await geneProfilesTable.dataRows.nth(0).click();
+    await geneProfilesTable.dataRows.nth(1).click();
+    await geneProfilesTable.dataRows.nth(2).click();
 
-    await expect(row.nth(0)).toHaveClass(/row-highlight/);
-    await expect(row.nth(1)).toHaveClass(/row-highlight/);
-    await expect(row.nth(2)).toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.dataRows.nth(0)).toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.dataRows.nth(1)).toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.dataRows.nth(2)).toHaveClass(/row-highlight/);
     await page.keyboard.up('Control');
 
     await page.keyboard.press('Escape');
-    await expect(row.nth(0)).not.toHaveClass(/row-highlight/);
-    await expect(row.nth(1)).not.toHaveClass(/row-highlight/);
-    await expect(row.nth(2)).not.toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.dataRows.nth(0)).not.toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.dataRows.nth(1)).not.toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.dataRows.nth(2)).not.toHaveClass(/row-highlight/);
   });
 
   test('should select multiple genes and check whether the modal appears correctly', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
     await page.keyboard.down('Control');
-    await row.nth(0).click();
-    await row.nth(1).click();
-    await row.nth(2).click();
+    await geneProfilesTable.dataRows.nth(0).click();
+    await geneProfilesTable.dataRows.nth(1).click();
+    await geneProfilesTable.dataRows.nth(2).click();
 
-    await expect(page.locator('#compare-genes-modal')).toBeVisible();
-    await expect(page.locator('.compare-gene-item')).toHaveCount(3);
+    await expect(geneProfilesTable.compareGenesModal).toBeVisible();
+    await expect(geneProfilesTable.compareGeneItems).toHaveCount(3);
 
     await page.keyboard.down('Control');
-    await row.nth(0).click();
-    await row.nth(1).click();
-    await row.nth(2).click();
+    await geneProfilesTable.dataRows.nth(0).click();
+    await geneProfilesTable.dataRows.nth(1).click();
+    await geneProfilesTable.dataRows.nth(2).click();
 
-    await expect(page.locator('#compare-genes-modal')).not.toBeVisible();
+    await expect(geneProfilesTable.compareGenesModal).not.toBeVisible();
   });
 
   test('should select multiple genes and remove them from modal', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
     await page.keyboard.down('Control');
-    await row.nth(0).click();
-    await row.nth(1).click();
-    await row.nth(2).click();
+    await geneProfilesTable.dataRows.nth(0).click();
+    await geneProfilesTable.dataRows.nth(1).click();
+    await geneProfilesTable.dataRows.nth(2).click();
 
-    await page.locator('.compare-genes-close').nth(0).click();
-    await expect(row.nth(0)).not.toHaveClass(/row-highlight/);
-    await expect(page.locator('.compare-gene-item')).toHaveCount(2);
+    await geneProfilesTable.compareGenesClose.nth(0).click();
+    await expect(geneProfilesTable.dataRows.nth(0)).not.toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.compareGeneItems).toHaveCount(2);
 
-    await page.locator('.compare-genes-close').nth(0).click();
-    await expect(row.nth(1)).not.toHaveClass(/row-highlight/);
-    await expect(page.locator('.compare-gene-item')).toHaveCount(1);
+    await geneProfilesTable.compareGenesClose.nth(0).click();
+    await expect(geneProfilesTable.dataRows.nth(1)).not.toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.compareGeneItems).toHaveCount(1);
 
-    await page.locator('.compare-genes-close').nth(0).click();
-    await expect(row.nth(2)).not.toHaveClass(/row-highlight/);
-    await expect(page.locator('.compare-genes-close')).not.toBeVisible();
+    await geneProfilesTable.compareGenesClose.nth(0).click();
+    await expect(geneProfilesTable.dataRows.nth(2)).not.toHaveClass(/row-highlight/);
+    await expect(geneProfilesTable.compareGenesClose).not.toBeVisible();
   });
 });
 
@@ -312,97 +325,98 @@ test.describe('Gene profiles table functionality tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
     await page.waitForSelector('gpf-gene-profiles-table');
     await page.waitForSelector('#loading', {state: 'detached'});
 
     await utils.resetGeneProfiles(page);
   });
   test('should sort genes by autism gene sets', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
     await searchInGeneProfilesTable(page, 'RAPGEF');
-    await expect(row).toHaveCount(4);
+    await expect(geneProfilesTable.dataRows).toHaveCount(4);
 
-    await page.locator('#category-filtering-button').click();
-    await page.locator('#check-uncheck-all-button').click();
-    await page.getByLabel('Autism Gene Sets').click();
-    await page.locator('#category-filtering-button').click();
+    await geneProfilesTable.categoryFilteringButton.click();
+    await geneProfilesTable.menuCheckUncheckAllButton.click();
+    await geneProfilesTable.menuOption('Autism Gene Sets').click();
+    await geneProfilesTable.categoryFilteringButton.click();
 
-    await expect(row.nth(0).locator('.row-cell').nth(1)).toHaveText('check_small');
-    await expect(row.nth(0).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(1).locator('.row-cell').nth(1)).toHaveText('');
-    await expect(row.nth(1).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(2).locator('.row-cell').nth(1)).toHaveText('');
-    await expect(row.nth(2).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(3).locator('.row-cell').nth(1)).toHaveText('');
-    await expect(row.nth(3).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(1)).toHaveText('check_small');
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(2)).toHaveText('');
 
-    await page.locator('.header-cell').getByText('Autism Gene Sets').click();
+    await geneProfilesTable.headerCellByText('Autism Gene Sets').click();
     await page.waitForTimeout(200);
-    await expect(row.nth(0).locator('.row-cell').nth(1)).toHaveText('');
-    await expect(row.nth(0).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(1).locator('.row-cell').nth(1)).toHaveText('');
-    await expect(row.nth(1).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(2).locator('.row-cell').nth(1)).toHaveText('');
-    await expect(row.nth(2).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(3).locator('.row-cell').nth(1)).toHaveText('check_small');
-    await expect(row.nth(3).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(1)).toHaveText('check_small');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(2)).toHaveText('');
   });
 
   test('should sort genes by relevant gene sets', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
     await searchInGeneProfilesTable(page, 'SENP');
-    await expect(page.locator('.search-loading-icon')).toHaveCount(0);
-    await expect(row).toHaveCount(6);
+    await expect(geneProfilesTable.searchLoadingIcon).toHaveCount(0);
+    await expect(geneProfilesTable.dataRows).toHaveCount(6);
 
-    await page.locator('#category-filtering-button').click();
-    await page.locator('#check-uncheck-all-button').click();
-    await page.getByLabel('Relevant Gene Sets').click();
-    await page.locator('#category-filtering-button').click();
+    await geneProfilesTable.categoryFilteringButton.click();
+    await geneProfilesTable.menuCheckUncheckAllButton.click();
+    await geneProfilesTable.menuOption('Relevant Gene Sets').click();
+    await geneProfilesTable.categoryFilteringButton.click();
 
-    await page.locator('.header-cell').getByText('Relevant Gene Sets').click();
+    await geneProfilesTable.headerCellByText('Relevant Gene Sets').click();
     await page.waitForTimeout(200);
 
-    await expect(row.nth(0).getByText('check_small')).toHaveCount(2);
-    await expect(row.nth(1).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(2).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(3).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(4).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(5).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(0).getByText('check_small')).toHaveCount(2);
+    await expect(geneProfilesTable.dataRows.nth(1).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(2).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(3).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(4).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(5).getByText('check_small')).toHaveCount(1);
 
-    await page.locator('.header-cell').getByText('Relevant Gene Sets').click();
+    await geneProfilesTable.headerCellByText('Relevant Gene Sets').click();
     await page.waitForTimeout(200);
 
-    await expect(row.nth(0).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(1).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(2).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(3).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(4).getByText('check_small')).toHaveCount(1);
-    await expect(row.nth(5).getByText('check_small')).toHaveCount(2);
+    await expect(geneProfilesTable.dataRows.nth(0).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(1).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(2).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(3).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(4).getByText('check_small')).toHaveCount(1);
+    await expect(geneProfilesTable.dataRows.nth(5).getByText('check_small')).toHaveCount(2);
   });
 
   test('should test the values in SFARI gene score column', async({ page }) => {
-    const row = page.locator('.table-body-row:not(#nothing-found)');
+    const geneProfilesTable = new GeneProfilesTable(page);
 
-    await expect(row).toHaveCount(16);
-    await expect(row.nth(0).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('3');
+    await expect(geneProfilesTable.dataRows).toHaveCount(16);
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(7)).toHaveText('3');
 
-    await page.getByText('SFARI gene score').click();
+    await geneProfilesTable.headerCellByText('SFARI gene score').click();
     await page.waitForTimeout(500);
-    await expect(row.nth(0).locator('.row-cell').nth(7)).toHaveText('3');
-    await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('3');
-    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(7)).toHaveText('3');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(7)).toHaveText('3');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(7)).toHaveText('1');
 
-    await page.getByText('SFARI gene score').click();
+    await geneProfilesTable.headerCellByText('SFARI gene score').click();
     await page.waitForTimeout(500);
-    await expect(row.nth(0).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('3');
+    await expect(geneProfilesTable.dataRows.nth(0).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(geneProfilesTable.dataRows.nth(3).locator('.row-cell').nth(7)).toHaveText('3');
   });
 
   [
@@ -412,82 +426,90 @@ test.describe('Gene profiles table functionality tests', () => {
     { score: 'pRec_rank', values: ['17823', '17507', '14843', '13429'], columnIndex: 11}
   ].forEach(data => {
     test(`should compare protection scores when sort by ${data.score}`, async({ page }) => {
-      const row = page.locator('.table-body-row:not(#nothing-found)');
+      const geneProfilesTable = new GeneProfilesTable(page);
       await searchInGeneProfilesTable(page, 'RAPGEF');
-      await expect(row).toHaveCount(4);
+      await expect(geneProfilesTable.dataRows).toHaveCount(4);
 
-      await page.getByText(data.score).click();
+      await geneProfilesTable.headerCellByText(data.score).click();
       await page.waitForTimeout(200);
       for (let i = 0; i < 4; i++) {
+        const cell = geneProfilesTable.dataRows.nth(i).locator('.row-cell').nth(data.columnIndex);
         // eslint-disable-next-line no-await-in-loop
-        await expect(row.nth(i).locator('.row-cell').nth(data.columnIndex)).toHaveText(data.values[i]);
+        await expect(cell).toHaveText(data.values[i]);
       }
 
-      await page.getByText(data.score).click();
+      await geneProfilesTable.headerCellByText(data.score).click();
       await page.waitForTimeout(200);
       data.values.reverse();
       for (let i = 0; i < 4; i++) {
+        const cell = geneProfilesTable.dataRows.nth(i).locator('.row-cell').nth(data.columnIndex);
         // eslint-disable-next-line no-await-in-loop
-        await expect(row.nth(i).locator('.row-cell').nth(data.columnIndex)).toHaveText(data.values[i]);
+        await expect(cell).toHaveText(data.values[i]);
       }
     });
   });
 
   test('should show nothing found when search query doesn\'t match', async({ page }) => {
-    await expect(page.locator('#nothing-found')).not.toBeVisible();
+    const geneProfilesTable = new GeneProfilesTable(page);
+    await expect(geneProfilesTable.nothingFound).not.toBeVisible();
 
     await searchInGeneProfilesTable(page, 'ewoqoqwekwoqkeowqkeowqkeoqwk');
-    await expect(page.locator('#nothing-found')).toBeVisible();
+    await expect(geneProfilesTable.nothingFound).toBeVisible();
 
-    await page.locator('input#gene-search-input').clear();
+    await geneProfilesTable.searchInput.clear();
 
-    await expect(page.getByText('progress_activity')).not.toBeVisible();
+    await expect(geneProfilesTable.progressActivity).not.toBeVisible();
 
-    await expect(page.locator('#nothing-found')).not.toBeVisible();
-    const rowCount = await page.locator('.table-body-row:not(#nothing-found)').count();
+    await expect(geneProfilesTable.nothingFound).not.toBeVisible();
+    const rowCount = await geneProfilesTable.dataRows.count();
     expect(rowCount).toBeGreaterThan(1);
   });
 
   test('should navigate to genotype browser', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const pedigree = new PedigreeSelector(page);
     await page.getByTitle('7.0 (2.79)\nCHD8').click();
     await page.waitForSelector('gpf-genotype-browser');
     expect(page.url()).toContain('/datasets/iossifov_2014_liftover/genotype-browser');
 
-    await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('CHD8');
-    await expect(page.locator('gpf-pedigree-selector').getByLabel('affected', { exact: true })).toBeChecked();
-    await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).not.toBeChecked();
+    await expect(genotypeBrowser.genes.geneSymbols.textbox).toHaveValue('CHD8');
+    await expect(pedigree.label('affected')).toBeChecked();
+    await expect(pedigree.label('unaffected')).not.toBeChecked();
 
-    await expect(page.locator('gpf-effect-types').getByLabel('intron')).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('nonsense')).toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('frame-shift', { exact: true })).toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('splice-site')).toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift-newStop')).toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('missense')).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift', { exact: true })).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('noStart')).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('noEnd')).not.toBeChecked();
-    await expect(page.locator('gpf-effect-types').getByLabel('synonymous')).not.toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('intron')).not.toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('nonsense')).toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('frame-shift')).toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('splice-site')).toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('no-frame-shift-newStop')).toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('missense')).not.toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('no-frame-shift')).not.toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('noStart')).not.toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('noEnd')).not.toBeChecked();
+    await expect(genotypeBrowser.effectTypes.label('synonymous')).not.toBeChecked();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('7 variants selected');
+    await expect(genotypeBrowser.variantsCount).toHaveText('7 variants selected');
   });
 
   test('should navigate to genotype browser and check if correct variants are loaded', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const pedigree = new PedigreeSelector(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype Browser');
-    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
-    await page.locator('#gene-symbols-panel textarea').pressSequentially('CHD8');
-    await page.locator('gpf-pedigree-selector').getByLabel('unaffected').click();
+    await genotypeBrowser.genes.openGeneSymbolsTab();
+    await genotypeBrowser.genes.geneSymbols.type('CHD8');
+    await pedigree.label('unaffected').click();
 
-    await page.getByRole('button', { name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('7 variants selected');
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCount).toHaveText('7 variants selected');
 
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
     await page.waitForSelector('gpf-gene-profiles-table');
 
     await page.getByTitle('7.0 (2.79)\nCHD8').click();
     await page.waitForSelector('gpf-genotype-browser');
     expect(page.url()).toContain('/datasets/iossifov_2014_liftover/genotype-browser');
 
-    await expect(page.locator('#variants-count-span')).toHaveText('7 variants selected');
+    await expect(genotypeBrowser.variantsCount).toHaveText('7 variants selected');
   });
 });
 
@@ -505,7 +527,8 @@ test.describe.serial('Gene profiles table state tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
     await page.waitForSelector('gpf-gene-profiles-table');
     await page.waitForSelector('#loading', {state: 'detached'});
 
@@ -525,7 +548,8 @@ test.describe.serial('Gene profiles table state tests', () => {
       resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 200
     );
 
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
     await geneProfilesStateResponse;
     await checkTable(page);
   });
@@ -536,7 +560,8 @@ test.describe.serial('Gene profiles table state tests', () => {
     await finalSave;
 
     await utils.logout(page);
-    await page.locator('#header a:text("Gene Profiles")').click();
+    const header = new Header(page);
+    await header.navLink('Gene Profiles').click();
     await checkDefaultTable(page);
 
     await utils.loginWorkerUser(page);
@@ -556,27 +581,29 @@ test.describe.serial('Gene profiles table state tests', () => {
 });
 
 export async function changeTable(page: Page): Promise<void> {
+  const geneProfilesTable = new GeneProfilesTable(page);
+
   // open tab
-  await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
-  await page.getByRole('button', {name: 'All genes'}).click();
+  await geneProfilesTable.geneCell('GRIN2B').click();
+  await geneProfilesTable.allGenesButton.click();
 
   await searchInGeneProfilesTable(page, 'RAPGEF');
 
   // highlight rows and open tab
   await page.keyboard.down('Control');
-  await page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}).click();
-  await page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}).click();
+  await geneProfilesTable.rowByText('RAPGEF4').click();
+  await geneProfilesTable.rowByText('RAPGEF2').click();
   await page.keyboard.up('Control');
-  await page.locator('#compare-genes-compare-button').click();
+  await geneProfilesTable.compareGenesCompareButton.click();
 
-  await page.getByRole('button', {name: 'All genes'}).click();
+  await geneProfilesTable.allGenesButton.click();
 
   // change table header columns visibility
-  await expect(page.locator('.header-cell')).toHaveCount(25);
-  await page.locator('#protection_scores-column-filtering-button').click({force: true});
-  await page.waitForSelector('gpf-multiple-select-menu');
-  await page.locator('gpf-multiple-select-menu').getByLabel('LGD_rank').click();
-  await page.locator('gpf-multiple-select-menu').getByLabel('pLI_rank').click();
+  await expect(geneProfilesTable.headerCells).toHaveCount(25);
+  await geneProfilesTable.columnFilteringButton('protection_scores').click({force: true});
+  await geneProfilesTable.multipleSelectMenu.waitFor();
+  await geneProfilesTable.menuOption('LGD_rank').click();
+  await geneProfilesTable.menuOption('pLI_rank').click();
 
   // change table header columns sorting - asc
   await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
@@ -586,18 +613,18 @@ export async function changeTable(page: Page): Promise<void> {
 
 
   // change table header columns order
-  await page.locator('#relevant_gene_sets_rank-column-filtering-button').click();
-  await expect(page.locator('gpf-multiple-select-menu label').nth(0)).toHaveText('CHD8 target genes');
+  await geneProfilesTable.columnFilteringButton('relevant_gene_sets_rank').click();
+  await expect(geneProfilesTable.menuLabels.nth(0)).toHaveText('CHD8 target genes');
 
-  const columnHeader = page.locator('.header-cell-content-span');
+  const columnHeader = geneProfilesTable.headerContentSpans;
   await expect(columnHeader.nth(5)).toHaveText('CHD8 target genes');
 
-  await page.locator('gpf-multiple-select-menu label').nth(0).hover();
+  await geneProfilesTable.menuLabels.nth(0).hover();
   await page.mouse.down();
   await page.mouse.move(1030, 370, {steps: 3});
   await page.mouse.up();
 
-  await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
+  await expect(geneProfilesTable.menuLabels.nth(2)).toHaveText('CHD8 target genes');
   await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
 }
 
@@ -637,45 +664,46 @@ export function waitForChangeTableSave(page: Page): Promise<Response> {
 }
 
 async function checkDefaultTable(page: Page): Promise<void> {
-  await expect(page.locator('input#gene-search-input')).toBeEmpty();// check search and search result
-  await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(16);
-  await expect(page.locator('#compare-genes-modal')).not.toBeVisible(); // check highlighted rows
-  await expect(page.locator('.header-cell')).toHaveCount(25);// check column visibility
-  await expect(page.locator('div.tab')).toHaveCount(0);// check opened tabs
-  await expect(page.locator('div.active-sort-header')).toContainText('Autism Gene Sets'); // check sorting
-  await expect(page.locator('div.active-sort-header').locator('gpf-sorting-buttons span')).toHaveId('desc');
-  await expect(page.locator('.header-cell-content-span').nth(5))
+  const geneProfilesTable = new GeneProfilesTable(page);
+
+  await expect(geneProfilesTable.searchInput).toBeEmpty();// check search and search result
+  await expect(geneProfilesTable.dataRows).toHaveCount(16);
+  await expect(geneProfilesTable.compareGenesModal).not.toBeVisible(); // check highlighted rows
+  await expect(geneProfilesTable.headerCells).toHaveCount(25);// check column visibility
+  await expect(geneProfilesTable.tabs).toHaveCount(0);// check opened tabs
+  await expect(geneProfilesTable.activeSortHeader).toContainText('Autism Gene Sets'); // check sorting
+  await expect(geneProfilesTable.activeSortHeader.locator('gpf-sorting-buttons span')).toHaveId('desc');
+  await expect(geneProfilesTable.headerContentSpans.nth(5))
     .toHaveText('CHD8 target genes');// check column reorder
 }
 
 export async function checkTable(page: Page): Promise<void> {
-  const columnHeader = page.locator('.header-cell-content-span');
+  const geneProfilesTable = new GeneProfilesTable(page);
+  const columnHeader = geneProfilesTable.headerContentSpans;
   // check search and search result
-  await expect(page.locator('input#gene-search-input')).toHaveValue('RAPGEF');
-  await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(4);
+  await expect(geneProfilesTable.searchInput).toHaveValue('RAPGEF');
+  await expect(geneProfilesTable.dataRows).toHaveCount(4);
 
   // check highlighted rows
-  await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}))
-    .toHaveClass(/row-highlight/);
-  await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}))
-    .toHaveClass(/row-highlight/);
+  await expect(geneProfilesTable.rowByText('RAPGEF4')).toHaveClass(/row-highlight/);
+  await expect(geneProfilesTable.rowByText('RAPGEF2')).toHaveClass(/row-highlight/);
 
   // check column visibility
-  await expect(page.locator('.header-cell')).toHaveCount(23);
-  await expect(page.locator('.header-cell').filter({ hasText: 'LGD_rank'})).not.toBeVisible();
-  await expect(page.locator('.header-cell').filter({ hasText: 'pLI_rank'})).not.toBeVisible();
+  await expect(geneProfilesTable.headerCells).toHaveCount(23);
+  await expect(geneProfilesTable.headerCellByText('LGD_rank')).not.toBeVisible();
+  await expect(geneProfilesTable.headerCellByText('pLI_rank')).not.toBeVisible();
 
   // check opened tabs
-  await expect(page.locator('div.tab')).toHaveCount(2);
-  await expect(page.locator('div.tab').nth(0)).toContainText('GRIN2B');
-  await expect(page.locator('div.tab').nth(1)).toContainText('RAPGEF2,RAPGEF4');
+  await expect(geneProfilesTable.tabs).toHaveCount(2);
+  await expect(geneProfilesTable.tabs.nth(0)).toContainText('GRIN2B');
+  await expect(geneProfilesTable.tabs.nth(1)).toContainText('RAPGEF2,RAPGEF4');
 
   // check sorting
-  await expect(page.locator('div.active-sort-header')).toContainText('Relevant Gene Sets');
-  await expect(page.locator('div.active-sort-header').locator('gpf-sorting-buttons span')).toHaveId('asc');
+  await expect(geneProfilesTable.activeSortHeader).toContainText('Relevant Gene Sets');
+  await expect(geneProfilesTable.activeSortHeader.locator('gpf-sorting-buttons span')).toHaveId('asc');
 
   // check column reorder
-  await page.locator('#relevant_gene_sets_rank-column-filtering-button').click();
-  await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
+  await geneProfilesTable.columnFilteringButton('relevant_gene_sets_rank').click();
+  await expect(geneProfilesTable.menuLabels.nth(2)).toHaveText('CHD8 target genes');
   await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
 }

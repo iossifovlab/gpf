@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { PhenoToolMeasure } from './components/pheno-tool-measure.component';
 
 test.describe('Pheno tool measure tests', () => {
   test.beforeEach(async({ page }) => {
@@ -9,49 +10,49 @@ test.describe('Pheno tool measure tests', () => {
   });
 
   test('should check if the dropdown menu closes when clicking outside', async({ page }) => {
-    await page.locator('#search-box').click();
-    await expect(page.locator('.measures-dropdown')).toBeVisible();
+    const measure = new PhenoToolMeasure(page);
+    await measure.searchBox.click();
+    await expect(measure.measuresDropdown).toBeVisible();
 
     await page.mouse.click(0, 0);
-    await expect(page.locator('.measures-dropdown')).not.toBeVisible();
+    await expect(measure.measuresDropdown).not.toBeVisible();
   });
 
   test('should check whether when the measure is empty, an error message appears' +
   'and the normalization checkboxes get disabled', async({ page }) => {
-    await expect(page.getByText('Please select a measure.')).toBeVisible();
-    await expect(page.getByLabel('Age')).toBeDisabled();
-    await expect(page.getByLabel('Non verbal IQ')).toBeDisabled();
+    const measure = new PhenoToolMeasure(page);
+    await expect(measure.pleaseSelectMeasureError).toBeVisible();
+    await expect(measure.normalizationCheckbox('Age')).toBeDisabled();
+    await expect(measure.normalizationCheckbox('Non verbal IQ')).toBeDisabled();
 
-    await page.locator('#search-box').click();
-    await page.getByText('instrument_1.measure_1').click();
-    await expect(page.getByText('Please select a measure.')).not.toBeVisible();
-    await expect(page.getByLabel('Age')).not.toBeDisabled();
-    await expect(page.getByLabel('Non verbal IQ')).not.toBeDisabled();
+    await measure.selectMeasure('instrument_1.measure_1');
+    await expect(measure.pleaseSelectMeasureError).not.toBeVisible();
+    await expect(measure.normalizationCheckbox('Age')).not.toBeDisabled();
+    await expect(measure.normalizationCheckbox('Non verbal IQ')).not.toBeDisabled();
 
-    await page.locator('#clear-measure-button').click();
-    await expect(page.getByText('Please select a measure.')).toBeVisible();
-    await expect(page.getByLabel('Age')).toBeDisabled();
-    await expect(page.getByLabel('Non verbal IQ')).toBeDisabled();
+    await measure.clearMeasureButton.click();
+    await expect(measure.pleaseSelectMeasureError).toBeVisible();
+    await expect(measure.normalizationCheckbox('Age')).toBeDisabled();
+    await expect(measure.normalizationCheckbox('Non verbal IQ')).toBeDisabled();
   });
 
   test('should check if the normalization checkboxes get disabled when' +
   'the measure is the same as the normalization criteria', async({ page }) => {
-    await page.locator('#search-box').click();
-    await page.getByText('instrument_1.age').click();
-    await expect(page.getByLabel('Age')).toBeDisabled();
+    const measure = new PhenoToolMeasure(page);
+    await measure.selectMeasure('instrument_1.age');
+    await expect(measure.normalizationCheckbox('Age')).toBeDisabled();
 
-    await page.locator('#clear-measure-button').click();
-    await page.locator('#search-box').click();
-    await page.getByText('instrument_1.iq').click();
-    await expect(page.getByLabel('Non verbal IQ')).toBeDisabled();
+    await measure.clearMeasureButton.click();
+    await measure.selectMeasure('instrument_1.iq');
+    await expect(measure.normalizationCheckbox('Non verbal IQ')).toBeDisabled();
   });
 
   test('should check the remove button with selected measure', async({ page }) => {
-    await page.locator('#search-box').click();
-    await page.getByText('instrument_1.age').click();
+    const measure = new PhenoToolMeasure(page);
+    await measure.selectMeasure('instrument_1.age');
 
-    await page.locator('#clear-measure-button').click();
-    await expect(page.locator('#search-box')).toBeEmpty();
+    await measure.clearMeasureButton.click();
+    await expect(measure.searchBox).toBeEmpty();
   });
 
   [
@@ -69,10 +70,11 @@ test.describe('Pheno tool measure tests', () => {
     },
   ].forEach(data => {
     test(`should type ${data.searchText} and check available measures`, async({ page }) => {
-      await page.locator('#search-box').click();
-      await page.locator('#search-box').fill(data.searchText);
-      await Promise.all(data.options.map(async(measure) => {
-        await expect(page.locator('.measures-dropdown').getByText(measure)).toBeVisible();
+      const measure = new PhenoToolMeasure(page);
+      await measure.searchBox.click();
+      await measure.searchBox.fill(data.searchText);
+      await Promise.all(data.options.map(async(option) => {
+        await expect(measure.measureOption(option)).toBeVisible();
       }));
     });
   });
