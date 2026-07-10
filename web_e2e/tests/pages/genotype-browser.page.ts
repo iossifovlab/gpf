@@ -5,6 +5,7 @@ import { PersonFiltersBlock } from '../components/person-filters-block.component
 import { GenomicScoresBlock } from '../components/genomic-scores-block.component';
 import { GenotypeBlock } from '../components/genotype-block.component';
 import { RegionsBlock } from '../components/regions-block.component';
+import { EffectTypes } from '../components/effect-types.component';
 
 // Page object for the Genotype browser route. Composes the block-level
 // component objects and owns the shared query controls (Table Preview /
@@ -17,6 +18,7 @@ export class GenotypeBrowserPage {
   public readonly genomicScores: GenomicScoresBlock;
   public readonly genotypeBlock: GenotypeBlock;
   public readonly regions: RegionsBlock;
+  public readonly effectTypes: EffectTypes;
 
   public readonly root: Locator;
   public readonly tablePreviewButton: Locator;
@@ -49,6 +51,7 @@ export class GenotypeBrowserPage {
     this.genomicScores = new GenomicScoresBlock(page);
     this.genotypeBlock = new GenotypeBlock(page);
     this.regions = new RegionsBlock(page);
+    this.effectTypes = new EffectTypes(page);
 
     this.root = page.locator('gpf-genotype-browser');
     this.tablePreviewButton = page.getByRole('button', { name: 'Table Preview' });
