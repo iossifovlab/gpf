@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { Header } from './components/header.component';
+import { Login } from './components/login.component';
+import { Datasets } from './components/datasets.component';
+import { HomePage } from './pages/home.page';
 
 test.describe('App tests', () => {
   test.beforeEach(async({ page }) => {
@@ -8,11 +12,12 @@ test.describe('App tests', () => {
   });
 
   test('should open oauth login window on login button click', async({ page }) => {
+    const login = new Login(page);
     await page.goto(`${page.url()}/datasets/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`);
-    await page.locator('#log-in-button').click();
+    await login.logInButton.click();
 
-    await expect(page.locator('input#id_username')).toBeVisible();
-    await expect(page.locator('input#id_password')).toBeVisible();
+    await expect(login.usernameInput).toBeVisible();
+    await expect(login.passwordInput).toBeVisible();
   });
 
   test('should display "GPF: Genotypes and Phenotypes in Families" as a title', async({ page }) => {
@@ -38,10 +43,11 @@ test.describe('App tests', () => {
   test('should click on the "User profile" button and navigate to "/user-profile"', async({
     page
   }) => {
+    const header = new Header(page);
     const savedQueriesUrl = `${utils.frontendUrl}/user-profile`;
 
     await utils.loginWorkerUser(page);
-    await page.locator('a:text("User Profile")').click();
+    await header.navLink('User Profile').click();
 
     const currentUrl = page.url();
 
@@ -54,10 +60,11 @@ test.describe('App tests', () => {
 
   test('should click on the "Gene profiles" button and ' +
      'navigate to "/autism-gene-profiles"', async({ page }) => {
+    const header = new Header(page);
     const geneProfilesUrl = `${utils.frontendUrl}/gene-profiles`;
 
     await utils.loginWorkerUser(page);
-    await page.locator('#header a:text("Gene Profiles")').click();
+    await header.navLink('Gene Profiles').click();
 
     const currentUrl = page.url();
 
@@ -95,81 +102,86 @@ test.describe('App user access rights tests', () => {
     login => login.username !== undefined && login.password !== undefined
   ).forEach(data => {
     test(`should check navigation bar for the right elements for ${data.username} user`, async({ page }) => {
+      const header = new Header(page);
       await utils.login(page, data.username as string, data.password as string);
 
-      await expect(page.locator('#header a')).toHaveCount(data.navigationTabsCount);
+      await expect(header.navLinks).toHaveCount(data.navigationTabsCount);
 
       for (const tab of data.navigationTabs) {
-        await expect(page.locator('#header a').getByText(tab)).toBeVisible();
+        // eslint-disable-next-line no-await-in-loop
+        await expect(header.navLinkByText(tab)).toBeVisible();
       }
     });
   });
 
   test('should properly disable tools based on access rights', async({ page }) => {
+    const header = new Header(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Dataset Description');
-    await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Gene Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Phenotype Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Enrichment Tool')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Phenotype Tool')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Dataset Description')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Dataset Statistics')).toHaveClass('nav-item disabled-tool');
 
 
     await utils.loginWorkerUser(page);
-    await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Gene Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Genotype Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Phenotype Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Enrichment Tool')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Phenotype Tool')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Dataset Description')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Dataset Statistics')).toHaveClass('nav-item disabled-tool');
 
     await utils.logout(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Dataset Description');
-    await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Gene Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Genotype Browser')).toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Phenotype Browser')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Enrichment Tool')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Phenotype Tool')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Dataset Description')).not.toHaveClass('nav-item disabled-tool');
+    await expect(header.toolNavItem('Dataset Statistics')).toHaveClass('nav-item disabled-tool');
   });
 
   test('should check that an authenticated worker user sees the phenotype and ' +
     'transmitted icons in the dimmed-but-visible style', async({ page }) => {
+    const header = new Header(page);
+    const datasets = new Datasets(page);
     await utils.loginWorkerUser(page);
-    await page.locator('a:text("Datasets")').click();
-    await page.locator('#datasets-dropdown-menu-button').click();
+    await header.navLink('Datasets').click();
+    await datasets.dropdownButton.click();
     await page.waitForSelector('div.dropdown-menu');
     await utils.expandDataset(page, utils.datasetIds.compDenovoLiftover);
     await utils.expandDataset(page, utils.datasetIds.denovoHelloWorld);
 
     await expect(
-      page.locator('gpf-dataset-node a').filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.phenotype-icon')
+      datasets.datasetNode(utils.datasetIds.vcfHelloWorld).locator('.phenotype-icon')
     ).toHaveCSS('color', 'rgb(126, 126, 126)');
     await expect(
-      page.locator('gpf-dataset-node a')
-        .filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.transmitted-icon')
+      datasets.datasetNode(utils.datasetIds.vcfHelloWorld).locator('.transmitted-icon')
     ).toHaveCSS('color', 'rgb(126, 126, 126)');
   });
 
   test('should login researcher and check whether the phenotype and transmitted icons ' +
     'have the correct color', async({ page }) => {
+    const header = new Header(page);
+    const datasets = new Datasets(page);
     await utils.login(page, userData.normal.username, userData.normal.password);
-    await page.locator('a:text("Datasets")').click();
-    await page.locator('#datasets-dropdown-menu-button').click();
+    await header.navLink('Datasets').click();
+    await datasets.dropdownButton.click();
     await page.waitForSelector('div.dropdown-menu');
     await utils.expandDataset(page, utils.datasetIds.compDenovoLiftover);
     await utils.expandDataset(page, utils.datasetIds.denovoHelloWorld);
-    await expect(page.locator('#register-alert')).toBeVisible();
+    await expect(datasets.registerAlert).toBeVisible();
 
     await expect(
-      page.locator('gpf-dataset-node a').filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.phenotype-icon')
+      datasets.datasetNode(utils.datasetIds.vcfHelloWorld).locator('.phenotype-icon')
     ).toHaveCSS('color', 'rgb(220, 220, 220)');
     await expect(
-      page.locator('gpf-dataset-node a')
-        .filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.transmitted-icon')
+      datasets.datasetNode(utils.datasetIds.vcfHelloWorld).locator('.transmitted-icon')
     ).toHaveCSS('color', 'rgb(220, 220, 220)');
   });
 
@@ -178,16 +190,19 @@ test.describe('App user access rights tests', () => {
   // /management, which requires the admin group via loginLiteralAdmin.
 
   test('if Gene Browser tool is opened by default', async({ page }) => {
-    await page.locator('a').filter({ hasText: 'Datasets'}).click();
-    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+    const header = new Header(page);
+    const datasets = new Datasets(page);
+    const home = new HomePage(page);
+    await header.navLink('Datasets').click();
+    await expect(datasets.geneBrowser).toBeVisible();
 
     await utils.loginWorkerUser(page);
-    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+    await expect(datasets.geneBrowser).toBeVisible();
 
     await utils.logout(page);
-    await expect(page.locator('gpf-home')).toBeVisible();
-    await page.locator('a').filter({ hasText: 'Datasets'}).click();
-    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+    await expect(home.root).toBeVisible();
+    await header.navLink('Datasets').click();
+    await expect(datasets.geneBrowser).toBeVisible();
   });
 
   // tests robustness of the authentication process
