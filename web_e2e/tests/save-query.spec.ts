@@ -3,6 +3,7 @@ import * as utils from './utils';
 import { SaveQuery } from './components/save-query.component';
 import { EffectTypes } from './components/effect-types.component';
 import { Header } from './components/header.component';
+import { Datasets } from './components/datasets.component';
 
 test.describe('Save query common tests', () => {
   test.beforeEach(async({ page }) => {
@@ -56,6 +57,7 @@ test.describe('Save query tests', () => {
   test('should save a query, load it, open all tools tabs and delete the query', async({ page }) => {
     const saveQueryComponent = new SaveQuery(page);
     const header = new Header(page);
+    const datasets = new Datasets(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await saveQueryComponent.dropdownButton.click();
     await saveQueryComponent.nameInput.fill('TestLoadAndDeleteQuery');
@@ -66,15 +68,15 @@ test.describe('Save query tests', () => {
     await saveQueryComponent.loadButton('TestLoadAndDeleteQuery').click();
 
     await header.toolNavItem('Dataset Statistics').click();
-    await expect(page.locator('gpf-variant-reports')).toBeVisible();
+    await expect(datasets.variantReports).toBeVisible();
     await header.toolNavItem('Genotype browser').click();
-    await expect(page.locator('gpf-genotype-browser')).toBeVisible();
+    await expect(datasets.genotypeBrowser).toBeVisible();
     await header.toolNavItem('Phenotype browser').click();
-    await expect(page.locator('gpf-pheno-browser-table')).toBeVisible();
+    await expect(datasets.phenoBrowserTable).toBeVisible();
     await header.toolNavItem('Phenotype tool').click();
-    await expect(page.locator('gpf-pheno-tool')).toBeVisible();
+    await expect(datasets.phenoTool).toBeVisible();
     await header.toolNavItem('Gene browser').click();
-    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+    await expect(datasets.geneBrowser).toBeVisible();
 
     await page.goto(utils.frontendUrl + '/user-profile', { waitUntil: 'load'});
 
@@ -101,7 +103,7 @@ test.describe('Save query tests', () => {
     await saveQueryComponent.loadButton('CheckedSavedQuery').click();
 
     const radios = effectTypesComponent.checkboxes;
-    await expect(page.getByText('nonsense')).toBeChecked();
+    await expect(effectTypesComponent.label('nonsense')).toBeChecked();
     const radiosPromises = [];
     const count = await radios.count();
     for (let i = 0; i < count; i++) {
@@ -134,7 +136,7 @@ test.describe('Save query tests', () => {
     await page.waitForSelector('gpf-genotype-browser');
 
     const radios = effectTypesComponent.checkboxes;
-    await expect(page.getByText('nonsense')).toBeChecked();
+    await expect(effectTypesComponent.label('nonsense')).toBeChecked();
     const radiosPromises = [];
     const count = await radios.count();
     for (let i = 0; i < count; i++) {

@@ -12,6 +12,7 @@ export class Datasets {
   // Per-tool content roots.
   public readonly genotypeBrowser: Locator;
   public readonly phenoBrowser: Locator;
+  public readonly phenoBrowserTable: Locator;
   public readonly phenoTool: Locator;
   public readonly variantReports: Locator;
   public readonly geneBrowser: Locator;
@@ -25,6 +26,7 @@ export class Datasets {
 
     this.genotypeBrowser = page.locator('gpf-genotype-browser');
     this.phenoBrowser = page.locator('gpf-pheno-browser');
+    this.phenoBrowserTable = page.locator('gpf-pheno-browser-table');
     this.phenoTool = page.locator('gpf-pheno-tool');
     this.variantReports = page.locator('gpf-variant-reports');
     this.geneBrowser = page.locator('gpf-gene-browser');
