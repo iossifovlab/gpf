@@ -1,6 +1,75 @@
 Release Notes
 =============
  
+* 2026.7.0
+    * Added two family-withdrawal tools, families_withdrawal_genotypes
+      and families_withdrawal_phenotypes, for removing consent-withdrawn
+      families from a study. Both take a study id plus family ids (or
+      ``--families-file``), support ``--dry-run``, and write a timestamped
+      .bak sibling before touching anything unless ``--no-backup`` is
+      given.
+      Phenotype withdrawal deletes the families' rows from the pheno DB.
+      Genotype withdrawal (duckdb_parquet storage only) rewrites the
+      study's pedigree.parquet and relies on the query layer to skip
+      variants of families no longer in the pedigree — the family-variant
+      parquet is left untouched, so the rows still exist on disk, and
+      derived artifacts (summary-variant frequencies, common reports,
+      denovo gene sets) stay stale until regenerated.
+    * Added a web-API feature-flag mechanism. Each flag has a default in
+      the in-code registry; a deployment overrides one through the
+      FEATURE_FLAGS Django setting, which is merged over the defaults, so
+      an override that omits a flag leaves it alone and an unknown flag
+      name is dropped with a warning. Production containers toggle a flag
+      through a GPF_FEATURE_FLAG__<NAME> environment variable (0, false
+      or no disable it; anything else enables it). GET
+      /api/v3/instance/features exposes the flag map to the web
+      interface. The one flag shipped is pheno_browser_download, which
+      defaults to on, so no existing deployment changes behavior; turning
+      it off hides the phenotype-browser download button and makes the
+      download endpoint return 404.
+    * Upgraded the web interface from Angular 19 to Angular 21, across
+      two major versions, including the migration to Angular's built-in
+      control-flow template syntax and to the ESLint flat-config format,
+      and landing on 21.2.17 to clear the XSS and denial-of-service
+      advisories that early 21.x carried.
+    * Fixed the web interface rendering a blank page after the Angular 21
+      upgrade. Angular 21 no longer provides zone.js change detection
+      implicitly, so the application bootstrapped zoneless and never
+      re-rendered on an async response. Zone-based change detection is
+      now provided explicitly.
+    * Fixed two further regressions from the Angular upgrade: selecting a
+      score in the genomic-scores dropdown left the CDK overlay backdrop
+      in place, an invisible layer that swallowed every subsequent click,
+      and gene-profiles table cells rendered a stray trailing space after
+      the gene name.
+    * Adopted gain's get_value_type() attribute API in the parquet writer
+      and the query layer. gain removed the Attribute.value_type field
+      the previous release read, which crashed summary-parquet writing on
+      import and the backend at boot. The summary schema keys each column
+      on the raw declared score type, so string-valued scores such as
+      CLNSIG and CLNDN keep their columns and score filters keep matching.
+    * Genomic-scores endpoints now serve a memoized, pre-rendered JSON
+      response instead of re-serializing every histogram on each request,
+      which took about 1.5 seconds. The cache is in-process, keyed on the
+      instance load timestamp so an instance reload invalidates it, and
+      responses now carry a one-hour Cache-Control.
+    * Phenotype data and image directories are now resolved from the
+      instance's configured phenotype_data dir and phenotype_images when
+      no explicit config is passed, instead of a hard-coded DAE_DB_DIR
+      sibling — so an instance that keeps pheno images elsewhere no
+      longer serves image paths pointing at the wrong directory. When no
+      instance can be discovered the old default is used rather than
+      raising, since these run at Django settings-import time.
+    * The gpf-web production image now ships the mysql client, so
+      wdaemanage dbshell works inside the deployed container, along with
+      mysqldump and mysqladmin.
+    * Bumped vulnerable transitive runtime dependencies to patched
+      releases: cryptography 49.0.0, msgpack 1.2.1 and tornado 6.5.7.
+    * The gpf-web end-to-end tests now run their database on mysql
+      8.0.33, matching every production host. CI previously ran MariaDB
+      10.11, which accepts schema operations MySQL 8 rejects — the gap
+      that let a MySQL-only migration failure reach a deploy.
+
 * 2026.6.5
     * Production images now run gunicorn with the gthread worker class
       (2 workers x 16 threads) instead of sync workers. A variant query
