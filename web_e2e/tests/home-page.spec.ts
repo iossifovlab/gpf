@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { HomePage } from './pages/home.page';
+import { GeneProfilesSingleView } from './components/gene-profiles-single-view.component';
 
 // tb-nxl-fix: the 'Home page description tests' describe that used to
 // live here (2 tests writing the global /api/v3/instance/description
@@ -31,6 +32,7 @@ test.describe('Home page tests', () => {
 
   test('should search genes by selecting gene', async({ page }) => {
     const homePage = new HomePage(page);
+    const singleView = new GeneProfilesSingleView(page);
     await homePage.searchBox.focus();
     await page.keyboard.type('chd');
     await homePage.option('CHD8').click();
@@ -39,12 +41,13 @@ test.describe('Home page tests', () => {
     await expect(homePage.root).not.toBeVisible();
     await expect(homePage.geneProfilesSingleView).toBeVisible();
     await expect(page).toHaveURL(`${utils.frontendUrl}/gene-profiles/CHD8`);
-    await expect(page.locator('.tab').getByText('CHD8')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'CHD8' })).toBeVisible();
+    await expect(singleView.tab('CHD8')).toBeVisible();
+    await expect(singleView.headingFor('CHD8')).toBeVisible();
   });
 
   test('should search genes by typing gene', async({ page }) => {
     const homePage = new HomePage(page);
+    const singleView = new GeneProfilesSingleView(page);
     await homePage.searchBox.focus();
     await page.keyboard.type('chd8');
     await expect(homePage.option('CHD8')).toBeVisible();
@@ -54,8 +57,8 @@ test.describe('Home page tests', () => {
     await expect(homePage.root).not.toBeVisible();
     await expect(homePage.geneProfilesSingleView).toBeVisible();
     await expect(page).toHaveURL(`${utils.frontendUrl}/gene-profiles/CHD8`);
-    await expect(page.locator('.tab').getByText('CHD8')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'CHD8' })).toBeVisible();
+    await expect(singleView.tab('CHD8')).toBeVisible();
+    await expect(singleView.headingFor('CHD8')).toBeVisible();
   });
 
   test('should show error message when searching invalid gene', async({ page }) => {
