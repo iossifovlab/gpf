@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import { EnrichmentToolPage } from './pages/enrichment-tool.page';
 
 test.describe('Enrichment tool tests', () => {
   test.beforeEach(async({ page }) => {
@@ -9,96 +10,106 @@ test.describe('Enrichment tool tests', () => {
   });
 
   test('should display enrichment tool elements', async({ page }) => {
-    await expect(page.locator('gpf-genes-block')).toBeVisible();
-    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    const enrichmentTool = new EnrichmentToolPage(page);
+    await expect(enrichmentTool.genesBlock.root).toBeVisible();
+    await expect(enrichmentTool.insertGeneSymbolError).toBeVisible();
     await page.waitForSelector('gpf-enrichment-models-block');
-    await expect(page.locator('gpf-enrichment-models-block')).toBeVisible();
-    await expect(page.getByRole('button', {name: 'Enrichment test'})).toBeVisible();
-    await expect(page.getByRole('button', {name: 'Share/save query'})).toBeVisible();
+    await expect(enrichmentTool.modelsBlock).toBeVisible();
+    await expect(enrichmentTool.enrichmentTestButton).toBeVisible();
+    await expect(enrichmentTool.shareSaveQueryButton).toBeVisible();
   });
 
   test('should display enrichment table after "Enrichment Test" button click', async({ page }) => {
-    await expect(page.locator('.enrichment-table')).not.toBeVisible();
-    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    const enrichmentTool = new EnrichmentToolPage(page);
+    await expect(enrichmentTool.enrichmentTable).not.toBeVisible();
+    await expect(enrichmentTool.insertGeneSymbolError).toBeVisible();
 
     await page.waitForSelector('#background-models');
     await page.waitForSelector('#counting-models');
 
-    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
-    await page.keyboard.type('CAMSAP1');
-    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await enrichmentTool.genesBlock.geneSymbols.type('CAMSAP1');
+    await expect(enrichmentTool.genesBlock.geneSymbols.errorsAlert).not.toBeVisible();
 
-    await page.getByRole('button', {name: 'Enrichment test'}).click();
-    await expect(page.locator('.enrichment-table')).toBeVisible();
+    await enrichmentTool.enrichmentTestButton.click();
+    await expect(enrichmentTool.enrichmentTable).toBeVisible();
   });
 
   test('should display alert window when the gene sets textarea is empty', async({ page }) => {
-    await page.locator('#gene-sets').click();
+    const enrichmentTool = new EnrichmentToolPage(page);
+    const geneSets = enrichmentTool.genesBlock.geneSets;
+
+    await enrichmentTool.genesBlock.openGeneSets();
     await page.waitForSelector('gpf-gene-sets');
 
-    await page.locator('gpf-gene-sets select').selectOption('Relevant Gene Sets');
+    await geneSets.selectCollectionForm('Relevant Gene Sets');
 
-    await expect(page.getByText('Please select a gene set.')).toBeVisible();
-    await page.locator('#search-box').click();
-    await page.locator('#search-box').focus();
+    await expect(enrichmentTool.selectGeneSetError).toBeVisible();
+    await enrichmentTool.searchBox.click();
+    await enrichmentTool.searchBox.focus();
     await page.keyboard.type('synaptic clefts inhibitory');
 
-    await page.waitForSelector('[title="synaptic clefts inhibitory (41): ' +
-    'Ken H. Loh, et al. Proteomic Analysis of Unbounded Cellular Compartments: Synaptic Clefts. Cell (2016)"]');
+    await geneSets.optionByTitle('synaptic clefts inhibitory (41): ' +
+    'Ken H. Loh, et al. Proteomic Analysis of Unbounded Cellular Compartments: Synaptic Clefts. Cell (2016)').waitFor();
 
-    await page.getByText('synaptic clefts inhibitory (41): Ken H. Loh, et al. ' +
+    await geneSets.optionByText('synaptic clefts inhibitory (41): Ken H. Loh, et al. ' +
     'Proteomic Analysis of Unbounded Cellular Compartments: Synaptic Clefts. Cell (2016)').click();
 
-    await page.getByRole('button', {name: 'Enrichment test'}).click();
-    await expect(page.locator('.enrichment-table')).toBeVisible();
+    await enrichmentTool.enrichmentTestButton.click();
+    await expect(enrichmentTool.enrichmentTable).toBeVisible();
   });
 
   test('should check the affected person\'s observed column ' +
   'of LGDs and missense\'s rows respectively with gene set Main: FMRP Darnell', async({ page }) => {
-    await page.locator('#gene-sets').click();
+    const enrichmentTool = new EnrichmentToolPage(page);
+    const geneSets = enrichmentTool.genesBlock.geneSets;
 
-    await page.locator('gpf-gene-sets select').selectOption('Relevant Gene Sets');
+    await enrichmentTool.genesBlock.openGeneSets();
+
+    await geneSets.selectCollectionForm('Relevant Gene Sets');
 
     await page.waitForSelector('gpf-gene-sets');
-    await page.locator('#search-box').click();
-    await page.locator('#search-box').focus();
+    await enrichmentTool.searchBox.click();
+    await enrichmentTool.searchBox.focus();
     await page.keyboard.type('FMRP Darnell');
 
-    await page.waitForSelector('[title="FMRP Darnell (842): Darnell JC., et al. FMRP stalls ribosomal ' +
-    'translocation on mRNAs linked to synaptic function and autism. Cell (2011)"]');
-    await page.getByText('FMRP Darnell (842): Darnell JC., et al. FMRP stalls ribosomal ' +
+    await geneSets.optionByTitle('FMRP Darnell (842): Darnell JC., et al. FMRP stalls ribosomal ' +
+    'translocation on mRNAs linked to synaptic function and autism. Cell (2011)').waitFor();
+    await geneSets.optionByText('FMRP Darnell (842): Darnell JC., et al. FMRP stalls ribosomal ' +
     'translocation on mRNAs linked to synaptic function and autism. Cell (2011)').click();
 
-    await page.getByRole('button', {name: 'Enrichment test'}).click();
+    await enrichmentTool.enrichmentTestButton.click();
     await page.waitForSelector('.enrichment-table');
 
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('10');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('20');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('5.40');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('22.06');
+    await expect(enrichmentTool.tableCell(3, 2)).toHaveText('10');
+    await expect(enrichmentTool.tableCell(4, 2)).toHaveText('20');
+    await expect(enrichmentTool.tableCell(3, 3)).toHaveText('5.40');
+    await expect(enrichmentTool.tableCell(4, 3)).toHaveText('22.06');
   });
 
   test('should check the affected person\'s observed column ' +
   'of LGDs and missense\'s rows respectively with gene set MSigDB Pathways: BIOCARTA_PTEN_PATHWAY', async({ page }) => {
-    await page.locator('#gene-sets').click();
+    const enrichmentTool = new EnrichmentToolPage(page);
+    const geneSets = enrichmentTool.genesBlock.geneSets;
+
+    await enrichmentTool.genesBlock.openGeneSets();
     await page.waitForSelector('gpf-gene-sets');
 
-    await page.locator('gpf-gene-sets select').selectOption('MSigDB Pathways');
-    await page.locator('#search-box').click();
-    await page.locator('#search-box').focus();
+    await geneSets.selectCollectionForm('MSigDB Pathways');
+    await enrichmentTool.searchBox.click();
+    await enrichmentTool.searchBox.focus();
     await page.keyboard.type('BIOCARTA_PTEN_PATHWAY');
 
-    await page.waitForSelector('[title="BIOCARTA_PTEN_PATHWAY (18): ' +
-    'http://www.gsea-msigdb.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY"]');
-    await page.getByText('BIOCARTA_PTEN_PATHWAY (18): ' +
+    await geneSets.optionByTitle('BIOCARTA_PTEN_PATHWAY (18): ' +
+    'http://www.gsea-msigdb.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY').waitFor();
+    await geneSets.optionByText('BIOCARTA_PTEN_PATHWAY (18): ' +
     'http://www.gsea-msigdb.org/gsea/msigdb/cards/BIOCARTA_PTEN_PATHWAY').click();
 
-    await page.getByRole('button', {name: 'Enrichment test'}).click();
+    await enrichmentTool.enrichmentTestButton.click();
     await page.waitForSelector('.enrichment-table');
 
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('0');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('0');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.06');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('0.24');
+    await expect(enrichmentTool.tableCell(3, 2)).toHaveText('0');
+    await expect(enrichmentTool.tableCell(4, 2)).toHaveText('0');
+    await expect(enrichmentTool.tableCell(3, 3)).toHaveText('0.06');
+    await expect(enrichmentTool.tableCell(4, 3)).toHaveText('0.24');
   });
 });

@@ -108,7 +108,7 @@ test.describe('Gene scores tests', () => {
 
     await expect(genotypeBrowser.genes.geneScores.numberHistogram.sumOfBarsLabel).not.toContainText('~');
 
-    await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
+    await genotypeBrowser.effectTypes.clickButton('All');
     await genotypeBrowser.runTablePreview();
 
     await expect(genotypeBrowser.variantsCount).toHaveText('55 variants selected');

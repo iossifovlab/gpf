@@ -197,7 +197,7 @@ test.describe('Genes sybmols tests', () => {
   test('loaded variants when there are duplicate gene symbols', async({ page }) => {
     const genotypeBrowser = new GenotypeBrowserPage(page);
     await genotypeBrowser.genes.geneSymbols.type('POGZ');
-    await page.locator('gpf-effect-types').getByText('All').click();
+    await genotypeBrowser.effectTypes.clickButton('All');
 
     await genotypeBrowser.runTablePreview();
     await expect(genotypeBrowser.variantsCount).toHaveText('16 variants selected');

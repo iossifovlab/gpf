@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { scanCSV } from 'nodejs-polars';
 import { GenotypeBrowserPage } from './pages/genotype-browser.page';
+import { PhenoMeasureSelector } from './components/pheno-measure-selector.component';
 
 test.describe('Genomic scores tests', () => {
   test.beforeEach(async({ page }) => {
@@ -232,7 +233,7 @@ test.describe('Genomic scores tests', () => {
     await expect(notProvidedDownload).toHaveCount(1);
     await notProvidedDownload.click();
 
-    await page.locator('gpf-effect-types').getByText('All').click();
+    await genotypeBrowser.effectTypes.clickButton('All');
 
     const downloadPromise = page.waitForEvent('download');
     await genotypeBrowser.downloadButton.click();
@@ -312,10 +313,10 @@ test.describe('Genomic scores tests', () => {
 
   test('should check downloded file filtering with genomic scores in phenotype tool', async({ page }) => {
     const genomicScores = new GenotypeBrowserPage(page).genomicScores;
+    const measureSelector = new PhenoMeasureSelector(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Phenotype tool');
 
-    await page.locator('gpf-pheno-measure-selector #search-box').click();
-    await page.getByText('instrument_1.measure_1').first().click();
+    await measureSelector.selectMeasure('instrument_1.measure_1');
 
     const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
     ' the concept specified by disease identifiers in CLNDISDB';
@@ -341,10 +342,10 @@ test.describe('Genomic scores tests', () => {
   test('should check loaded query filtering with genomic scores in phenotype tool', async({ page }) => {
     const genotypeBrowser = new GenotypeBrowserPage(page);
     const genomicScores = genotypeBrowser.genomicScores;
+    const measureSelector = new PhenoMeasureSelector(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Phenotype tool');
 
-    await page.locator('gpf-pheno-measure-selector #search-box').click();
-    await page.getByText('instrument_1.measure_1').first().click();
+    await measureSelector.selectMeasure('instrument_1.measure_1');
 
     const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
     ' the concept specified by disease identifiers in CLNDISDB';
@@ -373,7 +374,7 @@ test.describe('Genomic scores tests', () => {
   test('should filter by multiple genomic scores', async({ page }) => {
     const genotypeBrowser = new GenotypeBrowserPage(page);
     const genomicScores = genotypeBrowser.genomicScores;
-    await page.locator('gpf-effect-types').getByText('All').click();
+    await genotypeBrowser.effectTypes.clickButton('All');
 
     const clndn = 'CLNDN - ClinVar\'s preferred disease name for' +
     ' the concept specified by disease identifiers in CLNDISDB';
@@ -422,7 +423,7 @@ test.describe('Genomic scores tests', () => {
     const genotypeBrowser = new GenotypeBrowserPage(page);
     const genomicScores = genotypeBrowser.genomicScores;
     const categoricalHistogram = genotypeBrowser.genes.geneScores.categorical;
-    await page.locator('gpf-effect-types').getByText('All').click();
+    await genotypeBrowser.effectTypes.clickButton('All');
 
     await genotypeBrowser.genes.openGeneScores();
     await genotypeBrowser.genes.geneScores.selectScore(
@@ -483,7 +484,7 @@ test.describe('Genomic scores tests', () => {
     // MPC only annotates missense variants; the default Effect Types
     // selection is LGDs-only (no missense). Click All so the MPC range
     // filter has a non-empty result set deterministically on Jenkins.
-    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+    await genotypeBrowser.effectTypes.clickButton('All');
 
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
     'A deleteriousness prediction score for missense variants';

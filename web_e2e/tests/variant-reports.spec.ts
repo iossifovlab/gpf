@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { scanCSV } from 'nodejs-polars';
+import { VariantReports } from './components/variant-reports.component';
+import { Datasets } from './components/datasets.component';
+import { Header } from './components/header.component';
 
 const tags: string[] = [
   'tag_nuclear_family',
@@ -23,52 +26,61 @@ const tags: string[] = [
   'tag_missing_dad_family'
 ];
 
+async function navigateToDatasetStatistics(page: import('@playwright/test').Page): Promise<void> {
+  const datasets = new Datasets(page);
+  const header = new Header(page);
+  await header.navLink('Datasets').click();
+  await datasets.dropdownButton.click();
+  await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
+  await datasets.toolLink('Dataset Statistics').click();
+}
+
 test.describe('Variant reports tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
-    await page.locator('a:text("Datasets")').click();
-    await page.locator('#datasets-dropdown-menu-button').click();
-    await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
-    await page.getByText('Dataset Statistics').click();
+    await navigateToDatasetStatistics(page);
   });
 
   test('should display the correct elements in the families by number tab', async({ page }) => {
-    await page.getByText('Families by number').click();
-    await expect(page.locator('#download-total-families')).toBeVisible();
-    await expect(page.locator('#families-by-number-select')).toBeVisible();
-    await expect(page.locator('#families-by-number-div')).toBeVisible();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by number').click();
+    await expect(variantReports.downloadTotalFamilies).toBeVisible();
+    await expect(variantReports.familiesByNumberSelect).toBeVisible();
+    await expect(variantReports.familiesByNumberDiv).toBeVisible();
 
-    await page.getByText('De Novo variants').click();
-    await expect(page.locator('#download-total-families')).not.toBeVisible();
-    await expect(page.locator('#families-by-number-select')).not.toBeVisible();
-    await expect(page.locator('#families-by-number-div')).not.toBeVisible();
+    await variantReports.tab('De Novo variants').click();
+    await expect(variantReports.downloadTotalFamilies).not.toBeVisible();
+    await expect(variantReports.familiesByNumberSelect).not.toBeVisible();
+    await expect(variantReports.familiesByNumberDiv).not.toBeVisible();
   });
 
   test('should display the correct elements in the families by pedigree tab', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
-    await expect(page.locator('#families-by-pedigree-select')).toBeVisible();
-    await expect(page.locator('#download-button')).toBeVisible();
-    await expect(page.locator('#families-by-pedigree-div')).toBeVisible();
-    await expect(page.getByText('Select tags')).toBeVisible();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
+    await expect(variantReports.familiesByPedigreeSelect).toBeVisible();
+    await expect(variantReports.downloadButton).toBeVisible();
+    await expect(variantReports.familiesByPedigreeDiv).toBeVisible();
+    await expect(variantReports.selectTags).toBeVisible();
 
-    await page.getByText('De Novo variants').click();
-    await expect(page.locator('#families-by-pedigree-select')).not.toBeVisible();
-    await expect(page.locator('#download-button')).not.toBeVisible();
-    await expect(page.locator('#families-by-pedigree-div')).not.toBeVisible();
-    await expect(page.getByText('Select tags')).not.toBeVisible();
+    await variantReports.tab('De Novo variants').click();
+    await expect(variantReports.familiesByPedigreeSelect).not.toBeVisible();
+    await expect(variantReports.downloadButton).not.toBeVisible();
+    await expect(variantReports.familiesByPedigreeDiv).not.toBeVisible();
+    await expect(variantReports.selectTags).not.toBeVisible();
   });
 
   test('should display the correct elements in the families by denovo tab', async({ page }) => {
-    await page.getByText('De Novo variants').click();
-    await expect(page.locator('#denovo-variants-select')).toBeVisible();
-    await expect(page.locator('#de-novo-variants-legend-report')).toBeVisible();
-    await expect(page.locator('#denovo-variants-div')).toBeVisible();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('De Novo variants').click();
+    await expect(variantReports.denovoVariantsSelect).toBeVisible();
+    await expect(variantReports.denovoVariantsLegendReport).toBeVisible();
+    await expect(variantReports.denovoVariantsDiv).toBeVisible();
 
-    await page.getByText('Families by number').click();
-    await expect(page.locator('#denovo-variants-select')).not.toBeVisible();
-    await expect(page.locator('#de-novo-variants-legend-report')).not.toBeVisible();
-    await expect(page.locator('#denovo-variants-div')).not.toBeVisible();
+    await variantReports.tab('Families by number').click();
+    await expect(variantReports.denovoVariantsSelect).not.toBeVisible();
+    await expect(variantReports.denovoVariantsLegendReport).not.toBeVisible();
+    await expect(variantReports.denovoVariantsDiv).not.toBeVisible();
   });
 
   [
@@ -78,84 +90,88 @@ test.describe('Variant reports tests', () => {
   ].forEach(data => {
     test('should check content of the legend for ' + data.option +
       ' option in the families by pedigree tab', async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await expect(page.locator('#expand-legend-button')).toBeVisible();
-      await expect(page.locator('#legend')).not.toBeVisible();
-      await page.locator('#families-by-pedigree-select').selectOption(data.option);
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('Families by pedigree').click();
+      await expect(variantReports.expandLegendButton).toBeVisible();
+      await expect(variantReports.legend).not.toBeVisible();
+      await variantReports.familiesByPedigreeSelect.selectOption(data.option);
 
-      await page.locator('#expand-legend-button').click();
-      await expect(page.locator('#legend')).toBeVisible();
+      await variantReports.expandLegendButton.click();
+      await expect(variantReports.legend).toBeVisible();
 
-      await expect(page.locator('.legend-item')).toHaveCount(data.legendElements.length);
+      await expect(variantReports.legendItems).toHaveCount(data.legendElements.length);
 
-      await expect(page.locator('#legend')).toContainText(data.legendElements.join(''));
+      await expect(variantReports.legend).toContainText(data.legendElements.join(''));
 
-      await page.locator('#expand-legend-button').click();
-      await expect(page.locator('#legend')).not.toBeVisible();
+      await variantReports.expandLegendButton.click();
+      await expect(variantReports.legend).not.toBeVisible();
     });
   });
 
   test('should check content of the select in the families by pedigree tab', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
 
-    await expect(page.locator('#families-by-pedigree-select option')).toHaveCount(3);
+    await expect(variantReports.familiesByPedigreeSelect.locator('option')).toHaveCount(3);
 
-    const option1 = await page.locator('#families-by-pedigree-select option').nth(0).textContent();
+    const option1 = await variantReports.familiesByPedigreeSelect.locator('option').nth(0).textContent();
     expect(['Affected Status', 'Role', 'Phenotype']).toContain(option1);
 
-    const option2 = await page.locator('#families-by-pedigree-select option').nth(1).textContent();
+    const option2 = await variantReports.familiesByPedigreeSelect.locator('option').nth(1).textContent();
     expect(['Affected Status', 'Role', 'Phenotype']).toContain(option2);
 
-    const option3 = await page.locator('#families-by-pedigree-select option').nth(2).textContent();
+    const option3 = await variantReports.familiesByPedigreeSelect.locator('option').nth(2).textContent();
     expect(['Affected Status', 'Role', 'Phenotype']).toContain(option3);
   });
 
   test('should open, close and check content for selecting tags', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
-    await expect(page.getByText('Select tags')).toBeVisible();
-    await expect(page.locator('#tags-modal-content')).not.toBeVisible();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
+    await expect(variantReports.selectTags).toBeVisible();
+    await expect(variantReports.tagsModalContent).not.toBeVisible();
 
-    await page.getByText('Select tags').click();
-    await expect(page.locator('#tags-modal-content')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'And' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Or' })).toBeVisible();
+    await variantReports.selectTags.click();
+    await expect(variantReports.tagsModalContent).toBeVisible();
+    await expect(variantReports.andButton).toBeVisible();
+    await expect(variantReports.orButton).toBeVisible();
     await expect(page.getByText('Choose mode: ')).toBeVisible();
-    await expect(page.getByText('Clear filters')).toBeVisible();
-    await expect(page.locator('#tag-list')).toBeVisible();
+    await expect(variantReports.clearFilters).toBeVisible();
+    await expect(variantReports.tagList).toBeVisible();
 
-    await expect(page.locator('#tag-list'))
+    await expect(variantReports.tagList)
       .toContainText('add_circleremove_circle' + tags.join('add_circleremove_circle'));
 
     await page.mouse.click(0, 0);
-    await expect(page.locator('#tags-modal-content')).not.toBeVisible();
+    await expect(variantReports.tagsModalContent).not.toBeVisible();
   });
 
   test('should test clear all filters', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
-    await page.getByText('Select tags').click();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
+    await variantReports.selectTags.click();
 
-    await page.locator(`#${tags[2]}-tag-add`).click();
-    await expect(page.locator('#selected-tags-list')).toContainText(tags[2]);
-    await expect(page.locator(`#${tags[2]}-tag-add`)).toHaveCSS('color', 'rgb(0, 128, 0)');
+    await variantReports.tagAdd(tags[2]).click();
+    await expect(variantReports.selectedTagsList).toContainText(tags[2]);
+    await expect(variantReports.tagAdd(tags[2])).toHaveCSS('color', 'rgb(0, 128, 0)');
 
-    await page.locator(`#${tags[7]}-tag-remove`).click();
-    await expect(page.locator('#selected-tags-list')).toContainText('not ' + tags[7]);
-    await expect(page.locator(`#${tags[7]}-tag-remove`)).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await variantReports.tagRemove(tags[7]).click();
+    await expect(variantReports.selectedTagsList).toContainText('not ' + tags[7]);
+    await expect(variantReports.tagRemove(tags[7])).toHaveCSS('color', 'rgb(255, 0, 0)');
 
-    await page.locator(`#${tags[10]}-tag-remove`).click();
-    await expect(page.locator('#selected-tags-list')).toContainText('not ' + tags[10]);
-    await expect(page.locator(`#${tags[10]}-tag-remove`)).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await variantReports.tagRemove(tags[10]).click();
+    await expect(variantReports.selectedTagsList).toContainText('not ' + tags[10]);
+    await expect(variantReports.tagRemove(tags[10])).toHaveCSS('color', 'rgb(255, 0, 0)');
 
-    await page.locator(`#${tags[12]}-tag-add`).click();
-    await expect(page.locator('#selected-tags-list')).toContainText(tags[12]);
-    await expect(page.locator(`#${tags[12]}-tag-add`)).toHaveCSS('color', 'rgb(0, 128, 0)');
+    await variantReports.tagAdd(tags[12]).click();
+    await expect(variantReports.selectedTagsList).toContainText(tags[12]);
+    await expect(variantReports.tagAdd(tags[12])).toHaveCSS('color', 'rgb(0, 128, 0)');
 
-    await page.getByText('Clear filters').click();
-    await expect(page.locator(`#${tags[2]}-tag-add`)).not.toHaveCSS('color', 'rgb(0, 128, 0)');
-    await expect(page.locator(`#${tags[7]}-tag-add`)).not.toHaveCSS('color', 'rgb(255, 0, 0)');
-    await expect(page.locator(`#${tags[10]}-tag-add`)).not.toHaveCSS('color', 'rgb(255, 0, 0)');
-    await expect(page.locator(`#${tags[12]}-tag-add`)).not.toHaveCSS('color', 'rgb(0, 128, 0)');
-    await expect(page.locator('#selected-tags-list')).not.toBeVisible();
+    await variantReports.clearFilters.click();
+    await expect(variantReports.tagAdd(tags[2])).not.toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(variantReports.tagAdd(tags[7])).not.toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(variantReports.tagAdd(tags[10])).not.toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(variantReports.tagAdd(tags[12])).not.toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(variantReports.selectedTagsList).not.toBeVisible();
   });
 
   [
@@ -164,27 +180,28 @@ test.describe('Variant reports tests', () => {
   ].forEach(data => {
     test(`should select tags ${data.selectedTags.join()} and
       deselect tags ${data.deselectedTags.join()}`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('Families by pedigree').click();
+      await variantReports.selectTags.click();
 
       for (const tag of data.selectedTags) {
         // eslint-disable-next-line no-await-in-loop
-        await page.locator(`#${tag}-tag-add`).click();
+        await variantReports.tagAdd(tag).click();
         // eslint-disable-next-line no-await-in-loop
-        await expect(page.locator('#selected-tags-list')).toContainText(tag);
+        await expect(variantReports.selectedTagsList).toContainText(tag);
       }
 
       for (const tag of data.deselectedTags) {
         // eslint-disable-next-line no-await-in-loop
-        await page.locator(`#${tag}-tag-remove`).click();
+        await variantReports.tagRemove(tag).click();
         // eslint-disable-next-line no-await-in-loop
-        await expect(page.locator('#selected-tags-list')).toContainText('not ' + tag);
+        await expect(variantReports.selectedTagsList).toContainText('not ' + tag);
       }
       await page.mouse.click(0, 0); // close modal
 
-      await expect(page.locator('.pedigree-cell')).toHaveCount(data.expectedPedigreeCounts.length);
+      await expect(variantReports.pedigreeCells).toHaveCount(data.expectedPedigreeCounts.length);
       await Promise.all(data.expectedPedigreeCounts.map(async(count, i) => {
-        await expect(page.locator('.pedigree-cell').nth(i)).toHaveText(count);
+        await expect(variantReports.pedigreeCells.nth(i)).toHaveText(count);
       }));
     });
   });
@@ -193,28 +210,29 @@ test.describe('Variant reports tests', () => {
     {selectedTags: [tags[8], tags[14]], deselectedTags: [tags[6], tags[10]]},
     {selectedTags: [tags[5], tags[9]], deselectedTags: [tags[1], tags[7]]},
   ].forEach(data => {
-    test(`should select tags ${data.selectedTags.join()} and 
+    test(`should select tags ${data.selectedTags.join()} and
       deselect tags ${data.deselectedTags.join()} and check if nothing found is shown`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('Families by pedigree').click();
+      await variantReports.selectTags.click();
 
       for (const tag of data.selectedTags) {
         // eslint-disable-next-line no-await-in-loop
-        await page.locator(`#${tag}-tag-add`).click();
+        await variantReports.tagAdd(tag).click();
         // eslint-disable-next-line no-await-in-loop
-        await expect(page.locator('#selected-tags-list')).toContainText(tag);
+        await expect(variantReports.selectedTagsList).toContainText(tag);
       }
 
       for (const tag of data.deselectedTags) {
         // eslint-disable-next-line no-await-in-loop
-        await page.locator(`#${tag}-tag-remove`).click();
+        await variantReports.tagRemove(tag).click();
         // eslint-disable-next-line no-await-in-loop
-        await expect(page.locator('#selected-tags-list')).toContainText('not ' + tag);
+        await expect(variantReports.selectedTagsList).toContainText('not ' + tag);
       }
 
       await page.mouse.click(0, 0); // close modal
 
-      await expect(page.locator('#nothing-found')).toBeVisible();
+      await expect(variantReports.nothingFound).toBeVisible();
     });
   });
 
@@ -224,22 +242,23 @@ test.describe('Variant reports tests', () => {
   ].forEach(data => {
     test(`should check Or mode with selected ${data.selectedTag}
       and deselected ${data.deselectedTag}`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
-      await page.getByRole('button', { name: 'Or' }).click();
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('Families by pedigree').click();
+      await variantReports.selectTags.click();
+      await variantReports.orButton.click();
 
 
-      await page.locator(`#${data.selectedTag}-tag-add`).click();
-      await expect(page.locator('#selected-tags-list')).toContainText(data.selectedTag);
+      await variantReports.tagAdd(data.selectedTag).click();
+      await expect(variantReports.selectedTagsList).toContainText(data.selectedTag);
 
-      await page.locator(`#${data.deselectedTag}-tag-remove`).click();
-      await expect(page.locator('#selected-tags-list')).toContainText('not ' + data.deselectedTag);
+      await variantReports.tagRemove(data.deselectedTag).click();
+      await expect(variantReports.selectedTagsList).toContainText('not ' + data.deselectedTag);
 
       await page.mouse.click(0, 0); // close modal
 
-      await expect(page.locator('.pedigree-cell')).toHaveCount(data.expectedPedigreeCounts.length);
+      await expect(variantReports.pedigreeCells).toHaveCount(data.expectedPedigreeCounts.length);
       await Promise.all(data.expectedPedigreeCounts.map(async(count, i) => {
-        await expect(page.locator('.pedigree-cell').nth(i)).toHaveText(count);
+        await expect(variantReports.pedigreeCells.nth(i)).toHaveText(count);
       }));
     });
   });
@@ -250,56 +269,60 @@ test.describe('Variant reports tests', () => {
   ].forEach(data => {
     test(`should check Or mode with selected ${data.selectedTag}
     and deselected ${data.deselectedTag} and check if nothing found is shown`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('Families by pedigree').click();
+      await variantReports.selectTags.click();
 
-      await page.locator(`#${data.selectedTag}-tag-add`).click();
-      await expect(page.locator('#selected-tags-list')).toContainText(data.selectedTag);
+      await variantReports.tagAdd(data.selectedTag).click();
+      await expect(variantReports.selectedTagsList).toContainText(data.selectedTag);
 
-      await page.locator(`#${data.deselectedTag}-tag-remove`).click();
-      await expect(page.locator('#selected-tags-list')).toContainText('not ' + data.deselectedTag);
+      await variantReports.tagRemove(data.deselectedTag).click();
+      await expect(variantReports.selectedTagsList).toContainText('not ' + data.deselectedTag);
 
-      await page.getByRole('button', { name: 'Or' }).click();
+      await variantReports.orButton.click();
 
       await page.mouse.click(0, 0); // close modal
 
-      await expect(page.locator('#nothing-found')).toBeVisible();
+      await expect(variantReports.nothingFound).toBeVisible();
     });
   });
 
   test('should check pedigree chart modal content', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
-    await page.locator('.pedigree-cell').first().click();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
+    await variantReports.pedigreeCells.first().click();
 
-    await expect(page.locator('.modal-content')).toBeVisible();
-    await expect(page.locator('#modal-pedigree-container')).toBeVisible();
-    await expect(page.locator('#modal-family-count')).toBeVisible();
-    await expect(page.locator('.modal-content >> #download-button')).toBeVisible();
-    await expect(page.locator('#family-ids-list > div')).not.toBeEmpty();
+    await expect(variantReports.modalContent).toBeVisible();
+    await expect(variantReports.modalPedigreeContainer).toBeVisible();
+    await expect(variantReports.modalFamilyCount).toBeVisible();
+    await expect(variantReports.modalDownloadButton).toBeVisible();
+    await expect(variantReports.familyIdsList).not.toBeEmpty();
 
     await page.mouse.click(0, 0); // close modal
-    await expect(page.locator('.modal-content')).not.toBeVisible();
-    await expect(page.locator('#modal-pedigree-container')).not.toBeVisible();
-    await expect(page.locator('#modal-family-count')).not.toBeVisible();
-    await expect(page.locator('.modal-content >> #download-button')).not.toBeVisible();
-    await expect(page.locator('#family-ids-list > div')).not.toBeVisible();
+    await expect(variantReports.modalContent).not.toBeVisible();
+    await expect(variantReports.modalPedigreeContainer).not.toBeVisible();
+    await expect(variantReports.modalFamilyCount).not.toBeVisible();
+    await expect(variantReports.modalDownloadButton).not.toBeVisible();
+    await expect(variantReports.familyIdsList).not.toBeVisible();
   });
 
   test('should check the count of pedigree chart family ids', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
-    await page.locator('.pedigree-cell').nth(2).click();
-    const count = parseInt(await page.locator('#modal-family-count').textContent(), 10);
-    const text = await page.locator('#family-ids-list > div').textContent();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
+    await variantReports.pedigreeCells.nth(2).click();
+    const count = parseInt(await variantReports.modalFamilyCount.textContent(), 10);
+    const text = await variantReports.familyIdsList.textContent();
     const ids = text.split(',');
     expect(count).toEqual(ids.length);
   });
 
   test('if Rate of de Novo variants tab is not visible when selected study has no denovo', async({ page }) => {
+    const variantReports = new VariantReports(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Dataset Statistics');
-    await expect(page.getByText('Rate of de Novo variants')).not.toBeVisible();
+    await expect(variantReports.tab('Rate of de Novo variants')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Dataset Statistics');
-    await expect(page.getByText('Rate of de Novo variants')).toBeVisible();
+    await expect(variantReports.tab('Rate of de Novo variants')).toBeVisible();
   });
 });
 
@@ -307,10 +330,7 @@ test.describe('Variant reports download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
-    await page.locator('a:text("Datasets")').click();
-    await page.locator('#datasets-dropdown-menu-button').click();
-    await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
-    await page.getByText('Dataset Statistics').click();
+    await navigateToDatasetStatistics(page);
   });
 
   [
@@ -319,14 +339,15 @@ test.describe('Variant reports download tests', () => {
     {index: 5, name: 'fifth', columnsToCheck: ['familyId', 'personId', 'momId', 'dadId', 'sex', 'status', 'role']}
   ].forEach(cell => {
     test(`should download family counters report from ${cell.name} pedigree modal`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await expect(page.locator('#families-by-pedigree')).toBeVisible();
-      await page.locator('.pedigree-cell').nth(cell.index).click();
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('Families by pedigree').click();
+      await expect(variantReports.familiesByPedigree).toBeVisible();
+      await variantReports.pedigreeCells.nth(cell.index).click();
 
       let downloadPromise = page.waitForEvent('download');
       downloadPromise = page.waitForEvent('download');
 
-      await page.locator('.modal-content >> #download-button').click();
+      await variantReports.modalDownloadButton.click();
       const download = await downloadPromise;
 
       const fixtureData = scanCSV(await download.path(), {sep: '\t'});
@@ -338,8 +359,9 @@ test.describe('Variant reports download tests', () => {
   });
 
   test('downloading all families in families by number', async({ page }) => {
+    const variantReports = new VariantReports(page);
     const downloadPromise = page.waitForEvent('download');
-    await page.locator('.download-link').click();
+    await variantReports.downloadLink.click();
     const download = await downloadPromise;
     const columnsToCheck = ['familyId', 'personId', 'momId', 'dadId', 'sex', 'status', 'role'];
 
@@ -351,13 +373,14 @@ test.describe('Variant reports download tests', () => {
   });
 
   test('downloading in families by pedigree', async({ page }) => {
-    await page.getByText('Families by pedigree').click();
-    await page.getByText('Select tags').click();
-    await page.locator('#tag_trio_family-tag-add').click();
+    const variantReports = new VariantReports(page);
+    await variantReports.tab('Families by pedigree').click();
+    await variantReports.selectTags.click();
+    await variantReports.tagAdd('tag_trio_family').click();
     await page.keyboard.press('Escape');
 
     const downloadPromise = page.waitForEvent('download');
-    await page.locator('#download-button').click();
+    await variantReports.downloadButton.click();
     const download = await downloadPromise;
 
     const columnsToCheck = ['familyId', 'personId', 'momId', 'dadId', 'sex', 'status', 'role'];
@@ -374,10 +397,7 @@ test.describe('Variant reports Iossifov count tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginWorkerUser(page);
-    await page.locator('a:text("Datasets")').click();
-    await page.locator('#datasets-dropdown-menu-button').click();
-    await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
-    await page.getByText('Dataset Statistics').click();
+    await navigateToDatasetStatistics(page);
   });
 
   [
@@ -386,13 +406,14 @@ test.describe('Variant reports Iossifov count tests', () => {
     {rowIndex: 2, roleId: 'proband', expectedCounts: ['2166', '341', '2507']},
     {rowIndex: 3, roleId: 'sibling', expectedCounts: ['899', '1011', '1910']}
   ].forEach(data => {
-    test(`should display the correct numbers in families by numbers of role - 
+    test(`should display the correct numbers in families by numbers of role -
       ${data.roleId} pedigree modal`, async({ page }) => {
-      await page.locator('#families-by-number-select').selectOption('Role');
-      await expect(page.locator('div#families-by-number-div tbody th').nth(data.rowIndex)).toHaveText(data.roleId);
+      const variantReports = new VariantReports(page);
+      await variantReports.familiesByNumberSelect.selectOption('Role');
+      await expect(variantReports.familiesByNumberDiv.locator('tbody th').nth(data.rowIndex)).toHaveText(data.roleId);
 
       await Promise.all(data.expectedCounts.map(async(el, i) => {
-        await expect(page.locator('div#families-by-number-div td').nth((data.rowIndex * 3) + i)).toHaveText(el);
+        await expect(variantReports.familiesByNumberDiv.locator('td').nth((data.rowIndex * 3) + i)).toHaveText(el);
       }));
     });
   });
@@ -405,11 +426,12 @@ test.describe('Variant reports Iossifov count tests', () => {
   ].forEach(data => {
     test('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" role table', async({ page }) => {
-      await page.getByText('De Novo variants').click();
-      await page.locator('#denovo-variants-select').selectOption('Role');
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('De Novo variants').click();
+      await variantReports.denovoVariantsSelect.selectOption('Role');
       await Promise.all(data.expectedCounts.map(async(el) => {
-        await expect(page.locator('#denovo-variants-div tr').nth(data.rowIndex)).toContainText(data.effectType);
-        await expect(page.locator('#denovo-variants-div tr').nth(data.rowIndex)).toContainText(el);
+        await expect(variantReports.denovoVariantsDiv.locator('tr').nth(data.rowIndex)).toContainText(data.effectType);
+        await expect(variantReports.denovoVariantsDiv.locator('tr').nth(data.rowIndex)).toContainText(el);
       }));
     });
   });
@@ -422,11 +444,12 @@ test.describe('Variant reports Iossifov count tests', () => {
   ].forEach(data => {
     test('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" status table', async({ page }) => {
-      await page.getByText('De Novo variants').click();
-      await page.locator('#denovo-variants-select').selectOption('Affected Status');
+      const variantReports = new VariantReports(page);
+      await variantReports.tab('De Novo variants').click();
+      await variantReports.denovoVariantsSelect.selectOption('Affected Status');
       await Promise.all(data.expectedCounts.map(async(el) => {
-        await expect(page.locator('#denovo-variants-div tr').nth(data.rowIndex)).toContainText(data.effectType);
-        await expect(page.locator('#denovo-variants-div tr').nth(data.rowIndex)).toContainText(el);
+        await expect(variantReports.denovoVariantsDiv.locator('tr').nth(data.rowIndex)).toContainText(data.effectType);
+        await expect(variantReports.denovoVariantsDiv.locator('tr').nth(data.rowIndex)).toContainText(el);
       }));
     });
   });

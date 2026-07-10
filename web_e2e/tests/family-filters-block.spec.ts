@@ -791,8 +791,7 @@ test.describe('Pheno Measures tests', () => {
     const genotypeBrowser = new GenotypeBrowserPage(page);
     const phenoMeasures = genotypeBrowser.familyFilters.phenoMeasures;
     await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Phenotype tool');
-    await page.locator('input#search-box').click();
-    await page.getByText('instrument_1.age').click();
+    await phenoMeasures.selectMeasure('instrument_1.age');
 
     await genotypeBrowser.familyFilters.openPhenoMeasuresTab();
     await genotypeBrowser.familyFilters.measuresSearchInput.click();
