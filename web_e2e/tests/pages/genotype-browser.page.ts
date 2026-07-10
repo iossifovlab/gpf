@@ -2,6 +2,9 @@ import { Locator, Page } from '@playwright/test';
 import { GenesBlock } from '../components/genes-block.component';
 import { FamilyFiltersBlock } from '../components/family-filters-block.component';
 import { PersonFiltersBlock } from '../components/person-filters-block.component';
+import { GenomicScoresBlock } from '../components/genomic-scores-block.component';
+import { GenotypeBlock } from '../components/genotype-block.component';
+import { RegionsBlock } from '../components/regions-block.component';
 
 // Page object for the Genotype browser route. Composes the block-level
 // component objects and owns the shared query controls (Table Preview /
@@ -11,6 +14,9 @@ export class GenotypeBrowserPage {
   public readonly genes: GenesBlock;
   public readonly familyFilters: FamilyFiltersBlock;
   public readonly personFilters: PersonFiltersBlock;
+  public readonly genomicScores: GenomicScoresBlock;
+  public readonly genotypeBlock: GenotypeBlock;
+  public readonly regions: RegionsBlock;
 
   public readonly root: Locator;
   public readonly tablePreviewButton: Locator;
@@ -26,10 +32,23 @@ export class GenotypeBrowserPage {
   public readonly tablePreviewButtonId: Locator;
   public readonly downloadButtonId: Locator;
 
+  // preview-result / table locators
+  public readonly uniqueFamilyVariantsFilter: Locator;
+  public readonly sortChild: Locator;
+  public readonly detailsModal: Locator;
+  public readonly detailsHeaders: Locator;
+  public readonly detailsGrid: Locator;
+  public readonly overlay: Locator;
+  public readonly showDetails: Locator;
+  public readonly tableViewCell: Locator;
+
   public constructor(private readonly page: Page) {
     this.genes = new GenesBlock(page);
     this.familyFilters = new FamilyFiltersBlock(page);
     this.personFilters = new PersonFiltersBlock(page);
+    this.genomicScores = new GenomicScoresBlock(page);
+    this.genotypeBlock = new GenotypeBlock(page);
+    this.regions = new RegionsBlock(page);
 
     this.root = page.locator('gpf-genotype-browser');
     this.tablePreviewButton = page.getByRole('button', { name: 'Table Preview' });
@@ -43,6 +62,20 @@ export class GenotypeBrowserPage {
     this.previewTable = page.locator('gpf-genotype-preview-table');
     this.tablePreviewButtonId = page.locator('#table-preview-button');
     this.downloadButtonId = page.locator('#download-button');
+
+    this.uniqueFamilyVariantsFilter = page.locator('gpf-unique-family-variants-filter');
+    this.sortChild = page.locator('#sort-child');
+    this.detailsModal = page.locator('.modal-content');
+    this.detailsHeaders = page.locator('.modal-content > .details-header');
+    this.detailsGrid = page.locator('.modal-content > .grid-container');
+    this.overlay = page.locator('.overlay');
+    this.showDetails = page.getByText('Show details');
+    this.tableViewCell = page.locator('gpf-table-view-cell:nth-child(6) > div');
+  }
+
+  // A variant location link in the preview table (matched by its text).
+  public variantLink(pattern: RegExp): Locator {
+    return this.page.locator('a').filter({ hasText: pattern });
   }
 
   public async waitForLoaded(): Promise<void> {

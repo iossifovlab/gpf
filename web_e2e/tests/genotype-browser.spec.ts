@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { datasetIds } from './utils';
 import { scanCSV } from 'nodejs-polars';
+import { GenotypeBrowserPage } from './pages/genotype-browser.page';
 
 test.describe('Genotype browser tests', () => {
   test.beforeEach(async({ page }) => {
@@ -11,81 +12,84 @@ test.describe('Genotype browser tests', () => {
   });
 
   test('should display filters blocks and buttons', async({ page }) => {
-    await expect(page.getByRole('button', { name: 'Table Preview' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Share/save query' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Download' })).toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await expect(genotypeBrowser.tablePreviewButton).toBeVisible();
+    await expect(genotypeBrowser.shareSaveButton).toBeVisible();
+    await expect(genotypeBrowser.downloadButton).toBeVisible();
 
-    await expect(page.locator('gpf-regions-block')).toBeVisible();
-    await expect(page.locator('gpf-genes-block')).toBeVisible();
-    await expect(page.locator('gpf-genotype-block')).toBeVisible();
-    await expect(page.locator('gpf-genomic-scores-block')).toBeVisible();
-    await expect(page.locator('gpf-family-filters-block')).toBeVisible();
-    await expect(page.locator('gpf-person-filters-block')).toBeVisible();
-    await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
+    await expect(genotypeBrowser.regions.root).toBeVisible();
+    await expect(genotypeBrowser.genes.root).toBeVisible();
+    await expect(genotypeBrowser.genotypeBlock.root).toBeVisible();
+    await expect(genotypeBrowser.genomicScores.root).toBeVisible();
+    await expect(genotypeBrowser.familyFilters.root).toBeVisible();
+    await expect(genotypeBrowser.personFilters.root).toBeVisible();
+    await expect(genotypeBrowser.uniqueFamilyVariantsFilter).toBeVisible();
 
     await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
-    await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
+    await expect(genotypeBrowser.uniqueFamilyVariantsFilter).toBeVisible();
   });
 
   test('should hide table preview results after changing a filter', async({ page }) => {
-    await page.getByRole('button', { name: 'Table Preview' }).click();
-    await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.previewTable).toBeVisible();
 
-    await page.locator('gpf-present-in-child').getByLabel('sibling only', {exact: true}).click();
-    await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+    await genotypeBrowser.genotypeBlock.presentInChild.label('sibling only').click();
+    await expect(genotypeBrowser.previewTable).not.toBeVisible();
   });
 
   test('should load query after filtering with scores and family and person filters', async({ page }) => {
-    await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select')
-      .selectOption('SFARI Gene Score - Evidence strength supporting a gene\'s association with autism');
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const genomicScores = genotypeBrowser.genomicScores;
+    await genotypeBrowser.genes.openGeneScores();
+    await genotypeBrowser.genes.geneScores.selectScore(
+      'SFARI Gene Score - Evidence strength supporting a gene\'s association with autism'
+    );
 
-    await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
+    await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
     const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
     ' multiple values are separated by a vertical bar';
-    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
-    await page.locator(`mat-option:has-text("${clinsig}") span`).click();
+    await genomicScores.selectScore(clinsig);
 
-    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await genomicScores.categoricalSearchBox.focus();
     await page.keyboard.type('Pathogenic');
-    const pathogenic = page.locator('mat-option > span > span').filter({hasText: /^Pathogenic \(/});
+    const pathogenic = genomicScores.valueOption(/^Pathogenic \(/);
     await expect(pathogenic).toHaveCount(1);
     await pathogenic.click();
-    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await genomicScores.categoricalSearchBox.focus();
     await page.keyboard.type('Likely_pathogenic');
-    const likelyPathogenic = page.locator('mat-option > span > span').filter({hasText: /^Likely_pathogenic \(/});
+    const likelyPathogenic = genomicScores.valueOption(/^Likely_pathogenic \(/);
     await expect(likelyPathogenic).toHaveCount(1);
     await likelyPathogenic.click();
-    await page.locator('gpf-categorical-values-dropdown #search-box').focus();
+    await genomicScores.categoricalSearchBox.focus();
     await page.keyboard.type('Uncertain_significance');
-    const uncertainSig = page.locator('mat-option > span > span').filter({hasText: /^Uncertain_significance \(/});
+    const uncertainSig = genomicScores.valueOption(/^Uncertain_significance \(/);
     await expect(uncertainSig).toHaveCount(1);
     await uncertainSig.click();
 
-    await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
-    await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
+    await genotypeBrowser.familyFilters.openPhenoMeasuresTab();
+    await genotypeBrowser.familyFilters.measuresTextbox.click();
+    await genotypeBrowser.familyFilters.phenoMeasures.measureOption('instrument_1.measure_5').click();
 
-    await page.locator('gpf-person-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-person-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
-    await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
+    await genotypeBrowser.personFilters.openPhenoMeasuresTab();
+    await genotypeBrowser.personFilters.measuresTextbox.click();
+    await genotypeBrowser.familyFilters.phenoMeasures.measureOption('instrument_1.measure_5').click();
 
-    await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCountSpan).toHaveText('7 variants selected', { timeout: 120000 });
 
-    await page.getByRole('button', {name: 'Share/save query'}).click();
-    await expect(page.locator('#save-query-dropdown')).toBeVisible();
-    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    const shareLinkUrl = await genotypeBrowser.getShareLink();
+    await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('#gene-scores-panel')).toBeVisible();
-    await expect(page.locator('gpf-genomic-scores')).toBeVisible();
-    await expect(page.locator('gpf-family-filters-block').locator('svg')).toBeVisible();
-    await expect(page.locator('gpf-person-filters-block').locator('svg')).toBeVisible();
+    await expect(genotypeBrowser.genes.geneScoresPanel).toBeVisible();
+    await expect(genomicScores.scores).toBeVisible();
+    await expect(genotypeBrowser.familyFilters.root.locator('svg')).toBeVisible();
+    await expect(genotypeBrowser.personFilters.root.locator('svg')).toBeVisible();
 
-    await page.getByRole('button', {name: 'Table Preview'}).click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('7 variants selected', { timeout: 120000 });
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCountSpan).toHaveText('7 variants selected', { timeout: 120000 });
   });
 });
 
@@ -104,16 +108,17 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct overview paragraph ' +
     'when gene symbol is "CHD8" at /' + data.study + '/browser', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
-      await page.getByRole('tab', {name: 'Gene symbols'}).click();
-      await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+      await genotypeBrowser.genes.openGeneSymbolsTab();
+      await genotypeBrowser.genes.geneSymbols.textbox.focus();
       await page.keyboard.type('CHD8');
-      await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+      await expect(genotypeBrowser.genes.geneSymbols.errorsAlert).not.toBeVisible();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+      await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -124,12 +129,13 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct overview paragraph' +
     ' when regions filter is "' + data.region + '" at /iossifov_2014_liftover/browser', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
       await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
-      await page.locator('#regions-filter').click();
-      await page.locator('gpf-regions-filter textarea').focus();
+      await genotypeBrowser.regions.regionsFilterToggle.click();
+      await genotypeBrowser.regions.textarea.focus();
       await page.keyboard.type(data.region);
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -152,17 +158,18 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
     'affected status - ' + data.affectedStatus + ' is checked at /' + data.study + '/browser', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
+      const pedigreeSelector = genotypeBrowser.genotypeBlock.pedigreeSelector;
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
 
-      await page.locator('#pedigree-dropdown-menu-button').click();
-      await page.locator('gpf-pedigree-selector').getByRole('link', { name: 'Affected Status' }).click();
-      await page.locator('gpf-pedigree-selector').getByRole('button', {name: 'None'}).click();
-      await page.locator('gpf-pedigree-selector').getByLabel(data.affectedStatus, {exact: true}).click();
+      await pedigreeSelector.openAffectedStatus();
+      await pedigreeSelector.noneButton.click();
+      await pedigreeSelector.label(data.affectedStatus).click();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+      await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -173,13 +180,14 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct data in overview paragraph when ' +
         'child gender is ' + data.childGender, async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
       await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
-      await page.locator('gpf-gender').getByRole('button', {name: 'None'}).click();
-      await page.locator(`[class="gender-icon ${data.childGender}"]`).click();
+      await genotypeBrowser.genotypeBlock.gender.noneButton.click();
+      await genotypeBrowser.genotypeBlock.gender.genderIcon(data.childGender).click();
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -190,13 +198,14 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct data in overview paragraph when only ' +
     data.variantType + ' variant type checkbox is checked', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
       await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
-      await page.locator('gpf-variant-types').getByRole('button', {name: 'None'}).click();
-      await page.locator('gpf-variant-types').getByLabel(data.variantType, {exact: true}).click();
+      await genotypeBrowser.genotypeBlock.variantTypes.button('None').click();
+      await genotypeBrowser.genotypeBlock.variantTypes.label(data.variantType).click();
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -209,13 +218,15 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct data in overview paragraph' +
         ' where effect types are ' + data.effectType, async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
+      const effectTypes = genotypeBrowser.genotypeBlock.effectTypes;
       await utils.navigateToDatasetPage(page, datasetIds.vcfHelloWorld, 'Genotype browser');
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
-      await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
+      await effectTypes.clickButton('None');
+      await effectTypes.clickButton(data.effectType);
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -233,15 +244,17 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
     'inheritance types are ' + data.inheritanceType + ' at /' + data.study + '/browser', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
+      const inheritanceTypes = genotypeBrowser.genotypeBlock.inheritanceTypes;
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
 
-      await page.locator('gpf-inheritancetypes').getByRole('button', {name: 'None'}).click();
-      await page.locator('gpf-inheritancetypes').getByLabel(data.inheritanceType).click();
+      await inheritanceTypes.button('None').click();
+      await inheritanceTypes.label(data.inheritanceType).click();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+      await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -251,15 +264,16 @@ test.describe('Genotype browser table preview result tests', () => {
     {familyId: 'f3', count: '0'},
   ].forEach(data => {
     test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
       await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+      await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
-      await page.locator('#family-ids').click();
-      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
+      await genotypeBrowser.familyFilters.openFamilyIds();
+      await genotypeBrowser.familyFilters.familyIds.textarea.pressSequentially(data.familyId);
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -286,50 +300,57 @@ test.describe('Genotype browser table preview result tests', () => {
     test('should display the correct overview paragraph when effect types are ' +
         data.effectType + ' and gene symbol is "' + data.geneSymbol +
         '" at /' + data.study + '/browser', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
+      const effectTypes = genotypeBrowser.genotypeBlock.effectTypes;
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
 
-      await page.getByRole('tab', {name: 'Gene symbols'}).click();
-      await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+      await genotypeBrowser.genes.openGeneSymbolsTab();
+      await genotypeBrowser.genes.geneSymbols.textbox.focus();
       await page.keyboard.type(data.geneSymbol);
-      await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+      await expect(genotypeBrowser.genes.geneSymbols.errorsAlert).not.toBeVisible();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
-      await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
+      await effectTypes.clickButton('None');
+      await effectTypes.clickButton(data.effectType);
 
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(data.overviewParagraph);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(data.overviewParagraph);
     });
   });
 
   test('should display "2 variants selected" in overview paragraph ' +
   'when family id is 11057 at /iossifov_2014/browser', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
-    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
-    await page.locator('#family-ids').click();
-    await page.locator('gpf-family-ids textarea').pressSequentially('11057');
+    await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
+    await genotypeBrowser.familyFilters.openFamilyIds();
+    await genotypeBrowser.familyFilters.familyIds.textarea.pressSequentially('11057');
 
-    await page.getByRole('button', { name: 'Table Preview' }).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCount).toHaveText('2 variants selected');
   });
 
   test('should display "0 variants selected" in overview paragraph when the gene sets is ' +
   'GO Terms - GO:0016917 and effect type LGDs at /iossifov_2014/browser', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const geneSets = genotypeBrowser.genes.geneSets;
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
-    await page.locator('gpf-effect-types').getByRole('button', {name: 'LGDs'}).click();
+    await genotypeBrowser.genotypeBlock.effectTypes.clickButton('LGDs');
 
-    await page.locator('#gene-sets').click();
-    await page.locator('#selected-collection').click();
-    await page.locator('#selected-collection').selectOption('GO Terms');
-    await page.locator('#search-box').click();
+    const goTerm =
+      'GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917';
+    await genotypeBrowser.genes.openGeneSets();
+    await geneSets.collectionSelect.click();
+    await geneSets.collectionSelect.selectOption('GO Terms');
+    await geneSets.searchBox.click();
     await page.keyboard.type('GO:0016917');
-    await page.waitForSelector('[title="GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917"]');
-    await page.getByText('GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917').click();
+    await geneSets.optionByTitle(goTerm).waitFor();
+    await geneSets.optionByText(goTerm).click();
 
-    await page.getByRole('button', { name: 'Table Preview' }).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('0 variants selected');
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCount).toHaveText('0 variants selected');
   });
 
   [
@@ -345,25 +366,30 @@ test.describe('Genotype browser table preview result tests', () => {
     test('should display the correct overview paragraph when gene sets is GO Terms'+
     ' - GO:0016917 and effect types are ' + data.effectTypes.toString() +
     ' at /iossifov2014Liftover/browser', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
+      const geneSets = genotypeBrowser.genes.geneSets;
+      const effectTypes = genotypeBrowser.genotypeBlock.effectTypes;
       await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
-      await page.locator('#gene-sets').click();
-      await page.locator('#selected-collection').click();
-      await page.locator('#selected-collection').selectOption('GO Terms');
-      await page.locator('#search-box').click();
+      const goTerm =
+        'GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917';
+      await genotypeBrowser.genes.openGeneSets();
+      await geneSets.collectionSelect.click();
+      await geneSets.collectionSelect.selectOption('GO Terms');
+      await geneSets.searchBox.click();
       await page.keyboard.type('GO:0016917');
-      await page.waitForSelector('[title="GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917"]');
-      await page.getByText('GO:0016917-GABA_receptor_activity (23): https://www.ebi.ac.uk/QuickGO/term/GO:0016917').click();
+      await geneSets.optionByTitle(goTerm).waitFor();
+      await geneSets.optionByText(goTerm).click();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
+      await effectTypes.clickButton('None');
 
       for (const type of data.effectTypes) {
         // eslint-disable-next-line no-await-in-loop
-        await page.locator('gpf-effect-types').getByLabel(type).click();
+        await effectTypes.label(type).click();
       }
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.variantsCount).toHaveText(`${data.count} variants selected`);
     });
   });
 
@@ -373,81 +399,78 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct age and iq values in the measures column for "'
     + data.familyId + '" family', async({ page }) => {
+      const genotypeBrowser = new GenotypeBrowserPage(page);
       await utils.navigateToDatasetPage(page, datasetIds.vcfHelloWorld, 'Genotype browser');
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+      await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
-      await page.locator('#family-ids').click();
-      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
+      await genotypeBrowser.familyFilters.openFamilyIds();
+      await genotypeBrowser.familyFilters.familyIds.textarea.pressSequentially(data.familyId);
 
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(
-        page.locator('gpf-table-view-cell:nth-child(6) > div').nth(0)
-      ).toContainText(data.values.age);
-
-      await expect(
-        page.locator('gpf-table-view-cell:nth-child(6) > div').nth(1)
-      ).toContainText(data.values.iq);
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.tableViewCell.nth(0)).toContainText(data.values.age);
+      await expect(genotypeBrowser.tableViewCell.nth(1)).toContainText(data.values.iq);
     });
   });
 
   test('should display the correct overview paragraph with ' +
   'denovo inheritance types, affected only, 5\'UTR', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const genotypeBlock = genotypeBrowser.genotypeBlock;
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
-    await page.locator('#pedigree-dropdown-menu-button').click();
-    await page.locator('gpf-pedigree-selector').getByRole('link', { name: 'Affected Status' }).click();
-    await page.locator('gpf-pedigree-selector').getByRole('button', {name: 'None'}).click();
-    await page.locator('gpf-pedigree-selector').getByLabel('affected', {exact: true}).click();
+    await genotypeBlock.pedigreeSelector.openAffectedStatus();
+    await genotypeBlock.pedigreeSelector.noneButton.click();
+    await genotypeBlock.pedigreeSelector.label('affected').click();
 
-    await page.locator('gpf-inheritancetypes').getByRole('button', {name: 'None'}).click();
-    await page.locator('gpf-inheritancetypes').getByLabel('denovo').click();
+    await genotypeBlock.inheritanceTypes.button('None').click();
+    await genotypeBlock.inheritanceTypes.label('denovo').click();
 
-    await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
-    await page.locator('gpf-effect-types').getByLabel('5\'UTR').click();
+    await genotypeBlock.effectTypes.clickButton('None');
+    await genotypeBlock.effectTypes.clickLabel('5\'UTR');
 
-    await page.getByRole('button', { name: 'Table Preview' }).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('23 variants selected');
+    await genotypeBrowser.runTablePreview();
+    await expect(genotypeBrowser.variantsCount).toHaveText('23 variants selected');
   });
 
   test('should load query, click table preview and check if table is visible repeatedly', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
-    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+    await genotypeBrowser.genes.openGeneSymbolsTab();
 
     for (let i = 0; i < 5; i++) {
       /* eslint-disable no-await-in-loop */
-      await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
-      await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+      await genotypeBrowser.genes.geneSymbols.textbox.clear();
+      await genotypeBrowser.genes.geneSymbols.textbox.pressSequentially('CHD8');
 
-      await page.getByRole('button', {name: 'Share/save query'}).click();
-      await expect(page.locator('#save-query-dropdown')).toBeVisible();
-      const shareLinkUrl = await page.locator('#link-input').inputValue();
+      const shareLinkUrl = await genotypeBrowser.getShareLink();
+      await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
       await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
       await expect(async() => {
-        await page.getByRole('button', {name: 'Table Preview'}).click();
-        await expect(page.locator('gpf-genotype-preview-table')).toBeVisible({timeout: 5000});
+        await genotypeBrowser.runTablePreview();
+        await expect(genotypeBrowser.previewTable).toBeVisible({timeout: 5000});
       }).toPass({intervals: [1000]});
       /* eslint-enable */
     }
   });
 
   test('should load query, click table preview and check if loading screen is hidden repeatedly', async({ page }) => {
+    const genotypeBrowser = new GenotypeBrowserPage(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
-    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+    await genotypeBrowser.genes.openGeneSymbolsTab();
 
     for (let i = 0; i < 5; i++) {
       /* eslint-disable no-await-in-loop */
-      await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
-      await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+      await genotypeBrowser.genes.geneSymbols.textbox.clear();
+      await genotypeBrowser.genes.geneSymbols.textbox.pressSequentially('CHD8');
 
-      await page.getByRole('button', {name: 'Share/save query'}).click();
-      await expect(page.locator('#save-query-dropdown')).toBeVisible();
-      const shareLinkUrl = await page.locator('#link-input').inputValue();
+      const shareLinkUrl = await genotypeBrowser.getShareLink();
+      await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
       await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-      await page.getByRole('button', {name: 'Table Preview'}).click();
-      await expect(page.locator('.overlay')).not.toBeVisible();
+      await genotypeBrowser.runTablePreview();
+      await expect(genotypeBrowser.overlay).not.toBeVisible();
       /* eslint-enable */
     }
   });
@@ -462,15 +485,16 @@ test.describe('Genotype browser download tests', () => {
 
   test('should download all effect types CHD8 iossifov variants ' +
   'and validate whether they are equal to the reference data', async({ page }) => {
-    await page.getByRole('tab', {name: 'Gene symbols'}).click();
-    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.genes.openGeneSymbolsTab();
+    await genotypeBrowser.genes.geneSymbols.textbox.focus();
     await page.keyboard.type('CHD8');
-    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(genotypeBrowser.genes.geneSymbols.errorsAlert).not.toBeVisible();
 
-    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
+    await genotypeBrowser.genotypeBlock.effectTypes.clickButton('All');
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-    await page.getByRole('button', { name: 'Download' }).click();
+    await genotypeBrowser.downloadButton.click();
     const download = await downloadPromise;
     const fixtureData = scanCSV(await download.path(), { sep: '\t'});
     const downloadData = scanCSV('fixtures/genotype-browser/variants-1.tsv', { sep: '\t'});
@@ -489,34 +513,36 @@ test.describe('Genotype browser table tests', () => {
   });
 
   test('should redirect to UCSC', async({ page }) => {
-    await page.getByRole('button', { name: 'Table Preview' }).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.runTablePreview();
 
     const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=';
 
     await page.waitForSelector('span:text("92 variants selected")');
-    await page.locator('#sort-child').getByText('family id').click();
+    await genotypeBrowser.sortChild.getByText('family id').click();
 
     await expect(
-      page.locator('a').filter({ hasText: /^chr1:153665244$/ }).first()
+      genotypeBrowser.variantLink(/^chr1:153665244$/).first()
     ).toHaveAttribute('href', baseUrl + 'chr1:153665244');
 
 
     await expect(
-      page.locator('a').filter({ hasText: /^chrX:1389485$/ }).first()
+      genotypeBrowser.variantLink(/^chrX:1389485$/).first()
     ).toHaveAttribute('href', baseUrl + 'chrX:1389485');
   });
 
   test('should show details', async({ page }) => {
-    await page.getByRole('button', { name: 'Table Preview' }).click();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.runTablePreview();
     await page.waitForSelector('span:text("92 variants selected")');
-    await page.locator('#sort-child').getByText('family id').click();
+    await genotypeBrowser.sortChild.getByText('family id').click();
 
-    await page.getByText('Show details').first().click();
-    await expect(page.locator('.modal-content')).toBeVisible();
-    await expect(page.locator('.modal-content > .details-header')).toHaveCount(2);
-    await expect(page.locator('.modal-content > .details-header').nth(0)).toHaveText('Family id: 14621');
-    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: chr1:153665244');
-    await expect(page.locator('.modal-content > .grid-container')).toBeVisible();
+    await genotypeBrowser.showDetails.first().click();
+    await expect(genotypeBrowser.detailsModal).toBeVisible();
+    await expect(genotypeBrowser.detailsHeaders).toHaveCount(2);
+    await expect(genotypeBrowser.detailsHeaders.nth(0)).toHaveText('Family id: 14621');
+    await expect(genotypeBrowser.detailsHeaders.nth(1)).toHaveText('Location: chr1:153665244');
+    await expect(genotypeBrowser.detailsGrid).toBeVisible();
   });
 });
 
@@ -528,111 +554,111 @@ test.describe('Genotype browser zygosity tests', () => {
   });
 
   test('should check which filters have zygosity and if all types are selected by default', async({ page }) => {
-    await expect(page.locator('#pedigreeSelector-zygosity-filter')).toBeVisible();
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const zygosity = genotypeBrowser.genotypeBlock.zygosity;
+    await expect(zygosity.filter('pedigreeSelector')).toBeVisible();
+    await expect(zygosity.checkbox('pedigreeSelector', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('pedigreeSelector', 'heterozygous')).toBeChecked();
 
-    await expect(page.locator('#presentInChild-zygosity-filter')).toBeVisible();
-    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(zygosity.filter('presentInChild')).toBeVisible();
+    await expect(zygosity.checkbox('presentInChild', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInChild', 'heterozygous')).toBeChecked();
 
-    await expect(page.locator('#presentInParent-zygosity-filter')).toBeVisible();
-    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(zygosity.filter('presentInParent')).toBeVisible();
+    await expect(zygosity.checkbox('presentInParent', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInParent', 'heterozygous')).toBeChecked();
 
-    await expect(page.locator('#carrierGender-zygosity-filter')).toBeVisible();
-    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(zygosity.filter('carrierGender')).toBeVisible();
+    await expect(zygosity.checkbox('carrierGender', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('carrierGender', 'heterozygous')).toBeChecked();
 
-    await expect(page.locator('gpf-effect-types').locator('gpf-zygosity-filter')).not.toBeVisible();
-    await expect(page.locator('gpf-variant-types').locator('gpf-zygosity-filter')).not.toBeVisible();
-    await expect(page.locator('gpf-inheritancetypes').locator('gpf-zygosity-filter')).not.toBeVisible();
+    await expect(genotypeBrowser.genotypeBlock.effectTypes.zygosityFilter).not.toBeVisible();
+    await expect(genotypeBrowser.genotypeBlock.variantTypes.zygosityFilter).not.toBeVisible();
+    await expect(genotypeBrowser.genotypeBlock.inheritanceTypes.zygosityFilter).not.toBeVisible();
   });
 
   test('should show error message when no zygosity type is selected', async({ page }) => {
-    await expect(
-      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
-    ).not.toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const zygosity = genotypeBrowser.genotypeBlock.zygosity;
+    await expect(zygosity.selectAtLeastOneError('presentInChild')).not.toBeVisible();
 
-    await page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous').uncheck();
-    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
-    await expect(
-      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
-    ).toBeVisible();
+    await zygosity.checkbox('presentInChild', 'homozygous').uncheck();
+    await zygosity.checkbox('presentInChild', 'heterozygous').uncheck();
+    await expect(zygosity.selectAtLeastOneError('presentInChild')).toBeVisible();
 
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeDisabled();
+    await expect(genotypeBrowser.downloadButton).toBeDisabled();
 
-    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').check();
-    await expect(
-      page.locator('#presentInChild-zygosity-filter').getByText('Select at least one zygosity.')
-    ).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+    await zygosity.checkbox('presentInChild', 'heterozygous').check();
+    await expect(zygosity.selectAtLeastOneError('presentInChild')).not.toBeVisible();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
+    await expect(genotypeBrowser.shareSaveButton).toBeEnabled();
+    await expect(genotypeBrowser.downloadButton).toBeEnabled();
   });
 
   test('should check if zygosity types are loaded correctly after sharing query', async({ page }) => {
-    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
-    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
-    await page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous').uncheck();
-    await page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous').uncheck();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const zygosity = genotypeBrowser.genotypeBlock.zygosity;
+    await zygosity.checkbox('pedigreeSelector', 'homozygous').uncheck();
+    await zygosity.checkbox('presentInChild', 'heterozygous').uncheck();
+    await zygosity.checkbox('presentInParent', 'homozygous').uncheck();
+    await zygosity.checkbox('carrierGender', 'heterozygous').uncheck();
 
-    await page.getByRole('button', {name: 'Share/save query'}).click();
-    await expect(page.locator('#save-query-dropdown')).toBeVisible();
-    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    const shareLinkUrl = await genotypeBrowser.getShareLink();
+    await expect(genotypeBrowser.saveQueryDropdown).toBeVisible();
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).not.toBeChecked();
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
-    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).not.toBeChecked();
-    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
-    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).not.toBeChecked();
-    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).not.toBeChecked();
+    await expect(zygosity.checkbox('pedigreeSelector', 'homozygous')).not.toBeChecked();
+    await expect(zygosity.checkbox('pedigreeSelector', 'heterozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInChild', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInChild', 'heterozygous')).not.toBeChecked();
+    await expect(zygosity.checkbox('presentInParent', 'heterozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInParent', 'homozygous')).not.toBeChecked();
+    await expect(zygosity.checkbox('carrierGender', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('carrierGender', 'heterozygous')).not.toBeChecked();
   });
 
   test('should check if zygosity types are reset when switching tools', async({ page }) => {
-    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
-    await page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous').uncheck();
-    await page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous').uncheck();
-    await page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous').uncheck();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const zygosity = genotypeBrowser.genotypeBlock.zygosity;
+    await zygosity.checkbox('pedigreeSelector', 'homozygous').uncheck();
+    await zygosity.checkbox('presentInChild', 'heterozygous').uncheck();
+    await zygosity.checkbox('presentInParent', 'homozygous').uncheck();
+    await zygosity.checkbox('carrierGender', 'heterozygous').uncheck();
 
-    await page.locator('a').filter({ hasText: 'Enrichment Tool'}).click();
-    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+    await genotypeBrowser.openToolLink('Enrichment Tool');
+    await genotypeBrowser.openToolLink('Genotype Browser');
 
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#presentInChild-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
-    await expect(page.locator('#presentInParent-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#carrierGender-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
+    await expect(zygosity.checkbox('pedigreeSelector', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInChild', 'heterozygous')).toBeChecked();
+    await expect(zygosity.checkbox('presentInParent', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('carrierGender', 'heterozygous')).toBeChecked();
   });
 
   test('should check if invalid zygosity state is reset when switching tools', async({ page }) => {
-    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous').uncheck();
-    await page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous').uncheck();
-    await expect(
-      page.locator('#pedigreeSelector-zygosity-filter').getByText('Select at least one zygosity.')
-    ).toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    const zygosity = genotypeBrowser.genotypeBlock.zygosity;
+    await zygosity.checkbox('pedigreeSelector', 'homozygous').uncheck();
+    await zygosity.checkbox('pedigreeSelector', 'heterozygous').uncheck();
+    await expect(zygosity.selectAtLeastOneError('pedigreeSelector')).toBeVisible();
 
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(genotypeBrowser.tablePreviewButton).toBeDisabled();
 
-    await page.locator('a').filter({ hasText: 'Gene Browser'}).click();
-    await page.locator('a').filter({ hasText: 'Genotype Browser'}).click();
+    await genotypeBrowser.openToolLink('Gene Browser');
+    await genotypeBrowser.openToolLink('Genotype Browser');
 
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('homozygous')).toBeChecked();
-    await expect(page.locator('#pedigreeSelector-zygosity-filter').getByLabel('heterozygous')).toBeChecked();
-    await expect(
-      page.locator('#pedigreeSelector-zygosity-filter').getByText('Select at least one zygosity.')
-    ).not.toBeVisible();
+    await expect(zygosity.checkbox('pedigreeSelector', 'homozygous')).toBeChecked();
+    await expect(zygosity.checkbox('pedigreeSelector', 'heterozygous')).toBeChecked();
+    await expect(zygosity.selectAtLeastOneError('pedigreeSelector')).not.toBeVisible();
 
-    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(genotypeBrowser.tablePreviewButton).toBeEnabled();
   });
 
   test('should check if zygosity is not visible in Phenotype Tool', async({ page }) => {
-    await page.locator('a').filter({ hasText: 'Phenotype Tool'}).click();
-    await expect(page.locator('#presentInParent-zygosity-filter')).not.toBeVisible();
-    await expect(page.locator('gpf-effect-types').locator('gpf-zygosity-filter')).not.toBeVisible();
+    const genotypeBrowser = new GenotypeBrowserPage(page);
+    await genotypeBrowser.openToolLink('Phenotype Tool');
+    await expect(genotypeBrowser.genotypeBlock.zygosity.filter('presentInParent')).not.toBeVisible();
+    await expect(genotypeBrowser.genotypeBlock.effectTypes.zygosityFilter).not.toBeVisible();
   });
 });

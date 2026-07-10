@@ -44,6 +44,14 @@ export class GeneSets {
     return this.page.getByRole('option', { name });
   }
 
+  public optionByTitle(title: string): Locator {
+    return this.page.locator(`[title="${title}"]`);
+  }
+
+  public optionByText(text: string): Locator {
+    return this.page.getByText(text);
+  }
+
   public async selectCollection(collection: string): Promise<void> {
     await this.collectionSelect.selectOption(collection);
   }
