@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { scanCSV } from 'nodejs-polars';
+import { PhenoToolPage } from './pages/pheno-tool.page';
 
 test.describe('Pheno tool tests', () => {
   test.beforeEach(async({ page }) => {
@@ -10,117 +11,121 @@ test.describe('Pheno tool tests', () => {
   });
 
   test('should display pheno tool elements', async({ page }) => {
-    await expect(page.locator('gpf-genes-block')).toBeVisible();
-    await expect(page.locator('gpf-pheno-tool-measure')).toBeVisible();
-    await expect(page.locator('gpf-pheno-tool-genotype-block')).toBeVisible();
-    await expect(page.locator('gpf-family-filters-block')).toBeVisible();
-    await expect(page.getByText('Report')).toBeVisible();
-    await expect(page.locator('#save-query-dropdown-button')).toBeVisible();
-    await expect(page.getByText('Download')).toBeVisible();
+    const phenoToolPage = new PhenoToolPage(page);
+    await expect(phenoToolPage.genesBlock.root).toBeVisible();
+    await expect(phenoToolPage.measure.root).toBeVisible();
+    await expect(phenoToolPage.genotypeBlock).toBeVisible();
+    await expect(phenoToolPage.familyFilters.root).toBeVisible();
+    await expect(phenoToolPage.reportButton).toBeVisible();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeVisible();
+    await expect(phenoToolPage.downloadButton).toBeVisible();
   });
 
   test('should display pheno tool results chart after "Report" button click', async({ page }) => {
-    await expect(page.locator('gpf-pheno-tool-results-chart')).not.toBeVisible();
-    await expect(page.locator('gpf-pheno-tool-measure gpf-errors-alert .alert-danger')).toBeVisible();
+    const phenoToolPage = new PhenoToolPage(page);
+    await expect(phenoToolPage.resultsChart).not.toBeVisible();
+    await expect(phenoToolPage.measureErrorAlert).toBeVisible();
 
-    await page.locator('input#search-box').click();
-    await page.getByText('instrument_1.age').first().click();
-    await page.locator('gpf-pheno-tool').getByText('Report').click();
-    await page.waitForSelector('gpf-pheno-tool-results-chart');
-    await expect(page.locator('gpf-pheno-tool-results-chart')).toBeVisible();
+    await phenoToolPage.measure.selectMeasure('instrument_1.age');
+    await phenoToolPage.clickReport();
+    await phenoToolPage.resultsChart.waitFor();
+    await expect(phenoToolPage.resultsChart).toBeVisible();
   });
 
   test('should hide pheno tool results chart on state change', async({ page }) => {
-    await expect(page.locator('gpf-pheno-tool-results-chart')).not.toBeVisible();
+    const phenoToolPage = new PhenoToolPage(page);
+    await expect(phenoToolPage.resultsChart).not.toBeVisible();
 
     await page.getByPlaceholder('Select or start typing to search').click();
     await page.getByText('instrument_1.age').first().click();
-    await page.locator('gpf-pheno-tool').getByText('Report').click();
-    await page.waitForSelector('gpf-pheno-tool-results-chart');
-    await expect(page.locator('gpf-pheno-tool-results-chart')).toBeVisible();
+    await phenoToolPage.clickReport();
+    await phenoToolPage.resultsChart.waitFor();
+    await expect(phenoToolPage.resultsChart).toBeVisible();
 
-    await page.locator('gpf-pheno-tool-effect-types button').getByText('None').click();
+    await phenoToolPage.effectTypesButton('None').click();
 
-    await expect(page.locator('gpf-pheno-tool-results-chart')).not.toBeVisible();
+    await expect(phenoToolPage.resultsChart).not.toBeVisible();
   });
 
   test('should proplery disable the "Report", "Save/share query" and "Download" buttons on errors', async({
     page
   }) => {
-    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
-    await expect(page.getByText('Report')).toBeDisabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+    const phenoToolPage = new PhenoToolPage(page);
 
-    await page.locator('input#search-box').click();
-    await page.getByText('instrument_1.age').first().click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
-    await expect(page.getByText('Report')).toBeEnabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeDisabled();
+    await expect(phenoToolPage.reportButton).toBeDisabled();
+    await expect(phenoToolPage.downloadButton).toBeDisabled();
 
-    await page.locator('#clear-measure-button').click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
-    await expect(page.getByText('Report')).toBeDisabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+    await phenoToolPage.measure.selectMeasure('instrument_1.age');
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeEnabled();
+    await expect(phenoToolPage.reportButton).toBeEnabled();
+    await expect(phenoToolPage.downloadButton).toBeEnabled();
 
-    await page.locator('input#search-box').click();
-    await page.getByText('instrument_1.age').first().click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
-    await expect(page.getByText('Report')).toBeEnabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
-    await page.locator('gpf-present-in-parent button').filter({ hasText: 'None'}).click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
-    await expect(page.getByText('Report')).toBeDisabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+    await phenoToolPage.measure.clearMeasureButton.click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeDisabled();
+    await expect(phenoToolPage.reportButton).toBeDisabled();
+    await expect(phenoToolPage.downloadButton).toBeDisabled();
 
-    await page.locator('gpf-present-in-parent button').filter({ hasText: 'All' }).click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
-    await expect(page.getByText('Report')).toBeEnabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+    await phenoToolPage.measure.selectMeasure('instrument_1.age');
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeEnabled();
+    await expect(phenoToolPage.reportButton).toBeEnabled();
+    await expect(phenoToolPage.downloadButton).toBeEnabled();
+    await phenoToolPage.presentInParent.button('None').click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeDisabled();
+    await expect(phenoToolPage.reportButton).toBeDisabled();
+    await expect(phenoToolPage.downloadButton).toBeDisabled();
 
-    await page.locator('gpf-pheno-tool-effect-types button').filter({ hasText: 'None' }).click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
-    await expect(page.getByText('Report')).toBeDisabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
-    await page.locator('gpf-pheno-tool-effect-types button').filter({ hasText: 'All' }).click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
-    await expect(page.getByText('Report')).toBeEnabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+    await phenoToolPage.presentInParent.button('All').click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeEnabled();
+    await expect(phenoToolPage.reportButton).toBeEnabled();
+    await expect(phenoToolPage.downloadButton).toBeEnabled();
 
-    await page.locator('#family-ids').click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
-    await expect(page.getByText('Report')).toBeDisabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+    await phenoToolPage.effectTypesButton('None').click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeDisabled();
+    await expect(phenoToolPage.reportButton).toBeDisabled();
+    await expect(phenoToolPage.downloadButton).toBeDisabled();
+    await phenoToolPage.effectTypesButton('All').click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeEnabled();
+    await expect(phenoToolPage.reportButton).toBeEnabled();
+    await expect(phenoToolPage.downloadButton).toBeEnabled();
 
-    await page.locator('gpf-family-ids textarea').pressSequentially('f1');
-    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
-    await expect(page.getByText('Report')).toBeEnabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+    await phenoToolPage.familyIdsToggle.click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeDisabled();
+    await expect(phenoToolPage.reportButton).toBeDisabled();
+    await expect(phenoToolPage.downloadButton).toBeDisabled();
 
-    await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
-    await expect(page.getByText('Report')).toBeDisabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+    await phenoToolPage.familyIds.textarea.pressSequentially('f1');
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeEnabled();
+    await expect(phenoToolPage.reportButton).toBeEnabled();
+    await expect(phenoToolPage.downloadButton).toBeEnabled();
+
+    await phenoToolPage.tab('Advanced').click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeDisabled();
+    await expect(phenoToolPage.reportButton).toBeDisabled();
+    await expect(phenoToolPage.downloadButton).toBeDisabled();
 
     await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
-    await page.locator('.dropdown-item span', {hasText: 'instrument_1.age'}).click();
-    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
-    await expect(page.getByText('Report')).toBeEnabled();
-    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+    await phenoToolPage.dropdownItemSpans.filter({ hasText: 'instrument_1.age' }).click();
+    await expect(phenoToolPage.saveQueryDropdownButton).toBeEnabled();
+    await expect(phenoToolPage.reportButton).toBeEnabled();
+    await expect(phenoToolPage.downloadButton).toBeEnabled();
   });
 
   test('should check present in parent default state when study doesn\'t have denovo', async({ page }) => {
-    await expect(page.locator('gpf-present-in-parent').getByLabel('mother only')).not.toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByLabel('father only')).not.toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByLabel('mother and father')).not.toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByLabel('neither')).toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByRole('radio', {name: 'ultraRare'})).not.toBeVisible();
+    const phenoToolPage = new PhenoToolPage(page);
+
+    await expect(phenoToolPage.presentInParent.checkbox('mother only')).not.toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('father only')).not.toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('mother and father')).not.toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('neither')).toBeChecked();
+    await expect(phenoToolPage.presentInParent.ultraRareRadio()).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Phenotype tool');
-    await expect(page.locator('gpf-present-in-parent').getByLabel('mother only')).toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByLabel('father only')).toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByLabel('mother and father')).toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByLabel('neither')).toBeChecked();
-    await expect(page.locator('gpf-present-in-parent').getByRole('radio', {name: 'ultraRare'})).toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('mother only')).toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('father only')).toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('mother and father')).toBeChecked();
+    await expect(phenoToolPage.presentInParent.checkbox('neither')).toBeChecked();
+    await expect(phenoToolPage.presentInParent.ultraRareRadio()).toBeChecked();
   });
 });
 
@@ -131,11 +136,11 @@ test.describe('Pheno tool download tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Phenotype tool');
   });
   test('should download instrument_1.measure_1 and check if it equals the reference data', async({ page }) => {
-    await page.locator('input#search-box').click();
-    await page.getByText('instrument_1.measure_1').first().click();
+    const phenoToolPage = new PhenoToolPage(page);
+    await phenoToolPage.measure.selectMeasure('instrument_1.measure_1');
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-    await page.getByText('Download').click();
+    await phenoToolPage.downloadButton.click();
     const download = await downloadPromise;
     const downloadData = scanCSV(await download.path(), {nullValues: '-'});
     const fixtureData = scanCSV('fixtures/pheno-tool/pheno_report1.csv', {nullValues: '-'});
@@ -151,12 +156,12 @@ test.describe('Pheno tool download tests', () => {
     test(`should normalize by "
       ${data.normalizedBy}
     ", download report and compare it to the reference data`, async({ page }) => {
-      await page.locator('input#search-box').click();
-      await page.getByText(data.measure).first().click();
-      await page.getByLabel(data.normalizedBy).click();
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.measure.selectMeasure(data.measure);
+      await phenoToolPage.measure.normalizationCheckbox(data.normalizedBy).click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByText('Download').click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -173,19 +178,20 @@ test.describe('Pheno tool download tests', () => {
     test(`should apply ${
       data.filters.toString()
     } filters, download report and compare it to the reference data`, async({ page }) => {
-      await page.locator('input#search-box').click();
-      await page.getByText('instrument_1.measure_1').first().click();
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.measure.selectMeasure('instrument_1.measure_1');
 
 
-      await page.locator('gpf-checkbox-list').getByRole('button', { name: 'None' }).click();
-      await page.locator('gpf-pheno-tool-effect-types').getByRole('button', { name: 'None' }).click();
+      await phenoToolPage.checkboxList.getByRole('button', { name: 'None' }).click();
+      await phenoToolPage.effectTypesButton('None').click();
 
       for (const filter of data.filters) {
+        // eslint-disable-next-line no-await-in-loop
         await page.getByText(filter, {exact: true}).click();
       }
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByText('Download').click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -200,14 +206,14 @@ test.describe('Pheno tool download tests', () => {
     {id: '7', familyId: 'f2'}
   ].forEach(data => {
     test(`should check downloaded report with family id ${data.familyId}`, async({ page }) => {
-      await page.locator('input#search-box').click();
-      await page.getByText('instrument_1.age').first().click();
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.measure.selectMeasure('instrument_1.age');
 
-      await page.locator('#family-ids').click();
-      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
+      await phenoToolPage.familyIdsToggle.click();
+      await phenoToolPage.familyIds.textarea.pressSequentially(data.familyId);
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByText('Download').click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -222,31 +228,31 @@ test.describe('Pheno tool download tests', () => {
     {id: '9', familyFilter: 'instrument_1.measure_1', familyHistogramfromTo: ['50', '120']}
   ].forEach(data => {
     test(`should test advanced family filters with ${data.familyFilter}`, async({ page }) => {
-      await page.locator('input#search-box').click();
-      await page.getByText('instrument_1.age').first().click();
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.measure.selectMeasure('instrument_1.age');
 
-      await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
-      await page.locator('gpf-categorical-filter').getByRole('button', { name: 'close' }).click();
+      await phenoToolPage.tab('Advanced').click();
+      await phenoToolPage.categoricalFilter.getByRole('button', { name: 'close' }).click();
       await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
-      await page.locator('.dropdown-item span', {hasText: data.familyFilter}).click();
+      await phenoToolPage.dropdownItemSpans.filter({ hasText: data.familyFilter }).click();
 
-      await expect(page.locator('gpf-histogram')).toBeVisible();
-      await page.locator('#from-input-field').clear();
-      await page.locator('#from-input-field').pressSequentially(data.familyHistogramfromTo[0]);
+      await expect(phenoToolPage.histogram).toBeVisible();
+      await phenoToolPage.fromInput.clear();
+      await phenoToolPage.fromInput.pressSequentially(data.familyHistogramfromTo[0]);
 
       await page.waitForResponse(
         resp => resp.url().includes('/api/v3/measures/partitions') && resp.status() === 200
       );
 
-      await page.locator('#to-input-field').clear();
-      await page.locator('#to-input-field').pressSequentially(data.familyHistogramfromTo[1]);
+      await phenoToolPage.toInput.clear();
+      await phenoToolPage.toInput.pressSequentially(data.familyHistogramfromTo[1]);
 
       await page.waitForResponse(
         resp => resp.url().includes('/api/v3/measures/partitions') && resp.status() === 200
       );
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByText('Download').click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -261,15 +267,15 @@ test.describe('Pheno tool download tests', () => {
     {id: '11', geneSymbol: 'SAMD11'}
   ].forEach(data => {
     test(`should check downloaded report with gene symbol ${data.geneSymbol}`, async({ page }) => {
-      await page.locator('li#gene-symbols').click();
-      await page.locator('gpf-gene-symbols textarea').focus();
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.genesBlock.geneSymbolsToggle.click();
+      await phenoToolPage.genesBlock.geneSymbols.textbox.focus();
       await page.keyboard.type(data.geneSymbol);
 
-      await page.locator('input#search-box').click();
-      await page.getByText('instrument_1.age').click();
+      await phenoToolPage.measure.selectMeasure('instrument_1.age');
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByText('Download').click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -294,20 +300,21 @@ test.describe('Pheno tool download tests', () => {
     }
   ].forEach(data => {
     test(`should check downloaded report with gene sets collection ${data.collection}`, async({ page }) => {
-      await page.getByRole('tab', { name: 'Gene Sets' }).click();
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.genesBlock.openGeneSetsTab();
 
-      await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
+      await phenoToolPage.genesBlock.geneSets.selectCollectionForm(data.collection);
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
       await page.getByLabel('Gene Sets')
         .getByPlaceholder('Select or start typing to search').focus();
       await page.keyboard.type(data.set.substring(0, data.set.indexOf(' (')));
-      await page.getByRole('option', { name: data.set}).click();
+      await phenoToolPage.genesBlock.geneSets.option(data.set).click();
 
-      await page.locator('gpf-pheno-tool-measure #search-box').click();
+      await phenoToolPage.measure.searchBox.click();
       await page.getByText(data.measure).first().click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByRole('button', { name: 'Download' }).click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -335,24 +342,28 @@ test.describe('Pheno tool download tests', () => {
     }
   ].forEach(data => {
     test(`should check downloaded report with gene set Denovo and measure ${data.measure}`, async({ page }) => {
-      await page.getByRole('tab', { name: 'Gene Sets' }).click();
-      await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.genesBlock.openGeneSetsTab();
+      await phenoToolPage.genesBlock.geneSets.selectCollectionForm('Denovo');
 
-      await page.getByRole('button', { name: 'Select studies' }).click();
-      await expect(page.locator('.modal-content')).toBeVisible();
+      await phenoToolPage.selectStudiesModal.open();
+      await expect(phenoToolPage.selectStudiesModal.content).toBeVisible();
 
-      await page.locator('#dataset-' + data.genotype).click();
-      await page.locator(`#${data.genotype}-checkbox-${data.affectedStatus}`).click();
+      await phenoToolPage.selectStudiesModal.datasetNode(data.genotype).click();
+      const affectedCheckbox = data.affectedStatus === 'affected'
+        ? phenoToolPage.selectStudiesModal.affectedCheckbox(data.genotype)
+        : phenoToolPage.selectStudiesModal.unaffectedCheckbox(data.genotype);
+      await affectedCheckbox.click();
       await page.mouse.click(0, 0); // close modal
 
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
-      await page.getByRole('option', { name: data.set}).click();
+      await phenoToolPage.genesBlock.geneSets.option(data.set).click();
 
-      await page.locator('gpf-pheno-tool-measure #search-box').click();
-      await page.locator('.dropdown-item span', {hasText: data.measure}).click();
+      await phenoToolPage.measure.searchBox.click();
+      await phenoToolPage.dropdownItemSpans.filter({ hasText: data.measure }).click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByRole('button', { name: 'Download' }).click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
@@ -376,19 +387,19 @@ test.describe('Pheno tool download tests', () => {
     }
   ].forEach(data => {
     test(`should check downloaded report with gene score ${data.geneScore}`, async({ page }) => {
-      await page.getByRole('tab', { name: 'Gene Scores' }).click();
-      await page.locator('#gene-scores-panel select.form-control').selectOption(data.geneScore);
+      const phenoToolPage = new PhenoToolPage(page);
+      await phenoToolPage.genesBlock.openGeneScoresTab();
+      await phenoToolPage.geneScoresPanelSelect.selectOption(data.geneScore);
 
-      await page.locator('input#search-box').click();
-      await page.getByText(data.measure).first().click();
+      await phenoToolPage.measure.selectMeasure(data.measure);
 
-      await page.locator('#from-input-field').clear();
-      await page.locator('#from-input-field').pressSequentially(data.geneScoresHistogramFromTo[0]);
-      await page.locator('#to-input-field').clear();
-      await page.locator('#to-input-field').pressSequentially(data.geneScoresHistogramFromTo[1]);
+      await phenoToolPage.fromInput.clear();
+      await phenoToolPage.fromInput.pressSequentially(data.geneScoresHistogramFromTo[0]);
+      await phenoToolPage.toInput.clear();
+      await phenoToolPage.toInput.pressSequentially(data.geneScoresHistogramFromTo[1]);
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
-      await page.getByRole('button', { name: 'Download' }).click();
+      await phenoToolPage.downloadButton.click();
       const download = await downloadPromise;
       const downloadData = scanCSV(await download.path(), {nullValues: '-'});
       const fixtureData = scanCSV(`fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
