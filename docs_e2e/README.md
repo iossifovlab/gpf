@@ -76,9 +76,14 @@ band**, into the node-local `gpf-grr-cache` docker volume.
 Before an agent runs `gpf-docs-e2e` for the first time, seed it:
 
 * Run the **`gpf-docs-e2e-prewarm`** Jenkins job with `AGENT_LABEL`
-  set to that agent (e.g. `eyoree`). It clones gpf-getting-started,
-  appends the gnomAD + ClinVar annotation block, and runs
-  `grr_cache_repo` into the volume. ~40 min cold; idempotent.
+  set to that agent (both jobs default to `pooh`). It clones
+  gpf-getting-started, appends the gnomAD + ClinVar annotation block,
+  and runs `grr_cache_repo` into the volume. ~40 min cold; idempotent.
+
+  **Seed before you switch.** `gpf-docs-e2e`'s `AGENT_LABEL` must not
+  be pointed at an agent whose `gpf-grr-cache` volume has no
+  `.docs-e2e-prewarmed` sentinel — the `grr_cache_seeded` guard will
+  fail every build until the prewarm goes green there.
 
 If an agent is not seeded, the build fails **fast** at fixture setup
 (the `grr_cache_seeded` guard) with a message naming the agent and

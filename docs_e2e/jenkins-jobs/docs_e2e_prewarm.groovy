@@ -23,10 +23,10 @@ pipelineJob('gpf-docs-e2e-prewarm') {
 
     parameters {
         stringParam(
-            'AGENT_LABEL', 'eyoree',
+            'AGENT_LABEL', 'pooh',
             'The specific agent to seed. Must match the agent ' +
             'gpf-docs-e2e runs on (its AGENT_LABEL default is also ' +
-            '"eyoree") — the gpf-grr-cache volume is node-local. ' +
+            '"pooh") — the gpf-grr-cache volume is node-local. ' +
             'Set a different concrete name to seed another agent.',
         )
         stringParam(
