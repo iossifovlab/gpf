@@ -221,45 +221,49 @@ annotation:
     - allele_score: hg38/scores/ClinVar_20240730
 YAML
 
-                    docker run --rm \
-                        -v "$PWD:/workspace" \
-                        -v "$GRR_CACHE_VOLUME:/grr-cache" \
-                        -w /workspace \
-                        "$DRIVER_IMAGE" \
-                        bash -lc '
-                            set -eu
-                            # Mirror conftest.conda_channel: build an
-                            # indexed local channel from the copied
-                            # .conda artefacts.
-                            rm -rf /tmp/channel
-                            mkdir -p /tmp/channel/noarch
-                            cp /workspace/dist/conda/*.conda /tmp/channel/noarch/
-                            /opt/conda/bin/python -m conda_index /tmp/channel
-                            # Mirror conftest.gpf_env_prefix: install
-                            # gpf-web (pulls gain-core + gpf-core, which
-                            # provide grr_cache_repo and its -i provider).
-                            # First-party packages come ONLY from the local
-                            # channel (gpf-* from the gpf build, gain-core from
-                            # the gain build copied above); the iossifovlab
-                            # release channel is deliberately dropped so a stale
-                            # published gain-core/gpf-core cannot leak in
-                            # (gpf#916). gain-core's recipe now declares tqdm,
-                            # so the old gain#89 explicit-tqdm workaround is
-                            # gone. Mirrors conftest.gpf_env_prefix.
-                            mamba create -y -n prewarm \
-                                -c file:///tmp/channel \
-                                -c bioconda -c conda-forge \
-                                gpf-web
-                            # Mirror the conftest.denovo_instance GRR block
-                            # byte-for-byte: the GPF default is a `group` of
-                            # grr-gpf.iossifovlab.com (GPF-specific resources,
-                            # e.g. enrichment/samocha_background) and
-                            # grr.iossifovlab.com (general annotation
-                            # resources). The cache keys on each child repo
-                            # id, so the prewarm MUST use the same ids the
-                            # suite uses (default_gpf / default) or the suite
-                            # cold-re-pulls under a mismatched path.
-                            cat > /root/.grr_definition.yaml <<YAML
+                    # The seeding script is written to a FILE through a
+                    # QUOTED heredoc and then run inside the container —
+                    # it is deliberately NOT inlined into
+                    # `bash -lc '<script>'`. A quoted heredoc is taken
+                    # literally, so an apostrophe in a comment cannot
+                    # close the quote and spill the rest of the script
+                    # onto the AGENT HOST. Inlining broke this job
+                    # twice: fixed in gpf#871, regressed in gpf#916
+                    # (`gain-core's recipe`), where the host — not the
+                    # container — ran `mamba create` and died with
+                    # `mamba: command not found`, exit 127. Keep the
+                    # script in a heredoc; apostrophes are safe here.
+                    cat > .prewarm-inner.sh <<'PREWARM'
+set -eu
+
+# Mirror conftest.conda_channel: build an indexed local channel from
+# the copied .conda artefacts.
+rm -rf /tmp/channel
+mkdir -p /tmp/channel/noarch
+cp /workspace/dist/conda/*.conda /tmp/channel/noarch/
+/opt/conda/bin/python -m conda_index /tmp/channel
+
+# Mirror conftest.gpf_env_prefix: install gpf-web (pulls gain-core +
+# gpf-core, which provide grr_cache_repo and its -i provider).
+# First-party packages come ONLY from the local channel (gpf-* from the
+# gpf build, gain-core from the gain build copied above); the
+# iossifovlab release channel is deliberately dropped so a stale
+# published gain-core/gpf-core cannot leak in (gpf#916). gain-core's
+# recipe now declares tqdm, so the old gain#89 explicit-tqdm workaround
+# is gone.
+mamba create -y -n prewarm \
+    -c file:///tmp/channel \
+    -c bioconda -c conda-forge \
+    gpf-web
+
+# Mirror the conftest.denovo_instance GRR block byte-for-byte: the GPF
+# default is a `group` of grr-gpf.iossifovlab.com (GPF-specific
+# resources, e.g. enrichment/samocha_background) and
+# grr.iossifovlab.com (general annotation resources). The cache keys on
+# each child repo id, so the prewarm MUST use the same ids the suite
+# uses (default_gpf / default) or the suite cold-re-pulls under a
+# mismatched path.
+cat > /root/.grr_definition.yaml <<YAML
 id: "default_gpf_grr"
 type: "group"
 cache_dir: "/grr-cache"
@@ -271,25 +275,33 @@ children:
     type: "http"
     url: "https://grr.iossifovlab.com"
 YAML
-                            cd /workspace/gs
-                            # -j 1: one download worker gets the full GRR
-                            # link (~6 MB/s) instead of splitting it 4 ways
-                            # (grr_cache_repo default -j 4), so large
-                            # gnomAD chunk reads finish well within the
-                            # aiohttp 300s default timeout. gain hardcodes
-                            # HTTPFileSystem with no timeout override
-                            # (fsspec_protocol.py), so -j 1 + less GRR
-                            # server contention is the lever until the
-                            # durable gain timeout/retry fix lands (no
-                            # apostrophes here: this is inside bash -lc).
-                            mamba run -n prewarm grr_cache_repo -i \
-                                minimal_instance/gpf_instance.yaml -j 1
-                            # Sentinel: only a SUCCESSFUL full cache
-                            # write reaches here. The build guard checks
-                            # for this, so a partial cache cannot
-                            # false-pass.
-                            touch /grr-cache/.docs-e2e-prewarmed
-                        '
+
+cd /workspace/gs
+
+# -j 1: one download worker gets the full GRR link (~6 MB/s) instead of
+# splitting it 4 ways (grr_cache_repo's default -j 4), so large gnomAD
+# chunk reads finish well within the aiohttp 300s default timeout. gain
+# hardcodes HTTPFileSystem with no timeout override (fsspec_protocol.py),
+# so -j 1 + less GRR server contention is the lever until the durable
+# gain timeout/retry fix lands.
+mamba run -n prewarm grr_cache_repo -i \
+    minimal_instance/gpf_instance.yaml -j 1
+
+# Sentinel: only a SUCCESSFUL full cache write reaches here. The build
+# guard checks for this, so a partial cache cannot false-pass.
+touch /grr-cache/.docs-e2e-prewarmed
+PREWARM
+
+                    # Catch a syntax error in the generated script now,
+                    # not 90 minutes into the GRR download.
+                    bash -n .prewarm-inner.sh
+
+                    docker run --rm \
+                        -v "$PWD:/workspace" \
+                        -v "$GRR_CACHE_VOLUME:/grr-cache" \
+                        -w /workspace \
+                        "$DRIVER_IMAGE" \
+                        bash -lc 'bash /workspace/.prewarm-inner.sh'
                 '''
             }
         }
@@ -299,7 +311,8 @@ YAML
         always {
             sh '''
                 docker rmi "$DRIVER_IMAGE" || true
-                docker run --rm -v "$PWD:/wd" -w /wd alpine rm -rf gs || true
+                docker run --rm -v "$PWD:/wd" -w /wd alpine \
+                    rm -rf gs .prewarm-inner.sh || true
             '''
         }
         success {
