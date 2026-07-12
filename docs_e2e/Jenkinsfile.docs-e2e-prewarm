@@ -31,7 +31,8 @@
 //
 // Set AGENT_LABEL to the specific agent you are onboarding (e.g.
 // `eyoree`) — the cache volume is agent-local, so seeding one agent
-// does NOT seed the others.
+// does NOT seed the others. The default is `pooh`, matching
+// gpf-docs-e2e's own AGENT_LABEL default.
 
 pipeline {
     // Pin to the specific agent being seeded. The gpf-grr-cache
@@ -40,15 +41,15 @@ pipeline {
     // `?:` fallback covers a first run where params.AGENT_LABEL is
     // not yet defined; pass AGENT_LABEL explicitly to seed a given
     // agent (the seeded node must match gpf-docs-e2e's AGENT_LABEL).
-    agent { label "${params.AGENT_LABEL ?: 'eyoree'}" }
+    agent { label "${params.AGENT_LABEL ?: 'pooh'}" }
 
     parameters {
         string(
             name: 'AGENT_LABEL',
-            defaultValue: 'eyoree',
+            defaultValue: 'pooh',
             description: 'The specific agent to seed. Must match ' +
                 'the agent gpf-docs-e2e runs on (its AGENT_LABEL ' +
-                'default is also "eyoree") — the gpf-grr-cache ' +
+                'default is also "pooh") — the gpf-grr-cache ' +
                 'volume is node-local. Set a different concrete ' +
                 'name to seed another agent.',
         )

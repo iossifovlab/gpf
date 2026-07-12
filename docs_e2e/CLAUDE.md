@@ -61,7 +61,7 @@ failure must carry the originating `RST file:line` (`rst_ref=`).
 
 ## Per-agent GRR cache seeding
 
-The suite is pinned to one agent (`AGENT_LABEL`, default `eyoree`) and
+The suite is pinned to one agent (`AGENT_LABEL`, default `pooh`) and
 needs that agent's node-local `gpf-grr-cache` volume pre-seeded by the
 `gpf-docs-e2e-prewarm` job (it bulk-caches ~15 GB of instance resources
 out of band; the build then validates the warm cache fast). The
