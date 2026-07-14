@@ -151,9 +151,24 @@ The group carries `cache_dir: /grr_cache`, and the compose files bind `${GRR_CAC
 - **Don't rename the children.** The cache is keyed by their ids; a rename orphans the warm cache instead of failing loudly. `grr.sync` is also what `gain-web-e2e` calls the main GRR, so on a shared agent the two jobs reuse **one** cached copy of it.
 - **The cache's unit is a whole file, not a byte range.** A resource the suite touches at all is downloaded in full. The first run on a fresh cache is slow by design (~32.5 GB worst case: dbSNP, gnomAD genomes/exomes, MPC, ClinVar, GRCh38); every run after it reads from local disk. That is why the job's timeout is 4h and the web-tier healthchecks carry a 3600s `start_period` (a probe failing inside `start_period` burns no retry, so a warm cache pays nothing for it).
 
-In Jenkins, `GRR_CACHE_DIR` is `${HOME}/grr_cache` on the agent (`web_e2e/Jenkinsfile.e2e` `mkdir -p`s it). Locally it defaults to `web_infra/grr_cache`; export `GRR_CACHE_DIR=/some/roomy/path` to put it elsewhere, and expect the first run to download.
+In Jenkins, `GRR_CACHE_DIR` is `${HOME}/grr_cache` on the agent. Locally it defaults to `web_infra/grr_cache`; export `GRR_CACHE_DIR=/some/roomy/path` to put it elsewhere, and expect the first run to download.
 
-`instance-import` and the split-mode `backend` run as **`${AGENT_UID}:${AGENT_GID}`** (the Jenkinsfile exports them; they default to `0:0` outside CI) so the shared cache never fills with root-owned files the `jenkins` user cannot prune or refresh. The combined-mode `frontend` is the exception — the production image's supervisord declares `user=root` and refuses to start otherwise, so the Jenkinsfile chowns the cache back to the agent uid at the start of every build.
+`instance-import` and the split-mode `backend` run as **`${AGENT_UID}:${AGENT_GID}`**, defaulting to `0:0` outside CI, so the shared cache never fills with root-owned files the `jenkins` user cannot prune or refresh. The combined-mode `frontend` is the exception — the production image's supervisord declares `user=root` and refuses to start otherwise, so the Jenkinsfile chowns the cache back to the agent uid at the start of every build.
+
+#### How CI gets those three values into compose (and why it's belt-and-braces)
+
+Declaring `GRR_CACHE_DIR` / `AGENT_UID` / `AGENT_GID` in the pipeline's `environment{}` block is **not** sufficient, and quietly failing at it is the exact bug gain-web-e2e #1042 shipped: compose silently took the `${GRR_CACHE_DIR:-./grr_cache}` and `${AGENT_UID:-0}` *fallbacks*, so the "persistent" cache landed **inside the workspace** (wiped by the next build) and every container ran as **root**. Both designs were inert and nothing failed.
+
+So `Jenkinsfile.e2e`'s **`Compose env`** stage pins it, in four layers:
+
+1. Re-derives the values in the shell (`$HOME`, `id -u`, `id -g`) instead of trusting the `environment{}` block.
+2. Writes them to **`web_infra/.env`** — the compose *project directory*, where Compose auto-loads a `.env` from. (Gitignored.)
+3. Passes **`--env-file web_infra/.env`** explicitly on every `docker compose` call, so nothing depends on which directory Compose picks as the project dir.
+4. **Sources that same `.env`** (`set -a; . ./web_infra/.env; set +a`) before each call — because `--env-file` alone is *not* enough: the process environment **outranks** `--env-file`, so a variable that is present-but-**empty** in the shell still wins and still selects the fallback.
+
+Then **`web_infra/verify-compose-env.sh`** runs `docker compose config` and fails the build unless, for every GRR-building service, the `/grr_cache` bind source is exactly `$GRR_CACHE_DIR` (under `$HOME`, outside `$WORKSPACE`), `GRR_DEFINITION_FILE` is set, and the resolved user is non-root — with `frontend` in combined mode as the one documented root exception. It also rejects any surviving `/mnt/cephfs` bind. Run it by hand the same way CI does if you change a compose file.
+
+The `${VAR:-default}` fallbacks stay in the compose YAML as a last-resort guard for a plain local `docker compose up`.
 
 ### Build the prod images locally
 
