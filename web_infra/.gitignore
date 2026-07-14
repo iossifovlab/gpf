@@ -1,1 +1,6 @@
 /wdae-logs
+# Default local GRR cache: the compose files bind
+# ${GRR_CACHE_DIR:-./grr_cache} at /grr_cache, and a plain local
+# `docker compose up` takes the fallback. In Jenkins it is
+# ${HOME}/grr_cache on the agent, outside the workspace.
+/grr_cache

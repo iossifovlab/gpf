@@ -96,7 +96,19 @@ pipeline {
     }
 
     options {
-        timeout(time: 1, unit: 'HOURS')
+        // 4h, not 1h: the GRR is no longer a bind-mounted NFS
+        // directory but https://grr.seqpipe.org +
+        // https://grr-sfari.seqpipe.org behind a persistent
+        // per-agent cache, and the cache's unit is a whole file
+        // rather than a byte range — the first build on a given
+        // agent downloads every resource the instance-import and
+        // the suite touch, in full (~32.5 GB worst case). Cold
+        // builds are expected to be slow (and are allowed to be);
+        // warm builds should beat the old NFS baseline, since they
+        // read from local disk. Trim this back once warm-build
+        // times have been measured. Note the timeout also covers
+        // the per-agent `Run e2e` lock wait.
+        timeout(time: 4, unit: 'HOURS')
         buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
@@ -128,6 +140,35 @@ pipeline {
         E2E_WORKER_COUNT     = "${params.E2E_WORKER_COUNT}"
         E2E_GUNICORN_WORKERS = "${params.E2E_GUNICORN_WORKERS}"
         E2E_GUNICORN_THREADS = "${params.E2E_GUNICORN_THREADS}"
+
+        // Persistent across builds, and shared with gain-web-e2e:
+        // both name the main GRR `grr.sync`, and a group's cache is
+        // keyed by child repo id (GenomicResourceCachedRepo joins
+        // cache_url with proto_id), so both jobs populate and reuse
+        // the same ${HOME}/grr_cache/grr.sync/ tree. Same shape as
+        // gain's web_e2e/Jenkinsfile.e2e and core/
+        // Jenkinsfile.integration: anchored to the agent home (on
+        // pooh, /var/lib/jenkins -> ZFS via the home symlink) rather
+        // than a hardcoded mount, bind-mounted into the containers
+        // by web_infra/compose-jenkins*.yaml.
+        //
+        // Created below with `mkdir -p` rather than relying on the
+        // agent being pre-provisioned (seqpipe/infra#66 provisions it
+        // on the agents, but this job's label is `!dory`, so it must
+        // work on any of them). Concurrent builds on one agent are
+        // safe: the caching protocol takes a per-file lock before
+        // copying.
+        GRR_CACHE_DIR = "${env.HOME}/grr_cache"
+
+        // instance-import and the split-mode backend run as the
+        // agent's uid/gid instead of root, so the long-lived GRR
+        // cache — and the instance dir they rewrite — stay owned by
+        // `jenkins` and remain prunable. Root-owned artefacts in a
+        // workspace are a bug class this stack has already been
+        // bitten by. (The combined-mode image still needs root; see
+        // web_infra/compose-jenkins-combined.yaml.)
+        AGENT_UID = sh(script: 'id -u', returnStdout: true).trim()
+        AGENT_GID = sh(script: 'id -g', returnStdout: true).trim()
     }
 
     stages {
@@ -162,22 +203,57 @@ pipeline {
         stage('Prepare workspace') {
             steps {
                 // Playwright writes traces / videos to
-                // web_e2e/reports and the backend writes Django
-                // file-logs to web_infra/wdae-logs as root (no
-                // USER directive in either container), so the
-                // host Jenkins user can't `rm` them on the next
-                // build. Run the cleanup inside an alpine
-                // container as root to sidestep that. Wiping
-                // wdae-logs each build keeps the captured
-                // artefact attributable to this build only.
-                // Then mkdir runs on the host so the new reports
-                // dir is Jenkins-owned and the post-stage
-                // host-side `cp` can write into it.
+                // web_e2e/reports as root (the e2e-tests container
+                // has no USER directive and needs none), so the host
+                // Jenkins user can't `rm` them on the next build. Run
+                // the cleanup inside an alpine container as root to
+                // sidestep that. Wiping wdae-logs each build keeps
+                // the captured artefact attributable to this build
+                // only.
+                //
+                // The chown in the same container reclaims everything
+                // a root container has left behind, and is what makes
+                // the non-root switch survivable:
+                //   - the import residue under web_e2e/
+                //     gpf_e2e_instance (OUTPUT/, genotype_storage/,
+                //     ...) written by earlier root-run imports — a
+                //     now-non-root instance-import could not rm -rf a
+                //     root-owned directory tree, since unlinking its
+                //     contents needs write permission on the
+                //     directories themselves;
+                //   - GRR cache entries downloaded by a combined-mode
+                //     run, which must stay root (see
+                //     web_infra/compose-jenkins-combined.yaml).
+                // It is metadata-only, so it costs inodes, not bytes.
+                //
+                // GRR_CACHE_DIR is the one thing that must NOT be
+                // wiped — it is the persistent cross-build cache —
+                // so it is only ever mkdir'd and re-chowned. Created
+                // here rather than assumed pre-provisioned, so the
+                // job works on any `!dory` agent.
+                //
+                // Then mkdir runs on the host so the new reports and
+                // wdae-logs dirs are Jenkins-owned: the post-stage
+                // host-side `cp` writes into reports/, and dockerd
+                // creates a *missing* bind source as root:root — a
+                // dir the non-root instance-import / backend could
+                // not write into.
                 sh '''
-                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
-                        rm -rf dist reports web_e2e/reports \
-                               web_infra/wdae-logs
-                    mkdir -p reports/web_e2e
+                    mkdir -p "$GRR_CACHE_DIR"
+
+                    docker run --rm \
+                        -v "$PWD:/wd" \
+                        -v "$GRR_CACHE_DIR:/grr_cache" \
+                        -e AGENT_UID -e AGENT_GID \
+                        -w /wd alpine sh -c '
+                            set -eu
+                            rm -rf dist reports web_e2e/reports \
+                                   web_infra/wdae-logs
+                            chown -R "$AGENT_UID:$AGENT_GID" \
+                                  /wd /grr_cache
+                        '
+
+                    mkdir -p reports/web_e2e web_infra/wdae-logs
                 '''
             }
         }
