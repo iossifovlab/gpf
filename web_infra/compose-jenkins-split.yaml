@@ -16,6 +16,12 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE:-gpf-web-api-prod:latest}
+    # Agent uid/gid, not root — same rationale as `instance-import`
+    # in the base compose file: this service writes into the shared,
+    # long-lived GRR cache, and root-owned entries there are ones the
+    # `jenkins` user can neither prune nor refresh. gunicorn binds
+    # 9001 (unprivileged) and the image needs nothing else from root.
+    user: "${AGENT_UID:-0}:${AGENT_GID:-0}"
     # Tests target the frontend service at http://frontend
     # (web_e2e/tests/utils.ts) — Apache there reverse-proxies
     # /api/ and /ws/ to backend:9001, so the SPA and API share
@@ -78,17 +84,11 @@ services:
       # gpf_instance.py:102-109) — same behaviour production
       # deployments rely on; build #12 caught the mismatch.
       - ../web_e2e/gpf_e2e_instance:/data
-      # GRR resources mount — same shape as gain's
-      # web_infra/compose-jenkins.yaml. The paths are the CSHL
-      # Jenkins agents' shared GRR caches; runs on other hosts
-      # need to provide equivalent /grr + /grr_sfari or override
-      # GRR_DEFINITION_FILE to a different definition. Both
-      # mounts are required: the e2e instance fixture's
-      # grr-definition.yaml below combines them as a `group`
-      # repo with grr_sfari first (overriding overlapping
-      # enrichment IDs in grr).
-      - /mnt/cephfs/seqpipe/grr:/grr
-      - /mnt/cephfs/seqpipe/grr_sfari:/grr_sfari
+      # Persistent per-agent GRR cache — same mount, same cache_dir
+      # (/grr_cache) as `instance-import` in the base compose file,
+      # which has already warmed most of it by the time this service
+      # starts. See the base file for the full rationale.
+      - ${GRR_CACHE_DIR:-./grr_cache}:/grr_cache
       # Django file logs (wdae-debug.log via WDAE_LOG_DIR);
       # see the matching mount on instance-import in the base
       # for the full rationale.
@@ -96,12 +96,17 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: gpf_web.production_settings
       DAE_DB_DIR: /data
-      # The prod image bakes /grr-definition.yaml (single /grr
-      # repo, see web_api/Dockerfile.production). Override here to
-      # the in-instance file that defines a group of /grr_sfari +
-      # /grr — e2e-only, leaves prod deployments on the single
-      # repo. The instance dir is bind-mounted at /data above.
+      # The prod image bakes /grr-definition.yaml (a single
+      # directory-backed repo at /grr, see
+      # web_api/Dockerfile.production). Override here to the
+      # in-instance file that defines the http group of
+      # grr-sfari.seqpipe.org + grr.seqpipe.org behind /grr_cache —
+      # e2e-only, leaves prod deployments on their on-host GRR. The
+      # instance dir is bind-mounted at /data above.
       GRR_DEFINITION_FILE: /data/grr-definition.yaml
+      # No passwd entry for the agent uid in the image -> HOME would
+      # be `/`, which is not writable. See the base compose file.
+      HOME: /tmp
       WDAE_DB_NAME: gpf
       WDAE_DB_USER: seqpipe
       WDAE_DB_PASSWORD: secret
@@ -143,10 +148,24 @@ services:
       # gain's compose-jenkins.yaml uses the same pattern:
       # /api/editor/pipeline_status?pipeline_id=pipeline/Clinical_annotation
       # with --max-time 120.
+      #
+      # start_period is generous because the GRR is now an http repo
+      # behind a cache whose unit is a WHOLE FILE, not a byte range:
+      # against the old NFS bind a tabix query read a few KB of a
+      # score file, but on a cold cache the first open() downloads the
+      # entire file. `instance-import` warms most of what the suite
+      # touches before this service starts, but eager study loading
+      # can still be the first thing to open a given resource. While
+      # in start_period a failing probe only marks the container
+      # `starting` — it does not burn one of the 30 retries — so this
+      # is a budget for a cold GRR, not added latency: a warm cache
+      # goes healthy on the first probe and pays nothing. The real
+      # ceiling is the Jenkins job timeout.
       test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/datasets/"]
       interval: 10s
       timeout: 5s
       retries: 30
+      start_period: 3600s
 
   frontend:
     image: ${FRONTEND_IMAGE:-gpf-web-ui-prod:latest}
