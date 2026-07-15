@@ -137,6 +137,14 @@ services:
     # compose runs, because dockerd creates a *missing* bind source as
     # root:root, which a non-root container then cannot write into.
     user: "${AGENT_UID:-0}:${AGENT_GID:-0}"
+    # Run from a writable cwd. import_data.sh runs several gain/gpf task-graph
+    # CLIs (generate_gene_profile, generate_common_report,
+    # generate_denovo_gene_sets) whose default task-log dir is
+    # `os.getcwd()/.task-log` (gain task_graph/logging.py). The container's
+    # default cwd is `/`, so as a non-root uid every one of them EPERMs on
+    # `/.task-log`. /tmp is writable; the script itself uses only absolute
+    # ${INSTANCE_DIR} paths, and its `cd -` now returns here rather than to /.
+    working_dir: /tmp
     depends_on:
       db:
         condition: service_healthy
