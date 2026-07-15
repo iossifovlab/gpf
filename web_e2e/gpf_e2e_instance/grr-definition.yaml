@@ -53,3 +53,16 @@ children:
   - id: "grr.sync"
     type: http
     url: "https://grr.seqpipe.org"
+  # grr_seqpipe is LAST on purpose (lowest priority). It exists in the
+  # group only to supply resources that neither grr_sfari nor grr have --
+  # today just hg38/enrichment/coding_length_ref_gene_v20170601, which the
+  # default_configuration.yaml enrichment `selected_background_models`
+  # requires and which is absent from iossifovlab/grr entirely (404 on
+  # grr.seqpipe.org, grr-sfari.seqpipe.org AND grr.iossifovlab.com; it only
+  # ever lived on piglet's decommissioned /mnt/cephfs GRR). grr_seqpipe
+  # also carries 7 hg19 gene-model resources that DO overlap grr; putting
+  # this child last means grr's versions win those ids, so adding it here
+  # cannot shadow anything -- it can only fill the gap.
+  - id: "grr_seqpipe.sync"
+    type: http
+    url: "https://grr-seqpipe.seqpipe.org"
