@@ -140,18 +140,40 @@ pipeline {
         E2E_GUNICORN_WORKERS = "${params.E2E_GUNICORN_WORKERS}"
         E2E_GUNICORN_THREADS = "${params.E2E_GUNICORN_THREADS}"
 
-        // GRR_ROOT is the node-local grr-sync LVM root (stable per-repo symlinks <root>/{grr,grr_sfari,grr_seqpipe}), provisioned by seqpipe/infra#71. Pin this to infra#71's actual mount path when that lands.
+        // GRR_ROOT is the node-local grr-sync root holding the stable
+        // per-repo symlinks <root>/{grr,grr_sfari,grr_seqpipe}, published
+        // by grr-sync (atomic mode, iossifovlab/grr-sync#20) and
+        // provisioned per-agent by seqpipe/infra#71 — where it is NOT a
+        // uniform path: /tank/grr on pooh (a dedicated ZFS dataset),
+        // /data/grr on piglet + eyoree (the cache-fronted LVM). So resolve
+        // it per-node: honour an explicit GRR_ROOT from the agent's node
+        // environment if one is set, else auto-detect the first candidate
+        // that exists on this agent. The `Compose env` pre-flight below
+        // then asserts the three repo trees + their .CONTENTS actually
+        // resolve under it, so a wrong/empty root fails loudly there,
+        // before compose up (a dangling symlink would otherwise mount as
+        // an empty dir and fail deep in the run).
         //
-        // The compose files bind ${GRR_ROOT}/{grr,grr_sfari,
-        // grr_seqpipe} read-only into every GRR-reading service; the
-        // instance's grr-definition.yaml is a `type: group` of three
-        // `type: directory` children over those mounts. Shared with
-        // gain-web-e2e, which reads the same node-local trees by the
-        // same repo ids. The `Compose env` stage below asserts each
-        // tree is synced on this agent before compose up (a dangling
-        // symlink would otherwise mount as an empty dir and fail deep
-        // in the run).
-        GRR_ROOT = "/grr-sync"
+        // The compose files bind ${GRR_ROOT}/{grr,grr_sfari,grr_seqpipe}
+        // read-only into every GRR-reading service; the instance's
+        // grr-definition.yaml is a `type: group` of three `type: directory`
+        // children over those mounts. Shared with gain-web-e2e, which reads
+        // the same node-local trees by the same repo ids.
+        GRR_ROOT = sh(
+            script: '''
+                if [ -n "${GRR_ROOT:-}" ]; then
+                    printf '%s' "$GRR_ROOT"; exit 0
+                fi
+                for d in /tank/grr /data/grr; do
+                    [ -d "$d" ] && { printf '%s' "$d"; exit 0; }
+                done
+                # Nothing found: emit a non-resolving sentinel so the
+                # Compose-env pre-flight fails with a clear "GRR not synced
+                # on this node yet" rather than an empty GRR_ROOT.
+                printf '%s' "/grr-not-provisioned"
+            ''',
+            returnStdout: true,
+        ).trim()
 
         // instance-import and the split-mode backend run as the
         // agent's uid/gid instead of root, so the instance dir they
