@@ -26,3 +26,13 @@ This is also a good place to talk about performance and security considerations 
 ## Related issues
 
 Link issues which concern/are resolved by this PR.
+
+If this PR resolves an issue **in this repository**, write `Closes #NNN` here —
+GitHub then closes the issue automatically when the PR merges. Without it the
+issue stays open after the work has landed, and the tracker starts lying about
+what's left to do.
+
+Auto-closing is **same-repo only**. For an issue in another repository
+(`iossifovlab/gain`, `seqpipe/infra`, ...) reference it as
+`iossifovlab/gain#NNN` — that creates a backlink but does **not** close it.
+Close those by hand once this merges.
