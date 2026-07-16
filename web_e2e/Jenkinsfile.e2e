@@ -96,18 +96,17 @@ pipeline {
     }
 
     options {
-        // 4h, not 1h: the GRR is no longer a bind-mounted NFS
-        // directory but https://grr.seqpipe.org +
-        // https://grr-sfari.seqpipe.org behind a persistent
-        // per-agent cache, and the cache's unit is a whole file
-        // rather than a byte range — the first build on a given
-        // agent downloads every resource the instance-import and
-        // the suite touch, in full (~32.5 GB worst case). Cold
-        // builds are expected to be slow (and are allowed to be);
-        // warm builds should beat the old NFS baseline, since they
-        // read from local disk. Trim this back once warm-build
-        // times have been measured. Note the timeout also covers
-        // the per-agent `Run e2e` lock wait.
+        // 4h ceiling. There is no longer a cold-download penalty: the
+        // GRR is bind-mounted node-local and read-only (the grr-sync
+        // trees provisioned by seqpipe/infra#71), so every resource
+        // access is a byte-range read off local disk — not the
+        // whole-file https download the earlier http+cache design
+        // forced (~32.5 GB worst case, which is why this was widened
+        // to 4h from ~1h). The wall-clock is now dominated by the
+        // import + Playwright suite themselves; this generous ceiling
+        // is kept as headroom and because the timeout also covers the
+        // per-agent `Run e2e` lock wait. Trim it back once node-local
+        // build times have been measured.
         timeout(time: 4, unit: 'HOURS')
         buildDiscarder(logRotator(numToKeepStr: '20'))
     }
@@ -141,32 +140,49 @@ pipeline {
         E2E_GUNICORN_WORKERS = "${params.E2E_GUNICORN_WORKERS}"
         E2E_GUNICORN_THREADS = "${params.E2E_GUNICORN_THREADS}"
 
-        // Persistent across builds, and shared with gain-web-e2e:
-        // both name the main GRR `grr.sync`, and a group's cache is
-        // keyed by child repo id (GenomicResourceCachedRepo joins
-        // cache_url with proto_id), so both jobs populate and reuse
-        // the same ${HOME}/grr_cache/grr.sync/ tree. Same shape as
-        // gain's web_e2e/Jenkinsfile.e2e and core/
-        // Jenkinsfile.integration: anchored to the agent home (on
-        // pooh, /var/lib/jenkins -> ZFS via the home symlink) rather
-        // than a hardcoded mount, bind-mounted into the containers
-        // by web_infra/compose-jenkins*.yaml.
+        // GRR_ROOT is the node-local grr-sync root holding the stable
+        // per-repo symlinks <root>/{grr,grr_sfari,grr_seqpipe}, published
+        // by grr-sync (atomic mode, iossifovlab/grr-sync#20) and
+        // provisioned per-agent by seqpipe/infra#71 — where it is NOT a
+        // uniform path: /tank/grr on pooh (a dedicated ZFS dataset),
+        // /data/grr on piglet + eyoree (the cache-fronted LVM). So resolve
+        // it per-node: honour an explicit GRR_ROOT from the agent's node
+        // environment if one is set, else auto-detect the first candidate
+        // that exists on this agent. The `Compose env` pre-flight below
+        // then asserts the three repo trees + their .CONTENTS actually
+        // resolve under it, so a wrong/empty root fails loudly there,
+        // before compose up (a dangling symlink would otherwise mount as
+        // an empty dir and fail deep in the run).
         //
-        // Created below with `mkdir -p` rather than relying on the
-        // agent being pre-provisioned (seqpipe/infra#66 provisions it
-        // on the agents, but this job's label is `!dory`, so it must
-        // work on any of them). Concurrent builds on one agent are
-        // safe: the caching protocol takes a per-file lock before
-        // copying.
-        GRR_CACHE_DIR = "${env.HOME}/grr_cache"
+        // The compose files bind ${GRR_ROOT}/{grr,grr_sfari,grr_seqpipe}
+        // read-only into every GRR-reading service; the instance's
+        // grr-definition.yaml is a `type: group` of three `type: directory`
+        // children over those mounts. Shared with gain-web-e2e, which reads
+        // the same node-local trees by the same repo ids.
+        GRR_ROOT = sh(
+            script: '''
+                if [ -n "${GRR_ROOT:-}" ]; then
+                    printf '%s' "$GRR_ROOT"; exit 0
+                fi
+                for d in /tank/grr /data/grr; do
+                    [ -d "$d" ] && { printf '%s' "$d"; exit 0; }
+                done
+                # Nothing found: emit a non-resolving sentinel so the
+                # Compose-env pre-flight fails with a clear "GRR not synced
+                # on this node yet" rather than an empty GRR_ROOT.
+                printf '%s' "/grr-not-provisioned"
+            ''',
+            returnStdout: true,
+        ).trim()
 
         // instance-import and the split-mode backend run as the
-        // agent's uid/gid instead of root, so the long-lived GRR
-        // cache — and the instance dir they rewrite — stay owned by
-        // `jenkins` and remain prunable. Root-owned artefacts in a
-        // workspace are a bug class this stack has already been
-        // bitten by. (The combined-mode image still needs root; see
-        // web_infra/compose-jenkins-combined.yaml.)
+        // agent's uid/gid instead of root, so the instance dir they
+        // rewrite in the workspace stays owned by `jenkins` and
+        // remains prunable by the next build. Root-owned artefacts in
+        // a workspace are a bug class this stack has already been
+        // bitten by. This is independent of the GRR, which is now
+        // mounted read-only. (The combined-mode image still needs
+        // root; see web_infra/compose-jenkins-combined.yaml.)
         AGENT_UID = sh(script: 'id -u', returnStdout: true).trim()
         AGENT_GID = sh(script: 'id -g', returnStdout: true).trim()
     }
@@ -211,26 +227,17 @@ pipeline {
                 // the captured artefact attributable to this build
                 // only.
                 //
-                // The chown in the same container reclaims everything
-                // a root container has left behind, and is what makes
-                // the non-root switch survivable:
-                //   - the import residue under web_e2e/
-                //     gpf_e2e_instance (OUTPUT/, genotype_storage/,
-                //     ...) written by earlier root-run imports — a
-                //     now-non-root instance-import could not rm -rf a
-                //     root-owned directory tree, since unlinking its
-                //     contents needs write permission on the
-                //     directories themselves;
-                //   - GRR cache entries downloaded by a combined-mode
-                //     run, which must stay root (see
-                //     web_infra/compose-jenkins-combined.yaml).
-                // It is metadata-only, so it costs inodes, not bytes.
-                //
-                // GRR_CACHE_DIR is the one thing that must NOT be
-                // wiped — it is the persistent cross-build cache —
-                // so it is only ever mkdir'd and re-chowned. Created
-                // here rather than assumed pre-provisioned, so the
-                // job works on any `!dory` agent.
+                // The chown in the same container reclaims the import
+                // residue under web_e2e/gpf_e2e_instance (OUTPUT/,
+                // genotype_storage/, ...) written by earlier root-run
+                // imports (a combined-mode run touches /data as root) —
+                // a now-non-root instance-import could not rm -rf a
+                // root-owned directory tree, since unlinking its
+                // contents needs write permission on the directories
+                // themselves. It is metadata-only, so it costs inodes,
+                // not bytes. The node-local GRR is bind-mounted
+                // read-only and lives outside the workspace, so it is
+                // not touched here.
                 //
                 // Then mkdir runs on the host so the new reports and
                 // wdae-logs dirs are Jenkins-owned: the post-stage
@@ -239,29 +246,24 @@ pipeline {
                 // dir the non-root instance-import / backend could
                 // not write into.
                 //
-                // GRR_CACHE_DIR / AGENT_UID / AGENT_GID are re-derived from
-                // the shell rather than trusted from the environment{}
-                // block — see the `Compose env` stage for why. Here it also
-                // matters for correctness of the chown: a `chown -R ":"`
-                // (empty uid:gid) is an error, and `mkdir -p ""` is too.
+                // AGENT_UID / AGENT_GID are re-derived from the shell
+                // rather than trusted from the environment{} block —
+                // see the `Compose env` stage for why. Here it also
+                // matters for correctness of the chown: a
+                // `chown -R ":"` (empty uid:gid) is an error.
                 sh '''
-                    : "${GRR_CACHE_DIR:=$HOME/grr_cache}"
                     AGENT_UID="$(id -u)"
                     AGENT_GID="$(id -g)"
-                    export GRR_CACHE_DIR AGENT_UID AGENT_GID
-
-                    mkdir -p "$GRR_CACHE_DIR"
+                    export AGENT_UID AGENT_GID
 
                     docker run --rm \
                         -v "$PWD:/wd" \
-                        -v "$GRR_CACHE_DIR:/grr_cache" \
                         -e AGENT_UID -e AGENT_GID \
                         -w /wd alpine sh -c '
                             set -eu
                             rm -rf dist reports web_e2e/reports \
                                    web_infra/wdae-logs
-                            chown -R "$AGENT_UID:$AGENT_GID" \
-                                  /wd /grr_cache
+                            chown -R "$AGENT_UID:$AGENT_GID" /wd
                         '
 
                     mkdir -p reports/web_e2e web_infra/wdae-logs
@@ -289,23 +291,23 @@ pipeline {
             }
         }
 
-        // Make the compose stack's view of GRR_CACHE_DIR / AGENT_UID /
-        // AGENT_GID deterministic, then PROVE it before anything starts.
+        // Make the compose stack's view of AGENT_UID / AGENT_GID /
+        // GRR_ROOT deterministic, then PROVE the GRR is actually synced
+        // on this agent before anything starts.
         //
-        // gain-web-e2e #1042 (identical compose pattern) declared all three
-        // in the pipeline `environment{}` block and `docker compose` still
-        // did not see them: `docker inspect` on the live container showed
-        // the bind source as <workspace>/web_infra/grr_cache — the
-        // `${GRR_CACHE_DIR:-./grr_cache}` FALLBACK, i.e. inside the
-        // workspace, wiped by the next build's cleanup — and User=0:0, the
-        // `${AGENT_UID:-0}` fallback. Both designs, the persistent cache and
-        // the non-root ownership, were completely inert, and nothing failed.
+        // gain-web-e2e #1042 (identical compose pattern) declared its
+        // vars in the pipeline `environment{}` block and `docker compose`
+        // still did not see them: `docker inspect` on the live container
+        // showed User=0:0, the `${AGENT_UID:-0}` fallback. The non-root
+        // ownership was completely inert, and nothing failed.
         //
         // Rather than chase Jenkins' env-export semantics, pin it:
         //
-        //   1. Re-derive the values HERE, in the shell, from `$HOME` and
+        //   1. Re-derive the uid/gid HERE, in the shell, from
         //      `id -u`/`id -g` — the shell's own view is authoritative and
-        //      cannot be half-exported.
+        //      cannot be half-exported. GRR_ROOT is a static path from the
+        //      environment{} block; write it through too so the compose
+        //      `${GRR_ROOT:?...}` binds resolve from the same file.
         //   2. Write them to web_infra/.env — the compose PROJECT directory
         //      (the dir of the first `-f` file), which is where Compose
         //      auto-loads a .env from.
@@ -319,65 +321,68 @@ pipeline {
         //      against docker compose). Sourcing makes the shell agree with
         //      the file, which closes that hole.
         //
-        // The ${VAR:-default} fallbacks stay in the compose YAML as a
-        // last-resort guard for local `docker compose up` outside CI.
+        // The ${AGENT_UID:-0} fallback stays in the compose YAML as a
+        // last-resort guard for local `docker compose up` outside CI; the
+        // ${GRR_ROOT:?...} bind is intentionally hard-required (no default)
+        // so a missing GRR_ROOT fails loudly instead of mounting nothing.
         stage('Compose env') {
             steps {
                 sh '''
                     set -eu
 
-                    : "${GRR_CACHE_DIR:=$HOME/grr_cache}"
-                    mkdir -p "$GRR_CACHE_DIR"
-
 # Heredoc body is at column 0 on purpose: compose's dotenv parser takes
 # the line verbatim, and a leading-space "  KEY=value" is not reliably
 # the same thing as "KEY=value".
 cat > web_infra/.env <<EOF
-GRR_CACHE_DIR=$GRR_CACHE_DIR
 AGENT_UID=$(id -u)
 AGENT_GID=$(id -g)
+GRR_ROOT=$GRR_ROOT
 EOF
 
                     echo "--- web_infra/.env ---"
                     cat web_infra/.env
                 '''
 
-                // The teeth. A silent fallback to a workspace-local cache
-                // running as root is EXACTLY the bug above; it must never
-                // pass quietly again. This asserts on the RESOLVED config
-                // (`docker compose config`), not on what we believe we
-                // exported, and fails the build with expected-vs-actual.
-                //
-                // BOTH overlays are checked on every build, not just the
-                // STACK_MODE one: split is the default, so a regression in
-                // the combined overlay would otherwise sit unnoticed until
-                // someone opted into combined mode.
+                // Fail-fast GRR pre-flight. The compose files bind
+                // ${GRR_ROOT}/{grr,grr_sfari,grr_seqpipe} read-only into
+                // every GRR-reading service; grr-sync publishes those as
+                // stable per-repo symlinks (seqpipe/infra#71). A dangling
+                // symlink (repo not yet synced on this agent) would
+                // bind-mount as an EMPTY directory rather than error, and
+                // the run would die deep inside instance-import with a
+                // baffling FileNotFoundError on .CONTENTS.json. Assert
+                // here — before any container starts — that each tree
+                // resolves AND carries its grr-sync manifest, and fail
+                // with a clear message if not.
                 sh '''
                     set -eu
                     set -a; . ./web_infra/.env; set +a
 
-                    echo "########## split mode ##########"
-                    EXPECT_GRR_SERVICES="instance-import backend" \
-                    ./web_infra/verify-compose-env.sh \
-                        web_infra/.env \
-                        web_infra/compose-jenkins.yaml \
-                        web_infra/compose-jenkins-split.yaml
-
-                    echo
-                    echo "########## combined mode ##########"
-                    # `frontend` is the documented root exception: the
-                    # combined image IS the production artefact, and its
-                    # supervisord.conf declares user=root and hard-exits
-                    # ("Can't drop privilege as nonroot user") for anyone
-                    # else. It still gets the cache bind + GRR_DEFINITION_FILE;
-                    # only the uid leg is waived, and the `Prepare workspace`
-                    # chown reclaims whatever it leaves root-owned.
-                    EXPECT_GRR_SERVICES="instance-import frontend" \
-                    ROOT_OK_SERVICES="frontend" \
-                    ./web_infra/verify-compose-env.sh \
-                        web_infra/.env \
-                        web_infra/compose-jenkins.yaml \
-                        web_infra/compose-jenkins-combined.yaml
+                    for repo in grr grr_sfari grr_seqpipe; do
+                        tree="$GRR_ROOT/$repo"
+                        if ! resolved="$(readlink -e "$tree")"; then
+                            echo "GRR not synced on this node yet: $repo" >&2
+                            echo "  ($tree does not resolve — grr-sync has not" >&2
+                            echo "   published this repo on this agent; see" >&2
+                            echo "   seqpipe/infra#71)" >&2
+                            exit 1
+                        fi
+                        # Accept EITHER manifest name: gain's directory
+                        # GRR loader (fsspec_protocol.py load_contents)
+                        # tries .CONTENTS.json.gz first and falls back to
+                        # the uncompressed .CONTENTS.json, so a tree that
+                        # grr-sync published with only the plain manifest
+                        # loads fine — don't fail it here.
+                        if [ ! -f "$tree/.CONTENTS.json.gz" ] \
+                           && [ ! -f "$tree/.CONTENTS.json" ]; then
+                            echo "GRR not synced on this node yet: $repo" >&2
+                            echo "  ($resolved has no .CONTENTS.json.gz or" >&2
+                            echo "   .CONTENTS.json — the tree is present but" >&2
+                            echo "   incomplete)" >&2
+                            exit 1
+                        fi
+                        echo "OK: $repo -> $resolved (.CONTENTS manifest present)"
+                    done
                 '''
             }
         }

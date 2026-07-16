@@ -5,64 +5,54 @@
 # the image-baked web_api/scripts/grr-definition.yaml against CSHL's
 # own on-host GRR.
 #
-# Replaces the bind-mounted NFS GRRs (/mnt/cephfs/seqpipe/grr +
-# /mnt/cephfs/seqpipe/grr_sfari), which died with piglet's
-# decommissioning: a bind-mount of a missing host path yields an
-# *empty* directory, so the GRR read empty and the job had to be
-# disabled. https://grr.seqpipe.org and https://grr-sfari.seqpipe.org
-# serve the same two repositories over https (grr-sync's mirrors on
-# kowalski; grr.seqpipe.org's .CONTENTS.json.gz is byte-identical to
-# grr.iossifovlab.com).
+# Reads node-local, materialized `type: directory` GRRs produced by
+# grr-sync in atomic-publish mode (grr-sync#20) and provisioned on the
+# agents by seqpipe/infra#71. Each child points at a stable per-repo
+# symlink (/grr, /grr_sfari, /grr_seqpipe) that the compose files bind
+# **read-only** from the node-local grr-sync LVM root. Byte-range local
+# reads (tabix/fasta/bigwig), zero per-build network, no cache. This
+# replaces the earlier http+cache group (grr.seqpipe.org behind a
+# whole-file /grr_cache), which itself replaced the dead
+# /mnt/cephfs NFS binds (piglet's decommissioning).
 #
-# Three things here are load-bearing:
+# Two things here are load-bearing:
 #
 # 1. Child ORDER. `grr_sfari` stays FIRST: a group repo resolves a
 #    resource id from the first child that has it, and grr_sfari's
 #    enrichment backgrounds deliberately override the same ids in
 #    grr. Reordering the children changes behaviour.
 #
-# 2. Child IDS stay verbatim. `cache_dir` on the group auto-partitions
-#    the cache by child repo id — GenomicResourceCachedRepo's
-#    _get_or_create_cache_proto does os.path.join(self.cache_url,
-#    proto_id) — so the cache materialises at /grr_cache/grr.sync/ and
-#    /grr_cache/grr_sfari.sync/. Renaming a child silently orphans the
-#    warm cache (a full cold re-download) instead of failing loudly.
-#    `grr.sync` is also what gain's CI definition calls the main GRR,
-#    so gpf-web-e2e and gain-web-e2e SHARE one cached copy of it on
-#    the agent.
+# 2. Child IDS stay verbatim. `grr.sync` is what gain's CI definition
+#    also calls the main GRR, and the node-local trees are laid out by
+#    grr-sync under these repo ids. Renaming a child would point it at
+#    a tree that isn't synced on the node.
 #
-# 3. No `read_only: true` on the children. It exists on
-#    FileRepoDefinition (what the previous `type: directory` children
-#    were) but NOT on HttpRepoDefinition, and _RepoDefinitionBase sets
-#    extra="forbid" — carrying it over is a hard validation failure,
-#    not a harmless no-op. `public_url` is dropped as unnecessary: for
-#    an http repo it defaults to `url`, which is already the public,
-#    browsable location of exactly this data.
-#
-# The cache's unit is a WHOLE FILE, not a byte range: a resource the
-# suite touches at all is downloaded in full. The first build on an
-# agent is slow by design (~32.5 GB worst case); every build after it
-# reads from local disk. See web_e2e/README.md.
+# `read_only: true` is valid on FileRepoDefinition (a `type: directory`
+# child) and guarantees builds never write into the shared, hardlinked
+# grr-sync tree. `cache_dir` is dropped entirely: reads are direct and
+# node-local, so there is nothing to cache.
 id: "local"
 type: group
-cache_dir: /grr_cache
 children:
   - id: "grr_sfari.sync"
-    type: http
-    url: "https://grr-sfari.seqpipe.org"
+    type: directory
+    directory: /grr_sfari
+    read_only: true
   - id: "grr.sync"
-    type: http
-    url: "https://grr.seqpipe.org"
+    type: directory
+    directory: /grr
+    read_only: true
   # grr_seqpipe is LAST on purpose (lowest priority). It exists in the
   # group only to supply resources that neither grr_sfari nor grr have --
   # today just hg38/enrichment/coding_length_ref_gene_v20170601, which the
   # default_configuration.yaml enrichment `selected_background_models`
-  # requires and which is absent from iossifovlab/grr entirely (404 on
-  # grr.seqpipe.org, grr-sfari.seqpipe.org AND grr.iossifovlab.com; it only
+  # requires and which is absent from iossifovlab/grr entirely (it only
   # ever lived on piglet's decommissioned /mnt/cephfs GRR). grr_seqpipe
   # also carries 7 hg19 gene-model resources that DO overlap grr; putting
   # this child last means grr's versions win those ids, so adding it here
-  # cannot shadow anything -- it can only fill the gap.
+  # cannot shadow anything -- it can only fill the gap. infra#71 syncs
+  # grr_seqpipe node-locally alongside the other repos.
   - id: "grr_seqpipe.sync"
-    type: http
-    url: "https://grr-seqpipe.seqpipe.org"
+    type: directory
+    directory: /grr_seqpipe
+    read_only: true

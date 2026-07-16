@@ -33,15 +33,12 @@ services:
     # supervisord.conf + a tmpfs over /run) would mean reshaping the
     # very artefact combined mode exists to test faithfully.
     #
-    # Consequence: files this container downloads into the shared GRR
-    # cache below are root-owned. That is contained rather than
-    # ignored -- the Jenkinsfile chowns ${GRR_CACHE_DIR} back to the
-    # agent uid at the start of every build, so the cache is
-    # self-healing and the non-root services of the *next* build (or
-    # of gain-web-e2e) can still prune and refresh it. Combined mode
-    # is also opt-in (STACK_MODE defaults to split), and the cache is
-    # largely warmed by the non-root `instance-import` that runs
-    # first, so the root-owned residue is a minority of the tree.
+    # Running as root is harmless for the GRR here: it is bind-mounted
+    # read-only (below), so this container cannot write into the shared
+    # node-local tree, and it mounts the /data instance dir that
+    # `instance-import` already populated (root only touches the two
+    # first-startup description files). No root-owned cache residue to
+    # reclaim, unlike the earlier http+cache design.
     depends_on:
       instance-import:
         condition: service_completed_successfully
@@ -56,14 +53,16 @@ services:
       # (gpf_instance/gpf_instance.py:102-109). instance-import
       # populated the rest of the tree already.
       - ../web_e2e/gpf_e2e_instance:/data
-      # Persistent per-agent GRR cache — same mount and same cache_dir
-      # (/grr_cache) as the other two GRR-reading services. The
-      # combined image bakes a default /grr-definition.yaml pointing
-      # at a directory repo under /grr; the GRR_DEFINITION_FILE env
-      # var below overrides it to the in-instance http group
-      # (grr-sfari.seqpipe.org over grr.seqpipe.org). See the base
-      # compose file for the full rationale.
-      - ${GRR_CACHE_DIR:-./grr_cache}:/grr_cache
+      # Node-local, read-only GRR trees — same three :ro mounts as the
+      # other two GRR-reading services. The combined image bakes a
+      # default /grr-definition.yaml pointing at a directory repo under
+      # /grr; the GRR_DEFINITION_FILE env var below overrides it to the
+      # in-instance group of three `type: directory` children. See the
+      # base compose file for the full rationale (grr-sync#20 /
+      # seqpipe/infra#71).
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr:/grr:ro
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr_sfari:/grr_sfari:ro
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr_seqpipe:/grr_seqpipe:ro
       # Django file logs — gunicorn (under supervisord) writes
       # wdae-debug.log via WDAE_LOG_DIR exactly as the split-
       # mode backend does. See the base compose file's
@@ -111,10 +110,11 @@ services:
       # extra hop adds negligible latency.
       #
       # start_period 3600s for the same reason as split mode's
-      # backend: on a cold GRR cache the first open() of a resource
-      # downloads the whole file over https. Probes that fail inside
-      # start_period don't burn retries, so a warm cache still flips
-      # healthy on the first probe.
+      # backend: it absorbs gunicorn's STUDIES_EAGER_LOADING warm-up
+      # under many workers. There is no longer a cold-download penalty
+      # — the GRR is node-local and read-only, so every open() is a
+      # byte-range read off local disk. Probes that fail inside
+      # start_period don't burn retries.
       test: ["CMD", "curl", "-f", "http://localhost/api/v3/datasets/"]
       interval: 10s
       timeout: 5s
