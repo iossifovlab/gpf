@@ -127,12 +127,13 @@ services:
   # Apache into a step that doesn't need them.
   instance-import:
     image: ${BACKEND_IMAGE:-gpf-web-api-prod:latest}
-    # Run as the agent's uid/gid, not root. The GRR cache below is
-    # long-lived and shared across builds (and with gain-web-e2e); a
-    # root-owned cache tree is one the `jenkins` user can neither
-    # prune nor rewrite -- the EPERM-on-root-owned-artefacts bug class
-    # this stack has already hit. Same reasoning applies to the
-    # instance dir this one-shot rm -rf's and rebuilds. The host bind
+    # Run as the agent's uid/gid, not root. `instance-import` rm -rf's
+    # and rebuilds the instance dir bind-mounted at /data (below); a
+    # root-owned instance tree in the workspace is one the `jenkins`
+    # user can neither prune nor rewrite on the next build -- the
+    # EPERM-on-root-owned-artefacts bug class this stack has already
+    # hit. This is independent of the GRR, which is now bind-mounted
+    # read-only (no writes, no ownership concern). The host bind
     # sources are created (and reclaimed) by the Jenkinsfile before
     # compose runs, because dockerd creates a *missing* bind source as
     # root:root, which a non-root container then cannot write into.
@@ -150,17 +151,20 @@ services:
         condition: service_healthy
     volumes:
       - ../web_e2e/gpf_e2e_instance:/data:rw
-      # Persistent per-agent GRR cache, replacing the dead
-      # /mnt/cephfs/seqpipe/grr + /mnt/cephfs/seqpipe/grr_sfari NFS
-      # binds (piglet is decommissioned). /grr_cache is the cache_dir
-      # named by the instance's grr-definition.yaml, which now points
-      # at https://grr.seqpipe.org + https://grr-sfari.seqpipe.org;
-      # the group's cache auto-partitions by child repo id, so the
-      # trees land at /grr_cache/grr.sync/ and /grr_cache/
-      # grr_sfari.sync/. This one-shot does the bulk of the cold
-      # download (imports + annotation + reports); the web tier that
-      # follows mostly reads an already-warm cache.
-      - ${GRR_CACHE_DIR:-./grr_cache}:/grr_cache
+      # Node-local, materialized GRR trees produced by grr-sync
+      # (grr-sync#20) and provisioned on the agents by seqpipe/infra#71.
+      # These replace the earlier http+cache /grr_cache bind (which
+      # forced whole-file downloads) and, before that, the dead
+      # /mnt/cephfs NFS binds. The instance's grr-definition.yaml is a
+      # `type: group` of three `type: directory` children pointing at
+      # /grr_sfari, /grr, /grr_seqpipe. Mounted :ro — builds do
+      # byte-range reads straight off local disk and never write into
+      # the shared hardlinked tree. GRR_ROOT is the grr-sync LVM root;
+      # the Jenkinsfile pre-flight asserts each tree is synced before
+      # compose up.
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr:/grr:ro
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr_sfari:/grr_sfari:ro
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr_seqpipe:/grr_seqpipe:ro
       # Django writes wdae-debug.log under WDAE_LOG_DIR
       # (default_settings.py LOGGING). Bind to a host path the
       # Jenkinsfile archives so the file logs survive `compose

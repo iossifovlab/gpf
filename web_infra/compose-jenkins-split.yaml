@@ -17,10 +17,12 @@ services:
   backend:
     image: ${BACKEND_IMAGE:-gpf-web-api-prod:latest}
     # Agent uid/gid, not root — same rationale as `instance-import`
-    # in the base compose file: this service writes into the shared,
-    # long-lived GRR cache, and root-owned entries there are ones the
-    # `jenkins` user can neither prune nor refresh. gunicorn binds
-    # 9001 (unprivileged) and the image needs nothing else from root.
+    # in the base compose file: WGPFInstance first-startup touches
+    # files under the writable /data instance mount, and root-owned
+    # entries there are ones the `jenkins` user can neither prune nor
+    # refresh on the next build. The GRR is bind-mounted read-only, so
+    # it plays no part in this. gunicorn binds 9001 (unprivileged) and
+    # the image needs nothing else from root.
     user: "${AGENT_UID:-0}:${AGENT_GID:-0}"
     # Tests target the frontend service at http://frontend
     # (web_e2e/tests/utils.ts) — Apache there reverse-proxies
@@ -84,11 +86,12 @@ services:
       # gpf_instance.py:102-109) — same behaviour production
       # deployments rely on; build #12 caught the mismatch.
       - ../web_e2e/gpf_e2e_instance:/data
-      # Persistent per-agent GRR cache — same mount, same cache_dir
-      # (/grr_cache) as `instance-import` in the base compose file,
-      # which has already warmed most of it by the time this service
-      # starts. See the base file for the full rationale.
-      - ${GRR_CACHE_DIR:-./grr_cache}:/grr_cache
+      # Node-local, read-only GRR trees — same three :ro mounts as
+      # `instance-import` in the base compose file. See the base file
+      # for the full rationale (grr-sync#20 / seqpipe/infra#71).
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr:/grr:ro
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr_sfari:/grr_sfari:ro
+      - ${GRR_ROOT:?GRR_ROOT must point at the grr-sync LVM root}/grr_seqpipe:/grr_seqpipe:ro
       # Django file logs (wdae-debug.log via WDAE_LOG_DIR);
       # see the matching mount on instance-import in the base
       # for the full rationale.
@@ -99,8 +102,8 @@ services:
       # The prod image bakes /grr-definition.yaml (a single
       # directory-backed repo at /grr, see
       # web_api/Dockerfile.production). Override here to the
-      # in-instance file that defines the http group of
-      # grr-sfari.seqpipe.org + grr.seqpipe.org behind /grr_cache —
+      # in-instance file that defines the group of three node-local
+      # `type: directory` children (/grr_sfari, /grr, /grr_seqpipe) —
       # e2e-only, leaves prod deployments on their on-host GRR. The
       # instance dir is bind-mounted at /data above.
       GRR_DEFINITION_FILE: /data/grr-definition.yaml
@@ -149,18 +152,16 @@ services:
       # /api/editor/pipeline_status?pipeline_id=pipeline/Clinical_annotation
       # with --max-time 120.
       #
-      # start_period is generous because the GRR is now an http repo
-      # behind a cache whose unit is a WHOLE FILE, not a byte range:
-      # against the old NFS bind a tabix query read a few KB of a
-      # score file, but on a cold cache the first open() downloads the
-      # entire file. `instance-import` warms most of what the suite
-      # touches before this service starts, but eager study loading
-      # can still be the first thing to open a given resource. While
-      # in start_period a failing probe only marks the container
-      # `starting` — it does not burn one of the 30 retries — so this
-      # is a budget for a cold GRR, not added latency: a warm cache
-      # goes healthy on the first probe and pays nothing. The real
-      # ceiling is the Jenkins job timeout.
+      # start_period is generous but no longer pays a cold-GRR tax:
+      # the GRR is now bind-mounted node-local and read-only, so every
+      # open() is a byte-range read straight off local disk (no
+      # whole-file download as the earlier http+cache design forced).
+      # What still dominates startup is gunicorn's STUDIES_EAGER_LOADING
+      # under many workers. While in start_period a failing probe only
+      # marks the container `starting` — it does not burn one of the 30
+      # retries — so this budget only ever delays an *unhealthy*
+      # verdict for a genuinely broken backend. The real ceiling is the
+      # Jenkins job timeout.
       test: ["CMD", "curl", "-f", "http://localhost:9001/api/v3/datasets/"]
       interval: 10s
       timeout: 5s
