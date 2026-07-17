@@ -14,6 +14,16 @@
 # nothing re-derives them when pyproject/uv.lock move. Floors track
 # pyproject by construction and cannot rot the same way.
 #
+# `python=3.12` is the one deliberate exception. Every pyproject says
+# `requires-python = ">=3.12"`, but the project targets 3.12 itself:
+# CI builds and tests on it, and web_api/Dockerfile.production's
+# wheels-only invariant assumes cp312 wheels. A `python>=3.12` floor
+# would let the solver take the newest interpreter and silently
+# diverge this env from what CI actually tests. It is not a rot risk
+# either way: conda's `=` is a prefix match, so `python=3.12` already
+# accepts every 3.12.x patch -- unlike an exact patch pin such as the
+# old `django=5.2.5`. Raise it when the project moves to 3.13.
+#
 # Entries below with no pyproject counterpart are conda-only (system
 # tooling, build pins) and are flagged as such.
 
@@ -23,7 +33,8 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  # requires-python
+  # requires-python is ">=3.12"; the 3.12 series pin here is a
+  # deliberate exception -- see the header.
   - python=3.12
 
   # --- core/pyproject.toml [project.dependencies] ---
@@ -79,10 +90,15 @@ dependencies:
 
   # --- conda-only: no pyproject counterpart ---
   # htslib/samtools/bcftools are the system binaries behind pysam;
-  # pip installs vendor them into the wheel, conda does not.
-  - htslib=1.22
-  - samtools=1.22
-  - bcftools=1.22
+  # pip installs vendor them into the wheel, conda does not. Floors,
+  # not exact pins: 1.22 is the minimum this project needs. samtools
+  # and bcftools each carry a tight htslib run-constraint of their own
+  # (`htslib >=1.24,<1.25.0a0` as of writing), so the solver keeps the
+  # three on a coherent series by itself; the floor only sets a lower
+  # bound and cannot pull them apart.
+  - htslib>=1.22
+  - samtools>=1.22
+  - bcftools>=1.22
   # runtime lib for mysqlclient
   - mysql-common=8.0
   # dask dashboard proxying for local development
