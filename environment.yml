@@ -89,13 +89,18 @@ dependencies:
   - mysqlclient>=2.2
 
   # --- conda-only: no pyproject counterpart ---
-  # htslib/samtools/bcftools are the system binaries behind pysam;
-  # pip installs vendor them into the wheel, conda does not. Floors,
-  # not exact pins: 1.22 is the minimum this project needs. samtools
-  # and bcftools each carry a tight htslib run-constraint of their own
-  # (`htslib >=1.24,<1.25.0a0` as of writing), so the solver keeps the
-  # three on a coherent series by itself; the floor only sets a lower
-  # bound and cannot pull them apart.
+  # htslib/samtools/bcftools are a developer convenience, not a
+  # dependency. No code in gpf (or gain) links against them or shells
+  # out to them, and conda's pysam bundles its own htslib -- it
+  # declares no dependency on the htslib package at all. They are here
+  # because working on gain or gpf day to day constantly needs these
+  # CLIs at hand, and a dev env without them is a nuisance.
+  #
+  # Floors, not exact pins: 1.22 is "recent enough to be useful", not a
+  # compatibility requirement -- nothing here breaks on a newer one.
+  # samtools and bcftools each carry their own tight htslib
+  # run-constraint (`htslib >=1.24,<1.25.0a0` as of writing), so the
+  # solver keeps the three on one coherent series regardless.
   - htslib>=1.22
   - samtools>=1.22
   - bcftools>=1.22
