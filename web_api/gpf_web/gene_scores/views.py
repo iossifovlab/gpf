@@ -1,9 +1,12 @@
+from typing import Any
 
 import numpy as np
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
+from gain.gene_scores.gene_scores import ScoreDesc
+from gain.genomic_resources.histogram import NumberHistogram
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
@@ -25,26 +28,40 @@ class GeneScoresListView(QueryBaseView):
         else:
             gene_scores = self.gpf_instance.get_all_gene_score_descs()
         return Response(
-            [
-                {
-                    "score": score.score_id,
-                    "desc": f"{score.score_id} - {score.description}",
-                    "bars": score.hist.bars,
-                    "bins": score.hist.bins,
-                    "xscale":
-                        "log" if score.hist.config.x_log_scale else
-                        "linear",
-                    "yscale":
-                        "log" if score.hist.config.y_log_scale else
-                        "linear",
-                    "range": score.hist.config.view_range,
-                    "help": score.help,
-                    "small_values_desc": score.small_values_desc,
-                    "large_values_desc": score.large_values_desc,
-                }
-                for score in gene_scores
-            ],
+            [self._score_record(score) for score in gene_scores],
         )
+
+    @staticmethod
+    def _score_record(score: ScoreDesc) -> dict[str, Any]:
+        """Serialize a gene score description into a flat record.
+
+        A numeric score keeps today's byte-identical
+        ``bars``/``bins``/``xscale``/``yscale``/``range`` shape; a categorical
+        (or null) score drops those number-only keys and carries the
+        polymorphic ``histogram`` payload instead.
+        """
+        record: dict[str, Any] = {
+            "score": score.score_id,
+            "desc": f"{score.score_id} - {score.description}",
+        }
+        if isinstance(score.hist, NumberHistogram):
+            record.update({
+                "bars": score.hist.bars,
+                "bins": score.hist.bins,
+                "xscale":
+                    "log" if score.hist.config.x_log_scale else "linear",
+                "yscale":
+                    "log" if score.hist.config.y_log_scale else "linear",
+                "range": score.hist.config.view_range,
+            })
+        else:
+            record["histogram"] = score.hist.to_dict()
+        record.update({
+            "help": score.help,
+            "small_values_desc": score.small_values_desc,
+            "large_values_desc": score.large_values_desc,
+        })
+        return record
 
 
 class HistogramView(QueryBaseView):
