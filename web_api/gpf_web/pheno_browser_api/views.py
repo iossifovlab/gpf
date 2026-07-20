@@ -178,7 +178,9 @@ class PhenoMeasuresView(QueryBaseView):
         return Response(res)
 
 
-class PhenoMeasuresDownload(FeatureFlagMixin, QueryBaseView, DatasetAccessRightsView):
+class PhenoMeasuresDownload(
+    FeatureFlagMixin, QueryBaseView, DatasetAccessRightsView,
+):
     """Phenotype measure downloads view."""
 
     feature_flag = "pheno_browser_download"
