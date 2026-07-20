@@ -124,10 +124,7 @@ STATIC_ROOT = ""
 # /<prefix>/static/ — where the combined image's Apache aliases
 # it. Root keeps the relative "static/" it has always used.
 # WDAE_PREFIX is read above (next to LOGIN_URL/FORCE_SCRIPT_NAME).
-if WDAE_PREFIX:
-    STATIC_URL = f"/{WDAE_PREFIX}/static/"
-else:
-    STATIC_URL = "static/"
+STATIC_URL = f"/{WDAE_PREFIX}/static/" if WDAE_PREFIX else "static/"
 
 APPEND_SLASH = False
 
