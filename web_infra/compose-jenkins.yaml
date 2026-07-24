@@ -51,7 +51,22 @@ services:
     # gpf-infra/templates/compose.yaml.j2's db so an ORM migration
     # that breaks on MySQL fails here instead of on deploy.
     image: mysql:8.0.33
-    restart: always
+    # Ephemeral, per-build stack: never ask the daemon to keep this
+    # alive (gain#323). `always` also means "start on daemon start", so
+    # a container leaked by an aborted build (Jenkins never reaches
+    # post{}, so the `down -v` backstop never runs) is resurrected on
+    # every dockerd start, forever -- never idle-reaped, never aged
+    # out. Seven such db containers, the oldest from 2026-05-13, came
+    # back from the dead on piglet's 2026-07-15 reimage.
+    #
+    # Note this is NOT what covers the cold-init window below: the
+    # temporary --skip-networking init server runs inside this same
+    # container process, so a cold start is not an exit-and-retry.
+    # The #316 race was fixed by the TCP healthcheck probe, and
+    # dependents gate on `depends_on: service_healthy`. Matches the
+    # sibling services in this file. (Prod -- gpf-infra -- keeps a
+    # restart policy, correctly: it is a long-lived deployment.)
+    restart: "no"
     volumes_from:
       - mysql-data
     environment:
