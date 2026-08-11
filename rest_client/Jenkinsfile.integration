@@ -11,7 +11,8 @@
 // container that hits the backend with pytest --url.
 
 pipeline {
-    agent { label '!dory' }
+    // builder = general build agents; deploy targets don't carry it
+    agent { label 'builder' }
 
     parameters {
         string(

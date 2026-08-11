@@ -10,7 +10,8 @@
 // backend with pytest (TEST_REMOTE_HOST=http://backend:21010).
 
 pipeline {
-    agent { label '!dory' }
+    // builder = general build agents; deploy targets don't carry it
+    agent { label 'builder' }
 
     parameters {
         string(

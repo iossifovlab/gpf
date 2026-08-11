@@ -90,11 +90,8 @@ def findUpstreamBuildForCommit(String project, String sha) {
 }
 
 pipeline {
-    // !dory mirrors the root Jenkinsfile and the other gpf
-    // pipelines — dory's docker daemon / resource profile doesn't
-    // fit the root build's compose stacks (and our docker-build-
-    // heavy phases here).
-    agent { label '!dory' }
+    // builder = general build agents; deploy targets don't carry it
+    agent { label 'builder' }
 
     parameters {
         string(
@@ -1101,7 +1098,7 @@ EOF
             // fires whether the failure was mid-stage (where the
             // outer agent is still alive) or pre-stage (where it
             // isn't).
-            node('!dory') {
+            node('builder') {
                 script {
                     // Surface GAIN_PIN_VERSION in the failure
                     // message when it was set — pinned releases
@@ -1132,7 +1129,7 @@ EOF
             // BACKEND_REPO/FRONTEND_REPO/BUNDLE_REPO/CONDA_BUILDER/
             // TAG_NAME — empty values turn the rmi into a harmless
             // no-op.
-            node('!dory') {
+            node('builder') {
                 sh '''
                     docker rmi "${CONDA_BUILDER:-}" 2>/dev/null || true
                     for repo in "${BACKEND_REPO:-}" "${FRONTEND_REPO:-}" "${BUNDLE_REPO:-}"; do

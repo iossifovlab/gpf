@@ -22,9 +22,8 @@
 // `web_infra/compose-jenkins.yaml` e2e stack.
 
 pipeline {
-    // Excludes `dory` (matches the root Jenkinsfile's choice).
-    // Any other agent has docker + the standard tools.
-    agent { label '!dory' }
+    // builder = general build agents; deploy targets don't carry it
+    agent { label 'builder' }
 
     parameters {
         string(
@@ -693,7 +692,7 @@ EOF
                     // 16 Playwright workers + a full backend stack
                     // contend hard with a sibling build on the same
                     // agent (32 workers fighting one docker daemon ->
-                    // load-induced flakes). The `!dory` agent label
+                    // load-induced flakes). The `builder` agent label
                     // doesn't pin to a dedicated host, so concurrent
                     // builds CAN land together. This lock keyed by
                     // NODE_NAME serialises Run-e2e stages on the same

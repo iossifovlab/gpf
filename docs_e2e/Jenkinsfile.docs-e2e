@@ -27,7 +27,7 @@ pipeline {
     // The persistent gpf-grr-cache volume is node-local and ~15 GB,
     // seeded out of band by gpf-docs-e2e-prewarm; pinning keeps the
     // build on the agent that was actually seeded rather than any
-    // '!dory' node. Override AGENT_LABEL to move docs-e2e to a
+    // `builder` node. Override AGENT_LABEL to move docs-e2e to a
     // different (seeded) agent.
     // `?:` fallback covers the first run after this param is added,
     // before the jobDsl re-seed makes params.AGENT_LABEL exist.
