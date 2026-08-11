@@ -29,9 +29,9 @@
 // after a known failure would be a real own-goal.
 
 pipeline {
-    // Same label exclusion the other gpf pipelines use — dory's
-    // docker daemon / resource profile doesn't fit our jobs.
-    agent { label '!dory' }
+    // builder = general build agents; deploy targets (dory) don't
+    // carry it — this pipeline wipes and redeploys dory downstream.
+    agent { label 'builder' }
 
     options {
         // Generous: a cold master rebuild + both integration suites
@@ -140,7 +140,7 @@ pipeline {
             // Wrapped in an explicit node block: a pipeline-init
             // failure can tear down the outer agent before post
             // runs, leaving zulipSend without a FilePath context.
-            node('!dory') {
+            node('builder') {
                 zulipSend(
                     topic: 'nightly',
                     message:

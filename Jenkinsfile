@@ -147,7 +147,8 @@ def publishReports(String name) {
 }
 
 pipeline {
-    agent { label '!dory' }
+    // builder = general build agents; deploy targets don't carry it
+    agent { label 'builder' }
 
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -816,7 +817,7 @@ pipeline {
                     //
                     // Uses the Jenkins-managed `gpf-docs-deploy` SSH
                     // credential (set up 2026-05-11). Independent of
-                    // which '!dory' agent picks up the build; the
+                    // which `builder` agent picks up the build; the
                     // earlier bind-mount-the-agent's-~/.ssh approach
                     // was agent-roulette and failed when the picked
                     // agent didn't have the deploy key.
