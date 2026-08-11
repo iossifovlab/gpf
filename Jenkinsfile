@@ -1242,9 +1242,31 @@ print('gpf-web prefix settings OK')"
                 // those .groovy files were added). `catchError` keeps
                 // those bootstrap failures non-fatal: the parent build
                 // logs the error and stays UNSTABLE.
+                //
+                // Change-request (PR-*) builds skip all four
+                // downstream triggers (#998): in a PR job
+                // BRANCH_NAME is the Jenkins job name
+                // (`PR-<n>-merge` / `PR-<n>-head`), not a git ref.
+                // The web_e2e / federation / rest_client seeded
+                // jobs load their pipeline definition from SCM via
+                // `branch('${BRANCH_NAME}')`, so those runs die at
+                // Jenkinsfile fetch before COMMIT_SHA precedence
+                // can apply. docs-e2e's seed DSL pins
+                // `branch('master')` so its definition loads, but
+                // its runtime checkout of COMMIT_SHA (= GIT_COMMIT)
+                // then fails on PR-merge builds — that merge commit
+                // is synthesized locally by Jenkins and absent from
+                // the GitHub remote. Same-repo PRs lose no
+                // coverage: the source branch's own job fires the
+                // same triggers for the same commits.
 
                 stage('Trigger web_e2e') {
-                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
+                    when {
+                        allOf {
+                            not { environment name: 'DOCS_ONLY', value: 'true' }
+                            not { changeRequest() }
+                        }
+                    }
                     // Downstream gate for the gpf-web-e2e job (DSL at
                     // web_e2e/jenkins-jobs/e2e.groovy). Runs on every
                     // branch — the e2e job clones the same branch /
@@ -1290,7 +1312,12 @@ print('gpf-web prefix settings OK')"
                 }
 
                 stage('Trigger federation integration') {
-                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
+                    when {
+                        allOf {
+                            not { environment name: 'DOCS_ONLY', value: 'true' }
+                            not { changeRequest() }
+                        }
+                    }
                     steps {
                         catchError(
                             buildResult: 'UNSTABLE',
@@ -1328,7 +1355,12 @@ print('gpf-web prefix settings OK')"
                 }
 
                 stage('Trigger rest_client integration') {
-                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
+                    when {
+                        allOf {
+                            not { environment name: 'DOCS_ONLY', value: 'true' }
+                            not { changeRequest() }
+                        }
+                    }
                     steps {
                         catchError(
                             buildResult: 'UNSTABLE',
@@ -1366,7 +1398,12 @@ print('gpf-web prefix settings OK')"
                 }
 
                 stage('Trigger docs-e2e') {
-                    when { not { environment name: 'DOCS_ONLY', value: 'true' } }
+                    when {
+                        allOf {
+                            not { environment name: 'DOCS_ONLY', value: 'true' }
+                            not { changeRequest() }
+                        }
+                    }
                     // Guide-accuracy regression for the GPF
                     // Getting Started Guide — see #871 (parent
                     // epic) and #872 (v1 infrastructure +
@@ -1376,7 +1413,8 @@ print('gpf-web prefix settings OK')"
                     // via the Apply Job DSL stage above.
                     //
                     // Same shape as the other Trigger stages:
-                    // gated on `not DOCS_ONLY`, wait:false /
+                    // gated on `not DOCS_ONLY` and not a
+                    // change-request build (#998), wait:false /
                     // propagate:false so a docs-e2e failure
                     // surfaces in its own job history without
                     // blocking parent FAILURE. catchError keeps
