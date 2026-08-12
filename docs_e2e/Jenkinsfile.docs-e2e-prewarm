@@ -34,6 +34,44 @@
 // does NOT seed the others. The default is `pooh`, matching
 // gpf-docs-e2e's own AGENT_LABEL default.
 
+// Zulip failure alert (seqpipe/infra#105). Builds that pass say nothing.
+//
+// `build-status` used to receive a "Started build" message *and* a result
+// message for every build of every job — 827 messages in 48h, of which 10 were
+// failures — which made it unreadable, so nobody read it. Only FAILURE and
+// UNSTABLE alert now, and they tag the channel so the alert actually pushes.
+//
+// UNSTABLE is included deliberately: lint/type gates mark the build UNSTABLE
+// rather than FAILURE, so a failure-only rule would let a regression sit
+// silent until the 09:00 digest (seqpipe/infra#110).
+//
+// Verbatim copy of the block proven in iossifovlab/gain#809 — do not
+// re-derive it.
+def zulipAlert(String status, String emoji) {
+    String suffix = ''
+    try {
+        def results = currentBuild.rawBuild.getAction(
+            hudson.tasks.test.AbstractTestResultAction)
+        if (results != null) {
+            // failCount == 0 on a red build means nothing got as far as
+            // failing a test — a teardown / sidecar / agent problem rather
+            // than a code break. Saying which is what decides "re-run" vs
+            // "investigate" without opening Jenkins.
+            suffix = results.failCount > 0
+                ? " — ${results.failCount} test(s) failed"
+                : ' — no failing tests (infra/teardown)'
+        }
+    } catch (ignored) {
+        // getAction() needs a one-time In-process Script Approval
+        // (seqpipe/infra#106). Until that lands the alert still fires, just
+        // without the count: the reporting must never break the report.
+        suffix = ''
+    }
+    return "@**channel** ${emoji} " +
+        "[${env.JOB_NAME} ${currentBuild.displayName}](${env.BUILD_URL}) " +
+        "${status}${suffix}"
+}
+
 pipeline {
     // Pin to the specific agent being seeded. The gpf-grr-cache
     // volume is node-local; a broad label would seed an arbitrary
@@ -112,10 +150,6 @@ pipeline {
                 script {
                     currentBuild.displayName =
                         "#${env.BUILD_NUMBER} seed ${env.NODE_NAME}"
-                    zulipSend(
-                        message: "Started GRR-cache prewarm #${env.BUILD_NUMBER} on agent ${env.NODE_NAME} (${env.BUILD_URL})",
-                        topic: "${env.JOB_NAME}",
-                    )
                 }
             }
         }
@@ -316,6 +350,12 @@ PREWARM
                     rm -rf gs .prewarm-inner.sh || true
             '''
         }
+        // Kept despite the failure-only rule (seqpipe/infra#105): this is a
+        // per-EVENT announcement, not per-build noise. The job runs only when
+        // an agent is being seeded, and the message tells the team a
+        // capability now exists — gpf-docs-e2e can run warm on that agent —
+        // which nothing else, including the 09:00 digest, would report. Same
+        // reasoning as the release announcements and grr's publish messages.
         success {
             zulipSend(
                 message: "GRR-cache prewarm #${env.BUILD_NUMBER} on agent ${env.NODE_NAME} SUCCEEDED — gpf-docs-e2e can now run warm here (${env.BUILD_URL})",
@@ -323,10 +363,20 @@ PREWARM
             )
         }
         failure {
-            zulipSend(
-                message: "GRR-cache prewarm #${env.BUILD_NUMBER} on agent ${env.NODE_NAME} FAILED (${env.BUILD_URL})",
-                topic: "${env.JOB_NAME}",
-            )
+            node('builder') {
+                zulipSend(
+                    topic: "${env.JOB_NAME}",
+                    message: zulipAlert('FAILED', '❌'),
+                )
+            }
+        }
+        unstable {
+            node('builder') {
+                zulipSend(
+                    topic: "${env.JOB_NAME}",
+                    message: zulipAlert('UNSTABLE', '⚠️'),
+                )
+            }
         }
     }
 }

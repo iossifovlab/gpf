@@ -22,6 +22,44 @@
 // container; mounts the per-agent persistent gpf-grr-cache
 // docker volume so hg38 demand-pulls are reused across builds.
 
+// Zulip failure alert (seqpipe/infra#105). Builds that pass say nothing.
+//
+// `build-status` used to receive a "Started build" message *and* a result
+// message for every build of every job — 827 messages in 48h, of which 10 were
+// failures — which made it unreadable, so nobody read it. Only FAILURE and
+// UNSTABLE alert now, and they tag the channel so the alert actually pushes.
+//
+// UNSTABLE is included deliberately: lint/type gates mark the build UNSTABLE
+// rather than FAILURE, so a failure-only rule would let a regression sit
+// silent until the 09:00 digest (seqpipe/infra#110).
+//
+// Verbatim copy of the block proven in iossifovlab/gain#809 — do not
+// re-derive it.
+def zulipAlert(String status, String emoji) {
+    String suffix = ''
+    try {
+        def results = currentBuild.rawBuild.getAction(
+            hudson.tasks.test.AbstractTestResultAction)
+        if (results != null) {
+            // failCount == 0 on a red build means nothing got as far as
+            // failing a test — a teardown / sidecar / agent problem rather
+            // than a code break. Saying which is what decides "re-run" vs
+            // "investigate" without opening Jenkins.
+            suffix = results.failCount > 0
+                ? " — ${results.failCount} test(s) failed"
+                : ' — no failing tests (infra/teardown)'
+        }
+    } catch (ignored) {
+        // getAction() needs a one-time In-process Script Approval
+        // (seqpipe/infra#106). Until that lands the alert still fires, just
+        // without the count: the reporting must never break the report.
+        suffix = ''
+    }
+    return "@**channel** ${emoji} " +
+        "[${env.JOB_NAME} ${currentBuild.displayName}](${env.BUILD_URL}) " +
+        "${status}${suffix}"
+}
+
 pipeline {
     // Pinned to a specific agent via AGENT_LABEL (default below).
     // The persistent gpf-grr-cache volume is node-local and ~15 GB,
@@ -126,10 +164,6 @@ pipeline {
                     }
                     currentBuild.displayName =
                         "#${env.BUILD_NUMBER} ${label}"
-                    zulipSend(
-                        message: "Started build #${env.BUILD_NUMBER} [${label}] of project ${env.JOB_NAME} (${env.BUILD_URL})",
-                        topic: "${env.JOB_NAME}",
-                    )
                 }
             }
         }
@@ -291,19 +325,36 @@ pipeline {
     post {
         always {
             script {
-                try {
-                    junit(
-                        allowEmptyResults: true,
-                        testResults: 'reports/docs_e2e/*.xml',
-                    )
-                    archiveArtifacts(
-                        artifacts: 'reports/docs_e2e/**',
-                        allowEmptyArchive: true,
-                        fingerprint: false,
-                    )
-                } finally {
-                    zulipNotification(topic: "${env.JOB_NAME}")
-                }
+                junit(
+                    allowEmptyResults: true,
+                    testResults: 'reports/docs_e2e/*.xml',
+                )
+                archiveArtifacts(
+                    artifacts: 'reports/docs_e2e/**',
+                    allowEmptyArchive: true,
+                    fingerprint: false,
+                )
+            }
+        }
+        // `always` above must run before these so the test-result action
+        // zulipAlert() reads is already attached to the build.
+        failure {
+            // Wrapped in an explicit node block: a pipeline-init failure can
+            // tear down the outer agent before post runs, leaving zulipSend
+            // without a FilePath context.
+            node('builder') {
+                zulipSend(
+                    topic: "${env.JOB_NAME}",
+                    message: zulipAlert('FAILED', '❌'),
+                )
+            }
+        }
+        unstable {
+            node('builder') {
+                zulipSend(
+                    topic: "${env.JOB_NAME}",
+                    message: zulipAlert('UNSTABLE', '⚠️'),
+                )
             }
         }
         cleanup {

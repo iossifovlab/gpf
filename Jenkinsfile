@@ -146,6 +146,44 @@ def publishReports(String name) {
     )
 }
 
+// Zulip failure alert (seqpipe/infra#105). Builds that pass say nothing.
+//
+// `build-status` used to receive a "Started build" message *and* a result
+// message for every build of every job — 827 messages in 48h, of which 10 were
+// failures — which made it unreadable, so nobody read it. Only FAILURE and
+// UNSTABLE alert now, and they tag the channel so the alert actually pushes.
+//
+// UNSTABLE is included deliberately: lint/type gates mark the build UNSTABLE
+// rather than FAILURE, so a failure-only rule would let a regression sit
+// silent until the 09:00 digest (seqpipe/infra#110).
+//
+// Verbatim copy of the block proven in iossifovlab/gain#809 — do not
+// re-derive it.
+def zulipAlert(String status, String emoji) {
+    String suffix = ''
+    try {
+        def results = currentBuild.rawBuild.getAction(
+            hudson.tasks.test.AbstractTestResultAction)
+        if (results != null) {
+            // failCount == 0 on a red build means nothing got as far as
+            // failing a test — a teardown / sidecar / agent problem rather
+            // than a code break. Saying which is what decides "re-run" vs
+            // "investigate" without opening Jenkins.
+            suffix = results.failCount > 0
+                ? " — ${results.failCount} test(s) failed"
+                : ' — no failing tests (infra/teardown)'
+        }
+    } catch (ignored) {
+        // getAction() needs a one-time In-process Script Approval
+        // (seqpipe/infra#106). Until that lands the alert still fires, just
+        // without the count: the reporting must never break the report.
+        suffix = ''
+    }
+    return "@**channel** ${emoji} " +
+        "[${env.JOB_NAME} ${currentBuild.displayName}](${env.BUILD_URL}) " +
+        "${status}${suffix}"
+}
+
 pipeline {
     // builder = general build agents; deploy targets don't carry it
     agent { label 'builder' }
@@ -206,10 +244,6 @@ pipeline {
                                 copyArtifactPermission('*'),
                             ])
                         }
-                        zulipSend(
-                            message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
-                            topic: "${env.JOB_NAME}",
-                        )
                     }
                 }
 
@@ -1472,64 +1506,81 @@ print('gpf-web prefix settings OK')"
     post {
         always {
             script {
-                try {
-                    // All coverage is published here, in a controlled ORDER,
-                    // rather than in the per-project parallel post blocks. The
-                    // multibranch "Coverage" column shows the *first-registered*
-                    // CoverageBuildAction (Coverage plugin's
-                    // CoverageMetricColumn.getAction(); no id selector), and
-                    // parallel post blocks register in nondeterministic
-                    // stage-completion order — so per-project reports there made
-                    // the column show whichever stage finished first, not a
-                    // combined number.
-                    //
-                    // Register the COMBINED report first (owns the column), then
-                    // the per-project reports (drill-down + trend charts).
-                    // Order among the per-project ones is cosmetic (sidebar
-                    // listing). In post.always (not a stage) so coverage
-                    // publishes on red builds too; failOnError:false makes each
-                    // call a no-op on docs-only / tag builds where its file is
-                    // absent. Only core/web_api/web_ui produce coverage.xml
-                    // (federation/rest_client run skipPytest); the combined glob
-                    // matches exactly those top-level files, and the per-project
-                    // loop lists only them so we never create empty 0% actions.
+                // All coverage is published here, in a controlled ORDER,
+                // rather than in the per-project parallel post blocks. The
+                // multibranch "Coverage" column shows the *first-registered*
+                // CoverageBuildAction (Coverage plugin's
+                // CoverageMetricColumn.getAction(); no id selector), and
+                // parallel post blocks register in nondeterministic
+                // stage-completion order — so per-project reports there made
+                // the column show whichever stage finished first, not a
+                // combined number.
+                //
+                // Register the COMBINED report first (owns the column), then
+                // the per-project reports (drill-down + trend charts).
+                // Order among the per-project ones is cosmetic (sidebar
+                // listing). In post.always (not a stage) so coverage
+                // publishes on red builds too; failOnError:false makes each
+                // call a no-op on docs-only / tag builds where its file is
+                // absent. Only core/web_api/web_ui produce coverage.xml
+                // (federation/rest_client run skipPytest); the combined glob
+                // matches exactly those top-level files, and the per-project
+                // loop lists only them so we never create empty 0% actions.
+                recordCoverage(
+                    tools: [[parser: 'COBERTURA', pattern: 'reports/*/coverage.xml']],
+                    id: 'coverage',
+                    name: 'Combined coverage',
+                    skipPublishingChecks: true,
+                    failOnError: false,
+                )
+                for (proj in ['core', 'web_api', 'web_ui']) {
                     recordCoverage(
-                        tools: [[parser: 'COBERTURA', pattern: 'reports/*/coverage.xml']],
-                        id: 'coverage',
-                        name: 'Combined coverage',
+                        tools: [[parser: 'COBERTURA',
+                                 pattern: "reports/${proj}/coverage.xml"]],
+                        id: "${proj}-coverage",
+                        name: "${proj} coverage",
                         skipPublishingChecks: true,
                         failOnError: false,
                     )
-                    for (proj in ['core', 'web_api', 'web_ui']) {
-                        recordCoverage(
-                            tools: [[parser: 'COBERTURA',
-                                     pattern: "reports/${proj}/coverage.xml"]],
-                            id: "${proj}-coverage",
-                            name: "${proj} coverage",
-                            skipPublishingChecks: true,
-                            failOnError: false,
-                        )
-                    }
-                    archiveArtifacts(
-                        artifacts: 'reports/**/*.xml',
-                        allowEmptyArchive: true,
-                        fingerprint: false,
-                    )
-                    // dist/web_ui/gpfjs-spa.tar.gz is the conda-flavoured
-                    // Angular dist tarball; gpf-release fetches it from
-                    // this archive via copyArtifacts and the Conda
-                    // packages stage extracts it before feeding it to
-                    // the gpf-web conda recipe. fingerprint:true makes
-                    // the file findable even if the build record itself
-                    // rotates out, mirroring the gain wheel pattern.
-                    archiveArtifacts(
-                        artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/web_ui/gpfjs-spa.tar.gz, dist/conda/*.conda, dist/base-images.lock',
-                        allowEmptyArchive: true,
-                        fingerprint: true,
-                    )
-                } finally {
-                    zulipNotification(topic: "${env.JOB_NAME}")
                 }
+                archiveArtifacts(
+                    artifacts: 'reports/**/*.xml',
+                    allowEmptyArchive: true,
+                    fingerprint: false,
+                )
+                // dist/web_ui/gpfjs-spa.tar.gz is the conda-flavoured
+                // Angular dist tarball; gpf-release fetches it from
+                // this archive via copyArtifacts and the Conda
+                // packages stage extracts it before feeding it to
+                // the gpf-web conda recipe. fingerprint:true makes
+                // the file findable even if the build record itself
+                // rotates out, mirroring the gain wheel pattern.
+                archiveArtifacts(
+                    artifacts: 'dist/**/*.whl, dist/**/*.tar.gz, dist/web_ui/gpfjs-spa.tar.gz, dist/conda/*.conda, dist/base-images.lock',
+                    allowEmptyArchive: true,
+                    fingerprint: true,
+                )
+            }
+        }
+        // `always` above must run before these so the test-result action
+        // zulipAlert() reads is already attached to the build.
+        failure {
+            // Wrapped in an explicit node block: a pipeline-init failure can
+            // tear down the outer agent before post runs, leaving zulipSend
+            // without a FilePath context.
+            node('builder') {
+                zulipSend(
+                    topic: "${env.JOB_NAME}",
+                    message: zulipAlert('FAILED', '❌'),
+                )
+            }
+        }
+        unstable {
+            node('builder') {
+                zulipSend(
+                    topic: "${env.JOB_NAME}",
+                    message: zulipAlert('UNSTABLE', '⚠️'),
+                )
             }
         }
         cleanup {

@@ -28,6 +28,44 @@
 // stage uses a `when` gate instead — firing a destructive deploy
 // after a known failure would be a real own-goal.
 
+// Zulip failure alert (seqpipe/infra#105). Builds that pass say nothing.
+//
+// `build-status` used to receive a "Started build" message *and* a result
+// message for every build of every job — 827 messages in 48h, of which 10 were
+// failures — which made it unreadable, so nobody read it. Only FAILURE and
+// UNSTABLE alert now, and they tag the channel so the alert actually pushes.
+//
+// UNSTABLE is included deliberately: lint/type gates mark the build UNSTABLE
+// rather than FAILURE, so a failure-only rule would let a regression sit
+// silent until the 09:00 digest (seqpipe/infra#110).
+//
+// Verbatim copy of the block proven in iossifovlab/gain#809 — do not
+// re-derive it.
+def zulipAlert(String status, String emoji) {
+    String suffix = ''
+    try {
+        def results = currentBuild.rawBuild.getAction(
+            hudson.tasks.test.AbstractTestResultAction)
+        if (results != null) {
+            // failCount == 0 on a red build means nothing got as far as
+            // failing a test — a teardown / sidecar / agent problem rather
+            // than a code break. Saying which is what decides "re-run" vs
+            // "investigate" without opening Jenkins.
+            suffix = results.failCount > 0
+                ? " — ${results.failCount} test(s) failed"
+                : ' — no failing tests (infra/teardown)'
+        }
+    } catch (ignored) {
+        // getAction() needs a one-time In-process Script Approval
+        // (seqpipe/infra#106). Until that lands the alert still fires, just
+        // without the count: the reporting must never break the report.
+        suffix = ''
+    }
+    return "@**channel** ${emoji} " +
+        "[${env.JOB_NAME} ${currentBuild.displayName}](${env.BUILD_URL}) " +
+        "${status}${suffix}"
+}
+
 pipeline {
     // builder = general build agents; deploy targets (dory) don't
     // carry it — this pipeline wipes and redeploys dory downstream.
@@ -143,8 +181,19 @@ pipeline {
             node('builder') {
                 zulipSend(
                     topic: 'nightly',
-                    message:
-                        "Nightly FAILED — ${env.BUILD_URL}",
+                    message: zulipAlert('FAILED', '❌'),
+                )
+            }
+        }
+        // UNSTABLE now alerts too (seqpipe/infra#105): lint/type gates
+        // mark the build UNSTABLE rather than FAILURE, so a
+        // failure-only rule would let a regression sit silent
+        // overnight.
+        unstable {
+            node('builder') {
+                zulipSend(
+                    topic: 'nightly',
+                    message: zulipAlert('UNSTABLE', '⚠️'),
                 )
             }
         }
