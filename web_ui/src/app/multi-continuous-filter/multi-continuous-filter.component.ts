@@ -34,10 +34,10 @@ export class MultiContinuousFilterComponent extends ComponentValidator implement
   public internalSelectedMeasure: ContinuousMeasure;
 
   public constructor() {
-    const store = inject(Store);
+    const store = inject<Store>(Store);
 
     super(store, 'personFilters', selectPersonFilters);
-  
+
     this.store = store;
   }
 

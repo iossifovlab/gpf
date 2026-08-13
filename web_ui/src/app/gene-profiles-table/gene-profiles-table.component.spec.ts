@@ -3,7 +3,7 @@ import { GeneProfilesTableConfig } from './gene-profiles-table';
 import { plainToClass } from 'class-transformer';
 import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
-import { GeneProfilesTableService } from './gene-profiles-table.service';
+import { GeneProfilesGeneRow, GeneProfilesTableService } from './gene-profiles-table.service';
 import { ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { Store, StoreModule } from '@ngrx/store';
@@ -247,7 +247,7 @@ class UsersServiceMock {
 
 class GeneProfilesTableServiceMock {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public getGenes(pageIndex: number, geneInput: string): Observable<Record<string, any>> {
+  public getGenes(pageIndex: number, geneInput: string): Observable<GeneProfilesGeneRow[]> {
     const res = cloneDeep(genesMock);
     return of(res);
   }

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, waitForAsync, fakeAsync, flush } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { StudyFiltersComponent } from './study-filters.component';
-import { NgbNavModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbNav, NgbNavModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RemoveButtonComponent } from 'app/remove-button/remove-button.component';
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
@@ -157,7 +157,7 @@ describe('StudyFiltersComponent', () => {
     component.ngbNav = {
       activeId: undefined,
       select: jest.fn()
-    } as any;
+    } as unknown as NgbNav;
   }));
 
   it('should create', () => {
