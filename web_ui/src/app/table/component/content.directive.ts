@@ -5,6 +5,6 @@ import { Directive, TemplateRef, ViewContainerRef, inject } from '@angular/core'
   standalone: false
 })
 export class GpfTableCellContentDirective {
-  readonly templateRef = inject<TemplateRef<unknown>>(TemplateRef);
-  readonly viewContainer = inject(ViewContainerRef);
+  public readonly templateRef = inject<TemplateRef<unknown>>(TemplateRef);
+  public readonly viewContainer = inject(ViewContainerRef);
 }

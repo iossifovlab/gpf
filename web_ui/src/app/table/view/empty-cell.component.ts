@@ -12,14 +12,15 @@ export class GpfTableEmptyCellComponent implements AfterViewInit {
   private resizeService = inject(ResizeService);
 
   @Input() public columnInfo: GpfTableColumnComponent;
-  private nativeElement: any;
+  private nativeElement: HTMLElement;
   private firstRecalc = true;
   private isCustomWidth = false;
 
   public constructor() {
     const viewContainer = this.viewContainer;
 
-    this.nativeElement = viewContainer.element.nativeElement;
+    // ViewContainerRef.element is ElementRef<any>; this component's host is a DOM element.
+    this.nativeElement = viewContainer.element.nativeElement as HTMLElement;
   }
 
   public ngAfterViewInit(): void {
@@ -42,8 +43,11 @@ export class GpfTableEmptyCellComponent implements AfterViewInit {
     }
 
     const width = this.nativeElement.getBoundingClientRect().width;
-    if (width > 0 && width !== this.columnInfo.columnWidth) {
-      this.columnInfo.columnWidth = width + 'px';
+    // columnWidth is a CSS length, so compare the formatted value - comparing
+    // the raw number against it was always unequal and re-assigned every tick.
+    const columnWidth = `${width}px`;
+    if (width > 0 && columnWidth !== this.columnInfo.columnWidth) {
+      this.columnInfo.columnWidth = columnWidth;
     }
   }
 }

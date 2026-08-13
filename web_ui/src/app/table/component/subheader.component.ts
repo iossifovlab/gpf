@@ -3,7 +3,7 @@ import { GpfTableCellContentDirective } from './content.directive';
 
 // Rows can be any object shape; the subheader narrows to a dynamic
 // dictionary internally for the default field-based comparator.
-type SortableTableRow = object & { arrayPosition?: number };
+export type SortableTableRow = object & { arrayPosition?: number };
 
 @Component({
   selector: 'gpf-table-subheader',
