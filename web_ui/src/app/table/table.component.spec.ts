@@ -7,6 +7,11 @@ import { GpfTableCellComponent } from './view/cell.component';
 import { GpfTableEmptyCellComponent } from './view/empty-cell.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
 
+interface TestRow {
+  field: number;
+  arrayPosition: number;
+}
+
 describe('GpfTableComponent', () => {
   let component: GpfTableComponent;
   let fixture: ComponentFixture<GpfTableComponent>;
@@ -36,13 +41,14 @@ describe('GpfTableComponent', () => {
     fixture = TestBed.createComponent(GpfTableComponent);
     component = fixture.componentInstance;
 
-    component.dataSource = [
+    const rows: TestRow[] = [
       {field: 3, arrayPosition: 0},
       {field: 2, arrayPosition: 0},
       {field: 4, arrayPosition: 0},
       {field: -1, arrayPosition: 0},
       {field: 5, arrayPosition: 0},
     ];
+    component.dataSource = rows;
 
     fixture.detectChanges();
   }));

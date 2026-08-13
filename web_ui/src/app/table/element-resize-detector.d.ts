@@ -1,16 +1,26 @@
-declare function elementResizeDetectorMaker(options?: elementResizeDetectorMaker.ErdmOptions): elementResizeDetectorMaker.Erd;
+// Minimal type stubs for element-resize-detector. The library ships no .d.ts
+// and there is no @types package; this is the surface ResizeService uses.
+//
+// This must be a `declare module` block: written as a plain top-level
+// `export =`, the file is just an unreferenced module and imports of
+// 'element-resize-detector' stay unresolved.
+declare module 'element-resize-detector' {
+  interface ErdmOptions {
+    strategy?: 'scroll' | 'object';
+  }
 
-declare namespace elementResizeDetectorMaker {
-    interface ErdmOptions {
-        strategy?: 'scroll' | 'object';
-    }
+  interface Erd {
+    listenTo(element: HTMLElement, callback: (elem: HTMLElement) => void): void;
+    removeListener(element: HTMLElement, callback: (elem: HTMLElement) => void): void;
+    removeAllListeners(element: HTMLElement): void;
+    uninstall(element: HTMLElement): void;
+  }
 
-    interface Erd {
-        listenTo(element: HTMLElement, callback: (elem: HTMLElement) => void);
-        removeListener(element: HTMLElement, callback: (elem: HTMLElement) => void);
-        removeAllListeners(element: HTMLElement);
-        uninstall(element: HTMLElement);
-    }
+  function elementResizeDetectorMaker(options?: ErdmOptions): Erd;
+  namespace elementResizeDetectorMaker {
+    type Detector = Erd;
+    type Options = ErdmOptions;
+  }
+
+  export = elementResizeDetectorMaker;
 }
-
-export = elementResizeDetectorMaker;

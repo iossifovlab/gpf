@@ -76,14 +76,17 @@ describe('GpfTableCellComponent', () => {
     }).compileComponents();
 
     testFixture = TestBed.createComponent(TestGpfTableColumnComponent);
-    testComponent = testFixture.debugElement.children[0].componentInstance;
+    testComponent = testFixture.debugElement.children[0].componentInstance as GpfTableColumnComponent;
     testFixture.detectChanges();
 
     fixture = TestBed.createComponent(GpfTableCellComponent);
     component = fixture.componentInstance;
 
     component.columnInfo = testComponent;
-    component.data = {fieldH: 'valueH', field11: 'value11', field12: 'value12', field21: 'value21', field22: 'value22'};
+    const row: Record<string, string> = {
+      fieldH: 'valueH', field11: 'value11', field12: 'value12', field21: 'value21', field22: 'value22'
+    };
+    component.data = row;
     component.noScrollOptimization = false;
 
     fixture.detectChanges();

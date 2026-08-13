@@ -1,5 +1,9 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, ChangeDetectorRef, inject } from '@angular/core';
+import {
+  Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, ChangeDetectorRef,
+  QueryList, inject
+} from '@angular/core';
 import { SortInfo } from '../../table.component';
+import { GpfTableColumnComponent } from '../../component/column.component';
 
 @Component({
   selector: 'gpf-table-view-header',
@@ -11,8 +15,8 @@ import { SortInfo } from '../../table.component';
 export class GpfTableHeaderComponent {
   private cdr = inject(ChangeDetectorRef);
 
-  @Input() public columns: any;
-  @Output() public sortingInfoChange = new EventEmitter();
+  @Input() public columns: QueryList<GpfTableColumnComponent>;
+  @Output() public sortingInfoChange = new EventEmitter<SortInfo>();
   @Input() public sortingInfo: SortInfo;
 
   @HostListener('window:resize')

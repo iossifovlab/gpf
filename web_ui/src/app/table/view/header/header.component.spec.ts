@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { GpfTableHeaderComponent } from './header.component';
 import { GpfTableHeaderCellComponent } from './header-cell.component';
 import { GpfTableColumnComponent } from 'app/table/component/column.component';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, QueryList } from '@angular/core';
 import { GenotypePreviewFieldComponent } from 'app/genotype-preview-field/genotype-preview-field.component';
 import { GpfTableContentHeaderComponent } from 'app/table/component/header.component';
 import { GpfTableContentComponent } from 'app/table/component/content.component';
@@ -34,7 +34,9 @@ describe('GpfTableHeaderComponent', () => {
     fixture = TestBed.createComponent(GpfTableHeaderComponent);
     component = fixture.componentInstance;
 
-    component.columns = [testComponent];
+    const columns = new QueryList<GpfTableColumnComponent>();
+    columns.reset([testComponent]);
+    component.columns = columns;
 
     fixture.detectChanges();
   }));

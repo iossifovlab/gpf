@@ -1,6 +1,9 @@
-import { ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList, AfterViewChecked, ElementRef, ChangeDetectorRef, OnChanges, SimpleChanges, inject } from '@angular/core';
+import {
+  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList,
+  AfterViewChecked, ElementRef, ChangeDetectorRef, OnChanges, SimpleChanges, inject
+} from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
-import { GpfTableSubheaderComponent } from './component/subheader.component';
+import { GpfTableSubheaderComponent, SortableTableRow } from './component/subheader.component';
 import { GpfTableLegendDirective } from './component/legend.directive';
 
 export class SortInfo {
@@ -19,14 +22,14 @@ export class SortInfo {
 export class GpfTableComponent implements OnChanges, AfterViewChecked {
   private cdr = inject(ChangeDetectorRef);
 
-  @ViewChild('table') public tableViewChild: any;
-  @ViewChild('header', { read: ElementRef }) public tableHeader: ElementRef;
-  @ViewChildren('rows') public rowViewChildren: QueryList<any>;
+  @ViewChild('table') public tableViewChild: ElementRef<HTMLElement>;
+  @ViewChild('header', { read: ElementRef }) public tableHeader: ElementRef<HTMLElement>;
+  @ViewChildren('rows') public rowViewChildren: QueryList<ElementRef<HTMLElement>>;
 
 
   @ContentChildren(GpfTableColumnComponent) public columnsChildren: QueryList<GpfTableColumnComponent>;
   @ContentChild(GpfTableLegendDirective) public legend: GpfTableLegendDirective;
-  @Input() public dataSource: Array<any>;
+  @Input() public dataSource: SortableTableRow[];
   @Input() public noScrollOptimization = false;
 
   private previousSortingInfo: SortInfo;
@@ -35,7 +38,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   private tableTopPosition = 0;
 
   public tableWidth: string;
-  public tableData: Array<any> = [];
+  public tableData: SortableTableRow[] = [];
 
   public showFloatingHeader: boolean;
   public showLegend: boolean;
@@ -129,7 +132,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     return result > 0 ? result : 0;
   }
 
-  public getVisibleData(): Array<any> {
+  public getVisibleData(): SortableTableRow[] {
     this.tableWidth = `${this.calculateTableWidthFloat()}px`;
     if (!this.dataSource) {
       return [];
