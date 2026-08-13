@@ -1,13 +1,124 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { Type } from 'class-transformer';
 
+/*
+ * Wire formats for `GET /api/v3/gene_profiles/single-view/configuration`.
+ * The endpoint camelizes its snake_case config keys (see
+ * `prepare_gp_configuration` in web_api), so the keys are camelCase here.
+ *
+ * Every interface carries an `[k: string]: unknown` index signature: the SPA
+ * reads the fields it needs and ignores the rest, so the backend can add
+ * fields without breaking parsing.
+ */
+
+interface GeneProfilesShownJson {
+  category: string;
+  section: string;
+  id: string;
+  [k: string]: unknown;
+}
+
+interface GeneProfilesGeneLinkJson {
+  name: string;
+  url: string;
+  [k: string]: unknown;
+}
+
+interface GeneProfilesGeneSetJson {
+  setId: string;
+  collectionId: string;
+  meta: string;
+  defaultVisible: boolean;
+  [k: string]: unknown;
+}
+
+interface GeneProfilesGeneSetsCategoryJson {
+  category: string;
+  displayName: string;
+  defaultVisible: boolean;
+  sets: GeneProfilesGeneSetJson[];
+  [k: string]: unknown;
+}
+
+interface GeneProfilesGeneScoreJson {
+  scoreName: string;
+  format: string;
+  meta: string;
+  defaultVisible: boolean;
+  [k: string]: unknown;
+}
+
+interface GeneProfilesGeneScoresCategoryJson {
+  category: string;
+  displayName: string;
+  defaultVisible: boolean;
+  scores: GeneProfilesGeneScoreJson[];
+  [k: string]: unknown;
+}
+
+interface GeneProfilesGenomicScoreJson {
+  name: string;
+  min: number;
+  max: number;
+  [k: string]: unknown;
+}
+
+interface GeneProfilesDatasetStatisticJson {
+  id: string;
+  displayName: string;
+  effects: string[];
+  category: string;
+  description: string;
+  variantTypes: string[];
+  genomicScores?: GeneProfilesGenomicScoreJson[];
+  defaultVisible: boolean;
+  [k: string]: unknown;
+}
+
+interface GeneProfilesDatasetPersonSetJson {
+  id: string;
+  displayName: string;
+  collectionId: string;
+  description: string;
+  childrenCount: number;
+  shown?: GeneProfilesDatasetStatisticJson[];
+  statistics: GeneProfilesDatasetStatisticJson[];
+  [k: string]: unknown;
+}
+
+interface GeneProfilesDatasetJson {
+  id: string;
+  displayName: string;
+  meta: string;
+  defaultVisible: boolean;
+  shown?: GeneProfilesDatasetPersonSetJson[];
+  statistics: GeneProfilesDatasetStatisticJson[];
+  personSets: GeneProfilesDatasetPersonSetJson[];
+  [k: string]: unknown;
+}
+
+interface GeneProfilesOrderJson {
+  section: string;
+  id: string;
+  [k: string]: unknown;
+}
+
+export interface GeneProfilesSingleViewConfigJson {
+  shown?: GeneProfilesShownJson[];
+  defaultDataset: string;
+  description: string;
+  geneLinks?: GeneProfilesGeneLinkJson[];
+  geneSets?: GeneProfilesGeneSetsCategoryJson[];
+  geneScores?: GeneProfilesGeneScoresCategoryJson[];
+  datasets?: GeneProfilesDatasetJson[];
+  order?: GeneProfilesOrderJson[];
+  pageSize: number;
+  [k: string]: unknown;
+}
+
 export class GeneProfilesSingleViewConfig {
   public constructor(
-    public shown: Array<{category: any; section: string; id: string}>,
+    public shown: Array<{category: string; section: string; id: string}>,
     public defaultDataset: string,
     public description: string,
     public geneLinkTemplates: {name: string; url: string}[],
@@ -18,7 +129,7 @@ export class GeneProfilesSingleViewConfig {
     public pageSize: number,
   ) {}
 
-  public static fromJson(json): GeneProfilesSingleViewConfig {
+  public static fromJson(json: GeneProfilesSingleViewConfigJson): GeneProfilesSingleViewConfig {
     return new GeneProfilesSingleViewConfig(
       json['shown']?.map(s => ({category: s['category'], section: s['section'], id: s['id']})),
       json['defaultDataset'],
@@ -41,7 +152,7 @@ export class GeneProfilesGeneSetsCategory {
     public sets: GeneProfilesGeneSet[],
   ) {}
 
-  public static fromJson(json): GeneProfilesGeneSetsCategory {
+  public static fromJson(json: GeneProfilesGeneSetsCategoryJson): GeneProfilesGeneSetsCategory {
     return new GeneProfilesGeneSetsCategory(
       json['category'],
       json['displayName'],
@@ -59,7 +170,7 @@ export class GeneProfilesGeneSet {
     public defaultVisible: boolean,
   ) {}
 
-  public static fromJson(json): GeneProfilesGeneSet {
+  public static fromJson(json: GeneProfilesGeneSetJson): GeneProfilesGeneSet {
     return new GeneProfilesGeneSet(
       json['setId'],
       json['collectionId'],
@@ -77,7 +188,7 @@ export class GeneProfilesGeneScoresCategory {
     public scores: GeneProfilesGeneScore[],
   ) {}
 
-  public static fromJson(json): GeneProfilesGeneScoresCategory {
+  public static fromJson(json: GeneProfilesGeneScoresCategoryJson): GeneProfilesGeneScoresCategory {
     return new GeneProfilesGeneScoresCategory(
       json['category'],
       json['displayName'],
@@ -95,7 +206,7 @@ export class GeneProfilesGeneScore {
     public defaultVisible: boolean,
   ) {}
 
-  public static fromJson(json): GeneProfilesGeneScore {
+  public static fromJson(json: GeneProfilesGeneScoreJson): GeneProfilesGeneScore {
     return new GeneProfilesGeneScore(
       json['scoreName'],
       json['format'],
@@ -116,7 +227,7 @@ export class GeneProfilesDataset {
     public personSets: GeneProfilesDatasetPersonSet[],
   ) {}
 
-  public static fromJson(json): GeneProfilesDataset {
+  public static fromJson(json: GeneProfilesDatasetJson): GeneProfilesDataset {
     return new GeneProfilesDataset(
       json['id'],
       json['displayName'],
@@ -142,7 +253,7 @@ export class GeneProfilesDatasetPersonSet {
     public statistics: GeneProfilesDatasetStatistic[],
   ) {}
 
-  public static fromJson(json): GeneProfilesDatasetPersonSet {
+  public static fromJson(json: GeneProfilesDatasetPersonSetJson): GeneProfilesDatasetPersonSet {
     return new GeneProfilesDatasetPersonSet(
       json['id'],
       json['displayName'],
@@ -167,7 +278,7 @@ export class GeneProfilesDatasetStatistic {
     public defaultVisible: boolean,
   ) {}
 
-  public static fromJson(json): GeneProfilesDatasetStatistic {
+  public static fromJson(json: GeneProfilesDatasetStatisticJson): GeneProfilesDatasetStatistic {
     return new GeneProfilesDatasetStatistic(
       json['id'],
       json['displayName'],
@@ -175,14 +286,14 @@ export class GeneProfilesDatasetStatistic {
       json['category'],
       json['description'],
       json['variantTypes'],
-      json['genomicScores']?.map(s => ({
+      json['genomicScores']?.map((s): GenomicScoreState => ({
         score: s['name'],
         histogramType: 'continuous',
         rangeStart: s['min'],
         rangeEnd: s['max'],
         values: null,
         categoricalView: null,
-      } as GenomicScoreState)),
+      })),
       json['defaultVisible'],
     );
   }
@@ -194,7 +305,7 @@ export class GeneProfilesOrder {
     public id: string,
   ) {}
 
-  public static fromJson(json): GeneProfilesOrder {
+  public static fromJson(json: GeneProfilesOrderJson): GeneProfilesOrder {
     return new GeneProfilesOrder(
       json['section'],
       json['id'],
