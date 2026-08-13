@@ -13,8 +13,13 @@ import { Store, StoreModule } from '@ngrx/store';
 import {
   GeneProfilesDatasetPersonSet,
   GeneProfilesDatasetStatistic,
+  GeneProfilesEffectType,
+  GeneProfilesGene,
   GeneProfilesGeneScores,
+  GeneProfilesGeneSetsCategory,
+  GeneProfilesSingleViewConfig,
   GeneProfilesGeneScoreWithValue } from './gene-profiles-single-view';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
@@ -55,9 +60,10 @@ describe('GeneProfileSingleViewComponent', () => {
 
     fixture = TestBed.createComponent(GeneProfileSingleViewComponent);
     component = fixture.componentInstance;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    store = TestBed.inject(Store);
-    component.config = {geneSets: ['mockGeneSet']} as any;
+    store = TestBed.inject<Store>(Store);
+    component.config = {
+      geneSets: [new GeneProfilesGeneSetsCategory('mockGeneSet', 'mockGeneSet', true, [])]
+    } as GeneProfilesSingleViewConfig;
     fixture.detectChanges();
   });
 
@@ -66,7 +72,7 @@ describe('GeneProfileSingleViewComponent', () => {
   });
 
   it('should initialize', () => {
-    (component as any).geneSymbol = 'mockGeneSymbol';
+    Object.defineProperty(component, 'geneSymbol', {value: 'mockGeneSymbol', configurable: true});
     const getGeneSpy = jest.spyOn(component['geneProfilesService'], 'getGene');
     const fakeScores1 = [{id: 'fakeScore1', value: 1, format: ''}];
     const fakeScores2 = [{id: 'fakeScore2', value: 1, format: ''}];
@@ -78,11 +84,12 @@ describe('GeneProfileSingleViewComponent', () => {
     let geneMock = of({
       geneScores: mockGeneScores,
       geneSets: ['test1', 'test2', 'test3_sfari']
-    } as any);
+    } as GeneProfilesGene);
     getGeneSpy.mockReturnValue(geneMock);
 
+    const fakeScore = [new GenomicScore('desc', 'help', 'fakeScore', null)];
     const getGeneScoresSpy = jest.spyOn(component['geneScoresService'], 'getGeneScores');
-    getGeneScoresSpy.mockReturnValue(of('fakeScore' as any));
+    getGeneScoresSpy.mockReturnValue(of(fakeScore));
 
     expect(component.isGeneInSFARI).toBeFalsy();
     component.ngOnInit();
@@ -94,14 +101,15 @@ describe('GeneProfileSingleViewComponent', () => {
       ['fakeScore2']
     ]);
     expect(component.geneScores).toStrictEqual([
-      {category: 'fakeGeneScore1', scores: 'fakeScore'},
-      {category: 'fakeGeneScore2', scores: 'fakeScore' }
-    ] as any);
+      {category: 'fakeGeneScore1', scores: fakeScore},
+      {category: 'fakeGeneScore2', scores: fakeScore}
+    ]);
 
+    // No `geneScores` on this one: ngOnInit's score walk throws and the
+    // subscription's error handler runs instead.
     geneMock = of({
-      genomicScores: mockGeneScores,
       geneSets: ['test1', 'test2', 'test3']
-    } as any);
+    } as GeneProfilesGene);
     component.isGeneInSFARI = false;
     getGeneSpy.mockReturnValue(geneMock);
     component.ngOnInit();
@@ -110,15 +118,18 @@ describe('GeneProfileSingleViewComponent', () => {
   });
 
   it('should get autism score gene score', () => {
-    const mocksScores = [
-      {category: 'autismScore', scores: [{score: 'score1'}, {score: 'score2'}]},
-      {category: 'protectionScore', scores: [{score: 'score3'}, {score: 'score4'}]},
+    const score1 = new GenomicScore('desc1', 'help1', 'score1', null);
+    const score2 = new GenomicScore('desc2', 'help2', 'score2', null);
+    const score3 = new GenomicScore('desc3', 'help3', 'score3', null);
+    const score4 = new GenomicScore('desc4', 'help4', 'score4', null);
+    component.geneScores = [
+      {category: 'autismScore', scores: [score1, score2]},
+      {category: 'protectionScore', scores: [score3, score4]},
     ];
-    component.geneScores = mocksScores as any;
-    expect(component.getGeneScoreByKey('autismScore', 'score1')).toStrictEqual({score: 'score1'} as any);
-    expect(component.getGeneScoreByKey('autismScore', 'score2')).toStrictEqual({score: 'score2'}as any);
-    expect(component.getGeneScoreByKey('protectionScore', 'score3')).toStrictEqual({score: 'score3'} as any);
-    expect(component.getGeneScoreByKey('protectionScore', 'score4')).toStrictEqual({score: 'score4'} as any);
+    expect(component.getGeneScoreByKey('autismScore', 'score1')).toStrictEqual(score1);
+    expect(component.getGeneScoreByKey('autismScore', 'score2')).toStrictEqual(score2);
+    expect(component.getGeneScoreByKey('protectionScore', 'score3')).toStrictEqual(score3);
+    expect(component.getGeneScoreByKey('protectionScore', 'score4')).toStrictEqual(score4);
   });
 
   it('should get gene dataset value', () => {
@@ -179,23 +190,23 @@ describe('GeneProfileSingleViewComponent', () => {
           ]
         }
       ]
-    };
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId1', 'effectTypeId1'))
-      .toStrictEqual({id: 'effectTypeId1'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId1', 'effectTypeId2'))
-      .toStrictEqual({id: 'effectTypeId2'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId2', 'effectTypeId3'))
-      .toStrictEqual({id: 'effectTypeId3'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId1', 'personSetId2', 'effectTypeId4'))
-      .toStrictEqual({id: 'effectTypeId4'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId3', 'effectTypeId5'))
-      .toStrictEqual({id: 'effectTypeId5'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId3', 'effectTypeId6'))
-      .toStrictEqual({id: 'effectTypeId6'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId4', 'effectTypeId7'))
-      .toStrictEqual({id: 'effectTypeId7'} as any);
-    expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId4', 'effectTypeId8'))
-      .toStrictEqual({id: 'effectTypeId8'} as any);
+    } as GeneProfilesGene;
+    expect(component.getGeneDatasetValue(mockGene, 'studyId1', 'personSetId1', 'effectTypeId1'))
+      .toStrictEqual({id: 'effectTypeId1'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId1', 'personSetId1', 'effectTypeId2'))
+      .toStrictEqual({id: 'effectTypeId2'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId1', 'personSetId2', 'effectTypeId3'))
+      .toStrictEqual({id: 'effectTypeId3'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId1', 'personSetId2', 'effectTypeId4'))
+      .toStrictEqual({id: 'effectTypeId4'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId2', 'personSetId3', 'effectTypeId5'))
+      .toStrictEqual({id: 'effectTypeId5'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId2', 'personSetId3', 'effectTypeId6'))
+      .toStrictEqual({id: 'effectTypeId6'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId2', 'personSetId4', 'effectTypeId7'))
+      .toStrictEqual({id: 'effectTypeId7'} as GeneProfilesEffectType);
+    expect(component.getGeneDatasetValue(mockGene, 'studyId2', 'personSetId4', 'effectTypeId8'))
+      .toStrictEqual({id: 'effectTypeId8'} as GeneProfilesEffectType);
   });
 
   it('should get single score value', () => {

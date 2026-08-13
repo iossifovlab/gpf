@@ -22,7 +22,9 @@ import { cloneDeep } from 'lodash';
 export class GeneProfilesBlockComponent implements OnInit {
   private geneProfilesService = inject(GeneProfilesService);
   private queryService = inject(QueryService);
-  private store = inject(Store);
+  // Pin the state type: bare `inject(Store)` resolves to `Store<any>`, which
+  // then flows untyped into `GeneProfileSingleViewComponent.goToQuery`.
+  private store = inject<Store>(Store);
 
   public geneProfilesTableConfig: GeneProfilesTableConfig;
   public geneProfilesSingleViewConfig: GeneProfilesSingleViewConfig;
