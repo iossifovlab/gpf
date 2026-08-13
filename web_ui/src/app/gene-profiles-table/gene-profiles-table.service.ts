@@ -7,6 +7,12 @@ import { Store } from '@ngrx/store';
 import { UsersService } from 'app/users/users.service';
 import { GeneProfiles, selectGeneProfiles } from './gene-profiles-table.state';
 
+/**
+ * A row of `GET /api/v3/gene_profiles/table/rows`: the backend keys each
+ * value by a configured column id, so the row has no fixed shape.
+ */
+export type GeneProfilesGeneRow = Record<string, unknown>;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -75,7 +81,13 @@ export class GeneProfilesTableService implements OnDestroy {
     });
   };
 
-  public getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<any[]> {
+  /**
+   * A gene row is a bag of column values keyed by the backend's column ids
+   * (see `GeneProfilesColumn.id`), so it has no fixed shape.
+   */
+  public getGenes(
+    page: number, searchString?: string, sortBy?: string, order?: string
+  ): Observable<GeneProfilesGeneRow[]> {
     let url = this.config.baseUrl + this.genesUrl;
     let params = new HttpParams().set('page', page.toString());
 
@@ -93,9 +105,7 @@ export class GeneProfilesTableService implements OnDestroy {
 
     url += `?${ params.toString() }`;
 
-    return this.http.get(url).pipe(
-      map(res => (res as Array<any>))
-    );
+    return this.http.get<GeneProfilesGeneRow[]>(url);
   }
 
   public getGeneSymbols(page: number, searchString?: string): Observable<string[]> {

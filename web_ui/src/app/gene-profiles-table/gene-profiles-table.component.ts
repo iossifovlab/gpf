@@ -85,10 +85,10 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
   public stateFinishedLoading = false;
 
   public constructor() {
-    const store = inject(Store);
+    const store = inject<Store>(Store);
 
     super(store, 'geneProfiles', selectGeneProfiles);
-  
+
     this.store = store;
   }
 

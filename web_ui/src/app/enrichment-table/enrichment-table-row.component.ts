@@ -19,7 +19,7 @@ import { setStudyTypes } from 'app/study-types/study-types.state';
 })
 export class EnrichmentTableRowComponent {
   private queryService = inject(QueryService);
-  private store = inject(Store);
+  private store = inject<Store>(Store);
 
   @Input() public label: string;
   @Input() public effectResult: EnrichmentEffectResult;

@@ -33,10 +33,10 @@ export class StudyFiltersComponent extends ComponentValidator implements OnInit,
   @ViewChild('nav') public ngbNav: NgbNav;
 
   public constructor() {
-    const store = inject(Store);
+    const store = inject<Store>(Store);
 
     super(store, 'studyFilters', selectStudyFilters);
-  
+
     this.store = store;
   }
 

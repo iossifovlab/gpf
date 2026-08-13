@@ -21,7 +21,7 @@ export class StudyTypesComponent extends ComponentValidator implements OnInit {
   public selectedValues: Set<string> = new Set<string>([]);
 
   public constructor() {
-    const store = inject(Store);
+    const store = inject<Store>(Store);
 
     super(store, 'studyTypes', selectStudyTypes);
     this.store = store;
