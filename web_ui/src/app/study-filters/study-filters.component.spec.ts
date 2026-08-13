@@ -151,11 +151,9 @@ describe('StudyFiltersComponent', () => {
     jest.spyOn(store, 'select').mockReturnValue(of(['studyFilter1', 'studyFilter2']));
     jest.spyOn(store, 'dispatch').mockImplementation();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     component.dataset = datasetMock;
     fixture.detectChanges();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.ngbNav = {
       activeId: undefined,
       select: jest.fn()

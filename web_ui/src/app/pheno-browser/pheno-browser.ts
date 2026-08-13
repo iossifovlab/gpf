@@ -34,12 +34,10 @@ export class PhenoRegression {
 
 export class PhenoRegressions {
   public static emptyRegression = new PhenoRegression({
-    /* eslint-disable @typescript-eslint/naming-convention */
     figure_regression: null,
     figure_regression_small: null,
     pvalue_regression_male: null,
     pvalue_regression_female: null
-    /* eslint-enable */
   });
 
   public constructor(regArr: object[]) {

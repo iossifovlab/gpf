@@ -18,7 +18,6 @@ export class DatasetsService {
   private readonly descriptionUrl = 'datasets/description';
   private readonly pageSize = 25;
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   public datasetsLoading = false;

@@ -17,7 +17,6 @@ declare module 'oboe' {
   }
 
   function oboe(opts: OboeOptions): OboeInstance;
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace oboe {
     type Instance = OboeInstance;
   }

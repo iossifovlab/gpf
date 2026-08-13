@@ -37,7 +37,6 @@ export class UsersService {
 
   public logout(): Observable<object> {
     const csrfToken = this.cookieService.get('csrftoken');
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
@@ -70,7 +69,6 @@ export class UsersService {
 
   public resetPassword(email: string): void {
     const csrfToken = this.cookieService.get('csrftoken');
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json'};
 
     // Using plain js fetch, because the API end-point does not return JSON
@@ -110,7 +108,6 @@ export class UsersService {
     };
 
     const csrfToken = this.cookieService.get('csrftoken');
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
     const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}`;
@@ -123,7 +120,6 @@ export class UsersService {
     user.id = null;
 
     const csrfToken = this.cookieService.get('csrftoken');
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
@@ -210,10 +206,8 @@ export class UsersService {
     const options = { withCredentials: true };
 
     return this.http.put(this.config.baseUrl + 'users/federation_credentials',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       {name: oldCredentialName, new_name: newCredentialName}, options)
       .pipe(
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         map((res: {new_name: string}) => res.new_name)
       );
   }

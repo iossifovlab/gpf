@@ -38,7 +38,6 @@ const personFilterMock = {
   role: '',
   filterType: '',
   domain: [''],
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/explicit-function-return-type
   isEmpty: (): boolean => true,
   selection: selectionMock
 };

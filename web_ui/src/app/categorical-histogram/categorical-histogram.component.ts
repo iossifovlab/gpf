@@ -290,15 +290,12 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         if (d.length > maxLabelLen) {
           d = d.slice(0, maxLabelLen).concat('...');
         }
-        // eslint-disable-next-line no-invalid-this
         d3.select(labels[i]).text(d);
 
         // add hover text on each label
         if (value.name === 'Other values') {
-          // eslint-disable-next-line no-invalid-this
           d3.select(labels[i]).append('title').text(value.name + ` (${this.otherValueNames.length})`);
         } else {
-          // eslint-disable-next-line no-invalid-this
           d3.select(labels[i]).append('title').text(value.name);
         }
       });

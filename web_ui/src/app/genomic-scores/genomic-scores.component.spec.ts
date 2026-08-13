@@ -48,7 +48,6 @@ describe('GenomicScoresComponent', () => {
     component = fixture.componentInstance;
 
     component.errors = [];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 
     component.selectedGenomicScore = new GenomicScore(
       'desc',

@@ -24,7 +24,6 @@ export class GeneScoresService {
   }
 
   public getPartitions(score: string, min: number, max: number): Observable<Partitions> {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers };
 

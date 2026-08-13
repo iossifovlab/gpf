@@ -137,7 +137,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         this.geneService
           .searchGenes(this.geneSymbol)
           .pipe(take(1))
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           .subscribe((response: { 'gene_symbols': string[] }) => {
             this.geneSymbolSuggestions = response.gene_symbols;
           });
@@ -415,7 +414,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   private drawEffectTypesIcons(): void {
     const effectIcons = {
-      /* eslint-disable  @typescript-eslint/naming-convention */
       '#LGDs': draw.star,
       '#missense': draw.triangle,
       '#synonymous': draw.circle,

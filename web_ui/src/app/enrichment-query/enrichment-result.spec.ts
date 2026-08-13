@@ -6,9 +6,9 @@ describe('ChildrenStats', () => {
     const childrenStatsMock = new ChildrenStats(1, 2, 3);
 
     const childrenStatsMockFromJson = ChildrenStats.fromJson({
-      M: 1, // eslint-disable-line
-      F: 2, // eslint-disable-line
-      U: 3 // eslint-disable-line
+      M: 1,
+      F: 2,
+      U: 3
     });
 
     expect(childrenStatsMock).toStrictEqual(childrenStatsMockFromJson);
@@ -335,7 +335,7 @@ const enrichmentResult2 = new EnrichmentResult('selector396',
 
 const enrichmentResultFromJson1 = {
   selector: 'selector1',
-  LGDs: enrichmentEffectResultMockFromJson, // eslint-disable-line
+  LGDs: enrichmentEffectResultMockFromJson,
   missense: {
     all: {
       name: 'name138', count: 139, expected: 140, overlapped: 141, pvalue: 142,
@@ -440,15 +440,15 @@ const enrichmentResultFromJson1 = {
     }
   },
   childrenStats: {
-    M: 393, // eslint-disable-line
-    F: 394, // eslint-disable-line
-    U: 395 // eslint-disable-line
+    M: 393,
+    F: 394,
+    U: 395
   }
 };
 
 const enrichmentResultFromJson2 = {
   selector: 'selector396',
-  LGDs: { // eslint-disable-line
+  LGDs: {
     all: {
       name: 'name396', count: 397, expected: 398, overlapped: 399, pvalue: 400,
       countFilter:
@@ -598,9 +598,9 @@ const enrichmentResultFromJson2 = {
       }
     }
   }, childrenStats: {
-    M: 782, // eslint-disable-line
-    F: 783, // eslint-disable-line
-    U: 784 // eslint-disable-line
+    M: 782,
+    F: 783,
+    U: 784
   }
 };
 

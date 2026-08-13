@@ -31,7 +31,6 @@ export class QueryService {
   private readonly userSaveQueryEndpoint = 'user_queries/save';
   private readonly userCollectQueriesEndpoint = 'user_queries/collect';
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   private oboeInstance: oboe.Instance | null = null;
@@ -249,7 +248,6 @@ export class QueryService {
     const options = { headers: this.headers, withCredentials: true };
 
     const data = {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       query_uuid: uuid,
       name: query_name,
       description: query_description

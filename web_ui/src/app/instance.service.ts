@@ -11,7 +11,6 @@ export class InstanceService {
   private config = inject(ConfigService);
 
   private readonly instanceUrl = 'instance';
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   public getGpfVersion(): Observable<string> {

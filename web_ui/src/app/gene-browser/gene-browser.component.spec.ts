@@ -29,7 +29,6 @@ jest.mock('../utils/svg-drawing');
 
 class MockActivatedRoute {
   public static params = {dataset: 'testDatasetId', get: (): string => ''};
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   public queryParams = of({coding_only: true});
   public parent = {params: of(MockActivatedRoute.params)};
   public queryParamMap = of(MockActivatedRoute.params);

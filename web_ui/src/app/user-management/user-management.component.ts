@@ -109,7 +109,6 @@ export class UserManagementComponent implements OnInit {
     }
 
     this.usersGroupsService.getGroup(name)
-      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       .pipe(catchError(_ => {
         this.cancelCreation();
         const newGroup = new UserGroup(null, name, [], []);

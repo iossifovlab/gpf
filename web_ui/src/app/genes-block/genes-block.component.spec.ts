@@ -36,7 +36,6 @@ describe('GenesBlockComponent', () => {
     fixture.detectChanges();
 
     // Mock ngbNav ViewChild
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component.ngbNav = {
       activeId: undefined,
       select: jest.fn()

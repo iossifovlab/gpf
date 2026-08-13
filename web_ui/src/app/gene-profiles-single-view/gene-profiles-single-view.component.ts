@@ -204,7 +204,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
     newTab: boolean = true
   ): void {
     const effectTypes = {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       LGDs: LGDS,
       intron: ['intron'],
       missense: ['missense'],
