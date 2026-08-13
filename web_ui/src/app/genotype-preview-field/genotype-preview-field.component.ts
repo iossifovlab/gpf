@@ -15,7 +15,6 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public genome: string;
 
   public formattedValue: string | string[];
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
   public fullEffectDetails: FullEffectDetails;
   public pedigreeMaxHeight = 75;

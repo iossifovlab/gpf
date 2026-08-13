@@ -220,7 +220,6 @@ describe('PersonSetCollections', () => {
 describe('PersonFilter', () => {
   it('should create person filter instance from json', () => {
     const mockPersonFilter1 = PersonFilter.fromJson({
-      /* eslint-disable */
       name: {
         name: 'name1',
         from: 'from1',
@@ -237,7 +236,6 @@ describe('PersonFilter', () => {
         filter_type: 'filterType2',
         role: 'role2',
       }
-      /* eslint-enable */
     });
 
     const mockPersonFilter2 = [
@@ -319,7 +317,6 @@ describe('GenotypeBrowser', () => {
       false
     );
 
-    /* eslint-disable */
     const genotypeMock2 = GenotypeBrowser.fromJson({
       has_pedigree_selector: false,
       has_present_in_child: true,
@@ -386,7 +383,6 @@ describe('GenotypeBrowser', () => {
       selected_variant_types: ['selectedVariant', 'string1'],
       max_variants_count: 5,
     });
-    /* eslint-enable */
 
     expect(genotypeMock1).toStrictEqual(genotypeMock2);
   });
@@ -477,7 +473,6 @@ describe('GeneBrowser', () => {
       true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true
     );
     const mockBrowser2 = GeneBrowser.fromJson({
-      /* eslint-disable */
       enabled: true,
       frequency_column: 'frequencyCol1',
       frequency_name: 'frequencyName1',
@@ -486,7 +481,6 @@ describe('GeneBrowser', () => {
       domain_min: 5,
       domain_max: 6,
       has_affected_status: true
-      /* eslint-enable */
     });
 
     expect(mockBrowser1).toStrictEqual(mockBrowser2);
@@ -658,7 +652,6 @@ describe('Dataset', () => {
     true
   );
 
-  /* eslint-disable */
   const datasetJson1 = {
     id: 'id1',
     description: 'desc1',
@@ -977,7 +970,6 @@ describe('Dataset', () => {
     has_transmitted: true,
     has_zygosity: true
   };
-  /* eslint-enable */
 
   it('should create dataset from json', () => {
     const datasetMockFromJson = Dataset.fromJson(datasetJson1);
@@ -995,7 +987,6 @@ describe('Dataset', () => {
   });
 
   it('should create dataset from dataset and details json\'s', () => {
-    /* eslint-disable */
     const datasetMockFromJson = Dataset.fromDataset({
       id: 'id1',
       description: 'desc1',
@@ -1148,7 +1139,6 @@ describe('Dataset', () => {
       has_transmitted: true,
       has_zygosity: true
     });
-    /* eslint-enable */
     expect(datasetMock1).toStrictEqual(datasetMockFromJson);
   });
 });

@@ -62,7 +62,6 @@ class MockPhenoBrowserService {
 
   public getMeasuresInfo(): Observable<PhenoMeasures> {
     const measuresInfo = PhenoMeasures.fromJson(
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       {base_image_url: 'base', has_descriptions: true, regression_names: {age: 'age'}}
     );
     return of(measuresInfo);
@@ -81,7 +80,6 @@ class MockPhenoBrowserService {
     return '';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public cancelStreamPost(): void { }
 }
 class MockDatasetsService {
@@ -113,7 +111,6 @@ class MockRouter {
 }
 
 class MockPhenoMeasures {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public clear(): void { }
 }
 
@@ -300,11 +297,9 @@ describe('PhenoBrowserComponent', () => {
 
   it('should test download', () => {
     const data = {
-      /* eslint-disable @typescript-eslint/naming-convention */
       dataset_id: 'datasetId',
       instrument: 'instrument',
       search_term: 'search'
-      /* eslint-enable */
     };
     // eslint-disable-next-line @stylistic/max-len
     component.selectedDataset = new Dataset(data.dataset_id, '', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, true, null, null, null);

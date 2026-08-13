@@ -66,7 +66,6 @@ import { effectTypesReducer } from 'app/effect-types/effect-types.state';
 import { variantTypesReducer } from 'app/variant-types/variant-types.state';
 import { datasetIdReducer } from 'app/datasets/datasets.state';
 
-/* eslint-disable */
 const genotypeMock = GenotypeBrowser.fromJson({
   has_pedigree_selector: false,
   has_present_in_child: true,
@@ -131,7 +130,6 @@ const genotypeMock = GenotypeBrowser.fromJson({
   selected_variant_types: ['selectedVariant', 'string1'],
   max_variants_count: 5,
 });
-/* eslint-enable */
 
 const genotypeBrowserStateResult = {
   variantTypes: ['ins'],

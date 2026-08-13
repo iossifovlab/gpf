@@ -32,15 +32,15 @@ describe('SummaryAllele', () => {
     const row = {
       location: 'location1',
       position: 3,
-      end_position: 7, // eslint-disable-line
+      end_position: 7,
       chrom: 'chrom1',
       variant: 'variant1',
       effect: 'effect1',
       frequency: 13,
-      family_variants_count: 17, // eslint-disable-line
-      is_denovo: true, // eslint-disable-line
-      seen_in_affected: false, // eslint-disable-line
-      seen_in_unaffected: true, // eslint-disable-line
+      family_variants_count: 17,
+      is_denovo: true,
+      seen_in_affected: false,
+      seen_in_unaffected: true,
     };
     summaryAllele = SummaryAllele.fromRow(row);
 
@@ -279,28 +279,28 @@ describe('SummaryAllelesArray', () => {
         {
           location: 'location1',
           position: 3,
-          end_position: 7, //eslint-disable-line
+          end_position: 7,
           chrom: 'chrom1',
           variant: 'variant1',
           effect: 'effect1',
           frequency: 13,
-          family_variants_count: 17, //eslint-disable-line
-          is_denovo: true, //eslint-disable-line
-          seen_in_affected: false, //eslint-disable-line
-          seen_in_unaffected: true, //eslint-disable-line
+          family_variants_count: 17,
+          is_denovo: true,
+          seen_in_affected: false,
+          seen_in_unaffected: true,
         },
         {
           location: 'location2',
           position: 4,
-          end_position: 9, //eslint-disable-line
+          end_position: 9,
           chrom: 'chrom2',
           variant: 'variant2',
           effect: 'effect2',
           frequency: 14,
-          family_variants_count: 16, //eslint-disable-line
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: false, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          family_variants_count: 16,
+          is_denovo: false,
+          seen_in_affected: false,
+          seen_in_unaffected: false,
         }
       ]
     };
@@ -367,173 +367,173 @@ describe('SummaryAllelesFilter', () => {
         // wanted allele
         {
           location: '1',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'sub(G->A)',
           effect: 'frame-shift',
           frequency: 10,
           position: 30,
-          end_position: 30, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 30,
+          family_variants_count: 1,
           chrom: '',
         },
         // wanted allele
         {
           location: '2',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 35,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '3',
           // filtered out because:
-          is_denovo: true, //eslint-disable-line
+          is_denovo: true,
           //
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 35,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '4',
-          is_denovo: false, //eslint-disable-line
+          is_denovo: false,
           // filtered out because:
-          seen_in_affected: false, //eslint-disable-line
-          seen_in_unaffected: true, //eslint-disable-line
+          seen_in_affected: false,
+          seen_in_unaffected: true,
           //
           variant: 'sub(G->T)',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 35,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '5',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           // filtered out because:
           variant: 'fake(A->T)',
           //
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 35,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '6',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'sub(G->T)',
           // filtered out because:
           effect: 'fake',
           //
           frequency: 5,
           position: 25,
-          end_position: 35, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 35,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '7',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'sub(T->G)',
           effect: 'lgds',
           // filtered out because:
           frequency: 4,
           //
           position: 30,
-          end_position: 30, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 30,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '8',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'sub(C->T)',
           effect: 'lgds',
           // filtered out because:
           frequency: 16,
           //
           position: 30,
-          end_position: 30, //eslint-disable-line
-          family_variants_count: 1, //eslint-disable-line
+          end_position: 30,
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '9',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           // filtered out because:
           position: 20,
-          end_position: 24, //eslint-disable-line
+          end_position: 24,
           //
-          family_variants_count: 1, //eslint-disable-line
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '10',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           // filtered out because:
           position: 36,
-          end_position: 45, //eslint-disable-line
+          end_position: 45,
           //
-          family_variants_count: 1, //eslint-disable-line
+          family_variants_count: 1,
           chrom: '',
         },
         // unwanted allele
         {
           location: '11',
-          is_denovo: false, //eslint-disable-line
-          seen_in_affected: true, //eslint-disable-line
-          seen_in_unaffected: false, //eslint-disable-line
+          is_denovo: false,
+          seen_in_affected: true,
+          seen_in_unaffected: false,
           variant: 'sub(T->C)',
           effect: 'lgds',
           frequency: 10,
           // filtered out because:
           position: 24,
-          end_position: 24, //eslint-disable-line
+          end_position: 24,
           //
-          family_variants_count: 1, //eslint-disable-line
+          family_variants_count: 1,
           chrom: '',
         },
       ]

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import {
   ChildrenCounter,

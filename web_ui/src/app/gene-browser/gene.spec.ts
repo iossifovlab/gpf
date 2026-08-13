@@ -170,7 +170,6 @@ describe('Transcript', () => {
 
   it('should create from json', () => {
     const transcript = Transcript.fromJson({
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       transcript_id: 'testTranscriptId',
       chrom: 'testChrom',
       strand: 'testStrand',
@@ -302,14 +301,12 @@ describe('Gene', () => {
     const geneFromJson = Gene.fromJson({
       gene: 'gene1',
       transcripts: [
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         { transcript_id: 'testTranscriptId1',
           chrom: 'testChrom1',
           strand: 'testStrand1',
           cds: [{ chromosome: 'chr1', start: 1, stop: 10 }, { chromosome: 'chr2', start: 11, stop: 20 }],
           exons: [{ chromosome: 'chr3', start: 21, stop: 31}, { chromosome: 'chr4', start: 32, stop: 43 }]
         },
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         { transcript_id: 'testTranscriptId2',
           chrom: 'testChrom2',
           strand: 'testStrand2',

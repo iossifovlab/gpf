@@ -196,7 +196,6 @@ const gridData = [
   }
 ];
 
-/* eslint-disable */
 const genesMock = [
   {
     'column1': 'value10',
@@ -235,7 +234,6 @@ const genesMock = [
     'column3.column33.column332': 'value39'
   }
 ];
-/* eslint-enable */
 
 class UsersServiceMock {
   public cachedUserInfo(): UserInfo {

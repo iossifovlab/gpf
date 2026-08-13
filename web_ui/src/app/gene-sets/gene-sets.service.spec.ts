@@ -39,7 +39,6 @@ describe('GeneSetsService', () => {
       [
         [
           'testUrl/gene_sets/gene_sets_collections',
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           { headers: {'Content-Type': 'application/json'}, withCredentials: true }
         ]
       ]

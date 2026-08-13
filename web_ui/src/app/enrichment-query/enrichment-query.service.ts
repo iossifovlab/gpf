@@ -12,7 +12,6 @@ export class EnrichmentQueryService {
   private config = inject(ConfigService);
 
   private readonly genotypePreviewUrl = 'enrichment/test';
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   public getEnrichmentTest(filter: object): Observable<EnrichmentResults> {

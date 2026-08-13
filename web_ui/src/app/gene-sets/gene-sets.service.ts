@@ -21,7 +21,6 @@ export class GeneSetsService {
   private readonly geneSetsSearchUrl = 'gene_sets/gene_sets';
 
   public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
@@ -31,7 +30,6 @@ export class GeneSetsService {
   }
 
   public getDenovoGeneSets(): Observable<GeneSetType[]> {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
@@ -45,7 +43,6 @@ export class GeneSetsService {
     searchTerm: string,
     geneSetsTypes: object
   ): Observable<GeneSet[]> {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 

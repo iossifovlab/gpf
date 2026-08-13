@@ -90,11 +90,9 @@ describe('pheno measures', () => {
   phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, basePath);
 
   const phenoMeasures = PhenoMeasures.fromJson({
-    /* eslint-disable @typescript-eslint/naming-convention */
     base_image_url: basePath,
     measures: [fakeJsonMeasure],
     has_descriptions: true
-    /* eslint-enable */
 
   });
 
