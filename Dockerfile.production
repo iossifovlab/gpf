@@ -90,6 +90,8 @@ EXPOSE 80
 # vhost + repoints the SPA <base href>) when set, then exec's the
 # CMD. supervisord runs as PID 1; it forks gunicorn (loopback
 # :9001) and apache2 (:80) and forwards their stdio to the
-# container's stdio.
+# container's stdio. Its control socket is wired up (#981), so
+# `docker exec <c> supervisorctl {status,restart gunicorn,tail -f
+# gunicorn}` works from inside a running container.
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
