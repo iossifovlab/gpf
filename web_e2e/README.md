@@ -305,6 +305,11 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
    # forwards both gunicorn and apache stdio to its docker logs).
    docker compose -p "$COMPOSE_PROJECT" -f web_infra/compose-jenkins.yaml -f "$OVERLAY" \
        logs --no-color backend --tail 200
+
+   # combined mode only: demux that merged stream, or cycle the
+   # backend alone without taking apache (and its connections) down.
+   docker exec <container> supervisorctl tail -f gunicorn
+   docker exec <container> supervisorctl restart gunicorn
    ```
    or, on a CI build, grab the `wdae-debug.log` and `compose.log` artefacts archived by the Jenkins job — `wdae-debug.log` has the per-request Django output, `compose.log` interleaves every service's stdout by timestamp.
 4. File a new issue: `gh issue create --repo iossifovlab/gpf --label needs-triage`. The umbrella `genomics-toolbox/CLAUDE.md` documents the label vocabulary and the workflow loop.
