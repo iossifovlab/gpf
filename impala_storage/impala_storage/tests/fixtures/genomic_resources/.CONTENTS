@@ -1,4 +1,5 @@
 - config:
+    allele_score_mode: substitutions
     default_annotation:
     - name: cadd_raw
       nucleotide_aggregator: max
@@ -29,7 +30,7 @@
         index: 1
       reference:
         index: 2
-    type: np_score
+    type: allele_score
   id: hg19/CADD
   manifest:
   - md5: 9499e8511a30d7445ec973cae9726920
@@ -140,6 +141,7 @@
     size: 54
   version: '0'
 - config:
+    allele_score_mode: substitutions
     default_annotation:
     - name: mpc
       nucleotide_aggregator: max
@@ -168,7 +170,7 @@
         name: pos
       reference:
         name: ref
-    type: np_score
+    type: allele_score
   id: hg19/MPC
   manifest:
   - md5: cd8f6f35577bc24f6b56c6ff1c06173a
@@ -442,6 +444,7 @@
     size: 54
   version: '0'
 - config:
+    allele_score_mode: substitutions
     default_annotation:
     - name: cadd_raw
       nucleotide_aggregator: max
@@ -471,7 +474,7 @@
         name: Pos
       reference:
         name: Ref
-    type: np_score
+    type: allele_score
   id: hg38/TESTCADD
   manifest:
   - md5: 18001f318b5e9226d4ce5fd16613ac43

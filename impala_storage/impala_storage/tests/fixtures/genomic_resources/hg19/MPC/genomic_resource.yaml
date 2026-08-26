@@ -1,6 +1,7 @@
 ---
 
-type: np_score
+type: allele_score
+allele_score_mode: substitutions
 
 table:
   filename: fordist_constraint_official_mpc_values_v2.txt.gz

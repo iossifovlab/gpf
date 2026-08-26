@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+import pathlib
 import textwrap
 from typing import cast
 
@@ -114,22 +115,24 @@ def scores_repo() -> GenomicResourceProtocolRepo:
     })
 
 
-@pytest.fixture
-def annotation_gpf(
+def build_scores_gpf_instance(
+    root_path: pathlib.Path,
     scores_repo: GenomicResourceProtocolRepo,
-    tmp_path_factory: pytest.TempPathFactory,
+    annotation_config: str,
 ) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("genomic_scores_db_gpf")
+    """Build a GPF instance annotating with `annotation_config`.
 
+    The genomic-scores registry is populated from the instance's annotation
+    pipeline, so a test that wants a score in the registry gets there by
+    configuring an annotator for it.
+    """
     setup_directories(root_path / "gpf_instance", {
         "gpf_instance.yaml": textwrap.dedent("""
         instance_id: test_instance
         annotation:
             conf_file: annotation.yaml
         """),
-        "annotation.yaml": textwrap.dedent("""
-        - position_score: phastCons
-        """),
+        "annotation.yaml": annotation_config,
     })
     setup_genome(
         root_path / "alla_gpf" / "genome" / "allChr.fa",
@@ -153,6 +156,20 @@ def annotation_gpf(
         gene_models_id="empty_gene_models",
         grr=build_genomic_resource_group_repository(
             "aaa", [local_repo, scores_repo]),
+    )
+
+
+@pytest.fixture
+def annotation_gpf(
+    scores_repo: GenomicResourceProtocolRepo,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GPFInstance:
+    return build_scores_gpf_instance(
+        tmp_path_factory.mktemp("genomic_scores_db_gpf"),
+        scores_repo,
+        textwrap.dedent("""
+        - position_score: phastCons
+        """),
     )
 
 
@@ -444,3 +461,102 @@ def test_build_annotator_scores_desc(
     assert "phastcons100" in score_descs
     assert isinstance(score_descs["phastcons100"], ScoreDesc)
     assert score_descs["phastcons100"].name == "phastcons100"
+
+
+@pytest.fixture
+def allele_scores_repo() -> GenomicResourceProtocolRepo:
+    return build_inmemory_test_repository({
+        "MPC": {
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: allele_score
+                table:
+                  filename: mpc.txt.gz
+                  format: tabix
+                  header_mode: none
+                  chrom:
+                    index: 0
+                  pos_begin:
+                    index: 1
+                  reference:
+                    index: 2
+                  alternative:
+                    index: 3
+                scores:
+                  - id: MPC
+                    index: 4
+                    type: float
+                    desc: MPC desc
+                    histogram:
+                      type: number
+                      number_of_bins: 4
+                      view_range:
+                        max: 1.0
+                        min: 0.0
+
+                default_annotation:
+                  - source: MPC
+                    name: mpc
+                meta:
+                  description:
+                    test_help
+                  labels: ~
+            """),
+            "statistics": {
+                "histogram_MPC.json": textwrap.dedent("""{
+                    "bars": [4, 3, 2, 1],
+                    "bins": [0.0, 0.25, 0.5, 0.75, 1.0],
+                    "config": {
+                      "type": "number",
+                      "number_of_bins": 4,
+                      "view_range": {
+                        "max": 1.0,
+                        "min": 0.0
+                      },
+                      "x_log_scale": false,
+                      "x_min_log": null,
+                      "y_log_scale": false
+                    }
+                }
+                """),
+            },
+        },
+    })
+
+
+@pytest.fixture
+def allele_score_gpf(
+    allele_scores_repo: GenomicResourceProtocolRepo,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GPFInstance:
+    return build_scores_gpf_instance(
+        tmp_path_factory.mktemp("allele_score_gpf"),
+        allele_scores_repo,
+        textwrap.dedent("""
+        - allele_score: MPC
+        """),
+    )
+
+
+def test_genomic_scores_registry_picks_up_allele_score_annotator(
+    allele_score_gpf: GPFInstance,
+) -> None:
+    """An `allele_score` annotator contributes its scores to the registry.
+
+    The registry filters the pipeline's annotators by type
+    (`GenomicScoresRegistry.build_genomic_scores_registry`).  Every other
+    test in this module drives that filter with `position_score` only, so
+    without this test the `allele_score` branch is unexercised and the
+    deprecated alias could be dropped from the accepted set with no test
+    going red either way (#1004).
+    """
+    registry = allele_score_gpf.genomic_scores
+    assert registry is not None
+
+    assert "mpc" in registry
+    assert [name for name, _ in registry.get_scores()] == ["mpc"]
+
+    score = registry["mpc"]
+    assert score.name == "mpc"
+    assert score.resource_id == "MPC"
+    assert isinstance(score.hist, NumberHistogram)
+    assert list(score.hist.bars) == [4, 3, 2, 1]
