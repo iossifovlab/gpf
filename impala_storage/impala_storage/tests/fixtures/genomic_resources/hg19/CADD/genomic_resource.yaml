@@ -1,7 +1,8 @@
 ---
 
 
-type: np_score
+type: allele_score
+allele_score_mode: substitutions
 
 table:
   filename: CADD.bedgraph.gz

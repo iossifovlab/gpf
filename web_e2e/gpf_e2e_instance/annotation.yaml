@@ -36,6 +36,6 @@
       name: hg19_annotatable
       internal: true
 
-- np_score:
+- allele_score:
     resource_id: hg19/scores/MPC
     input_annotatable: hg19_annotatable

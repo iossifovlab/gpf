@@ -90,7 +90,7 @@ class GenomicScoresRegistry:
             for annotator in pipeline.annotators:
                 annotator_info = annotator.get_info()
                 if annotator_info.type not in \
-                        {"position_score", "np_score", "allele_score"}:
+                        {"position_score", "allele_score"}:
                     continue
                 score_annotators.append(
                     cast(GenomicScoreAnnotatorBase, annotator))
