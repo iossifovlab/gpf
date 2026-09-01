@@ -52,7 +52,7 @@ def imported_study(
         foo    6   .  A   C   .    .      .    GT     0/0 1/1 0/0 0/0 0/0 1/1 0/0 0/0
         foo    7   .  A   C   .    .      .    GT     0/0 0/0 1/1 0/0 0/0 0/0 1/1 0/0
         foo    8   .  A   C   .    .      .    GT     0/0 0/0 0/0 1/1 0/0 0/0 0/0 1/1
-        """)  # noqa: E501
+        """)  # ruff: ignore[line-too-long]
 
     return vcf_study(
         root_path,

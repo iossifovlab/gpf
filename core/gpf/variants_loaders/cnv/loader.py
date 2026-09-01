@@ -410,14 +410,14 @@ class CNVLoader(VariantsGenotypesLoader):
                         )
                     ]
                     # pylint: disable=protected-access
-                    fa._inheritance_in_members = inheritance  # noqa: SLF001
+                    fa._inheritance_in_members = inheritance  # ruff: ignore[private-member-access]
 
             yield summary_variants, family_variants
 
     @classmethod
     def parse_cli_arguments(
         cls, argv: argparse.Namespace, *,
-        use_defaults: bool = False,  # noqa: ARG003
+        use_defaults: bool = False,  # ruff: ignore[unused-class-method-argument]
     ) -> tuple[list[str], dict[str, Any]]:
         if argv.cnv_file is None:
             return [], {}

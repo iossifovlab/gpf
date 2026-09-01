@@ -192,7 +192,7 @@ def sample_gp() -> GPStatistic:
 def gp_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
-        sample_gp: GPStatistic,  # noqa: ARG001
+        sample_gp: GPStatistic,  # ruff: ignore[unused-function-argument]
         mocker: MockerFixture) -> GPFInstance:
     root_path = tmp_path
     gpf_instance = alla_gpf(root_path)
@@ -221,8 +221,8 @@ def gp_gpf_instance(
             "autism candidates",
             ["CHD8"]))
 
-    gpf_instance._gene_profile_db = GeneProfileDB(  # noqa: SLF001
-            gpf_instance._gene_profile_config,  # noqa: SLF001
+    gpf_instance._gene_profile_db = GeneProfileDB(  # ruff: ignore[private-member-access]
+            gpf_instance._gene_profile_config,  # ruff: ignore[private-member-access]
             gpdb_filename,
         )
     print(gpdb_filename)

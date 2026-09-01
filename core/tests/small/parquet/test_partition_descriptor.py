@@ -361,8 +361,8 @@ def test_partition_directory() -> None:
      "summary_region_bin_1_frequency_bin_0_bucket_index_000001.parquet"),
     ("summary", [("region_bin", "1"), ("frequency_bin", "0"),
                  ("coding_bin", "1")], 0,
-     "summary_region_bin_1_frequency_bin_0_coding_bin_1_"
-     "bucket_index_000000.parquet"),
+     ("summary_region_bin_1_frequency_bin_0_coding_bin_1_"
+     "bucket_index_000000.parquet")),
     ("merged", [("region_bin", "1")], 1,
      "merged_region_bin_1_bucket_index_000001.parquet"),
     ("merged", [], None,
@@ -374,8 +374,8 @@ def test_partition_directory() -> None:
     ("merged", Partition("chr_1", "0", "1"), None,
      "merged_region_bin_chr_1_frequency_bin_0_coding_bin_1.parquet"),
     ("merged", Partition("chr_1", "0", "1", "5"), None,
-     "merged_region_bin_chr_1_frequency_bin_0_coding_bin_1_"
-     "family_bin_5.parquet"),
+     ("merged_region_bin_chr_1_frequency_bin_0_coding_bin_1_"
+     "family_bin_5.parquet")),
 ])
 def test_partition_filename(
     prefix: str,

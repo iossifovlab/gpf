@@ -43,7 +43,7 @@ def test_oauth2_confidential_client(
         m.setenv("OAUTHLIB_INSECURE_TRANSPORT", "yes")
 
         client_id = "federation"
-        client_secret = "secret"  # noqa: S105
+        client_secret = "secret"  # ruff: ignore[hardcoded-password-string]
 
         client = BackendApplicationClient(
             client_id=client_id,

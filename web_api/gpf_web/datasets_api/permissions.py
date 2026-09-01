@@ -27,7 +27,7 @@ def get_instance_timestamp_etag(
     _request: Request, **_kwargs: dict[str, Any],
 ) -> str:
     etag = f"{get_instance_timestamp()}"
-    return hashlib.md5(etag.encode()).hexdigest()  # noqa: S324
+    return hashlib.md5(etag.encode()).hexdigest()  # ruff: ignore[hashlib-insecure-hash-function]
 
 
 def get_permissions_etag(
@@ -39,7 +39,7 @@ def get_permissions_etag(
         f"{get_permission_timestamp()}"
         f"{request.user.id}"
     )
-    return hashlib.md5(etag.encode()).hexdigest()  # noqa: S324
+    return hashlib.md5(etag.encode()).hexdigest()  # ruff: ignore[hashlib-insecure-hash-function]
 
 
 class IsDatasetAllowed(permissions.BasePermission):
@@ -286,7 +286,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
         if cache is None:
             cache = {}
-            user._permitted_datasets_cache = cache  # type: ignore[attr-defined]  # noqa: SLF001
+            user._permitted_datasets_cache = cache  # type: ignore[attr-defined]  # ruff: ignore[private-member-access]
         cache[instance_id] = result
 
         return result

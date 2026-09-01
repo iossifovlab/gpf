@@ -496,7 +496,7 @@ def dae_transmitted_data(
             chr  position variant   familyData all.nParCalled all.prcntParCalled all.nAltAlls all.altFreq
             chrA 6        sub(A->C) f1:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0 2 100.00 1 50.00
             chrA 13       sub(T->G) f1:0100/2221:0||0||0||0/0||0||0||0/0||0||0||0 2 100.00 1 50.00
-        """),  # noqa
+        """),  # ruff: ignore[line-too-long]
         textwrap.dedent("""
             chr position variant familyData
         """),
@@ -1303,9 +1303,9 @@ def test_liftover_tool_invalid_missing_source_genome(
 
 def test_liftover_tool_no_grr(
     tmp_path: pathlib.Path,
-    liftover_data: GenomicResourceRepo,  # noqa: ARG001
+    liftover_data: GenomicResourceRepo,  # ruff: ignore[unused-function-argument]
     vcf_data: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Test liftover with source genome that's not a genome resource."""
 
@@ -1328,7 +1328,7 @@ def test_liftover_tool_grr_from_context(
     tmp_path: pathlib.Path,
     liftover_data: GenomicResourceRepo,
     vcf_data: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Test liftover with source genome that's not a genome resource."""
 

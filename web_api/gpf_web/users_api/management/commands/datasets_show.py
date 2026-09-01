@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "Show all existing datasets"
 
     def handle(
-        self, *args: Any, **options: Any,  # noqa: ARG002
+        self, *args: Any, **options: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         datasets = Dataset.objects.all()
         for ds in datasets:

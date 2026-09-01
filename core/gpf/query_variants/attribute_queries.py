@@ -271,7 +271,7 @@ class AttributeQueryTransformerFunction(AttributeQueryTransformer):
         assert value in self._values, f"{value} not in {self._values.keys()}"
 
         def compare_literal(
-            x: int, y: int | None = None,  # noqa: ARG001
+            x: int, y: int | None = None,  # ruff: ignore[unused-function-argument]
         ) -> bool:
             return bool(
                 self._values[value].value & x == self._values[value].value)
@@ -430,7 +430,7 @@ class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
 
 
 class Matcher(Protocol):
-    def __call__(self, a: int, b: int | None = None) -> bool:  # noqa: ARG002
+    def __call__(self, a: int, b: int | None = None) -> bool:  # ruff: ignore[unused-method-argument]
         return False
 
 

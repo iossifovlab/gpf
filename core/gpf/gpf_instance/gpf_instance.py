@@ -140,14 +140,14 @@ class GPFInstance:
     def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""
         # pylint: disable=pointless-statement
-        self.reference_genome  # noqa: B018
-        self.gene_models  # noqa: B018
-        self.gene_sets_db  # noqa: B018
-        self._pheno_registry  # noqa: B018
-        self._variants_db  # noqa: B018
-        self.denovo_gene_sets_db  # noqa: B018
-        self.genomic_scores  # noqa: B018
-        self.genotype_storages  # noqa: B018
+        self.reference_genome  # ruff: ignore[useless-expression]
+        self.gene_models  # ruff: ignore[useless-expression]
+        self.gene_sets_db  # ruff: ignore[useless-expression]
+        self._pheno_registry  # ruff: ignore[useless-expression]
+        self._variants_db  # ruff: ignore[useless-expression]
+        self.denovo_gene_sets_db  # ruff: ignore[useless-expression]
+        self.genomic_scores  # ruff: ignore[useless-expression]
+        self.genotype_storages  # ruff: ignore[useless-expression]
         return self
 
     @cached_property

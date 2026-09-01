@@ -66,34 +66,40 @@ def wdae_django_setup(
         import django
         django.setup()
 
-        yield
+        # try/finally, not a bare yield: the cleanup below evicts the
+        # Django app modules from `sys.modules`, and skipping it leaves a
+        # half-configured django importable for whatever runs next. A test
+        # that raises inside the `with` would otherwise take every later
+        # test in the session down with it.
+        try:
+            yield
+        finally:
+            for app_name in [
+                    "utils",
+                    "gene_scores",
+                    "gene_sets",
+                    "datasets_api",
+                    "genotype_browser",
+                    "enrichment_api",
+                    "measures_api",
+                    "pheno_browser_api",
+                    "common_reports_api",
+                    "pheno_tool_api",
+                    "query_base",
+                    "users_api",
+                    "groups_api",
+                    "gpfjs",
+                    "query_state_save",
+                    "user_queries",
+                    "gpf_web.urls"]:
+                _module_cleaner(app_name)
 
-        for app_name in [
-                "utils",
-                "gene_scores",
-                "gene_sets",
-                "datasets_api",
-                "genotype_browser",
-                "enrichment_api",
-                "measures_api",
-                "pheno_browser_api",
-                "common_reports_api",
-                "pheno_tool_api",
-                "query_base",
-                "users_api",
-                "groups_api",
-                "gpfjs",
-                "query_state_save",
-                "user_queries",
-                "gpf_web.urls"]:
-            _module_cleaner(app_name)
-
-        _module_cleaner(test_settings)
-        _module_cleaner("oauth2_provider")
-        _module_cleaner("gpf_instance")
-        _module_cleaner("corsheaders")
-        _module_cleaner("rest_framework")
-        _module_cleaner("django")
+            _module_cleaner(test_settings)
+            _module_cleaner("oauth2_provider")
+            _module_cleaner("gpf_instance")
+            _module_cleaner("corsheaders")
+            _module_cleaner("rest_framework")
+            _module_cleaner("django")
 
     return builder
 
@@ -117,8 +123,13 @@ def wdae_django_server(
             gpf_instance.reload_datasets(gpf)
             server = LiveServer("localhost:0")
 
-            yield server
-
-            server.stop()
+            # try/finally for the same reason as above: an unstopped
+            # LiveServer keeps its thread and its port, and the next test
+            # that asks for one gets a different address than the fixture
+            # reports.
+            try:
+                yield server
+            finally:
+                server.stop()
 
     return builder

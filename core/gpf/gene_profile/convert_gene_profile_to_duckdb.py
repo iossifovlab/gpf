@@ -33,7 +33,7 @@ def main(
         gpf_instance = GPFInstance.build()
 
     # pylint: disable=protected-access, invalid-name
-    config = gpf_instance._gene_profile_config  # noqa: SLF001
+    config = gpf_instance._gene_profile_config  # ruff: ignore[private-member-access]
 
     assert config is not None, "No GP configuration found."
 
@@ -43,11 +43,11 @@ def main(
     )
 
     table_name = "gene_profile"
-    query = f"SELECT * from {table_name}"  # noqa: S608
+    query = f"SELECT * from {table_name}"  # ruff: ignore[hardcoded-sql-expression]
 
     conn = sqlite3.connect(database=args.dbfile)
 
-    df = pd.read_sql(query, conn)  # noqa: F841
+    df = pd.read_sql(query, conn)  # ruff: ignore[unused-variable]
 
     with duckdb.connect(f"{gpdb.dbfile}") as connection:
         connection.execute("INSERT INTO gene_profile SELECT * FROM df")

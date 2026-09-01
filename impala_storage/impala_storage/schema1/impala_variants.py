@@ -63,7 +63,7 @@ class ImpalaVariants(QueryVariants):
 
         # Temporary workaround for studies that are imported without tags
         # e.g. production data that is too large to reimport
-        FamiliesLoader._build_families_tags(  # noqa: SLF001
+        FamiliesLoader._build_families_tags(  # ruff: ignore[private-member-access]
             self.families, {"ped_tags": True},
         )
 
@@ -97,7 +97,7 @@ class ImpalaVariants(QueryVariants):
     @property
     def connection_pool(self) -> pool.QueuePool:
         # pylint: disable=protected-access
-        return self._impala_helpers._connection_pool  # noqa: SLF001
+        return self._impala_helpers._connection_pool  # ruff: ignore[private-member-access]
 
     # pylint: disable=too-many-arguments,unused-argument
     def build_summary_variants_query_runner(
@@ -112,7 +112,7 @@ class ImpalaVariants(QueryVariants):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -193,7 +193,7 @@ class ImpalaVariants(QueryVariants):
         limit: int | None = None,
         pedigree_fields: tuple[list[str], list[str]] | None = None,
         tags_query: TagsQuery | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -287,7 +287,7 @@ class ImpalaVariants(QueryVariants):
     def _fetch_pedigree(self) -> pd.DataFrame:
         with closing(self.connection()) as conn, \
                 closing(conn.cursor()) as cursor:
-            query = f"SELECT * FROM {self.db}.{self.pedigree_table}"""  # noqa
+            query = f"SELECT * FROM {self.db}.{self.pedigree_table}"""  # ruff: ignore[single-line-implicit-string-concatenation, hardcoded-sql-expression]
 
             cursor.execute(query)
             ped_df = cast(pd.DataFrame, as_pandas(cursor))

@@ -79,7 +79,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
     def _build_backend_internal(
         self, study_config: dict[str, Any],
         genome: ReferenceGenome,
-        gene_models: GeneModels | None,  # noqa: ARG002
+        gene_models: GeneModels | None,  # ruff: ignore[unused-method-argument]
     ) -> Any:
         start = time.time()
         config = Box(study_config)

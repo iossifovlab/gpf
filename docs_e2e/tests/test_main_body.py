@@ -19,7 +19,7 @@ from docs_e2e.guide_assertions import (
 
 
 class TestDenovoImport:
-    """`getting_started.rst` lines ~149–246: importing the
+    """`getting_started.rst` lines ~149-246: importing the
     de novo example study via ``import_genotypes``."""
 
     def test_import_genotypes_command_succeeds(self, prepared_instance):
@@ -60,7 +60,7 @@ class TestDenovoImport:
 
 
 class TestVcfImport:
-    """`getting_started.rst` lines ~250–305: importing the
+    """`getting_started.rst` lines ~250-305: importing the
     VCF example study via ``import_genotypes``."""
 
     def test_import_genotypes_command_succeeds(self, prepared_instance):
@@ -101,7 +101,7 @@ class TestVcfImport:
 
 
 class TestExampleDataset:
-    """`getting_started.rst` lines ~307–348: combining the two
+    """`getting_started.rst` lines ~307-348: combining the two
     studies into ``example_dataset``."""
 
     def test_example_dataset_yaml_present(self, prepared_instance):

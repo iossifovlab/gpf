@@ -151,7 +151,7 @@ def f1_test(
     chr1    70   .	A	G,T	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	0/0 	0/1	  0/0
     chr1    77   .	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    1/0 	0/0 	0/.	  0/2
     chr1    97   .	T	C,A	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	2/2 	1/1	  2/2
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return (str(ped_path), str(vcf_path))
 
@@ -225,7 +225,7 @@ def simple_family(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     chr1    55  .	T	G	        .   	.   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     chr1    64  .	C	G	        .   	.   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     chr1    77  .	T	GA,AA,CA,CC	.   	.   	.   	GT  	2/3	2/2	2/1	2/2	2/2	2/2	2/2
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(ped_path), str(vcf_path)
 

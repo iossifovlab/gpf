@@ -64,7 +64,7 @@ class DenovoGeneSetsDb(QueryBaseView):
         """Build response to a get request."""
         result = {}
         denovo_collections = self.gpf_instance \
-            .denovo_gene_sets_db._denovo_gene_set_collections  # noqa: SLF001
+            .denovo_gene_sets_db._denovo_gene_set_collections  # ruff: ignore[private-member-access]
 
         for study_id, collection in denovo_collections.items():
             result[study_id] = {

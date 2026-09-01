@@ -51,7 +51,7 @@ def vcffile_chromosomes(filename: str) -> list[str]:
             index=tabix_index_filename,
         ) as tbx:
             return list(tbx.contigs)
-    except Exception:  # noqa: BLE001
+    except Exception:  # ruff: ignore[blind-except]
         return seqnames
 
 
@@ -115,7 +115,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             tuple[Family, np.ndarray, np.ndarray | None], None, None]:
         self.known_independent_genotypes = []
         # pylint: disable=protected-access
-        fill_value = self.loader._fill_missing_value  # noqa: SLF001
+        fill_value = self.loader._fill_missing_value  # ruff: ignore[private-member-access]
 
         for family in self.loader.families.values():
             family_genotype, independent_genotypes, gt_type = \
@@ -231,7 +231,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 for inh in inheritance_in_members
             ]
             # pylint: disable=protected-access
-            fa._inheritance_in_members = inheritance_in_members  # noqa: SLF001
+            fa._inheritance_in_members = inheritance_in_members  # ruff: ignore[private-member-access]
         return False
 
     @staticmethod
@@ -275,7 +275,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 for inh in inheritance_in_members
             ]
             # pylint: disable=protected-access
-            fa._inheritance_in_members = inheritance_in_members  # noqa: SLF001
+            fa._inheritance_in_members = inheritance_in_members  # ruff: ignore[private-member-access]
         return False
 
     @staticmethod
@@ -379,7 +379,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 index=index_filename,
             ) as tbx:
                 res = [str(c) for c in tbx.contigs]
-        except Exception:  # noqa: BLE001
+        except Exception:  # ruff: ignore[blind-except]
             res = seqnames
 
         return [self._adjust_chrom(chrom) for chrom in res]
@@ -651,7 +651,7 @@ class VcfLoader(VariantsGenotypesLoader):
         genome: ReferenceGenome,
         regions: list[Region] | None = None,
         params: dict[str, Any] | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ):
         # pylint: disable=unused-argument
         params = params or {}
@@ -994,7 +994,7 @@ class VcfLoader(VariantsGenotypesLoader):
         summary_index = 0
         for vcf_loader in self.vcf_loaders:
             # pylint: disable=protected-access
-            iterator = vcf_loader._full_variants_iterator_impl(  # noqa: SLF001
+            iterator = vcf_loader._full_variants_iterator_impl(  # ruff: ignore[private-member-access]
                 summary_index)
             try:
                 for summary_variant, family_variants in iterator:

@@ -76,7 +76,7 @@ def sample_attributes_columns() -> tuple[list[Any], list[str]]:
         ["1"],
         ["TransmissionTiie.denovo"],
         [
-            "3'UTR!PCDHAC1:3'UTR|PCDHAC2:3'UTR|PCDHA1:3'UTR|PCDHA10:3'UTR|PCD"
+            ("3'UTR!PCDHAC1:3'UTR|PCDHAC2:3'UTR|PCDHA1:3'UTR|PCDHA10:3'UTR|PCD"
             "HA11:3'UTR|PCDHA12:3'UTR|PCDHA13:3'UTR|PCDHA2:3'UTR|PCDHA3:3'UTR"
             "|PCDHA4:3'UTR|PCDHA5:3'UTR|PCDHA6:3'UTR|PCDHA7:3'UTR|PCDHA8:3'UT"
             "R|PCDHA6:3'UTR|PCDHA9:3'UTR!NM_018898:PCDHAC1:3'UTR:1480|NM_0188"
@@ -87,7 +87,7 @@ def sample_attributes_columns() -> tuple[list[Any], list[str]]:
             "8906:PCDHA3:3'UTR:1480|NM_018907:PCDHA4:3'UTR:1480|NM_018908:PCD"
             "HA5:3'UTR:1480|NM_018909:PCDHA6:3'UTR:1480|NM_018910:PCDHA7:3'UT"
             "R:1480|NM_018911:PCDHA8:3'UTR:1480|NM_031849:PCDHA6:3'UTR:1480|N"
-            "M_031857:PCDHA9:3'UTR:1480",
+            "M_031857:PCDHA9:3'UTR:1480"),
         ],
         ["-"],
         ["-"],

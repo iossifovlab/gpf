@@ -70,7 +70,7 @@ class DenovoGeneSetsDb:
                 gene_sets_types_legend=dgs["legend"],
             )
 
-            dgsc.cache = dgsc._convert_cache_innermost_types(  # noqa: SLF001
+            dgsc.cache = dgsc._convert_cache_innermost_types(  # ruff: ignore[private-member-access]
                 dgsc.cache, list, set,
             )
 
@@ -158,7 +158,7 @@ class DenovoGeneSetsDb:
         self,
         gene_set_id: str,
         gene_set_spec: dict[str, dict[str, list[str]]],
-        collection_id: str = "denovo",  # noqa: ARG002
+        collection_id: str = "denovo",  # ruff: ignore[unused-method-argument]
     ) -> dict[str, Any] | None:
         # pylint: disable=unused-argument
         """Return de Novo gene set matching the spec for permitted datasets."""
@@ -171,7 +171,7 @@ class DenovoGeneSetsDb:
     def get_all_gene_sets(
         self,
         denovo_gene_set_spec: dict[str, dict[str, list[str]]],
-        collection_id: str = "denovo",  # noqa: ARG002
+        collection_id: str = "denovo",  # ruff: ignore[unused-method-argument]
     ) -> list[dict[str, Any]]:
         # pylint: disable=unused-argument
         """Return all de Novo gene sets matching the spec for permitted DS."""

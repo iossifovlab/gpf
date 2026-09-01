@@ -182,7 +182,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
                 if gene_score is None:
                     continue
                 self.gene_scores_dicts[score_id] = \
-                    gene_score._to_dict(score_id)  # noqa: SLF001
+                    gene_score._to_dict(score_id)  # ruff: ignore[private-member-access]
 
     @staticmethod
     def _get_pheno_values_for_variant(
@@ -316,7 +316,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
                     # pylint: disable=unused-argument
                     def col_formatter(
                         val: Any,
-                        col_format: str | None,  # noqa: ARG001
+                        col_format: str | None,  # ruff: ignore[unused-function-argument]
                     ) -> str:
                         if val is None:
                             return "-"

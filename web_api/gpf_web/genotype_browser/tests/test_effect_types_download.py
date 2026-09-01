@@ -9,7 +9,7 @@ from rest_framework import status
 
 def test_effect_details_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",

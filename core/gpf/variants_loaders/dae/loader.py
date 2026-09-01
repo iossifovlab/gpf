@@ -168,12 +168,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                     extra_attributes[attr] = [attr_val]
                 if genotype is None:
                     (fv.gt,
-                     fv._genetic_model,  # noqa: SLF001
+                     fv._genetic_model,  # ruff: ignore[private-member-access]
                      ) = self._calc_genotype(fv, self.genome)
                     for fa in fv.family_alleles:
                         fa.gt = fv.gt
                         # pylint: disable=protected-access
-                        fa._genetic_model = fv.genetic_model  # noqa: SLF001
+                        fa._genetic_model = fv.genetic_model  # ruff: ignore[private-member-access]
                 fv.update_attributes(extra_attributes)
                 fvs.append(fv)
         return fvs
@@ -241,7 +241,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         )
                     ]
                     # pylint: disable=protected-access
-                    fa._inheritance_in_members = inheritance  # noqa: SLF001
+                    fa._inheritance_in_members = inheritance  # ruff: ignore[private-member-access]
 
             yield summary_variants, family_variants
 
@@ -360,7 +360,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     @classmethod
     def parse_cli_arguments(
         cls, argv: argparse.Namespace, *,
-        use_defaults: bool = False,  # noqa: ARG003
+        use_defaults: bool = False,  # ruff: ignore[unused-class-method-argument]
     ) -> tuple[list[str], dict[str, Any]]:
         # pylint: disable=too-many-branches
         logger.debug("CLI arguments: %s", argv)
@@ -855,7 +855,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self._chromosomes = \
                     [self._adjust_chrom(chrom) for chrom in tbx.contigs]
-        except Exception:  # noqa: BLE001 pylint: disable=broad-except
+        except Exception:  # ruff: ignore[blind-except] pylint: disable=broad-except
             self._chromosomes = self.genome.chromosomes
 
     @property
@@ -1033,13 +1033,13 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 family_id=fam.family_id,
                 member_ids=fam.member_ids,
                 genotype=None, best_state=best_state)
-            fv.gt, fv._genetic_model = self._calc_genotype(  # noqa: SLF001
+            fv.gt, fv._genetic_model = self._calc_genotype(  # ruff: ignore[private-member-access]
                     fv, self.genome)
 
             for fa in fv.family_alleles:
                 fa.gt = fv.gt
                 # pylint: disable=protected-access
-                fa._genetic_model = fv._genetic_model  # noqa: SLF001
+                fa._genetic_model = fv._genetic_model  # ruff: ignore[private-member-access]
                 fa.update_attributes({"read_counts": read_counts})
             family_variants.append(fv)
         return family_variants
@@ -1146,7 +1146,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     @classmethod
     def parse_cli_arguments(
         cls, argv: argparse.Namespace, *,
-        use_defaults: bool = False,  # noqa: ARG003
+        use_defaults: bool = False,  # ruff: ignore[unused-class-method-argument]
     ) -> tuple[list[str], dict[str, Any]]:
         filename = argv.dae_summary_file
 

@@ -669,7 +669,7 @@ class ImportProject:
                 # the chromosomes getter will assert for us if the prefix
                 # can be removed or not. If there is no prefix to begin with
                 # we will get an assertion error
-                loader.chromosomes  # noqa: B018
+                loader.chromosomes  # ruff: ignore[useless-expression]
             except AssertionError as exp:
                 raise ValueError(
                     f"Chromosomes already missing the prefix {prefix}. "

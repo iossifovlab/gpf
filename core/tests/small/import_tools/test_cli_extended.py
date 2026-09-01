@@ -56,7 +56,7 @@ def simple_study_dir(
 
 def test_main_with_none_argv(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Test main() when called with argv=None (uses sys.argv)."""
     import_config_fn = str(simple_study_dir / "import_config.yaml")
@@ -72,7 +72,7 @@ def test_main_with_none_argv(
 
 def test_main_deprecated_tool_warning(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     """Test that deprecated tool names trigger a warning."""
@@ -93,7 +93,7 @@ def test_main_deprecated_tool_warning(
 
 def test_main_with_explicit_task_status_dir(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     tmp_path: pathlib.Path,
 ) -> None:
     """Test main() with explicit task_status_dir argument."""
@@ -112,7 +112,7 @@ def test_main_with_explicit_task_status_dir(
 
 def test_main_with_explicit_task_log_dir(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     tmp_path: pathlib.Path,
 ) -> None:
     """Test main() with explicit task_log_dir argument."""
@@ -129,7 +129,7 @@ def test_main_with_explicit_task_log_dir(
 
 def test_main_default_task_status_dir_creation(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     """Test that default task_status_dir is created correctly."""
@@ -158,7 +158,7 @@ def test_main_default_task_status_dir_creation(
 
 def test_main_default_task_log_dir_creation(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     """Test that default task_log_dir is created correctly."""
@@ -187,7 +187,7 @@ def test_main_default_task_log_dir_creation(
 
 def test_main_returns_1_on_failure(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     """Test that main() returns 1 when TaskGraphCli.process_graph fails."""
@@ -204,7 +204,7 @@ def test_main_returns_1_on_failure(
 
 def test_main_config_filenames_added_to_task_graph(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     """Test that config filenames are added to task graph input files."""
@@ -231,7 +231,7 @@ def test_main_config_filenames_added_to_task_graph(
 
 def test_main_with_verbosity_arguments(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Test main() with verbosity arguments."""
     import_config_fn = str(simple_study_dir / "import_config.yaml")
@@ -245,7 +245,7 @@ def test_main_with_verbosity_arguments(
 
 def test_main_list_command_verbose(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Test list command with verbose flag."""
     import_config_fn = str(simple_study_dir / "import_config.yaml")
@@ -443,7 +443,7 @@ def test_run_with_project_returns_false_on_failure(
 
 def test_main_creates_import_storage(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockerFixture,
 ) -> None:
     """Test that main() creates import storage and generates task graph."""
@@ -483,7 +483,7 @@ def test_run_with_project_creates_import_storage(
 
 def test_main_with_parallel_jobs(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Test main() with parallel jobs argument."""
     import_config_fn = str(simple_study_dir / "import_config.yaml")

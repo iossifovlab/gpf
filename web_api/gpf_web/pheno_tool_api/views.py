@@ -72,7 +72,7 @@ class PhenoToolView(QueryBaseView):
         data["phenoFilterFamilyIds"] = None
         if data.get("familyFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-                self.query_transformer  # noqa: SLF001
+                self.query_transformer  # ruff: ignore[private-member-access]
                 ._transform_filters_to_ids(
                     data["familyFilters"],
                     study_wrapper,
@@ -80,7 +80,7 @@ class PhenoToolView(QueryBaseView):
             )
         if data.get("familyPhenoFilters") is not None:
             data["phenoFilterFamilyIds"] = list(
-                self.query_transformer  # noqa: SLF001
+                self.query_transformer  # ruff: ignore[private-member-access]
                 ._transform_pheno_filters_to_ids(
                     data["familyPhenoFilters"],
                     study_wrapper,

@@ -56,7 +56,7 @@ chr1   4    .  T   G    .    .      .    GT     0/1  0/1  0/1 0/1  0/1  0/1 0/1 
 chr1   54   .  T   C    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/0  0/0  0/0
 chr1   90   .  G   C    .    .      .    GT     0/1  0/1  0/1 0/1  0/1  0/1 0/1  0/1  0/1
 chr1   100  .  T   G    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/1  0/1  0/1
-        """)  # noqa
+        """)  # ruff: ignore[line-too-long]
 
     project_config_update = {
         "partition_description": {

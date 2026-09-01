@@ -62,7 +62,7 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # noqa: ARG002
+        self, request: Request,  # ruff: ignore[unused-method-argument]
         dataset_id: str,
         family_id: str,
     ) -> Response:
@@ -99,7 +99,7 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
 class TagsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, request: Request) -> Response:  # noqa: ARG002
+    def get(self, request: Request) -> Response:  # ruff: ignore[unused-method-argument]
         # pylint: disable=unused-argument
         return Response(
             list(FamilyTag.all_labels()),
@@ -112,7 +112,7 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # noqa: ARG002
+        self, request: Request,  # ruff: ignore[unused-method-argument]
         dataset_id: str,
         family_id: str,
     ) -> Response:
@@ -151,7 +151,7 @@ class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: str,  # noqa: ARG002
+        self, request: Request, dataset_id: str,  # ruff: ignore[unused-method-argument]
         family_id: str, member_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
@@ -197,7 +197,7 @@ class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # noqa: ARG002
+        self, request: Request,  # ruff: ignore[unused-method-argument]
         dataset_id: str,
         family_id: str,
     ) -> Response:
@@ -241,7 +241,7 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # noqa: ARG002
+        self, request: Request,  # ruff: ignore[unused-method-argument]
         dataset_id: str,
     ) -> Response:
         # pylint: disable=unused-argument

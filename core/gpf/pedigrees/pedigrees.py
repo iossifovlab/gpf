@@ -1038,7 +1038,7 @@ class SandwichSolver:
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
                     [vertex],
-                    _graph_neighbors_cache=initial_realization[  # noqa: SLF001
+                    _graph_neighbors_cache=initial_realization[  # ruff: ignore[private-member-access]
                         0
                     ]._graph_neighbors_cache
                     if i > 0

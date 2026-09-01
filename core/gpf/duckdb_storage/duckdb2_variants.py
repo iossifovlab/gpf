@@ -156,7 +156,7 @@ class DuckDb2Variants(QueryVariantsBase):
         query = f"""SELECT value FROM {meta}
                WHERE key = '{key}'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
         with self.connection_factory.connect().cursor() as cursor:
             content = ""
             result = cursor.execute(query).fetchall()
@@ -214,7 +214,7 @@ class DuckDb2Variants(QueryVariantsBase):
         if self.layout.db is not None:
             pedigree = f"{self.layout.db}.{pedigree}"
 
-        query = f"SELECT * FROM {pedigree}"  # noqa: S608
+        query = f"SELECT * FROM {pedigree}"  # ruff: ignore[hardcoded-sql-expression]
         with self.connection_factory.connect().cursor() as cursor:
 
             ped_df = cursor.execute(query).df()
@@ -345,9 +345,9 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        study_filters: list[str] | None = None,  # noqa: ARG002
+        study_filters: list[str] | None = None,  # ruff: ignore[unused-method-argument]
         tags_query: TagsQuery | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""

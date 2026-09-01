@@ -26,7 +26,7 @@ def name_in_gene_sets(
 
 def test_gene_sets_collections(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_sets_collections"
     response = admin_client.get(url)
@@ -44,7 +44,7 @@ def test_gene_sets_collections(
 
 def test_denovo_gene_sets_types(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/denovo_gene_sets_types"
     response = admin_client.get(url)
@@ -93,7 +93,7 @@ def test_denovo_gene_sets_types(
 
 def test_denovo_gene_set_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -129,7 +129,7 @@ def test_denovo_gene_set_download(
 
 def test_gene_set_download_missense(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -162,7 +162,7 @@ def test_gene_set_download_missense(
 
 def test_denovo_gene_set_not_found(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -190,7 +190,7 @@ def test_denovo_gene_set_not_found(
 
 def test_main_gene_set_not_found(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
 
     url = "/api/v3/gene_sets/gene_set_download"
@@ -206,7 +206,7 @@ def test_main_gene_set_not_found(
 
 def test_bad_gene_set_collection_not_found(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -221,7 +221,7 @@ def test_bad_gene_set_collection_not_found(
 
 def test_get_gene_set_download_synonymous_autism(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -254,7 +254,7 @@ def test_get_gene_set_download_synonymous_autism(
 
 def test_get_gene_set_download_synonymous_recurrent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -287,7 +287,7 @@ def test_get_gene_set_download_synonymous_recurrent(
 
 def test_get_gene_set_download_synonymous_triple(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -320,7 +320,7 @@ def test_get_gene_set_download_synonymous_triple(
 
 def test_get_denovo_gene_set_not_found(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -347,7 +347,7 @@ def test_get_denovo_gene_set_not_found(
 
 def test_get_main_gene_set_not_found(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -361,7 +361,7 @@ def test_get_main_gene_set_not_found(
 
 def test_get_bad_gene_set_collection_not_found(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
@@ -375,7 +375,7 @@ def test_get_bad_gene_set_collection_not_found(
 
 def test_get_gene_set_collection_empty_query(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_set_download"
     query: dict[str, Any] = {}
@@ -386,7 +386,7 @@ def test_get_gene_set_collection_empty_query(
 
 def test_denovo_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_sets"
     query = {
@@ -417,7 +417,7 @@ def test_denovo_gene_sets(
 
 def test_gene_sets_empty_query(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_sets"
     query: dict[str, Any] = {}
@@ -430,7 +430,7 @@ def test_gene_sets_empty_query(
 
 def test_gene_sets_missing_collection(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_sets/gene_sets"
     query = {"geneSetsCollection": "BadBadName"}

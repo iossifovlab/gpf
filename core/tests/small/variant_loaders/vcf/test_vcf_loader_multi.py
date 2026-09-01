@@ -29,7 +29,7 @@ def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     chr1    23   .	G	A	.	    .	    EFF=MIS	GT	    0/0	    1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     chr1    44   .	G	A	.	    .	    EFF=SYN	GT	    0/1	    0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1    55   .	C	T	.	    .	    EFF=MIS	GT	    1/0	    1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 
@@ -49,7 +49,7 @@ def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     chr1    23 	 .	G	A	.   	.   	EFF=MIS	GT  	0/0 	1/1 	1/0 	0/0 	0/0 	1/1 	1/0 	1/0 	./.
     chr1    44 	 .	G	A	.   	.   	EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	./.
     chr1    55 	 .	C	T	.   	.   	EFF=MIS	GT  	1/0 	1/1 	1/0 	1/0 	1/0 	1/1 	0/1 	0/1 	./.
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 
@@ -122,7 +122,7 @@ def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     chr1    23   	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	1/0 	0/1	    0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1	    0/1 	1/0 	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
     chr1    44   	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0	    0/1 	0/0 	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0	    0/1
     chr1    55   	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/0 	0/1	    0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1	    0/1 	0/1 	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 
@@ -193,7 +193,7 @@ def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> str:
     chr1	24  	.	G	A	.	    .	    EFF=MIS	GT  	0/0 	1/0 	0/1 	0/0	    0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     chr1	44  	.	G	A	.	    .	    EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0	    0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1	54  	.	C	T	.	    .	    EFF=MIS	GT  	1/0 	1/0 	0/1 	0/0	    1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
     return str(vcf_path)
 
 
@@ -212,7 +212,7 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> str:
     chr1    24  	  .	  G	    A	    .   	.	    EFF=MIS	GT  	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
     chr1    44   	  .	  G	    A	    .   	.	    EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0 	0/1
     chr1    54  	  .	  C     T	    .   	.	    EFF=MIS	GT  	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
     return str(vcf_path)
 
 

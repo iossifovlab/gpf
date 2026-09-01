@@ -25,7 +25,7 @@ class Command(ImportUsersBase, BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("file", type=str)
 
-    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+    def handle(self, *args: Any, **options: Any) -> None:  # ruff: ignore[unused-method-argument]
         csvfilename: str = options["file"]
         assert os.path.exists(csvfilename)
 

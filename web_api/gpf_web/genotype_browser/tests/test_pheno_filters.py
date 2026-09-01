@@ -88,7 +88,7 @@ def test_query_with_pheno_filters(
     variants_count: int,
     pheno_values: list[list[str]],
     preview_sources: list[dict],
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_study_1",

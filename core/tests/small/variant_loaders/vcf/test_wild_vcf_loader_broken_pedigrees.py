@@ -63,7 +63,7 @@ def multivcf_pedigree(
     chr1   48  .  G   A   .    .      .    GT     0/0    0/1   0/0    1/0    0/1   0/0   0/0    1/1    0/1   1/0
     chr1   71  .  G   A   .    .      .    GT     0/1    0/1   0/1    0/0    0/0   0/1   0/1    0/0    0/1   0/0
     chr1   95  .  C   T   .    .      .    GT     1/0    0/1   1/0    1/0    0/1   0/0   1/0    1/1    0/1   0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
     setup_vcf(root_path / "vcf_data" / "in_chr2.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -75,7 +75,7 @@ def multivcf_pedigree(
     chr2   48  .  G   A   .    .      .    GT     0/0    1/0    0/1   0/0   0/0    1/0    0/1   0/0   1/1    0/1
     chr2   71  .  G   A   .    .      .    GT     0/1    0/0    0/1   0/0   0/1    0/0    0/0   0/1   0/0    0/1
     chr2   95  .  C   T   .    .      .    GT     1/0    1/0    0/1   0/0   1/0    1/0    0/1   0/0   1/1    0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     path_list.append(
         str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
@@ -94,7 +94,7 @@ def multivcf_pedigree(
     chr1   48  .  G   A   .    .      .    GT     0/0    1/1    1/0   0/0    1/1    1/0   1/0
     chr1   71  .  G   A   .    .      .    GT     0/1    0/0    0/1   0/1    0/0    0/0   0/1
     chr1   95  .  C   T   .    .      .    GT     1/0    1/1    1/0   1/0    1/1    0/1   0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
     setup_vcf(root_path / "vcf_data" / "in_chr2.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -108,7 +108,7 @@ def multivcf_pedigree(
     chr2   48  .  G   A   .    .      .    GT     1/1    1/0   0/0   0/0    1/0
     chr2   71  .  G   A   .    .      .    GT     0/0    0/1   0/0   0/1    0/0
     chr2   95  .  C   T   .    .      .    GT     1/1    1/0   1/0   1/0    0/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
     path_list.append(
         str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
     )

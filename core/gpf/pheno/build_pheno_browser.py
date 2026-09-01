@@ -159,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
             ]
     else:
         gpfi = GPFInstance.build(args.gpf_instance)
-        registry = gpfi._pheno_registry  # noqa: SLF001
+        registry = gpfi._pheno_registry  # ruff: ignore[private-member-access]
         pheno_db_dir = Path(get_pheno_db_dir(gpfi.dae_config))
         storage_registry = gpfi.phenotype_storages
         cache_dir = gpfi.get_pheno_cache_path()

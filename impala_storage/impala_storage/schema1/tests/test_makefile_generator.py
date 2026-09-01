@@ -39,7 +39,7 @@ def importer(
         "hdfs": {
             "host": hdfs_host,
             "port": 8020,
-            "base_dir": "/tmp/test_genotype_impala"},  # noqa: S108
+            "base_dir": "/tmp/test_genotype_impala"},  # ruff: ignore[hardcoded-temp-file]
     }
     gpf_instance_2013.genotype_storages.register_storage_config(
         storage_config,

@@ -82,7 +82,7 @@ class BigQueryVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         result = self.client.query(query).result()
         for row in result:
@@ -93,7 +93,7 @@ class BigQueryVariants(SqlSchema2Variants):
         query = f"""
             SELECT * FROM {self.db}.INFORMATION_SCHEMA.COLUMNS
             WHERE table_name = '{table}'
-        """  # noqa: S608
+        """  # ruff: ignore[hardcoded-sql-expression]
         df = self.client.query(query).result().to_dataframe()
 
         records = df[["column_name", "data_type"]].to_records()
@@ -103,7 +103,7 @@ class BigQueryVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'variants_data_schema'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         for row in self.client.query(query).result():
             return cast(dict[str, Any], yaml.safe_load(row[0]))
@@ -113,14 +113,14 @@ class BigQueryVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'variants_blob_serializer'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         for row in self.client.query(query).result():
             return cast(str, row[0])
         return "json"
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.db}.{self.pedigree_table}"  # noqa: S608
+        query = f"SELECT * FROM {self.db}.{self.pedigree_table}"  # ruff: ignore[hardcoded-sql-expression]
         ped_df = self.client.query(query).result().to_dataframe()
 
         columns = {

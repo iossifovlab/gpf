@@ -35,7 +35,7 @@ class MockQueryRunner(QueryRunner):
                 # Apply deserializer
                 value = self.deserializer(item)
                 self.put_value_in_result_queue(value)
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:  # ruff: ignore[blind-except]
             self.put_value_in_result_queue(ex)
         finally:
             with self._status_lock:

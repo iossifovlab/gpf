@@ -31,9 +31,9 @@ def log_filter(
     data: Any = copy.deepcopy(getattr(request, "data", "-"))
     query_params: Any = copy.deepcopy(getattr(request, "query_params", "-"))
     if "password" in data:
-        data["password"] = "******"  # noqa: S105
+        data["password"] = "******"  # ruff: ignore[hardcoded-password-string]
     if "password" in query_params:
-        query_params["password"] = "******"  # noqa: S105
+        query_params["password"] = "******"  # ruff: ignore[hardcoded-password-string]
 
     return (
         f"user: {username}; remote addr: {remote_addr}; "

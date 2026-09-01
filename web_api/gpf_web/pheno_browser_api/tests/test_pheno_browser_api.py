@@ -57,7 +57,7 @@ def test_pheno_browser_api_permissions(
     method: str,
     body: dict,
     status: Any,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -72,7 +72,7 @@ def test_pheno_browser_api_permissions(
 
 def test_instruments_missing_dataset_id(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get(URL)
 
@@ -81,7 +81,7 @@ def test_instruments_missing_dataset_id(
 
 def test_instruments_missing_dataset_id_forbidden(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = user_client.get(URL)
 
@@ -90,7 +90,7 @@ def test_instruments_missing_dataset_id_forbidden(
 
 def test_instruments(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = f"{URL}?dataset_id=t4c8_study_1"
     response = admin_client.get(url)
@@ -104,7 +104,7 @@ def test_instruments(
 
 def test_anonymous_instruments_allowed(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = f"{URL}?dataset_id=t4c8_study_1"
     response = user_client.get(url)
@@ -114,7 +114,7 @@ def test_anonymous_instruments_allowed(
 
 def test_measures_info(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = f"{MEASURES_INFO_URL}?dataset_id=t4c8_study_1"
     response = admin_client.get(url)
@@ -127,7 +127,7 @@ def test_measures_info(
 
 def test_measures(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
     response = admin_client.get(url)
@@ -139,7 +139,7 @@ def test_measures(
 
 def test_measures_count(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = f"{MEASURES_COUNT_URL}?dataset_id=t4c8_study_1&instrument=i1"
     response = admin_client.get(url)
@@ -152,7 +152,7 @@ def test_measures_count(
 def test_anonymous_measures_allowed(
     user_client: Client,
     user: User,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     print(user.groups.all())
     url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
@@ -163,7 +163,7 @@ def test_anonymous_measures_allowed(
 
 def test_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -183,7 +183,7 @@ def test_download(
 
 def test_download_specific_measures(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -206,7 +206,7 @@ def test_download_specific_measures(
 
 def test_download_all_instruments(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -240,7 +240,7 @@ def test_download_all_instruments(
 
 def test_download_all_instruments_specific_measures(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -273,8 +273,8 @@ def test_download_all_instruments_specific_measures(
 @override_settings(FEATURE_FLAGS={"pheno_browser_download": False})
 def test_download_disabled_returns_404(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-    reset_flags: None,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -288,8 +288,8 @@ def test_download_disabled_returns_404(
 @override_settings(FEATURE_FLAGS={"pheno_browser_download": False})
 def test_download_head_disabled_returns_404(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-    reset_flags: None,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -303,8 +303,8 @@ def test_download_head_disabled_returns_404(
 @override_settings(FEATURE_FLAGS={})
 def test_download_enabled_when_override_omits_flag(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-    reset_flags: None,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """An override that omits the flag leaves the download enabled."""
     data = {
@@ -320,7 +320,7 @@ def test_download_enabled_when_override_omits_flag(
 
 def test_measure_details(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = (
         f"{MEASURE_DESCRIPTION_URL}?dataset_id=t4c8_study_1"

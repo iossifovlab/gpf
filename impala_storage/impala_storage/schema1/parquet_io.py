@@ -341,7 +341,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         rows: int = 100_000,
         *,
         include_reference: bool = True,
-        filesystem: fsspec.AbstractFileSystem | None = None,  # noqa: ARG004
+        filesystem: fsspec.AbstractFileSystem | None = None,  # ruff: ignore[unused-static-method-argument]
     ) -> AbstractVariantsParquetWriter:
         return VariantsParquetWriter(
             out_dir=out_dir,

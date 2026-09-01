@@ -84,7 +84,7 @@ def _dump_minio_diagnostics(reason: str) -> None:
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(
-    item: pytest.Item,  # noqa: ARG001
+    item: pytest.Item,  # ruff: ignore[unused-function-argument]
     call: pytest.CallInfo[None],
 ) -> Any:
     """Detect EndpointConnectionError failures and dump diagnostics.
@@ -119,7 +119,7 @@ def _default_genotype_storage_configs(
     # port mapping. Returns a fully-qualified URL.
     s3_endpoint_url = f"{s3_test_server_endpoint()}/"
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"  # noqa: S105
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"  # ruff: ignore[hardcoded-password-string]
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
 

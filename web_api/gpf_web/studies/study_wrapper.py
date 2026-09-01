@@ -771,7 +771,7 @@ class WDAEStudy(WDAEAbstractStudy):
         query_transformer: QueryTransformerProtocol,
         *,
         max_variants_count: int | None = None,
-        max_variants_message: bool = False,  # noqa: ARG002
+        max_variants_message: bool = False,  # ruff: ignore[unused-method-argument]
     ) -> Iterator[FamilyVariant]:
         """Query for raw family variants from registry."""
 

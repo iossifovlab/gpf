@@ -52,7 +52,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
     def get_children_ids(
         self,
         *,
-        leaves: bool = True,  # noqa: ARG002
+        leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         """Return the list of children ids."""
         return [self._study_id]
@@ -66,7 +66,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
         return self._description
 
     @description.setter
-    def description(self, input_text: str) -> None:  # noqa: ARG002
+    def description(self, input_text: str) -> None:  # ruff: ignore[unused-method-argument]
         return
 
     def query_variants_wdae(
@@ -82,10 +82,10 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
     def query_variants_preview_wdae(
         self, kwargs: dict[str, Any],
-        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
-        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        query_transformer: QueryTransformerProtocol,  # ruff: ignore[unused-method-argument]
+        response_transformer: ResponseTransformerProtocol,  # ruff: ignore[unused-method-argument]
         *,
-        max_variants_count: int | None = None,  # noqa: ARG002
+        max_variants_count: int | None = None,  # ruff: ignore[unused-method-argument]
     ) -> Generator[Any | None, None, None]:
         handle_denovo_gene_sets(self.rest_client, kwargs)
         handle_gene_sets(self.rest_client, kwargs)
@@ -101,10 +101,10 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
     def query_variants_download_wdae(
         self, kwargs: dict[str, Any],
-        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
-        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        query_transformer: QueryTransformerProtocol,  # ruff: ignore[unused-method-argument]
+        response_transformer: ResponseTransformerProtocol,  # ruff: ignore[unused-method-argument]
         *,
-        max_variants_count: int | None = None,  # noqa: ARG002
+        max_variants_count: int | None = None,  # ruff: ignore[unused-method-argument]
     ) -> Generator[Any | None, None, None]:
         handle_denovo_gene_sets(self.rest_client, kwargs)
         handle_gene_sets(self.rest_client, kwargs)
@@ -119,7 +119,7 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
     def get_measures_json(
         self,
-        used_types: list[str],  # noqa: ARG002
+        used_types: list[str],  # ruff: ignore[unused-method-argument]
     ) -> list[dict[str, Any]]:
         return cast(
             list[dict[str, Any]],
@@ -140,9 +140,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
     def get_gene_view_summary_variants(
         self,
-        frequency_column: str,  # noqa: ARG002
+        frequency_column: str,  # ruff: ignore[unused-method-argument]
         query_transformer: QueryTransformerProtocol,
-        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        response_transformer: ResponseTransformerProtocol,  # ruff: ignore[unused-method-argument]
         **kwargs: Any,
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
@@ -153,9 +153,9 @@ class RemoteWDAEStudy(WDAEAbstractStudy):
 
     def get_gene_view_summary_variants_download(
         self,
-        frequency_column: str,  # noqa: ARG002
-        query_transformer: QueryTransformerProtocol,  # noqa: ARG002
-        response_transformer: ResponseTransformerProtocol,  # noqa: ARG002
+        frequency_column: str,  # ruff: ignore[unused-method-argument]
+        query_transformer: QueryTransformerProtocol,  # ruff: ignore[unused-method-argument]
+        response_transformer: ResponseTransformerProtocol,  # ruff: ignore[unused-method-argument]
         **kwargs: Any,
     ) -> Iterable:
         """Return gene browser summary variants for downloading."""
@@ -238,7 +238,7 @@ class RemoteWDAEStudyGroup(RemoteWDAEStudy):  # pylint: disable=abstract-method
     def get_children_ids(
         self,
         *,
-        leaves: bool = True,  # noqa: ARG002
+        leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         return [child.study_id for child in self.children]
 

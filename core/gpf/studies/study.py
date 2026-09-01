@@ -90,7 +90,7 @@ class GenotypeData(CommonStudyMixin, ABC):
         self._registry = registry
         self.studies = studies
 
-        self._person_set_collections: dict[str, PersonSetCollection] | None = None  # noqa: E501
+        self._person_set_collections: dict[str, PersonSetCollection] | None = None  # ruff: ignore[line-too-long]
         self._parents: set[str] = set()
         self._executor = None
         self.is_remote = False
@@ -668,13 +668,13 @@ class GenotypeDataStudy(GenotypeData):
 
     def get_studies_ids(
         self, *,
-        leaves: bool = True,  # noqa: ARG002
+        leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         return [self.study_id]
 
     def get_children_ids(
         self, *,
-        leaves: bool = True,  # noqa: ARG002
+        leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         return [self.study_id]
 

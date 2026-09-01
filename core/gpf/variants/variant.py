@@ -278,10 +278,10 @@ class VariantDetails:
         """Build variant details from a CNV variant."""
         # pylint: disable=protected-access
         assert core.Allele.Type.is_cnv(
-            variant._allele_type)  # noqa: SLF001
+            variant._allele_type)  # ruff: ignore[private-member-access]
 
         variant_desc = VariantDesc(
-            variant_type=variant._allele_type,  # noqa: SLF001
+            variant_type=variant._allele_type,  # ruff: ignore[private-member-access]
             position=variant.position,
             end_position=variant.end_position)
         return VariantDetails(
@@ -614,7 +614,7 @@ class SummaryVariant:
 
         for allele_index, allele in enumerate(alleles):
             if allele.allele_index == 0:
-                allele._allele_index = allele_index  # noqa: SLF001
+                allele._allele_index = allele_index  # ruff: ignore[private-member-access]
 
         self._svuid: str | None = None
 

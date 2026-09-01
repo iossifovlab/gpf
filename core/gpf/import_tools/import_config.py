@@ -220,7 +220,7 @@ def _copy_loader_args(
 ) -> None:
     # Fix use of private _arguments of loaders
     # pylint: disable=protected-access
-    for arg in loader_cls._arguments():  # noqa: SLF001
+    for arg in loader_cls._arguments():  # ruff: ignore[private-member-access]
         if not arg.argument_name.startswith("--"):
             # ignore positional arguments as they are explicitly
             # specified in the schema

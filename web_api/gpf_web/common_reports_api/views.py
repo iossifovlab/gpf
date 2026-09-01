@@ -235,7 +235,7 @@ def create_common_reports_helper(
             return common_reports_helper
 
     if not isinstance(study, WDAEStudy):
-        raise ValueError(  # noqa: TRY004
+        raise ValueError(  # ruff: ignore[type-check-without-type-error]
             f"Pheno browser helper for {study.study_id} is missing!")
 
     return CommonReportsHelper(study)

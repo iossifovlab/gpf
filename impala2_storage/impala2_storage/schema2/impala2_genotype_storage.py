@@ -55,7 +55,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def _build_backend_internal(
         self, study_config: dict,
-        genome: ReferenceGenome | None,  # noqa: ARG002
+        genome: ReferenceGenome | None,  # ruff: ignore[unused-method-argument]
         gene_models: GeneModels | None,
     ) -> ImpalaVariants:
         assert study_config is not None

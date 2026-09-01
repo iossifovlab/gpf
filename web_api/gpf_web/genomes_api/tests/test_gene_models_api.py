@@ -8,7 +8,7 @@ from gpf_instance.gpf_instance import WGPFInstance
 
 def test_default_gene_models_id(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = anonymous_client.get("/api/v3/genome/gene_models/default")
 
@@ -19,7 +19,7 @@ def test_default_gene_models_id(
 
 def test_get_chd8_transcripts(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = anonymous_client.get("/api/v3/genome/gene_models/default/t4")
 
@@ -41,7 +41,7 @@ def test_get_chd8_transcripts(
 
 def test_get_nonexistant_gene_transcripts(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = anonymous_client.get("/api/v3/genome/gene_models/default/asdf")
 
@@ -51,7 +51,7 @@ def test_get_nonexistant_gene_transcripts(
 
 def test_get_case_insensitive_gene(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = anonymous_client.get("/api/v3/genome/gene_models/default/T4")
     assert response

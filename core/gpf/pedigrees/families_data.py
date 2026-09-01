@@ -100,7 +100,7 @@ def merge_families(
     # modifying the original family's Person instances
     # pylint: disable=protected-access
     merged = Family.from_persons([
-        Person(**person._attributes)  # noqa: SLF001
+        Person(**person._attributes)  # ruff: ignore[private-member-access]
         for person in merged_persons.values()
     ])
     layouts = Layout.from_family(merged)
@@ -267,7 +267,7 @@ class FamiliesData(Mapping[str, Family]):
             for family in self.values():
                 for person in family.full_members:
                     # pylint: disable=protected-access
-                    rec = copy.deepcopy(person._attributes)  # noqa: SLF001
+                    rec = copy.deepcopy(person._attributes)  # ruff: ignore[private-member-access]
                     rec["mom_id"] = person.mom_id or "0"
                     rec["dad_id"] = person.dad_id or "0"
                     rec["generated"] = person.generated or False

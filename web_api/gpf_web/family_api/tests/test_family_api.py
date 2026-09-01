@@ -20,7 +20,7 @@ from gpf.variants.attributes import Role, Sex, Status
 ])
 def test_family_api_permissions(
     anonymous_client: Client, url: str, method: str, body: dict | None,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -35,7 +35,7 @@ def test_family_api_permissions(
 
 def test_list_families_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1"
     response = admin_client.get(url)
@@ -45,7 +45,7 @@ def test_list_families_view(
 
 def test_list_families_view_tag_filter(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1?tags=tag_female_prb_family"
     response = admin_client.get(url)
@@ -57,7 +57,7 @@ def test_list_families_view_tag_filter(
 
 def test_list_families_view_tag_filter_multiple(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = (
         "/api/v3/families/t4c8_study_1"
@@ -72,7 +72,7 @@ def test_list_families_view_tag_filter_multiple(
 
 def test_list_families_view_nonexistent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/Study123123123"
     response = admin_client.get(url)
@@ -81,7 +81,7 @@ def test_list_families_view_nonexistent(
 
 def test_list_tags_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/tags"
     response = admin_client.get(url)
@@ -110,7 +110,7 @@ def test_list_tags_view(
 
 def test_family_details_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f1.3"
     response = admin_client.get(url)
@@ -135,7 +135,7 @@ def test_family_details_view(
 
 def test_family_details_view_nonexistent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f654654654"
     response = admin_client.get(url)
@@ -144,7 +144,7 @@ def test_family_details_view_nonexistent(
 
 def test_list_members_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f1.3/members"
     response = admin_client.get(url)
@@ -154,7 +154,7 @@ def test_list_members_view(
 
 def test_list_members_view_nonexistent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f654654654/members"
     response = admin_client.get(url)
@@ -163,7 +163,7 @@ def test_list_members_view_nonexistent(
 
 def test_member_details_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f1.3/members/s3"
     response = admin_client.get(url)
@@ -189,7 +189,7 @@ def test_member_details_view(
 
 def test_member_details_view_nonexistent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f6/members/ch456456"
     response = admin_client.get(url)
@@ -198,7 +198,7 @@ def test_member_details_view_nonexistent(
 
 def test_full_family_details_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/f1.1/members/all"
 
@@ -277,7 +277,7 @@ def test_full_family_details_view(
 
 def test_full_study_families_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/families/t4c8_study_1/all"
 

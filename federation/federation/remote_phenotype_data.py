@@ -129,7 +129,7 @@ class RemotePhenotypeData(PhenotypeData):
     def count_measures(
         self, instrument: str | None,
         search_term: str | None,
-        page: int | None = None,  # noqa: ARG002
+        page: int | None = None,  # ruff: ignore[unused-method-argument]
     ) -> int:
         return self.rest_client.get_browser_measure_count(
             self._remote_pheno_id, instrument, search_term,
@@ -137,7 +137,7 @@ class RemotePhenotypeData(PhenotypeData):
 
     def get_children_ids(
         self, *,
-        leaves: bool = True,  # noqa: ARG002
+        leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         if not self._is_group:
             return [self.pheno_id]

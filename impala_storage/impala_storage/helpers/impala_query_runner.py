@@ -44,7 +44,7 @@ class ImpalaQueryRunner(QueryRunner):
                     "(%s) connection created; pool status %s",
                     self.study_id,
                     self.connection_pool.status())
-                return connection  # noqa: TRY300
+                return connection  # ruff: ignore[try-consider-else]
             except exc.TimeoutError:
                 elapsed = time.time() - started
                 logger.debug(

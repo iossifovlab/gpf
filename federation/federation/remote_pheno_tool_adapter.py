@@ -47,7 +47,7 @@ class RemotePhenoToolAdapter(PhenoToolAdapterBase):
     def produce_download(
         self,
         query_data: dict[str, Any],
-        query_transformer: QueryTransformer,  # noqa: ARG002
+        query_transformer: QueryTransformer,  # ruff: ignore[unused-method-argument]
     ) -> Generator[str, None, None]:
         """Produce columns for download."""
         query_data["datasetId"] = self.dataset_id

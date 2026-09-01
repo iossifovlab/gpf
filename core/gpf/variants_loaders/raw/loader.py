@@ -181,7 +181,7 @@ class FamiliesGenotypes(ABC):
         pass
 
 
-class CLILoader(ABC):  # noqa: B024
+class CLILoader(ABC):  # ruff: ignore[abstract-base-class-without-abstract-method]
     """Base class for loader classes that require cli arguments."""
 
     def __init__(
@@ -366,7 +366,7 @@ class VariantsLoaderDecorator(VariantsLoader):
             genome=variants_loader.genome,
             transmission_type=variants_loader.transmission_type,
             params=variants_loader.params,
-            attributes=variants_loader._attributes,  # noqa: SLF001
+            attributes=variants_loader._attributes,  # ruff: ignore[private-member-access]
         )
         self.variants_loader = variants_loader
 
@@ -596,7 +596,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             cls, family_variant: FamilyVariant,
             genome: ReferenceGenome) -> tuple[np.ndarray, GeneticModel]:
         # pylint: disable=protected-access
-        best_state = family_variant._best_state  # noqa: SLF001
+        best_state = family_variant._best_state  # ruff: ignore[private-member-access]
         assert best_state is not None
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
@@ -654,40 +654,40 @@ class VariantsGenotypesLoader(VariantsLoader):
                     chrom, self.genome.resource.resource_id)
                 continue
             # pylint: disable=protected-access
-            summary_variant._chromosome = chrom  # noqa: SLF001
+            summary_variant._chromosome = chrom  # ruff: ignore[private-member-access]
             for summary_allele in summary_variant.alleles:
-                summary_allele._chrom = chrom  # noqa: SLF001
-                summary_allele._attributes["chrom"] = chrom  # noqa: SLF001
+                summary_allele._chrom = chrom  # ruff: ignore[private-member-access]
+                summary_allele._attributes["chrom"] = chrom  # ruff: ignore[private-member-access]
 
             for fv in family_variants:
 
                 if self.expect_genotype:
-                    assert fv._best_state is None  # noqa: SLF001
-                    assert fv._genetic_model is None  # noqa: SLF001
+                    assert fv._best_state is None  # ruff: ignore[private-member-access]
+                    assert fv._genetic_model is None  # ruff: ignore[private-member-access]
                     assert fv.gt is not None
 
                     fv._genetic_model = \
-                        self._calc_genetic_model(  # noqa: SLF001
+                        self._calc_genetic_model(  # ruff: ignore[private-member-access]
                             fv, self.genome,
                         )
 
-                    fv._best_state = self._calc_best_state(  # noqa: SLF001
+                    fv._best_state = self._calc_best_state(  # ruff: ignore[private-member-access]
                         fv, self.genome, force=False,
                     )
                     for fa in fv.family_alleles:
-                        fa._best_state = fv.best_state  # noqa: SLF001
-                        fa._genetic_model = fv.genetic_model  # noqa: SLF001
+                        fa._best_state = fv.best_state  # ruff: ignore[private-member-access]
+                        fa._genetic_model = fv.genetic_model  # ruff: ignore[private-member-access]
                 elif self.expect_best_state and fv.gt is None:
-                    assert fv._best_state is not None  # noqa: SLF001
-                    assert fv._genetic_model is None  # noqa: SLF001
+                    assert fv._best_state is not None  # ruff: ignore[private-member-access]
+                    assert fv._genetic_model is None  # ruff: ignore[private-member-access]
                     assert fv.gt is None
 
                     (
                         fv.gt,
-                        fv._genetic_model,  # noqa: SLF001
+                        fv._genetic_model,  # ruff: ignore[private-member-access]
                     ) = self._calc_genotype(fv, self.genome)
                     for fa in fv.family_alleles:
                         fa.gt = fv.gt
-                        fa._genetic_model = fv.genetic_model  # noqa: SLF001
+                        fa._genetic_model = fv.genetic_model  # ruff: ignore[private-member-access]
 
             yield summary_variant, family_variants

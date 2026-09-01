@@ -187,7 +187,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def _build_backend_internal(
         self, study_config: dict[str, Any],
-        genome: ReferenceGenome,  # noqa: ARG002
+        genome: ReferenceGenome,  # ruff: ignore[unused-method-argument]
         gene_models: GeneModels,
     ) -> QueryVariantsBase:
         assert study_config is not None

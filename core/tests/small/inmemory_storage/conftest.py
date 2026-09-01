@@ -15,7 +15,7 @@ GMM_CONTENT = """
 g1        tx1  foo   +      3       15    3        13     2         3,7        6,13
 g1        tx2  foo   +      3       9     3        6      1         3          6
 g2        tx3  bar   -      10      20    12       18     1         12         18
-"""  # noqa
+"""  # ruff: ignore[line-too-long]
 
 
 @pytest.fixture(scope="module")

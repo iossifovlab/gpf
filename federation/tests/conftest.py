@@ -81,7 +81,7 @@ def test_remote_extension(
 @pytest.fixture
 def t4c8_wgpf_instance(
     t4c8_instance: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
 
@@ -126,15 +126,15 @@ def t4c8_wgpf_instance(
 
 @pytest.fixture
 def admin_client(
-    admin: AbstractUser,  # noqa: ARG001
-    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
+    admin: AbstractUser,  # ruff: ignore[unused-function-argument]
+    tokens: tuple[AccessToken, AccessToken],  # ruff: ignore[unused-function-argument]
 ) -> Client:
     return Client(HTTP_AUTHORIZATION="Bearer admin-token")
 
 
 @pytest.fixture
 def admin(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
@@ -162,14 +162,14 @@ def tokens(
         user=user,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token="user-token",  # noqa: S106
+        token="user-token",  # ruff: ignore[hardcoded-password-func-arg]
         application=oauth_app,
     )
     admin_access_token = access_token(
         user=admin,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token="admin-token",  # noqa: S106
+        token="admin-token",  # ruff: ignore[hardcoded-password-func-arg]
         application=oauth_app,
     )
     user_access_token.save()
@@ -182,7 +182,7 @@ def tokens(
 
 @pytest.fixture
 def user(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
@@ -208,7 +208,7 @@ def oauth_app(admin: AbstractUser) -> Application:
         authorization_grant_type="authorization-code",
         redirect_uris="http://localhost:4200/datasets",
         client_id="admin",
-        client_secret="secret",  # noqa: S106
+        client_secret="secret",  # ruff: ignore[hardcoded-password-func-arg]
     )
     new_application.save()
     return cast(Application, new_application)

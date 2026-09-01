@@ -89,7 +89,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         inheritance = None

@@ -41,8 +41,8 @@ class GPFRemoteExtension(GPFExtensionBase):
         # since it will be non-empty because of the remote denovo gene sets
         # being loaded into the internal _collections and _configs
         # variables
-        _ = d_gs_db._denovo_gene_set_collections  # noqa: SLF001
-        _ = d_gs_db._denovo_gene_set_configs  # noqa: SLF001
+        _ = d_gs_db._denovo_gene_set_collections  # ruff: ignore[private-member-access]
+        _ = d_gs_db._denovo_gene_set_configs  # ruff: ignore[private-member-access]
 
         for client in clients.values():
             studies = self.fetch_studies_from_client(client)
@@ -60,9 +60,9 @@ class GPFRemoteExtension(GPFExtensionBase):
             for study in studies:
                 self.studies[study.study_id] = study
                 logger.info("register remote study %s", study.study_id)
-                self.instance._study_wrappers[  # noqa: SLF001
+                self.instance._study_wrappers[  # ruff: ignore[private-member-access]
                     study.study_id] = cast(WDAEStudy, study)
-                pheno_registry = self.instance._pheno_registry  # noqa: SLF001
+                pheno_registry = self.instance._pheno_registry  # ruff: ignore[private-member-access]
 
                 if study.has_pheno_data:
                     for candidate_study in studies:
@@ -74,7 +74,7 @@ class GPFRemoteExtension(GPFExtensionBase):
 
                 if study.is_genotype:
                     self.instance\
-                        ._variants_db.register_genotype_data(  # noqa: SLF001
+                        ._variants_db.register_genotype_data(  # ruff: ignore[private-member-access]
                             study.genotype_data)
 
             gs_db = self.instance.gene_sets_db

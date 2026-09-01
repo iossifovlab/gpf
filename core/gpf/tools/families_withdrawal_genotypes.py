@@ -77,7 +77,7 @@ def _rewrite_parquet(
         [str(path)],
     ).fetchone()[0]  # type: ignore[index]
     matching = conn.execute(
-        f'SELECT COUNT(*) FROM read_parquet(?) '  # noqa: S608
+        f'SELECT COUNT(*) FROM read_parquet(?) '  # ruff: ignore[hardcoded-sql-expression]
         f'WHERE "{famcol}" IN ({placeholders})',
         [str(path), *params],
     ).fetchone()[0]  # type: ignore[index]
@@ -91,7 +91,7 @@ def _rewrite_parquet(
     tmp = path.with_name(path.name + ".withdraw-tmp")
     try:
         conn.execute(
-            f'COPY (SELECT * FROM read_parquet(?) '  # noqa: S608
+            f'COPY (SELECT * FROM read_parquet(?) '  # ruff: ignore[hardcoded-sql-expression]
             f'WHERE "{famcol}" NOT IN ({placeholders})) '
             f"TO '{tmp}' "
             f"(FORMAT parquet, ROW_GROUP_SIZE 50000, COMPRESSION zstd)",
@@ -144,7 +144,7 @@ def _remove_from_genotype_leaf(
         # exception carries the real cause whether build_study_layout
         # raised (e.g. tables is None) or parquet_scan_path rejected the
         # value (its ValueError embeds the offending expression).
-        logger.error(  # noqa: TRY400
+        logger.error(  # ruff: ignore[error-instead-of-exception]
             "[%s] could not resolve pedigree path from study config: %s",
             study.study_id, exc,
         )

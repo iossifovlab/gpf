@@ -43,16 +43,16 @@ class DatasetSerializer(serializers.BaseSerializer):
 
         return instance
 
-    def to_internal_value(self, data: Any) -> Any:  # noqa: ARG002
+    def to_internal_value(self, data: Any) -> Any:  # ruff: ignore[unused-method-argument]
         """Do nothing, method is for DB objects only."""
         return
 
-    def create(self, validated_data: Any) -> Any:  # noqa: ARG002
+    def create(self, validated_data: Any) -> Any:  # ruff: ignore[unused-method-argument]
         """Do nothing, method is for DB objects only."""
         return
 
     def update(
-            self, instance: Any, validated_data: Any) -> Any:  # noqa: ARG002
+            self, instance: Any, validated_data: Any) -> Any:  # ruff: ignore[unused-method-argument]
         """Do nothing, method is for DB objects only."""
         return
 

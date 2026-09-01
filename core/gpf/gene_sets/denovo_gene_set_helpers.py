@@ -38,7 +38,7 @@ class DenovoGeneSetHelpers:
             logger.info(
                 "No denovo gene set collection for %s", study.study_id)
             return None
-        dgsc.cache = dgsc._convert_cache_innermost_types(  # noqa: SLF001
+        dgsc.cache = dgsc._convert_cache_innermost_types(  # ruff: ignore[private-member-access]
             cache, list, set,
         )
         return dgsc

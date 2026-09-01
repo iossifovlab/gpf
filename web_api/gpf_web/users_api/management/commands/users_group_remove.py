@@ -18,7 +18,7 @@ class Command(BaseCommand):
         parser.add_argument("email", type=str)
         parser.add_argument("groups", type=str)
 
-    def handle(self, *args: Any, **options: Any) -> None:  # noqa:ARG002
+    def handle(self, *args: Any, **options: Any) -> None:  # ruff: ignore[unused-method-argument]
         try:
             UserModel = get_user_model()  # pylint: disable=invalid-name
             user = UserModel.objects.get(email=options["email"])

@@ -7,7 +7,7 @@ from gpf_instance.gpf_instance import WGPFInstance
 
 def test_gene_scores_partitions(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores/partitions"
     data = {
@@ -23,7 +23,7 @@ def test_gene_scores_partitions(
 
 def test_bad_gene_score_partition(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores/partitions"
     data = {

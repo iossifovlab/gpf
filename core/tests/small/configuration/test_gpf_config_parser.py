@@ -108,7 +108,7 @@ def test_config_parser_load_paths(
     print(config)
     assert config.id == "152135"
     assert config.name == "Path test config"
-    assert config.some_abs_path == "/tmp/maybesomeconf.toml"  # noqa: S108
+    assert config.some_abs_path == "/tmp/maybesomeconf.toml"  # ruff: ignore[hardcoded-temp-file]
     assert config.some_rel_path == os.path.join(
         fixtures_dir, "environ_conf.toml",
     )

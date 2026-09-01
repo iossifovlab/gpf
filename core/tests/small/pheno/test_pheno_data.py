@@ -306,7 +306,7 @@ def test_study_person_sets(
     assert "unaffected" in person_set_collections["phenotype"].person_sets
 
     assert len(person_set_collections["phenotype"].person_sets["autism"]) == 66
-    assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 129  # noqa: E501
+    assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 129  # ruff: ignore[line-too-long]
 
 
 def test_study_common_report(

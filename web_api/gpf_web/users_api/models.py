@@ -121,7 +121,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         override = None
         try:
             override = settings.EMAIL_OVERRIDE  # type: ignore
-        except Exception:  # noqa: BLE001
+        except Exception:  # ruff: ignore[blind-except]
             logger.debug("no email override; sending email")
             override = None
         to_email = override or self.email
@@ -148,7 +148,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.is_active = False  # pyright: ignore
 
     def reset_password(
-        self, by_admin: bool = False,  # noqa: FBT001,FBT002
+        self, by_admin: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
     ) -> None:
         verif_code = ResetPasswordCode.create(self)
         send_reset_email(self, verif_code, by_admin)
@@ -358,7 +358,7 @@ class AuthenticationLog(models.Model):
 
     @staticmethod
     def log_authentication_attempt(
-        email: str, failed: bool,  # noqa: FBT001
+        email: str, failed: bool,  # ruff: ignore[boolean-type-hint-positional-argument]
     ) -> None:
         """Log an attempt for authentication."""
         last_login = AuthenticationLog.get_last_login_for(email)
@@ -378,7 +378,7 @@ class AuthenticationLog(models.Model):
 
 
 def staff_update(
-    sender: Any, **kwargs: Any,  # noqa: ARG001
+    sender: Any, **kwargs: Any,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Update if user is part of staff when SUPERUSER_GROUP is added/rmed."""
     for key in ["action", "instance", "reverse"]:
@@ -403,7 +403,7 @@ def staff_update(
 
 
 def group_post_delete(
-    sender: type[Group], **kwargs: Any,  # noqa: ARG001
+    sender: type[Group], **kwargs: Any,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Automatically remove staff privileges of SUPERUSER_GROUP users.
 
@@ -421,14 +421,14 @@ def group_post_delete(
     with transaction.atomic():
         # pylint: disable=protected-access
         for user in WdaeUser.objects.filter(
-                pk__in=group._user_ids).all():  # noqa: SLF001
+                pk__in=group._user_ids).all():  # ruff: ignore[private-member-access]
             user.is_staff = False
             user.save()
 
 
 # a hack to save the users the group had, used in the post_delete signal
 def group_pre_delete(
-    sender: type[Group], **kwargs: Any,  # noqa: ARG001
+    sender: type[Group], **kwargs: Any,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Attach user-ids when a group is being deleted.
 
@@ -441,7 +441,7 @@ def group_pre_delete(
     group = kwargs["instance"]
     if group.name == WdaeUser.SUPERUSER_GROUP:
         # pylint: disable=protected-access
-        group._user_ids = [u.pk for u in group.user_set.all()]  # noqa: SLF001
+        group._user_ids = [u.pk for u in group.user_set.all()]  # ruff: ignore[private-member-access]
 
 
 m2m_changed.connect(
@@ -515,7 +515,7 @@ def send_reset_inactive_acc_email(user: WdaeUser) -> None:
 
 def send_reset_email(
     user: WdaeUser, verif_path: BaseVerificationCode,
-    by_admin: bool = False,  # noqa: FBT001,FBT002
+    by_admin: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
 ) -> None:
     """Return dict with subject and message of the email."""
     # pylint: disable=import-outside-toplevel
@@ -552,7 +552,7 @@ def _create_verif_email(
 
 def _create_reset_mail(
     endpoint: str, path: str, verification_path: str,
-    by_admin: bool = False,  # noqa: FBT001,FBT002
+    by_admin: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
 ) -> dict[str, str]:
     message = (
         "Hello. You have requested to reset your password for "

@@ -246,7 +246,7 @@ def test_generate_denovo_gene_sets_script_passes(
 
 def test_generate_denovo_gene_sets_study_1(
     t4c8_instance: GPFInstance,
-    t4c8_study_1: GenotypeData,  # noqa: ARG001
+    t4c8_study_1: GenotypeData,  # ruff: ignore[unused-function-argument]
 ) -> None:
     generate_denovo_gene_sets([], gpf_instance=t4c8_instance)
     generate_common_report([], gpf_instance=t4c8_instance)
@@ -282,7 +282,7 @@ def test_generate_denovo_gene_sets_study_1(
 
 def test_generate_denovo_gene_sets_study_2(
     t4c8_instance: GPFInstance,
-    t4c8_study_2: GenotypeData,  # noqa: ARG001
+    t4c8_study_2: GenotypeData,  # ruff: ignore[unused-function-argument]
 ) -> None:
     generate_denovo_gene_sets([], gpf_instance=t4c8_instance)
     generate_common_report([], gpf_instance=t4c8_instance)

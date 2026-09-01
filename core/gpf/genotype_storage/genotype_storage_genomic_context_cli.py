@@ -71,7 +71,7 @@ class CLIGenotypeStorageContextProvider(GenomicContextProvider):
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         """Register CLI argument for the genotype storage configuration file.
 

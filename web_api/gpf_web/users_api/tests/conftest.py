@@ -1,4 +1,4 @@
-# ruff: noqa: ARG001, S106
+# ruff: file-ignore[unused-function-argument, hardcoded-password-func-arg]
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import uuid

@@ -392,7 +392,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
             query = f"""
                 CREATE TABLE {table_name} AS
                 SELECT * FROM parquet_scan('{parquet_path}')
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
             cursor.sql(query)
 
     def create_table_partitioned(
@@ -420,7 +420,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
                 CREATE TABLE {table_name} AS
                 SELECT * FROM
                 parquet_scan('{dataset_path}', hive_partitioning = 1)
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
             logger.info("query: %s", query)
             cursor.sql(query)
 
@@ -491,7 +491,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
 
     def import_dataset(
         self,
-        work_dir: str,  # noqa: ARG002
+        work_dir: str,  # ruff: ignore[unused-method-argument]
         study_id: str,
         layout: Schema2DatasetLayout,
         partition_descriptor: PartitionDescriptor,
@@ -540,7 +540,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
 
     def _build_backend_internal(
             self, study_config: dict,
-            genome: ReferenceGenome,  # noqa: ARG002
+            genome: ReferenceGenome,  # ruff: ignore[unused-method-argument]
             gene_models: GeneModels) -> DuckDbVariants | DuckDb2Variants:
         if self.connection_factory is None:
             self.start()

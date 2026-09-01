@@ -135,7 +135,7 @@ class FamiliesLoader(CLILoader):
                 logger.debug("building family roles: %s", family.family_id)
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
-            families._ped_df = None  # noqa: SLF001
+            families._ped_df = None  # ruff: ignore[private-member-access]
 
     def load(self) -> FamiliesData:
         if self.file_format == "simple":
@@ -368,7 +368,7 @@ class FamiliesLoader(CLILoader):
         ped_not_sequenced: str | int = "not_sequenced",
         ped_sample_id: str | int = "sample_id",
         enums_as_values: bool = False,
-        **kwargs: Any,  # noqa: ARG004
+        **kwargs: Any,  # ruff: ignore[unused-static-method-argument]
     ) -> pd.DataFrame:
         """Read a pedigree from file."""
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument

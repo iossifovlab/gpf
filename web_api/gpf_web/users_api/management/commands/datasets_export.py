@@ -22,10 +22,10 @@ class Command(BaseCommand, DatasetBaseMixin):
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument("--file", type=str)
 
-    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+    def handle(self, *args: Any, **options: Any) -> None:  # ruff: ignore[unused-method-argument]
         # pylint: disable=consider-using-with
         if options["file"]:
-            outfile: TextIO = open(options["file"], "w")  # noqa: SIM115
+            outfile: TextIO = open(options["file"], "w")  # ruff: ignore[open-file-with-context-handler]
         else:
             outfile = sys.stdout
 

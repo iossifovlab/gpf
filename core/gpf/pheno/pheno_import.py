@@ -73,7 +73,7 @@ from gpf.variants.attributes import Status
 logger = logging.getLogger(__name__)
 
 
-# ruff: noqa: S608
+# ruff: file-ignore[hardcoded-sql-expression]
 
 
 @dataclass
@@ -679,7 +679,7 @@ def collect_instruments(
     return list(all_instruments.values())
 
 
-def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
+def _transform_value(val: str | bool) -> str | None:  # ruff: ignore[boolean-type-hint-positional-argument]
     if val == "":
         return None
     if val == "True":

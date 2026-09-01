@@ -49,7 +49,7 @@ def test_gene_view_api_permissions(
     method: str,
     body: dict,
     status: Any,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -64,7 +64,7 @@ def test_gene_view_api_permissions(
 
 def test_gene_view_summary_variants_query(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {"datasetId": "t4c8_study_1"}
     response = admin_client.post(
@@ -85,7 +85,7 @@ def test_gene_view_summary_variants_query(
 
 def test_gene_view_summary_variants_query_group(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {"datasetId": "t4c8_dataset"}
     response = admin_client.post(
@@ -110,7 +110,7 @@ def test_gene_view_summary_variants_query_group(
 
 def test_gene_view_summary_variants_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {"queryData": json.dumps({"datasetId": "t4c8_study_1"})}
     response = admin_client.post(
@@ -125,7 +125,7 @@ def test_gene_view_summary_variants_download(
 
 def test_gene_view_summary_variants_download_group(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {"queryData": json.dumps({"datasetId": "t4c8_dataset"})}
     response = admin_client.post(
@@ -140,7 +140,7 @@ def test_gene_view_summary_variants_download_group(
 
 def test_gene_view_config(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/gene_view/config?datasetId=t4c8_study_1",
@@ -216,7 +216,7 @@ summary_query_kwargs_expected = [
 @pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
 def test_query_gene_view_summary_variants_dataset(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     data: dict[str, Any],
     expected: dict[str, Any],
 ) -> None:
@@ -244,7 +244,7 @@ def test_query_gene_view_summary_variants_dataset(
 @pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
 def test_query_gene_view_summary_variants_download_dataset(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     data: dict[str, Any],
     expected: dict[str, Any],
 ) -> None:
@@ -280,7 +280,7 @@ def test_query_gene_view_summary_variants_download_dataset(
 @pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
 def test_query_gene_view_summary_variants_study(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     data: dict[str, Any],
     expected: dict[str, Any],
 ) -> None:
@@ -308,7 +308,7 @@ def test_query_gene_view_summary_variants_study(
 @pytest.mark.parametrize("data,expected", summary_query_kwargs_expected)
 def test_query_gene_view_summary_variants_download_study(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     data: dict[str, Any],
     expected: dict[str, Any],
 ) -> None:

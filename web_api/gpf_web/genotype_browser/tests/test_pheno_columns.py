@@ -11,7 +11,7 @@ QUERY_URL = "/api/v3/genotype_browser/query"
 def test_query_preview_have_pheno_column_values(
     admin_client: Client,
     preview_sources: list[dict],
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_study_1",

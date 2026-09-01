@@ -16,7 +16,7 @@ from rest_framework.request import Request
 
 class SessionAuthenticationWithoutCSRF(SessionAuthentication):
 
-    def enforce_csrf(self, request: Request) -> None:  # noqa: ARG002
+    def enforce_csrf(self, request: Request) -> None:  # ruff: ignore[unused-method-argument]
         """Enforce CSRF validation for session based authentication."""
         return
 
@@ -28,7 +28,7 @@ class SessionAuthenticationWithUnauthenticatedCSRF(SessionAuthentication):
         """Return the currently logged-in user or None otherwise."""
         # Get the session-based user from the underlying HttpRequest object
         # pylint: disable=protected-access
-        user = getattr(request._request, "user", None)  # noqa: SLF001
+        user = getattr(request._request, "user", None)  # ruff: ignore[private-member-access]
 
         self.enforce_csrf(request)
 

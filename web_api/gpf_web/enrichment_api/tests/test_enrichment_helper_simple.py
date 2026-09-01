@@ -247,7 +247,7 @@ def test_get_selected_person_set_collections_default(
                 "values": ["unaffected"],
                 "color": "#ffffff"},
             ],
-            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # noqa: E501
+            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # ruff: ignore[line-too-long]
             "status": {"id": "status",
             "name": "Affected Status",
             "sources": [{"from": "pedigree", "source": "status"}],
@@ -261,7 +261,7 @@ def test_get_selected_person_set_collections_default(
                 "values": ["unaffected"],
                 "color": "#ffffff"},
             ],
-            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # noqa: E501
+            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # ruff: ignore[line-too-long]
             "role": {"id": "role",
             "name": "Role",
             "sources": [{"from": "pedigree", "source": "role"}],
@@ -274,7 +274,7 @@ def test_get_selected_person_set_collections_default(
                  "name": "Sibling",
                  "values": ["sib"], "color": "#ffffff"},
             ],
-            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # noqa: E501
+            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # ruff: ignore[line-too-long]
             "selected_person_set_collections": ["role", "status", "phenotype"],
     }}
 

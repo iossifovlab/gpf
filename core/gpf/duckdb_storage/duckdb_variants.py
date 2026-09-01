@@ -113,7 +113,7 @@ class DuckDbQueryDialect(Dialect):
 
     def build_table_name(
         self, table: str,
-        db: str | None,  # noqa: ARG002
+        db: str | None,  # ruff: ignore[unused-method-argument]
     ) -> str:
         return table
 
@@ -160,7 +160,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'variants_data_schema'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         with self._get_connection_factory() as connection:
             result = connection.execute(query).fetchall()
@@ -172,7 +172,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         with self._get_connection_factory() as connection:
             result = connection.execute(query).fetchall()
@@ -184,7 +184,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'variants_blob_serializer'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         with self._get_connection_factory() as connection:
             result = connection.execute(query).fetchall()
@@ -196,7 +196,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'summary_schema'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         schema_content = ""
         with self._get_connection_factory() as connection:
@@ -209,7 +209,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'family_schema'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         schema_content = ""
         with self._get_connection_factory() as connection:
@@ -219,12 +219,12 @@ class DuckDbVariants(SqlSchema2Variants):
         return dict(line.split("|") for line in schema_content.split("\n"))
 
     def _fetch_schema(
-        self, table: str,  # noqa: ARG002
+        self, table: str,  # ruff: ignore[unused-method-argument]
     ) -> dict[str, str]:
         return {}
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.pedigree_table}"  # noqa: S608
+        query = f"SELECT * FROM {self.pedigree_table}"  # ruff: ignore[hardcoded-sql-expression]
         with self._get_connection_factory() as connection:
 
             ped_df = cast(pd.DataFrame, connection.execute(query).df())

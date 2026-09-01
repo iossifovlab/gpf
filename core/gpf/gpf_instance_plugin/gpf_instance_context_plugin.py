@@ -66,7 +66,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
 
     def add_argparser_arguments(
         self, parser: argparse.ArgumentParser,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
@@ -79,6 +79,7 @@ class GPFInstanceContextProvider(GenomicContextProvider):
         from gain.genomic_resources.repository_factory import (
             build_genomic_resource_repository,
         )
+
         from gpf.gpf_instance.gpf_instance import GPFInstance
         gpf_instance = kwargs.get("gpf_instance")
         if gpf_instance is not None:

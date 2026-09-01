@@ -39,21 +39,21 @@ def test_get_all_returns_a_copy() -> None:
 
 @override_settings(FEATURE_FLAGS={})
 def test_defaults_used_when_no_override(
-    reset_flags: None,  # noqa: ARG001
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     assert get_feature_flags().get_all() == DEFAULT_FEATURE_FLAGS
 
 
 @override_settings(FEATURE_FLAGS={"pheno_browser_download": False})
 def test_known_flag_override_applies(
-    reset_flags: None,  # noqa: ARG001
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     assert get_feature_flags().is_enabled("pheno_browser_download") is False
 
 
 @override_settings(FEATURE_FLAGS={"made_up_flag": True})
 def test_unknown_override_key_is_dropped(
-    reset_flags: None,  # noqa: ARG001
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     flags = get_feature_flags().get_all()
 

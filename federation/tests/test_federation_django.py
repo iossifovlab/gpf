@@ -13,7 +13,7 @@ from rest_framework import status
 
 def test_studies(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     expected_ids = {
         "t4c8_dataset", "t4c8_study_1", "TEST_REMOTE_t4c8_dataset",
@@ -32,7 +32,7 @@ def test_studies(
 
 def test_study_description(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get(
         "/api/v3/datasets/description/TEST_REMOTE_t4c8_study_1")
@@ -45,7 +45,7 @@ def test_study_description(
 
 def test_get_remote_study(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get("/api/v3/datasets/TEST_REMOTE_t4c8_dataset")
 
@@ -57,7 +57,7 @@ def test_get_remote_study(
 
 def test_genomic_scores(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     expected_scores = {"score_one", "TEST_REMOTE_score_one"}
 
@@ -71,7 +71,7 @@ def test_genomic_scores(
 
 def test_gene_sets_collections(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get("/api/v3/gene_sets/gene_sets_collections")
     assert response
@@ -88,7 +88,7 @@ def test_gene_sets_collections(
 
 def test_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.post(
         "/api/v3/gene_sets/gene_sets",
@@ -116,7 +116,7 @@ def test_gene_sets(
 
 def test_denovo_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get("/api/v3/gene_sets/denovo_gene_sets_types")
 
@@ -138,7 +138,7 @@ def test_denovo_gene_sets(
 
 def test_dgs_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "geneSetsCollection": "denovo",
@@ -162,7 +162,7 @@ def test_dgs_gene_sets(
 
 def test_measures_regressions(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     expected_measures = {"age", "iq"}
 
@@ -177,7 +177,7 @@ def test_measures_regressions(
 
 def test_pheno_tool(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -232,7 +232,7 @@ def test_pheno_tool(
 
 def test_pheno_tool_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -275,7 +275,7 @@ def test_pheno_tool_gene_sets(
 
 def test_pheno_tool_denovo_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -324,7 +324,7 @@ def test_pheno_tool_denovo_gene_sets(
 
 def test_pheno_tool_genomic_scores(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -374,7 +374,7 @@ def test_pheno_tool_genomic_scores(
 
 def test_pheno_tool_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     download_url = "/api/v3/pheno_tool/download"
     response = cast(StreamingHttpResponse, admin_client.post(
@@ -404,7 +404,7 @@ def test_pheno_tool_download(
 
 def test_enrichment_models(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get(
         "/api/v3/enrichment/models/TEST_REMOTE_t4c8_dataset")
@@ -421,7 +421,7 @@ def test_enrichment_models(
 
 def test_enrichment_test(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "datasetId": "TEST_REMOTE_t4c8_dataset",
@@ -458,7 +458,7 @@ def test_enrichment_test(
 
 def test_gene_view_config(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response = admin_client.get(
         "/api/v3/gene_view/config?datasetId=TEST_REMOTE_t4c8_study_1",
@@ -468,7 +468,7 @@ def test_gene_view_config(
 
 def test_gene_view_summary_variants_query(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {"datasetId": "TEST_REMOTE_t4c8_study_1", "geneSymbols": ["t4"]}
     response = admin_client.post(
@@ -485,7 +485,7 @@ def test_gene_view_summary_variants_query(
 
 def test_gene_view_summary_variants_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "queryData": json.dumps({
@@ -508,7 +508,7 @@ def test_gene_view_summary_variants_download(
 
 def test_query_variants_wdae_remote(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -567,7 +567,7 @@ def test_query_variants_wdae_remote(
 
 def test_query_variants_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     query = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -635,7 +635,7 @@ def test_query_variants_download(
 
 def test_query_variants_wdae_remote_denovo_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -666,7 +666,7 @@ def test_query_variants_wdae_remote_denovo_gene_sets(
 
 def test_query_variants_wdae_remote_gene_sets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -692,7 +692,7 @@ def test_query_variants_wdae_remote_gene_sets(
 
 def test_query_variants_wdae_remote_genomic_scores(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -723,7 +723,7 @@ def test_query_variants_wdae_remote_genomic_scores(
 
 def test_genotype_browser_query_default_person_set_collection(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {"datasetId": "TEST_REMOTE_t4c8_study_1"}
     response = admin_client.post(
@@ -748,7 +748,7 @@ def test_genotype_browser_query_default_person_set_collection(
 
 def test_genotype_browser_query_explicit_person_set_collection(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     data = {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -788,7 +788,7 @@ def test_genotype_browser_query_explicit_person_set_collection(
 def test_pheno_browser_instruments(
     admin_client: Client,
     dataset_id: str,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     instruments_url = "/api/v3/pheno_browser/instruments"
     response = admin_client.get(
@@ -806,7 +806,7 @@ def test_pheno_browser_instruments(
 
 def test_pheno_browser_measures_info(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     info_url = "/api/v3/pheno_browser/measures_info"
     response_remote = admin_client.get(
@@ -839,7 +839,7 @@ def test_pheno_browser_measures_info(
 
 def test_pheno_browser_measure_description(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     descriptions_url = "/api/v3/pheno_browser/measure_description"
     response_remote = admin_client.get(
@@ -867,7 +867,7 @@ def test_pheno_browser_measure_description(
 
 def test_pheno_browser_measures_search(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     measures_url = "/api/v3/pheno_browser/measures"
     response_remote = admin_client.get(
@@ -897,7 +897,7 @@ def test_pheno_browser_measures_search(
 
 def test_pheno_browser_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     download_url = "/api/v3/pheno_browser/download"
     response_remote = cast(StreamingHttpResponse, admin_client.get(
@@ -928,7 +928,7 @@ def test_pheno_browser_download(
 
 def test_pheno_browser_download_check(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     download_url = "/api/v3/pheno_browser/download"
     response_remote = cast(StreamingHttpResponse, admin_client.head(
@@ -954,7 +954,7 @@ def test_pheno_browser_download_check(
 
 def test_pheno_browser_measure_count(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     measures_count_url = "/api/v3/pheno_browser/measures_count"
     response_remote = admin_client.get(
@@ -980,7 +980,7 @@ def test_pheno_browser_measure_count(
 
 def test_pheno_browser_image_links(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     response_info = admin_client.get(
         "/api/v3/pheno_browser/measures_info",
@@ -1007,7 +1007,7 @@ def test_pheno_browser_image_links(
 
 def test_variant_reports(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     common_report_url = (
         "/api/v3/common_reports/studies/"
@@ -1038,7 +1038,7 @@ def test_variant_reports(
 
 def test_full_variant_reports(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     common_report_url = (
         "/api/v3/common_reports/studies/"
@@ -1061,7 +1061,7 @@ def test_full_variant_reports(
 
 def test_family_counter_list(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     family_counter_url = (
         "/api/v3/common_reports/family_counters"
@@ -1092,7 +1092,7 @@ def test_family_counter_list(
 
 def test_family_counter_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = "/api/v3/common_reports/family_counters/download"
     data = {
@@ -1138,7 +1138,7 @@ def test_family_counter_download(
 
 def test_families_data_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = (
         "/api/v3/common_reports/families_data/TEST_REMOTE_t4c8_dataset"
@@ -1173,7 +1173,7 @@ def test_families_data_download(
 
 def test_families_tags_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = (
         "/api/v3/common_reports/families_data/TEST_REMOTE_t4c8_dataset"
@@ -1219,7 +1219,7 @@ def test_families_tags_download(
 
 def test_measure_list_categorical(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = (
         "/api/v3/measures/type/categorical?datasetId=TEST_REMOTE_t4c8_study_1"
@@ -1232,7 +1232,7 @@ def test_measure_list_categorical(
 
 def test_measure_list_continuous(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = (
         "/api/v3/measures/type/continuous?datasetId=TEST_REMOTE_t4c8_study_1"
@@ -1245,7 +1245,7 @@ def test_measure_list_continuous(
 
 def test_histograms(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post("/api/v3/measures/histogram", {
         "datasetId": "TEST_REMOTE_t4c8_study_1", "measure": "i1.age",
@@ -1299,7 +1299,7 @@ def test_histograms(
 
 def test_histograms_beta(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post("/api/v3/measures/histogram-beta", {
         "datasetId": "TEST_REMOTE_t4c8_study_1", "measure": "i1.age",
@@ -1359,7 +1359,7 @@ def test_histograms_beta(
 
 def test_histograms_beta_with_roles(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post("/api/v3/measures/histogram-beta", {
         "datasetId": "TEST_REMOTE_t4c8_study_1",
@@ -1422,7 +1422,7 @@ def test_histograms_beta_with_roles(
 
 def test_regressions(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/measures/regressions?datasetId=TEST_REMOTE_t4c8_study_1",
@@ -1434,7 +1434,7 @@ def test_regressions(
 
 def test_role_list(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post(
         "/api/v3/measures/role-list",

@@ -45,7 +45,7 @@ class Command(BaseCommand, ImportUsersBase):
 
         parser.add_argument("email", help="The emails of the new user")
 
-    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+    def handle(self, *args: Any, **options: Any) -> None:  # ruff: ignore[unused-method-argument]
         # pylint: disable=invalid-name
         UserModel = get_user_model()
         if UserModel.objects.filter(email=options["email"]).exists():

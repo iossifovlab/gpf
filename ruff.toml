@@ -45,24 +45,69 @@ target-version = "py310"
 
 [lint]
 select = ["E", "F", "W", "C90", "I", "UP", "ASYNC", "S", "BLE", "FBT", "B", "A", "COM", "C4", "T10", "EXE", "ISC", "LOG", "G", "INP", "PIE", "T20", "PT", "Q", "RSE", "RET", "SLF", "SIM", "ARG", "PTH", "FIX", "ERA", "PD", "TRY", "PERF", "FURB", "RUF"]
+# Selectors are rule NAMES rather than codes: ruff 0.16 deprecated codes in
+# selectors (`rule-codes-in-selectors`) and its own fix rewrote these.  The
+# old code is kept in a trailing comment on each line so that grepping this
+# file for a code quoted in an old commit or issue still lands on the right
+# row.  Category prefixes (PTH, SLF, D) have no name spelling and stay as
+# they are.
 ignore = [
-    "D105", "D107", "D417", "UP015", "FURB152",
-    "TRY003",
-    "T201", "S101", "PTH",  # for separate tasks, fix issues and then enable these rules
-    "PT006",  # for separate task - currently we use 'csv', but maybe change to 'tuple' or 'list'?
-    "PERF203", # Python 3.11 introduces zero cost exception handling
-    "S603",
-    "S404",
-    "B019",
-    "FURB192",
-    "S301",
+    "undocumented-magic-method",           # D105
+    "undocumented-public-init",            # D107
+    "undocumented-param",                  # D417
+    "redundant-open-modes",                # UP015
+    "math-constant",                       # FURB152
+    "raise-vanilla-args",                  # TRY003
+    # for separate tasks, fix issues and then enable these rules
+    "print",                               # T201
+    "assert",                              # S101
+    "PTH",
+    # for separate task - currently we use 'csv', but maybe change to
+    # 'tuple' or 'list'?
+    "pytest-parametrize-names-wrong-type", # PT006
+    # Python 3.11 introduces zero cost exception handling
+    "try-except-in-loop",                  # PERF203
+    "subprocess-without-shell-equals-true", # S603
+    "suspicious-subprocess-import",        # S404
+    "cached-instance-method",              # B019
+    "sorted-min-max",                      # FURB192
+    "suspicious-pickle-usage",             # S301
 ]
 fixable = ["ALL"]
 preview = true
 
 [lint.per-file-ignores]
-"test*.py" = ["S101", "SLF", "FBT001"]
+"test*.py" = [
+    "assert",                              # S101
+    "SLF",
+    "boolean-type-hint-positional-argument",  # FBT001
+    # RUF069, new in ruff 0.16's preview set.  These assertions compare a
+    # query or loader's output against the exact float written into the
+    # test's own fixture.  Every such value is exactly representable and
+    # travels through the code unarithmetically, so `==` is the assertion
+    # we want: a tolerance would let a real regression through.  The rule
+    # stays on for production code, where a computed float really can
+    # drift.
+    "float-equality-comparison",           # RUF069
+]
 "conftest.py" = ["D"]
+# RUF067 (`non-empty-init-module`), new in ruff 0.16's preview set, wants
+# every `__init__.py` to hold nothing but docstrings and re-exports.
+# These three hold deliberate code:
+#
+#   impala_storage / impala2_storage   the `__version__` fallback that
+#                                      reads `__build__` then `_version`
+#   core/tests/small/studies           `logging.basicConfig()`, run for
+#                                      its side effect on the test package
+#
+# Scoped to the three rather than ignored globally, so a NEW `__init__.py`
+# that starts accumulating logic is still reported.
+"core/tests/small/studies/__init__.py" = ["non-empty-init-module"]     # RUF067
+"impala_storage/impala_storage/__init__.py" = ["non-empty-init-module"]   # RUF067
+"impala2_storage/impala2_storage/__init__.py" = ["non-empty-init-module"] # RUF067
+# A standalone helper script run by hand against the built web UI, not a
+# package member -- nothing imports it.
+"web_ui/ppindex.py" = ["implicit-namespace-package"]  # INP001
 
 [lint.isort]
 # Make first-party detection deterministic across local

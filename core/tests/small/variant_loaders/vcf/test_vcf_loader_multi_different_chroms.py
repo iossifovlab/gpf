@@ -92,7 +92,7 @@ def multi_contig_vcf(
     4   	44  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     4   	55   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 
@@ -120,7 +120,7 @@ def multi_contig_vcf_gz(
     4   	44  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	1/1 	0/1 	0/0	    0/0
     4   	55  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/1 	0/0 	0/0	    1/1
     4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3 	2/2 	2/2 	2/2 	2/2 	2/2	2/2
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 
@@ -167,7 +167,7 @@ def multi_contig_chr_vcf(
     chr4	44   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     chr4	55  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     chr4	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 
@@ -195,7 +195,7 @@ def multi_contig_chr_vcf_gz(
     chr4	44    	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     chr4	55     	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     chr4	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment, line-too-long]
 
     return str(vcf_path)
 

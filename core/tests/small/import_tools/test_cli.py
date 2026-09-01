@@ -50,7 +50,7 @@ def simple_study_dir(
 
 def test_run(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     import_config_fn = str(simple_study_dir / "import_config.yaml")
     assert cli.main([import_config_fn, "-j", "1"]) == 0
@@ -58,7 +58,7 @@ def test_run(
 
 def test_list(
     simple_study_dir: pathlib.Path,
-    context_fixture: GenomicContext,  # noqa: ARG001
+    context_fixture: GenomicContext,  # ruff: ignore[unused-function-argument]
 ) -> None:
     import_config_fn = str(simple_study_dir / "import_config.yaml")
     assert cli.main([import_config_fn, "list"]) == 0

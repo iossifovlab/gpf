@@ -7,7 +7,7 @@ def test_authenticate(base_url: str) -> None:
     client = GPFOAuthSession(
         base_url=base_url,
         client_id="federation",
-        client_secret="secret",  # noqa: S106
+        client_secret="secret",  # ruff: ignore[hardcoded-password-func-arg]
         redirect_uri="http://localhost:21010/login",
     )
 
@@ -19,7 +19,7 @@ def test_authenticate_and_revoke(base_url: str) -> None:
     client = GPFOAuthSession(
         base_url=base_url,
         client_id="federation",
-        client_secret="secret",  # noqa: S106
+        client_secret="secret",  # ruff: ignore[hardcoded-password-func-arg]
         redirect_uri="http://localhost:21010/login",
     )
 

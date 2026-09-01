@@ -46,7 +46,7 @@ def test_users_cant_get_all_users(user_client: Client) -> None:
 
 
 def test_unauthenticated_cant_get_all_users(
-    db: None, client: Client,  # noqa: ARG001
+    db: None, client: Client,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = "/api/v3/users"
     response = client.get(url)
@@ -316,7 +316,7 @@ def test_two_admins_can_not_remove_superuser_group_from_self(
 
 
 def test_two_admins_can_remove_superuser_group_from_other(
-    admin: WdaeUser,  # noqa: ARG001
+    admin: WdaeUser,  # ruff: ignore[unused-function-argument]
     admin_client: Client,
     user_model: type[WdaeUser],
 ) -> None:
@@ -386,7 +386,7 @@ def test_resetting_user_password_does_not_deauthenticates_them(
     assert response.status_code == status.HTTP_200_OK
     assert response.data["loggedIn"]
 
-    reset_password_url = "/api/v3/users/forgotten_password"  # noqa: S105
+    reset_password_url = "/api/v3/users/forgotten_password"  # ruff: ignore[hardcoded-password-string]
     data = {"email": user.email}
     response = admin_client.post(
         reset_password_url, json.dumps(data),
@@ -540,7 +540,7 @@ def test_admin_cannot_delete_own_user(
 def test_admin_can_password_reset(
     admin_client: Client,
     active_user: WdaeUser,
-    user_model: type[WdaeUser],  # noqa: ARG001
+    user_model: type[WdaeUser],  # ruff: ignore[unused-function-argument]
 ) -> None:
 
     url = f"/api/v3/users/{active_user.id}/password_reset"
@@ -553,7 +553,7 @@ def test_admin_can_password_reset(
 def test_non_admin_can_not_password_reset(
     user_client: Client,
     active_user: WdaeUser,
-    user_model: type[WdaeUser],  # noqa: ARG001
+    user_model: type[WdaeUser],  # ruff: ignore[unused-function-argument]
 ) -> None:
 
     url = f"/api/v3/users/{active_user.id}/password_reset"
@@ -565,7 +565,7 @@ def test_non_admin_can_not_password_reset(
 
 def test_admin_password_reset_of_nonexiting_user_fails(
     admin_client: Client,
-    active_user: WdaeUser, user_model: type[WdaeUser],  # noqa: ARG001
+    active_user: WdaeUser, user_model: type[WdaeUser],  # ruff: ignore[unused-function-argument]
 ) -> None:
 
     url = "/api/v3/users/0/password_reset"

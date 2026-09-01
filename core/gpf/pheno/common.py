@@ -199,7 +199,7 @@ class ImportManifest(BaseModel):
         """Read manifests from given table."""
         with connection.cursor() as cursor:
             table_row = cursor.execute(sqlglot.parse_one(
-                "SELECT * FROM information_schema.tables"  # noqa: S608
+                "SELECT * FROM information_schema.tables"  # ruff: ignore[hardcoded-sql-expression]
                 f" WHERE table_name = '{table.alias_or_name}'",
             ).sql()).fetchone()
             if table_row is None:

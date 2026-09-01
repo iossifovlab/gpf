@@ -31,7 +31,7 @@ def omni_dataset(custom_wgpf: WGPFInstance) -> GenotypeData:
 
 @pytest.fixture
 def na_user(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> User:
     user_ctr = get_user_model()
     user = user_ctr.objects.create(
@@ -144,7 +144,7 @@ def test_any_user_propagates_to_children(
 
 def test_dataset_group_rights_mixed(
     user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     add_group_perm_to_user("test_group", user)
     add_group_perm_to_dataset("test_group", "dataset_1")
@@ -154,7 +154,7 @@ def test_dataset_group_rights_mixed(
 
 def test_user_and_dataset_groups_getter_methods(
     user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     add_group_perm_to_user("test_group", user)
     add_group_perm_to_dataset("test_group", "omni_dataset")
@@ -218,7 +218,7 @@ def test_unregistered_dataset_does_not_propagate_permissions(
 
 def test_nauser_user_and_dataset_groups_getter_methods(
     na_user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     add_group_perm_to_user("test_group", na_user)
     add_group_perm_to_dataset("test_group", "omni_dataset")
@@ -246,7 +246,7 @@ def test_any_user_with_anonymous(omni_dataset: GenotypeData) -> None:
 
 def test_permitted_datasets_cte_runs_once_per_user(
     user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     """Within one request (same user instance) the CTE runs once.
 
@@ -272,7 +272,7 @@ def test_permitted_datasets_cte_runs_once_per_user(
 
 def test_permitted_datasets_memo_is_correct(
     user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     """The memoized result equals a freshly-computed permitted set."""
     add_group_perm_to_user("test_group", user)
@@ -288,8 +288,8 @@ def test_permitted_datasets_memo_is_correct(
 
 
 def test_permitted_datasets_no_cross_request_leak(
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
-    db: None,  # noqa: ARG001
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """A different user object (new request) recomputes independently.
 
@@ -337,7 +337,7 @@ def test_permitted_datasets_no_cross_request_leak(
 
 def test_permitted_datasets_memo_keyed_per_instance(
     user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: GenotypeData,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     """The per-user memo is keyed by ``instance_id`` and does not collide.
 

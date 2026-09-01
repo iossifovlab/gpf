@@ -109,7 +109,7 @@ def t4c8_study(instance: GPFInstance) -> str:
         chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
         chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
         chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-    """)  # noqa: E501
+    """)  # ruff: ignore[line-too-long]
 
     project_config = {
         "destination": {"storage_type": "schema2"},

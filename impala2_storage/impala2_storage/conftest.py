@@ -49,7 +49,7 @@ def impala_genotype_storage(
         "hdfs": {
             "host": hdfs_host,
             "port": 8020,
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
         },
     }
     registry = GenotypeStorageRegistry()
